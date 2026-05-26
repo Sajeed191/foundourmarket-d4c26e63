@@ -5,7 +5,9 @@ import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
 import { ProductCard } from "@/components/site/ProductCard";
+import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -166,6 +168,8 @@ function Home() {
           ))}
         </div>
       </section>
+
+      <RecentlyViewed />
 
       {/* Why Choose Us */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
