@@ -19,9 +19,18 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
+import { Route as AdminSearchRouteImport } from './routes/admin-search'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
+import { Route as AdminReportsRouteImport } from './routes/admin-reports'
+import { Route as AdminMarketingRouteImport } from './routes/admin-marketing'
+import { Route as AdminInventoryRouteImport } from './routes/admin-inventory'
+import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
+import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
+import { Route as AdminActivityRouteImport } from './routes/admin-activity'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
@@ -84,9 +93,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTrafficRoute = AdminTrafficRouteImport.update({
+  id: '/admin-traffic',
+  path: '/admin-traffic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
   id: '/admin-shipments',
   path: '/admin-shipments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSearchRoute = AdminSearchRouteImport.update({
+  id: '/admin-search',
+  path: '/admin-search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminReturnsRoute = AdminReturnsRouteImport.update({
@@ -94,9 +113,44 @@ const AdminReturnsRoute = AdminReturnsRouteImport.update({
   path: '/admin-returns',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin-reports',
+  path: '/admin-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/admin-marketing',
+  path: '/admin-marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/admin-inventory',
+  path: '/admin-inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFinancialRoute = AdminFinancialRouteImport.update({
+  id: '/admin-financial',
+  path: '/admin-financial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/admin-customers',
+  path: '/admin-customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCmsRoute = AdminCmsRouteImport.update({
   id: '/admin-cms',
   path: '/admin-cms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/admin-analytics',
+  path: '/admin-analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/admin-activity',
+  path: '/admin-activity',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -159,9 +213,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-activity': typeof AdminActivityRoute
+  '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-financial': typeof AdminFinancialRoute
+  '/admin-inventory': typeof AdminInventoryRoute
+  '/admin-marketing': typeof AdminMarketingRoute
+  '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
+  '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
@@ -185,9 +248,18 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-activity': typeof AdminActivityRoute
+  '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-financial': typeof AdminFinancialRoute
+  '/admin-inventory': typeof AdminInventoryRoute
+  '/admin-marketing': typeof AdminMarketingRoute
+  '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
+  '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
@@ -212,9 +284,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-activity': typeof AdminActivityRoute
+  '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-financial': typeof AdminFinancialRoute
+  '/admin-inventory': typeof AdminInventoryRoute
+  '/admin-marketing': typeof AdminMarketingRoute
+  '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
+  '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
@@ -240,9 +321,18 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-activity'
+    | '/admin-analytics'
     | '/admin-cms'
+    | '/admin-customers'
+    | '/admin-financial'
+    | '/admin-inventory'
+    | '/admin-marketing'
+    | '/admin-reports'
     | '/admin-returns'
+    | '/admin-search'
     | '/admin-shipments'
+    | '/admin-traffic'
     | '/auth'
     | '/blog'
     | '/cart'
@@ -266,9 +356,18 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-activity'
+    | '/admin-analytics'
     | '/admin-cms'
+    | '/admin-customers'
+    | '/admin-financial'
+    | '/admin-inventory'
+    | '/admin-marketing'
+    | '/admin-reports'
     | '/admin-returns'
+    | '/admin-search'
     | '/admin-shipments'
+    | '/admin-traffic'
     | '/auth'
     | '/blog'
     | '/cart'
@@ -292,9 +391,18 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-activity'
+    | '/admin-analytics'
     | '/admin-cms'
+    | '/admin-customers'
+    | '/admin-financial'
+    | '/admin-inventory'
+    | '/admin-marketing'
+    | '/admin-reports'
     | '/admin-returns'
+    | '/admin-search'
     | '/admin-shipments'
+    | '/admin-traffic'
     | '/auth'
     | '/blog'
     | '/cart'
@@ -319,9 +427,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
   AdminRoute: typeof AdminRoute
+  AdminActivityRoute: typeof AdminActivityRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCmsRoute: typeof AdminCmsRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFinancialRoute: typeof AdminFinancialRoute
+  AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminMarketingRoute: typeof AdminMarketingRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
+  AdminSearchRoute: typeof AdminSearchRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
+  AdminTrafficRoute: typeof AdminTrafficRoute
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRouteWithChildren
   CartRoute: typeof CartRoute
@@ -410,11 +527,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-traffic': {
+      id: '/admin-traffic'
+      path: '/admin-traffic'
+      fullPath: '/admin-traffic'
+      preLoaderRoute: typeof AdminTrafficRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-shipments': {
       id: '/admin-shipments'
       path: '/admin-shipments'
       fullPath: '/admin-shipments'
       preLoaderRoute: typeof AdminShipmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-search': {
+      id: '/admin-search'
+      path: '/admin-search'
+      fullPath: '/admin-search'
+      preLoaderRoute: typeof AdminSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-returns': {
@@ -424,11 +555,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReturnsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-reports': {
+      id: '/admin-reports'
+      path: '/admin-reports'
+      fullPath: '/admin-reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-marketing': {
+      id: '/admin-marketing'
+      path: '/admin-marketing'
+      fullPath: '/admin-marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-inventory': {
+      id: '/admin-inventory'
+      path: '/admin-inventory'
+      fullPath: '/admin-inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-financial': {
+      id: '/admin-financial'
+      path: '/admin-financial'
+      fullPath: '/admin-financial'
+      preLoaderRoute: typeof AdminFinancialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-customers': {
+      id: '/admin-customers'
+      path: '/admin-customers'
+      fullPath: '/admin-customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-cms': {
       id: '/admin-cms'
       path: '/admin-cms'
       fullPath: '/admin-cms'
       preLoaderRoute: typeof AdminCmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-analytics': {
+      id: '/admin-analytics'
+      path: '/admin-analytics'
+      fullPath: '/admin-analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-activity': {
+      id: '/admin-activity'
+      path: '/admin-activity'
+      fullPath: '/admin-activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -540,9 +720,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
   AdminRoute: AdminRoute,
+  AdminActivityRoute: AdminActivityRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCmsRoute: AdminCmsRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminFinancialRoute: AdminFinancialRoute,
+  AdminInventoryRoute: AdminInventoryRoute,
+  AdminMarketingRoute: AdminMarketingRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
+  AdminSearchRoute: AdminSearchRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
+  AdminTrafficRoute: AdminTrafficRoute,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRouteWithChildren,
   CartRoute: CartRoute,

@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_activity_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: number
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: number
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: number
+          metadata?: Json
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -104,6 +134,54 @@ export type Database = {
           session_id?: string | null
           user_id?: string | null
           value?: number | null
+        }
+        Relationships: []
+      }
+      banners: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta_text: string | null
+          ends_at: string | null
+          id: string
+          image: string | null
+          link: string | null
+          sort_order: number
+          starts_at: string | null
+          subtitle: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta_text?: string | null
+          ends_at?: string | null
+          id?: string
+          image?: string | null
+          link?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta_text?: string | null
+          ends_at?: string | null
+          id?: string
+          image?: string | null
+          link?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -296,6 +374,57 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_notes: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          note: string
+          pinned: boolean
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          note: string
+          pinned?: boolean
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          note?: string
+          pinned?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_tags: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          tag?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           attempts: number
@@ -380,6 +509,42 @@ export type Database = {
           shipping_updates?: boolean
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      flash_sales: {
+        Row: {
+          active: boolean
+          created_at: string
+          discount_percent: number
+          ends_at: string | null
+          id: string
+          name: string
+          product_slugs: string[]
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          discount_percent?: number
+          ends_at?: string | null
+          id?: string
+          name: string
+          product_slugs?: string[]
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          discount_percent?: number
+          ends_at?: string | null
+          id?: string
+          name?: string
+          product_slugs?: string[]
+          starts_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -595,6 +760,42 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          country: string | null
+          created_at: string
+          device: string | null
+          id: number
+          path: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: number
+          path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: number
+          path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -772,6 +973,7 @@ export type Database = {
       products: {
         Row: {
           category: string
+          cost: number
           created_at: string
           description: string | null
           discount: number | null
@@ -792,9 +994,11 @@ export type Database = {
           stock_quantity: number
           tagline: string | null
           updated_at: string
+          views_count: number
         }
         Insert: {
           category: string
+          cost?: number
           created_at?: string
           description?: string | null
           discount?: number | null
@@ -815,9 +1019,11 @@ export type Database = {
           stock_quantity?: number
           tagline?: string | null
           updated_at?: string
+          views_count?: number
         }
         Update: {
           category?: string
+          cost?: number
           created_at?: string
           description?: string | null
           discount?: number | null
@@ -838,6 +1044,7 @@ export type Database = {
           stock_quantity?: number
           tagline?: string | null
           updated_at?: string
+          views_count?: number
         }
         Relationships: []
       }
@@ -1001,6 +1208,36 @@ export type Database = {
           },
         ]
       }
+      search_logs: {
+        Row: {
+          clicked_product_slug: string | null
+          created_at: string
+          id: number
+          query: string
+          results_count: number
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_product_slug?: string | null
+          created_at?: string
+          id?: number
+          query: string
+          results_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_product_slug?: string | null
+          created_at?: string
+          id?: number
+          query?: string
+          results_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shipment_events: {
         Row: {
           created_at: string
@@ -1155,6 +1392,42 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_sessions: {
+        Row: {
+          country: string | null
+          device: string | null
+          landing_path: string | null
+          last_seen: string
+          page_views: number
+          referrer: string | null
+          session_id: string
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          device?: string | null
+          landing_path?: string | null
+          last_seen?: string
+          page_views?: number
+          referrer?: string | null
+          session_id: string
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          device?: string | null
+          landing_path?: string | null
+          last_seen?: string
+          page_views?: number
+          referrer?: string | null
+          session_id?: string
+          started_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
@@ -1209,6 +1482,7 @@ export type Database = {
         }
         Returns: {
           category: string
+          cost: number
           created_at: string
           description: string | null
           discount: number | null
@@ -1229,6 +1503,7 @@ export type Database = {
           stock_quantity: number
           tagline: string | null
           updated_at: string
+          views_count: number
         }[]
         SetofOptions: {
           from: "*"
@@ -1239,7 +1514,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer" | "manager" | "support" | "fulfillment"
+      app_role:
+        | "admin"
+        | "customer"
+        | "manager"
+        | "support"
+        | "fulfillment"
+        | "super_admin"
+        | "warehouse_staff"
+        | "editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1367,7 +1650,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer", "manager", "support", "fulfillment"],
+      app_role: [
+        "admin",
+        "customer",
+        "manager",
+        "support",
+        "fulfillment",
+        "super_admin",
+        "warehouse_staff",
+        "editor",
+      ],
     },
   },
 } as const
