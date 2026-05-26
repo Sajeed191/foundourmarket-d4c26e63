@@ -362,6 +362,60 @@ function AdminPage() {
         </>
       )}
 
+      {tab === "promos" && (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-medium">Promo Codes</h2>
+            <button onClick={() => setEditingPromo("new")} className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all">
+              <Plus className="size-3.5" /> New Code
+            </button>
+          </div>
+          {promos === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
+            promos.length === 0 ? <p className="text-sm text-muted-foreground">No promo codes yet.</p> :
+            <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+              <table className="w-full text-sm min-w-[760px]">
+                <thead className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="text-left px-5 py-3">Code</th>
+                    <th className="text-left px-5 py-3">Discount</th>
+                    <th className="text-right px-5 py-3">Min Subtotal</th>
+                    <th className="text-right px-5 py-3">Uses</th>
+                    <th className="text-left px-5 py-3">Expires</th>
+                    <th className="text-left px-5 py-3">Status</th>
+                    <th className="px-5 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {promos.map((p) => (
+                    <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-white/[0.02]">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="size-9 rounded-lg bg-background border border-border grid place-items-center"><Ticket className="size-4 text-muted-foreground" /></div>
+                          <p className="font-mono uppercase tracking-widest text-xs">{p.code}</p>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-xs">{p.kind === "percent" ? `${Number(p.value)}%` : `$${Number(p.value).toFixed(2)}`}</td>
+                      <td className="px-5 py-3 text-right font-mono text-xs">${Number(p.min_subtotal).toFixed(2)}</td>
+                      <td className="px-5 py-3 text-right font-mono text-xs">{p.uses}{p.max_uses != null ? ` / ${p.max_uses}` : ""}</td>
+                      <td className="px-5 py-3 text-[11px] font-mono text-muted-foreground">{p.expires_at ? new Date(p.expires_at).toLocaleDateString() : "—"}</td>
+                      <td className="px-5 py-3 text-[11px] font-mono uppercase tracking-widest">
+                        <span className={p.active ? "text-accent" : "text-muted-foreground"}>{p.active ? "Active" : "Inactive"}</span>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => setEditingPromo(p)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 transition-colors" aria-label="Edit"><Pencil className="size-3.5" /></button>
+                          <button onClick={() => deletePromo(p.id)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 hover:text-accent transition-colors" aria-label="Delete"><Trash2 className="size-3.5" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          }
+        </>
+      )}
+
       {editing && (
         <ProductEditor
           row={editing === "new" ? null : editing}
