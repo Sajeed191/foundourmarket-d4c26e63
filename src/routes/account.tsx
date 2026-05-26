@@ -52,7 +52,6 @@ function AccountPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const { slugs: wishSlugs } = useWishlist();
   const { unread, items: notifs } = useNotifications();
-  const { slugs: recentSlugs } = useRecentlyViewed();
   const { products } = useProducts();
   const cart = useCart();
 
