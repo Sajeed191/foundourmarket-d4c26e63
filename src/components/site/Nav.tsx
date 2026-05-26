@@ -62,8 +62,10 @@ export function Nav() {
               <Menu className="size-5" />
             </button>
 
-            <Link to="/" className="text-base sm:text-lg font-display tracking-tight font-semibold whitespace-nowrap flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-accent shadow-[0_0_12px_var(--color-accent)] animate-glow" aria-hidden />
+            <Link to="/" className="text-base sm:text-lg font-display tracking-tight font-semibold whitespace-nowrap flex items-center gap-2">
+              <span className="relative inline-grid place-items-center size-8 rounded-xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_18px_-4px_var(--color-accent)]">
+                <img src={logoSrc} alt="FoundOurMarket logo" className="size-8 object-cover" />
+              </span>
               FoundOurMarket<span className="text-accent">™</span>
             </Link>
 
