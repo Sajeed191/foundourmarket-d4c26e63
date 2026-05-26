@@ -170,7 +170,10 @@ function Home() {
         </div>
       </section>
 
+      <HomePersonalized />
+
       <RecentlyViewed />
+
 
       {/* Why Choose Us */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
