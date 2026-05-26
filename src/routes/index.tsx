@@ -380,39 +380,6 @@ function Home() {
         </div>
       </section>
 
-      {/* Journal teaser */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">From the Journal</p>
-            <h2 className="text-fluid-2xl font-display tracking-tight">Stories & curator notes</h2>
-          </div>
-          <Link to="/blog" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-            Read All
-          </Link>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {[
-            { title: "The art of curation in a noisy marketplace", excerpt: "How we audition every supplier before they reach your door.", tag: "Inside" },
-            { title: "Materials we love this season", excerpt: "From recycled aluminum to organic linen — what we are sourcing right now.", tag: "Sourcing" },
-            { title: "A guide to buying audio gear that lasts", excerpt: "Five things to listen for before you commit to a pair of headphones.", tag: "Guides" },
-          ].map((p, i) => (
-            <Reveal key={p.title} delay={i}>
-              <Link to="/blog" className="group block h-full rounded-2xl border border-border bg-card overflow-hidden hover:border-accent/40 transition-colors">
-                <div className="aspect-[16/10] relative overflow-hidden">
-                  <div className="absolute inset-0" style={{ background: "var(--gradient-ember)", opacity: 0.4 }} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-                  <span className="absolute top-4 left-4 text-[10px] font-mono uppercase tracking-widest bg-background/70 backdrop-blur px-2.5 py-1 rounded-full border border-border">{p.tag}</span>
-                </div>
-                <div className="p-5 sm:p-6">
-                  <h3 className="text-base sm:text-lg font-medium leading-snug mb-2 group-hover:text-accent transition-colors">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{p.excerpt}</p>
-                </div>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
 
       {/* Newsletter */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24">
