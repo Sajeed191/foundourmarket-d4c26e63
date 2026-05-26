@@ -52,8 +52,8 @@ function AdminReturnsPage() {
     setReturns((data as ReturnRow[]) ?? []);
   }
 
-  async function update(id: string, patch: Partial<ReturnRow>) {
-    if (patch.status === "completed") (patch as any).resolved_at = new Date().toISOString();
+  async function update(id: string, patch: Record<string, unknown>) {
+    if (patch.status === "completed") patch.resolved_at = new Date().toISOString();
     const { error } = await supabase.from("returns").update(patch).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Return updated");
