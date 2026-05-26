@@ -83,16 +83,27 @@ function ReturnsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+    <div className="container-page py-10 sm:py-16 max-w-3xl">
       <Link to="/account" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="size-3.5" /> Account
       </Link>
-      <h1 className="text-2xl sm:text-4xl font-display font-semibold mb-2 flex items-center gap-3">
-        <RotateCcw className="size-7 text-accent" /> Returns
-      </h1>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Account</p>
+        <h1 className="text-fluid-2xl font-display font-semibold flex items-center gap-3">
+          <RotateCcw className="size-7 text-accent" /> Returns
+        </h1>
+        <p className="text-sm text-muted-foreground mt-2 max-w-md">
+          Submit a return request and track refund status. Returns are reviewed within 2 business days.
+        </p>
+      </motion.div>
 
       {eligibleOrder && (
-        <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-card border border-border rounded-2xl p-5 sm:p-6 mt-8"
+        >
           <h2 className="text-sm font-medium mb-4">Request return for order #{eligibleOrder.id.slice(0, 8)}</h2>
           <div className="space-y-3 mb-4">
             {eligibleOrder.order_items.map((it) => (
@@ -119,19 +130,38 @@ function ReturnsPage() {
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Additional details (optional)"
             className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent mb-4" />
           <button onClick={submit} disabled={submitting}
-            className="bg-accent text-accent-foreground rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold disabled:opacity-50">
+            className="w-full sm:w-auto bg-accent text-accent-foreground rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold disabled:opacity-50 hover:brightness-110 transition-all">
             {submitting ? "Submitting…" : "Submit return"}
           </button>
-        </div>
+        </motion.div>
       )}
 
       <div className="mt-10">
-        <h2 className="text-sm font-medium mb-4">Your returns</h2>
-        {returns === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
-          returns.length === 0 ? <p className="text-sm text-muted-foreground">No returns yet.</p> :
+        <h2 className="text-sm font-medium mb-4 uppercase tracking-widest text-muted-foreground">Your returns</h2>
+        {returns === null ? (
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        ) : returns.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-2xl p-12 sm:p-16 text-center"
+          >
+            <div className="size-14 mx-auto mb-5 grid place-items-center rounded-full border border-border">
+              <Package className="size-5 text-muted-foreground" />
+            </div>
+            <p className="text-base font-medium">No returns yet</p>
+            <p className="text-sm text-muted-foreground mt-1">Eligible orders can be returned from the order page.</p>
+          </motion.div>
+        ) : (
           <div className="space-y-3">
-            {returns.map((r) => (
-              <div key={r.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between flex-wrap gap-2">
+            {returns.map((r, i) => (
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.04 }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5 flex items-center justify-between flex-wrap gap-3 hover:border-accent/30 transition-colors"
+              >
                 <div>
                   <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Return #{r.id.slice(0, 8)} · Order #{r.order_id.slice(0, 8)}</p>
                   <p className="text-sm mt-1">{r.reason}</p>
@@ -140,10 +170,10 @@ function ReturnsPage() {
                   <span className="text-[10px] font-mono uppercase tracking-widest text-accent bg-accent/10 px-2 py-1 rounded-full">{r.status}</span>
                   <p className="font-mono text-sm mt-1">${Number(r.refund_amount).toFixed(2)} · {r.refund_status}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        }
+        )}
       </div>
     </div>
   );
