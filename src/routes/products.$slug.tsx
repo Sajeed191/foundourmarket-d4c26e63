@@ -391,7 +391,7 @@ function ProductPage() {
       <RecentlyViewed excludeSlug={product.slug} />
 
       {/* Sticky mobile CTA */}
-      <div className="sm:hidden fixed bottom-16 inset-x-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+      <div className="sm:hidden fixed bottom-[5.25rem] inset-x-0 z-40 px-3 pb-[env(safe-area-inset-bottom)]">
         <div className="glass-strong rounded-2xl px-2.5 py-2.5 flex items-center gap-2">
           <div className="flex items-center bg-white/5 rounded-full">
             <button onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease" className="size-10 grid place-items-center">
