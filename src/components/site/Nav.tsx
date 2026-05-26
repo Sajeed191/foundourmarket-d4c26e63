@@ -17,6 +17,13 @@ export function Nav() {
   const { slugs: wishSlugs } = useWishlist();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .then(({ data }) => setIsAdmin((data ?? []).some((r) => ADMIN_ROLES.includes(r.role as string))));
+  }, [user]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
