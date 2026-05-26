@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin")({
 type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
   contact_email: string | null; created_at: string;
-  order_items: { name: string; quantity: number }[];
+  order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number }[];
 };
 
 type ProductRow = {
