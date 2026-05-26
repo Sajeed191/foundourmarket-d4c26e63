@@ -60,6 +60,7 @@ function SearchPage() {
         price: Number(r.price), rating: Number(r.rating), reviews: r.reviews,
         image: resolveImage(r.image), description: r.description ?? "",
         inStock: r.in_stock, discount: r.discount ?? undefined, featured: r.featured ?? false,
+        sku: r.sku ?? null, stockQuantity: r.stock_quantity ?? 0, lowStockThreshold: r.low_stock_threshold ?? 5,
       })));
       setLoading(false);
     });
