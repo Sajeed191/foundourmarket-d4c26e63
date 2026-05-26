@@ -114,14 +114,58 @@ function ProductPage() {
               <span className="text-xs font-mono text-muted-foreground">{product.rating} · {product.reviews} reviews</span>
             </div>
 
-            <div className="flex items-baseline gap-4 mb-8">
-              <span className="text-4xl font-mono text-accent">{format(product.price)}</span>
-              {product.discount && (
-                <span className="text-sm font-mono text-muted-foreground line-through">{format(product.price * (1 + product.discount / 100))}</span>
-              )}
-            </div>
+            {(() => {
+              const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
+              const effectivePrice = selectedVariant?.priceOverride ?? product.price;
+              const effectiveStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
+              const effectiveSku = selectedVariant?.sku ?? product.sku;
+              const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
+              return (
+                <>
+                  <div className="flex items-baseline gap-4 mb-4">
+                    <span className="text-4xl font-mono text-accent">{format(effectivePrice)}</span>
+                    {product.discount && (
+                      <span className="text-sm font-mono text-muted-foreground line-through">{format(effectivePrice * (1 + product.discount / 100))}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mb-6 text-[10px] font-mono uppercase tracking-widest">
+                    {effectiveStock <= 0 ? (
+                      <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground">Out of stock</span>
+                    ) : lowStock ? (
+                      <span className="px-2 py-1 rounded-full bg-accent/15 text-accent">Only {effectiveStock} left</span>
+                    ) : (
+                      <span className="px-2 py-1 rounded-full bg-accent/10 text-accent">In stock</span>
+                    )}
+                    {effectiveSku && <span className="text-muted-foreground">SKU: {effectiveSku}</span>}
+                  </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+                  {variants.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Variant</p>
+                      <div className="flex flex-wrap gap-2">
+                        {variants.map((v) => {
+                          const sel = v.id === variantId;
+                          const oos = v.stockQuantity <= 0;
+                          return (
+                            <button
+                              key={v.id}
+                              onClick={() => !oos && setVariantId(v.id)}
+                              disabled={oos}
+                              className={`px-4 py-2 rounded-full text-xs border transition-colors ${sel ? "border-accent text-accent bg-accent/10" : "border-border hover:border-accent/50"} disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through`}
+                            >
+                              {v.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+                </>
+              );
+            })()}
+
 
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center border border-border rounded-full">
