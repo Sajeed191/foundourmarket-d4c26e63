@@ -37,6 +37,17 @@ const BANNER_SIZE_PRESETS: { label: string; w: number; h: number; note: string }
   { label: "Mobile banner", w: 750, h: 1000, note: "Mobile portrait" },
 ];
 
+const ACTION_LABELS: Record<string, string> = {
+  banner_publish: "Published banner",
+  banner_draft_create: "Created banner draft",
+  banner_draft_update: "Updated banner draft",
+  banner_delete: "Deleted banner",
+  banner_reorder: "Reordered banners",
+  flash_create: "Created flash sale",
+  flash_update: "Updated flash sale",
+  flash_delete: "Deleted flash sale",
+};
+
 function MarketingPage() {
   const [tab, setTab] = useState<"banners" | "flash">("banners");
   const [banners, setBanners] = useState<Banner[] | null>(null);
