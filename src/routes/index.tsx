@@ -299,25 +299,6 @@ function Home() {
         </section>
       )}
 
-      {/* Editorial split */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 max-w-2xl mx-auto">
-          <Reveal>
-            <Link to="/category/$slug" params={{ slug: "electronics" }} className="group relative block rounded-3xl overflow-hidden border border-border bg-card aspect-[4/5] sm:aspect-[5/6] md:aspect-[4/5]">
-              <div className="absolute inset-0" style={{ background: "var(--gradient-ember)", opacity: 0.4 }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-              <div className="relative h-full flex flex-col justify-end p-6 sm:p-10">
-                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Collection 01</p>
-                <h3 className="text-3xl sm:text-4xl md:text-5xl font-display tracking-tight mb-3">Modern Tech<br/>Essentials</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mb-5">Headphones, keyboards, lamps and gear engineered to elevate the everyday.</p>
-                <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-accent group-hover:gap-3 transition-all">
-                  Shop the edit <ArrowRight className="size-3.5" />
-                </span>
-              </div>
-            </Link>
-          </Reveal>
-        </div>
-      </section>
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
