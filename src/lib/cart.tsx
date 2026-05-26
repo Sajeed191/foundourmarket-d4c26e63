@@ -4,15 +4,20 @@ import { type Product } from "./products";
 import { useProducts } from "./use-products";
 import { useAuth } from "./auth";
 
-type CartItem = { slug: string; qty: number };
+type CartItem = { slug: string; qty: number; savedForLater?: boolean };
+type DetailedItem = CartItem & { product: Product };
+
 type Ctx = {
   items: CartItem[];
   add: (slug: string, qty?: number) => Promise<void>;
   remove: (slug: string) => Promise<void>;
   setQty: (slug: string, qty: number) => Promise<void>;
   clear: () => Promise<void>;
+  saveForLater: (slug: string) => Promise<void>;
+  moveToCart: (slug: string) => Promise<void>;
   count: number;
-  detailed: (CartItem & { product: Product })[];
+  detailed: DetailedItem[];
+  savedDetailed: DetailedItem[];
   subtotalUSD: number;
   loading: boolean;
 };
@@ -22,7 +27,11 @@ const LS_KEY = "cart";
 
 function readLS(): CartItem[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? "[]"); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
 }
 function writeLS(items: CartItem[]) {
   if (typeof window !== "undefined") localStorage.setItem(LS_KEY, JSON.stringify(items));
@@ -51,16 +60,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      // upsert cart row
       const { data: existing } = await supabase
-        .from("carts").select("id").eq("user_id", user.id).maybeSingle();
+        .from("carts")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
       let id = existing?.id as string | undefined;
       if (!id) {
         const { data: created } = await supabase
-          .from("carts").insert({ user_id: user.id }).select("id").single();
+          .from("carts")
+          .insert({ user_id: user.id })
+          .select("id")
+          .single();
         id = created?.id;
       }
-      if (!id || cancelled) { setLoading(false); return; }
+      if (!id || cancelled) {
+        setLoading(false);
+        return;
+      }
       setCartId(id);
 
       // Merge guest LS into server cart (one-time per session)
@@ -70,28 +87,45 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (guest.length) {
           for (const g of guest) {
             const { data: row } = await supabase
-              .from("cart_items").select("id,quantity")
-              .eq("cart_id", id).eq("product_slug", g.slug).is("variant_id", null)
+              .from("cart_items")
+              .select("id,quantity")
+              .eq("cart_id", id)
+              .eq("product_slug", g.slug)
+              .is("variant_id", null)
               .maybeSingle();
             if (row) {
-              await supabase.from("cart_items").update({ quantity: row.quantity + g.qty }).eq("id", row.id);
+              await supabase
+                .from("cart_items")
+                .update({ quantity: row.quantity + g.qty })
+                .eq("id", row.id);
             } else {
-              await supabase.from("cart_items").insert({ cart_id: id, product_slug: g.slug, quantity: g.qty });
+              await supabase
+                .from("cart_items")
+                .insert({ cart_id: id, product_slug: g.slug, quantity: g.qty });
             }
           }
           writeLS([]);
         }
       }
 
-      // Load server items
       const { data: rows } = await supabase
-        .from("cart_items").select("product_slug,quantity").eq("cart_id", id);
+        .from("cart_items")
+        .select("product_slug,quantity,saved_for_later")
+        .eq("cart_id", id);
       if (!cancelled) {
-        setItems((rows ?? []).map((r) => ({ slug: r.product_slug, qty: r.quantity })));
+        setItems(
+          (rows ?? []).map((r) => ({
+            slug: r.product_slug,
+            qty: r.quantity,
+            savedForLater: !!r.saved_for_later,
+          })),
+        );
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // Persist guests to LS
@@ -101,59 +135,131 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = async (slug: string, qty = 1) => {
     if (user && cartId) {
-      const existing = items.find((i) => i.slug === slug);
+      const existing = items.find((i) => i.slug === slug && !i.savedForLater);
       const newQty = (existing?.qty ?? 0) + qty;
-      setItems((p) => existing ? p.map((i) => i.slug === slug ? { ...i, qty: newQty } : i) : [...p, { slug, qty }]);
+      setItems((p) =>
+        existing
+          ? p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, qty: newQty } : i))
+          : [...p, { slug, qty, savedForLater: false }],
+      );
       const { data: row } = await supabase
-        .from("cart_items").select("id").eq("cart_id", cartId)
-        .eq("product_slug", slug).is("variant_id", null).maybeSingle();
+        .from("cart_items")
+        .select("id")
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", false)
+        .is("variant_id", null)
+        .maybeSingle();
       if (row) await supabase.from("cart_items").update({ quantity: newQty }).eq("id", row.id);
-      else await supabase.from("cart_items").insert({ cart_id: cartId, product_slug: slug, quantity: qty });
+      else
+        await supabase
+          .from("cart_items")
+          .insert({ cart_id: cartId, product_slug: slug, quantity: qty, saved_for_later: false });
     } else {
       setItems((prev) => {
         const f = prev.find((i) => i.slug === slug);
-        return f ? prev.map((i) => i.slug === slug ? { ...i, qty: i.qty + qty } : i) : [...prev, { slug, qty }];
+        return f
+          ? prev.map((i) => (i.slug === slug ? { ...i, qty: i.qty + qty } : i))
+          : [...prev, { slug, qty }];
       });
     }
   };
 
   const remove = async (slug: string) => {
-    setItems((p) => p.filter((i) => i.slug !== slug));
+    setItems((p) => p.filter((i) => !(i.slug === slug && !i.savedForLater)));
     if (user && cartId) {
-      await supabase.from("cart_items").delete().eq("cart_id", cartId).eq("product_slug", slug);
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", false);
     }
   };
 
   const setQty = async (slug: string, qty: number) => {
     if (qty <= 0) return remove(slug);
-    setItems((p) => p.map((i) => i.slug === slug ? { ...i, qty } : i));
+    setItems((p) => p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, qty } : i)));
     if (user && cartId) {
-      await supabase.from("cart_items").update({ quantity: qty })
-        .eq("cart_id", cartId).eq("product_slug", slug);
+      await supabase
+        .from("cart_items")
+        .update({ quantity: qty })
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", false);
     }
   };
 
   const clear = async () => {
-    setItems([]);
+    setItems((p) => p.filter((i) => i.savedForLater));
     if (user && cartId) {
-      await supabase.from("cart_items").delete().eq("cart_id", cartId);
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("cart_id", cartId)
+        .eq("saved_for_later", false);
     } else {
       writeLS([]);
     }
   };
 
-  const detailed = items
-    .map((i) => {
-      const product = products.find((p) => p.slug === i.slug);
-      return product ? { ...i, product } : null;
-    })
-    .filter(Boolean) as (CartItem & { product: Product })[];
+  const saveForLater = async (slug: string) => {
+    setItems((p) => p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, savedForLater: true } : i)));
+    if (user && cartId) {
+      await supabase
+        .from("cart_items")
+        .update({ saved_for_later: true })
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", false);
+    }
+  };
+
+  const moveToCart = async (slug: string) => {
+    setItems((p) => p.map((i) => (i.slug === slug && i.savedForLater ? { ...i, savedForLater: false } : i)));
+    if (user && cartId) {
+      await supabase
+        .from("cart_items")
+        .update({ saved_for_later: false })
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", true);
+    }
+  };
+
+  const toDetailed = (list: CartItem[]): DetailedItem[] =>
+    list
+      .map((i) => {
+        const product = products.find((p) => p.slug === i.slug);
+        return product ? { ...i, product } : null;
+      })
+      .filter(Boolean) as DetailedItem[];
+
+  const active = items.filter((i) => !i.savedForLater);
+  const saved = items.filter((i) => i.savedForLater);
+  const detailed = toDetailed(active);
+  const savedDetailed = toDetailed(saved);
 
   const subtotalUSD = detailed.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const count = items.reduce((s, i) => s + i.qty, 0);
+  const count = active.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, setQty, clear, count, detailed, subtotalUSD, loading }}>
+    <CartContext.Provider
+      value={{
+        items: active,
+        add,
+        remove,
+        setQty,
+        clear,
+        saveForLater,
+        moveToCart,
+        count,
+        detailed,
+        savedDetailed,
+        subtotalUSD,
+        loading,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
