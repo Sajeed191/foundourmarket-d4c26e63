@@ -10,14 +10,14 @@ export function MobileBottomNav() {
   const { slugs } = useWishlist();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const items = [
-    { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-    { to: "/search", label: "Browse", icon: LayoutGrid, match: (p: string) => p.startsWith("/category") },
-    { to: "/search", label: "Search", icon: Search, match: (p: string) => p === "/search" },
-    { to: "/wishlist", label: "Saved", icon: Heart, match: (p: string) => p === "/wishlist", badge: slugs.size },
-    { to: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p === "/cart", badge: count },
-    { to: user ? "/account" : "/auth", label: user ? "Me" : "Sign in", icon: User, match: (p: string) => p === "/account" || p === "/auth" },
-  ] as const;
+  const items: { to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }[] = [
+    { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
+    { to: "/search", label: "Browse", icon: LayoutGrid, match: (p) => p.startsWith("/category") },
+    { to: "/search", label: "Search", icon: Search, match: (p) => p === "/search" },
+    { to: "/wishlist", label: "Saved", icon: Heart, match: (p) => p === "/wishlist", badge: slugs.size },
+    { to: "/cart", label: "Cart", icon: ShoppingBag, match: (p) => p === "/cart", badge: count },
+    { to: user ? "/account" : "/auth", label: user ? "Me" : "Sign in", icon: User, match: (p) => p === "/account" || p === "/auth" },
+  ];
 
   return (
     <nav
