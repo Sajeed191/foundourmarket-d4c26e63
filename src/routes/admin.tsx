@@ -104,9 +104,7 @@ function AdminPage() {
     a.click();
     URL.revokeObjectURL(url);
   }
-    const { data } = await supabase.from("products").select("*").order("sort_order", { ascending: true });
-    setProducts((data as ProductRow[]) ?? []);
-  }
+
 
   async function loadPromos() {
     const { data } = await supabase.from("promo_codes").select("*").order("created_at", { ascending: false });
