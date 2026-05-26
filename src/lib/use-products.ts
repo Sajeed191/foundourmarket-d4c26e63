@@ -47,10 +47,6 @@ export function useProducts() {
   }, []);
   return { products, loading };
 }
-    return () => { active = false; subscribers.delete(sub); };
-  }, []);
-  return { products, loading };
-}
 
 export function useProduct(slug: string) {
   const [product, setProduct] = useState<Product | null>(
