@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap } from "lucide-react";
 import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
@@ -9,6 +9,34 @@ import { ProductCard } from "@/components/site/ProductCard";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
+
+const PLACEHOLDERS = [
+  "Search 2,400+ curated products...",
+  "Try 'wireless headphones'...",
+  "Discover 'linen shirt'...",
+  "Find 'ceramic mug'...",
+  "Explore 'smart watch'...",
+];
+
+function useRotatingPlaceholder(active: boolean) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % PLACEHOLDERS.length), 2800);
+    return () => clearInterval(id);
+  }, [active]);
+  return PLACEHOLDERS[idx];
+}
+
+function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix?: string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const mv = useMotionValue(0);
+  const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
+  const display = useTransform(spring, (v) => Math.round(v).toLocaleString() + suffix);
+  useEffect(() => { if (inView) mv.set(to); }, [inView, to, mv]);
+  return <motion.span ref={ref}>{display}</motion.span>;
+}
 
 
 export const Route = createFileRoute("/")({
@@ -51,6 +79,8 @@ function Home() {
 
   const nav = useNavigate();
   const [query, setQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
   const categoryCounts = useMemo(
     () => products.reduce<Record<string, number>>((acc, p) => {
@@ -78,6 +108,7 @@ function Home() {
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
           <div className="orb animate-orb" style={{ width: 520, height: 520, top: "10%", left: "55%", background: "var(--gradient-ember)" }} />
           <div className="orb animate-orb" style={{ width: 460, height: 460, top: "30%", left: "10%", background: "var(--gradient-violet)", animationDelay: "-7s" }} />
+          <div className="orb animate-orb" style={{ width: 380, height: 380, top: "65%", left: "70%", background: "radial-gradient(circle at 50% 50%, oklch(0.7 0.15 220 / 0.18), transparent 65%)", animationDelay: "-14s" }} />
           <div
             className="absolute inset-0 opacity-[0.04]"
             style={{
@@ -86,6 +117,13 @@ function Home() {
               backgroundSize: "64px 64px",
               maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
             }}
+          />
+          {/* cinematic light sweep */}
+          <motion.div
+            initial={{ x: "-30%", opacity: 0 }}
+            animate={{ x: "130%", opacity: [0, 0.5, 0] }}
+            transition={{ duration: 8, repeat: Infinity, repeatDelay: 6, ease: "easeInOut" }}
+            className="absolute top-0 bottom-0 w-[40%] -skew-x-12 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent pointer-events-none"
           />
         </div>
 
@@ -121,15 +159,23 @@ function Home() {
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
             className="max-w-2xl mx-auto relative group"
           >
-            <div className="absolute -inset-px rounded-full bg-gradient-to-r from-accent/40 via-transparent to-accent/40 opacity-0 group-focus-within:opacity-100 blur-md transition-opacity" />
-            <div className="relative glass-strong rounded-full">
-              <Search className="absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <motion.div
+              aria-hidden
+              animate={{ opacity: searchFocused ? 1 : 0.35 }}
+              transition={{ duration: 0.4 }}
+              className="absolute -inset-1 rounded-full blur-xl"
+              style={{ background: "conic-gradient(from 0deg, oklch(0.74 0.19 49 / 0.45), transparent 30%, oklch(0.55 0.18 290 / 0.35) 60%, transparent 80%, oklch(0.74 0.19 49 / 0.45))" }}
+            />
+            <div className="relative glass-strong rounded-full ring-1 ring-white/10">
+              <Search className={`absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-4 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search 2,400+ curated products..."
-                className="w-full bg-transparent rounded-full pl-12 sm:pl-14 pr-24 sm:pr-32 py-4 sm:py-5 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/60"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder={rotatingPlaceholder}
+                className="w-full bg-transparent rounded-full pl-12 sm:pl-14 pr-24 sm:pr-32 py-4 sm:py-5 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/60 transition-[placeholder] duration-500"
               />
               <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[11px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
                 Search
@@ -221,6 +267,8 @@ function Home() {
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{ background: "var(--gradient-ember)" }}
                 />
+                {/* shimmer sweep */}
+                <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1400ms] ease-out bg-gradient-to-r from-transparent via-white/[0.08] to-transparent skew-x-12" />
                 <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-end z-10">
                   <p className="font-mono text-[10px] text-accent mb-1">{String(i + 1).padStart(2, "0")}</p>
                   <h3 className="text-base sm:text-lg font-medium">{cat.name}</h3>
@@ -348,6 +396,40 @@ function Home() {
       <HomePersonalized />
 
       
+
+      {/* Live Marketplace Stats */}
+      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-10 sm:mb-14">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
+          </p>
+          <h2 className="text-fluid-2xl font-display tracking-tight">A global engine, in motion.</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {[
+            { icon: Globe2, value: 180, suffix: "+", label: "Countries served" },
+            { icon: Users, value: 48230, suffix: "", label: "Active shoppers" },
+            { icon: Package, value: 2412, suffix: "", label: "Products available" },
+            { icon: ShoppingBag, value: 17, suffix: "/min", label: "Orders right now" },
+          ].map((s, i) => (
+            <Reveal key={s.label} delay={i}>
+              <div className="group relative glass-strong rounded-2xl p-5 sm:p-7 h-full overflow-hidden">
+                <div aria-hidden className="absolute -top-12 -right-12 size-40 rounded-full opacity-40 group-hover:opacity-70 transition-opacity blur-2xl" style={{ background: "var(--gradient-ember-soft)" }} />
+                <div className="relative flex items-center justify-between mb-5">
+                  <div className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center ring-1 ring-accent/20">
+                    <s.icon className="size-4" />
+                  </div>
+                  <Zap className="size-3.5 text-accent/60 animate-glow" />
+                </div>
+                <div className="relative text-3xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">
+                  <AnimatedCounter to={s.value} suffix={s.suffix} />
+                </div>
+                <div className="relative text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-2">{s.label}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
       {/* Why Choose Us */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
