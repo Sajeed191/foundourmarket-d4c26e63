@@ -1625,6 +1625,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      notify_roles: {
+        Args: {
+          _body: string
+          _data: Json
+          _link: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _title: string
+          _type: string
+        }
+        Returns: undefined
+      }
       refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
       search_products: {
         Args: {
