@@ -301,7 +301,7 @@ function Home() {
 
       {/* Editorial split */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 max-w-2xl mx-auto">
           <Reveal>
             <Link to="/category/$slug" params={{ slug: "electronics" }} className="group relative block rounded-3xl overflow-hidden border border-border bg-card aspect-[4/5] sm:aspect-[5/6] md:aspect-[4/5]">
               <div className="absolute inset-0" style={{ background: "var(--gradient-ember)", opacity: 0.4 }} />
