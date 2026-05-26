@@ -120,10 +120,15 @@ function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pb-24 sm:pb-16">
-      <div className="container-page py-5 sm:py-10 lg:py-14 space-y-6 sm:space-y-10">
+    <div className="min-h-screen pb-28 sm:pb-16">
+      {/* Ambient page glow */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
+      </div>
+
+      <div className="container-page py-4 sm:py-10 lg:py-14 space-y-5 sm:space-y-10">
         {/* 1 — HEADER */}
-        <motion.header {...fadeUp} className="relative overflow-hidden rounded-3xl glass-strong">
+        <motion.header {...fadeUp} className="relative overflow-hidden rounded-[28px] sm:rounded-3xl glass-strong">
           <div aria-hidden className="absolute inset-0 -z-10">
             <div className="absolute -top-32 -right-20 size-[420px] rounded-full opacity-70" style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
             <div className="absolute -bottom-32 -left-24 size-[360px] rounded-full opacity-60" style={{ background: "var(--gradient-violet)", filter: "blur(90px)" }} />
@@ -137,10 +142,15 @@ function AccountPage() {
               }}
             />
           </div>
-          <div className="relative p-5 sm:p-7 lg:p-9 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="relative">
-                <div className="size-14 sm:size-16 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shrink-0 shadow-[var(--shadow-float)]">
+          <div className="relative p-4 sm:p-7 lg:p-9 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+              <div className="relative shrink-0">
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, ease }}
+                  className="size-14 sm:size-16 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shadow-[var(--shadow-float)] ring-1 ring-accent/30"
+                >
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -148,20 +158,29 @@ function AccountPage() {
                       {firstName.slice(0, 1).toUpperCase()}
                     </span>
                   )}
-                </div>
-                <span className="absolute -bottom-1 -right-1 size-4 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
+                </motion.div>
+                <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1.5 flex items-center gap-1.5">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1 flex items-center gap-1.5">
                   <span className="size-1 rounded-full bg-accent animate-glow" /> {greeting()}
                 </p>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-semibold truncate tracking-tight">
+                <h1 className="text-[20px] leading-tight sm:text-2xl lg:text-3xl font-display font-semibold truncate tracking-tight">
                   Welcome back, <span className="text-gradient-ember">{firstName}</span>
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-1">{user.email}</p>
+                <p className="text-[11px] sm:text-sm text-muted-foreground truncate mt-0.5">{user.email}</p>
+              </div>
+              <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+                <Link to="/account/notifications" aria-label="Notifications" className="relative size-10 grid place-items-center rounded-xl glass hover:text-accent transition-all">
+                  <Bell className="size-4" />
+                  {unread > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--color-accent)]" />}
+                </Link>
+                <Link to="/account/profile" aria-label="Settings" className="size-10 grid place-items-center rounded-xl glass hover:text-accent transition-all">
+                  <Settings className="size-4" />
+                </Link>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 self-start sm:self-auto">
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3 self-start sm:self-auto">
               <Link
                 to="/account/notifications"
                 aria-label="Notifications"
@@ -187,7 +206,7 @@ function AccountPage() {
         {/* 2 — OVERVIEW CARDS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
           <SectionHeader title="Overview" eyebrow="Your account at a glance" />
-          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
             <OverviewCard icon={Package} label="Active orders" value={stats.active} loading={!orders} accent />
             <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} to="/wishlist" />
             <OverviewCard icon={ShoppingBag} label="Cart items" value={cartCount} to="/cart" />
