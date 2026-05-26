@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
+import { SearchCommand } from "@/components/site/SearchCommand";
 
 export function Nav() {
   const { count } = useCart();
@@ -12,11 +13,23 @@ export function Nav() {
   const { user } = useAuth();
   const { slugs: wishSlugs } = useWishlist();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const navLinks = [
     { to: "/", label: "Shop" },
