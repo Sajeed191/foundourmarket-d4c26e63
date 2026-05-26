@@ -188,9 +188,19 @@ function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
-      <div className="mb-10">
-        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Operator</p>
-        <h1 className="text-3xl md:text-5xl font-display font-semibold">Admin Dashboard</h1>
+      <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Operator</p>
+          <h1 className="text-3xl md:text-5xl font-display font-semibold">Admin Dashboard</h1>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Link to="/admin-shipments" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-4 py-2 hover:border-accent/40">
+            <Truck className="size-3.5" /> Shipments
+          </Link>
+          <Link to="/admin-returns" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-4 py-2 hover:border-accent/40">
+            <RotateCcw className="size-3.5" /> Returns
+          </Link>
+        </div>
       </div>
 
       <div className="flex gap-1 mb-10 border-b border-border overflow-x-auto">
