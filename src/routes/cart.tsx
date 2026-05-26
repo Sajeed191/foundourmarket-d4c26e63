@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Minus, Plus, X, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
+import { RelatedProducts } from "@/components/site/RelatedProducts";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — FoundOurMarket™" }] }),
@@ -91,6 +92,12 @@ function CartPage() {
           </div>
         </aside>
       </div>
+      <RelatedProducts
+        excludeSlugs={detailed.map((i) => i.slug)}
+        title="Complete the look"
+        eyebrow="You might also need"
+        limit={8}
+      />
     </div>
   );
 }
