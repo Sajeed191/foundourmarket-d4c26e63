@@ -124,7 +124,7 @@ export function Nav() {
             </div>
           </div>
         </nav>
-      </div>
+      </motion.div>
 
 
       {/* Mobile drawer */}
