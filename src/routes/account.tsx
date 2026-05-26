@@ -294,13 +294,13 @@ function AccountPage() {
               action={<Link to="/account/notifications" className="action-link">All <ArrowRight className="size-3" /></Link>}
             >
               {notifs.length === 0 ? (
-                <div className="bg-card border border-border rounded-2xl p-6 text-center">
+                <div className="card-premium rounded-2xl p-6 text-center">
                   <Bell className="size-5 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm">All caught up</p>
                   <p className="text-xs text-muted-foreground mt-1">You'll see order, shipment & promo alerts here.</p>
                 </div>
               ) : (
-                <ul className="bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                <ul className="card-premium rounded-2xl overflow-hidden divide-y divide-border">
                   {notifs.slice(0, 4).map((n) => (
                     <li key={n.id} className={`p-4 flex gap-3 ${!n.read_at ? "bg-accent/5" : ""}`}>
                       <span className={`mt-1.5 size-1.5 rounded-full shrink-0 ${!n.read_at ? "bg-accent animate-pulse" : "bg-muted-foreground/30"}`} />
@@ -562,7 +562,7 @@ function FooterAction({ icon: Icon, label, to }: { icon: typeof Package; label: 
 
 function EmptyState({ icon: Icon = Star, title, body, cta, extra }: { icon?: typeof Package; title: string; body: string; cta?: React.ReactNode; extra?: React.ReactNode }) {
   return (
-    <div className="bg-card border border-dashed border-border rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center">
+    <div className="card-premium rounded-2xl border-dashed p-5 sm:p-6 flex flex-col items-center text-center">
       <div className="size-10 rounded-xl bg-accent/10 text-accent grid place-items-center mb-3">
         <Icon className="size-[18px]" />
       </div>
@@ -622,7 +622,7 @@ function SkeletonRows() {
   return (
     <div className="space-y-3">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="bg-card border border-border rounded-2xl p-5 h-24 animate-pulse" />
+        <div key={i} className="card-premium rounded-2xl p-5 h-24 animate-pulse" />
       ))}
     </div>
   );
