@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth";
 import { WishlistProvider } from "@/lib/wishlist";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
+import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 
 function NotFoundComponent() {
   return (
