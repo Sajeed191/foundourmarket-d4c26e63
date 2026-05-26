@@ -6,6 +6,8 @@ import { useRegion } from "@/lib/region";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
 import { SearchCommand } from "@/components/site/SearchCommand";
+import { NotificationBell } from "@/components/site/NotificationBell";
+import { useAuth as useAuthHook } from "@/lib/auth";
 
 export function Nav() {
   const { count } = useCart();
