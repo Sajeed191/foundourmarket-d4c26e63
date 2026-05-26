@@ -91,6 +91,17 @@ function Home() {
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <motion.div
+            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="relative mx-auto mb-6 sm:mb-8 size-24 sm:size-28"
+          >
+            <div aria-hidden className="absolute inset-0 rounded-full blur-2xl opacity-70 animate-glow" style={{ background: "var(--gradient-ember)" }} />
+            <div className="relative size-full rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-[var(--shadow-glow)] animate-float">
+              <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
+            </div>
+          </motion.div>
+
+          <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
           >
