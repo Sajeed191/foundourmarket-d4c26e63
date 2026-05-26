@@ -41,16 +41,8 @@ export function resolveImage(raw: string | null | undefined): string {
   return ASSET_MAP[base] ?? raw;
 }
 
-export const CATEGORIES = [
-  { slug: "electronics", name: "Electronics" },
-  { slug: "fashion", name: "Fashion" },
-  { slug: "home", name: "Home" },
-  { slug: "beauty", name: "Beauty" },
-  { slug: "fitness", name: "Fitness" },
-  { slug: "gaming", name: "Gaming" },
-  { slug: "accessories", name: "Accessories" },
-  { slug: "gadgets", name: "Gadgets" },
-];
+// Categories are now managed in the database — see src/lib/use-categories.ts
+
 
 type Row = {
   slug: string; name: string; tagline: string | null; category: string;
