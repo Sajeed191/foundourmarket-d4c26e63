@@ -72,9 +72,38 @@ function AdminPage() {
     loadProducts();
     loadCategories();
     loadPromos();
+    loadSubscribers();
   }, [isAdmin]);
 
   async function loadProducts() {
+    const { data } = await supabase.from("products").select("*").order("sort_order", { ascending: true });
+    setProducts((data as ProductRow[]) ?? []);
+  }
+
+  async function loadSubscribers() {
+    const { data } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });
+    setSubscribers((data as Subscriber[]) ?? []);
+  }
+
+  async function deleteSubscriber(id: string) {
+    if (!confirm("Remove this subscriber?")) return;
+    await supabase.from("newsletter_subscribers").delete().eq("id", id);
+    setSubscribers((prev) => prev?.filter((s) => s.id !== id) ?? null);
+  }
+
+  function exportSubscribersCSV() {
+    if (!subscribers?.length) return;
+    const rows = [["email", "source", "status", "created_at"]].concat(
+      subscribers.map((s) => [s.email, s.source ?? "", s.status, s.created_at])
+    );
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
     const { data } = await supabase.from("products").select("*").order("sort_order", { ascending: true });
     setProducts((data as ProductRow[]) ?? []);
   }
