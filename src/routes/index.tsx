@@ -211,17 +211,7 @@ function Home() {
             <p className="text-muted-foreground mb-8 text-pretty">
               Exclusive drops and curator insights — plus 10% off your first order.
             </p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                required
-                placeholder="Email address"
-                className="flex-1 bg-black/40 border border-border rounded-full px-6 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-              <button className="bg-accent text-accent-foreground font-bold px-8 py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterForm source="homepage" />
           </div>
           <div
             aria-hidden
