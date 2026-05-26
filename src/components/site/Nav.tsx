@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShoppingBag, Search, User, Heart, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
 import { SearchCommand } from "@/components/site/SearchCommand";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
+import { supabase } from "@/integrations/supabase/client";
+
+const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
 
 export function Nav() {
   const { count } = useCart();
@@ -14,6 +17,13 @@ export function Nav() {
   const { slugs: wishSlugs } = useWishlist();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .then(({ data }) => setIsAdmin((data ?? []).some((r) => ADMIN_ROLES.includes(r.role as string))));
+  }, [user]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -74,6 +84,11 @@ export function Nav() {
                 <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center">{wishSlugs.size}</span>
               )}
             </Link>
+            {isAdmin && (
+              <Link to="/admin" aria-label="Admin" className="hidden sm:grid size-9 rounded-full place-items-center hover:bg-white/5 transition-colors text-accent" title="Admin">
+                <LayoutDashboard className="size-4" />
+              </Link>
+            )}
             {user && <NotificationBell />}
             <Link to={user ? "/account" : "/auth"} aria-label="Account" className="size-9 rounded-full grid place-items-center hover:bg-white/5 transition-colors">
               <User className="size-4" />
@@ -120,6 +135,7 @@ export function Nav() {
                 <li><Link to={user ? "/account" : "/auth"} onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">{user ? "My Account" : "Sign In"}</Link></li>
                 <li><Link to="/wishlist" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Wishlist · {wishSlugs.size}</Link></li>
                 <li><Link to="/cart" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Cart · {count}</Link></li>
+                {isAdmin && <li><Link to="/admin" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium text-accent hover:bg-white/5">Admin Panel</Link></li>}
               </ul>
             </div>
             <div className="px-5 py-4 border-t border-border flex justify-center">
