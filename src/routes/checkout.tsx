@@ -186,18 +186,19 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
       <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Checkout</p>
-      <h1 className="text-3xl md:text-5xl font-display font-semibold mb-6">Almost yours</h1>
-      <div className="mb-10 inline-flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-full px-4 py-1.5">
-        <span className="size-1.5 rounded-full bg-accent animate-pulse" />
-        <p className="text-[10px] font-mono uppercase tracking-widest text-accent">Demo payment mode — no real transaction occurs</p>
+      <h1 className="text-fluid-2xl font-display font-semibold mb-5 sm:mb-6">Almost yours</h1>
+      <div className="mb-8 sm:mb-10 inline-flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-full px-3 sm:px-4 py-1.5 max-w-full">
+        <span className="size-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+        <p className="text-[10px] font-mono uppercase tracking-widest text-accent truncate">Demo payment mode — no real transaction</p>
       </div>
 
-      <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-6">
+      <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="lg:col-span-2 space-y-5 sm:space-y-6">
           {/* Shipping address */}
-          <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
+
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm uppercase tracking-widest font-medium inline-flex items-center gap-2">
                 <MapPin className="size-4 text-accent" /> Shipping address
@@ -257,7 +258,7 @@ function CheckoutPage() {
           </div>
 
           {/* Payment method */}
-          <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
             <h2 className="text-sm uppercase tracking-widest font-medium mb-4 inline-flex items-center gap-2">
               <CreditCard className="size-4 text-accent" /> Payment method
             </h2>
@@ -287,7 +288,8 @@ function CheckoutPage() {
         </div>
 
         <aside>
-          <div className="bg-card border border-border rounded-2xl p-6 sticky top-24">
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24">
+
             <h2 className="text-lg font-medium mb-6">Summary</h2>
             <ul className="space-y-3 mb-5">
               {detailed.map((i) => (
