@@ -25,6 +25,7 @@ type ProductRow = {
   price: number | string; rating: number | string; reviews: number;
   image: string | null; description: string | null; in_stock: boolean;
   discount: number | null; sort_order: number; featured: boolean;
+  sku: string | null; stock_quantity: number; low_stock_threshold: number;
 };
 
 type PromoRow = {
