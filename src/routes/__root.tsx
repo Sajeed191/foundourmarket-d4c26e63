@@ -139,6 +139,7 @@ function RootComponent() {
                   <Footer />
                   <MobileBottomNav />
                   <CompareTray />
+                  <InstallPrompt />
                 </div>
               </CartProvider>
             </RegionProvider>
