@@ -349,13 +349,14 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
 
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="bg-card border border-border rounded-2xl p-5">
-      <div className="flex items-center gap-2 text-muted-foreground mb-3">
-        {icon}
-        <span className="text-[10px] font-mono uppercase tracking-[0.3em]">{label}</span>
+    <div className="card-premium relative overflow-hidden rounded-2xl p-5 group">
+      <div className="absolute -top-12 -right-12 size-32 rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(24px)" }} />
+      <div className="relative flex items-center gap-2 mb-3">
+        <span className="grid place-items-center size-7 rounded-lg bg-accent/10 border border-accent/20 text-accent">{icon}</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
       </div>
-      <p className="text-2xl font-display font-semibold">{value}</p>
-      {sub && <div className="mt-2">{sub}</div>}
+      <p className="relative text-3xl font-display font-semibold tabular-nums tracking-tight">{value}</p>
+      {sub && <div className="relative mt-2">{sub}</div>}
     </div>
   );
 }
