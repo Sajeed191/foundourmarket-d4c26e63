@@ -847,7 +847,7 @@ function VariantManager({ slug }: { slug: string }) {
   }
 
   async function update(id: string, patch: Record<string, any>) {
-    await supabase.from("product_variants").update(patch).eq("id", id);
+    await (supabase.from("product_variants") as any).update(patch).eq("id", id);
     load();
   }
 
