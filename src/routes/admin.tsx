@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateProducts } from "@/lib/use-products";
@@ -281,6 +281,7 @@ function AdminPage() {
 
 function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     slug: row?.slug ?? "",
@@ -345,7 +346,38 @@ function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | 
           <Field label="Rating" type="number" value={form.rating} onChange={(v) => setForm({ ...form, rating: v })} />
           <Field label="Reviews" type="number" value={String(form.reviews)} onChange={(v) => setForm({ ...form, reviews: Number(v) || 0 })} />
           <div className="col-span-2">
-            <Field label="Image URL or filename (e.g. product-earbuds.jpg)" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
+            <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Image</label>
+            <div className="flex gap-3 items-start">
+              <div className="size-20 rounded-lg overflow-hidden bg-background border border-border shrink-0 grid place-items-center">
+                {form.image ? (
+                  <img src={form.image.startsWith("http") ? form.image : form.image} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <Package className="size-5 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input type="text" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  placeholder="Paste URL or upload below"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                <label className="inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-border text-[10px] font-mono uppercase tracking-widest hover:bg-white/5 transition-colors">
+                  {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+                  {uploading ? "Uploading…" : "Upload Image"}
+                  <input type="file" accept="image/*" className="hidden" disabled={uploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true); setError(null);
+                      const ext = file.name.split(".").pop() ?? "jpg";
+                      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                      const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+                      if (upErr) { setError(upErr.message); setUploading(false); return; }
+                      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+                      setForm((f) => ({ ...f, image: data.publicUrl }));
+                      setUploading(false);
+                    }} />
+                </label>
+              </div>
+            </div>
           </div>
           <div className="col-span-2">
             <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Description</label>
