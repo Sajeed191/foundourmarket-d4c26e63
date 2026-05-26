@@ -22,6 +22,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Overview",
     items: [
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/admin-live", label: "Live activity", icon: Activity },
       { to: "/admin-analytics", label: "Analytics", icon: BarChart3 },
       { to: "/admin-financial", label: "Financial", icon: Wallet, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-traffic", label: "Traffic", icon: Globe, roles: ["admin", "super_admin", "manager"] },
