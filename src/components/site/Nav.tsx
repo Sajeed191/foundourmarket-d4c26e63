@@ -135,6 +135,7 @@ export function Nav() {
                 <li><Link to={user ? "/account" : "/auth"} onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">{user ? "My Account" : "Sign In"}</Link></li>
                 <li><Link to="/wishlist" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Wishlist · {wishSlugs.size}</Link></li>
                 <li><Link to="/cart" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Cart · {count}</Link></li>
+                {isAdmin && <li><Link to="/admin" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium text-accent hover:bg-white/5">Admin Panel</Link></li>}
               </ul>
             </div>
             <div className="px-5 py-4 border-t border-border flex justify-center">
