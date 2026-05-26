@@ -26,6 +26,7 @@ function ProductPage() {
   const { format } = useRegion();
   const { add } = useCart();
   const { record } = useRecentlyViewed();
+  const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
