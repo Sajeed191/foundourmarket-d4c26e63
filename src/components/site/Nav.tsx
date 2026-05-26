@@ -8,6 +8,7 @@ import { SearchCommand } from "@/components/site/SearchCommand";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
 import { supabase } from "@/integrations/supabase/client";
+import logoSrc from "@/assets/logo.jpeg";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
 
@@ -61,8 +62,10 @@ export function Nav() {
               <Menu className="size-5" />
             </button>
 
-            <Link to="/" className="text-base sm:text-lg font-display tracking-tight font-semibold whitespace-nowrap flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-accent shadow-[0_0_12px_var(--color-accent)] animate-glow" aria-hidden />
+            <Link to="/" className="text-base sm:text-lg font-display tracking-tight font-semibold whitespace-nowrap flex items-center gap-2">
+              <span className="relative inline-grid place-items-center size-8 rounded-xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_18px_-4px_var(--color-accent)]">
+                <img src={logoSrc} alt="FoundOurMarket logo" className="size-8 object-cover" />
+              </span>
               FoundOurMarket<span className="text-accent">™</span>
             </Link>
 
@@ -115,7 +118,8 @@ export function Nav() {
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-[82%] max-w-xs bg-background border-r border-border flex flex-col animate-slide-in-right" style={{ animationName: "slide-in-left" }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <Link to="/" onClick={() => setOpen(false)} className="text-base font-display tracking-tighter uppercase font-semibold">
+              <Link to="/" onClick={() => setOpen(false)} className="text-base font-display tracking-tighter uppercase font-semibold flex items-center gap-2">
+                <img src={logoSrc} alt="FoundOurMarket logo" className="size-7 rounded-lg object-cover ring-1 ring-white/10" />
                 FoundOurMarket<span className="text-accent">™</span>
               </Link>
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="size-9 rounded-full grid place-items-center hover:bg-white/5">
