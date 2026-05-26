@@ -61,8 +61,9 @@ function AdminPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .in("role", ["admin", "manager", "support", "fulfillment"])
+      .then(({ data }) => setIsAdmin(!!data && data.length > 0));
   }, [user]);
 
   useEffect(() => {
