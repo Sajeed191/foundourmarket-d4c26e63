@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap } from "lucide-react";
+import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap, Flame } from "lucide-react";
 import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
@@ -92,10 +92,21 @@ function Home() {
     [products]
   );
 
+  const trending = useMemo(
+    () => [...products].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0)).slice(0, 4),
+    [products]
+  );
+
+  const newArrivals = useMemo(
+    () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")).slice(0, 8),
+    [products]
+  );
+
   const bestSellers = useMemo(
     () => [...products].sort((a, b) => (b.rating * b.reviews) - (a.rating * a.reviews)).slice(0, 4),
     [products]
   );
+
 
   const dealProducts = useMemo(
     () => products.filter((p) => (p.discount ?? 0) > 0).slice(0, 4),
@@ -305,6 +316,49 @@ function Home() {
         </section>
       )}
 
+      {/* Trending Now */}
+      {trending.length > 0 && (
+        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
+                <Flame className="size-3" /> Hot Right Now
+              </p>
+              <h2 className="text-fluid-2xl font-display tracking-tight">Trending Products</h2>
+            </div>
+            <Link to="/search" className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
+              See All
+            </Link>
+          </Reveal>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            {trending.map((p, i) => (
+              <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* New Arrivals */}
+      {newArrivals.length > 0 && (
+        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
+                <Sparkles className="size-3" /> Just Landed
+              </p>
+              <h2 className="text-fluid-2xl font-display tracking-tight">New Arrivals</h2>
+            </div>
+            <Link to="/search" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
+              View All
+            </Link>
+          </Reveal>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            {newArrivals.map((p, i) => (
+              <Reveal key={p.slug} delay={i % 4}><ProductCard product={p} /></Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
@@ -328,25 +382,7 @@ function Home() {
         </section>
       )}
 
-      {/* New Arrivals */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
-              <Sparkles className="size-3" /> Curated
-            </p>
-            <h2 className="text-fluid-2xl font-display tracking-tight">New Arrivals</h2>
-          </div>
-          <Link to="/search" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-            View All
-          </Link>
-        </Reveal>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-          {products.filter((p) => !p.featured).slice(0, 8).map((p, i) => (
-            <Reveal key={p.slug} delay={i % 4}><ProductCard product={p} /></Reveal>
-          ))}
-        </div>
-      </section>
+
 
       {/* Deals strip */}
       {dealProducts.length > 0 && (
