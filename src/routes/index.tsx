@@ -9,6 +9,8 @@ import { ProductCard } from "@/components/site/ProductCard";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
+import { PromoBannerCarousel } from "@/components/site/PromoBannerCarousel";
+
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
