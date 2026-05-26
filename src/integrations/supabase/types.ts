@@ -118,18 +118,21 @@ export type Database = {
       }
       carts: {
         Row: {
+          abandoned_cart_sent_at: string | null
           created_at: string
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          abandoned_cart_sent_at?: string | null
           created_at?: string
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          abandoned_cart_sent_at?: string | null
           created_at?: string
           id?: string
           updated_at?: string
@@ -167,6 +170,93 @@ export type Database = {
           slug?: string
           sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          id: string
+          payload: Json | null
+          provider: string
+          provider_message_id: string | null
+          recipient: string
+          related_order_id: string | null
+          status: string
+          subject: string | null
+          template: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          provider?: string
+          provider_message_id?: string | null
+          recipient: string
+          related_order_id?: string | null
+          status?: string
+          subject?: string | null
+          template: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          provider?: string
+          provider_message_id?: string | null
+          recipient?: string
+          related_order_id?: string | null
+          status?: string
+          subject?: string | null
+          template?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_preferences: {
+        Row: {
+          abandoned_cart: boolean
+          created_at: string
+          marketing: boolean
+          order_updates: boolean
+          product_news: boolean
+          return_updates: boolean
+          shipping_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abandoned_cart?: boolean
+          created_at?: string
+          marketing?: boolean
+          order_updates?: boolean
+          product_news?: boolean
+          return_updates?: boolean
+          shipping_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abandoned_cart?: boolean
+          created_at?: string
+          marketing?: boolean
+          order_updates?: boolean
+          product_news?: boolean
+          return_updates?: boolean
+          shipping_updates?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
