@@ -397,6 +397,40 @@ function Home() {
 
       
 
+      {/* Live Marketplace Stats */}
+      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-10 sm:mb-14">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
+          </p>
+          <h2 className="text-fluid-2xl font-display tracking-tight">A global engine, in motion.</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {[
+            { icon: Globe2, value: 180, suffix: "+", label: "Countries served" },
+            { icon: Users, value: 48230, suffix: "", label: "Active shoppers" },
+            { icon: Package, value: 2412, suffix: "", label: "Products available" },
+            { icon: ShoppingBag, value: 17, suffix: "/min", label: "Orders right now" },
+          ].map((s, i) => (
+            <Reveal key={s.label} delay={i}>
+              <div className="group relative glass-strong rounded-2xl p-5 sm:p-7 h-full overflow-hidden">
+                <div aria-hidden className="absolute -top-12 -right-12 size-40 rounded-full opacity-40 group-hover:opacity-70 transition-opacity blur-2xl" style={{ background: "var(--gradient-ember-soft)" }} />
+                <div className="relative flex items-center justify-between mb-5">
+                  <div className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center ring-1 ring-accent/20">
+                    <s.icon className="size-4" />
+                  </div>
+                  <Zap className="size-3.5 text-accent/60 animate-glow" />
+                </div>
+                <div className="relative text-3xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">
+                  <AnimatedCounter to={s.value} suffix={s.suffix} />
+                </div>
+                <div className="relative text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-2">{s.label}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       {/* Why Choose Us */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
         <Reveal className="text-center mb-12 sm:mb-16">
