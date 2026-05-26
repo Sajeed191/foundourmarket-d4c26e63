@@ -506,3 +506,64 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
     </div>
   );
 }
+
+function CategoryEditor({ row, nextSort, onClose, onSaved }: { row: Category | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    slug: row?.slug ?? "",
+    name: row?.name ?? "",
+    description: row?.description ?? "",
+    image: row?.image ?? "",
+    sort_order: row?.sort_order ?? nextSort,
+  });
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setError(null);
+    const payload = {
+      slug: form.slug.trim().toLowerCase(),
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      image: form.image.trim() || null,
+      sort_order: Number(form.sort_order) || 0,
+    };
+    const { error } = row
+      ? await supabase.from("categories").update(payload).eq("id", row.id)
+      : await supabase.from("categories").insert(payload);
+    setSaving(false);
+    if (error) { setError(error.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+      <form onSubmit={save} onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-card border border-border rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-display">{row ? "Edit Category" : "New Category"}</h2>
+          <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Slug" required value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} />
+          <Field label="Name" required value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+          <Field label="Sort Order" type="number" value={String(form.sort_order)} onChange={(v) => setForm({ ...form, sort_order: Number(v) || 0 })} />
+          <Field label="Image URL" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
+          <div className="col-span-2">
+            <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Description</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+        {error && <p className="text-xs text-red-400 mt-4">{error}</p>}
+        <div className="flex justify-end gap-2 mt-6">
+          <button type="button" onClick={onClose} className="px-5 py-2 rounded-full text-xs uppercase tracking-widest border border-border hover:bg-white/5">Cancel</button>
+          <button type="submit" disabled={saving} className="px-5 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+}
