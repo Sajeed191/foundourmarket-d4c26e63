@@ -23,7 +23,7 @@ type ProductRow = {
   id: string; slug: string; name: string; tagline: string | null; category: string;
   price: number | string; rating: number | string; reviews: number;
   image: string | null; description: string | null; in_stock: boolean;
-  discount: number | null; sort_order: number;
+  discount: number | null; sort_order: number; featured: boolean;
 };
 
 const STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
@@ -242,9 +242,13 @@ function AdminPage() {
                       <td className="px-5 py-3 text-xs text-muted-foreground capitalize">{p.category}</td>
                       <td className="px-5 py-3 text-right font-mono text-accent">${Number(p.price).toFixed(2)}</td>
                       <td className="px-5 py-3 text-right">
-                        <span className={`text-[10px] font-mono uppercase tracking-widest ${p.in_stock ? "text-accent" : "text-muted-foreground"}`}>
-                          {p.in_stock ? "In stock" : "Out"}
-                        </span>
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {p.featured && <span className="text-[9px] font-mono uppercase tracking-widest bg-foreground/10 text-foreground px-2 py-0.5 rounded-full">Featured</span>}
+                          {p.discount && <span className="text-[9px] font-mono uppercase tracking-widest bg-accent/15 text-accent px-2 py-0.5 rounded-full">Sale −{p.discount}%</span>}
+                          <span className={`text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full ${p.in_stock ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"}`}>
+                            {p.in_stock ? "In stock" : "Out"}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -379,6 +383,7 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
     rating: row ? String(row.rating) : "5",
     reviews: row?.reviews ?? 0,
     sort_order: row?.sort_order ?? nextSort,
+    featured: row?.featured ?? false,
   });
 
   async function save(e: React.FormEvent) {
@@ -397,6 +402,7 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
       rating: Number(form.rating) || 0,
       reviews: Number(form.reviews) || 0,
       sort_order: Number(form.sort_order) || 0,
+      featured: form.featured,
     };
     const { error } = row
       ? await supabase.from("products").update(payload).eq("id", row.id)
@@ -467,10 +473,15 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
               className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
           </div>
-          <label className="flex items-center gap-2 text-sm col-span-2">
+          <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.in_stock} onChange={(e) => setForm({ ...form, in_stock: e.target.checked })}
               className="accent-[var(--accent)]" />
             In stock
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+              className="accent-[var(--accent)]" />
+            Featured
           </label>
         </div>
         {error && <p className="text-xs text-red-400 mt-4">{error}</p>}
