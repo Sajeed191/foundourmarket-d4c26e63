@@ -29,7 +29,7 @@ export async function track(event: string, opts: {
       referrer: document.referrer || null,
       product_slug: opts.productSlug ?? null,
       value: opts.value ?? null,
-      metadata: opts.metadata ?? {},
+      metadata: (opts.metadata ?? {}) as never,
     });
   } catch {
     // swallow analytics errors
