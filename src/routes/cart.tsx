@@ -18,11 +18,11 @@ function CartPage() {
 
   if (count === 0 && savedDetailed.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-32 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-32 text-center">
         <div className="size-16 mx-auto mb-6 grid place-items-center rounded-full bg-card border border-border">
           <ShoppingBag className="size-6 text-muted-foreground" />
         </div>
-        <h1 className="text-3xl font-display mb-3">Your cart is empty</h1>
+        <h1 className="text-2xl sm:text-3xl font-display mb-3">Your cart is empty</h1>
         <p className="text-muted-foreground mb-8">Add a few things you love.</p>
         <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-accent-foreground text-xs uppercase tracking-widest font-bold">
           Browse Products <ArrowRight className="size-3.5" />
@@ -31,10 +31,12 @@ function CartPage() {
     );
   }
 
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-16">
-      <h1 className="text-3xl md:text-5xl font-display font-semibold mb-12">Your Cart</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-16">
+      <h1 className="text-fluid-2xl font-display font-semibold mb-8 sm:mb-12">Your Cart</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+
         <div className="lg:col-span-2 space-y-4">
           {detailed.length === 0 ? (
             <div className="bg-card border border-border rounded-2xl p-10 text-center">
@@ -120,7 +122,7 @@ function CartPage() {
         </div>
 
         <aside className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-2xl p-6 sticky top-24">
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24">
             <h2 className="text-lg font-medium mb-6">Order Summary</h2>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{format(subtotalUSD)}</dd></div>
@@ -146,6 +148,22 @@ function CartPage() {
         eyebrow="You might also need"
         limit={8}
       />
+
+      {/* Sticky mobile checkout bar */}
+      {count > 0 && (
+        <div className="lg:hidden fixed bottom-16 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Total</p>
+              <p className="font-mono text-base text-accent leading-tight truncate">{format(total)}</p>
+            </div>
+            <Link to="/checkout" className="bg-accent text-accent-foreground font-bold px-5 py-3 rounded-full text-[11px] uppercase tracking-widest inline-flex items-center gap-2 whitespace-nowrap">
+              Checkout <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
