@@ -540,16 +540,60 @@ function FooterAction({ icon: Icon, label, to }: { icon: typeof Package; label: 
   );
 }
 
-function EmptyState({ title, body, cta, extra }: { title: string; body: string; cta?: React.ReactNode; extra?: React.ReactNode }) {
+function EmptyState({ icon: Icon = Star, title, body, cta, extra }: { icon?: typeof Package; title: string; body: string; cta?: React.ReactNode; extra?: React.ReactNode }) {
   return (
-    <div className="bg-card border border-dashed border-border rounded-2xl p-7 sm:p-10 flex flex-col items-center text-center">
-      <div className="size-12 rounded-2xl bg-accent/10 text-accent grid place-items-center mb-4">
-        <Star className="size-5" />
+    <div className="bg-card border border-dashed border-border rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center">
+      <div className="size-10 rounded-xl bg-accent/10 text-accent grid place-items-center mb-3">
+        <Icon className="size-[18px]" />
       </div>
       <p className="text-sm font-medium">{title}</p>
-      <p className="text-xs text-muted-foreground mt-1.5 max-w-xs">{body}</p>
-      {cta && <div className="mt-5">{cta}</div>}
+      <p className="text-xs text-muted-foreground mt-1 max-w-xs">{body}</p>
+      {cta && <div className="mt-4">{cta}</div>}
       {extra}
+    </div>
+  );
+}
+
+function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: string; image: string; price: number; tagline?: string }>; format: (n: number) => string }) {
+  const { add } = useCart();
+  const { has, toggle } = useWishlist();
+  return (
+    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
+      {items.map((p) => {
+        const saved = has(p.slug);
+        return (
+          <div
+            key={p.slug}
+            className="snap-start shrink-0 w-[150px] sm:w-[160px] group bg-card border border-border rounded-xl p-2 hover:border-accent/40 transition-colors"
+          >
+            <Link to="/products/$slug" params={{ slug: p.slug }} className="block relative">
+              <div className="aspect-square rounded-lg overflow-hidden bg-black/40">
+                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              </div>
+              <button
+                onClick={(e) => { e.preventDefault(); toggle(p.slug); }}
+                aria-label={saved ? "Remove from wishlist" : "Save"}
+                className={`absolute top-1.5 right-1.5 size-6 grid place-items-center rounded-full bg-black/50 backdrop-blur-md ${saved ? "text-accent" : "text-white/70 hover:text-accent"}`}
+              >
+                <Heart className={`size-3 ${saved ? "fill-accent" : ""}`} />
+              </button>
+            </Link>
+            <div className="px-0.5 pt-2 pb-1">
+              <p className="text-[11.5px] font-medium truncate">{p.name}</p>
+              <div className="mt-1 flex items-center justify-between gap-1">
+                <span className="font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
+                <button
+                  onClick={() => add(p.slug)}
+                  aria-label="Add to cart"
+                  className="size-6 grid place-items-center rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors text-[10px] font-bold"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
