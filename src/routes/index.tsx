@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Shield, Truck, Headset, ArrowRight, Star } from "lucide-react";
-import { CATEGORIES } from "@/lib/products";
+import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/")({
