@@ -16,6 +16,7 @@ import { WishlistProvider } from "@/lib/wishlist";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
+import { CompareTray } from "@/components/site/CompareTray";
 
 function NotFoundComponent() {
   return (
