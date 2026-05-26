@@ -40,6 +40,18 @@ function SearchPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const q = (search.q ?? "").trim();
+    if (q) {
+      try {
+        const raw = localStorage.getItem("fom_search_history");
+        const arr: { q: string; ts: number }[] = raw ? JSON.parse(raw) : [];
+        const next = [{ q, ts: Date.now() }, ...arr.filter((x) => x.q !== q)].slice(0, 20);
+        localStorage.setItem("fom_search_history", JSON.stringify(next));
+      } catch { /* ignore */ }
+    }
+  }, [search.q]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     (supabase.rpc as any)("search_products", {

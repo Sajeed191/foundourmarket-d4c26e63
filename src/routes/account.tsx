@@ -226,6 +226,7 @@ function AccountPage() {
             <ActionCard to="/account/addresses" icon={MapPin} title="Addresses" subtitle="Shipping & billing" />
             <ActionCard to="/account/notifications" icon={Bell} title="Notifications" subtitle="Inbox & alerts" badge={unread} />
             <ActionCard to="/account/recently-viewed" icon={Eye} title="Recently viewed" subtitle="Pick up where you left" badge={recentSlugs.length || undefined} />
+            <ActionCard to="/account/history" icon={Clock} title="History" subtitle="Activity timeline" />
             <ActionCard to="/account/security" icon={Shield} title="Security" subtitle="Password & sessions" />
             <ActionCard to="/help" icon={HelpCircle} title="Help center" subtitle="Guides & FAQ" />
           </div>

@@ -48,6 +48,7 @@ import { Route as AccountRecentlyViewedRouteImport } from './routes/account.rece
 import { Route as AccountPreferencesRouteImport } from './routes/account.preferences'
 import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AccountNotificationsRouteImport } from './routes/account.notifications'
+import { Route as AccountHistoryRouteImport } from './routes/account.history'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -245,6 +246,11 @@ const AccountNotificationsRoute = AccountNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountHistoryRoute = AccountHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AccountRoute,
+} as any)
 const AccountAddressesRoute = AccountAddressesRouteImport.update({
   id: '/addresses',
   path: '/addresses',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
+  '/account/history': typeof AccountHistoryRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
+  '/account/history': typeof AccountHistoryRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
+  '/account/history': typeof AccountHistoryRoute
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/wishlist'
     | '/account/addresses'
+    | '/account/history'
     | '/account/notifications'
     | '/account/orders'
     | '/account/preferences'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/wishlist'
     | '/account/addresses'
+    | '/account/history'
     | '/account/notifications'
     | '/account/orders'
     | '/account/preferences'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/wishlist'
     | '/account/addresses'
+    | '/account/history'
     | '/account/notifications'
     | '/account/orders'
     | '/account/preferences'
@@ -817,6 +829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountNotificationsRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/history': {
+      id: '/account/history'
+      path: '/history'
+      fullPath: '/account/history'
+      preLoaderRoute: typeof AccountHistoryRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/account/addresses': {
       id: '/account/addresses'
       path: '/addresses'
@@ -829,6 +848,7 @@ declare module '@tanstack/react-router' {
 
 interface AccountRouteChildren {
   AccountAddressesRoute: typeof AccountAddressesRoute
+  AccountHistoryRoute: typeof AccountHistoryRoute
   AccountNotificationsRoute: typeof AccountNotificationsRoute
   AccountOrdersRoute: typeof AccountOrdersRoute
   AccountPreferencesRoute: typeof AccountPreferencesRoute
@@ -839,6 +859,7 @@ interface AccountRouteChildren {
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountAddressesRoute: AccountAddressesRoute,
+  AccountHistoryRoute: AccountHistoryRoute,
   AccountNotificationsRoute: AccountNotificationsRoute,
   AccountOrdersRoute: AccountOrdersRoute,
   AccountPreferencesRoute: AccountPreferencesRoute,
