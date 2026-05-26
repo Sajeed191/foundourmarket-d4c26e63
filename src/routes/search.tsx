@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { resolveImage, type Product } from "@/lib/products";
 import { useCategories } from "@/lib/use-categories";
-import { useProducts } from "@/lib/use-products";
-
 import { ProductCard } from "@/components/site/ProductCard";
 
 type SearchParams = { q?: string; cat?: string; sort?: string; min?: number; max?: number; stock?: string };
@@ -23,8 +23,8 @@ export const Route = createFileRoute("/search")({
 
 const SORTS = [
   { value: "relevance", label: "Relevance" },
-  { value: "price-asc", label: "Price: Low → High" },
-  { value: "price-desc", label: "Price: High → Low" },
+  { value: "price_asc", label: "Price: Low → High" },
+  { value: "price_desc", label: "Price: High → Low" },
   { value: "rating", label: "Top Rated" },
   { value: "newest", label: "Newest" },
 ];
@@ -32,30 +32,39 @@ const SORTS = [
 function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
-  const { products, loading } = useProducts();
   const { categories } = useCategories();
 
   const [query, setQuery] = useState(search.q ?? "");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const results = useMemo(() => {
-    const q = (search.q ?? "").trim().toLowerCase();
-    let r = products.filter((p) => {
-      if (search.cat && p.category !== search.cat) return false;
-      if (search.stock === "in" && !p.inStock) return false;
-      if (search.min != null && p.price < search.min) return false;
-      if (search.max != null && p.price > search.max) return false;
-      if (q && !(`${p.name} ${p.tagline} ${p.description} ${p.category}`.toLowerCase().includes(q))) return false;
-      return true;
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (supabase.rpc as any)("search_products", {
+      q: search.q ?? null,
+      category_filter: search.cat ?? null,
+      min_price: search.min ?? null,
+      max_price: search.max ?? null,
+      min_rating: null,
+      sort_by: search.sort ?? "relevance",
+      page_limit: 60,
+      page_offset: 0,
+    }).then(({ data }: { data: any[] | null }) => {
+      if (cancelled) return;
+      let rows = data ?? [];
+      if (search.stock === "in") rows = rows.filter((r: any) => r.in_stock);
+      setResults(rows.map((r: any) => ({
+        slug: r.slug, name: r.name, tagline: r.tagline ?? "", category: r.category,
+        price: Number(r.price), rating: Number(r.rating), reviews: r.reviews,
+        image: resolveImage(r.image), description: r.description ?? "",
+        inStock: r.in_stock, discount: r.discount ?? undefined, featured: r.featured ?? false,
+      })));
+      setLoading(false);
     });
-    switch (search.sort) {
-      case "price-asc": r = [...r].sort((a, b) => a.price - b.price); break;
-      case "price-desc": r = [...r].sort((a, b) => b.price - a.price); break;
-      case "rating": r = [...r].sort((a, b) => b.rating - a.rating); break;
-      case "newest": r = [...r].reverse(); break;
-    }
-    return r;
-  }, [products, search]);
+    return () => { cancelled = true; };
+  }, [search.q, search.cat, search.min, search.max, search.sort, search.stock]);
 
   function update(patch: Partial<SearchParams>) {
     nav({ search: (prev: SearchParams) => ({ ...prev, ...patch }), replace: true });
