@@ -150,6 +150,7 @@ function AccountPage() {
       <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }} className="mb-10">
         <h2 className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-3">Quick actions</h2>
         <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
+          <QuickAction to="/account/profile" icon={UserIcon} label="Edit profile" />
           <QuickAction to="/account/addresses" icon={MapPin} label="Addresses" />
           <QuickAction to="/account/returns" icon={RotateCcw} label="Returns" />
           <QuickAction to="/account/notifications" icon={Bell} label="Inbox" badge={unread} />
