@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Shield, Truck, Headset, ArrowRight, Star } from "lucide-react";
-import { CATEGORIES } from "@/lib/products";
+import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/")({
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { products } = useProducts();
+  const { categories } = useCategories();
+
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const categoryCounts = products.reduce<Record<string, number>>((acc, p) => {
@@ -103,7 +106,7 @@ function Home() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {CATEGORIES.map((cat, i) => (
+          {categories.map((cat, i) => (
             <Link
               key={cat.slug}
               to="/category/$slug"

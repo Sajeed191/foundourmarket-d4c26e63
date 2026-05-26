@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X, Upload } from "lucide-react";
+import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X, Upload, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateProducts } from "@/lib/use-products";
-import { CATEGORIES, resolveImage } from "@/lib/products";
+import { invalidateCategories, type Category } from "@/lib/use-categories";
+import { resolveImage } from "@/lib/products";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — FoundOurMarket™" }] }),
@@ -25,7 +27,7 @@ type ProductRow = {
 };
 
 const STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
-type Tab = "overview" | "orders" | "customers" | "products";
+type Tab = "overview" | "orders" | "customers" | "products" | "categories";
 
 function AdminPage() {
   const { user, loading } = useAuth();
@@ -33,9 +35,12 @@ function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [products, setProducts] = useState<ProductRow[] | null>(null);
+  const [categories, setCategories] = useState<Category[] | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
   const [updating, setUpdating] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProductRow | "new" | null>(null);
+  const [editingCat, setEditingCat] = useState<Category | "new" | null>(null);
+
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
 
@@ -52,11 +57,17 @@ function AdminPage() {
       .order("created_at", { ascending: false }).limit(200)
       .then(({ data }) => setOrders((data as Order[]) ?? []));
     loadProducts();
+    loadCategories();
   }, [isAdmin]);
 
   async function loadProducts() {
     const { data } = await supabase.from("products").select("*").order("sort_order", { ascending: true });
     setProducts((data as ProductRow[]) ?? []);
+  }
+
+  async function loadCategories() {
+    const { data } = await supabase.from("categories").select("*").order("sort_order", { ascending: true });
+    setCategories((data as Category[]) ?? []);
   }
 
   async function updateStatus(id: string, status: string) {
@@ -72,6 +83,15 @@ function AdminPage() {
     await loadProducts();
     invalidateProducts();
   }
+
+  async function deleteCategory(id: string) {
+    if (!confirm("Delete this category? Products in it will keep their category slug.")) return;
+    await supabase.from("categories").delete().eq("id", id);
+    await loadCategories();
+    invalidateCategories();
+  }
+
+
 
   if (loading || isAdmin === null) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -120,7 +140,7 @@ function AdminPage() {
       </div>
 
       <div className="flex gap-1 mb-10 border-b border-border overflow-x-auto">
-        {(["overview", "orders", "products", "customers"] as Tab[]).map((t) => (
+        {(["overview", "orders", "products", "categories", "customers"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-3 text-xs uppercase tracking-widest font-mono transition-colors border-b-2 -mb-px whitespace-nowrap ${tab === t ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
             {t}
@@ -267,19 +287,81 @@ function AdminPage() {
         </div>
       )}
 
+      {tab === "categories" && (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-medium">Categories</h2>
+            <button onClick={() => setEditingCat("new")} className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all">
+              <Plus className="size-3.5" /> New Category
+            </button>
+          </div>
+          {categories === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
+            categories.length === 0 ? <p className="text-sm text-muted-foreground">No categories yet.</p> :
+            <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-b border-border">
+                  <tr><th className="text-left px-5 py-3">Category</th><th className="text-left px-5 py-3">Slug</th><th className="text-right px-5 py-3">Products</th><th className="text-right px-5 py-3">Order</th><th className="px-5 py-3"></th></tr>
+                </thead>
+                <tbody>
+                  {categories.map((c) => {
+                    const count = products?.filter((p) => p.category === c.slug).length ?? 0;
+                    return (
+                      <tr key={c.id} className="border-b border-border/40 last:border-0 hover:bg-white/[0.02]">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="size-9 rounded-lg overflow-hidden bg-background border border-border shrink-0 grid place-items-center">
+                              {c.image ? <img src={c.image} alt="" className="w-full h-full object-cover" /> : <Tag className="size-4 text-muted-foreground" />}
+                            </div>
+                            <p className="text-sm">{c.name}</p>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-xs font-mono text-muted-foreground">{c.slug}</td>
+                        <td className="px-5 py-3 text-right font-mono text-xs">{count}</td>
+                        <td className="px-5 py-3 text-right font-mono text-xs text-muted-foreground">{c.sort_order}</td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => setEditingCat(c)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 transition-colors" aria-label="Edit">
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button onClick={() => deleteCategory(c.id)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 hover:text-accent transition-colors" aria-label="Delete">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          }
+        </>
+      )}
+
       {editing && (
         <ProductEditor
           row={editing === "new" ? null : editing}
           nextSort={(products?.length ?? 0) + 1}
+          categories={categories ?? []}
           onClose={() => setEditing(null)}
           onSaved={async () => { setEditing(null); await loadProducts(); invalidateProducts(); }}
+        />
+      )}
+
+      {editingCat && (
+        <CategoryEditor
+          row={editingCat === "new" ? null : editingCat}
+          nextSort={(categories?.length ?? 0) + 1}
+          onClose={() => setEditingCat(null)}
+          onSaved={async () => { setEditingCat(null); await loadCategories(); invalidateCategories(); }}
         />
       )}
     </div>
   );
 }
 
-function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+
+function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: ProductRow | null; nextSort: number; categories: Category[]; onClose: () => void; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -287,7 +369,8 @@ function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | 
     slug: row?.slug ?? "",
     name: row?.name ?? "",
     tagline: row?.tagline ?? "",
-    category: row?.category ?? CATEGORIES[0].slug,
+    category: row?.category ?? categories[0]?.slug ?? "",
+
     price: row ? String(row.price) : "0",
     image: row?.image ?? "",
     description: row?.description ?? "",
@@ -338,7 +421,7 @@ function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | 
             <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Category</label>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
-              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
             </select>
           </div>
           <Field label="Price (USD)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
@@ -420,6 +503,65 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
         <span className="text-accent">{icon}</span>
       </div>
       <p className="text-2xl font-display font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function CategoryEditor({ row, nextSort, onClose, onSaved }: { row: Category | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    slug: row?.slug ?? "",
+    name: row?.name ?? "",
+    description: row?.description ?? "",
+    image: row?.image ?? "",
+    sort_order: row?.sort_order ?? nextSort,
+  });
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setError(null);
+    const payload = {
+      slug: form.slug.trim().toLowerCase(),
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      image: form.image.trim() || null,
+      sort_order: Number(form.sort_order) || 0,
+    };
+    const { error } = row
+      ? await supabase.from("categories").update(payload).eq("id", row.id)
+      : await supabase.from("categories").insert(payload);
+    setSaving(false);
+    if (error) { setError(error.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+      <form onSubmit={save} onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-card border border-border rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-display">{row ? "Edit Category" : "New Category"}</h2>
+          <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Slug" required value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} />
+          <Field label="Name" required value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+          <Field label="Sort Order" type="number" value={String(form.sort_order)} onChange={(v) => setForm({ ...form, sort_order: Number(v) || 0 })} />
+          <Field label="Image URL" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
+          <div className="col-span-2">
+            <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Description</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+        {error && <p className="text-xs text-red-400 mt-4">{error}</p>}
+        <div className="flex justify-end gap-2 mt-6">
+          <button type="button" onClick={onClose} className="px-5 py-2 rounded-full text-xs uppercase tracking-widest border border-border hover:bg-white/5">Cancel</button>
+          <button type="submit" disabled={saving} className="px-5 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

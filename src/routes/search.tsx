@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
-import { CATEGORIES } from "@/lib/products";
+import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+
 import { ProductCard } from "@/components/site/ProductCard";
 
 type SearchParams = { q?: string; cat?: string; sort?: string; min?: number; max?: number; stock?: string };
@@ -32,6 +33,8 @@ function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
   const { products, loading } = useProducts();
+  const { categories } = useCategories();
+
   const [query, setQuery] = useState(search.q ?? "");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -108,7 +111,7 @@ function SearchPage() {
             <div className="space-y-1.5">
               <button onClick={() => update({ cat: undefined })}
                 className={`block text-sm hover:text-accent transition-colors ${!search.cat ? "text-accent" : "text-foreground"}`}>All</button>
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button key={c.slug} onClick={() => update({ cat: c.slug })}
                   className={`block text-sm hover:text-accent transition-colors ${search.cat === c.slug ? "text-accent" : "text-foreground"}`}>{c.name}</button>
               ))}
