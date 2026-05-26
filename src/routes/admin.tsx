@@ -287,17 +287,79 @@ function AdminPage() {
         </div>
       )}
 
+      {tab === "categories" && (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-medium">Categories</h2>
+            <button onClick={() => setEditingCat("new")} className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all">
+              <Plus className="size-3.5" /> New Category
+            </button>
+          </div>
+          {categories === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
+            categories.length === 0 ? <p className="text-sm text-muted-foreground">No categories yet.</p> :
+            <div className="overflow-x-auto bg-card border border-border rounded-2xl">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-b border-border">
+                  <tr><th className="text-left px-5 py-3">Category</th><th className="text-left px-5 py-3">Slug</th><th className="text-right px-5 py-3">Products</th><th className="text-right px-5 py-3">Order</th><th className="px-5 py-3"></th></tr>
+                </thead>
+                <tbody>
+                  {categories.map((c) => {
+                    const count = products?.filter((p) => p.category === c.slug).length ?? 0;
+                    return (
+                      <tr key={c.id} className="border-b border-border/40 last:border-0 hover:bg-white/[0.02]">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="size-9 rounded-lg overflow-hidden bg-background border border-border shrink-0 grid place-items-center">
+                              {c.image ? <img src={c.image} alt="" className="w-full h-full object-cover" /> : <Tag className="size-4 text-muted-foreground" />}
+                            </div>
+                            <p className="text-sm">{c.name}</p>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-xs font-mono text-muted-foreground">{c.slug}</td>
+                        <td className="px-5 py-3 text-right font-mono text-xs">{count}</td>
+                        <td className="px-5 py-3 text-right font-mono text-xs text-muted-foreground">{c.sort_order}</td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => setEditingCat(c)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 transition-colors" aria-label="Edit">
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button onClick={() => deleteCategory(c.id)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 hover:text-accent transition-colors" aria-label="Delete">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          }
+        </>
+      )}
+
       {editing && (
         <ProductEditor
           row={editing === "new" ? null : editing}
           nextSort={(products?.length ?? 0) + 1}
+          categories={categories ?? []}
           onClose={() => setEditing(null)}
           onSaved={async () => { setEditing(null); await loadProducts(); invalidateProducts(); }}
+        />
+      )}
+
+      {editingCat && (
+        <CategoryEditor
+          row={editingCat === "new" ? null : editingCat}
+          nextSort={(categories?.length ?? 0) + 1}
+          onClose={() => setEditingCat(null)}
+          onSaved={async () => { setEditingCat(null); await loadCategories(); invalidateCategories(); }}
         />
       )}
     </div>
   );
 }
+
 
 function ProductEditor({ row, nextSort, onClose, onSaved }: { row: ProductRow | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);
