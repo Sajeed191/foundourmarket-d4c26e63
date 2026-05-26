@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X, Upload } from "lucide-react";
+import { Loader2, ShieldAlert, TrendingUp, ShoppingBag, Users, Package, Plus, Pencil, Trash2, X, Upload, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateProducts } from "@/lib/use-products";
-import { CATEGORIES, resolveImage } from "@/lib/products";
+import { invalidateCategories, type Category } from "@/lib/use-categories";
+import { resolveImage } from "@/lib/products";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — FoundOurMarket™" }] }),
