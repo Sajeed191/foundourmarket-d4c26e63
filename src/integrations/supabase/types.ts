@@ -136,6 +136,39 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reviews: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          product_slug: string
+          rating: number
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          product_slug: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          product_slug?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -274,6 +307,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "customer"
