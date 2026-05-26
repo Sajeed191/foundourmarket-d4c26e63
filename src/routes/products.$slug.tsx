@@ -10,6 +10,7 @@ import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
 import { useCompare } from "@/hooks/use-compare";
+import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, type ProductImage, type ProductVariant } from "@/lib/products";
 
 
