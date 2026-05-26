@@ -430,7 +430,7 @@ function OverviewCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.25, ease }}
-      className={`snap-start shrink-0 w-[44%] sm:w-auto h-full relative overflow-hidden rounded-2xl p-4 sm:p-5 transition-all ${
+      className={`h-full w-full relative overflow-hidden rounded-2xl p-3.5 sm:p-5 transition-all ${
         accent
           ? "border border-accent/40 bg-gradient-to-br from-accent/15 via-card to-card shadow-[var(--shadow-glow)]"
           : "card-premium"
