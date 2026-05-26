@@ -118,7 +118,8 @@ export function Nav() {
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-[82%] max-w-xs bg-background border-r border-border flex flex-col animate-slide-in-right" style={{ animationName: "slide-in-left" }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <Link to="/" onClick={() => setOpen(false)} className="text-base font-display tracking-tighter uppercase font-semibold">
+              <Link to="/" onClick={() => setOpen(false)} className="text-base font-display tracking-tighter uppercase font-semibold flex items-center gap-2">
+                <img src={logoSrc} alt="FoundOurMarket logo" className="size-7 rounded-lg object-cover ring-1 ring-white/10" />
                 FoundOurMarket<span className="text-accent">™</span>
               </Link>
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="size-9 rounded-full grid place-items-center hover:bg-white/5">
