@@ -112,6 +112,16 @@ function ProductPage() {
               <button aria-label="Wishlist" className="size-12 grid place-items-center border border-border rounded-full hover:text-accent transition-colors">
                 <Heart className="size-4" />
               </button>
+              <button
+                aria-label={inCompare(product.slug) ? "Remove from compare" : "Add to compare"}
+                aria-pressed={inCompare(product.slug)}
+                onClick={() => toggleCompare(product.slug)}
+                disabled={!inCompare(product.slug) && compareFull}
+                title={!inCompare(product.slug) && compareFull ? "Compare list is full" : undefined}
+                className={`size-12 grid place-items-center border rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${inCompare(product.slug) ? "border-accent text-accent bg-accent/10" : "border-border hover:text-accent"}`}
+              >
+                <Scale className="size-4" />
+              </button>
             </div>
 
             <Link
