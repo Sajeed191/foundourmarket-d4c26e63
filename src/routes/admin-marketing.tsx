@@ -101,9 +101,12 @@ function MarketingPage() {
                         {b.subtitle && <p className="text-xs text-muted-foreground mt-1">{b.subtitle}</p>}
                       </div>
                       <div className="flex gap-1">
+                        <button onClick={() => moveBanner(b.id, -1)} title="Move left" className="size-8 grid place-items-center rounded-full hover:bg-white/5 disabled:opacity-30" disabled={banners.indexOf(b) === 0}><ChevronLeft className="size-3.5" /></button>
+                        <button onClick={() => moveBanner(b.id, 1)} title="Move right" className="size-8 grid place-items-center rounded-full hover:bg-white/5 disabled:opacity-30" disabled={banners.indexOf(b) === banners.length - 1}><ChevronRight className="size-3.5" /></button>
                         <button onClick={() => setEditingB(b)} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><Pencil className="size-3.5" /></button>
                         <button onClick={() => deleteBanner(b.id)} className="size-8 grid place-items-center rounded-full hover:bg-white/5 hover:text-destructive"><Trash2 className="size-3.5" /></button>
                       </div>
+
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-[10px] font-mono uppercase tracking-widest">
                       <span className={b.active ? "text-accent" : "text-muted-foreground"}>{b.active ? "Active" : "Inactive"}</span>
