@@ -10,7 +10,6 @@ import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
 
 export function Nav() {
   const { count } = useCart();
-  const { region, setRegion } = useRegion();
   const { user } = useAuth();
   const { slugs: wishSlugs } = useWishlist();
   const [open, setOpen] = useState(false);
