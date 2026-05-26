@@ -26,8 +26,14 @@ type ProductRow = {
   discount: number | null; sort_order: number; featured: boolean;
 };
 
+type PromoRow = {
+  id: string; code: string; kind: "percent" | "fixed"; value: number | string;
+  active: boolean; max_uses: number | null; uses: number;
+  min_subtotal: number | string; expires_at: string | null;
+};
+
 const STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
-type Tab = "overview" | "orders" | "customers" | "products" | "categories";
+type Tab = "overview" | "orders" | "customers" | "products" | "categories" | "promos";
 
 function AdminPage() {
   const { user, loading } = useAuth();
