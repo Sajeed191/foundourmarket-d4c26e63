@@ -24,7 +24,10 @@ export type Product = {
   sku?: string | null;
   stockQuantity: number;
   lowStockThreshold: number;
+  viewsCount: number;
+  createdAt: string;
 };
+
 
 export type ProductImage = { id: string; url: string; alt: string | null; sortOrder: number };
 export type ProductVariant = {
