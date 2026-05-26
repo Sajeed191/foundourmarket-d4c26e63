@@ -346,24 +346,6 @@ function AccountPage() {
               </div>
             </SectionBlock>
 
-            {/* Founders Club */}
-            <motion.div {...fadeUp} className="relative overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 via-card to-card p-5 sm:p-6">
-              <div className="absolute -top-16 -right-12 size-44 rounded-full bg-accent/25 blur-3xl" />
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-3">
-                  <Award className="size-4 text-accent" />
-                  <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent">Founders Club</p>
-                </div>
-                <h3 className="text-base sm:text-lg font-display font-semibold leading-snug">Earn rewards on every order.</h3>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  Loyalty perks, early drops & member-only pricing — coming soon.
-                </p>
-                <div className="mt-4 flex items-baseline gap-2">
-                  <AnimatedNumber value={Math.round(stats.spent)} className="font-mono text-2xl text-accent" />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">pts preview</span>
-                </div>
-              </div>
-            </motion.div>
           </aside>
         </div>
 
