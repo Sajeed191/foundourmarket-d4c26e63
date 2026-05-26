@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Truck, ArrowLeft, Plus, ShieldAlert } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
+import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-shipments")({
@@ -37,25 +37,11 @@ type Shipment = {
 const SHIPMENT_STATUSES = ["pending", "label_created", "picked_up", "in_transit", "out_for_delivery", "delivered", "failed"] as const;
 
 function AdminShipmentsPage() {
-  const { user, loading } = useAuth();
-  const nav = useNavigate();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [creating, setCreating] = useState<string | null>(null);
 
-  useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    void load();
-  }, [isAdmin]);
+  useEffect(() => { void load(); }, []);
 
   async function load() {
     const [{ data: o }, { data: s }] = await Promise.all([
@@ -68,14 +54,15 @@ function AdminShipmentsPage() {
 
   async function createShipment(o: Order) {
     setCreating(o.id);
-    const { error } = await supabase.from("shipments").insert({
+    const { error, data } = await supabase.from("shipments").insert({
       order_id: o.id,
       user_id: o.user_id,
       status: "pending",
-    });
+    }).select().single();
     setCreating(null);
     if (error) { toast.error(error.message); return; }
     toast.success("Shipment created");
+    logActivity("shipment_create", "shipment", (data as { id: string } | null)?.id, { order_id: o.id });
     void load();
   }
 
@@ -92,34 +79,19 @@ function AdminShipmentsPage() {
         status: patch.status,
         description: `Status updated to ${patch.status.replace(/_/g, " ")}`,
       });
+      logActivity("shipment_status", "shipment", id, { status: patch.status });
     }
     void load();
   }
 
-  if (loading || isAdmin === null) {
-    return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
-  }
-  if (!isAdmin) {
-    return (
-      <div className="max-w-md mx-auto px-6 py-24 text-center">
-        <ShieldAlert className="size-8 mx-auto text-muted-foreground mb-3" />
-        <h1 className="font-display text-2xl mb-2">Admins only</h1>
-        <Link to="/" className="text-xs uppercase tracking-widest text-accent">Back home</Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-      <Link to="/admin" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="size-3.5" /> Admin
-      </Link>
-      <h1 className="text-2xl sm:text-4xl font-display font-semibold mb-2 flex items-center gap-3">
-        <Truck className="size-7 text-accent" /> Shipments
-      </h1>
-      <p className="text-sm text-muted-foreground mb-8">Create shipments and track delivery status. Updates sync to customer order timelines.</p>
-
-      {orders === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : (
+    <AdminShell
+      title="Shipments"
+      subtitle="Create shipments and track delivery status. Updates sync to customer order timelines."
+      allow={["admin","super_admin","manager","fulfillment","warehouse_staff"]}
+    >
+      {orders === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
+        orders.length === 0 ? <p className="text-sm text-muted-foreground">No orders yet.</p> : (
         <div className="space-y-3">
           {orders.map((o) => {
             const orderShipments = shipments.filter((s) => s.order_id === o.id);
@@ -174,6 +146,6 @@ function AdminShipmentsPage() {
           })}
         </div>
       )}
-    </div>
+    </AdminShell>
   );
 }
