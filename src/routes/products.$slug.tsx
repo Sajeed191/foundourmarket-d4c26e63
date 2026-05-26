@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProduct, invalidateProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
+import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
+import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
+
 
 
 export const Route = createFileRoute("/products/$slug")({
@@ -21,7 +24,13 @@ function ProductPage() {
   const { product, loading } = useProduct(slug);
   const { format } = useRegion();
   const { add } = useCart();
+  const { record } = useRecentlyViewed();
   const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    if (product) record(product.slug);
+  }, [product?.slug, record]);
+
 
   if (loading) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -132,6 +141,9 @@ function ProductPage() {
       <ProductQA productSlug={product.slug} />
 
       <RelatedProducts product={product} />
+
+      <RecentlyViewed excludeSlug={product.slug} />
     </>
   );
 }
+
