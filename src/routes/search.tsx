@@ -33,6 +33,8 @@ function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
   const { products, loading } = useProducts();
+  const { categories } = useCategories();
+
   const [query, setQuery] = useState(search.q ?? "");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
