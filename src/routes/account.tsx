@@ -546,9 +546,9 @@ function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
 
 function InsightStat({ label, value, accent, small, truncate }: { label: string; value: string; accent?: boolean; small?: boolean; truncate?: boolean }) {
   return (
-    <div className={`rounded-xl border border-border bg-card p-3.5 ${accent ? "border-accent/30" : ""}`}>
+    <div className={`rounded-xl glass p-3.5 transition-colors hover:border-accent/30 ${accent ? "border-accent/30 bg-accent/5" : ""}`}>
       <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className={`mt-1 font-display font-semibold ${small ? "text-sm" : "text-lg"} ${accent ? "text-accent" : ""} ${truncate ? "truncate" : ""}`}>{value}</p>
+      <p className={`mt-1 font-display font-semibold tabular-nums ${small ? "text-sm" : "text-lg"} ${accent ? "text-gradient-ember" : ""} ${truncate ? "truncate" : ""}`}>{value}</p>
     </div>
   );
 }
@@ -557,10 +557,12 @@ function FooterAction({ icon: Icon, label, to }: { icon: typeof Package; label: 
   return (
     <Link
       to={to}
-      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-background/40 p-4 hover:border-accent/40 hover:text-accent transition-colors"
+      className="group flex flex-col items-center justify-center gap-2 rounded-2xl glass p-4 hover:border-accent/40 hover:text-accent hover:-translate-y-0.5 transition-all"
     >
-      <Icon className="size-4" />
-      <span className="text-xs uppercase tracking-widest">{label}</span>
+      <span className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center group-hover:bg-accent/20 transition-colors">
+        <Icon className="size-4" />
+      </span>
+      <span className="text-[11px] uppercase tracking-widest">{label}</span>
     </Link>
   );
 }
