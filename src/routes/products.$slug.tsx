@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useProduct, useProducts, invalidateProducts } from "@/lib/use-products";
+import { useProduct, invalidateProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
-import { ProductCard } from "@/components/site/ProductCard";
+import { RelatedProducts } from "@/components/site/RelatedProducts";
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
+
 
 export const Route = createFileRoute("/products/$slug")({
   head: ({ params }) => ({
@@ -18,7 +19,6 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
-  const { products } = useProducts();
   const { format } = useRegion();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
@@ -35,8 +35,6 @@ function ProductPage() {
       </div>
     );
   }
-
-  const related = products.filter((p) => p.category === product.category && p.slug !== product.slug).slice(0, 4);
 
   return (
     <>
@@ -133,14 +131,7 @@ function ProductPage() {
 
       <ProductQA productSlug={product.slug} />
 
-      {related.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 py-24">
-          <h2 className="text-2xl font-display tracking-tight mb-8">You may also like</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {related.map((p) => <ProductCard key={p.slug} product={p} />)}
-          </div>
-        </section>
-      )}
+      <RelatedProducts product={product} />
     </>
   );
 }
