@@ -151,10 +151,32 @@ function CheckoutPage() {
                 </li>
               ))}
             </ul>
+            <div className="border-t border-border pt-4 mb-4">
+              {promo ? (
+                <div className="flex items-center justify-between gap-2 bg-background border border-border rounded-full px-4 py-2">
+                  <div className="text-xs">
+                    <span className="font-mono uppercase tracking-widest text-accent">{promo.code}</span>
+                    <span className="text-muted-foreground ml-2">−{promo.kind === "percent" ? `${promo.value}%` : format(promo.value)}</span>
+                  </div>
+                  <button type="button" onClick={() => { setPromo(null); setPromoInput(""); }} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground">Remove</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code"
+                    className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent uppercase tracking-widest font-mono" />
+                  <button type="button" onClick={applyPromo} disabled={promoBusy || !promoInput.trim()}
+                    className="px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border border-border hover:bg-white/5 disabled:opacity-50 inline-flex items-center gap-1.5">
+                    {promoBusy && <Loader2 className="size-3 animate-spin" />}Apply
+                  </button>
+                </div>
+              )}
+              {promoError && <p className="text-[11px] text-destructive mt-2">{promoError}</p>}
+            </div>
             <dl className="space-y-2 text-sm border-t border-border pt-4">
               <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{format(subtotalUSD)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shipping === 0 ? "Free" : format(shipping)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="font-mono">{format(tax)}</dd></div>
+              {discount > 0 && <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="font-mono text-accent">−{format(discount)}</dd></div>}
               <div className="border-t border-border pt-2 flex justify-between text-base"><dt className="font-medium">Total</dt><dd className="font-mono text-accent">{format(total)}</dd></div>
             </dl>
             <button disabled={busy} className="w-full mt-6 bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 inline-flex items-center justify-center gap-2">
