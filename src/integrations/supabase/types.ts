@@ -1286,6 +1286,36 @@ export type Database = {
           },
         ]
       }
+      role_change_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: number
+          reason: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          reason?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          reason?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       search_logs: {
         Row: {
           clicked_product_slug: string | null
@@ -1449,6 +1479,21 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_bootstrap: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1569,6 +1614,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
+      manage_user_role: {
+        Args: {
+          _grant: boolean
+          _reason?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: undefined
       }
       refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
       search_products: {
