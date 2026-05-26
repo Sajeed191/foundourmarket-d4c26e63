@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.enforce_single_default_address() FROM PUBLIC, authenticated, anon;
