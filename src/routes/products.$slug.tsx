@@ -12,6 +12,9 @@ import { ProductQA } from "@/components/site/ProductQA";
 import { useCompare } from "@/hooks/use-compare";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, type ProductImage, type ProductVariant } from "@/lib/products";
+import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
+import { RecommendationStrip } from "@/components/site/RecommendationStrip";
+import { Users, ShoppingBag as ShoppingBagIcon } from "lucide-react";
 
 
 
