@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, Shield, Truck, Headset, ArrowRight, Star } from "lucide-react";
-import { PRODUCTS, CATEGORIES } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
+import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/")({
@@ -14,6 +15,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const { products } = useProducts();
+  const categoryCounts = products.reduce<Record<string, number>>((acc, p) => {
+    acc[p.category] = (acc[p.category] ?? 0) + 1;
+    return acc;
+  }, {});
   return (
     <>
       {/* Hero */}
@@ -107,7 +113,7 @@ function Home() {
               <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
                 <p className="font-mono text-[10px] text-accent mb-1">{String(i + 1).padStart(2, "0")}</p>
                 <h3 className="text-lg font-medium">{cat.name}</h3>
-                <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">{cat.count} items</p>
+                <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">{categoryCounts[cat.slug] ?? 0} items</p>
               </div>
             </Link>
           ))}
@@ -126,7 +132,7 @@ function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PRODUCTS.map((p) => (
+          {products.slice(0, 8).map((p) => (
             <ProductCard key={p.slug} product={p} />
           ))}
         </div>

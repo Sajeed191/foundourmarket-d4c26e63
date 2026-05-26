@@ -1,44 +1,40 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { getProduct, PRODUCTS } from "@/lib/products";
+import { useProduct, useProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
 
 export const Route = createFileRoute("/products/$slug")({
-  loader: ({ params }) => {
-    const product = getProduct(params.slug);
-    if (!product) throw notFound();
-    return { product };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.product.name} — FoundOurMarket™` },
-          { name: "description", content: loaderData.product.description },
-          { property: "og:title", content: loaderData.product.name },
-          { property: "og:description", content: loaderData.product.description },
-          { property: "og:image", content: loaderData.product.image },
-        ]
-      : [],
+  head: ({ params }) => ({
+    meta: [{ title: `${params.slug} — FoundOurMarket™` }],
   }),
-  notFoundComponent: () => (
-    <div className="py-32 text-center">
-      <h1 className="text-3xl font-display mb-4">Product not found</h1>
-      <Link to="/" className="text-accent underline">Back to shop</Link>
-    </div>
-  ),
   component: ProductPage,
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { product, loading } = useProduct(slug);
+  const { products } = useProducts();
   const { format } = useRegion();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
 
-  const related = PRODUCTS.filter((p) => p.category === product.category && p.slug !== product.slug).slice(0, 4);
+  if (loading) {
+    return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="py-32 text-center">
+        <h1 className="text-3xl font-display mb-4">Product not found</h1>
+        <Link to="/" className="text-accent underline">Back to shop</Link>
+      </div>
+    );
+  }
+
+  const related = products.filter((p) => p.category === product.category && p.slug !== product.slug).slice(0, 4);
 
   return (
     <>
@@ -52,7 +48,6 @@ function ProductPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Gallery */}
           <div className="space-y-4">
             <div className="aspect-square bg-card rounded-3xl overflow-hidden border border-border">
               <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
@@ -66,7 +61,6 @@ function ProductPage() {
             </div>
           </div>
 
-          {/* Details */}
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">{product.tagline}</p>
             <h1 className="text-4xl md:text-5xl font-display font-semibold tracking-tight mb-4">{product.name}</h1>
@@ -88,7 +82,6 @@ function ProductPage() {
 
             <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
 
-            {/* Qty + actions */}
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center border border-border rounded-full">
                 <button onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease" className="size-12 grid place-items-center hover:text-accent transition-colors">

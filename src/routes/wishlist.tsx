@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
-import { PRODUCTS } from "@/lib/products";
+import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -15,17 +15,18 @@ export const Route = createFileRoute("/wishlist")({
 function WishlistPage() {
   const { user, loading } = useAuth();
   const { slugs, loading: wlLoading } = useWishlist();
+  const { products, loading: pLoading } = useProducts();
   const nav = useNavigate();
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
   }, [loading, user, nav]);
 
-  if (loading || !user || wlLoading) {
+  if (loading || !user || wlLoading || pLoading) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
 
-  const items = PRODUCTS.filter((p) => slugs.has(p.slug));
+  const items = products.filter((p) => slugs.has(p.slug));
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">

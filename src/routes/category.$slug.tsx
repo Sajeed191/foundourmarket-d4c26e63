@@ -1,24 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CATEGORIES, getProductsByCategory, type Product } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
+import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/category/$slug")({
-  loader: ({ params }) => {
+  head: ({ params }) => {
     const cat = CATEGORIES.find((c) => c.slug === params.slug);
-    const products = getProductsByCategory(params.slug);
-    return { cat, products, slug: params.slug };
+    return {
+      meta: [
+        { title: `${cat?.name ?? "Category"} — FoundOurMarket™` },
+        { name: "description", content: `Shop ${cat?.name ?? "premium products"} curated from the global marketplace.` },
+      ],
+    };
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.cat?.name ?? "Category"} — FoundOurMarket™` },
-      { name: "description", content: `Shop ${loaderData?.cat?.name ?? "premium products"} curated from the global marketplace.` },
-    ],
-  }),
   component: CategoryPage,
 });
 
 function CategoryPage() {
-  const { cat, products, slug } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const cat = CATEGORIES.find((c) => c.slug === slug);
+  const { products, loading } = useProducts();
+  const items = products.filter((p) => p.category === slug);
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
       <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6">
@@ -29,10 +33,12 @@ function CategoryPage() {
       <header className="mb-12">
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Category</p>
         <h1 className="text-4xl md:text-6xl font-display font-semibold tracking-tight capitalize">{cat?.name ?? slug}</h1>
-        <p className="text-muted-foreground mt-3">{products.length} product{products.length === 1 ? "" : "s"}</p>
+        <p className="text-muted-foreground mt-3">{items.length} product{items.length === 1 ? "" : "s"}</p>
       </header>
 
-      {products.length === 0 ? (
+      {loading ? (
+        <div className="py-24 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+      ) : items.length === 0 ? (
         <div className="py-24 text-center border border-dashed border-border rounded-2xl">
           <p className="text-muted-foreground">No products in this category yet. Check back soon.</p>
           <Link to="/" className="inline-block mt-6 text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1">
@@ -41,7 +47,7 @@ function CategoryPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((p: Product) => (<ProductCard key={p.slug} product={p} />))}
+          {items.map((p) => (<ProductCard key={p.slug} product={p} />))}
         </div>
       )}
     </div>
