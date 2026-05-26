@@ -6,13 +6,14 @@ import flask from "@/assets/product-flask.jpg";
 import keyboard from "@/assets/product-keyboard.jpg";
 import backpack from "@/assets/product-backpack.jpg";
 import sunglasses from "@/assets/product-sunglasses.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Product = {
   slug: string;
   name: string;
   tagline: string;
   category: string;
-  price: number; // USD base
+  price: number;
   rating: number;
   reviews: number;
   image: string;
@@ -21,31 +22,73 @@ export type Product = {
   discount?: number;
 };
 
-export const PRODUCTS: Product[] = [
-  { slug: "aero-x-buds", name: "Aero-X Buds", tagline: "Titanium Series", category: "electronics", price: 189, rating: 4.9, reviews: 1284, image: earbuds, description: "Studio-grade wireless earbuds with active noise cancellation and 36-hour playback.", inStock: true, discount: 15 },
-  { slug: "tempus-one", name: "Tempus One", tagline: "Swiss Movement", category: "accessories", price: 340, rating: 4.8, reviews: 612, image: watch, description: "A precision automatic timepiece machined from a single block of brushed titanium.", inStock: true },
-  { slug: "beam-desk-light", name: "Beam Desk Light", tagline: "Smart Dimmable", category: "home", price: 120, rating: 4.7, reviews: 942, image: lamp, description: "Sculpted aluminum desk lamp with circadian temperature control.", inStock: true },
-  { slug: "obsidian-headphones", name: "Obsidian Headphones", tagline: "Reference Audio", category: "electronics", price: 399, rating: 4.9, reviews: 2103, image: headphones, description: "Reference-class over-ear headphones with planar magnetic drivers.", inStock: true, discount: 10 },
-  { slug: "titan-flask", name: "Titan Flask", tagline: "Aerospace Grade", category: "fitness", price: 85, rating: 4.6, reviews: 478, image: flask, description: "Vacuum-insulated titanium flask. 24h cold, 12h hot.", inStock: true },
-  { slug: "halo-keyboard", name: "Halo Keyboard", tagline: "Tactile Switch", category: "gaming", price: 240, rating: 4.8, reviews: 856, image: keyboard, description: "Low-profile mechanical keyboard with hot-swap switches.", inStock: true },
-  { slug: "voyage-pack", name: "Voyage Pack", tagline: "Full-Grain Leather", category: "fashion", price: 295, rating: 4.7, reviews: 321, image: backpack, description: "Full-grain leather backpack with magnetic closures.", inStock: true },
-  { slug: "ember-shades", name: "Ember Shades", tagline: "Polarized", category: "fashion", price: 160, rating: 4.5, reviews: 234, image: sunglasses, description: "Hand-finished acetate frames with polarized amber lenses.", inStock: true, discount: 20 },
-];
+// Bundled assets keyed by filename so DB rows can reference them by basename.
+const ASSET_MAP: Record<string, string> = {
+  "product-earbuds.jpg": earbuds,
+  "product-watch.jpg": watch,
+  "product-lamp.jpg": lamp,
+  "product-headphones.jpg": headphones,
+  "product-flask.jpg": flask,
+  "product-keyboard.jpg": keyboard,
+  "product-backpack.jpg": backpack,
+  "product-sunglasses.jpg": sunglasses,
+};
+
+export function resolveImage(raw: string | null | undefined): string {
+  if (!raw) return "";
+  if (raw.startsWith("http") || raw.startsWith("data:")) return raw;
+  const base = raw.split("/").pop() ?? raw;
+  return ASSET_MAP[base] ?? raw;
+}
 
 export const CATEGORIES = [
-  { slug: "electronics", name: "Electronics", count: 2 },
-  { slug: "fashion", name: "Fashion", count: 2 },
-  { slug: "home", name: "Home", count: 1 },
-  { slug: "beauty", name: "Beauty", count: 0 },
-  { slug: "fitness", name: "Fitness", count: 1 },
-  { slug: "gaming", name: "Gaming", count: 1 },
-  { slug: "accessories", name: "Accessories", count: 1 },
-  { slug: "gadgets", name: "Gadgets", count: 0 },
+  { slug: "electronics", name: "Electronics" },
+  { slug: "fashion", name: "Fashion" },
+  { slug: "home", name: "Home" },
+  { slug: "beauty", name: "Beauty" },
+  { slug: "fitness", name: "Fitness" },
+  { slug: "gaming", name: "Gaming" },
+  { slug: "accessories", name: "Accessories" },
+  { slug: "gadgets", name: "Gadgets" },
 ];
 
-export function getProduct(slug: string) {
-  return PRODUCTS.find((p) => p.slug === slug);
+type Row = {
+  slug: string; name: string; tagline: string | null; category: string;
+  price: number | string; rating: number | string; reviews: number;
+  image: string | null; description: string | null; in_stock: boolean;
+  discount: number | null;
+};
+
+function rowToProduct(r: Row): Product {
+  return {
+    slug: r.slug,
+    name: r.name,
+    tagline: r.tagline ?? "",
+    category: r.category,
+    price: Number(r.price),
+    rating: Number(r.rating),
+    reviews: r.reviews,
+    image: resolveImage(r.image),
+    description: r.description ?? "",
+    inStock: r.in_stock,
+    discount: r.discount ?? undefined,
+  };
 }
-export function getProductsByCategory(slug: string) {
-  return PRODUCTS.filter((p) => p.category === slug);
+
+export async function fetchProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount")
+    .order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return (data as Row[]).map(rowToProduct);
+}
+
+export async function fetchProduct(slug: string): Promise<Product | null> {
+  const { data } = await supabase
+    .from("products")
+    .select("slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data ? rowToProduct(data as Row) : null;
 }
