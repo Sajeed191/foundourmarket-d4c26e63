@@ -429,34 +429,7 @@ function HistoryPage() {
           </div>
         </section>
 
-        {/* Recently viewed */}
-        {recentProducts.length > 0 && (
-          <section className="mt-12">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg sm:text-xl font-display tracking-tight inline-flex items-center gap-2">
-                <Eye className="size-4 text-accent" /> Recently viewed
-              </h2>
-              <div className="flex gap-1.5">
-                <button onClick={() => scrollRecent(-1)} aria-label="Scroll left" className="size-8 grid place-items-center rounded-full glass ring-1 ring-white/10 hover:ring-accent/40 transition-all">
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button onClick={() => scrollRecent(1)} aria-label="Scroll right" className="size-8 grid place-items-center rounded-full glass ring-1 ring-white/10 hover:ring-accent/40 transition-all">
-                  <ChevronRight className="size-4" />
-                </button>
-                <button onClick={clearRecent} className="ml-1 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors px-2">
-                  <X className="size-3" /> Clear
-                </button>
-              </div>
-            </div>
-            <div ref={recentScroller} className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2">
-              {recentProducts.map((p) => (
-                <div key={p!.slug} className="snap-start shrink-0 w-[64%] xs:w-[52%] sm:w-[40%] md:w-[30%] lg:w-[24%]">
-                  <ProductCard product={p!} />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Recently viewed removed */}
 
         {/* Wishlist preview */}
         {wishProducts.length > 0 && (

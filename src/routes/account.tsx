@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 import { useWishlist } from "@/lib/wishlist";
 import { useNotifications } from "@/lib/notifications";
-import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
+
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -52,7 +52,6 @@ function AccountPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const { slugs: wishSlugs } = useWishlist();
   const { unread, items: notifs } = useNotifications();
-  const { slugs: recentSlugs } = useRecentlyViewed();
   const { products } = useProducts();
   const cart = useCart();
 
@@ -95,16 +94,12 @@ function AccountPage() {
     () => products.filter((p) => wishSlugs.has(p.slug)).slice(0, 8),
     [products, wishSlugs],
   );
-  const recentProducts = useMemo(
-    () => recentSlugs.map((s) => products.find((p) => p.slug === s)).filter(Boolean).slice(0, 8) as typeof products,
-    [products, recentSlugs],
-  );
   const recommended = useMemo(
     () => products
-      .filter((p) => !wishSlugs.has(p.slug) && !recentSlugs.includes(p.slug))
+      .filter((p) => !wishSlugs.has(p.slug))
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 8),
-    [products, wishSlugs, recentSlugs],
+    [products, wishSlugs],
   );
   const trending = useMemo(
     () => [...products].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 6),
@@ -206,26 +201,23 @@ function AccountPage() {
         {/* 2 — OVERVIEW CARDS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
           <SectionHeader title="Overview" eyebrow="Your account at a glance" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             <OverviewCard icon={Package} label="Active orders" value={stats.active} loading={!orders} accent />
             <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} to="/wishlist" />
             <OverviewCard icon={ShoppingBag} label="Cart items" value={cartCount} to="/cart" />
             <OverviewCard icon={Wallet} label="Total saved" value={stats.saved} formatter={format} loading={!orders} />
-            <OverviewCard icon={Eye} label="Recently viewed" value={recentSlugs.length} />
-            
           </div>
         </motion.section>
 
         {/* 3 — QUICK ACTIONS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }}>
           <SectionHeader title="Quick actions" eyebrow="Jump to" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             <ActionCard to="/account/orders" icon={Package} title="Orders" subtitle="Track & invoices" badge={stats.active || undefined} />
             <ActionCard to="/wishlist" icon={Heart} title="Wishlist" subtitle="Saved for later" badge={wishSlugs.size || undefined} />
             <ActionCard to="/cart" icon={ShoppingBag} title="Cart" subtitle="Review & checkout" badge={cartCount || undefined} />
             <ActionCard to="/account/addresses" icon={MapPin} title="Addresses" subtitle="Shipping & billing" />
             <ActionCard to="/account/notifications" icon={Bell} title="Notifications" subtitle="Inbox & alerts" badge={unread} />
-            <ActionCard to="/account/recently-viewed" icon={Eye} title="Recently viewed" subtitle="Pick up where you left" badge={recentSlugs.length || undefined} />
             <ActionCard to="/account/history" icon={Clock} title="History" subtitle="Activity timeline" />
             <ActionCard to="/account/security" icon={Shield} title="Security" subtitle="Password & sessions" />
             <ActionCard to="/help" icon={HelpCircle} title="Help center" subtitle="Guides & FAQ" />
@@ -290,12 +282,8 @@ function AccountPage() {
               )}
             </SectionBlock>
 
-            {/* 6 — RECENTLY VIEWED */}
-            {recentProducts.length > 0 && (
-              <SectionBlock title="Recently viewed" icon={Eye} action={<Link to="/" className="action-link">Continue browsing <ArrowRight className="size-3" /></Link>}>
-                <ProductScroller items={recentProducts} />
-              </SectionBlock>
-            )}
+            {/* Recently viewed removed */}
+
 
             {/* 7 — RECOMMENDATIONS */}
             {recommended.length > 0 && (

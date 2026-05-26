@@ -10,7 +10,7 @@ import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
-import { RecentlyViewed } from "@/components/site/RecentlyViewed";
+
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
 import { useCompare } from "@/hooks/use-compare";
@@ -388,7 +388,7 @@ function ProductPage() {
       </div>
       <ProductQA productSlug={product.slug} />
       <RelatedProducts product={product} />
-      <RecentlyViewed excludeSlug={product.slug} />
+      
 
       {/* Sticky mobile CTA */}
       <div className="sm:hidden fixed bottom-[5.25rem] inset-x-0 z-40 px-3 pb-[env(safe-area-inset-bottom)]">
