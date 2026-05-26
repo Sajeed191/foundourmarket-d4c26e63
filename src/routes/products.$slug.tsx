@@ -10,6 +10,7 @@ import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
 import { useCompare } from "@/hooks/use-compare";
+import { fetchProductImages, fetchProductVariants, type ProductImage, type ProductVariant } from "@/lib/products";
 
 
 
@@ -28,10 +29,27 @@ function ProductPage() {
   const { record } = useRecentlyViewed();
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
   const [qty, setQty] = useState(1);
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [activeImg, setActiveImg] = useState(0);
+  const [variantId, setVariantId] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) record(product.slug);
   }, [product?.slug, record]);
+
+  useEffect(() => {
+    if (!slug) return;
+    let active = true;
+    Promise.all([fetchProductImages(slug), fetchProductVariants(slug)]).then(([imgs, vars]) => {
+      if (!active) return;
+      setImages(imgs);
+      setVariants(vars);
+      setActiveImg(0);
+      setVariantId(vars[0]?.id ?? null);
+    });
+    return () => { active = false; };
+  }, [slug]);
 
 
   if (loading) {
