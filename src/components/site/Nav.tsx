@@ -103,8 +103,8 @@ export function Nav() {
               ))}
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              <button onClick={() => setSearchOpen(true)} aria-label="Search" className="size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors">
+            <div className="shrink-0 flex items-center gap-0.5 sm:gap-1.5">
+              <button onClick={() => setSearchOpen(true)} aria-label="Search" className="hidden xs:grid sm:grid size-9 rounded-xl place-items-center hover:bg-white/5 transition-colors">
                 <Search className="size-4" />
               </button>
               <div className="hidden lg:block"><CurrencySwitcher /></div>
