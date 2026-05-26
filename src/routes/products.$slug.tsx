@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2 } from "lucide-react";
+import { Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2, Scale } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useProduct, invalidateProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
