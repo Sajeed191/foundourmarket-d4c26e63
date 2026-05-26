@@ -11,19 +11,25 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
+import { Route as AdminCmsRouteImport } from './routes/admin-cms'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AccountReturnsRouteImport } from './routes/account.returns'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 
@@ -37,9 +43,19 @@ const TrackRoute = TrackRouteImport.update({
   path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -57,6 +73,11 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -70,6 +91,11 @@ const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
 const AdminReturnsRoute = AdminReturnsRouteImport.update({
   id: '/admin-returns',
   path: '/admin-returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCmsRoute = AdminCmsRouteImport.update({
+  id: '/admin-cms',
+  path: '/admin-cms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -92,6 +118,11 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersIdRoute = OrdersIdRouteImport.update({
   id: '/orders/$id',
   path: '/orders/$id',
@@ -101,6 +132,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const AccountReturnsRoute = AccountReturnsRouteImport.update({
   id: '/returns',
@@ -117,38 +153,50 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-cms': typeof AdminCmsRoute
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/returns': typeof AccountReturnsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-cms': typeof AdminCmsRoute
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/returns': typeof AccountReturnsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesById {
@@ -156,19 +204,25 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/admin-cms': typeof AdminCmsRoute
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/returns': typeof AccountReturnsRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRouteTypes {
@@ -177,57 +231,75 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-cms'
     | '/admin-returns'
     | '/admin-shipments'
     | '/auth'
+    | '/blog'
     | '/cart'
     | '/checkout'
     | '/compare'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track'
     | '/wishlist'
     | '/account/addresses'
     | '/account/returns'
+    | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
+    | '/pages/$slug'
     | '/products/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-cms'
     | '/admin-returns'
     | '/admin-shipments'
     | '/auth'
+    | '/blog'
     | '/cart'
     | '/checkout'
     | '/compare'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track'
     | '/wishlist'
     | '/account/addresses'
     | '/account/returns'
+    | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
+    | '/pages/$slug'
     | '/products/$slug'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-cms'
     | '/admin-returns'
     | '/admin-shipments'
     | '/auth'
+    | '/blog'
     | '/cart'
     | '/checkout'
     | '/compare'
+    | '/robots.txt'
     | '/search'
+    | '/sitemap.xml'
     | '/track'
     | '/wishlist'
     | '/account/addresses'
     | '/account/returns'
+    | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
+    | '/pages/$slug'
     | '/products/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -235,17 +307,22 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
   AdminRoute: typeof AdminRoute
+  AdminCmsRoute: typeof AdminCmsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CompareRoute: typeof CompareRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SearchRoute: typeof SearchRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
   OrdersIdRoute: typeof OrdersIdRoute
+  PagesSlugRoute: typeof PagesSlugRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
 }
 
@@ -265,11 +342,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -293,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -312,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-returns'
       fullPath: '/admin-returns'
       preLoaderRoute: typeof AdminReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-cms': {
+      id: '/admin-cms'
+      path: '/admin-cms'
+      fullPath: '/admin-cms'
+      preLoaderRoute: typeof AdminCmsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -342,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pages/$slug': {
+      id: '/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orders/$id': {
       id: '/orders/$id'
       path: '/orders/$id'
@@ -355,6 +467,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/category/$slug'
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/account/returns': {
       id: '/account/returns'
@@ -386,21 +505,36 @@ const AccountRouteChildren: AccountRouteChildren = {
 const AccountRouteWithChildren =
   AccountRoute._addFileChildren(AccountRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
   AdminRoute: AdminRoute,
+  AdminCmsRoute: AdminCmsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CompareRoute: CompareRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SearchRoute: SearchRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
   OrdersIdRoute: OrdersIdRoute,
+  PagesSlugRoute: PagesSlugRoute,
   ProductsSlugRoute: ProductsSlugRoute,
 }
 export const routeTree = rootRouteImport
