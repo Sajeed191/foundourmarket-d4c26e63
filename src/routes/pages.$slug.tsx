@@ -24,23 +24,30 @@ function CmsPage() {
   useEffect(() => {
     let active = true;
     setLoading(true); setMissing(false);
-    supabase.from("cms_pages").select("slug,title,body,meta_title,meta_description")
-      .eq("slug", slug).eq("published", true).maybeSingle()
-      .then(({ data }) => {
-        if (!active) return;
-        if (!data) setMissing(true);
-        else {
-          setPage(data as Page);
-          if (data.meta_title) document.title = data.meta_title;
-          if (data.meta_description) {
-            let m = document.querySelector('meta[name="description"]');
-            if (!m) { m = document.createElement("meta"); m.setAttribute("name", "description"); document.head.appendChild(m); }
-            m.setAttribute("content", data.meta_description);
+    function fetchPage() {
+      supabase.from("cms_pages").select("slug,title,body,meta_title,meta_description")
+        .eq("slug", slug).eq("published", true).maybeSingle()
+        .then(({ data }) => {
+          if (!active) return;
+          if (!data) setMissing(true);
+          else {
+            setPage(data as Page); setMissing(false);
+            if (data.meta_title) document.title = data.meta_title;
+            if (data.meta_description) {
+              let m = document.querySelector('meta[name="description"]');
+              if (!m) { m = document.createElement("meta"); m.setAttribute("name", "description"); document.head.appendChild(m); }
+              m.setAttribute("content", data.meta_description);
+            }
           }
-        }
-        setLoading(false);
-      });
-    return () => { active = false; };
+          setLoading(false);
+        });
+    }
+    fetchPage();
+    const ch = supabase
+      .channel(`rt-cms-page-${slug}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "cms_pages" }, fetchPage)
+      .subscribe();
+    return () => { active = false; supabase.removeChannel(ch); };
   }, [slug]);
 
   if (loading) return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;

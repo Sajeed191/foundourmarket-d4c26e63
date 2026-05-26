@@ -18,7 +18,7 @@ export function PromoBannerCarousel() {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  useEffect(() => {
+  function fetchBanners() {
     supabase
       .from("banners")
       .select("id,title,subtitle,image,link,cta_text,sort_order,active,starts_at,ends_at,type")
@@ -34,6 +34,16 @@ export function PromoBannerCarousel() {
         );
         setBanners(valid);
       });
+  }
+
+  useEffect(() => {
+    fetchBanners();
+    // Live updates: refetch whenever admin publishes/edits a banner
+    const ch = supabase
+      .channel("rt-banners-public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, fetchBanners)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {

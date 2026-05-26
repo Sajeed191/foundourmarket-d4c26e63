@@ -19,23 +19,30 @@ function BlogPost() {
 
   useEffect(() => {
     let active = true;
-    supabase.from("cms_posts").select("*").eq("slug", slug)
-      .not("published_at", "is", null).lte("published_at", new Date().toISOString())
-      .maybeSingle().then(({ data }) => {
-        if (!active) return;
-        if (!data) setMissing(true);
-        else {
-          setPost(data as Post);
-          if (data.meta_title) document.title = data.meta_title;
-          if (data.meta_description) {
-            let m = document.querySelector('meta[name="description"]');
-            if (!m) { m = document.createElement("meta"); m.setAttribute("name", "description"); document.head.appendChild(m); }
-            m.setAttribute("content", data.meta_description);
+    function fetchPost() {
+      supabase.from("cms_posts").select("*").eq("slug", slug)
+        .not("published_at", "is", null).lte("published_at", new Date().toISOString())
+        .maybeSingle().then(({ data }) => {
+          if (!active) return;
+          if (!data) setMissing(true);
+          else {
+            setPost(data as Post); setMissing(false);
+            if (data.meta_title) document.title = data.meta_title;
+            if (data.meta_description) {
+              let m = document.querySelector('meta[name="description"]');
+              if (!m) { m = document.createElement("meta"); m.setAttribute("name", "description"); document.head.appendChild(m); }
+              m.setAttribute("content", data.meta_description);
+            }
           }
-        }
-        setLoading(false);
-      });
-    return () => { active = false; };
+          setLoading(false);
+        });
+    }
+    fetchPost();
+    const ch = supabase
+      .channel(`rt-cms-post-${slug}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "cms_posts" }, fetchPost)
+      .subscribe();
+    return () => { active = false; supabase.removeChannel(ch); };
   }, [slug]);
 
   if (loading) return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;

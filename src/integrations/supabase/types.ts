@@ -142,9 +142,12 @@ export type Database = {
           active: boolean
           created_at: string
           cta_text: string | null
+          draft_data: Json | null
           ends_at: string | null
+          has_draft: boolean
           id: string
           image: string | null
+          last_published_at: string | null
           link: string | null
           sort_order: number
           starts_at: string | null
@@ -157,9 +160,12 @@ export type Database = {
           active?: boolean
           created_at?: string
           cta_text?: string | null
+          draft_data?: Json | null
           ends_at?: string | null
+          has_draft?: boolean
           id?: string
           image?: string | null
+          last_published_at?: string | null
           link?: string | null
           sort_order?: number
           starts_at?: string | null
@@ -172,9 +178,12 @@ export type Database = {
           active?: boolean
           created_at?: string
           cta_text?: string | null
+          draft_data?: Json | null
           ends_at?: string | null
+          has_draft?: boolean
           id?: string
           image?: string | null
+          last_published_at?: string | null
           link?: string | null
           sort_order?: number
           starts_at?: string | null
@@ -294,7 +303,10 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          draft_data: Json | null
+          has_draft: boolean
           id: string
+          last_published_at: string | null
           meta_description: string | null
           meta_title: string | null
           published: boolean
@@ -306,7 +318,10 @@ export type Database = {
         Insert: {
           body?: string
           created_at?: string
+          draft_data?: Json | null
+          has_draft?: boolean
           id?: string
+          last_published_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published?: boolean
@@ -318,7 +333,10 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          draft_data?: Json | null
+          has_draft?: boolean
           id?: string
+          last_published_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published?: boolean
@@ -335,8 +353,11 @@ export type Database = {
           body: string
           cover_image: string | null
           created_at: string
+          draft_data: Json | null
           excerpt: string | null
+          has_draft: boolean
           id: string
+          last_published_at: string | null
           meta_description: string | null
           meta_title: string | null
           published_at: string | null
@@ -349,8 +370,11 @@ export type Database = {
           body?: string
           cover_image?: string | null
           created_at?: string
+          draft_data?: Json | null
           excerpt?: string | null
+          has_draft?: boolean
           id?: string
+          last_published_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null
@@ -363,8 +387,11 @@ export type Database = {
           body?: string
           cover_image?: string | null
           created_at?: string
+          draft_data?: Json | null
           excerpt?: string | null
+          has_draft?: boolean
           id?: string
+          last_published_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null

@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProduct, type Product } from "./products";
+import { supabase } from "@/integrations/supabase/client";
+
+let realtimeBound = false;
+function bindRealtime() {
+  if (realtimeBound || typeof window === "undefined") return;
+  realtimeBound = true;
+  supabase
+    .channel("rt-products-public")
+    .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => invalidateProducts())
+    .subscribe();
+}
 
 let cache: Product[] | null = null;
 let inflight: Promise<Product[]> | null = null;
@@ -27,6 +38,7 @@ export function useProducts() {
   const [products, setProducts] = useState<Product[]>(cache ?? []);
   const [loading, setLoading] = useState(!cache);
   useEffect(() => {
+    bindRealtime();
     let active = true;
     const sub = (p: Product[]) => { if (active) setProducts(p); };
     subscribers.add(sub);

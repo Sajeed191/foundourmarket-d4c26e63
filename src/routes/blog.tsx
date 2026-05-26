@@ -18,10 +18,18 @@ function BlogIndex() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("cms_posts").select("slug,title,excerpt,cover_image,author,published_at")
-      .not("published_at", "is", null).lte("published_at", new Date().toISOString())
-      .order("published_at", { ascending: false })
-      .then(({ data }) => { setPosts((data as Post[]) ?? []); setLoading(false); });
+    function fetchPosts() {
+      supabase.from("cms_posts").select("slug,title,excerpt,cover_image,author,published_at")
+        .not("published_at", "is", null).lte("published_at", new Date().toISOString())
+        .order("published_at", { ascending: false })
+        .then(({ data }) => { setPosts((data as Post[]) ?? []); setLoading(false); });
+    }
+    fetchPosts();
+    const ch = supabase
+      .channel("rt-cms-posts-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cms_posts" }, fetchPosts)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   return (
