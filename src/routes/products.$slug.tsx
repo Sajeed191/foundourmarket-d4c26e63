@@ -6,6 +6,7 @@ import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductReviews } from "@/components/site/ProductReviews";
+import { ProductQA } from "@/components/site/ProductQA";
 
 export const Route = createFileRoute("/products/$slug")({
   head: ({ params }) => ({
@@ -129,6 +130,8 @@ function ProductPage() {
       </div>
 
       <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
+
+      <ProductQA productSlug={product.slug} />
 
       {related.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 py-24">
