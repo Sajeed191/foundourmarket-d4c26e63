@@ -22,11 +22,18 @@ export function ProductCard({ product }: { product: Product }) {
             height={800}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          {product.discount && (
-            <span className="absolute top-3 left-3 bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2 py-1 rounded-full">
-              −{product.discount}%
-            </span>
-          )}
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+            {product.featured && (
+              <span className="bg-foreground text-background text-[10px] font-bold font-mono px-2 py-1 rounded-full uppercase tracking-widest">
+                Featured
+              </span>
+            )}
+            {product.discount && (
+              <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2 py-1 rounded-full">
+                −{product.discount}% Sale
+              </span>
+            )}
+          </div>
           <button
             onClick={(e) => { e.preventDefault(); toggle(product.slug); }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
