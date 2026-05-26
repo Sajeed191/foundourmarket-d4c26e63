@@ -50,56 +50,64 @@ export function Nav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 gap-2">
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Open menu"
-            className="md:hidden size-9 rounded-full grid place-items-center hover:bg-white/5 transition-colors -ml-1"
-          >
-            <Menu className="size-5" />
-          </button>
-
-          <Link to="/" className="text-base sm:text-xl font-display tracking-tighter uppercase font-semibold whitespace-nowrap">
-            FoundOurMarket<span className="text-accent">™</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {navLinks.map((l) => (
-              <Link key={l.label} to={l.to} params={"params" in l ? l.params : undefined as never} className="hover:text-foreground transition-colors">
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-3">
-            <button onClick={() => setSearchOpen(true)} aria-label="Search" className="size-9 rounded-full grid place-items-center hover:bg-white/5 transition-colors">
-              <Search className="size-4" />
+      <div className="sticky top-0 z-50 px-3 sm:px-4 pt-3 sm:pt-4">
+        <nav className="max-w-7xl mx-auto rounded-2xl glass-strong">
+          <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 gap-2">
+            <button
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors"
+            >
+              <Menu className="size-5" />
             </button>
-            <div className="hidden sm:block"><CurrencySwitcher /></div>
-            <Link to="/wishlist" aria-label="Wishlist" className="relative hidden xs:grid sm:grid size-9 rounded-full place-items-center hover:bg-white/5 transition-colors">
-              <Heart className="size-4" />
-              {wishSlugs.size > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center">{wishSlugs.size}</span>
-              )}
+
+            <Link to="/" className="text-base sm:text-lg font-display tracking-tight font-semibold whitespace-nowrap flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-accent shadow-[0_0_12px_var(--color-accent)] animate-glow" aria-hidden />
+              FoundOurMarket<span className="text-accent">™</span>
             </Link>
-            {isAdmin && (
-              <Link to="/admin" aria-label="Admin" className="hidden sm:grid size-9 rounded-full place-items-center hover:bg-white/5 transition-colors text-accent" title="Admin">
-                <LayoutDashboard className="size-4" />
+
+            <div className="hidden md:flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+              {navLinks.map((l) => (
+                <Link
+                  key={l.label}
+                  to={l.to}
+                  params={"params" in l ? l.params : undefined as never}
+                  className="px-3.5 py-1.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <button onClick={() => setSearchOpen(true)} aria-label="Search" className="size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors">
+                <Search className="size-4" />
+              </button>
+              <div className="hidden lg:block"><CurrencySwitcher /></div>
+              <Link to="/wishlist" aria-label="Wishlist" className="relative hidden sm:grid size-9 rounded-xl place-items-center hover:bg-white/5 transition-colors">
+                <Heart className="size-4" />
+                {wishSlugs.size > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center">{wishSlugs.size}</span>
+                )}
               </Link>
-            )}
-            {user && <NotificationBell />}
-            <Link to={user ? "/account" : "/auth"} aria-label="Account" className="size-9 rounded-full grid place-items-center hover:bg-white/5 transition-colors">
-              <User className="size-4" />
-            </Link>
-            <Link to="/cart" aria-label="Cart" className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border border-border hover:border-accent/40 transition-colors">
-              <ShoppingBag className="size-4" />
-              <span className="text-xs font-mono">{count}</span>
-            </Link>
+              {isAdmin && (
+                <Link to="/admin" aria-label="Admin" className="hidden sm:grid size-9 rounded-xl place-items-center hover:bg-white/5 transition-colors text-accent" title="Admin">
+                  <LayoutDashboard className="size-4" />
+                </Link>
+              )}
+              {user && <NotificationBell />}
+              <Link to={user ? "/account" : "/auth"} aria-label="Account" className="size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors">
+                <User className="size-4" />
+              </Link>
+              <Link to="/cart" aria-label="Cart" className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-accent-foreground hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
+                <ShoppingBag className="size-4" />
+                <span className="text-xs font-mono font-semibold">{count}</span>
+              </Link>
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
+
 
       {/* Mobile drawer */}
       {open && (
