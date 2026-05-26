@@ -20,6 +20,7 @@ export type Product = {
   description: string;
   inStock: boolean;
   discount?: number;
+  featured: boolean;
 };
 
 // Bundled assets keyed by filename so DB rows can reference them by basename.
@@ -48,7 +49,7 @@ type Row = {
   slug: string; name: string; tagline: string | null; category: string;
   price: number | string; rating: number | string; reviews: number;
   image: string | null; description: string | null; in_stock: boolean;
-  discount: number | null;
+  discount: number | null; featured?: boolean | null;
 };
 
 function rowToProduct(r: Row): Product {
@@ -64,13 +65,16 @@ function rowToProduct(r: Row): Product {
     description: r.description ?? "",
     inStock: r.in_stock,
     discount: r.discount ?? undefined,
+    featured: r.featured ?? false,
   };
 }
+
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured";
 
 export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount")
+    .select(SELECT_COLS)
     .order("sort_order", { ascending: true });
   if (error || !data) return [];
   return (data as Row[]).map(rowToProduct);
@@ -79,7 +83,7 @@ export async function fetchProducts(): Promise<Product[]> {
 export async function fetchProduct(slug: string): Promise<Product | null> {
   const { data } = await supabase
     .from("products")
-    .select("slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount")
+    .select(SELECT_COLS)
     .eq("slug", slug)
     .maybeSingle();
   return data ? rowToProduct(data as Row) : null;
