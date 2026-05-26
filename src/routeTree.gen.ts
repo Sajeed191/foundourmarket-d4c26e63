@@ -44,7 +44,9 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AccountProfileRouteImport } from './routes/account_.profile'
 import { Route as AccountSecurityRouteImport } from './routes/account.security'
 import { Route as AccountReturnsRouteImport } from './routes/account.returns'
+import { Route as AccountRecentlyViewedRouteImport } from './routes/account.recently-viewed'
 import { Route as AccountPreferencesRouteImport } from './routes/account.preferences'
+import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AccountNotificationsRouteImport } from './routes/account.notifications'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 
@@ -223,9 +225,19 @@ const AccountReturnsRoute = AccountReturnsRouteImport.update({
   path: '/returns',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountRecentlyViewedRoute = AccountRecentlyViewedRouteImport.update({
+  id: '/recently-viewed',
+  path: '/recently-viewed',
+  getParentRoute: () => AccountRoute,
+} as any)
 const AccountPreferencesRoute = AccountPreferencesRouteImport.update({
   id: '/preferences',
   path: '/preferences',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountOrdersRoute = AccountOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => AccountRoute,
 } as any)
 const AccountNotificationsRoute = AccountNotificationsRouteImport.update({
@@ -269,7 +281,9 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/notifications': typeof AccountNotificationsRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
+  '/account/recently-viewed': typeof AccountRecentlyViewedRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/profile': typeof AccountProfileRoute
@@ -309,7 +323,9 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/notifications': typeof AccountNotificationsRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
+  '/account/recently-viewed': typeof AccountRecentlyViewedRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/profile': typeof AccountProfileRoute
@@ -350,7 +366,9 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/notifications': typeof AccountNotificationsRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
+  '/account/recently-viewed': typeof AccountRecentlyViewedRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account_/profile': typeof AccountProfileRoute
@@ -392,7 +410,9 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/account/addresses'
     | '/account/notifications'
+    | '/account/orders'
     | '/account/preferences'
+    | '/account/recently-viewed'
     | '/account/returns'
     | '/account/security'
     | '/account/profile'
@@ -432,7 +452,9 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/account/addresses'
     | '/account/notifications'
+    | '/account/orders'
     | '/account/preferences'
+    | '/account/recently-viewed'
     | '/account/returns'
     | '/account/security'
     | '/account/profile'
@@ -472,7 +494,9 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/account/addresses'
     | '/account/notifications'
+    | '/account/orders'
     | '/account/preferences'
+    | '/account/recently-viewed'
     | '/account/returns'
     | '/account/security'
     | '/account_/profile'
@@ -765,11 +789,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/recently-viewed': {
+      id: '/account/recently-viewed'
+      path: '/recently-viewed'
+      fullPath: '/account/recently-viewed'
+      preLoaderRoute: typeof AccountRecentlyViewedRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/account/preferences': {
       id: '/account/preferences'
       path: '/preferences'
       fullPath: '/account/preferences'
       preLoaderRoute: typeof AccountPreferencesRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/orders': {
+      id: '/account/orders'
+      path: '/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AccountOrdersRouteImport
       parentRoute: typeof AccountRoute
     }
     '/account/notifications': {
@@ -792,7 +830,9 @@ declare module '@tanstack/react-router' {
 interface AccountRouteChildren {
   AccountAddressesRoute: typeof AccountAddressesRoute
   AccountNotificationsRoute: typeof AccountNotificationsRoute
+  AccountOrdersRoute: typeof AccountOrdersRoute
   AccountPreferencesRoute: typeof AccountPreferencesRoute
+  AccountRecentlyViewedRoute: typeof AccountRecentlyViewedRoute
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
 }
@@ -800,7 +840,9 @@ interface AccountRouteChildren {
 const AccountRouteChildren: AccountRouteChildren = {
   AccountAddressesRoute: AccountAddressesRoute,
   AccountNotificationsRoute: AccountNotificationsRoute,
+  AccountOrdersRoute: AccountOrdersRoute,
   AccountPreferencesRoute: AccountPreferencesRoute,
+  AccountRecentlyViewedRoute: AccountRecentlyViewedRoute,
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
 }
