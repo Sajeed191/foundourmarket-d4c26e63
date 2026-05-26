@@ -451,13 +451,13 @@ function OverviewCard({
         <AnimatedNumber
           value={value}
           formatter={formatter}
-          className={`relative block text-2xl sm:text-3xl font-display font-semibold tabular-nums ${accent ? "text-gradient-ember" : ""}`}
+          className={`relative block text-xl sm:text-3xl font-display font-semibold tabular-nums ${accent ? "text-gradient-ember" : ""}`}
         />
       )}
-      <p className="relative text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mt-1.5">{label}</p>
+      <p className="relative text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mt-1.5 truncate">{label}</p>
     </motion.div>
   );
-  return to ? <Link to={to} className="contents">{inner}</Link> : inner;
+  return to ? <Link to={to} className="block h-full">{inner}</Link> : inner;
 }
 
 function ActionCard({
