@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap } from "lucide-react";
 import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
@@ -9,6 +9,34 @@ import { ProductCard } from "@/components/site/ProductCard";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
+
+const PLACEHOLDERS = [
+  "Search 2,400+ curated products...",
+  "Try 'wireless headphones'...",
+  "Discover 'linen shirt'...",
+  "Find 'ceramic mug'...",
+  "Explore 'smart watch'...",
+];
+
+function useRotatingPlaceholder(active: boolean) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % PLACEHOLDERS.length), 2800);
+    return () => clearInterval(id);
+  }, [active]);
+  return PLACEHOLDERS[idx];
+}
+
+function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix?: string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const mv = useMotionValue(0);
+  const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
+  const display = useTransform(spring, (v) => Math.round(v).toLocaleString() + suffix);
+  useEffect(() => { if (inView) mv.set(to); }, [inView, to, mv]);
+  return <motion.span ref={ref}>{display}</motion.span>;
+}
 
 
 export const Route = createFileRoute("/")({
