@@ -13,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group bg-card border border-border rounded-2xl p-2.5 sm:p-4 hover:border-accent/40 transition-all duration-500 hover:-translate-y-1">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="relative aspect-square mb-5 rounded-xl overflow-hidden bg-black/40">
+        <div className="relative aspect-square mb-3 sm:mb-5 rounded-xl overflow-hidden bg-black/40">
           <img
             src={product.image}
             alt={product.name}
