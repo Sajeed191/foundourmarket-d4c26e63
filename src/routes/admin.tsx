@@ -189,36 +189,55 @@ function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
-      <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Operator</p>
-          <h1 className="text-3xl md:text-5xl font-display font-semibold">Admin Dashboard</h1>
+      <div className="relative overflow-hidden rounded-3xl glass-strong p-6 md:p-10 mb-10">
+        <div className="orb absolute -top-24 -left-24 size-72 opacity-60" style={{ background: "var(--gradient-ember-soft)" }} />
+        <div className="orb absolute -bottom-32 -right-20 size-80 opacity-40" style={{ background: "radial-gradient(circle, hsl(265 80% 60% / 0.5), transparent 70%)" }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "42px 42px", maskImage: "radial-gradient(circle at 50% 30%, black, transparent 75%)" }} />
+
+        <div className="relative flex items-end justify-between flex-wrap gap-6">
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)] animate-pulse" />
+              Operator console
+            </p>
+            <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight">
+              Admin <span className="text-gradient-ember">Dashboard</span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-md">Real-time operations, catalog, and customer intelligence.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap max-w-2xl justify-end">
+            <button onClick={() => { setTab("products"); setEditing("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-full px-4 py-2 font-bold hover:brightness-110 shadow-[var(--shadow-ember)] transition-all"><Plus className="size-3.5" /> New Product</button>
+            <button onClick={() => { setTab("categories"); setEditingCat("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-accent/40 text-accent rounded-full px-4 py-2 hover:bg-accent/10 transition-colors"><Plus className="size-3.5" /> New Category</button>
+          </div>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => { setTab("products"); setEditing("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-full px-3 py-2 font-bold hover:brightness-110"><Plus className="size-3.5" /> New Product</button>
-          <button onClick={() => { setTab("categories"); setEditingCat("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-accent/40 text-accent rounded-full px-3 py-2 hover:bg-accent/10"><Plus className="size-3.5" /> New Category</button>
-          <button onClick={() => setTab("products")} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Package className="size-3.5" /> Manage Products</button>
-          <button onClick={() => setTab("categories")} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Tag className="size-3.5" /> Manage Categories</button>
-          <Link to="/admin-live" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Activity className="size-3.5" /> Live</Link>
-          <Link to="/admin-analytics" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><BarChart3 className="size-3.5" /> Analytics</Link>
-          <Link to="/admin-financial" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Wallet className="size-3.5" /> Financial</Link>
-          <Link to="/admin-traffic" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Globe className="size-3.5" /> Traffic</Link>
-          <Link to="/admin-shipments" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Truck className="size-3.5" /> Shipments</Link>
-          <Link to="/admin-returns" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><RotateCcw className="size-3.5" /> Returns</Link>
-          <Link to="/admin-inventory" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Boxes className="size-3.5" /> Inventory</Link>
-          <Link to="/admin-customers" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Users className="size-3.5" /> Customers</Link>
-          <Link to="/admin-marketing" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Megaphone className="size-3.5" /> Marketing</Link>
-          <Link to="/admin-search" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Search className="size-3.5" /> Search</Link>
-          <Link to="/admin-cms" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Pencil className="size-3.5" /> CMS</Link>
-          <Link to="/admin-reports" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><FileText className="size-3.5" /> Reports</Link>
-          <Link to="/admin-activity" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-3 py-2 hover:border-accent/40"><Activity className="size-3.5" /> Activity</Link>
+
+        <div className="relative flex gap-2 flex-wrap mt-6 pt-6 border-t border-border/40">
+          {[
+            { to: "/admin-live", icon: Activity, label: "Live" },
+            { to: "/admin-analytics", icon: BarChart3, label: "Analytics" },
+            { to: "/admin-financial", icon: Wallet, label: "Financial" },
+            { to: "/admin-traffic", icon: Globe, label: "Traffic" },
+            { to: "/admin-shipments", icon: Truck, label: "Shipments" },
+            { to: "/admin-returns", icon: RotateCcw, label: "Returns" },
+            { to: "/admin-inventory", icon: Boxes, label: "Inventory" },
+            { to: "/admin-customers", icon: Users, label: "Customers" },
+            { to: "/admin-marketing", icon: Megaphone, label: "Marketing" },
+            { to: "/admin-search", icon: Search, label: "Search" },
+            { to: "/admin-cms", icon: Pencil, label: "CMS" },
+            { to: "/admin-reports", icon: FileText, label: "Reports" },
+            { to: "/admin-activity", icon: Activity, label: "Activity" },
+          ].map(({ to, icon: Icon, label }) => (
+            <Link key={to} to={to} className="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest glass rounded-full px-3.5 py-2 hover:border-accent/40 hover:text-accent transition-all">
+              <Icon className="size-3.5" /> {label}
+            </Link>
+          ))}
         </div>
       </div>
 
-      <div className="flex gap-1 mb-10 border-b border-border overflow-x-auto">
+      <div className="flex gap-1 mb-10 p-1 rounded-full glass-strong w-fit overflow-x-auto">
         {(["overview", "orders", "products", "categories", "promos", "customers", "subscribers"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-3 text-xs uppercase tracking-widest font-mono transition-colors border-b-2 -mb-px whitespace-nowrap ${tab === t ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            className={`px-5 py-2 text-xs uppercase tracking-widest font-mono transition-all rounded-full whitespace-nowrap ${tab === t ? "bg-accent text-accent-foreground shadow-[var(--shadow-ember)]" : "text-muted-foreground hover:text-foreground"}`}>
             {t}
           </button>
         ))}

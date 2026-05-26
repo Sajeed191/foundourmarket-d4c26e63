@@ -136,7 +136,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5">
+        <div className="lg:col-span-2 card-premium rounded-2xl p-5">
           <div className="flex items-baseline justify-between mb-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Last {period} days</p>
@@ -181,7 +181,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="card-premium rounded-2xl p-5">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Pipeline</p>
           <h2 className="text-lg font-medium mt-1 mb-4">Order status</h2>
           <ul className="space-y-3">
@@ -210,7 +210,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="card-premium rounded-2xl p-5">
           <div className="flex justify-between items-baseline mb-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Bestsellers</p>
@@ -238,7 +238,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="card-premium rounded-2xl p-5">
           <div className="flex justify-between items-baseline mb-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Recent activity</p>
@@ -268,7 +268,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="card-premium rounded-2xl p-5">
           <div className="flex justify-between items-baseline mb-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Inventory alerts</p>
@@ -314,7 +314,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="card-premium rounded-2xl p-5">
           <div className="flex justify-between items-baseline mb-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Catalog health</p>
@@ -349,13 +349,14 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
 
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="bg-card border border-border rounded-2xl p-5">
-      <div className="flex items-center gap-2 text-muted-foreground mb-3">
-        {icon}
-        <span className="text-[10px] font-mono uppercase tracking-[0.3em]">{label}</span>
+    <div className="card-premium relative overflow-hidden rounded-2xl p-5 group">
+      <div className="absolute -top-12 -right-12 size-32 rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(24px)" }} />
+      <div className="relative flex items-center gap-2 mb-3">
+        <span className="grid place-items-center size-7 rounded-lg bg-accent/10 border border-accent/20 text-accent">{icon}</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
       </div>
-      <p className="text-2xl font-display font-semibold">{value}</p>
-      {sub && <div className="mt-2">{sub}</div>}
+      <p className="relative text-3xl font-display font-semibold tabular-nums tracking-tight">{value}</p>
+      {sub && <div className="relative mt-2">{sub}</div>}
     </div>
   );
 }
