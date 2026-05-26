@@ -287,12 +287,8 @@ function AccountPage() {
               )}
             </SectionBlock>
 
-            {/* 6 — RECENTLY VIEWED */}
-            {recentProducts.length > 0 && (
-              <SectionBlock title="Recently viewed" icon={Eye} action={<Link to="/" className="action-link">Continue browsing <ArrowRight className="size-3" /></Link>}>
-                <ProductScroller items={recentProducts} />
-              </SectionBlock>
-            )}
+            {/* Recently viewed removed */}
+
 
             {/* 7 — RECOMMENDATIONS */}
             {recommended.length > 0 && (
