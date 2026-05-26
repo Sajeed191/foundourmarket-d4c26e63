@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
-import { CATEGORIES } from "@/lib/products";
+import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+
 import { ProductCard } from "@/components/site/ProductCard";
 
 type SearchParams = { q?: string; cat?: string; sort?: string; min?: number; max?: number; stock?: string };
