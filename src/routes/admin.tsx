@@ -614,7 +614,6 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
     name: row?.name ?? "",
     tagline: row?.tagline ?? "",
     category: row?.category ?? categories[0]?.slug ?? "",
-
     price: row ? String(row.price) : "0",
     image: row?.image ?? "",
     description: row?.description ?? "",
@@ -624,6 +623,9 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
     reviews: row?.reviews ?? 0,
     sort_order: row?.sort_order ?? nextSort,
     featured: row?.featured ?? false,
+    sku: row?.sku ?? "",
+    stock_quantity: row?.stock_quantity ?? 0,
+    low_stock_threshold: row?.low_stock_threshold ?? 5,
   });
 
   async function save(e: React.FormEvent) {
@@ -643,6 +645,9 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
       reviews: Number(form.reviews) || 0,
       sort_order: Number(form.sort_order) || 0,
       featured: form.featured,
+      sku: form.sku.trim() || null,
+      stock_quantity: Number(form.stock_quantity) || 0,
+      low_stock_threshold: Number(form.low_stock_threshold) || 0,
     };
     const { error } = row
       ? await supabase.from("products").update(payload).eq("id", row.id)
@@ -654,7 +659,7 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <form onSubmit={save} onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl bg-card border border-border rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
+      <form onSubmit={save} onClick={(e) => e.stopPropagation()} className="w-full max-w-3xl bg-card border border-border rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-display">{row ? "Edit Product" : "New Product"}</h2>
           <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
@@ -672,14 +677,17 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
           </div>
           <Field label="Price (USD)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
           <Field label="Discount %" type="number" value={form.discount?.toString() ?? ""} onChange={(v) => setForm({ ...form, discount: v ? Number(v) : null })} />
+          <Field label="SKU" value={form.sku} onChange={(v) => setForm({ ...form, sku: v })} />
+          <Field label="Stock Quantity" type="number" value={String(form.stock_quantity)} onChange={(v) => setForm({ ...form, stock_quantity: Number(v) || 0 })} />
+          <Field label="Low Stock Threshold" type="number" value={String(form.low_stock_threshold)} onChange={(v) => setForm({ ...form, low_stock_threshold: Number(v) || 0 })} />
           <Field label="Rating" type="number" value={form.rating} onChange={(v) => setForm({ ...form, rating: v })} />
           <Field label="Reviews" type="number" value={String(form.reviews)} onChange={(v) => setForm({ ...form, reviews: Number(v) || 0 })} />
           <div className="col-span-2">
-            <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Image</label>
+            <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Main Image</label>
             <div className="flex gap-3 items-start">
               <div className="size-20 rounded-lg overflow-hidden bg-background border border-border shrink-0 grid place-items-center">
                 {form.image ? (
-                  <img src={form.image.startsWith("http") ? form.image : form.image} alt="" className="w-full h-full object-cover" />
+                  <img src={form.image} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Package className="size-5 text-muted-foreground" />
                 )}
@@ -723,6 +731,20 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
               className="accent-[var(--accent)]" />
             Featured
           </label>
+
+          {row && (
+            <>
+              <div className="col-span-2 border-t border-border pt-6 mt-2">
+                <GalleryManager slug={row.slug} />
+              </div>
+              <div className="col-span-2 border-t border-border pt-6">
+                <VariantManager slug={row.slug} />
+              </div>
+            </>
+          )}
+          {!row && (
+            <p className="col-span-2 text-[11px] text-muted-foreground italic">Save the product first to manage gallery images and variants.</p>
+          )}
         </div>
         {error && <p className="text-xs text-red-400 mt-4">{error}</p>}
         <div className="flex justify-end gap-2 mt-6">
@@ -735,6 +757,149 @@ function ProductEditor({ row, nextSort, categories, onClose, onSaved }: { row: P
     </div>
   );
 }
+
+function GalleryManager({ slug }: { slug: string }) {
+  const [images, setImages] = useState<{ id: string; url: string; alt: string | null; sort_order: number }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    const { data } = await supabase.from("product_images").select("id,url,alt,sort_order").eq("product_slug", slug).order("sort_order");
+    setImages(data ?? []);
+  }
+  useEffect(() => { load(); }, [slug]);
+
+  async function onUpload(file: File) {
+    setUploading(true); setErr(null);
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${slug}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+    if (upErr) { setErr(upErr.message); setUploading(false); return; }
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    const { error: insErr } = await supabase.from("product_images").insert({
+      product_slug: slug, url: data.publicUrl, sort_order: images.length,
+    });
+    if (insErr) setErr(insErr.message);
+    await load();
+    setUploading(false);
+  }
+
+  async function remove(id: string) {
+    await supabase.from("product_images").delete().eq("id", id);
+    load();
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-medium">Gallery Images <span className="text-muted-foreground font-mono text-[10px]">· {images.length}</span></h3>
+        <label className="inline-flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border border-border text-[10px] font-mono uppercase tracking-widest hover:bg-white/5 transition-colors">
+          {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+          {uploading ? "Uploading…" : "Add Image"}
+          <input type="file" accept="image/*" className="hidden" disabled={uploading}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
+        </label>
+      </div>
+      {images.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">No gallery images yet. The main image is used as a fallback.</p>
+      ) : (
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {images.map((img) => (
+            <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-background">
+              <img src={img.url} alt={img.alt ?? ""} className="w-full h-full object-cover" />
+              <button type="button" onClick={() => remove(img.id)} className="absolute top-1 right-1 size-6 grid place-items-center rounded-full bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove image">
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
+    </div>
+  );
+}
+
+function VariantManager({ slug }: { slug: string }) {
+  const [variants, setVariants] = useState<{ id: string; name: string; sku: string | null; price_override: number | string | null; stock_quantity: number; sort_order: number }[]>([]);
+  const [draft, setDraft] = useState({ name: "", sku: "", price_override: "", stock_quantity: "0" });
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    const { data } = await supabase.from("product_variants").select("id,name,sku,price_override,stock_quantity,sort_order").eq("product_slug", slug).order("sort_order");
+    setVariants(data ?? []);
+  }
+  useEffect(() => { load(); }, [slug]);
+
+  async function add() {
+    if (!draft.name.trim()) return;
+    setErr(null);
+    const { error } = await supabase.from("product_variants").insert({
+      product_slug: slug,
+      name: draft.name.trim(),
+      sku: draft.sku.trim() || null,
+      price_override: draft.price_override ? Number(draft.price_override) : null,
+      stock_quantity: Number(draft.stock_quantity) || 0,
+      sort_order: variants.length,
+    });
+    if (error) { setErr(error.message); return; }
+    setDraft({ name: "", sku: "", price_override: "", stock_quantity: "0" });
+    load();
+  }
+
+  async function update(id: string, patch: Record<string, any>) {
+    await supabase.from("product_variants").update(patch).eq("id", id);
+    load();
+  }
+
+  async function remove(id: string) {
+    await supabase.from("product_variants").delete().eq("id", id);
+    load();
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-medium mb-3">Variants <span className="text-muted-foreground font-mono text-[10px]">· {variants.length}</span></h3>
+      {variants.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {variants.map((v) => (
+            <div key={v.id} className="grid grid-cols-12 gap-2 items-center text-sm">
+              <input value={v.name} onChange={(e) => setVariants((arr) => arr.map((x) => x.id === v.id ? { ...x, name: e.target.value } : x))}
+                onBlur={(e) => update(v.id, { name: e.target.value })}
+                className="col-span-4 bg-background border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-accent" />
+              <input value={v.sku ?? ""} placeholder="SKU" onChange={(e) => setVariants((arr) => arr.map((x) => x.id === v.id ? { ...x, sku: e.target.value } : x))}
+                onBlur={(e) => update(v.id, { sku: e.target.value || null })}
+                className="col-span-3 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+              <input type="number" value={v.price_override ?? ""} placeholder="Price" onChange={(e) => setVariants((arr) => arr.map((x) => x.id === v.id ? { ...x, price_override: e.target.value } : x))}
+                onBlur={(e) => update(v.id, { price_override: e.target.value ? Number(e.target.value) : null })}
+                className="col-span-2 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+              <input type="number" value={v.stock_quantity} onChange={(e) => setVariants((arr) => arr.map((x) => x.id === v.id ? { ...x, stock_quantity: Number(e.target.value) || 0 } : x))}
+                onBlur={(e) => update(v.id, { stock_quantity: Number(e.target.value) || 0 })}
+                className="col-span-2 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+              <button type="button" onClick={() => remove(v.id)} className="col-span-1 size-7 grid place-items-center rounded-full hover:bg-white/5 hover:text-accent justify-self-end" aria-label="Remove variant">
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-12 gap-2 items-center">
+        <input placeholder="Variant name (e.g. Large / Red)" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          className="col-span-4 bg-background border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-accent" />
+        <input placeholder="SKU" value={draft.sku} onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
+          className="col-span-3 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+        <input type="number" placeholder="Price" value={draft.price_override} onChange={(e) => setDraft({ ...draft, price_override: e.target.value })}
+          className="col-span-2 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+        <input type="number" placeholder="Stock" value={draft.stock_quantity} onChange={(e) => setDraft({ ...draft, stock_quantity: e.target.value })}
+          className="col-span-2 bg-background border border-border rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-accent" />
+        <button type="button" onClick={add} className="col-span-1 size-7 grid place-items-center rounded-full bg-accent text-accent-foreground justify-self-end" aria-label="Add variant">
+          <Plus className="size-3.5" />
+        </button>
+      </div>
+      {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
+    </div>
+  );
+}
+
 
 function Field({ label, value, onChange, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
   return (
