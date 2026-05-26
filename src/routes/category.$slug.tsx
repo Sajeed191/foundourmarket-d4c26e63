@@ -1,16 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CATEGORIES } from "@/lib/products";
+import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Loader2 } from "lucide-react";
 
+function titleize(slug: string) {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
-    const cat = CATEGORIES.find((c) => c.slug === params.slug);
+    const name = titleize(params.slug);
     return {
       meta: [
-        { title: `${cat?.name ?? "Category"} — FoundOurMarket™` },
-        { name: "description", content: `Shop ${cat?.name ?? "premium products"} curated from the global marketplace.` },
+        { title: `${name} — FoundOurMarket™` },
+        { name: "description", content: `Shop ${name} curated from the global marketplace.` },
       ],
     };
   },
@@ -19,9 +23,11 @@ export const Route = createFileRoute("/category/$slug")({
 
 function CategoryPage() {
   const { slug } = Route.useParams();
-  const cat = CATEGORIES.find((c) => c.slug === slug);
+  const { categories } = useCategories();
+  const cat = categories.find((c) => c.slug === slug);
   const { products, loading } = useProducts();
   const items = products.filter((p) => p.category === slug);
+
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
