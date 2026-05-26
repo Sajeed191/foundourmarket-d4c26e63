@@ -20,6 +20,7 @@ import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 import { CompareTray } from "@/components/site/CompareTray";
+import { InstallPrompt } from "@/components/site/InstallPrompt";
 import { registerServiceWorker } from "@/lib/pwa";
 import { trackPageView } from "@/lib/analytics";
 
@@ -73,18 +74,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "FoundOurMarket™ — Everything You Need. All In One Place." },
       { name: "description", content: "A premium independent marketplace sourcing top-quality products worldwide." },
+      { name: "application-name", content: "FoundOurMarket" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "FoundOurMarket" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "format-detection", content: "telephone=no" },
       { property: "og:title", content: "FoundOurMarket™" },
       { property: "og:description", content: "Everything You Need. All In One Place." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "FoundOurMarket" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0a0a0a" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "apple-touch-icon", href: "/icon-192.png", sizes: "192x192" },
     ],
   }),
   shellComponent: RootShell,
@@ -129,6 +139,7 @@ function RootComponent() {
                   <Footer />
                   <MobileBottomNav />
                   <CompareTray />
+                  <InstallPrompt />
                 </div>
               </CartProvider>
             </RegionProvider>
