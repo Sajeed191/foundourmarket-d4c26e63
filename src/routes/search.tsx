@@ -16,9 +16,7 @@ export const Route = createFileRoute("/search")({
     max: typeof s.max === "number" ? s.max : s.max ? Number(s.max) : undefined,
     stock: typeof s.stock === "string" ? s.stock : undefined,
   }),
-  head: ({ search }: { search: SearchParams }) => ({
-    meta: [{ title: `${search.q ? `"${search.q}" — ` : ""}Search — FoundOurMarket™` }],
-  }),
+  head: () => ({ meta: [{ title: "Search — FoundOurMarket™" }] }),
   component: SearchPage,
 });
 
