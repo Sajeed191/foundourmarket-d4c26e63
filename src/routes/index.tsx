@@ -71,90 +71,110 @@ function Home() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative pt-10 sm:pt-20 md:pt-24 pb-16 sm:pb-28 md:pb-32 px-4 sm:px-6 overflow-hidden">
+      {/* Hero — cinematic */}
+      <section className="relative pt-12 sm:pt-20 md:pt-28 pb-20 sm:pb-32 md:pb-40 px-4 sm:px-6 overflow-hidden">
+        {/* Floating gradient orbs */}
+        <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="orb animate-orb" style={{ width: 520, height: 520, top: "10%", left: "55%", background: "var(--gradient-ember)" }} />
+          <div className="orb animate-orb" style={{ width: 460, height: 460, top: "30%", left: "10%", background: "var(--gradient-violet)", animationDelay: "-7s" }} />
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.6) 1px, transparent 1px)",
+              backgroundSize: "64px 64px",
+              maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
+            }}
+          />
+        </div>
+
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.25em] sm:tracking-[0.3em] text-accent mb-4 sm:mb-6"
+            className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
           >
-            Global Marketplace · Curated Worldwide
-          </motion.p>
+            <span className="size-1.5 rounded-full bg-accent animate-glow" />
+            Live · 180+ countries · 2.4k products
+          </motion.div>
+
           <motion.h1
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-6 sm:mb-8"
           >
-            Everything You Need.
+            Everything you need.
             <br />
-            <span className="text-muted-foreground">All In One Place.</span>
+            <span className="text-gradient-ember">All in one place.</span>
           </motion.h1>
+
           <motion.p
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.7 }}
-            className="text-fluid-base text-muted-foreground max-w-2xl mx-auto text-balance mb-8 sm:mb-12 px-2"
+            className="text-fluid-base text-muted-foreground max-w-2xl mx-auto text-balance mb-10 sm:mb-12 px-2"
           >
             A premium independent marketplace sourcing top-quality products from across the world — delivered to your door with cinematic precision.
           </motion.p>
 
-          {/* Smart Search */}
           <motion.form
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.7 }}
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
-            className="max-w-2xl mx-auto relative"
+            className="max-w-2xl mx-auto relative group"
           >
-            <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the marketplace..."
-              className="w-full bg-card border border-border rounded-full pl-11 sm:pl-14 pr-24 sm:pr-32 py-4 sm:py-5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all placeholder:text-muted-foreground/60"
-            />
-            <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all">
-              Search
-            </button>
+            <div className="absolute -inset-px rounded-full bg-gradient-to-r from-accent/40 via-transparent to-accent/40 opacity-0 group-focus-within:opacity-100 blur-md transition-opacity" />
+            <div className="relative glass-strong rounded-full">
+              <Search className="absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search 2,400+ curated products..."
+                className="w-full bg-transparent rounded-full pl-12 sm:pl-14 pr-24 sm:pr-32 py-4 sm:py-5 text-sm sm:text-base focus:outline-none placeholder:text-muted-foreground/60"
+              />
+              <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[11px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
+                Search
+              </button>
+            </div>
           </motion.form>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
-            className="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3 sm:gap-4"
+            className="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3"
           >
-            <Link to="/category/$slug" params={{ slug: "electronics" }} className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-foreground text-background text-[10px] sm:text-xs uppercase tracking-widest font-semibold hover:brightness-110 transition-all">
+            <Link to="/category/$slug" params={{ slug: "electronics" }} className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-foreground text-background text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:brightness-110 hover:-translate-y-0.5 transition-all">
               Explore Products <ArrowRight className="size-3.5" />
             </Link>
-            <a href="#categories" className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full border border-border text-[10px] sm:text-xs uppercase tracking-widest font-semibold hover:bg-white/5 transition-all">
+            <a href="#categories" className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full glass text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:bg-white/10 transition-all">
               Shop Categories
             </a>
           </motion.div>
 
-          {/* Live stats */}
+          {/* Live stats — floating layered cards */}
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
-            className="mt-12 sm:mt-16 grid grid-cols-3 gap-3 sm:gap-6 max-w-3xl mx-auto"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55, duration: 0.8 }}
+            className="mt-14 sm:mt-20 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
           >
             {[
-              { value: "180+", label: "Countries" },
-              { value: "2.4k+", label: "Products" },
-              { value: "98%", label: "Happy buyers" },
-            ].map((s) => (
-              <div key={s.label} className="glass rounded-2xl px-3 sm:px-6 py-4 sm:py-5">
-                <div className="text-xl sm:text-3xl font-display font-semibold tracking-tight">{s.value}</div>
-                <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-1">{s.label}</div>
-              </div>
+              { value: "180+", label: "Countries", hint: "Worldwide reach" },
+              { value: "2.4k+", label: "Products", hint: "Curated daily" },
+              { value: "98%", label: "Happy buyers", hint: "5-star average" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + i * 0.08, duration: 0.6 }}
+                className="glass-strong rounded-2xl px-3 sm:px-6 py-4 sm:py-6 text-left"
+              >
+                <div className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">{s.value}</div>
+                <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5">{s.label}</div>
+                <div className="hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5">{s.hint}</div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
-
-        {/* ember glow */}
-        <div
-          aria-hidden
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] sm:w-[900px] h-[60vw] sm:h-[500px] max-w-none -z-0 rounded-full animate-glow"
-          style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }}
-        />
       </section>
 
       {/* Trust Strip */}
-      <section className="border-y border-border bg-white/[0.02]">
+      <section className="border-y border-border bg-white/[0.015] backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {[
             { icon: Truck, label: "Worldwide Shipping" },
@@ -162,15 +182,16 @@ function Home() {
             { icon: Star, label: "Curated Quality" },
             { icon: Headset, label: "24/7 Support" },
           ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-3">
-              <div className="size-9 sm:size-10 grid place-items-center rounded-full bg-accent/10 text-accent shrink-0">
+            <div key={label} className="flex items-center gap-3 group">
+              <div className="size-10 grid place-items-center rounded-xl bg-accent/10 text-accent shrink-0 group-hover:bg-accent/20 group-hover:scale-105 transition-all">
                 <Icon className="size-4" />
               </div>
-              <span className="text-[11px] sm:text-xs font-medium uppercase tracking-widest text-muted-foreground">{label}</span>
+              <span className="text-[11px] sm:text-xs font-medium uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
             </div>
           ))}
         </div>
       </section>
+
 
       {/* Categories */}
       <section id="categories" className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
