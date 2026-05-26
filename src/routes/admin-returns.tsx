@@ -54,7 +54,7 @@ function AdminReturnsPage() {
 
   async function update(id: string, patch: Record<string, unknown>) {
     if (patch.status === "completed") patch.resolved_at = new Date().toISOString();
-    const { error } = await supabase.from("returns").update(patch).eq("id", id);
+    const { error } = await (supabase.from("returns") as any).update(patch).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Return updated");
     void load();
