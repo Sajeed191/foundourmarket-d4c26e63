@@ -92,10 +92,21 @@ function Home() {
     [products]
   );
 
+  const trending = useMemo(
+    () => [...products].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0)).slice(0, 4),
+    [products]
+  );
+
+  const newArrivals = useMemo(
+    () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")).slice(0, 8),
+    [products]
+  );
+
   const bestSellers = useMemo(
     () => [...products].sort((a, b) => (b.rating * b.reviews) - (a.rating * a.reviews)).slice(0, 4),
     [products]
   );
+
 
   const dealProducts = useMemo(
     () => products.filter((p) => (p.discount ?? 0) > 0).slice(0, 4),
