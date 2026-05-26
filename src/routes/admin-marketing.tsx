@@ -58,6 +58,9 @@ function MarketingPage() {
     ]);
     logActivity("banner_reorder", "banner", id);
     load();
+  }
+
+
 
   async function deleteFlash(id: string) {
     if (!confirm("Delete this flash sale?")) return;
