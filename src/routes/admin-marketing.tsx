@@ -205,7 +205,7 @@ function MarketingPage() {
         title="Publish banner live?"
         description={`"${publishing?.draft_data?.title ?? publishing?.title}" will appear on the public site immediately for every visitor.`}
         onCancel={() => setPublishing(null)}
-        onConfirm={() => publishing && publishBanner(publishing)}
+        onConfirm={async () => { if (publishing) await publishBanner(publishing); }}
       />
     </AdminShell>
   );
