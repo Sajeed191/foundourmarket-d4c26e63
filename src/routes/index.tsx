@@ -106,6 +106,7 @@ function Home() {
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
           <div className="orb animate-orb" style={{ width: 520, height: 520, top: "10%", left: "55%", background: "var(--gradient-ember)" }} />
           <div className="orb animate-orb" style={{ width: 460, height: 460, top: "30%", left: "10%", background: "var(--gradient-violet)", animationDelay: "-7s" }} />
+          <div className="orb animate-orb" style={{ width: 380, height: 380, top: "65%", left: "70%", background: "radial-gradient(circle at 50% 50%, oklch(0.7 0.15 220 / 0.18), transparent 65%)", animationDelay: "-14s" }} />
           <div
             className="absolute inset-0 opacity-[0.04]"
             style={{
@@ -114,6 +115,13 @@ function Home() {
               backgroundSize: "64px 64px",
               maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
             }}
+          />
+          {/* cinematic light sweep */}
+          <motion.div
+            initial={{ x: "-30%", opacity: 0 }}
+            animate={{ x: "130%", opacity: [0, 0.5, 0] }}
+            transition={{ duration: 8, repeat: Infinity, repeatDelay: 6, ease: "easeInOut" }}
+            className="absolute top-0 bottom-0 w-[40%] -skew-x-12 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent pointer-events-none"
           />
         </div>
 
