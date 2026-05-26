@@ -26,7 +26,7 @@ export function Footer() {
         <div className="space-y-4">
           <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Support</h5>
           <ul className="text-xs space-y-2 text-muted-foreground">
-            <li className="hover:text-foreground transition-colors cursor-pointer">Track Order</li>
+            <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
             <li className="hover:text-foreground transition-colors cursor-pointer">Shipping Policy</li>
             <li className="hover:text-foreground transition-colors cursor-pointer">Returns</li>
             <li className="hover:text-foreground transition-colors cursor-pointer">Contact</li>
