@@ -202,7 +202,7 @@ function AccountPage() {
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
           <SectionHeader title="Overview" eyebrow="Your account at a glance" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <OverviewCard icon={Package} label="Active orders" value={stats.active} loading={!orders} accent />
+            <OverviewCard icon={Package} label="Active orders" value={stats.active} loading={!orders} accent to="/account/orders" />
             <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} to="/wishlist" />
             <OverviewCard icon={ShoppingBag} label="Cart items" value={cartCount} to="/cart" />
             <OverviewCard icon={Wallet} label="Total saved" value={stats.saved} formatter={format} loading={!orders} />
