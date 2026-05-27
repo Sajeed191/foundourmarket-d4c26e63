@@ -370,16 +370,16 @@ function TrackPage() {
         )}
 
         {/* AI Shopping Intelligence */}
-        {result?.found && !cancelled && (
+        {result?.found && !cancelled && recentSlugs.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="mt-10"
+            className="mt-2"
           >
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <Sparkles className="size-3.5 text-accent" />
-              <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">You may also love</p>
-            </div>
-            <RecommendationStrip slug="recommended" title="" />
+            <RecommendationStrip
+              title="You may also love"
+              subtitle="AI picks based on your order"
+              slugs={recentSlugs.slice(0, 8)}
+            />
           </motion.div>
         )}
 
