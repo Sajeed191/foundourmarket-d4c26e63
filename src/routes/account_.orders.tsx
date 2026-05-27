@@ -284,48 +284,53 @@ function OrdersPage() {
         </AnimatePresence>
       </header>
 
-      <div className="container-page max-w-5xl pb-16 pt-4">
-        {/* Filter pills */}
-        <div className="-mx-4 px-4 overflow-x-auto no-scrollbar mb-3">
-          <div className="flex gap-1.5 w-max">
-            {FILTERS.map((f) => {
-              const Icon = f.icon;
-              const active = filter === f.id;
-              return (
+      <div className="container-page max-w-5xl pb-16 pt-3">
+        {/* Sticky filter + date rail */}
+        <div className={`sticky z-30 -mx-4 px-4 pt-2 pb-2 mb-3 transition-all ${scrolled ? "top-[52px] bg-background/85 backdrop-blur-xl border-b border-border/40" : "top-[64px] bg-background/60 backdrop-blur-md"}`}>
+          <div className="overflow-x-auto no-scrollbar snap-x snap-mandatory">
+            <div className="flex gap-1.5 w-max">
+              {FILTERS.map((f) => {
+                const Icon = f.icon;
+                const active = filter === f.id;
+                return (
+                  <motion.button
+                    key={f.id}
+                    onClick={() => setFilter(f.id)}
+                    whileTap={{ scale: 0.94 }}
+                    className={`relative snap-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] uppercase tracking-widest font-mono whitespace-nowrap transition-all ${
+                      active
+                        ? "bg-accent text-accent-foreground shadow-[0_0_18px_rgba(255,122,0,0.5)]"
+                        : "bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {active && (
+                      <motion.span layoutId="orders-filter-pill" aria-hidden
+                        className="absolute inset-0 rounded-full ring-1 ring-accent/40" transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                    )}
+                    <Icon className="size-3 relative" />
+                    <span className="relative">{f.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="overflow-x-auto no-scrollbar mt-2">
+            <div className="flex items-center gap-1.5 w-max">
+              <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">
+                <Calendar className="size-3 text-accent" /> Date
+              </span>
+              {DATE_PRESETS.map((p) => (
                 <button
-                  key={f.id}
-                  onClick={() => setFilter(f.id)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] uppercase tracking-widest font-mono whitespace-nowrap transition-all active:scale-95 ${
-                    active
-                      ? "bg-accent text-accent-foreground shadow-[0_0_14px_rgba(255,122,0,0.45)]"
-                      : "bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:border-accent/40"
+                  key={p.id}
+                  onClick={() => setDatePreset(p.id)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-mono transition-all whitespace-nowrap active:scale-95 ${
+                    datePreset === p.id ? "bg-accent/15 text-accent border border-accent/40" : "bg-card/40 border border-border/50 text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="size-3" />
-                  {f.label}
+                  {p.label}
                 </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Date filter chips */}
-        <div className="-mx-4 px-4 overflow-x-auto no-scrollbar mb-5">
-          <div className="flex items-center gap-1.5 w-max">
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">
-              <Calendar className="size-3 text-accent" /> Date
-            </span>
-            {DATE_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setDatePreset(p.id)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-mono transition-all whitespace-nowrap active:scale-95 ${
-                  datePreset === p.id ? "bg-accent/15 text-accent border border-accent/40" : "bg-card/40 border border-border/50 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -338,29 +343,39 @@ function OrdersPage() {
           </div>
         )}
 
-        {/* Quick actions */}
+        {/* Quick actions — premium glass tiles */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-5">
           {[
-            { icon: Truck, label: "Track", to: "/track" as const },
-            { icon: RotateCcw, label: "Return", to: "/account_/returns" as const },
-            { icon: HelpCircle, label: "Support", to: "/help" as const },
-            { icon: FileText, label: "Invoices", to: "/account_/history" as const },
-            { icon: RefreshCw, label: "Reorder", to: "/cart" as const },
-            { icon: ShieldCheck, label: "Protection", to: "/pages/$slug" as const, params: { slug: "returns" } },
-          ].map((a) => {
+            { icon: Truck, label: "Track", to: "/track" as const, tint: "from-sky-500/20 to-sky-500/0" },
+            { icon: RotateCcw, label: "Return", to: "/account_/returns" as const, tint: "from-amber-500/20 to-amber-500/0" },
+            { icon: HelpCircle, label: "Support", to: "/help" as const, tint: "from-violet-500/20 to-violet-500/0" },
+            { icon: FileText, label: "Invoices", to: "/account_/history" as const, tint: "from-emerald-500/20 to-emerald-500/0" },
+            { icon: RefreshCw, label: "Reorder", to: "/cart" as const, tint: "from-accent/25 to-accent/0" },
+            { icon: ShieldCheck, label: "Protection", to: "/pages/$slug" as const, params: { slug: "returns" }, tint: "from-rose-500/20 to-rose-500/0" },
+          ].map((a, i) => {
             const Icon = a.icon;
             const props = a.params ? { to: a.to, params: a.params } : { to: a.to };
             return (
-              <Link key={a.label} {...(props as { to: typeof a.to })}
-                className="group flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-card/40 border border-border/50 backdrop-blur hover:border-accent/40 hover:bg-card/70 active:scale-95 transition-all">
-                <span className="size-9 grid place-items-center rounded-xl bg-accent/10 text-accent group-hover:shadow-[0_0_14px_rgba(255,122,0,0.35)] transition">
-                  <Icon className="size-4" />
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground group-hover:text-foreground">{a.label}</span>
-              </Link>
+              <motion.div key={a.label}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i, duration: 0.3 }}>
+                <Link {...(props as { to: typeof a.to })}
+                  className="group relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-md hover:border-accent/40 hover:bg-card/70 active:scale-95 transition-all overflow-hidden">
+                  <span aria-hidden className={`absolute inset-0 -z-10 opacity-60 bg-gradient-to-b ${a.tint}`} />
+                  <span aria-hidden className="absolute -top-6 left-1/2 -translate-x-1/2 size-12 rounded-full bg-accent/10 blur-xl opacity-0 group-hover:opacity-100 transition" />
+                  <motion.span whileHover={{ y: -2, rotate: -4 }} transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                    className="size-9 grid place-items-center rounded-xl bg-gradient-to-br from-accent/25 to-accent/5 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_rgba(255,122,0,0.45)] transition">
+                    <Icon className="size-4" />
+                  </motion.span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground group-hover:text-foreground">{a.label}</span>
+                </Link>
+              </motion.div>
             );
           })}
         </div>
+
+        {/* Smart insights — engagement & conversion feed */}
+        <SmartInsights />
+
 
         {/* Recent activity */}
         {activity.length > 0 && (
