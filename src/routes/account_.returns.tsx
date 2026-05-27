@@ -13,6 +13,11 @@ import {
   LifeBuoy,
   Mail,
   ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Hourglass,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
@@ -20,6 +25,55 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+const SUPPORT_EMAIL = "support@foundourmarket.com";
+const SUPPORT_CC = "returns@foundourmarket.com";
+const SUPPORT_SUBJECT = "Refund Support Request - FoundOurMarket";
+const SUPPORT_BODY = `Hello FoundOurMarket Support,
+
+I need help regarding a refund request.
+
+Order ID:
+Issue:
+Details:
+
+Thank you.`;
+
+function buildMailto() {
+  const params = new URLSearchParams({
+    cc: SUPPORT_CC,
+    subject: SUPPORT_SUBJECT,
+    body: SUPPORT_BODY,
+  });
+  return `mailto:${SUPPORT_EMAIL}?${params.toString()}`;
+}
+
+function buildGmailUrl() {
+  const params = new URLSearchParams({
+    view: "cm",
+    fs: "1",
+    to: SUPPORT_EMAIL,
+    cc: SUPPORT_CC,
+    su: SUPPORT_SUBJECT,
+    body: SUPPORT_BODY,
+  });
+  return `https://mail.google.com/mail/?${params.toString()}`;
+}
+
+function hapticTap() {
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate?.(8);
+    }
+  } catch {}
+}
 
 const searchSchema = z.object({ order: z.string().optional() });
 
@@ -87,8 +141,23 @@ function ReturnsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [scrolled, setScrolled] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
+
+  function openEmailSupport() {
+    hapticTap();
+    setEmailOpen(true);
+  }
+
+  async function copySupportEmail() {
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      toast.success("Support email copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -318,25 +387,23 @@ function ReturnsPage() {
             {FILTERS.map((f) => {
               const count = counts[f.key];
               const active = filter === f.key;
-              const disabled = f.key !== "all" && count === 0;
               return (
                 <motion.button
                   key={f.key}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setFilter(f.key)}
-                  disabled={disabled}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                  onClick={() => { hapticTap(); setFilter(f.key); }}
+                  aria-pressed={active}
                   className={cn(
-                    "shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide transition-all ring-1",
+                    "shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide transition-all ring-1 backdrop-blur-xl",
                     active
-                      ? "bg-[#FF7A00] text-white ring-[#FF7A00] shadow-[0_4px_16px_-6px_#FF7A00]"
-                      : disabled
-                      ? "bg-white/[0.02] text-white/25 ring-white/[0.05] cursor-not-allowed"
+                      ? "bg-[#FF7A00] text-white ring-[#FF7A00] shadow-[0_6px_20px_-6px_#FF7A00,0_0_0_4px_rgba(255,122,0,0.12)] scale-[1.02]"
                       : "bg-white/[0.04] text-white/70 ring-white/[0.08] hover:text-white hover:bg-white/[0.07]"
                   )}
                 >
                   {f.label}
-                  {f.key !== "all" && count > 0 && (
-                    <span className={cn("ml-1.5 text-[10px]", active ? "opacity-90" : "opacity-60")}>
+                  {f.key !== "all" && (
+                    <span className={cn("ml-1.5 text-[10px] tabular-nums", active ? "opacity-90" : "opacity-50")}>
                       {count}
                     </span>
                   )}
@@ -355,52 +422,62 @@ function ReturnsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-              className="relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl px-6 py-10 sm:py-12 text-center overflow-hidden"
-            >
-              <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/50 to-transparent" />
-              <div aria-hidden className="absolute -bottom-20 left-1/2 -translate-x-1/2 size-64 rounded-full blur-3xl opacity-20"
-                style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)" }} />
-              <motion.div
-                initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 18 }}
-                className="relative size-16 mx-auto mb-5 grid place-items-center rounded-2xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/25"
-              >
-                <Package className="size-6 text-[#FF9F43]" />
-              </motion.div>
-              <p className="relative text-base font-semibold">
-                {filter === "all" ? "No refund requests yet" : `No ${filter} refunds`}
-              </p>
-              <p className="relative text-[13px] text-white/55 mt-1.5 max-w-sm mx-auto leading-relaxed">
-                Eligible products may be refunded within 4 days after successful delivery.
-              </p>
-              <p className="relative text-[11px] text-white/35 mt-2 max-w-sm mx-auto">
-                Refund eligibility is available from your Orders page.
-              </p>
-              <div className="relative mt-6 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-center">
-                <Link
-                  to="/account/orders"
-                  className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_20px_-8px_#FF7A00] transition-all"
+            (() => {
+              const emptyMap: Record<FilterKey, { icon: typeof Package; title: string; sub: string }> = {
+                all:       { icon: Package,      title: "No refund requests yet", sub: "Eligible products may be refunded within 4 days after successful delivery." },
+                processing:{ icon: Hourglass,    title: "No refunds in review",   sub: "Submitted requests under review will appear here." },
+                approved:  { icon: CheckCircle2, title: "No approved refunds yet",sub: "Approved refunds awaiting payout will show up here." },
+                refunded:  { icon: BadgeCheck,   title: "No completed refunds",   sub: "Completed refunds will appear here once processed." },
+                rejected:  { icon: XCircle,      title: "No rejected refund requests", sub: "Declined refund requests will appear here with reasons." },
+              };
+              const E = emptyMap[filter];
+              const Icon = E.icon;
+              return (
+                <motion.div
+                  key={filter}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl px-6 py-10 sm:py-12 text-center overflow-hidden"
                 >
-                  View Eligible Orders <ChevronRight className="size-3.5" />
-                </Link>
-                <Link
-                  to="/returns"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/80 hover:text-white ring-1 ring-white/10 hover:ring-white/25 bg-white/[0.03] transition"
-                >
-                  Refund Policy
-                </Link>
-                <Link
-                  to="/help"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/60 hover:text-white transition"
-                >
-                  Contact Support
-                </Link>
-              </div>
-            </motion.div>
+                  <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/50 to-transparent" />
+                  <div aria-hidden className="absolute -bottom-20 left-1/2 -translate-x-1/2 size-64 rounded-full blur-3xl opacity-20"
+                    style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)" }} />
+                  <motion.div
+                    initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.08, type: "spring", stiffness: 220, damping: 18 }}
+                    className="relative size-16 mx-auto mb-5 grid place-items-center rounded-2xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/25"
+                  >
+                    <Icon className="size-6 text-[#FF9F43]" />
+                  </motion.div>
+                  <p className="relative text-base font-semibold">{E.title}</p>
+                  <p className="relative text-[13px] text-white/55 mt-1.5 max-w-sm mx-auto leading-relaxed">{E.sub}</p>
+                  <div className="relative mt-6 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-center">
+                    {filter !== "all" && (
+                      <button
+                        onClick={() => { hapticTap(); setFilter("all"); }}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/80 hover:text-white ring-1 ring-white/10 hover:ring-white/25 bg-white/[0.03] transition"
+                      >
+                        Show all refunds
+                      </button>
+                    )}
+                    <Link
+                      to="/account/orders"
+                      className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_20px_-8px_#FF7A00] transition-all"
+                    >
+                      View Eligible Orders <ChevronRight className="size-3.5" />
+                    </Link>
+                    <Link
+                      to="/returns"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/60 hover:text-white transition"
+                    >
+                      Refund Policy
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })()
           ) : (
             <div className="space-y-2.5">
               {filtered.map((r, i) => (
@@ -470,18 +547,22 @@ function ReturnsPage() {
         >
           <h3 className="text-[11px] font-mono uppercase tracking-[0.24em] text-white/50 mb-3">Quick support</h3>
           <div className="grid grid-cols-2 gap-2.5">
-            {[
-              { to: "/help", icon: MessageCircle, label: "Chat Support", hint: "Live agent" },
-              { to: "/returns", icon: FileText, label: "Refund Policy", hint: "Eligibility" },
-              { to: "/help", icon: LifeBuoy, label: "Help Center", hint: "FAQs" },
-              { href: "mailto:support@foundourmarket.com", icon: Mail, label: "Email Support", hint: "support@" },
-            ].map((a) => {
+            {([
+              { kind: "link",   to: "/help",    icon: MessageCircle, label: "Chat Support", hint: "Live agent" },
+              { kind: "link",   to: "/returns", icon: FileText,      label: "Refund Policy", hint: "Eligibility" },
+              { kind: "link",   to: "/help",    icon: LifeBuoy,      label: "Help Center",   hint: "FAQs" },
+              { kind: "email",  icon: Mail,     label: "Email Support", hint: SUPPORT_EMAIL.replace("@foundourmarket.com","@…") },
+            ] as const).map((a) => {
               const inner = (
                 <motion.div
-                  whileTap={{ scale: 0.97 }}
-                  className="group rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all"
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                  className="group relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div aria-hidden className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: "radial-gradient(120px 60px at var(--x,50%) 0%, rgba(255,122,0,0.18), transparent 70%)" }} />
+                  <div className="flex items-center gap-2.5 relative">
                     <div className="size-8 grid place-items-center rounded-lg bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/20 text-[#FF9F43] shrink-0">
                       <a.icon className="size-3.5" />
                     </div>
@@ -492,10 +573,21 @@ function ReturnsPage() {
                   </div>
                 </motion.div>
               );
-              return a.href ? (
-                <a key={a.label} href={a.href}>{inner}</a>
-              ) : (
-                <Link key={a.label} to={a.to!}>{inner}</Link>
+              if (a.kind === "email") {
+                return (
+                  <button
+                    key={a.label}
+                    type="button"
+                    onClick={openEmailSupport}
+                    className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/40 rounded-2xl"
+                    aria-label="Email FoundOurMarket support"
+                  >
+                    {inner}
+                  </button>
+                );
+              }
+              return (
+                <Link key={a.label} to={a.to} onClick={() => hapticTap()}>{inner}</Link>
               );
             })}
           </div>
@@ -510,6 +602,66 @@ function ReturnsPage() {
           <Link to="/returns" className="hover:text-white/80 transition">Refund Policy</Link>
         </footer>
       </main>
+
+      {/* EMAIL SUPPORT FALLBACK DIALOG */}
+      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
+        <DialogContent className="bg-[#0a0f1f] border-white/[0.08] text-white max-w-sm rounded-2xl p-0 overflow-hidden">
+          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/60 to-transparent" />
+          <div aria-hidden className="absolute -top-24 -right-16 size-56 rounded-full blur-3xl opacity-30 pointer-events-none"
+            style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)" }} />
+          <div className="relative p-5">
+            <DialogHeader>
+              <div className="size-10 grid place-items-center rounded-xl bg-[#FF7A00]/15 ring-1 ring-[#FF7A00]/30 text-[#FF9F43] mb-3">
+                <Mail className="size-4" />
+              </div>
+              <DialogTitle className="text-base font-semibold">Contact Support</DialogTitle>
+              <DialogDescription className="text-white/60 text-[13px] leading-relaxed">
+                Reach FoundOurMarket support directly. Pick the option that works best for you.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-4 rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06] px-3 py-2.5 flex items-center justify-between gap-2">
+              <span className="text-[12px] font-mono text-white/80 truncate">{SUPPORT_EMAIL}</span>
+              <button
+                onClick={copySupportEmail}
+                className="shrink-0 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-[#FF9F43] hover:text-white transition px-2 py-1 rounded-md hover:bg-white/5"
+              >
+                <Copy className="size-3" /> Copy
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+              <a
+                href={buildMailto()}
+                onClick={() => { hapticTap(); setEmailOpen(false); }}
+                className="w-full inline-flex items-center justify-center gap-2 bg-[#FF7A00] text-white rounded-full px-5 py-3 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_22px_-8px_#FF7A00] transition-all"
+              >
+                <Mail className="size-3.5" /> Open Email App
+              </a>
+              <a
+                href={buildGmailUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { hapticTap(); setEmailOpen(false); }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[11px] uppercase tracking-widest font-semibold text-white/85 hover:text-white ring-1 ring-white/10 hover:ring-white/25 bg-white/[0.03] transition"
+              >
+                <ExternalLink className="size-3.5" /> Open in Gmail
+              </a>
+              <Link
+                to="/help"
+                onClick={() => { hapticTap(); setEmailOpen(false); }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[11px] uppercase tracking-widest font-semibold text-white/70 hover:text-white transition"
+              >
+                <MessageCircle className="size-3.5" /> Contact Live Chat
+              </Link>
+            </div>
+
+            <p className="mt-4 text-[10px] font-mono uppercase tracking-[0.22em] text-white/35 text-center">
+              Avg reply · 2 business days
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

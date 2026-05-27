@@ -222,7 +222,7 @@ function OrdersPage() {
             className={`size-10 grid place-items-center rounded-full border transition active:scale-95 ${searchOpen ? "border-accent text-accent bg-accent/10" : "border-border/60 hover:border-accent/50"}`}>
             <Search className="size-4" />
           </button>
-          <Link to="/account_/notifications" aria-label="Notifications" className="size-10 grid place-items-center rounded-full border border-border/60 hover:border-accent/50 active:scale-95 transition">
+          <Link to="/account/notifications" aria-label="Notifications" className="size-10 grid place-items-center rounded-full border border-border/60 hover:border-accent/50 active:scale-95 transition">
             <Bell className="size-4" />
           </Link>
           <Link to="/cart" aria-label="Cart" className="relative size-10 grid place-items-center rounded-full border border-border/60 hover:border-accent/50 active:scale-95 transition">
@@ -349,7 +349,7 @@ function OrdersPage() {
             { icon: Truck, label: "Track", to: "/track" as const, tint: "from-sky-500/20 to-sky-500/0" },
             { icon: RotateCcw, label: "Return", to: "/returns" as const, tint: "from-amber-500/20 to-amber-500/0" },
             { icon: HelpCircle, label: "Support", to: "/help" as const, tint: "from-violet-500/20 to-violet-500/0" },
-            { icon: FileText, label: "Invoices", to: "/account_/history" as const, tint: "from-emerald-500/20 to-emerald-500/0" },
+            { icon: FileText, label: "Invoices", to: "/account/history" as const, tint: "from-emerald-500/20 to-emerald-500/0" },
             { icon: RefreshCw, label: "Reorder", to: "/cart" as const, tint: "from-accent/25 to-accent/0" },
             { icon: ShieldCheck, label: "Protection", to: "/returns" as const, tint: "from-rose-500/20 to-rose-500/0" },
           ].map((a, i) => {
