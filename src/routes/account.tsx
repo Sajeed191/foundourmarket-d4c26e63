@@ -675,3 +675,104 @@ function AnimatedNumber({
   }, [value, mv]);
   return <motion.span className={className}>{display}</motion.span>;
 }
+
+function FlashSaleStrip() {
+  const endTime = useMemo(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d.getTime();
+  }, []);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const diff = Math.max(0, endTime - now);
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.04 }}>
+      <Link
+        to="/search"
+        className="relative block overflow-hidden rounded-3xl glass-strong p-4 sm:p-5 group hover:border-accent/50 transition-colors"
+      >
+        <div aria-hidden className="absolute inset-0 -z-10 opacity-70" style={{ background: "var(--gradient-ember-soft)" }} />
+        <div aria-hidden className="absolute -top-16 -right-10 size-56 rounded-full blur-3xl opacity-60" style={{ background: "var(--gradient-ember)" }} />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <motion.span
+              animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              className="size-11 sm:size-12 rounded-2xl bg-accent text-accent-foreground grid place-items-center shadow-[0_0_24px_var(--color-accent)] shrink-0"
+            >
+              <Zap className="size-5" fill="currentColor" />
+            </motion.span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Flash sale · Up to 60% off</p>
+              <p className="text-sm sm:text-base font-display font-semibold truncate">Ends tonight — don't miss out</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {[pad(h), pad(m), pad(s)].map((v, i) => (
+              <div key={i} className="flex items-center gap-1 sm:gap-1.5">
+                <span className="min-w-[34px] sm:min-w-[40px] px-1.5 py-1.5 rounded-lg bg-background/60 backdrop-blur text-center font-mono text-sm sm:text-base font-semibold text-accent tabular-nums ring-1 ring-accent/30">
+                  {v}
+                </span>
+                {i < 2 && <span className="text-accent font-bold">:</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+function RewardsStrip({ saved, format }: { saved: number; format: (n: number) => string }) {
+  const points = Math.max(120, Math.round(saved * 10));
+  const nextTier = 5000;
+  const pct = Math.min(100, (points / nextTier) * 100);
+  return (
+    <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.07 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="sm:col-span-2 relative overflow-hidden rounded-2xl card-premium p-4 sm:p-5">
+          <div aria-hidden className="absolute -top-16 -right-10 size-48 rounded-full blur-3xl opacity-50" style={{ background: "var(--gradient-ember)" }} />
+          <div className="relative flex items-center gap-3 sm:gap-4">
+            <span className="size-11 rounded-2xl bg-accent/15 text-accent grid place-items-center shadow-[0_0_18px_-4px_var(--color-accent)] shrink-0">
+              <Gift className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Reward points</p>
+                <p className="text-[10px] font-mono text-muted-foreground">{points}/{nextTier}</p>
+              </div>
+              <p className="text-xl sm:text-2xl font-display font-semibold tabular-nums text-gradient-ember">{points.toLocaleString()} pts</p>
+              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 1, ease }}
+                  className="h-full bg-gradient-to-r from-accent to-primary shadow-[0_0_10px_var(--color-accent)]"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5">Earn {(nextTier - points).toLocaleString()} more for Gold tier</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative overflow-hidden rounded-2xl card-premium p-4 sm:p-5 flex items-center gap-3">
+          <span className="size-11 rounded-2xl bg-emerald-500/15 text-emerald-400 grid place-items-center shrink-0 shadow-[0_0_18px_-6px_oklch(0.7_0.18_150)]">
+            <Truck className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Fast delivery</p>
+            <p className="text-sm font-medium leading-tight mt-0.5">Free 2-day shipping unlocked</p>
+            <p className="text-[10.5px] text-emerald-400/90 mt-0.5">Secure checkout enabled</p>
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
