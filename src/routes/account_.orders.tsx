@@ -193,7 +193,7 @@ function OrdersPage() {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
 
-  const cartCount = cart.items.reduce((n, i) => n + i.quantity, 0);
+  const cartCount = cart.items.reduce((n, i) => n + i.qty, 0);
   const dateLabel = DATE_PRESETS.find((d) => d.id === datePreset)?.label ?? "Anytime";
 
   return (
