@@ -14,6 +14,7 @@ import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
 import { PromoBannerCarousel } from "@/components/site/PromoBannerCarousel";
+import { ProductRail } from "@/components/site/ProductRail";
 
 
 
@@ -315,14 +316,15 @@ function Home() {
 
       {/* Featured Products */}
       {products.some((p) => p.featured) && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
+          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Handpicked</p>
               <h2 className="text-fluid-2xl font-display tracking-tight">Featured Products</h2>
             </div>
           </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          <ProductRail products={products.filter((p) => p.featured).slice(0, 8)} />
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {products.filter((p) => p.featured).slice(0, 4).map((p, i) => (
               <Reveal key={p.slug} delay={i}>
                 <ProductCard product={p} />
@@ -339,8 +341,8 @@ function Home() {
         </section>
       ) : null}
       {trending.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
+          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Flame className="size-3" /> Hot Right Now
@@ -351,7 +353,8 @@ function Home() {
               See All
             </Link>
           </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          <ProductRail products={trending} />
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {trending.map((p, i) => (
               <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
             ))}
@@ -364,9 +367,9 @@ function Home() {
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
 
-          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
+          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Sparkles className="size-3" /> Just Landed
@@ -377,7 +380,8 @@ function Home() {
               View All
             </Link>
           </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          <ProductRail products={newArrivals} />
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {newArrivals.map((p, i) => (
               <Reveal key={p.slug} delay={i % 4}><ProductCard product={p} /></Reveal>
             ))}
@@ -387,8 +391,8 @@ function Home() {
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
+          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Award className="size-3" /> Top Rated
@@ -399,7 +403,8 @@ function Home() {
               See All
             </Link>
           </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          <ProductRail products={bestSellers} />
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {bestSellers.map((p, i) => (
               <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
             ))}
