@@ -51,7 +51,7 @@ function AccountPage() {
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const { slugs: wishSlugs } = useWishlist();
-  const { unread, items: notifs } = useNotifications();
+  const { unread } = useNotifications();
   const { products } = useProducts();
   const cart = useCart();
 
@@ -295,35 +295,7 @@ function AccountPage() {
 
           {/* SIDEBAR */}
           <aside className="space-y-6 lg:space-y-8">
-            {/* 8 — NOTIFICATION CENTER */}
-            <SectionBlock
-              title="Notifications"
-              icon={Bell}
-              action={<Link to="/account/notifications" className="action-link">All <ArrowRight className="size-3" /></Link>}
-            >
-              {notifs.length === 0 ? (
-                <div className="card-premium rounded-2xl p-6 text-center">
-                  <Bell className="size-5 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm">All caught up</p>
-                  <p className="text-xs text-muted-foreground mt-1">You'll see order, shipment & promo alerts here.</p>
-                </div>
-              ) : (
-                <ul className="card-premium rounded-2xl overflow-hidden divide-y divide-border">
-                  {notifs.slice(0, 4).map((n) => (
-                    <li key={n.id} className={`p-4 flex gap-3 ${!n.read_at ? "bg-accent/5" : ""}`}>
-                      <span className={`mt-1.5 size-1.5 rounded-full shrink-0 ${!n.read_at ? "bg-accent animate-pulse" : "bg-muted-foreground/30"}`} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{n.title}</p>
-                        {n.body && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>}
-                        <p className="text-[10px] font-mono text-muted-foreground mt-1.5">{new Date(n.created_at).toLocaleDateString()}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SectionBlock>
-
-            {/* 9 — ACCOUNT INSIGHTS */}
+            {/* 8 — ACCOUNT INSIGHTS */}
             <SectionBlock title="Account insights" icon={TrendingUp}>
               <div className="grid grid-cols-2 gap-2.5">
                 <InsightStat label="Total orders" value={String(stats.count)} />
