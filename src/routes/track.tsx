@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Package, Search, Loader2, CheckCircle2, Truck, Clock, XCircle,
   Sparkles, ShieldCheck, MapPin, Radio, MessageCircle, Mail, HelpCircle,
-  PackageCheck, PackageOpen, Send, Zap, ChevronRight,
+  PackageCheck, PackageOpen, Send, Zap, ChevronRight, Navigation, Timer,
+  Activity, Wind,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackOrder } from "@/lib/track-order.functions";
 import { useRegion } from "@/lib/region";
+import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 
 export const Route = createFileRoute("/track")({
   head: () => ({
