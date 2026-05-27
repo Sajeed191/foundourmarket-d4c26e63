@@ -769,3 +769,75 @@ function FlashSaleStrip() {
   );
 }
 
+function AnnouncementStrip() {
+  const messages = [
+    { icon: Globe, text: "Free Worldwide Shipping" },
+    { icon: Lock, text: "Secure Payments" },
+    { icon: Sparkles, text: "New Arrivals Just In" },
+    { icon: Flame, text: "Flash Sale Live Now" },
+  ];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((p) => (p + 1) % messages.length), 3000);
+    return () => clearInterval(t);
+  }, []);
+  const M = messages[i];
+  const Icon = M.icon;
+  return (
+    <div className="relative overflow-hidden rounded-full glass border border-accent/20 px-4 py-2 h-9 flex items-center justify-center">
+      <div aria-hidden className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-ember-soft)" }} />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.4, ease }}
+          className="relative flex items-center gap-2 text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] text-foreground"
+        >
+          <Icon className="size-3.5 text-accent" />
+          <span>{M.text}</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function WhyShopWithUs() {
+  const items = [
+    { icon: Lock, title: "Secure Payments", desc: "256-bit SSL encryption" },
+    { icon: Globe, title: "Worldwide Shipping", desc: "Delivered to 100+ countries" },
+    { icon: BadgeCheck, title: "Trusted Quality", desc: "Authentic & verified" },
+    { icon: Truck, title: "Fast Delivery", desc: "Express options available" },
+    { icon: Headphones, title: "24/7 Support", desc: "We're always here" },
+  ];
+  return (
+    <motion.section {...fadeUp}>
+      <SectionHeader title="Why shop with us" eyebrow="The FoundOurMarket promise" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        {items.map((it, idx) => {
+          const Icon = it.icon;
+          return (
+            <motion.div
+              key={it.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, ease, delay: idx * 0.05 }}
+              whileHover={{ y: -3 }}
+              className="card-premium p-3.5 sm:p-4 flex flex-col items-center text-center gap-2 hover:ring-1 hover:ring-accent/30 transition-all"
+            >
+              <span className="size-10 rounded-xl bg-accent/10 text-accent grid place-items-center shadow-[0_0_18px_-6px_var(--color-accent)]">
+                <Icon className="size-[18px]" />
+              </span>
+              <p className="text-[12px] sm:text-[13px] font-medium leading-tight">{it.title}</p>
+              <p className="text-[10px] text-muted-foreground leading-snug">{it.desc}</p>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
+
