@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Heart, Star, Plus } from "lucide-react";
+import { Heart, Star, Plus, BadgeCheck } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
+
+const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
 export function ProductCard({ product }: { product: Product }) {
   const { format } = useRegion();
@@ -11,6 +13,15 @@ export function ProductCard({ product }: { product: Product }) {
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
   const originalPrice = product.discount ? product.price * (1 + product.discount / 100) : null;
+
+  const isNew = product.createdAt
+    ? Date.now() - new Date(product.createdAt).getTime() < FOURTEEN_DAYS
+    : false;
+  const isHot = (product.viewsCount ?? 0) >= 200;
+  const isLimited =
+    product.stockQuantity > 0 &&
+    product.stockQuantity <= Math.max(5, product.lowStockThreshold ?? 5);
+  const showOnlyLeft = product.stockQuantity > 0 && product.stockQuantity <= 10;
 
   return (
     <div className="group card-premium p-2.5 sm:p-3 overflow-hidden relative">
@@ -50,13 +61,28 @@ export function ProductCard({ product }: { product: Product }) {
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
-            {product.featured && (
+            {isHot && (
+              <span className="bg-accent text-accent-foreground text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md shadow-[var(--shadow-ember)] tracking-wider">
+                HOT
+              </span>
+            )}
+            {isNew && !isHot && (
+              <span className="bg-emerald-500/90 text-white text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider">
+                NEW
+              </span>
+            )}
+            {isLimited && (
+              <span className="bg-red-500/90 text-white text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider">
+                LIMITED
+              </span>
+            )}
+            {product.featured && !isHot && !isNew && (
               <span className="backdrop-blur-md bg-white/10 border border-white/15 text-white text-[10px] font-semibold font-mono px-2 py-0.5 rounded-full tracking-wider">
                 FEATURED
               </span>
             )}
             {product.discount && (
-              <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2 py-0.5 rounded-full shadow-[var(--shadow-ember)]">
+              <span className="bg-accent/90 text-accent-foreground text-[10px] font-bold font-mono px-2 py-0.5 rounded-full">
                 −{product.discount}%
               </span>
             )}
@@ -97,11 +123,14 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-            <Star className="size-3 fill-accent text-accent" />
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground min-w-0">
+            <Star className="size-3 fill-accent text-accent shrink-0" />
             <span className="text-foreground/80">{product.rating}</span>
             <span className="opacity-50">({product.reviews})</span>
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-emerald-400/90" title="Verified seller">
+              <BadgeCheck className="size-3" />
+            </span>
           </div>
           <button
             onClick={(e) => { e.preventDefault(); add(product.slug); }}
@@ -110,6 +139,16 @@ export function ProductCard({ product }: { product: Product }) {
             Add +
           </button>
         </div>
+        {showOnlyLeft && (
+          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-accent/90">
+            Only {product.stockQuantity} left
+          </p>
+        )}
+        {!product.inStock && (
+          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+            Out of stock
+          </p>
+        )}
       </Link>
     </div>
   );

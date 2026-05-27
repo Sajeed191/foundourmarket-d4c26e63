@@ -6,6 +6,9 @@ import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
 import { ProductCard } from "@/components/site/ProductCard";
+import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
+import { FlashSaleStrip } from "@/components/site/FlashSaleStrip";
+import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
@@ -76,7 +79,7 @@ function Reveal({ children, className, delay = 0 }: { children: React.ReactNode;
 }
 
 function Home() {
-  const { products } = useProducts();
+  const { products, loading: productsLoading } = useProducts();
   const { categories } = useCategories();
 
   const nav = useNavigate();
@@ -116,7 +119,7 @@ function Home() {
   return (
     <>
       {/* Hero — cinematic */}
-      <section className="relative pt-12 sm:pt-20 md:pt-28 pb-20 sm:pb-32 md:pb-40 px-4 sm:px-6 overflow-hidden">
+      <section className="relative pt-10 sm:pt-16 md:pt-24 pb-12 sm:pb-20 md:pb-28 px-4 sm:px-6 overflow-hidden">
         {/* Floating gradient orbs */}
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
           <div className="orb animate-orb" style={{ width: 520, height: 520, top: "10%", left: "55%", background: "var(--gradient-ember)" }} />
@@ -253,14 +256,20 @@ function Home() {
         </div>
       </section>
 
+      {/* Trust badges strip (compact, denser) */}
+      <TrustBadgesStrip />
+
       {/* Promo banners carousel (managed in Admin → Marketing) */}
       <PromoBannerCarousel />
+
+      {/* Flash sale (admin-controlled — hidden when no active sale) */}
+      <FlashSaleStrip />
 
 
 
       {/* Categories */}
-      <section id="categories" className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+        <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Browse</p>
             <h2 className="text-fluid-2xl font-display tracking-tight">Featured Categories</h2>
@@ -299,8 +308,8 @@ function Home() {
 
       {/* Featured Products */}
       {products.some((p) => p.featured) && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Handpicked</p>
               <h2 className="text-fluid-2xl font-display tracking-tight">Featured Products</h2>
@@ -317,9 +326,14 @@ function Home() {
       )}
 
       {/* Trending Now */}
+      {productsLoading ? (
+        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
+          <ProductSkeletonGrid count={4} />
+        </section>
+      ) : null}
       {trending.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Flame className="size-3" /> Hot Right Now
@@ -340,8 +354,8 @@ function Home() {
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Sparkles className="size-3" /> Just Landed
@@ -362,8 +376,8 @@ function Home() {
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Award className="size-3" /> Top Rated
@@ -407,7 +421,7 @@ function Home() {
       
 
       {/* Live Marketplace Stats */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
         <Reveal className="text-center mb-10 sm:mb-14">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
@@ -441,7 +455,7 @@ function Home() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
         <Reveal className="text-center mb-12 sm:mb-16">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
           <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
@@ -496,7 +510,7 @@ function Home() {
 
 
       {/* Newsletter */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16">
         <Reveal className="max-w-3xl mx-auto bg-card border border-border p-6 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Inner Circle</p>
