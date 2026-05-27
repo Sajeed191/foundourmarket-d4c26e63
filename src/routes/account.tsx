@@ -313,7 +313,15 @@ function AccountPage() {
                 <ProductScroller items={recommended} />
               </SectionBlock>
             )}
+
+            {/* TRENDING */}
+            {trending.length > 0 && (
+              <SectionBlock title="Trending now" icon={Flame}>
+                <ProductScroller items={trending} />
+              </SectionBlock>
+            )}
           </div>
+
 
           {/* SIDEBAR */}
           <aside className="space-y-6 lg:space-y-8">
