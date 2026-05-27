@@ -78,11 +78,17 @@ export function PromoBannerCarousel({
 
   return (
     <section className="px-4 sm:px-6 pt-10 sm:pt-14">
+      {eyebrow && (
+        <p className="max-w-7xl mx-auto mb-3 text-[10px] font-mono uppercase tracking-[0.3em] text-accent">
+          {eyebrow}
+        </p>
+      )}
       <div
-        className="relative max-w-7xl mx-auto rounded-3xl overflow-hidden border border-border bg-card aspect-[16/7] sm:aspect-[21/8] group"
+        className={`relative max-w-7xl mx-auto rounded-3xl overflow-hidden border border-border bg-card ${aspectClassName} group`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
+
         <AnimatePresence mode="wait">
           <motion.div
             key={b.id}
