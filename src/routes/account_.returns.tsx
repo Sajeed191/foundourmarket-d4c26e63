@@ -31,7 +31,7 @@ type OrderForReturn = { id: string; order_items: OrderItem[] };
 function ReturnsPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const { order } = useSearch({ from: "/account/returns" });
+  const { order } = useSearch({ from: "/account_/returns" });
   const [returns, setReturns] = useState<ReturnRow[] | null>(null);
   const [eligibleOrder, setEligibleOrder] = useState<OrderForReturn | null>(null);
   const [reason, setReason] = useState("");
