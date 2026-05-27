@@ -43,6 +43,10 @@ function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("any");
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [customFrom, setCustomFrom] = useState<string>("");
+  const [customTo, setCustomTo] = useState<string>("");
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -59,13 +63,37 @@ function OrdersPage() {
     return () => { cancelled = true; };
   }, [user]);
 
+  const years = useMemo(() => {
+    const ys = new Set<number>();
+    (orders ?? []).forEach((o) => ys.add(new Date(o.created_at).getFullYear()));
+    ys.add(new Date().getFullYear());
+    return Array.from(ys).sort((a, b) => b - a);
+  }, [orders]);
+
+  const dateRange = useMemo<[Date | null, Date | null]>(() => {
+    const now = new Date();
+    if (datePreset === "any") return [null, null];
+    if (datePreset === "30d") return [new Date(now.getTime() - 30 * 864e5), now];
+    if (datePreset === "3m") { const d = new Date(now); d.setMonth(d.getMonth() - 3); return [d, now]; }
+    if (datePreset === "6m") { const d = new Date(now); d.setMonth(d.getMonth() - 6); return [d, now]; }
+    if (datePreset === "year") return [new Date(year, 0, 1), new Date(year, 11, 31, 23, 59, 59)];
+    if (datePreset === "custom") {
+      return [customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo + "T23:59:59") : null];
+    }
+    return [null, null];
+  }, [datePreset, year, customFrom, customTo]);
+
   const filtered = useMemo(() => {
     const list = orders ?? [];
+    const [from, to] = dateRange;
     return list.filter((o) => {
       const s = String(o.status).toLowerCase();
       if (filter === "active" && ["delivered", "cancelled", "refunded"].includes(s)) return false;
       if (filter === "delivered" && s !== "delivered") return false;
       if (filter === "cancelled" && !["cancelled", "refunded"].includes(s)) return false;
+      const created = new Date(o.created_at);
+      if (from && created < from) return false;
+      if (to && created > to) return false;
       if (q) {
         const needle = q.toLowerCase();
         if (!o.id.toLowerCase().includes(needle) &&
@@ -73,7 +101,7 @@ function OrdersPage() {
       }
       return true;
     });
-  }, [orders, q, filter]);
+  }, [orders, q, filter, dateRange]);
 
   if (loading || !user) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
