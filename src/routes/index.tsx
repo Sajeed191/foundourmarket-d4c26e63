@@ -268,8 +268,8 @@ function Home() {
 
 
       {/* Categories */}
-      <section id="categories" className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-        <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+        <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Browse</p>
             <h2 className="text-fluid-2xl font-display tracking-tight">Featured Categories</h2>
@@ -308,8 +308,8 @@ function Home() {
 
       {/* Featured Products */}
       {products.some((p) => p.featured) && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Handpicked</p>
               <h2 className="text-fluid-2xl font-display tracking-tight">Featured Products</h2>
@@ -327,8 +327,8 @@ function Home() {
 
       {/* Trending Now */}
       {trending.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Flame className="size-3" /> Hot Right Now
@@ -349,8 +349,8 @@ function Home() {
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Sparkles className="size-3" /> Just Landed
@@ -371,8 +371,8 @@ function Home() {
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
-          <Reveal className="flex justify-between items-end mb-8 sm:mb-12 gap-4">
+        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
+          <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
                 <Award className="size-3" /> Top Rated
@@ -416,7 +416,7 @@ function Home() {
       
 
       {/* Live Marketplace Stats */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
         <Reveal className="text-center mb-10 sm:mb-14">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
@@ -450,7 +450,7 @@ function Home() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
         <Reveal className="text-center mb-12 sm:mb-16">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
           <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
@@ -505,7 +505,7 @@ function Home() {
 
 
       {/* Newsletter */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 md:py-24">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16">
         <Reveal className="max-w-3xl mx-auto bg-card border border-border p-6 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Inner Circle</p>
