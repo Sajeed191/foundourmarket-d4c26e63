@@ -123,11 +123,14 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-            <Star className="size-3 fill-accent text-accent" />
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground min-w-0">
+            <Star className="size-3 fill-accent text-accent shrink-0" />
             <span className="text-foreground/80">{product.rating}</span>
             <span className="opacity-50">({product.reviews})</span>
+            <span className="inline-flex items-center gap-0.5 ml-1.5 text-emerald-400/90" title="Verified seller">
+              <BadgeCheck className="size-3" />
+            </span>
           </div>
           <button
             onClick={(e) => { e.preventDefault(); add(product.slug); }}
@@ -136,6 +139,16 @@ export function ProductCard({ product }: { product: Product }) {
             Add +
           </button>
         </div>
+        {showOnlyLeft && (
+          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-accent/90">
+            Only {product.stockQuantity} left
+          </p>
+        )}
+        {!product.inStock && (
+          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+            Out of stock
+          </p>
+        )}
       </Link>
     </div>
   );
