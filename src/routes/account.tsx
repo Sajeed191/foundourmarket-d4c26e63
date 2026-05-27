@@ -228,8 +228,6 @@ function AccountPage() {
           </div>
         </motion.section>
 
-        {/* REWARDS & COUPONS STRIP */}
-        <RewardsStrip saved={stats.saved} format={format} />
 
 
         {/* 3 — QUICK ACTIONS */}
