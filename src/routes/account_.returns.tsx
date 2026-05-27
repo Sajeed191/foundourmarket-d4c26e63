@@ -17,7 +17,6 @@ import {
   XCircle,
   Hourglass,
   Copy,
-  Copy,
   ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
