@@ -143,6 +143,8 @@ function ReturnsPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const [scrolled, setScrolled] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
 
@@ -152,12 +154,44 @@ function ReturnsPage() {
   }
 
   async function copySupportEmail() {
+    hapticTap();
     try {
       await navigator.clipboard.writeText(SUPPORT_EMAIL);
-      toast.success("Support email copied");
+      setCopied(true);
+      toast.success("Email copied", { description: SUPPORT_EMAIL });
+      setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.error("Could not copy");
+      toast.error("Couldn't copy — try selecting the address manually");
     }
+  }
+
+  function sendEmail() {
+    if (sending) return;
+    hapticTap();
+    setSending(true);
+
+    let handed = false;
+    const onHide = () => { handed = true; };
+    document.addEventListener("visibilitychange", onHide, { once: true });
+    window.addEventListener("blur", onHide, { once: true });
+
+    try {
+      window.location.href = buildMailto();
+    } catch {}
+
+    // If nothing took over the tab within 1.6s, assume no mail handler.
+    window.setTimeout(() => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("blur", onHide);
+      setSending(false);
+      if (!handed && !document.hidden) {
+        toast.error("No email app detected", {
+          description: "Try Gmail, copy the address, or open live chat.",
+        });
+      } else {
+        setEmailOpen(false);
+      }
+    }, 1600);
   }
 
   useEffect(() => {
