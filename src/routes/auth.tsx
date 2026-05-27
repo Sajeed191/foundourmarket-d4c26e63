@@ -34,12 +34,12 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/account`,
+            emailRedirectTo: `${window.location.origin}/auth/connect`,
             data: { full_name: name },
           },
         });
         if (error) throw error;
-        nav({ to: "/account" });
+        nav({ to: "/auth/connect" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -56,7 +56,7 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/account`,
+      redirect_uri: `${window.location.origin}/auth/connect`,
     });
     if (result.error) {
       setError(result.error.message ?? "Google sign-in failed");
@@ -64,7 +64,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    nav({ to: "/account" });
+    nav({ to: "/auth/connect" });
   };
 
   return (
