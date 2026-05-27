@@ -111,12 +111,10 @@ function AccountPage() {
     [products],
   );
 
+  const [quickView, setQuickView] = useState<Product | null>(null);
+
   if (loading || !user) {
-    return (
-      <div className="min-h-[60vh] grid place-items-center">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   return (
