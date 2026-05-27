@@ -306,6 +306,9 @@ function AccountPage() {
               )}
             </SectionBlock>
 
+            {/* ORDER TRACKING TIMELINE */}
+            {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
+
             {/* 5 — WISHLIST */}
             <SectionBlock
               title="Saved for later"
