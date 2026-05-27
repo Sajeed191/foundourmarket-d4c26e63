@@ -219,33 +219,7 @@ function AccountPage() {
 
         {/* SEARCH BAR */}
         <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.03 }}>
-          <Link
-            to="/search"
-            className="group relative flex items-center gap-3 glass-strong rounded-2xl px-4 py-3 sm:py-3.5 ring-1 ring-transparent hover:ring-accent/40 focus-visible:ring-accent/60 transition-all hover:shadow-[0_0_28px_-10px_var(--color-accent)]"
-          >
-            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(14px)" }} />
-            <motion.span
-              animate={{ scale: [1, 1.12, 1] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-              className="relative shrink-0"
-            >
-              <Search className="size-4 text-accent" />
-            </motion.span>
-            <span className="relative text-sm text-muted-foreground flex-1 truncate">
-              Search products, brands, categories…
-            </span>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); /* voice placeholder */ }}
-              aria-label="Voice search"
-              className="relative size-8 grid place-items-center rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
-            >
-              <Mic className="size-3.5" />
-            </button>
-            <span className="relative hidden sm:inline text-[10px] font-mono uppercase tracking-widest text-muted-foreground px-2 py-1 rounded-md bg-white/5">
-              ⌘ K
-            </span>
-          </Link>
+          <SmartSearchBar />
         </motion.div>
 
 
