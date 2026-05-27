@@ -203,11 +203,14 @@ function OrdersPage() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* ambient depth */}
-      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[420px] -z-10 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(255,122,0,0.10),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[520px] -z-10 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(255,122,0,0.12),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-[360px] -z-10 bg-[radial-gradient(50%_50%_at_50%_100%,rgba(255,122,0,0.06),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none fixed -left-24 top-1/3 size-72 -z-10 rounded-full bg-accent/5 blur-3xl" />
+      <div aria-hidden className="pointer-events-none fixed -right-24 top-2/3 size-72 -z-10 rounded-full bg-amber-300/5 blur-3xl" />
 
       {/* Sticky smart header */}
-      <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? "backdrop-blur-xl bg-background/70 border-b border-border/60 shadow-[0_8px_30px_-12px_rgba(255,122,0,0.15)]" : "bg-transparent"}`}>
-        <div className="container-page max-w-5xl py-3 flex items-center gap-2">
+      <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? "backdrop-blur-xl bg-background/75 border-b border-border/60 shadow-[0_8px_30px_-12px_rgba(255,122,0,0.18)]" : "bg-transparent"}`}>
+        <div className={`container-page max-w-5xl flex items-center gap-2 transition-all ${scrolled ? "py-2" : "py-3"}`}>
           <Link to="/account" aria-label="Back" className="size-10 grid place-items-center rounded-full border border-border/60 hover:border-accent/50 active:scale-95 transition">
             <ArrowLeft className="size-4" />
           </Link>
