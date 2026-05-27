@@ -354,11 +354,10 @@ function OrdersPage() {
             { icon: ShieldCheck, label: "Protection", to: "/returns" as const, tint: "from-rose-500/20 to-rose-500/0" },
           ].map((a, i) => {
             const Icon = a.icon;
-            const props = a.params ? { to: a.to, params: a.params } : { to: a.to };
             return (
               <motion.div key={a.label}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i, duration: 0.3 }}>
-                <Link {...(props as { to: typeof a.to })}
+                <Link to={a.to}
                   className="group relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-md hover:border-accent/40 hover:bg-card/70 active:scale-95 transition-all overflow-hidden">
                   <span aria-hidden className={`absolute inset-0 -z-10 opacity-60 bg-gradient-to-b ${a.tint}`} />
                   <span aria-hidden className="absolute -top-6 left-1/2 -translate-x-1/2 size-12 rounded-full bg-accent/10 blur-xl opacity-0 group-hover:opacity-100 transition" />
