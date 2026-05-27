@@ -15,6 +15,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ReturnsRouteImport } from './routes/returns'
+import { Route as ReturnRouteImport } from './routes/return'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -38,6 +39,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -79,6 +81,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const ReturnsRoute = ReturnsRouteImport.update({
   id: '/returns',
   path: '/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReturnRoute = ReturnRouteImport.update({
+  id: '/return',
+  path: '/return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -196,6 +203,11 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagesReturnsRoute = PagesReturnsRouteImport.update({
+  id: '/pages/returns',
+  path: '/pages/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesSlugRoute = PagesSlugRouteImport.update({
   id: '/pages/$slug',
   path: '/pages/$slug',
@@ -280,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
   '/help': typeof HelpRoute
+  '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -298,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
+  '/pages/returns': typeof PagesReturnsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesByTo {
@@ -323,6 +337,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
   '/help': typeof HelpRoute
+  '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -341,6 +356,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
+  '/pages/returns': typeof PagesReturnsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesById {
@@ -367,6 +383,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
   '/help': typeof HelpRoute
+  '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/search': typeof SearchRoute
@@ -385,6 +402,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
+  '/pages/returns': typeof PagesReturnsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRouteTypes {
@@ -412,6 +430,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compare'
     | '/help'
+    | '/return'
     | '/returns'
     | '/robots.txt'
     | '/search'
@@ -430,6 +449,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/orders/$id'
     | '/pages/$slug'
+    | '/pages/returns'
     | '/products/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -455,6 +475,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compare'
     | '/help'
+    | '/return'
     | '/returns'
     | '/robots.txt'
     | '/search'
@@ -473,6 +494,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/orders/$id'
     | '/pages/$slug'
+    | '/pages/returns'
     | '/products/$slug'
   id:
     | '__root__'
@@ -498,6 +520,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compare'
     | '/help'
+    | '/return'
     | '/returns'
     | '/robots.txt'
     | '/search'
@@ -516,6 +539,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/orders/$id'
     | '/pages/$slug'
+    | '/pages/returns'
     | '/products/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -542,6 +566,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   CompareRoute: typeof CompareRoute
   HelpRoute: typeof HelpRoute
+  ReturnRoute: typeof ReturnRoute
   ReturnsRoute: typeof ReturnsRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SearchRoute: typeof SearchRoute
@@ -559,6 +584,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   OrdersIdRoute: typeof OrdersIdRoute
   PagesSlugRoute: typeof PagesSlugRoute
+  PagesReturnsRoute: typeof PagesReturnsRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
 }
 
@@ -604,6 +630,13 @@ declare module '@tanstack/react-router' {
       path: '/returns'
       fullPath: '/returns'
       preLoaderRoute: typeof ReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/return': {
+      id: '/return'
+      path: '/return'
+      fullPath: '/return'
+      preLoaderRoute: typeof ReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -767,6 +800,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pages/returns': {
+      id: '/pages/returns'
+      path: '/pages/returns'
+      fullPath: '/pages/returns'
+      preLoaderRoute: typeof PagesReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pages/$slug': {
       id: '/pages/$slug'
       path: '/pages/$slug'
@@ -887,6 +927,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   CompareRoute: CompareRoute,
   HelpRoute: HelpRoute,
+  ReturnRoute: ReturnRoute,
   ReturnsRoute: ReturnsRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SearchRoute: SearchRoute,
@@ -904,6 +945,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   OrdersIdRoute: OrdersIdRoute,
   PagesSlugRoute: PagesSlugRoute,
+  PagesReturnsRoute: PagesReturnsRoute,
   ProductsSlugRoute: ProductsSlugRoute,
 }
 export const routeTree = rootRouteImport

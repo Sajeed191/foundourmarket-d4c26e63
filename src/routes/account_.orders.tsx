@@ -347,18 +347,17 @@ function OrdersPage() {
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-5">
           {[
             { icon: Truck, label: "Track", to: "/track" as const, tint: "from-sky-500/20 to-sky-500/0" },
-            { icon: RotateCcw, label: "Return", to: "/account_/returns" as const, tint: "from-amber-500/20 to-amber-500/0" },
+            { icon: RotateCcw, label: "Return", to: "/returns" as const, tint: "from-amber-500/20 to-amber-500/0" },
             { icon: HelpCircle, label: "Support", to: "/help" as const, tint: "from-violet-500/20 to-violet-500/0" },
             { icon: FileText, label: "Invoices", to: "/account_/history" as const, tint: "from-emerald-500/20 to-emerald-500/0" },
             { icon: RefreshCw, label: "Reorder", to: "/cart" as const, tint: "from-accent/25 to-accent/0" },
-            { icon: ShieldCheck, label: "Protection", to: "/pages/$slug" as const, params: { slug: "returns" }, tint: "from-rose-500/20 to-rose-500/0" },
+            { icon: ShieldCheck, label: "Protection", to: "/returns" as const, tint: "from-rose-500/20 to-rose-500/0" },
           ].map((a, i) => {
             const Icon = a.icon;
-            const props = a.params ? { to: a.to, params: a.params } : { to: a.to };
             return (
               <motion.div key={a.label}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i, duration: 0.3 }}>
-                <Link {...(props as { to: typeof a.to })}
+                <Link to={a.to}
                   className="group relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-md hover:border-accent/40 hover:bg-card/70 active:scale-95 transition-all overflow-hidden">
                   <span aria-hidden className={`absolute inset-0 -z-10 opacity-60 bg-gradient-to-b ${a.tint}`} />
                   <span aria-hidden className="absolute -top-6 left-1/2 -translate-x-1/2 size-12 rounded-full bg-accent/10 blur-xl opacity-0 group-hover:opacity-100 transition" />
@@ -586,7 +585,7 @@ function OrderCard({ order, index, format }: { order: Order; index: number; form
           )}
           {delivered && (
             <>
-              <Link to="/account_/returns" search={{ order: order.id }}
+              <Link to="/returns"
                 className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
                 <RotateCcw className="size-3" /> Return
               </Link>

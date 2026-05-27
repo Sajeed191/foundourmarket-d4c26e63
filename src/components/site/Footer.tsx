@@ -28,7 +28,7 @@ export function Footer() {
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
-            <li><Link to="/pages/$slug" params={{ slug: "returns" }} className="hover:text-foreground transition-colors">Returns</Link></li>
+            <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "about" }} className="hover:text-foreground transition-colors">About</Link></li>
             <li><Link to="/blog" className="hover:text-foreground transition-colors">Journal</Link></li>
           </ul>
@@ -53,7 +53,7 @@ export function Footer() {
         <div className="flex flex-wrap justify-center md:justify-end gap-4 sm:gap-6 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
           <Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground">Privacy</Link>
           <Link to="/pages/$slug" params={{ slug: "terms" }} className="hover:text-foreground">Terms</Link>
-          <Link to="/pages/$slug" params={{ slug: "returns" }} className="hover:text-foreground">Refunds</Link>
+          <Link to="/returns" className="hover:text-foreground">Refunds</Link>
         </div>
       </div>
     </footer>

@@ -349,7 +349,7 @@ function ProductPage() {
               <ul className="text-sm text-muted-foreground space-y-2 leading-relaxed">
                 <li>• Free standard shipping on orders over $50.</li>
                 <li>• Express delivery available at checkout (1–2 business days).</li>
-                <li>• 30-day hassle-free returns — see <Link to="/account/returns" className="text-accent underline">returns policy</Link>.</li>
+                <li>• Selected-product returns — check <Link to="/returns" className="text-accent underline">return eligibility</Link>.</li>
               </ul>
             </Accordion>
 

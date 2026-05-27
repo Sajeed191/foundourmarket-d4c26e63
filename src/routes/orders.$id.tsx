@@ -200,7 +200,7 @@ function OrderDetailPage() {
 
           {(order.status === "delivered" || shipments.some((s) => s.status === "delivered")) && (
             <Link
-              to="/account/returns"
+              to="/returns"
               search={{ order: order.id }}
               className="flex items-center justify-center gap-2 text-xs uppercase tracking-widest border border-border rounded-full px-5 py-3 hover:border-accent/40 hover:text-accent transition-colors"
             >
