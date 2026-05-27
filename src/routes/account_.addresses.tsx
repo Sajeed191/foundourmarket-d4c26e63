@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useAddresses, type Address } from "@/lib/use-addresses";
 import { AddressForm } from "@/components/site/AddressForm";
 
-export const Route = createFileRoute("/account/addresses")({
+export const Route = createFileRoute("/account_/addresses")({
   head: () => ({ meta: [{ title: "Addresses — FoundOurMarket™" }] }),
   component: AddressesPage,
 });

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Bell, BellOff } from "lucide-react";
 import { useNotifications } from "@/lib/notifications";
 
-export const Route = createFileRoute("/account/notifications")({
+export const Route = createFileRoute("/account_/notifications")({
   head: () => ({ meta: [{ title: "Notifications — FoundOurMarket™" }] }),
   component: NotificationsPage,
 });

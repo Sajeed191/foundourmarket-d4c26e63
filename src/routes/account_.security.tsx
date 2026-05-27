@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/account/security")({
+export const Route = createFileRoute("/account_/security")({
   head: () => ({ meta: [{ title: "Security — FoundOurMarket™" }] }),
   component: SecurityPage,
 });

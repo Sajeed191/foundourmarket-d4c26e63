@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 
-export const Route = createFileRoute("/account/orders")({
+export const Route = createFileRoute("/account_/orders")({
   head: () => ({ meta: [{ title: "Orders — FoundOurMarket™" }] }),
   component: OrdersPage,
 });

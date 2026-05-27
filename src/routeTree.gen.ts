@@ -41,14 +41,14 @@ import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as AccountSecurityRouteImport } from './routes/account_.security'
+import { Route as AccountReturnsRouteImport } from './routes/account_.returns'
 import { Route as AccountProfileRouteImport } from './routes/account_.profile'
-import { Route as AccountSecurityRouteImport } from './routes/account.security'
-import { Route as AccountReturnsRouteImport } from './routes/account.returns'
-import { Route as AccountPreferencesRouteImport } from './routes/account.preferences'
-import { Route as AccountOrdersRouteImport } from './routes/account.orders'
-import { Route as AccountNotificationsRouteImport } from './routes/account.notifications'
-import { Route as AccountHistoryRouteImport } from './routes/account.history'
-import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
+import { Route as AccountPreferencesRouteImport } from './routes/account_.preferences'
+import { Route as AccountOrdersRouteImport } from './routes/account_.orders'
+import { Route as AccountNotificationsRouteImport } from './routes/account_.notifications'
+import { Route as AccountHistoryRouteImport } from './routes/account_.history'
+import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -210,50 +210,50 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
+const AccountSecurityRoute = AccountSecurityRouteImport.update({
+  id: '/account_/security',
+  path: '/account/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountReturnsRoute = AccountReturnsRouteImport.update({
+  id: '/account_/returns',
+  path: '/account/returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/account_/profile',
   path: '/account/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountSecurityRoute = AccountSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => AccountRoute,
-} as any)
-const AccountReturnsRoute = AccountReturnsRouteImport.update({
-  id: '/returns',
-  path: '/returns',
-  getParentRoute: () => AccountRoute,
-} as any)
 const AccountPreferencesRoute = AccountPreferencesRouteImport.update({
-  id: '/preferences',
-  path: '/preferences',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/preferences',
+  path: '/account/preferences',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountOrdersRoute = AccountOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/orders',
+  path: '/account/orders',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountNotificationsRoute = AccountNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/notifications',
+  path: '/account/notifications',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountHistoryRoute = AccountHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/history',
+  path: '/account/history',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountAddressesRoute = AccountAddressesRouteImport.update({
-  id: '/addresses',
-  path: '/addresses',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/addresses',
+  path: '/account/addresses',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -284,9 +284,9 @@ export interface FileRoutesByFullPath {
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
+  '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/account/profile': typeof AccountProfileRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -295,7 +295,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -326,9 +326,9 @@ export interface FileRoutesByTo {
   '/account/notifications': typeof AccountNotificationsRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/preferences': typeof AccountPreferencesRoute
+  '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/account/profile': typeof AccountProfileRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -338,7 +338,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -364,14 +364,14 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
-  '/account/addresses': typeof AccountAddressesRoute
-  '/account/history': typeof AccountHistoryRoute
-  '/account/notifications': typeof AccountNotificationsRoute
-  '/account/orders': typeof AccountOrdersRoute
-  '/account/preferences': typeof AccountPreferencesRoute
-  '/account/returns': typeof AccountReturnsRoute
-  '/account/security': typeof AccountSecurityRoute
+  '/account_/addresses': typeof AccountAddressesRoute
+  '/account_/history': typeof AccountHistoryRoute
+  '/account_/notifications': typeof AccountNotificationsRoute
+  '/account_/orders': typeof AccountOrdersRoute
+  '/account_/preferences': typeof AccountPreferencesRoute
   '/account_/profile': typeof AccountProfileRoute
+  '/account_/returns': typeof AccountReturnsRoute
+  '/account_/security': typeof AccountSecurityRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -413,9 +413,9 @@ export interface FileRouteTypes {
     | '/account/notifications'
     | '/account/orders'
     | '/account/preferences'
+    | '/account/profile'
     | '/account/returns'
     | '/account/security'
-    | '/account/profile'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -455,9 +455,9 @@ export interface FileRouteTypes {
     | '/account/notifications'
     | '/account/orders'
     | '/account/preferences'
+    | '/account/profile'
     | '/account/returns'
     | '/account/security'
-    | '/account/profile'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -492,14 +492,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/track'
     | '/wishlist'
-    | '/account/addresses'
-    | '/account/history'
-    | '/account/notifications'
-    | '/account/orders'
-    | '/account/preferences'
-    | '/account/returns'
-    | '/account/security'
+    | '/account_/addresses'
+    | '/account_/history'
+    | '/account_/notifications'
+    | '/account_/orders'
+    | '/account_/preferences'
     | '/account_/profile'
+    | '/account_/returns'
+    | '/account_/security'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -509,7 +509,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccountRoute: typeof AccountRouteWithChildren
+  AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
@@ -535,7 +535,14 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
   WishlistRoute: typeof WishlistRoute
+  AccountAddressesRoute: typeof AccountAddressesRoute
+  AccountHistoryRoute: typeof AccountHistoryRoute
+  AccountNotificationsRoute: typeof AccountNotificationsRoute
+  AccountOrdersRoute: typeof AccountOrdersRoute
+  AccountPreferencesRoute: typeof AccountPreferencesRoute
   AccountProfileRoute: typeof AccountProfileRoute
+  AccountReturnsRoute: typeof AccountReturnsRoute
+  AccountSecurityRoute: typeof AccountSecurityRoute
   CategorySlugRoute: typeof CategorySlugRoute
   OrdersIdRoute: typeof OrdersIdRoute
   PagesSlugRoute: typeof PagesSlugRoute
@@ -768,6 +775,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
+    '/account_/security': {
+      id: '/account_/security'
+      path: '/account/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof AccountSecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account_/returns': {
+      id: '/account_/returns'
+      path: '/account/returns'
+      fullPath: '/account/returns'
+      preLoaderRoute: typeof AccountReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/profile': {
       id: '/account_/profile'
       path: '/account/profile'
@@ -775,80 +796,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/account/security': {
-      id: '/account/security'
-      path: '/security'
-      fullPath: '/account/security'
-      preLoaderRoute: typeof AccountSecurityRouteImport
-      parentRoute: typeof AccountRoute
-    }
-    '/account/returns': {
-      id: '/account/returns'
-      path: '/returns'
-      fullPath: '/account/returns'
-      preLoaderRoute: typeof AccountReturnsRouteImport
-      parentRoute: typeof AccountRoute
-    }
-    '/account/preferences': {
-      id: '/account/preferences'
-      path: '/preferences'
+    '/account_/preferences': {
+      id: '/account_/preferences'
+      path: '/account/preferences'
       fullPath: '/account/preferences'
       preLoaderRoute: typeof AccountPreferencesRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/account/orders': {
-      id: '/account/orders'
-      path: '/orders'
+    '/account_/orders': {
+      id: '/account_/orders'
+      path: '/account/orders'
       fullPath: '/account/orders'
       preLoaderRoute: typeof AccountOrdersRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/account/notifications': {
-      id: '/account/notifications'
-      path: '/notifications'
+    '/account_/notifications': {
+      id: '/account_/notifications'
+      path: '/account/notifications'
       fullPath: '/account/notifications'
       preLoaderRoute: typeof AccountNotificationsRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/account/history': {
-      id: '/account/history'
-      path: '/history'
+    '/account_/history': {
+      id: '/account_/history'
+      path: '/account/history'
       fullPath: '/account/history'
       preLoaderRoute: typeof AccountHistoryRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/account/addresses': {
-      id: '/account/addresses'
-      path: '/addresses'
+    '/account_/addresses': {
+      id: '/account_/addresses'
+      path: '/account/addresses'
       fullPath: '/account/addresses'
       preLoaderRoute: typeof AccountAddressesRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface AccountRouteChildren {
-  AccountAddressesRoute: typeof AccountAddressesRoute
-  AccountHistoryRoute: typeof AccountHistoryRoute
-  AccountNotificationsRoute: typeof AccountNotificationsRoute
-  AccountOrdersRoute: typeof AccountOrdersRoute
-  AccountPreferencesRoute: typeof AccountPreferencesRoute
-  AccountReturnsRoute: typeof AccountReturnsRoute
-  AccountSecurityRoute: typeof AccountSecurityRoute
-}
-
-const AccountRouteChildren: AccountRouteChildren = {
-  AccountAddressesRoute: AccountAddressesRoute,
-  AccountHistoryRoute: AccountHistoryRoute,
-  AccountNotificationsRoute: AccountNotificationsRoute,
-  AccountOrdersRoute: AccountOrdersRoute,
-  AccountPreferencesRoute: AccountPreferencesRoute,
-  AccountReturnsRoute: AccountReturnsRoute,
-  AccountSecurityRoute: AccountSecurityRoute,
-}
-
-const AccountRouteWithChildren =
-  AccountRoute._addFileChildren(AccountRouteChildren)
 
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
@@ -862,7 +846,7 @@ const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountRoute: AccountRouteWithChildren,
+  AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
@@ -888,7 +872,14 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
   WishlistRoute: WishlistRoute,
+  AccountAddressesRoute: AccountAddressesRoute,
+  AccountHistoryRoute: AccountHistoryRoute,
+  AccountNotificationsRoute: AccountNotificationsRoute,
+  AccountOrdersRoute: AccountOrdersRoute,
+  AccountPreferencesRoute: AccountPreferencesRoute,
   AccountProfileRoute: AccountProfileRoute,
+  AccountReturnsRoute: AccountReturnsRoute,
+  AccountSecurityRoute: AccountSecurityRoute,
   CategorySlugRoute: CategorySlugRoute,
   OrdersIdRoute: OrdersIdRoute,
   PagesSlugRoute: PagesSlugRoute,

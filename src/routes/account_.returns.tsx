@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const searchSchema = z.object({ order: z.string().optional() });
 
-export const Route = createFileRoute("/account/returns")({
+export const Route = createFileRoute("/account_/returns")({
   head: () => ({ meta: [{ title: "Returns — FoundOurMarket™" }] }),
   validateSearch: searchSchema,
   component: ReturnsPage,

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/account/preferences")({
+export const Route = createFileRoute("/account_/preferences")({
   head: () => ({ meta: [{ title: "Preferences — FoundOurMarket™" }] }),
   component: PreferencesPage,
 });

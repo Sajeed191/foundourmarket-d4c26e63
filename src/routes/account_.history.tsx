@@ -16,7 +16,7 @@ import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
 
-export const Route = createFileRoute("/account/history")({
+export const Route = createFileRoute("/account_/history")({
   head: () => ({ meta: [{ title: "History — FoundOurMarket™" }] }),
   component: HistoryPage,
 });
