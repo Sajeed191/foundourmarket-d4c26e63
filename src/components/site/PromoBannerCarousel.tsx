@@ -64,15 +64,6 @@ export function PromoBannerCarousel({
   }, [types.join("-"), maxItems]);
 
 
-  useEffect(() => {
-    fetchBanners();
-    // Live updates: refetch whenever admin publishes/edits a banner
-    const ch = supabase
-      .channel("rt-banners-public")
-      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, fetchBanners)
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, []);
 
   useEffect(() => {
     if (paused || banners.length < 2) return;
