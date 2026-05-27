@@ -314,10 +314,25 @@ function TrackPage() {
                   <p className="font-mono text-sm break-all">{result.order.id}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Placed</p>
-                  <p className="font-mono text-sm">{new Date(result.order.created_at).toLocaleDateString()}</p>
+                  {active && !cancelled ? (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-400/10 ring-1 ring-emerald-400/25 text-emerald-400">
+                      <span className="relative flex size-1.5">
+                        <span className={`absolute inset-0 rounded-full bg-emerald-400 ${liveQuery.isFetching ? "animate-ping" : "opacity-60"}`} />
+                        <span className="relative rounded-full bg-emerald-400 size-1.5" />
+                      </span>
+                      <span className="text-[9px] font-mono uppercase tracking-widest">
+                        {liveQuery.isFetching ? "Syncing" : secsAgo === null ? "Live" : `Live · ${secsAgo}s ago`}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Placed</p>
+                      <p className="font-mono text-sm">{new Date(result.order.created_at).toLocaleDateString()}</p>
+                    </>
+                  )}
                 </div>
               </div>
+
 
               {result.items[0]?.image && (
                 <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/5">
