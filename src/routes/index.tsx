@@ -6,6 +6,9 @@ import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
 import { ProductCard } from "@/components/site/ProductCard";
+import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
+import { FlashSaleStrip } from "@/components/site/FlashSaleStrip";
+import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { HomePersonalized } from "@/components/site/HomePersonalized";
