@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Package, Search, ArrowRight, Filter } from "lucide-react";
+import { Loader2, Package, Search, ArrowRight, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
@@ -24,6 +24,14 @@ type Order = {
 const FILTERS = ["all", "active", "delivered", "cancelled"] as const;
 type Filter = (typeof FILTERS)[number];
 
+const DATE_PRESETS = [
+  { id: "any", label: "Anytime" },
+  { id: "30d", label: "Last 30 days" },
+  { id: "3m", label: "Last 3 months" },
+  { id: "6m", label: "Last 6 months" },
+] as const;
+type DatePreset = (typeof DATE_PRESETS)[number]["id"] | "year" | "custom";
+
 const STATUS_STEPS: Record<string, number> = {
   pending: 20, processing: 40, shipped: 65, in_transit: 80, delivered: 100, cancelled: 0, refunded: 0,
 };
@@ -35,6 +43,10 @@ function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("any");
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [customFrom, setCustomFrom] = useState<string>("");
+  const [customTo, setCustomTo] = useState<string>("");
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -51,13 +63,37 @@ function OrdersPage() {
     return () => { cancelled = true; };
   }, [user]);
 
+  const years = useMemo(() => {
+    const ys = new Set<number>();
+    (orders ?? []).forEach((o) => ys.add(new Date(o.created_at).getFullYear()));
+    ys.add(new Date().getFullYear());
+    return Array.from(ys).sort((a, b) => b - a);
+  }, [orders]);
+
+  const dateRange = useMemo<[Date | null, Date | null]>(() => {
+    const now = new Date();
+    if (datePreset === "any") return [null, null];
+    if (datePreset === "30d") return [new Date(now.getTime() - 30 * 864e5), now];
+    if (datePreset === "3m") { const d = new Date(now); d.setMonth(d.getMonth() - 3); return [d, now]; }
+    if (datePreset === "6m") { const d = new Date(now); d.setMonth(d.getMonth() - 6); return [d, now]; }
+    if (datePreset === "year") return [new Date(year, 0, 1), new Date(year, 11, 31, 23, 59, 59)];
+    if (datePreset === "custom") {
+      return [customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo + "T23:59:59") : null];
+    }
+    return [null, null];
+  }, [datePreset, year, customFrom, customTo]);
+
   const filtered = useMemo(() => {
     const list = orders ?? [];
+    const [from, to] = dateRange;
     return list.filter((o) => {
       const s = String(o.status).toLowerCase();
       if (filter === "active" && ["delivered", "cancelled", "refunded"].includes(s)) return false;
       if (filter === "delivered" && s !== "delivered") return false;
       if (filter === "cancelled" && !["cancelled", "refunded"].includes(s)) return false;
+      const created = new Date(o.created_at);
+      if (from && created < from) return false;
+      if (to && created > to) return false;
       if (q) {
         const needle = q.toLowerCase();
         if (!o.id.toLowerCase().includes(needle) &&
@@ -65,7 +101,7 @@ function OrdersPage() {
       }
       return true;
     });
-  }, [orders, q, filter]);
+  }, [orders, q, filter, dateRange]);
 
   if (loading || !user) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -108,6 +144,67 @@ function OrdersPage() {
           ))}
         </div>
       </div>
+
+      <div className="bg-card border border-border rounded-2xl p-4 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="size-3.5 text-accent" />
+          <p className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground">Filter by date</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {DATE_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setDatePreset(p.id)}
+              className={`px-3.5 py-1.5 rounded-full text-[11px] font-mono transition-all ${
+                datePreset === p.id ? "bg-accent text-accent-foreground" : "bg-background border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+          {years.map((y) => (
+            <button
+              key={y}
+              onClick={() => { setDatePreset("year"); setYear(y); }}
+              className={`px-3.5 py-1.5 rounded-full text-[11px] font-mono transition-all ${
+                datePreset === "year" && year === y ? "bg-accent text-accent-foreground" : "bg-background border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+          <button
+            onClick={() => setDatePreset("custom")}
+            className={`px-3.5 py-1.5 rounded-full text-[11px] font-mono transition-all ${
+              datePreset === "custom" ? "bg-accent text-accent-foreground" : "bg-background border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Custom range
+          </button>
+        </div>
+        {datePreset === "custom" && (
+          <div className="flex flex-col sm:flex-row gap-2 mt-3">
+            <label className="flex-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              From
+              <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
+                className="mt-1 w-full px-3 py-2 rounded-full bg-background border border-border text-sm focus:border-accent outline-none" />
+            </label>
+            <label className="flex-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              To
+              <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
+                className="mt-1 w-full px-3 py-2 rounded-full bg-background border border-border text-sm focus:border-accent outline-none" />
+            </label>
+          </div>
+        )}
+        {datePreset !== "any" && (
+          <p className="text-[10px] font-mono text-muted-foreground mt-3">
+            Showing {filtered.length} order{filtered.length !== 1 ? "s" : ""}
+            {dateRange[0] && ` from ${dateRange[0].toLocaleDateString()}`}
+            {dateRange[1] && ` to ${dateRange[1].toLocaleDateString()}`}
+          </p>
+        )}
+      </div>
+
 
       {orders === null ? (
         <div className="space-y-3">
