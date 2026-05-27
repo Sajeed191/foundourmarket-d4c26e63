@@ -284,6 +284,29 @@ function TrackPage() {
               )}
             </motion.div>
 
+            {/* Carrier + ETA Countdown */}
+            {!cancelled && (
+              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+                <CarrierEta orderId={result.order.id} progress={currentStatusIdx} />
+              </motion.div>
+            )}
+
+            {/* Live Delivery Map */}
+            {!cancelled && currentStatusIdx >= 2 && (
+              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+                <LiveMap progress={currentStatusIdx} />
+              </motion.div>
+            )}
+
+            {/* Live activity feed */}
+            {!cancelled && (
+              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+                <LiveFeed />
+              </motion.div>
+            )}
+
+
+
             {/* AI Insights */}
             {!cancelled && (
               <motion.div
