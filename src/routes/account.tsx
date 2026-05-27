@@ -7,6 +7,7 @@ import {
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
   HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Headphones, Flame, Truck, Lock, BadgeCheck, Globe, Mic, Crown,
+  CheckCircle2, Box, Home, X, Plus, Minus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +18,8 @@ import { useNotifications } from "@/lib/notifications";
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import type { Product } from "@/lib/products";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Account — FoundOurMarket™" }] }),
@@ -41,10 +44,10 @@ const fadeUp = {
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return "Still up";
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 5) return { text: "Still up", emoji: "🌙" };
+  if (h < 12) return { text: "Good morning", emoji: "☀️" };
+  if (h < 18) return { text: "Good afternoon", emoji: "🌤️" };
+  return { text: "Good evening", emoji: "🌙" };
 }
 
 function AccountPage() {
@@ -87,7 +90,8 @@ function AccountPage() {
     const categoryCount = new Map<string, number>();
     for (const o of list) for (const it of o.order_items) categoryCount.set(it.name, (categoryCount.get(it.name) ?? 0) + it.quantity);
     const topCategory = [...categoryCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-    return { count: list.length, spent, active, saved, memberSince, topCategory };
+    const latestActive = list.find((o) => !["delivered", "cancelled", "refunded"].includes(String(o.status).toLowerCase())) ?? null;
+    return { count: list.length, spent, active, saved, memberSince, topCategory, latestActive };
   }, [orders, user]);
 
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
@@ -109,11 +113,7 @@ function AccountPage() {
   );
 
   if (loading || !user) {
-    return (
-      <div className="min-h-[60vh] grid place-items-center">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   return (
@@ -163,7 +163,7 @@ function AccountPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1 flex items-center gap-1.5">
-                  <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_oklch(0.7_0.18_150)] animate-pulse" /> Online · {greeting()}
+                  <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_oklch(0.7_0.18_150)] animate-pulse" /> Online · {greeting().text} {greeting().emoji}
                 </p>
                 <h1 className="text-[20px] leading-tight sm:text-2xl lg:text-3xl font-display font-semibold truncate tracking-tight">
                   Welcome back, <span className="text-gradient-ember">{firstName}</span>
@@ -303,6 +303,9 @@ function AccountPage() {
                 </div>
               )}
             </SectionBlock>
+
+            {/* ORDER TRACKING TIMELINE */}
+            {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
 
             {/* 5 — WISHLIST */}
             <SectionBlock
@@ -898,6 +901,102 @@ function ProfileCompletion({ user }: { user: { email?: string | null; user_metad
     </div>
   );
 }
+
+function PremiumLoader() {
+  return (
+    <div className="min-h-[80vh] grid place-items-center relative overflow-hidden">
+      <div aria-hidden className="absolute inset-0 -z-10" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)", opacity: 0.6 }} />
+      <div className="flex flex-col items-center gap-4">
+        <motion.div
+          animate={{ scale: [1, 1.08, 1], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="size-16 rounded-2xl bg-accent text-accent-foreground grid place-items-center shadow-[0_0_40px_var(--color-accent)]"
+        >
+          <ShoppingBag className="size-8" strokeWidth={2.4} />
+        </motion.div>
+        <p className="text-sm font-display font-semibold tracking-wide text-gradient-ember">FoundOurMarket™</p>
+        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
+          <Loader2 className="size-3 animate-spin text-accent" /> Loading your store
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderTimeline({ order, format }: { order: Order; format: (n: number) => string }) {
+  const status = String(order.status).toLowerCase();
+  const steps = [
+    { key: "ordered", label: "Ordered", icon: CheckCircle2, match: ["pending", "processing", "shipped", "in_transit", "out_for_delivery", "delivered"] },
+    { key: "packed", label: "Packed", icon: Box, match: ["processing", "shipped", "in_transit", "out_for_delivery", "delivered"] },
+    { key: "shipped", label: "Shipped", icon: Truck, match: ["shipped", "in_transit", "out_for_delivery", "delivered"] },
+    { key: "out", label: "Out for Delivery", icon: MapPin, match: ["out_for_delivery", "delivered"] },
+    { key: "delivered", label: "Delivered", icon: Home, match: ["delivered"] },
+  ];
+  const activeIdx = steps.reduce((acc, s, i) => (s.match.includes(status) ? i : acc), 0);
+  const eta = new Date(new Date(order.created_at).getTime() + 7 * 86400000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return (
+    <motion.section {...fadeUp}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm sm:text-base font-medium flex items-center gap-2">
+          <span className="size-7 rounded-lg bg-accent/10 text-accent grid place-items-center">
+            <Truck className="size-3.5" />
+          </span>
+          Tracking your order
+        </h2>
+        <Link to="/orders/$id" params={{ id: order.id }} className="action-link">Details <ArrowRight className="size-3" /></Link>
+      </div>
+      <div className="card-premium rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+        <div aria-hidden className="absolute -top-16 -right-10 size-48 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-ember)" }} />
+        <div className="relative flex items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Order #{order.id.slice(0, 8)}</p>
+            <p className="text-sm font-medium mt-0.5 truncate">{order.order_items.length} item{order.order_items.length === 1 ? "" : "s"} · {format(Number(order.total))}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Est. delivery</p>
+            <p className="text-sm font-display font-semibold text-accent">{eta}</p>
+          </div>
+        </div>
+        <div className="relative">
+          <div className="absolute top-4 left-4 right-4 h-0.5 bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(activeIdx / (steps.length - 1)) * 100}%` }}
+              transition={{ duration: 0.9, ease }}
+              className="h-full bg-gradient-to-r from-accent to-primary shadow-[0_0_10px_var(--color-accent)]"
+            />
+          </div>
+          <div className="relative grid grid-cols-5 gap-1">
+            {steps.map((s, i) => {
+              const Icon = s.icon;
+              const done = i <= activeIdx;
+              return (
+                <div key={s.key} className="flex flex-col items-center gap-1.5 text-center">
+                  <motion.span
+                    initial={false}
+                    animate={done ? { scale: [1, 1.15, 1] } : {}}
+                    transition={{ duration: 0.5, ease }}
+                    className={`size-8 rounded-full grid place-items-center ring-2 transition-all ${
+                      done
+                        ? "bg-accent text-accent-foreground ring-accent shadow-[0_0_14px_var(--color-accent)]"
+                        : "bg-card text-muted-foreground ring-white/10"
+                    }`}
+                  >
+                    <Icon className="size-3.5" />
+                  </motion.span>
+                  <span className={`text-[9px] font-mono uppercase tracking-wider leading-tight ${done ? "text-foreground" : "text-muted-foreground"}`}>
+                    {s.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
 
 
 
