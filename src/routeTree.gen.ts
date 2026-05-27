@@ -44,7 +44,7 @@ import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as AuthConnectRouteImport } from './routes/auth.connect'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AccountSecurityRouteImport } from './routes/account_.security'
 import { Route as AccountReturnsRouteImport } from './routes/account_.returns'
 import { Route as AccountProfileRouteImport } from './routes/account_.profile'
@@ -229,9 +229,9 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
-const AuthConnectRoute = AuthConnectRouteImport.update({
-  id: '/connect',
-  path: '/connect',
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
 const AccountSecurityRoute = AccountSecurityRouteImport.update({
@@ -313,7 +313,7 @@ export interface FileRoutesByFullPath {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/auth/connect': typeof AuthConnectRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -359,7 +359,7 @@ export interface FileRoutesByTo {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/auth/connect': typeof AuthConnectRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -406,7 +406,7 @@ export interface FileRoutesById {
   '/account_/profile': typeof AccountProfileRoute
   '/account_/returns': typeof AccountReturnsRoute
   '/account_/security': typeof AccountSecurityRoute
-  '/auth/connect': typeof AuthConnectRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -454,7 +454,7 @@ export interface FileRouteTypes {
     | '/account/profile'
     | '/account/returns'
     | '/account/security'
-    | '/auth/connect'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -500,7 +500,7 @@ export interface FileRouteTypes {
     | '/account/profile'
     | '/account/returns'
     | '/account/security'
-    | '/auth/connect'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -546,7 +546,7 @@ export interface FileRouteTypes {
     | '/account_/profile'
     | '/account_/returns'
     | '/account_/security'
-    | '/auth/connect'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
     | '/orders/$id'
@@ -847,11 +847,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
-    '/auth/connect': {
-      id: '/auth/connect'
-      path: '/connect'
-      fullPath: '/auth/connect'
-      preLoaderRoute: typeof AuthConnectRouteImport
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/account_/security': {
@@ -914,11 +914,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
-  AuthConnectRoute: typeof AuthConnectRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthConnectRoute: AuthConnectRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
