@@ -128,6 +128,8 @@ function RootComponent() {
   useEffect(() => { registerServiceWorker(); }, []);
   useEffect(() => { trackPageView(pathname); }, [pathname]);
 
+  const isAuthRoute = pathname.startsWith("/auth");
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -136,12 +138,12 @@ function RootComponent() {
             <RegionProvider>
               <CartProvider>
                 <div className="min-h-screen flex flex-col">
-                  <Nav />
-                  <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+                  {!isAuthRoute && <Nav />}
+                  <main className={isAuthRoute ? "flex-1" : "flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"}>
                     <Outlet />
                   </main>
-                  <Footer />
-                  <MobileBottomNav />
+                  {!isAuthRoute && <Footer />}
+                  {!isAuthRoute && <MobileBottomNav />}
                   <CompareTray />
                   <InstallPrompt />
                   <Toaster position="bottom-center" richColors />
