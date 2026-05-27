@@ -112,8 +112,6 @@ function AccountPage() {
     [products],
   );
 
-  const [quickView, setQuickView] = useState<Product | null>(null);
-
   if (loading || !user) {
     return <PremiumLoader />;
   }
