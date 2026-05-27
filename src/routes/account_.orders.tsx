@@ -668,6 +668,89 @@ function EmptyState({
   );
 }
 
+function SmartInsights() {
+  const items = [
+    { icon: Zap, tone: "text-amber-300", ring: "ring-amber-300/30", title: "Flash sale ending soon", sub: "Up to 40% off curated picks", to: "/search" as const, cta: "Shop" },
+    { icon: Tag, tone: "text-emerald-400", ring: "ring-emerald-400/30", title: "Price dropped on a saved item", sub: "Tap to see your new price", to: "/wishlist" as const, cta: "View" },
+    { icon: Gift, tone: "text-accent", ring: "ring-accent/30", title: "Bundle & save 15%", sub: "Recommended bundle ready", to: "/" as const, cta: "Open" },
+    { icon: TrendingUp, tone: "text-sky-400", ring: "ring-sky-400/30", title: "New arrivals match your taste", sub: "Fresh drops just landed", to: "/search" as const, cta: "Explore" },
+  ];
+  return (
+    <div className="-mx-4 px-4 mb-5">
+      <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-accent">
+          <Sparkles className="size-3" /> For you
+        </div>
+        <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+        </span>
+      </div>
+      <div className="overflow-x-auto no-scrollbar snap-x snap-mandatory">
+        <div className="flex gap-2 w-max pr-4">
+          {items.map((it, i) => {
+            const Icon = it.icon;
+            return (
+              <motion.div key={it.title}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.32 }}
+                className="snap-start shrink-0 w-[72%] sm:w-[44%] md:w-[28%]">
+                <Link to={it.to}
+                  className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-card/80 to-card/40 border border-border/50 backdrop-blur p-3 hover:border-accent/40 active:scale-[0.98] transition-all">
+                  <span className={`size-10 grid place-items-center rounded-xl bg-background/60 ring-1 ${it.ring} ${it.tone} shrink-0`}>
+                    <Icon className="size-4" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate leading-tight">{it.title}</p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{it.sub}</p>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-accent shrink-0 inline-flex items-center gap-0.5">
+                    {it.cta} <ArrowRight className="size-3" />
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoryRail({ categories }: { categories: { slug: string; name: string; image: string | null }[] }) {
+  if (!categories?.length) return null;
+  const list = categories.slice(0, 8);
+  return (
+    <section className="py-6 scroll-mt-24">
+      <div className="flex items-end justify-between mb-3 px-1">
+        <div>
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1">
+            <Sparkles className="size-3" /> Curated
+          </div>
+          <h2 className="text-lg sm:text-xl font-display font-semibold tracking-tight">Shop by category</h2>
+        </div>
+        <Link to="/search" className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1">
+          All <ArrowRight className="size-3" />
+        </Link>
+      </div>
+      <div className="-mx-4 px-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+        <div className="flex gap-2 w-max">
+          {list.map((c, i) => (
+            <motion.div key={c.slug}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i }}
+              className="snap-start shrink-0">
+              <Link to="/category/$slug" params={{ slug: c.slug }}
+                className="relative block w-28 h-32 rounded-2xl overflow-hidden border border-border/50 bg-card/40 group active:scale-95 transition">
+                {c.image && <img src={c.image} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition duration-500" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <span className="absolute bottom-2 left-2 right-2 text-[11px] font-semibold truncate">{c.name}</span>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // minimal SpeechRecognition types (browser-only)
 type SpeechRecognition = { lang: string; start: () => void; onresult: (e: SpeechRecognitionEvent) => void };
 type SpeechRecognitionEvent = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
