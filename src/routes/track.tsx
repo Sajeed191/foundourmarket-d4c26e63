@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   Package, Search, Loader2, CheckCircle2, Truck, Clock, XCircle,
   Sparkles, ShieldCheck, MapPin, Radio, MessageCircle, Mail, HelpCircle,
@@ -55,6 +56,10 @@ function TrackPage() {
   const [orderId, setOrderId] = useState("");
   const [email, setEmail] = useState("");
   const [recent, setRecent] = useState<{ orderId: string; email: string }[]>([]);
+  const [active, setActive] = useState<{ orderId: string; email: string } | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [tick, setTick] = useState(0);
+  const prevStatusRef = useRef<string | null>(null);
   const { slugs: recentSlugs } = useRecentlyViewed();
 
   useEffect(() => {
@@ -73,16 +78,70 @@ function TrackPage() {
           localStorage.setItem(RECENT_KEY, JSON.stringify(next));
           setRecent(next);
         } catch {}
+        setActive(vars);
+        prevStatusRef.current = data.order.status;
+        setLastUpdated(Date.now());
+      } else {
+        setActive(null);
       }
     },
   });
 
+  // Real-time polling — refetch every 6s while a tracking session is active
+  const liveQuery = useQuery({
+    queryKey: ["track-live", active?.orderId, active?.email],
+    queryFn: () => track({ data: active! }),
+    enabled: !!active,
+    refetchInterval: (q) => {
+      const d = q.state.data;
+      if (d?.found && (d.order.status === "delivered" || d.order.status === "cancelled")) return false;
+      return 6000;
+    },
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+  });
+
+  // Detect status changes from the polling stream and notify
+  useEffect(() => {
+    const data = liveQuery.data;
+    if (!data?.found) return;
+    setLastUpdated(Date.now());
+    const next = data.order.status;
+    const prev = prevStatusRef.current;
+    if (prev && prev !== next) {
+      const labelEntry = STATUSES.find((s) => s.key === next);
+      const label = labelEntry?.label ?? next;
+      if (next === "cancelled") {
+        toast.error("Order cancelled", { description: `Order #${data.order.id.slice(0, 8)} was cancelled.` });
+      } else if (next === "delivered") {
+        toast.success("Delivered!", { description: "Your order has arrived. Enjoy ✨" });
+      } else {
+        toast(`Status update: ${label}`, { description: labelEntry?.hint });
+      }
+    }
+    prevStatusRef.current = next;
+  }, [liveQuery.data]);
+
+  // 1s ticker so the "updated Ns ago" badge stays fresh
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setActive(null);
+    prevStatusRef.current = null;
     m.mutate({ orderId: orderId.trim(), email: email.trim() });
   };
 
-  const result = m.data;
+  // Live data takes precedence over the initial mutation response
+  const result = liveQuery.data ?? m.data;
+  const secsAgo = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : null;
+  void tick; // keep dependency to re-render every second
+
   const currentStatusIdx = result?.found
     ? Math.max(0, STATUSES.findIndex((s) => s.key === result.order.status))
     : -1;
@@ -255,10 +314,25 @@ function TrackPage() {
                   <p className="font-mono text-sm break-all">{result.order.id}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Placed</p>
-                  <p className="font-mono text-sm">{new Date(result.order.created_at).toLocaleDateString()}</p>
+                  {active && !cancelled ? (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-400/10 ring-1 ring-emerald-400/25 text-emerald-400">
+                      <span className="relative flex size-1.5">
+                        <span className={`absolute inset-0 rounded-full bg-emerald-400 ${liveQuery.isFetching ? "animate-ping" : "opacity-60"}`} />
+                        <span className="relative rounded-full bg-emerald-400 size-1.5" />
+                      </span>
+                      <span className="text-[9px] font-mono uppercase tracking-widest">
+                        {liveQuery.isFetching ? "Syncing" : secsAgo === null ? "Live" : `Live · ${secsAgo}s ago`}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Placed</p>
+                      <p className="font-mono text-sm">{new Date(result.order.created_at).toLocaleDateString()}</p>
+                    </>
+                  )}
                 </div>
               </div>
+
 
               {result.items[0]?.image && (
                 <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/5">
