@@ -90,7 +90,8 @@ function AccountPage() {
     const categoryCount = new Map<string, number>();
     for (const o of list) for (const it of o.order_items) categoryCount.set(it.name, (categoryCount.get(it.name) ?? 0) + it.quantity);
     const topCategory = [...categoryCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-    return { count: list.length, spent, active, saved, memberSince, topCategory };
+    const latestActive = list.find((o) => !["delivered", "cancelled", "refunded"].includes(String(o.status).toLowerCase())) ?? null;
+    return { count: list.length, spent, active, saved, memberSince, topCategory, latestActive };
   }, [orders, user]);
 
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
