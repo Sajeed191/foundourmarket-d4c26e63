@@ -367,6 +367,22 @@ function TrackPage() {
           </motion.div>
         )}
 
+        {/* AI Shopping Intelligence */}
+        {result?.found && !cancelled && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mt-10"
+          >
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <Sparkles className="size-3.5 text-accent" />
+              <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">You may also love</p>
+            </div>
+            <RecommendationStrip slug="recommended" title="" />
+          </motion.div>
+        )}
+
+
+
         {/* Support */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
