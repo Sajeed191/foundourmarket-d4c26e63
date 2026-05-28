@@ -117,12 +117,13 @@ function EditProfilePage() {
       await supabase.auth.updateUser({
         data: { full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl.trim() },
       });
+      setSaved(true);
       toast.success("Profile updated");
-      nav({ to: "/account" });
+      setTimeout(() => nav({ to: "/account" }), 900);
     } catch (err: any) {
       toast.error(err?.message ?? "Could not save profile");
-    } finally {
       setSaving(false);
+
     }
   };
 
