@@ -32,9 +32,27 @@ export function renderMarkdown(src: string): string {
   return out.join("\n");
 }
 
+function safeLinkUrl(url: string): string {
+  const trimmed = url.trim();
+  if (/^(\/|#|\?)/.test(trimmed)) return trimmed;
+  try {
+    const u = new URL(trimmed);
+    if (["http:", "https:", "mailto:", "tel:"].includes(u.protocol)) return trimmed;
+    return "#";
+  } catch {
+    return "#";
+  }
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function inline(s: string): string {
   return s
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-accent underline">$1</a>');
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, label: string, url: string) =>
+      `<a href="${escapeAttr(safeLinkUrl(url))}" class="text-accent underline" rel="noopener noreferrer">${label}</a>`,
+    );
 }
