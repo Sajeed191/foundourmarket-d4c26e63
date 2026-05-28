@@ -40,23 +40,6 @@ function EditProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
 
-export const Route = createFileRoute("/account_/profile")({
-  head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
-  component: EditProfilePage,
-});
-
-function EditProfilePage() {
-  const { user, loading } = useAuth();
-  const nav = useNavigate();
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [fetching, setFetching] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
   const onPickAvatar = async (file: File) => {
     if (!user) return;
     if (!file.type.startsWith("image/")) { toast.error("Please choose an image"); return; }
