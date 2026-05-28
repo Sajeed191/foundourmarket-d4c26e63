@@ -217,8 +217,6 @@ function AccountPage() {
         </motion.header>
         </div>
 
-        </motion.header>
-        </div>
 
 
 
