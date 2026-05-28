@@ -234,6 +234,16 @@ function SellerAssistancePage() {
 
   const handleChannel = (id: string) => {
     if (loadingChannel) return;
+
+    // If chat is already open, close it.
+    if (id === "chat" && chatOpen) {
+      closeCrispChat();
+      setChatOpen(false);
+      track("support_channel_outcome", { metadata: { channel: "chat", outcome: "closed", surface: "seller_assistance" } });
+      toast.message("Chat closed", { description: "You can reopen it anytime." });
+      return;
+    }
+
     track("support_channel_click", { metadata: { channel: id, surface: "seller_assistance" } });
     setLoadingChannel(id);
     const finish = () => setLoadingChannel(null);
@@ -280,6 +290,7 @@ function SellerAssistancePage() {
             (email ? email.split("@")[0] : undefined);
           if (email || nickname) setCrispUser({ email, nickname });
           openCrispChat();
+          setChatOpen(true);
           toast.success("You're connected", {
             id: "chat-connect",
             description: "A FoundOurMarket specialist will reply momentarily.",
