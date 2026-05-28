@@ -100,7 +100,6 @@ function customizeCrispMenu(): void {
         (node as HTMLElement).style.display = "none";
       }
     });
-
     // Hide "Additional support" / "Need additional support?" links
     const allNodes = box.querySelectorAll("a, span, div, p, button");
     allNodes.forEach((node) => {
@@ -109,6 +108,7 @@ function customizeCrispMenu(): void {
         (node as HTMLElement).style.display = "none";
       }
     });
+  };
 
   apply();
   if (menuObserver) return;
