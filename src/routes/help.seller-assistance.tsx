@@ -62,11 +62,11 @@ const PROTECTION = [
 ];
 
 const CHANNELS = [
-  { icon: MessageCircle, title: "Live Chat", meta: "Avg reply · 2 min", status: "Online", color: "#22c55e", href: "/help#assistant" },
-  { icon: Mail, title: "Priority Email", meta: "foundourmarket@gmail.com", status: "< 24h", color: "#FF9F43", href: "mailto:foundourmarket@gmail.com" },
-  { icon: CalendarClock, title: "Schedule a Call", meta: "Free 1:1 with seller team", status: "Bookable", color: "#a78bfa", href: "mailto:foundourmarket@gmail.com?subject=Schedule%20Assistance%20Call" },
-  { icon: Phone, title: "WhatsApp Support", meta: "Direct mobile assistance", status: "Soon", color: "#25D366", href: "#" },
-];
+  { id: "chat", icon: MessageCircle, title: "Live Chat", meta: "Avg reply · 2 min", status: "Online", color: "#22c55e", loading: "Connecting to Live Marketplace Support…" },
+  { id: "email", icon: Mail, title: "Priority Email", meta: SUPPORT_EMAIL, status: "< 24h", color: "#FF9F43", loading: "Opening Priority Assistance…" },
+  { id: "call", icon: CalendarClock, title: "Schedule a Call", meta: "Free 1:1 with seller team", status: "Bookable", color: "#a78bfa", loading: "Scheduling Assistance Session…" },
+  { id: "whatsapp", icon: Phone, title: "WhatsApp Support", meta: "Direct mobile assistance", status: "Live", color: "#25D366", loading: "Connecting to Marketplace Support…" },
+] as const;
 
 const SUPPLIERS = [
   { icon: BadgeCheck, label: "Verified Supplier", tone: "from-emerald-400/30 to-emerald-400/0" },
