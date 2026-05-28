@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { loadCrisp, openCrispChat } from "@/lib/crisp";
+import { loadCrisp, openCrispChat, closeCrispChat } from "@/lib/crisp";
 import { useEffect, useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, useScroll, AnimatePresence } from "framer-motion";
 import {
