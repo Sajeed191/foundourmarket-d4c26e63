@@ -93,12 +93,12 @@ function customizeCrispMenu(): void {
       }
     });
 
-    // Hide "We run on Crisp" branding
-    const allDivs = box.querySelectorAll("div");
-    allDivs.forEach((div) => {
-      const text = (div.textContent || "").trim();
-      if (text.toLowerCase().includes("we run on") && text.toLowerCase().includes("crisp")) {
-        (div as HTMLElement).style.display = "none";
+    // Hide "We run on Crisp" branding (can render as div, span or anchor)
+    const candidates = box.querySelectorAll("a, span, div, p");
+    candidates.forEach((node) => {
+      const text = (node.textContent || "").trim().toLowerCase();
+      if (text.includes("we run on") && text.includes("crisp")) {
+        (node as HTMLElement).style.display = "none";
       }
     });
   };
