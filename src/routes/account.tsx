@@ -339,10 +339,11 @@ function AccountPage() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Open live chat"
-        className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-40 size-14 rounded-full bg-white grid place-items-center shadow-[0_0_30px_var(--color-accent),0_10px_30px_-8px_oklch(0_0_0/0.6)] hover:shadow-[0_0_45px_var(--color-accent)] transition-shadow cursor-pointer overflow-hidden border-2 border-accent/20"
+        className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-40 size-14 rounded-full bg-accent text-accent-foreground grid place-items-center shadow-[0_0_30px_var(--color-accent),0_10px_30px_-8px_oklch(0_0_0/0.6)] hover:shadow-[0_0_45px_var(--color-accent)] transition-shadow cursor-pointer"
       >
-        <img src={logoSrc} alt="FoundOurMarket" className="w-full h-full object-cover" />
-        <span className="absolute inset-0 rounded-full bg-accent/20 animate-ping pointer-events-none" />
+        <MessageCircle className="size-6" strokeWidth={2.4} />
+        <span className="absolute inset-0 rounded-full bg-accent/40 animate-ping pointer-events-none" />
+
       </motion.button>
     </div>
   );
