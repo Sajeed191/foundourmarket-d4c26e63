@@ -1,8 +1,7 @@
-import { ShieldCheck, RotateCcw, BadgeCheck, Lock } from "lucide-react";
+import { ShieldCheck, BadgeCheck, Lock } from "lucide-react";
 
 const ITEMS = [
   { icon: ShieldCheck, label: "Secure checkout", hint: "256-bit SSL" },
-  { icon: RotateCcw, label: "30-day returns", hint: "Hassle-free" },
   { icon: BadgeCheck, label: "Verified sellers", hint: "Hand-picked" },
   { icon: Lock, label: "Buyer protection", hint: "Money-back" },
 ];
