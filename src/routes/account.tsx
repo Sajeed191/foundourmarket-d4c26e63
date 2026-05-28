@@ -20,6 +20,7 @@ import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { Product } from "@/lib/products";
+import logoSrc from "@/assets/logo.jpeg";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Account — FoundOurMarket™" }] }),
@@ -157,9 +158,7 @@ function AccountPage() {
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-lg font-display font-semibold text-accent">
-                      {firstName.slice(0, 1).toUpperCase()}
-                    </span>
+                    <img src={logoSrc} alt="FoundOurMarket logo" className="w-full h-full object-cover" />
                   )}
                 </motion.div>
                 <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
