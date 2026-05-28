@@ -630,50 +630,133 @@ function SellerAssistancePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Schedule a call dialog */}
+      {/* Schedule a call dialog — embedded Calendly with loading + error fallback */}
       <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
-        <DialogContent className="border-white/10 bg-[#0a0f1f]/95 backdrop-blur-2xl text-white sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="border-white/10 bg-[#0a0f1f]/95 backdrop-blur-2xl text-white p-0 overflow-hidden sm:max-w-3xl w-[min(100vw-1rem,52rem)]">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/[0.06]">
             <DialogTitle className="flex items-center gap-2 text-base">
               <span className="grid place-items-center size-8 rounded-lg bg-violet-500/15 text-violet-300 border border-violet-400/30">
                 <CalendarClock className="size-4" />
               </span>
               Schedule an Assistance Session
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest text-emerald-300">
+                <Lock className="size-2.5" /> Secure
+              </span>
             </DialogTitle>
-            <DialogDescription className="text-white/60">
-              Book a free 1:1 with a FoundOurMarket™ seller specialist.
+            <DialogDescription className="text-white/60 text-xs">
+              Book a free 1:1 with a FoundOurMarket™ seller specialist — typically 20 minutes.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2.5 mt-1">
-            <a
-              href="https://calendly.com/foundourmarket/seller-support"
-              target="_blank" rel="noopener noreferrer"
-              onClick={() => setScheduleOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-orange-300/40 transition p-3 active:scale-[0.98]"
-            >
-              <span className="grid place-items-center size-10 rounded-lg" style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, ${ACCENT_2})` }}>
-                <CalendarClock className="size-5 text-white" />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">Open Calendly</p>
-                <p className="text-[11px] text-white/55">Pick a slot that works for you</p>
-              </div>
-              <ArrowRight className="size-4 text-white/40" />
-            </a>
-            <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Schedule Assistance Call")}&body=${encodeURIComponent("Hi FoundOurMarket team,\n\nI'd like to schedule a 1:1 call. My preferred times are:\n\n")}`}
-              onClick={() => setScheduleOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition p-3 active:scale-[0.98]"
-            >
-              <span className="grid place-items-center size-10 rounded-lg bg-white/[0.06] border border-white/10 text-orange-300">
-                <Mail className="size-5" />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-semibold">Request via Email</p>
-                <p className="text-[11px] text-white/55">We'll reply with available slots</p>
-              </div>
-              <ArrowRight className="size-4 text-white/40" />
-            </a>
+
+          {/* Calendly embed surface */}
+          <div className="relative bg-[#0a0f1f]" style={{ height: "min(70vh, 640px)" }}>
+            {calendlyStatus !== "error" && (
+              <iframe
+                key={scheduleOpen ? "open" : "closed"}
+                src={CALENDLY_EMBED_URL}
+                title="Schedule a call with FoundOurMarket"
+                onLoad={() => {
+                  if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
+                  setCalendlyStatus("ready");
+                }}
+                onError={() => setCalendlyStatus("error")}
+                className="w-full h-full border-0"
+                allow="camera; microphone; clipboard-write"
+              />
+            )}
+
+            <AnimatePresence>
+              {calendlyStatus === "loading" && (
+                <motion.div
+                  key="cal-loading"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="absolute inset-0 grid place-items-center bg-[#0a0f1f]"
+                >
+                  <div className="flex flex-col items-center gap-3 text-center px-6">
+                    <span className="relative grid place-items-center size-12 rounded-2xl bg-white/[0.04] border border-white/10">
+                      <Loader2 className="size-5 animate-spin text-orange-300" />
+                      <span className="absolute inset-0 rounded-2xl ring-1 ring-orange-300/20 animate-pulse" />
+                    </span>
+                    <p className="text-sm font-semibold">Loading your booking calendar…</p>
+                    <p className="text-[11px] text-white/55 max-w-xs">
+                      Connecting securely to Calendly. This usually takes a second.
+                    </p>
+                    <div className="mt-2 w-56 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div
+                        initial={{ x: "-100%" }} animate={{ x: "100%" }}
+                        transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+                        className="h-full w-1/2 rounded-full"
+                        style={{ backgroundImage: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)` }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {calendlyStatus === "error" && (
+                <motion.div
+                  key="cal-error"
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="absolute inset-0 grid place-items-center bg-[#0a0f1f] px-6"
+                >
+                  <div className="max-w-sm w-full text-center">
+                    <span className="grid place-items-center size-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-300">
+                      <AlertTriangle className="size-5" />
+                    </span>
+                    <h3 className="mt-3 text-base font-semibold">Calendar couldn't load</h3>
+                    <p className="mt-1 text-[12px] text-white/60">
+                      Your network may be blocking the booking widget. You can retry, open it in a new tab,
+                      or email the team — we'll reply with available slots.
+                    </p>
+                    <div className="mt-4 grid gap-2">
+                      <button
+                        onClick={retryCalendly}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_30px_-12px_rgba(255,122,0,0.6)]"
+                        style={{ backgroundImage: `linear-gradient(135deg, ${ACCENT}, ${ACCENT_2})` }}
+                      >
+                        <RefreshCw className="size-4" /> Retry
+                      </button>
+                      <a
+                        href={CALENDLY_URL}
+                        target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] transition"
+                      >
+                        <ExternalLink className="size-4" /> Open Calendly in a new tab
+                      </a>
+                      <a
+                        href={SCHEDULE_MAILTO}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] transition"
+                      >
+                        <Mail className="size-4" /> Email {SUPPORT_EMAIL}
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Footer — always-visible email fallback + trust */}
+          <div className="px-5 py-3 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-[#070b16]">
+            <p className="text-[11px] text-white/50 flex items-center gap-1.5 flex-1 min-w-0">
+              <ShieldCheck className="size-3 text-emerald-300 shrink-0" />
+              <span className="truncate">Encrypted booking · Verified FoundOurMarket™ staff · Avg. reply &lt; 24h</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <a
+                href={CALENDLY_URL}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-white/60 hover:text-white transition"
+              >
+                <ExternalLink className="size-3" /> New tab
+              </a>
+              <a
+                href={SCHEDULE_MAILTO}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-white/[0.08] transition"
+              >
+                <Mail className="size-3" /> Email instead
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
