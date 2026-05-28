@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
+import { loadCrisp, openCrispChat, setCrispUser } from "@/lib/crisp";
 
 const WHATSAPP_NUMBERS = [
   { number: "919745844213", display: "+91 97458 44213", department: "General Marketplace Support" },
@@ -264,12 +265,43 @@ function SellerAssistancePage() {
         finish();
       }, 700);
     } else if (id === "chat") {
-      toast.loading("Connecting to Live Marketplace Support…", { id: "chat-connect" });
-      setTimeout(() => {
-        toast.success("Live chat is warming up", { id: "chat-connect", description: "A seller specialist will join in a moment." });
-        track("support_channel_outcome", { metadata: { channel: "chat", outcome: "connected", surface: "seller_assistance" } });
-        finish();
-      }, 1400);
+      toast.loading("Connecting to Live Marketplace Support…", {
+        id: "chat-connect",
+        description: "Establishing encrypted channel · verified specialist",
+      });
+      loadCrisp()
+        .then(() => {
+          // Identify the user for the specialist when available.
+          const email = (user as any)?.email as string | undefined;
+          const nickname =
+            ((user as any)?.user_metadata?.full_name as string | undefined) ||
+            ((user as any)?.user_metadata?.name as string | undefined) ||
+            (email ? email.split("@")[0] : undefined);
+          if (email || nickname) setCrispUser({ email, nickname });
+          openCrispChat();
+          toast.success("You're connected", {
+            id: "chat-connect",
+            description: "A FoundOurMarket specialist will reply momentarily.",
+          });
+          track("support_channel_outcome", {
+            metadata: { channel: "chat", outcome: "connected", surface: "seller_assistance" },
+          });
+        })
+        .catch((err) => {
+          toast.error("Live chat unavailable", {
+            id: "chat-connect",
+            description: "Please try again or email support@foundourmarket.com.",
+          });
+          track("support_channel_outcome", {
+            metadata: {
+              channel: "chat",
+              outcome: "load_failed",
+              error: String(err),
+              surface: "seller_assistance",
+            },
+          });
+        })
+        .finally(() => finish());
     }
   };
 
