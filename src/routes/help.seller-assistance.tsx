@@ -482,14 +482,37 @@ function SellerAssistancePage() {
                   </div>
                   <p className="text-xs text-white/55 truncate mt-0.5">{loadingChannel === c.id ? c.loading : c.meta}</p>
                 </div>
-                <span className="relative inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/75">
-                  <span className="relative size-1.5 rounded-full" style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }}>
-                    {(c.status === "Online" || c.status === "Live") && (
-                      <span className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: c.color, opacity: 0.6 }} />
-                    )}
-                  </span>
-                  {c.status}
-                </span>
+                <div className="relative flex flex-col items-end gap-1 shrink-0">
+                  {(() => {
+                    const s = supportStatus[c.id] ?? STATUS_FALLBACK[c.id];
+                    return (
+                      <>
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/85"
+                          aria-live="polite"
+                          aria-label={`${c.title} status ${s.label}`}
+                        >
+                          <span
+                            className="relative size-1.5 rounded-full"
+                            style={{ backgroundColor: s.color, boxShadow: `0 0 10px ${s.color}` }}
+                          >
+                            {s.pulse && (
+                              <span
+                                className="absolute inset-0 rounded-full animate-ping"
+                                style={{ backgroundColor: s.color, opacity: 0.6 }}
+                              />
+                            )}
+                          </span>
+                          {s.label}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
+                          <Lock className="size-2.5" />
+                          {s.eta}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
               </motion.button>
             ))}
           </div>
