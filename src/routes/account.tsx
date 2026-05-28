@@ -313,6 +313,44 @@ function AccountPage() {
   );
 }
 
+function FloatingSupportButton() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const w = window as any;
+    w.$crisp = w.$crisp || [];
+    w.$crisp.push(["on", "chat:opened", () => setOpen(true)]);
+    w.$crisp.push(["on", "chat:closed", () => setOpen(false)]);
+  }, []);
+
+  const handleClick = () => {
+    if (open) {
+      closeCrispChat();
+      setOpen(false);
+    } else {
+      loadCrisp().then(() => openCrispChat());
+      setOpen(true);
+    }
+  };
+
+  return (
+    <motion.button
+      onClick={handleClick}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.6, type: "spring", stiffness: 260, damping: 20 }}
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.95 }}
+      aria-label={open ? "Close live chat" : "Open live chat"}
+      className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-40 size-14 rounded-full bg-accent text-accent-foreground grid place-items-center shadow-[0_0_30px_var(--color-accent),0_10px_30px_-8px_oklch(0_0_0/0.6)] hover:shadow-[0_0_45px_var(--color-accent)] transition-shadow cursor-pointer"
+    >
+      {open ? <X className="size-6" strokeWidth={2.4} /> : <MessageCircle className="size-6" strokeWidth={2.4} />}
+      {!open && <span className="absolute inset-0 rounded-full bg-accent/40 animate-ping pointer-events-none" />}
+    </motion.button>
+  );
+}
+
 
 /* ---------- helpers ---------- */
 
