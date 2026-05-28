@@ -69,12 +69,15 @@ let menuObserver: MutationObserver | null = null;
 
 // Crisp ships a "Minimize Support" item in its chatbox menu. We relabel it to
 // "Close chat" and make clicking it fully close + hide the widget.
+// We also remove the "We run on Crisp" branding.
 function customizeCrispMenu(): void {
   if (typeof window === "undefined") return;
 
   const apply = () => {
     const box = document.getElementById("crisp-chatbox");
     if (!box) return;
+
+    // Relabel "Minimize" → "Close chat"
     const items = box.querySelectorAll("li");
     items.forEach((li) => {
       const label = (li.textContent || "").trim().toLowerCase();
@@ -87,6 +90,15 @@ function customizeCrispMenu(): void {
             setTimeout(() => closeCrispChat(), 0);
           });
         }
+      }
+    });
+
+    // Hide "We run on Crisp" branding
+    const allDivs = box.querySelectorAll("div");
+    allDivs.forEach((div) => {
+      const text = (div.textContent || "").trim();
+      if (text.toLowerCase().includes("we run on") && text.toLowerCase().includes("crisp")) {
+        (div as HTMLElement).style.display = "none";
       }
     });
   };
