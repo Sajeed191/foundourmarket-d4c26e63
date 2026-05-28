@@ -256,7 +256,7 @@ function SellerAssistancePage() {
               <motion.a
                 key={a.title}
                 href="#seller-form"
-                onClick={() => update("issueType")(a.title)}
+                onClick={() => setForm((f) => ({ ...f, issueType: a.title }))}
                 initial={{ opacity: 0, y: 14 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
