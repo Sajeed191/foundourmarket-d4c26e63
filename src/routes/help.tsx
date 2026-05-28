@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,8 +19,13 @@ export const Route = createFileRoute("/help")({
       { property: "og:description", content: "Smart answers and premium support — whenever you need help." },
     ],
   }),
-  component: HelpPage,
+  component: HelpRouteShell,
 });
+
+function HelpRouteShell() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return pathname === "/help" ? <HelpPage /> : <Outlet />;
+}
 
 // ------- Data -------
 type FAQ = { q: string; a: string; cat: Category };
