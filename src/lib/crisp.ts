@@ -59,6 +59,19 @@ export function openCrispChat(): void {
   window.$crisp.push(["do", "chat:open"]);
 }
 
+export function closeCrispChat(): void {
+  if (typeof window === "undefined") return;
+  window.$crisp = window.$crisp || [];
+  window.$crisp.push(["do", "chat:hide"]);
+  window.$crisp.push(["do", "chat:close"]);
+}
+
+export function isCrispChatOpen(): boolean {
+  if (typeof window === "undefined" || !window.$crisp) return false;
+  // Crisp doesn't expose a direct state getter; we rely on page state tracking.
+  return false;
+}
+
 export function setCrispUser(opts: { email?: string; nickname?: string }): void {
   if (typeof window === "undefined") return;
   window.$crisp = window.$crisp || [];

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Loader2,
   Truck, CreditCard, RotateCcw, AlertTriangle, PackageSearch, UserCog,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
-import { loadCrisp, openCrispChat, setCrispUser } from "@/lib/crisp";
+import { loadCrisp, openCrispChat, closeCrispChat, setCrispUser } from "@/lib/crisp";
 
 const WHATSAPP_NUMBERS = [
   { number: "919745844213", display: "+91 97458 44213", department: "General Marketplace Support" },
@@ -184,6 +185,7 @@ function SellerAssistancePage() {
   const update = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
   const [loadingChannel, setLoadingChannel] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [calendlyStatus, setCalendlyStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -233,6 +235,16 @@ function SellerAssistancePage() {
 
   const handleChannel = (id: string) => {
     if (loadingChannel) return;
+
+    // If chat is already open, close it.
+    if (id === "chat" && chatOpen) {
+      closeCrispChat();
+      setChatOpen(false);
+      track("support_channel_outcome", { metadata: { channel: "chat", outcome: "closed", surface: "seller_assistance" } });
+      toast.message("Chat closed", { description: "You can reopen it anytime." });
+      return;
+    }
+
     track("support_channel_click", { metadata: { channel: id, surface: "seller_assistance" } });
     setLoadingChannel(id);
     const finish = () => setLoadingChannel(null);
@@ -279,6 +291,7 @@ function SellerAssistancePage() {
             (email ? email.split("@")[0] : undefined);
           if (email || nickname) setCrispUser({ email, nickname });
           openCrispChat();
+          setChatOpen(true);
           toast.success("You're connected", {
             id: "chat-connect",
             description: "A FoundOurMarket specialist will reply momentarily.",
@@ -481,72 +494,87 @@ function SellerAssistancePage() {
         {/* CHANNELS */}
         <Section eyebrow="Talk to us" title="Support channels">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {CHANNELS.map((c, i) => (
-              <motion.button
-                key={c.id}
-                type="button"
-                onClick={() => handleChannel(c.id)}
-                disabled={loadingChannel === c.id}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="group relative text-left rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 flex items-center gap-3.5 hover:border-white/20 hover:shadow-[0_18px_50px_-20px_rgba(255,122,0,0.5)] transition overflow-hidden disabled:opacity-70"
-              >
-                <span
-                  className="pointer-events-none absolute -left-10 -top-10 size-32 rounded-full blur-3xl opacity-0 group-hover:opacity-50 transition-opacity"
-                  style={{ backgroundColor: c.color }}
-                />
-                <div
-                  className="relative grid place-items-center size-11 rounded-xl border border-white/10"
-                  style={{ backgroundColor: `${c.color}1A`, color: c.color }}
+            {CHANNELS.map((c, i) => {
+              const isChatOpen = c.id === "chat" && chatOpen;
+              return (
+                <motion.button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleChannel(c.id)}
+                  disabled={loadingChannel === c.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    "group relative text-left rounded-2xl border backdrop-blur-xl p-4 flex items-center gap-3.5 transition overflow-hidden disabled:opacity-70",
+                    isChatOpen
+                      ? "border-emerald-400/30 bg-emerald-500/[0.06] hover:border-emerald-400/50 hover:shadow-[0_18px_50px_-20px_rgba(34,197,94,0.35)]"
+                      : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:shadow-[0_18px_50px_-20px_rgba(255,122,0,0.5)]"
+                  )}
                 >
-                  {loadingChannel === c.id ? <Loader2 className="size-5 animate-spin" /> : <c.icon className="size-5" />}
-                </div>
-                <div className="relative flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold truncate">{c.title}</p>
-                    <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60">
-                      <Lock className="size-2.5" /> {c.badge}
-                    </span>
+                  <span
+                    className="pointer-events-none absolute -left-10 -top-10 size-32 rounded-full blur-3xl opacity-0 group-hover:opacity-50 transition-opacity"
+                    style={{ backgroundColor: c.color }}
+                  />
+                  <div
+                    className="relative grid place-items-center size-11 rounded-xl border border-white/10"
+                    style={{ backgroundColor: `${c.color}1A`, color: c.color }}
+                  >
+                    {loadingChannel === c.id ? <Loader2 className="size-5 animate-spin" /> : isChatOpen ? <X className="size-5" /> : <c.icon className="size-5" />}
                   </div>
-                  <p className="text-xs text-white/55 truncate mt-0.5">{loadingChannel === c.id ? c.loading : c.meta}</p>
-                </div>
-                <div className="relative flex flex-col items-end gap-1 shrink-0">
-                  {(() => {
-                    const s = supportStatus[c.id] ?? STATUS_FALLBACK[c.id];
-                    return (
-                      <>
-                        <span
-                          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/85"
-                          aria-live="polite"
-                          aria-label={`${c.title} status ${s.label}`}
-                        >
+                  <div className="relative flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold truncate">{isChatOpen ? "Close Chat" : c.title}</p>
+                      <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60">
+                        <Lock className="size-2.5" /> {c.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/55 truncate mt-0.5">
+                      {loadingChannel === c.id ? c.loading : isChatOpen ? "Click to hide the chat widget" : c.meta}
+                    </p>
+                  </div>
+                  <div className="relative flex flex-col items-end gap-1 shrink-0">
+                    {(() => {
+                      const s = supportStatus[c.id] ?? STATUS_FALLBACK[c.id];
+                      return (
+                        <>
                           <span
-                            className="relative size-1.5 rounded-full"
-                            style={{ backgroundColor: s.color, boxShadow: `0 0 10px ${s.color}` }}
-                          >
-                            {s.pulse && (
-                              <span
-                                className="absolute inset-0 rounded-full animate-ping"
-                                style={{ backgroundColor: s.color, opacity: 0.6 }}
-                              />
+                            className={cn(
+                              "inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border",
+                              isChatOpen
+                                ? "bg-emerald-500/10 border-emerald-400/30 text-emerald-300"
+                                : "bg-white/[0.05] border-white/10 text-white/85"
                             )}
+                            aria-live="polite"
+                            aria-label={`${c.title} status ${isChatOpen ? "Open" : s.label}`}
+                          >
+                            <span
+                              className="relative size-1.5 rounded-full"
+                              style={{ backgroundColor: isChatOpen ? "#34d399" : s.color, boxShadow: `0 0 10px ${isChatOpen ? "#34d399" : s.color}` }}
+                            >
+                              {(isChatOpen || s.pulse) && (
+                                <span
+                                  className="absolute inset-0 rounded-full animate-ping"
+                                  style={{ backgroundColor: isChatOpen ? "#34d399" : s.color, opacity: 0.6 }}
+                                />
+                              )}
+                            </span>
+                            {isChatOpen ? "Open" : s.label}
                           </span>
-                          {s.label}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
-                          <Lock className="size-2.5" />
-                          {s.eta}
-                        </span>
-                      </>
-                    );
-                  })()}
-                </div>
-              </motion.button>
-            ))}
+                          <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
+                            <Lock className="size-2.5" />
+                            {isChatOpen ? "Active" : s.eta}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         </Section>
 
