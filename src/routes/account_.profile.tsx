@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Loader2,
@@ -15,10 +15,30 @@ import {
   Crown,
   Sparkles,
   ShieldCheck,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+
+export const Route = createFileRoute("/account_/profile")({
+  head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
+  component: EditProfilePage,
+});
+
+function EditProfilePage() {
+  const { user, loading } = useAuth();
+  const nav = useNavigate();
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [fetching, setFetching] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
 
 export const Route = createFileRoute("/account_/profile")({
   head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
