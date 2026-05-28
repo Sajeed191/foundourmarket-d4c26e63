@@ -20,6 +20,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
+import { track } from "@/lib/analytics";
 
 const WHATSAPP_NUMBERS = [
   { number: "919745844213", display: "+91 97458 44213", department: "General Marketplace Support" },
@@ -135,8 +136,15 @@ function SellerAssistancePage() {
       return;
     }
     setCalendlyStatus("loading");
+    track("support_calendly_open", { metadata: { surface: "seller_assistance" } });
     calendlyTimeoutRef.current = setTimeout(() => {
-      setCalendlyStatus((s) => (s === "loading" ? "error" : s));
+      setCalendlyStatus((s) => {
+        if (s === "loading") {
+          track("support_calendly_outcome", { metadata: { outcome: "timeout", surface: "seller_assistance" } });
+          return "error";
+        }
+        return s;
+      });
     }, 9000);
     return () => {
       if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
@@ -145,37 +153,63 @@ function SellerAssistancePage() {
 
   const retryCalendly = () => {
     setCalendlyStatus("loading");
+    track("support_calendly_retry", { metadata: { surface: "seller_assistance" } });
     if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
     calendlyTimeoutRef.current = setTimeout(() => {
-      setCalendlyStatus((s) => (s === "loading" ? "error" : s));
+      setCalendlyStatus((s) => {
+        if (s === "loading") {
+          track("support_calendly_outcome", { metadata: { outcome: "timeout_after_retry", surface: "seller_assistance" } });
+          return "error";
+        }
+        return s;
+      });
     }, 9000);
   };
 
-  const openWhatsApp = (number: string) => {
+  const openWhatsApp = (number: string, department?: string) => {
+    track("support_whatsapp_open", { metadata: { number, department, surface: "seller_assistance" } });
     const url = `https://wa.me/${number}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleChannel = (id: string) => {
     if (loadingChannel) return;
+    track("support_channel_click", { metadata: { channel: id, surface: "seller_assistance" } });
     setLoadingChannel(id);
     const finish = () => setLoadingChannel(null);
     if (id === "whatsapp") {
       toast.message("Connecting to Marketplace Support…", { description: "Choose a department to continue on WhatsApp." });
-      setTimeout(() => { setWhatsappOpen(true); finish(); }, 650);
+      setTimeout(() => {
+        setWhatsappOpen(true);
+        track("support_channel_outcome", { metadata: { channel: "whatsapp", outcome: "picker_opened", surface: "seller_assistance" } });
+        finish();
+      }, 650);
     } else if (id === "email") {
       toast.message("Opening Priority Assistance…");
       setTimeout(() => {
-        window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Priority Support Request")}&body=${encodeURIComponent("Hello FoundOurMarket Support,\n\nI need priority assistance regarding:\n\n")}`;
+        track("support_mail_open_attempt", {
+          metadata: { channel: "email", subject: "Priority Support Request", to: SUPPORT_EMAIL, surface: "seller_assistance" },
+        });
+        try {
+          window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Priority Support Request")}&body=${encodeURIComponent("Hello FoundOurMarket Support,\n\nI need priority assistance regarding:\n\n")}`;
+          track("support_channel_outcome", { metadata: { channel: "email", outcome: "mailto_dispatched", surface: "seller_assistance" } });
+        } catch (err) {
+          track("support_channel_outcome", { metadata: { channel: "email", outcome: "mailto_failed", error: String(err), surface: "seller_assistance" } });
+        }
         finish();
       }, 600);
     } else if (id === "call") {
       toast.message("Scheduling Assistance Session…");
-      setTimeout(() => { setScheduleOpen(true); finish(); }, 700);
+      setTimeout(() => {
+        setScheduleOpen(true);
+        track("support_channel_outcome", { metadata: { channel: "call", outcome: "modal_opened", surface: "seller_assistance" } });
+        finish();
+      }, 700);
     } else if (id === "chat") {
       toast.loading("Connecting to Live Marketplace Support…", { id: "chat-connect" });
       setTimeout(() => {
         toast.success("Live chat is warming up", { id: "chat-connect", description: "A seller specialist will join in a moment." });
+        track("support_channel_outcome", { metadata: { channel: "chat", outcome: "connected", surface: "seller_assistance" } });
         finish();
       }, 1400);
     }
@@ -610,7 +644,7 @@ function SellerAssistancePage() {
             {WHATSAPP_NUMBERS.map((w) => (
               <button
                 key={w.number}
-                onClick={() => { openWhatsApp(w.number); setWhatsappOpen(false); }}
+                onClick={() => { openWhatsApp(w.number, w.department); setWhatsappOpen(false); }}
                 className="w-full group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#25D366]/40 transition p-3 text-left active:scale-[0.98]"
               >
                 <span className="grid place-items-center size-10 rounded-lg bg-[#25D366]/15 text-[#25D366] border border-[#25D366]/25">
@@ -657,9 +691,17 @@ function SellerAssistancePage() {
                 title="Schedule a call with FoundOurMarket"
                 onLoad={() => {
                   if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
-                  setCalendlyStatus("ready");
+                  setCalendlyStatus((s) => {
+                    if (s !== "ready") {
+                      track("support_calendly_outcome", { metadata: { outcome: "loaded", surface: "seller_assistance" } });
+                    }
+                    return "ready";
+                  });
                 }}
-                onError={() => setCalendlyStatus("error")}
+                onError={() => {
+                  setCalendlyStatus("error");
+                  track("support_calendly_outcome", { metadata: { outcome: "iframe_error", surface: "seller_assistance" } });
+                }}
                 className="w-full h-full border-0"
                 allow="camera; microphone; clipboard-write"
               />
@@ -719,12 +761,14 @@ function SellerAssistancePage() {
                       <a
                         href={CALENDLY_URL}
                         target="_blank" rel="noopener noreferrer"
+                        onClick={() => track("support_calendly_external_open", { metadata: { source: "error_fallback", surface: "seller_assistance" } })}
                         className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] transition"
                       >
                         <ExternalLink className="size-4" /> Open Calendly in a new tab
                       </a>
                       <a
                         href={SCHEDULE_MAILTO}
+                        onClick={() => track("support_mail_open_attempt", { metadata: { channel: "call", subject: "Schedule Assistance Call", to: SUPPORT_EMAIL, source: "error_fallback", surface: "seller_assistance" } })}
                         className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] transition"
                       >
                         <Mail className="size-4" /> Email {SUPPORT_EMAIL}
@@ -746,12 +790,14 @@ function SellerAssistancePage() {
               <a
                 href={CALENDLY_URL}
                 target="_blank" rel="noopener noreferrer"
+                onClick={() => track("support_calendly_external_open", { metadata: { source: "footer", surface: "seller_assistance" } })}
                 className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-white/60 hover:text-white transition"
               >
                 <ExternalLink className="size-3" /> New tab
               </a>
               <a
                 href={SCHEDULE_MAILTO}
+                onClick={() => track("support_mail_open_attempt", { metadata: { channel: "call", subject: "Schedule Assistance Call", to: SUPPORT_EMAIL, source: "footer", surface: "seller_assistance" } })}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-white/[0.08] transition"
               >
                 <Mail className="size-3" /> Email instead
