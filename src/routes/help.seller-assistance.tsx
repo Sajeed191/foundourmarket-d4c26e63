@@ -354,12 +354,17 @@ function SellerAssistancePage() {
                   {loadingChannel === c.id ? <Loader2 className="size-5 animate-spin" /> : <c.icon className="size-5" />}
                 </div>
                 <div className="relative flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{c.title}</p>
-                  <p className="text-xs text-white/55 truncate">{loadingChannel === c.id ? c.loading : c.meta}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold truncate">{c.title}</p>
+                    <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60">
+                      <Lock className="size-2.5" /> {c.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/55 truncate mt-0.5">{loadingChannel === c.id ? c.loading : c.meta}</p>
                 </div>
                 <span className="relative inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/75">
                   <span className="relative size-1.5 rounded-full" style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }}>
-                    {c.status === "Online" && (
+                    {(c.status === "Online" || c.status === "Live") && (
                       <span className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: c.color, opacity: 0.6 }} />
                     )}
                   </span>
