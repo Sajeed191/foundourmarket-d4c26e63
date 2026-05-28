@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="px-4 sm:px-6 py-12 sm:py-16 border-t border-border bg-background safe-bottom">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
         <div className="col-span-2 md:col-span-1 space-y-4 sm:space-y-6">
-          <div className="text-lg sm:text-xl font-display tracking-tighter uppercase font-semibold">
+          <div className="text-lg sm:text-xl font-display tracking-tighter font-semibold">
             FoundOurMarket<span className="text-accent">™</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-[34ch]">
