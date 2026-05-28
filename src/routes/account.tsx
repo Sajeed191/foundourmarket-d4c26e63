@@ -855,10 +855,11 @@ function PremiumLoader() {
         <motion.div
           animate={{ scale: [1, 1.08, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="size-16 rounded-2xl bg-accent text-accent-foreground grid place-items-center shadow-[0_0_40px_var(--color-accent)]"
+          className="size-16 rounded-2xl overflow-hidden bg-white grid place-items-center shadow-[0_0_40px_var(--color-accent)] border border-accent/20"
         >
-          <ShoppingBag className="size-8" strokeWidth={2.4} />
+          <img src={logoSrc} alt="FoundOurMarket" className="w-full h-full object-cover" />
         </motion.div>
+
         <p className="text-sm font-display font-semibold tracking-wide text-gradient-ember">FoundOurMarket™</p>
         <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
           <Loader2 className="size-3 animate-spin text-accent" /> Loading your store
