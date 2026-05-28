@@ -644,7 +644,7 @@ function SellerAssistancePage() {
             {WHATSAPP_NUMBERS.map((w) => (
               <button
                 key={w.number}
-                onClick={() => { openWhatsApp(w.number); setWhatsappOpen(false); }}
+                onClick={() => { openWhatsApp(w.number, w.department); setWhatsappOpen(false); }}
                 className="w-full group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#25D366]/40 transition p-3 text-left active:scale-[0.98]"
               >
                 <span className="grid place-items-center size-10 rounded-lg bg-[#25D366]/15 text-[#25D366] border border-[#25D366]/25">
@@ -691,9 +691,17 @@ function SellerAssistancePage() {
                 title="Schedule a call with FoundOurMarket"
                 onLoad={() => {
                   if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
-                  setCalendlyStatus("ready");
+                  setCalendlyStatus((s) => {
+                    if (s !== "ready") {
+                      track("support_calendly_outcome", { metadata: { outcome: "loaded", surface: "seller_assistance" } });
+                    }
+                    return "ready";
+                  });
                 }}
-                onError={() => setCalendlyStatus("error")}
+                onError={() => {
+                  setCalendlyStatus("error");
+                  track("support_calendly_outcome", { metadata: { outcome: "iframe_error", surface: "seller_assistance" } });
+                }}
                 className="w-full h-full border-0"
                 allow="camera; microphone; clipboard-write"
               />
