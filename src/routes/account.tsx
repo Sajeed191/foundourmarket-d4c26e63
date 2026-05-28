@@ -185,9 +185,6 @@ function AccountPage() {
                 </h1>
                 <div className="mt-1 flex items-center gap-2 flex-wrap">
                   <p className="text-[11px] sm:text-sm text-muted-foreground truncate">{user.email}</p>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[9px] font-mono uppercase tracking-widest ring-1 ring-accent/30">
-                    <Crown className="size-2.5" /> Premium
-                  </span>
                 </div>
                 {/* Profile completion */}
                 <ProfileCompletion user={user} />
