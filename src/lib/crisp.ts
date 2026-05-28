@@ -70,7 +70,9 @@ function ensureHideStyle(): HTMLStyleElement {
     el.textContent = `
       html[data-crisp-hidden="true"] #crisp-chatbox,
       html[data-crisp-hidden="true"] .crisp-client,
-      html[data-crisp-hidden="true"] [class*="crisp-"][class*="client"] {
+      html[data-crisp-hidden="true"] [class*="crisp-client"],
+      html[data-crisp-hidden="true"] [id^="crisp-"],
+      html[data-crisp-hidden="true"] iframe[src*="crisp.chat"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
