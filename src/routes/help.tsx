@@ -54,7 +54,7 @@ const QUICK_ACTIONS = [
   { icon: CreditCard, label: "Refund Status", to: "/account/returns", tone: "from-emerald-500/20 to-teal-500/10" },
   { icon: Wrench, label: "Warranty Help", to: "/returns", tone: "from-violet-500/20 to-fuchsia-500/10" },
   { icon: FileText, label: "Download Invoice", to: "/account/orders", tone: "from-sky-500/20 to-indigo-500/10" },
-  { icon: Store, label: "Seller Assistance", to: "/help", tone: "from-amber-500/20 to-rose-500/10" },
+  { icon: Store, label: "Seller Assistance", to: "/help/seller-assistance", tone: "from-amber-500/20 to-rose-500/10" },
   { icon: AlertTriangle, label: "Delivery Issue", to: "/track", tone: "from-red-500/20 to-orange-500/10" },
 ];
 
