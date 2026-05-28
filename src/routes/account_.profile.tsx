@@ -127,7 +127,17 @@ function EditProfilePage() {
         <div className="orb animate-orb" style={{ width: 340, height: 340, top: -80, left: -60, background: "var(--gradient-ember)" }} />
         <div className="orb animate-orb" style={{ width: 300, height: 300, bottom: 40, right: -80, background: "var(--gradient-violet)", animationDelay: "-8s" }} />
         <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+        {[...Array(6)].map((_, i) => (
+          <motion.span
+            key={i}
+            className="absolute rounded-full bg-accent/40"
+            style={{ width: 3, height: 3, left: `${12 + i * 15}%`, top: `${20 + (i % 3) * 22}%` }}
+            animate={{ y: [0, -22, 0], opacity: [0.15, 0.6, 0.15] }}
+            transition={{ duration: 6 + i, repeat: Infinity, ease: "easeInOut", delay: i * 0.7 }}
+          />
+        ))}
       </div>
+
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-12 lg:py-16">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
