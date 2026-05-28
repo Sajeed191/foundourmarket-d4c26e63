@@ -298,35 +298,42 @@ function SellerAssistancePage() {
         <Section eyebrow="Talk to us" title="Support channels">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {CHANNELS.map((c, i) => (
-              <motion.a
-                key={c.title}
-                href={c.href}
+              <motion.button
+                key={c.id}
+                type="button"
+                onClick={() => handleChannel(c.id)}
+                disabled={loadingChannel === c.id}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ y: -2 }}
-                className="group relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 flex items-center gap-3.5 hover:border-white/20 transition overflow-hidden"
+                whileTap={{ scale: 0.98 }}
+                className="group relative text-left rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 flex items-center gap-3.5 hover:border-white/20 hover:shadow-[0_18px_50px_-20px_rgba(255,122,0,0.5)] transition overflow-hidden disabled:opacity-70"
               >
                 <span
-                  className="pointer-events-none absolute -left-10 -top-10 size-32 rounded-full blur-3xl opacity-0 group-hover:opacity-40 transition-opacity"
+                  className="pointer-events-none absolute -left-10 -top-10 size-32 rounded-full blur-3xl opacity-0 group-hover:opacity-50 transition-opacity"
                   style={{ backgroundColor: c.color }}
                 />
                 <div
                   className="relative grid place-items-center size-11 rounded-xl border border-white/10"
                   style={{ backgroundColor: `${c.color}1A`, color: c.color }}
                 >
-                  <c.icon className="size-5" />
+                  {loadingChannel === c.id ? <Loader2 className="size-5 animate-spin" /> : <c.icon className="size-5" />}
                 </div>
                 <div className="relative flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{c.title}</p>
-                  <p className="text-xs text-white/55 truncate">{c.meta}</p>
+                  <p className="text-xs text-white/55 truncate">{loadingChannel === c.id ? c.loading : c.meta}</p>
                 </div>
                 <span className="relative inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/75">
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }} />
+                  <span className="relative size-1.5 rounded-full" style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }}>
+                    {c.status === "Online" && (
+                      <span className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: c.color, opacity: 0.6 }} />
+                    )}
+                  </span>
                   {c.status}
                 </span>
-              </motion.a>
+              </motion.button>
             ))}
           </div>
         </Section>
