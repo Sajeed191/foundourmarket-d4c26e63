@@ -103,9 +103,11 @@ function AccountPage() {
   const [scrollDirection, setScrollDirection] = useState<"up" | "down" | null>(null);
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
-    if (latest > previous && latest > 60) setScrollDirection("up");
-    else if (latest < previous) setScrollDirection("down");
+    // Hide the profile card when scrolling upward (toward the top of the page).
+    if (latest < previous && latest > 60) setScrollDirection("up");
+    else if (latest > previous) setScrollDirection("down");
   });
+
 
   const wishlistProducts = useMemo(
     () => products.filter((p) => wishSlugs.has(p.slug)).slice(0, 8),
