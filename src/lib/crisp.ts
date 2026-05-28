@@ -92,12 +92,19 @@ function customizeCrispMenu(): void {
         }
       }
     });
-
     // Hide "We run on Crisp" branding (can render as div, span or anchor)
     const candidates = box.querySelectorAll("a, span, div, p");
     candidates.forEach((node) => {
       const text = (node.textContent || "").trim().toLowerCase();
       if (text.includes("we run on") && text.includes("crisp")) {
+        (node as HTMLElement).style.display = "none";
+      }
+    });
+    // Hide "Additional support" / "Need additional support?" links
+    const allNodes = box.querySelectorAll("a, span, div, p, button");
+    allNodes.forEach((node) => {
+      const text = (node.textContent || "").trim().toLowerCase();
+      if (text.includes("additional support")) {
         (node as HTMLElement).style.display = "none";
       }
     });
