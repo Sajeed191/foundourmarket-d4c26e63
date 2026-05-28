@@ -143,11 +143,8 @@ function AccountPage() {
 
 
         {/* 1 — HEADER */}
-        <motion.div
-          animate={{ y: scrollDirection === "up" ? -300 : 0, opacity: scrollDirection === "up" ? 0 : 1 }}
-          transition={{ duration: 0.35, ease }}
-          style={{ originY: 0 }}
-        >
+        <div>
+
           <motion.header {...fadeUp} className="relative overflow-hidden rounded-[28px] sm:rounded-3xl glass-strong">
           <div aria-hidden className="absolute inset-0 -z-10">
             <div className="absolute -top-32 -right-20 size-[420px] rounded-full opacity-70" style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
