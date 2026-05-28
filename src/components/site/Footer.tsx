@@ -30,7 +30,7 @@ export function Footer() {
             <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
             <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "about" }} className="hover:text-foreground transition-colors">About</Link></li>
-            <li><Link to="/blog" className="hover:text-foreground transition-colors">Journal</Link></li>
+            
           </ul>
         </div>
         <div className="space-y-4">
