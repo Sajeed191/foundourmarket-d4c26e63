@@ -42,6 +42,7 @@ import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
+import { Route as HelpSellerAssistanceRouteImport } from './routes/help.seller-assistance'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -219,6 +220,11 @@ const OrdersIdRoute = OrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpSellerAssistanceRoute = HelpSellerAssistanceRouteImport.update({
+  id: '/seller-assistance',
+  path: '/seller-assistance',
+  getParentRoute: () => HelpRoute,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -297,7 +303,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
-  '/help': typeof HelpRoute
+  '/help': typeof HelpRouteWithChildren
   '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -343,7 +350,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
-  '/help': typeof HelpRoute
+  '/help': typeof HelpRouteWithChildren
   '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -390,7 +398,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
-  '/help': typeof HelpRoute
+  '/help': typeof HelpRouteWithChildren
   '/return': typeof ReturnRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -577,7 +589,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CompareRoute: typeof CompareRoute
-  HelpRoute: typeof HelpRoute
+  HelpRoute: typeof HelpRouteWithChildren
   ReturnRoute: typeof ReturnRoute
   ReturnsRoute: typeof ReturnsRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
@@ -833,6 +845,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help/seller-assistance': {
+      id: '/help/seller-assistance'
+      path: '/seller-assistance'
+      fullPath: '/help/seller-assistance'
+      preLoaderRoute: typeof HelpSellerAssistanceRouteImport
+      parentRoute: typeof HelpRoute
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -933,6 +952,16 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
+interface HelpRouteChildren {
+  HelpSellerAssistanceRoute: typeof HelpSellerAssistanceRoute
+}
+
+const HelpRouteChildren: HelpRouteChildren = {
+  HelpSellerAssistanceRoute: HelpSellerAssistanceRoute,
+}
+
+const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -955,7 +984,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CompareRoute: CompareRoute,
-  HelpRoute: HelpRoute,
+  HelpRoute: HelpRouteWithChildren,
   ReturnRoute: ReturnRoute,
   ReturnsRoute: ReturnsRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
