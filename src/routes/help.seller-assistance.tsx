@@ -28,6 +28,10 @@ const WHATSAPP_NUMBERS = [
 ];
 const WHATSAPP_MESSAGE = "Hello FoundOurMarket Support, I need assistance regarding my marketplace account.";
 const SUPPORT_EMAIL = "support@foundourmarket.com";
+const CALENDLY_HANDLE = "foundourmarket/seller-support";
+const CALENDLY_URL = `https://calendly.com/${CALENDLY_HANDLE}`;
+const CALENDLY_EMBED_URL = `${CALENDLY_URL}?hide_gdpr_banner=1&background_color=0a0f1f&text_color=ffffff&primary_color=ff7a00`;
+const SCHEDULE_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Schedule Assistance Call")}&body=${encodeURIComponent("Hi FoundOurMarket team,\n\nI'd like to schedule a 1:1 call with a seller specialist.\n\nMy preferred times (with timezone):\n• \n• \n• \n\nBriefly, what I need help with:\n\n\nThanks,\n")}`;
 
 export const Route = createFileRoute("/help/seller-assistance")({
   head: () => ({
