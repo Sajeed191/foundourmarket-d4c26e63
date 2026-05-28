@@ -55,10 +55,14 @@ export function loadCrisp(): Promise<void> {
 export function openCrispChat(): void {
   if (typeof window === "undefined") return;
   window.$crisp = window.$crisp || [];
+  ensureHideStyle();
   document.documentElement.removeAttribute("data-crisp-hidden");
   window.$crisp.push(["do", "chat:show"]);
   window.$crisp.push(["do", "chat:open"]);
+  // Auto-hide the widget entirely once the user closes the chat.
+  window.$crisp.push(["on", "chat:closed", () => closeCrispChat()]);
 }
+
 
 const HIDE_STYLE_ID = "crisp-force-hide-style";
 
