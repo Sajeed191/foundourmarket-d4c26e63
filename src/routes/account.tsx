@@ -136,9 +136,6 @@ function AccountPage() {
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
       </div>
 
-      {/* Floating compact sticky bar (appears on scroll) */}
-      <FloatingHeaderBar firstName={firstName} avatarUrl={avatarUrl} unread={unread} cartCount={cartCount} />
-
       <div className="container-page py-4 sm:py-10 lg:py-14 space-y-5 sm:space-y-10">
 
 
@@ -948,53 +945,4 @@ function OrderTimeline({ order, format }: { order: Order; format: (n: number) =>
 
 
 
-function FloatingHeaderBar({ firstName, avatarUrl, unread, cartCount }: { firstName: string; avatarUrl: string; unread: number; cartCount: number }) {
-  const { scrollY } = useScroll();
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    return scrollY.on("change", (v) => setShow(v > 220));
-  }, [scrollY]);
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ y: -60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -60, opacity: 0 }}
-          transition={{ duration: 0.28, ease }}
-          className="fixed top-2 left-2 right-2 sm:left-4 sm:right-4 z-40"
-        >
-          <div className="mx-auto max-w-7xl glass-strong rounded-2xl px-3 py-2 flex items-center gap-2 ring-1 ring-white/10 shadow-[0_10px_30px_-12px_oklch(0_0_0/0.6)]">
-            <div className="size-9 rounded-xl border border-white/10 bg-secondary overflow-hidden grid place-items-center ring-1 ring-accent/30 shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-display font-semibold text-accent">{firstName.slice(0, 1).toUpperCase()}</span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-accent leading-none">Welcome</p>
-              <p className="text-xs font-medium truncate leading-tight mt-0.5">{firstName}</p>
-            </div>
-            <Link to="/search" aria-label="Search" className="size-9 grid place-items-center rounded-xl glass hover:text-accent transition-all">
-              <Search className="size-4" />
-            </Link>
-            <Link to="/account/notifications" aria-label="Notifications" className="relative size-9 grid place-items-center rounded-xl glass hover:text-accent transition-all">
-              <Bell className="size-4" />
-              {unread > 0 && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-accent animate-pulse" />}
-            </Link>
-            <Link to="/cart" aria-label="Cart" className="relative size-9 grid place-items-center rounded-xl glass hover:text-accent transition-all">
-              <ShoppingBag className="size-4" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold grid place-items-center">
-                  {cartCount > 9 ? "9+" : cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
 
