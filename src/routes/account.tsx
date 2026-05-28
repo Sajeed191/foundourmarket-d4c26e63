@@ -260,30 +260,6 @@ function AccountPage() {
               </SectionBlock>
             )}
 
-            {/* 5 — WISHLIST */}
-            <SectionBlock
-              title="Saved for later"
-              icon={Heart}
-              action={<Link to="/wishlist" className="action-link">View wishlist <ArrowRight className="size-3" /></Link>}
-            >
-              {wishlistProducts.length === 0 ? (
-                <EmptyState
-                  icon={Heart}
-                  title="Nothing saved yet"
-                  body="Tap the heart on any product to save it."
-                  extra={
-                    recommended.length > 0 ? (
-                      <div className="mt-5 w-full">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2.5 text-left">You might love</p>
-                        <MiniProductRow items={recommended.slice(0, 6)} format={format} />
-                      </div>
-                    ) : null
-                  }
-                />
-              ) : (
-                <ProductScroller items={wishlistProducts} />
-              )}
-            </SectionBlock>
 
           </div>
 
