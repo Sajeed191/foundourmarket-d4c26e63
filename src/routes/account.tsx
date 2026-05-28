@@ -143,7 +143,7 @@ function AccountPage() {
 
 
         {/* 1 — HEADER */}
-        <div>
+        <div className="sticky top-3 z-30">
 
           <motion.header {...fadeUp} className="relative overflow-hidden rounded-[28px] sm:rounded-3xl glass-strong">
           <div aria-hidden className="absolute inset-0 -z-10">
