@@ -238,9 +238,9 @@ function AdminPage() {
       </div>
 
       <div className="sticky top-2 z-30 mb-8">
-        <SegmentedTabs<Tab>
+        <SegmentedTabs
           value={tab}
-          onChange={setTab}
+          onChange={(v) => setTab(v as Tab)}
           items={[
             { value: "overview", label: "Overview", icon: <LayoutDashboard className="size-3.5" /> },
             { value: "orders", label: "Orders", icon: <Truck className="size-3.5" /> },
