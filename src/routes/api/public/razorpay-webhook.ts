@@ -89,6 +89,8 @@ async function handleEvent(event: string, payload: any) {
       const order = await findOrderByRzpOrderId(paymentEntity?.order_id);
       if (!order) return;
       if (order.payment_status !== "succeeded") {
+        // Commit reserved stock permanently (idempotent), then mark paid.
+        await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
         await supabaseAdmin
           .from("orders")
           .update({
