@@ -93,11 +93,11 @@ export function Nav() {
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
           <div className="flex items-center justify-between px-2.5 sm:px-5 py-2.5 sm:py-3 gap-1.5 sm:gap-2">
             <button
-              onClick={() => setOpen(true)}
-              aria-label="Open menu"
+              onClick={() => setOpen(!open)}
+              aria-label={open ? "Close menu" : "Open menu"}
               className="md:hidden shrink-0 size-10 rounded-xl grid place-items-center hover:bg-white/5 active:bg-white/10 transition-colors"
             >
-              <Menu className="size-5" />
+              <AnimatedHamburger open={open} />
             </button>
 
             <Link
@@ -309,6 +309,23 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     <div>
       <p className="px-1 mb-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground/70">{label}</p>
       <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function AnimatedHamburger({ open }: { open: boolean }) {
+  const line = "block h-[1.5px] rounded-full bg-current origin-center transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]";
+  return (
+    <div className="relative size-5 flex flex-col justify-center items-center gap-[4.5px]">
+      <span
+        className={`${line} w-5 ${open ? "rotate-45 translate-y-[3px]" : ""}`}
+      />
+      <span
+        className={`${line} w-5 ${open ? "opacity-0 scale-0" : "opacity-100 scale-100"}`}
+      />
+      <span
+        className={`${line} w-5 ${open ? "-rotate-45 -translate-y-[3px]" : ""}`}
+      />
     </div>
   );
 }
