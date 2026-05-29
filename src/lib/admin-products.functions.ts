@@ -38,6 +38,10 @@ const updateSchema = z.object({
   // Inventory
   stockQuantity: z.number().int().min(0).max(10_000_000).optional(),
   lowStockThreshold: z.number().int().min(0).max(1_000_000).optional(),
+  // Specifications
+  rating: z.number().min(0).max(5).optional(),
+  reviews: z.number().int().min(0).max(100_000_000).optional(),
+  warranty: z.string().min(1).max(120).optional(),
 });
 
 /**
