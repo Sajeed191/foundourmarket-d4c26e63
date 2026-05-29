@@ -133,6 +133,15 @@ function CheckoutPage() {
         },
       });
 
+      let customerId: string | undefined;
+      try {
+        const c = await ensureCustomer();
+        customerId = c.customerId;
+      } catch {
+        /* saving methods is optional — continue checkout regardless */
+      }
+
+
       const rzp = openRazorpay({
         key: created.keyId,
         amount: created.amount,
