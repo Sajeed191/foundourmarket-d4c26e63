@@ -75,6 +75,7 @@ type Row = {
   price_inr?: number | string | null; compare_price_inr?: number | string | null;
   price_usd?: number | string | null; compare_price_usd?: number | string | null;
   india_visible?: boolean | null; international_visible?: boolean | null;
+  warranty?: string | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
