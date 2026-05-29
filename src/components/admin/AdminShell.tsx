@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone,
   FileText, Truck, RotateCcw, Pencil, Activity, Wallet, Globe, Search,
-  Boxes, Loader2, ShieldAlert, Menu, X, Sparkles,
+  Boxes, Loader2, ShieldAlert, Menu, X, Sparkles, TrendingUp, ShoppingCart,
+  Cpu, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -161,85 +162,153 @@ export function AdminShell({
 
   const q = query.trim().toLowerCase();
 
-  return (
     <div className="min-h-screen flex w-full bg-background">
-      {/* Sidebar */}
-      <aside className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40 w-64 bg-card/95 backdrop-blur-xl border-r border-border transform transition-transform duration-300 ease-out lg:transform-none ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} h-screen overflow-y-auto flex flex-col`}>
-        <div className="px-5 py-5 border-b border-border flex items-center justify-between shrink-0">
-          <Link to="/" className="group inline-flex items-center gap-2">
-            <span className="size-7 rounded-lg bg-gradient-to-br from-accent to-primary grid place-items-center">
-              <Sparkles className="size-3.5 text-accent-foreground" />
-            </span>
-            <span className="font-display text-base tracking-tight">FoundOurMarket™</span>
-          </Link>
-          <button onClick={() => setOpen(false)} className="lg:hidden size-8 grid place-items-center rounded-full hover:bg-white/5">
-            <X className="size-4" />
-          </button>
-        </div>
+      {/* Sidebar — floating operator console */}
+      <aside className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40 w-[17.5rem] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none ${open ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"} h-screen p-3`}>
+        <div className="relative h-full flex flex-col rounded-[1.75rem] overflow-hidden glass-strong glass-reflect" style={{ boxShadow: "var(--shadow-float), var(--shadow-ember)" }}>
+          {/* Ambient lighting */}
+          <div className="orb animate-orb -top-16 -left-10 size-48" style={{ background: "var(--gradient-ember)" }} />
+          <div className="orb -bottom-20 -right-12 size-52 opacity-40" style={{ background: "var(--gradient-ember-soft)" }} />
+          <div className="pointer-events-none absolute inset-0 rounded-[1.75rem]" style={{ background: "radial-gradient(120% 80% at 50% -10%, oklch(1 0 0 / 0.05), transparent 55%)" }} />
 
-        <div className="px-3 pt-4 pb-2 shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter menu…"
-              className="w-full bg-background/60 border border-border rounded-lg pl-9 pr-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:border-accent/40"
-            />
+          {/* Brand + close */}
+          <div className="relative px-4 pt-4 pb-3 flex items-center justify-between shrink-0">
+            <Link to="/" className="group inline-flex items-center gap-2.5">
+              <span className="relative size-8 rounded-xl bg-gradient-to-br from-accent to-primary grid place-items-center shadow-[0_8px_24px_-8px_oklch(0.74_0.19_49_/_0.7)]">
+                <Sparkles className="size-4 text-accent-foreground" />
+                <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
+              </span>
+              <span className="font-display text-[15px] tracking-tight">FoundOurMarket™</span>
+            </Link>
+            <button onClick={() => setOpen(false)} className="lg:hidden size-8 grid place-items-center rounded-full hover:bg-white/5 transition-colors">
+              <X className="size-4" />
+            </button>
           </div>
-        </div>
 
-        <nav className="px-3 py-3 space-y-5 flex-1">
-          {NAV.map((g) => {
-            const items = g.items
-              .filter(visibleItem)
-              .filter((it) => !q || it.label.toLowerCase().includes(q) || g.group.toLowerCase().includes(q));
-            if (!items.length) return null;
-            return (
-              <div key={g.group}>
-                <p className="px-3 mb-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">{g.group}</p>
-                <ul className="space-y-0.5">
-                  {items.map((it) => {
-                    const active = isActive(it.to);
-                    return (
-                      <li key={it.to}>
-                        <Link
-                          to={it.to as string}
-                          className={`relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                            active
-                              ? "bg-gradient-to-r from-accent/15 to-transparent text-accent"
-                              : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
-                          }`}
-                        >
-                          {active && (
-                            <motion.span
-                              layoutId="admin-active-indicator"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-accent"
-                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                            />
-                          )}
-                          <it.icon className="size-4 shrink-0" />
-                          <span className="truncate">{it.label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+          {/* Operator profile card */}
+          <div className="relative px-3 shrink-0">
+            <div className="relative overflow-hidden rounded-2xl glass p-3 flex items-center gap-3">
+              <div className="pointer-events-none absolute -top-8 -right-6 size-24 rounded-full opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(20px)" }} />
+              <div className="relative size-11 rounded-xl bg-gradient-to-br from-accent/25 to-primary/10 grid place-items-center ring-1 ring-inset ring-white/15 shrink-0">
+                <span className="font-display text-sm text-accent uppercase">{user?.email?.[0] ?? "F"}</span>
+                <motion.span
+                  className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-400 ring-2 ring-card"
+                  animate={{ scale: [1, 1.25, 1], opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
-            );
-          })}
-        </nav>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium leading-tight truncate">Founder</p>
+                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-0.5">Operator Console</p>
+                <div className="mt-1.5 inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-400/90">Live System Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div className="px-5 py-4 border-t border-border shrink-0">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Signed in</p>
-          <p className="text-xs truncate">{user?.email}</p>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {roles.map((r) => (
-              <span key={r} className="text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">{r}</span>
-            ))}
+          {/* Live operator widgets */}
+          <div className="relative px-3 pt-3 shrink-0">
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: ShoppingCart, label: "Orders", value: "128" },
+                { icon: TrendingUp, label: "Revenue", value: "$14k" },
+                { icon: Cpu, label: "Status", value: "OK" },
+              ].map((w, i) => (
+                <motion.div
+                  key={w.label}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative overflow-hidden rounded-xl glass px-2 py-2"
+                >
+                  <div className="pointer-events-none absolute -top-6 -right-4 size-12 rounded-full opacity-30" style={{ background: "var(--gradient-ember-soft)", filter: "blur(12px)" }} />
+                  <w.icon className="size-3 text-accent mb-1" />
+                  <p className="text-[13px] font-display leading-none">{w.value}</p>
+                  <p className="text-[8px] font-mono uppercase tracking-[0.15em] text-muted-foreground mt-1">{w.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Search console */}
+          <div className="relative px-3 pt-3 pb-2 shrink-0">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground group-focus-within:text-accent transition-colors" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search console…"
+                className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_oklch(0.74_0.19_49_/_0.1),0_0_28px_-8px_oklch(0.74_0.19_49_/_0.5)] transition-all duration-300"
+              />
+            </div>
+          </div>
+
+          <nav className="relative px-2.5 py-2 space-y-4 flex-1 overflow-y-auto">
+            {NAV.map((g) => {
+              const items = g.items
+                .filter(visibleItem)
+                .filter((it) => !q || it.label.toLowerCase().includes(q) || g.group.toLowerCase().includes(q));
+              if (!items.length) return null;
+              return (
+                <div key={g.group}>
+                  <div className="flex items-center gap-2 px-2.5 mb-1.5">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.32em] text-muted-foreground/70">{g.group}</p>
+                    <span className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                  </div>
+                  <ul className="space-y-0.5">
+                    {items.map((it) => {
+                      const active = isActive(it.to);
+                      return (
+                        <li key={it.to}>
+                          <Link
+                            to={it.to as string}
+                            className={`group relative flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-300 hover:translate-x-0.5 ${
+                              active
+                                ? "text-accent"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/[0.035]"
+                            }`}
+                          >
+                            {active && (
+                              <motion.span
+                                layoutId="admin-active-indicator"
+                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/15 via-accent/5 to-transparent ring-1 ring-inset ring-accent/20 shadow-[inset_0_0_24px_-12px_oklch(0.74_0.19_49_/_0.8)]"
+                                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                              />
+                            )}
+                            {active && (
+                              <motion.span
+                                layoutId="admin-active-bar"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-accent shadow-[0_0_12px_2px_oklch(0.74_0.19_49_/_0.7)]"
+                                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                              />
+                            )}
+                            <it.icon className={`relative size-4 shrink-0 transition-transform duration-300 group-hover:scale-110 ${active ? "drop-shadow-[0_0_6px_oklch(0.74_0.19_49_/_0.6)]" : ""}`} />
+                            <span className="relative truncate flex-1">{it.label}</span>
+                            <ChevronRight className={`relative size-3.5 shrink-0 transition-all duration-300 ${active ? "opacity-70" : "opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0"}`} />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </nav>
+
+          <div className="relative px-4 py-3.5 shrink-0 border-t border-white/[0.07]">
+            <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-muted-foreground/70 mb-1">Signed in</p>
+            <p className="text-xs truncate">{user?.email}</p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {roles.map((r) => (
+                <span key={r} className="text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">{r}</span>
+              ))}
+            </div>
           </div>
         </div>
       </aside>
+
 
       <AnimatePresence>
         {open && (
