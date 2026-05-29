@@ -18,15 +18,23 @@ import logoSrc from "@/assets/logo.jpeg";
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
 
 function AnimatedHamburger({ open }: { open: boolean }) {
-  const line = "block h-[1.5px] rounded-full bg-current origin-center transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]";
+  const line =
+    "absolute left-1/2 top-1/2 block h-[1.5px] w-5 -translate-x-1/2 rounded-full bg-current will-change-transform [transition:transform_0.4s_cubic-bezier(0.4,0,0.2,1),opacity_0.25s_ease]";
   return (
-    <div className="relative size-5 flex flex-col justify-center items-center gap-[4.5px]">
-      <span className={`${line} w-5 ${open ? "rotate-45 translate-y-[3px]" : ""}`} />
-      <span className={`${line} w-5 ${open ? "opacity-0 scale-0" : "opacity-100 scale-100"}`} />
-      <span className={`${line} w-5 ${open ? "-rotate-45 -translate-y-[3px]" : ""}`} />
+    <div className="relative size-5 [transform:translateZ(0)]">
+      <span
+        className={`${line} ${open ? "[transform:translate(-50%,-50%)_rotate(45deg)]" : "[transform:translate(-50%,calc(-50%-5px))]"}`}
+      />
+      <span
+        className={`${line} ${open ? "opacity-0 [transform:translate(-50%,-50%)_scale(0.6)]" : "opacity-100 [transform:translate(-50%,-50%)]"}`}
+      />
+      <span
+        className={`${line} ${open ? "[transform:translate(-50%,-50%)_rotate(-45deg)]" : "[transform:translate(-50%,calc(-50%+5px))]"}`}
+      />
     </div>
   );
 }
+
 
 
 export function Nav() {
