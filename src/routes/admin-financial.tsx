@@ -315,8 +315,6 @@ function FinancialPage() {
           </div>
         </motion.div>
       )}
-        )}
-      </div>
 
       {/* charts */}
       <div className="grid gap-4 lg:grid-cols-2 mb-4">
