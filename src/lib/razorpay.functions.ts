@@ -165,6 +165,22 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       throw new Error("Could not record order items.");
     }
 
+    // Atomically reserve stock (row-locked, anti-oversell). 15 min TTL.
+    const { error: reserveErr } = await supabaseAdmin.rpc("reserve_order_stock", {
+      _order_id: order.id,
+      _ttl_minutes: 15,
+    });
+    if (reserveErr) {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "payment_failed", payment_status: "failed" })
+        .eq("id", order.id);
+      throw new Error(
+        /insufficient stock/i.test(reserveErr.message)
+          ? "Some items just went out of stock. Please review your cart."
+          : "Could not reserve inventory for this order.",
+      );
+    }
 
     // Create the Razorpay order (amount in paise)
     let rzpOrder;
@@ -182,7 +198,8 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
         },
       );
     } catch (e: any) {
-      // Roll the pending order into a failed state so it doesn't dangle
+      // Roll the pending order into a failed state and give the reserved stock back
+      await supabaseAdmin.rpc("release_order_stock", { _order_id: order.id, _reason: "gateway_error" });
       await supabaseAdmin
         .from("orders")
         .update({ status: "payment_failed", payment_status: "failed" })
@@ -240,6 +257,10 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     );
 
     if (!valid) {
+      await supabaseAdmin.rpc("release_order_stock", {
+        _order_id: order.id,
+        _reason: "signature_failed",
+      });
       await supabaseAdmin
         .from("orders")
         .update({ status: "payment_failed", payment_status: "failed" })
@@ -261,7 +282,8 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       throw new Error("Payment verification failed.");
     }
 
-    // Mark order paid
+    // Commit reserved stock permanently, then mark the order paid.
+    await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
     await supabaseAdmin
       .from("orders")
       .update({
@@ -270,6 +292,8 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
         razorpay_payment_id: data.razorpayPaymentId,
       })
       .eq("id", order.id);
+
+
 
     // Record the payment (idempotent on razorpay_payment_id)
     const { data: existingPay } = await supabaseAdmin
@@ -296,6 +320,38 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     return { ok: true, orderId: order.id, alreadyPaid: false };
   });
+
+const cancelSchema = z.object({ orderId: z.string().uuid() });
+
+/**
+ * Cancel a still-pending order (e.g. the user closed the checkout modal).
+ * Releases reserved stock immediately. Idempotent; never touches paid orders.
+ */
+export const cancelRazorpayOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => cancelSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("id,user_id,payment_status,stock_state")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (!order || order.user_id !== userId) return { ok: false };
+    if (order.payment_status === "succeeded") return { ok: false };
+
+    await supabaseAdmin.rpc("release_order_stock", {
+      _order_id: order.id,
+      _reason: "user_cancelled",
+    });
+    await supabaseAdmin
+      .from("orders")
+      .update({ status: "payment_failed", payment_status: "failed" })
+      .eq("id", order.id)
+      .eq("payment_status", "pending");
+    return { ok: true };
+  });
+
 
 const refundSchema = z.object({
   paymentId: z.string().uuid(),

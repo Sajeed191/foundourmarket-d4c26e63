@@ -734,6 +734,7 @@ export type Database = {
           created_at: string
           currency: string
           discount: number
+          expires_at: string | null
           fulfillment_status: string
           id: string
           payment_method: string | null
@@ -744,6 +745,7 @@ export type Database = {
           shipping: number
           shipping_address: Json | null
           status: string
+          stock_state: string
           subtotal: number
           tax: number
           total: number
@@ -757,6 +759,7 @@ export type Database = {
           created_at?: string
           currency?: string
           discount?: number
+          expires_at?: string | null
           fulfillment_status?: string
           id?: string
           payment_method?: string | null
@@ -767,6 +770,7 @@ export type Database = {
           shipping?: number
           shipping_address?: Json | null
           status?: string
+          stock_state?: string
           subtotal?: number
           tax?: number
           total?: number
@@ -780,6 +784,7 @@ export type Database = {
           created_at?: string
           currency?: string
           discount?: number
+          expires_at?: string | null
           fulfillment_status?: string
           id?: string
           payment_method?: string | null
@@ -790,6 +795,7 @@ export type Database = {
           shipping?: number
           shipping_address?: Json | null
           status?: string
+          stock_state?: string
           subtotal?: number
           tax?: number
           total?: number
@@ -1750,6 +1756,8 @@ export type Database = {
       }
     }
     Functions: {
+      commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
+      expire_stale_orders: { Args: never; Returns: number }
       get_fbt: {
         Args: { _limit?: number; _slug: string }
         Returns: {
@@ -1793,6 +1801,14 @@ export type Database = {
         Returns: undefined
       }
       refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
+      release_order_stock: {
+        Args: { _order_id: string; _reason?: string }
+        Returns: undefined
+      }
+      reserve_order_stock: {
+        Args: { _order_id: string; _ttl_minutes?: number }
+        Returns: undefined
+      }
       search_products: {
         Args: {
           category_filter?: string

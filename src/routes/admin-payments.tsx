@@ -9,6 +9,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { createRazorpayRefund } from "@/lib/razorpay.functions";
+import { VirtualTable } from "@/components/admin/VirtualTable";
 
 export const Route = createFileRoute("/admin-payments")({
   head: () => ({
@@ -222,55 +223,65 @@ function PaymentsInner() {
 
           {/* Desktop table / mobile cards */}
           <div className="glass border border-white/10 rounded-2xl overflow-hidden">
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                    <th className="text-left p-3">Payment</th><th className="text-left p-3">Order</th>
-                    <th className="text-left p-3">Amount</th><th className="text-left p-3">Method</th>
-                    <th className="text-left p-3">Status</th><th className="text-left p-3">Time</th><th className="p-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPayments.map((p) => (
-                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02] cursor-pointer" onClick={() => setDrawer(p)}>
-                      <td className="p-3 font-mono text-xs">{p.transaction_id?.slice(0, 16)}</td>
-                      <td className="p-3 font-mono text-xs">#{p.order_id.slice(0, 8)}</td>
-                      <td className="p-3 font-mono">{inr(p.amount, p.currency)}</td>
-                      <td className="p-3 capitalize text-xs">{p.method}</td>
-                      <td className="p-3"><StatusPill status={p.status} /></td>
-                      <td className="p-3 text-xs text-muted-foreground">{when(p.created_at)}</td>
-                      <td className="p-3 text-right">
-                        {p.status === "succeeded" && !p.demo && (
-                          <button onClick={(e) => { e.stopPropagation(); doRefund(p); }} disabled={refundBusy === p.id}
-                            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-widest hover:bg-white/5 disabled:opacity-50">
-                            {refundBusy === p.id ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />} Refund
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {!filteredPayments.length && <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">No transactions found.</td></tr>}
-                </tbody>
-              </table>
+            {/* Desktop: virtualized rows */}
+            <div className="hidden md:block">
+              <VirtualTable
+                rows={filteredPayments}
+                rowKey={(p) => p.id}
+                estimateSize={52}
+                gridTemplate="1.4fr 0.9fr 0.9fr 0.8fr 0.9fr 1fr 0.8fr"
+                empty="No transactions found."
+                header={
+                  <>
+                    <div className="p-3 text-left">Payment</div><div className="p-3 text-left">Order</div>
+                    <div className="p-3 text-left">Amount</div><div className="p-3 text-left">Method</div>
+                    <div className="p-3 text-left">Status</div><div className="p-3 text-left">Time</div><div className="p-3" />
+                  </>
+                }
+                renderRow={(p) => (
+                  <div className="contents cursor-pointer [&>div]:hover:bg-white/[0.02]" onClick={() => setDrawer(p)}>
+                    <div className="p-3 font-mono text-xs truncate">{p.transaction_id?.slice(0, 16)}</div>
+                    <div className="p-3 font-mono text-xs">#{p.order_id.slice(0, 8)}</div>
+                    <div className="p-3 font-mono">{inr(p.amount, p.currency)}</div>
+                    <div className="p-3 capitalize text-xs">{p.method}</div>
+                    <div className="p-3"><StatusPill status={p.status} /></div>
+                    <div className="p-3 text-xs text-muted-foreground">{when(p.created_at)}</div>
+                    <div className="p-3 text-right">
+                      {p.status === "succeeded" && !p.demo && (
+                        <button onClick={(e) => { e.stopPropagation(); doRefund(p); }} disabled={refundBusy === p.id}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-widest hover:bg-white/5 disabled:opacity-50">
+                          {refundBusy === p.id ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />} Refund
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              />
             </div>
-            <div className="md:hidden divide-y divide-white/5">
-              {filteredPayments.map((p) => (
-                <button key={p.id} onClick={() => setDrawer(p)} className="w-full text-left p-4 active:bg-white/[0.03]">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-xs">#{p.order_id.slice(0, 8)}</span>
-                    <StatusPill status={p.status} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-base">{inr(p.amount, p.currency)}</span>
-                    <span className="text-[10px] text-muted-foreground capitalize">{p.method}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">{when(p.created_at)}</p>
-                </button>
-              ))}
-              {!filteredPayments.length && <p className="p-8 text-center text-sm text-muted-foreground">No transactions found.</p>}
+            {/* Mobile: virtualized compact cards */}
+            <div className="md:hidden">
+              <VirtualTable
+                rows={filteredPayments}
+                rowKey={(p) => p.id}
+                estimateSize={84}
+                empty="No transactions found."
+                renderRow={(p) => (
+                  <button onClick={() => setDrawer(p)} className="w-full text-left p-4 active:bg-white/[0.03]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-mono text-xs">#{p.order_id.slice(0, 8)}</span>
+                      <StatusPill status={p.status} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-base">{inr(p.amount, p.currency)}</span>
+                      <span className="text-[10px] text-muted-foreground capitalize">{p.method}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{when(p.created_at)}</p>
+                  </button>
+                )}
+              />
             </div>
           </div>
+
         </>
       )}
 

@@ -13,7 +13,7 @@ import { useRegion } from "@/lib/region";
 import { useAddresses, type Address } from "@/lib/use-addresses";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
-import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
+import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder } from "@/lib/razorpay.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
 
 export const Route = createFileRoute("/checkout")({
@@ -37,6 +37,7 @@ function CheckoutPage() {
 
   const createOrder = useServerFn(createRazorpayOrder);
   const verifyPayment = useServerFn(verifyRazorpayPayment);
+  const cancelOrder = useServerFn(cancelRazorpayOrder);
 
   const [stage, setStage] = useState<Stage>("review");
   const [error, setError] = useState<string | null>(null);
@@ -144,10 +145,10 @@ function CheckoutPage() {
         theme: { color: "#ff7a1a", backdrop_color: "#0a0a0f" },
         method: { emi: false, paylater: false },
         modal: {
-          escape: true,
           ondismiss: () => {
             setStage("failed");
             setError("Payment was cancelled. Your cart is safe — you can try again.");
+            cancelOrder({ data: { orderId: created.orderId } }).catch(() => {});
           },
         },
         handler: async (response: RazorpayResponse) => {
@@ -174,6 +175,7 @@ function CheckoutPage() {
       rzp.on("payment.failed", (resp: any) => {
         setStage("failed");
         setError(resp?.error?.description ?? "Payment failed. Please try again.");
+        cancelOrder({ data: { orderId: created.orderId } }).catch(() => {});
       });
 
       rzp.open();

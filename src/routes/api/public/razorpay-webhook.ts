@@ -89,6 +89,8 @@ async function handleEvent(event: string, payload: any) {
       const order = await findOrderByRzpOrderId(paymentEntity?.order_id);
       if (!order) return;
       if (order.payment_status !== "succeeded") {
+        // Commit reserved stock permanently (idempotent), then mark paid.
+        await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
         await supabaseAdmin
           .from("orders")
           .update({
@@ -138,6 +140,11 @@ async function handleEvent(event: string, payload: any) {
       const order = await findOrderByRzpOrderId(paymentEntity?.order_id);
       if (!order) return;
       if (order.payment_status !== "succeeded") {
+        // Give the reserved stock back (idempotent), then mark failed.
+        await supabaseAdmin.rpc("release_order_stock", {
+          _order_id: order.id,
+          _reason: "webhook_payment_failed",
+        });
         await supabaseAdmin
           .from("orders")
           .update({ status: "payment_failed", payment_status: "failed" })

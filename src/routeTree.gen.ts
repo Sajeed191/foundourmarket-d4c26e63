@@ -58,6 +58,7 @@ import { Route as AccountNotificationsRouteImport } from './routes/account_.noti
 import { Route as AccountHistoryRouteImport } from './routes/account_.history'
 import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as ApiPublicExpireOrdersRouteImport } from './routes/api/public/expire-orders'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -305,6 +306,11 @@ const ApiPublicRazorpayWebhookRoute =
     path: '/api/public/razorpay-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicExpireOrdersRoute = ApiPublicExpireOrdersRouteImport.update({
+  id: '/api/public/expire-orders',
+  path: '/api/public/expire-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -355,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesById {
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -511,6 +520,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -562,6 +572,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   id:
     | '__root__'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -662,6 +674,7 @@ export interface RootRouteChildren {
   PagesReturnsRoute: typeof PagesReturnsRoute
   PagesShippingRoute: typeof PagesShippingRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
+  ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
@@ -1010,6 +1023,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/expire-orders': {
+      id: '/api/public/expire-orders'
+      path: '/api/public/expire-orders'
+      fullPath: '/api/public/expire-orders'
+      preLoaderRoute: typeof ApiPublicExpireOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1089,6 +1109,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagesReturnsRoute: PagesReturnsRoute,
   PagesShippingRoute: PagesShippingRoute,
   ProductsSlugRoute: ProductsSlugRoute,
+  ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
