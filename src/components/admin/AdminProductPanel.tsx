@@ -40,6 +40,9 @@ type Patch = {
   internationalVisible?: boolean;
   featured?: boolean;
   inStock?: boolean;
+  rating?: number;
+  reviews?: number;
+  warranty?: string;
 };
 
 const numOrNull = (v: string): number | null => {
