@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { type Product } from "./products";
 import { useProducts } from "./use-products";
 import { useAuth } from "./auth";
+import { useRegion } from "./region";
 
 type CartItem = { slug: string; qty: number; savedForLater?: boolean };
 type DetailedItem = CartItem & { product: Product };
@@ -44,6 +45,7 @@ function writeLS(items: CartItem[]) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { products } = useProducts();
+  const { priceOf } = useRegion();
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -301,7 +303,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const detailed = toDetailed(active);
   const savedDetailed = toDetailed(saved);
 
-  const subtotalUSD = detailed.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const subtotalUSD = detailed.reduce((s, i) => s + priceOf(i.product) * i.qty, 0);
   const count = active.reduce((s, i) => s + i.qty, 0);
 
   return (
