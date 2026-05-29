@@ -602,7 +602,7 @@ function CarrierEta({ orderId, progress }: { orderId: string; progress: number }
   const ringDash = 2 * Math.PI * 28;
   const ringOffset = ringDash * (1 - pct / 100);
 
-  const carriers = ["FOM Express", "Skyline Priority", "Aero Logistics"];
+  const carriers = ["FOM Standard", "Skyline Priority", "Aero Logistics"];
   const carrier = carriers[seed % carriers.length];
 
   return (
