@@ -62,6 +62,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(readLS());
       setCartId(null);
       mergedRef.current = false;
+      setLoadedFor(null);
     }
   }, [user]);
 
