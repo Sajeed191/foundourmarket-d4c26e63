@@ -94,7 +94,9 @@ export function AdminProductPanel({ product }: { product: Product }) {
     try {
       await update({ data: { slug: product.slug, ...patch } });
       await invalidateProducts();
-      toast.success(label);
+      toast.success(label, {
+        description: "Published — your edits are now live for all customers.",
+      });
     } catch (e) {
       toast.error("Save failed", {
         description: e instanceof Error ? e.message : "Try again.",
