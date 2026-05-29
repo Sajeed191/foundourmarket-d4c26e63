@@ -77,6 +77,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-email-ops", label: "Email operations", icon: ShieldBan, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-email-queue", label: "Email queue", icon: Inbox, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-email-delivery", label: "Email delivery", icon: PackageCheck, roles: ["admin", "super_admin", "manager"] },
+      { to: "/admin-email-health", label: "Email health", icon: Activity, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-activity", label: "Activity log", icon: Activity, roles: ["admin", "super_admin"] },
     ],
   },

@@ -38,6 +38,7 @@ import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
 import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
 import { Route as AdminEmailQueueRouteImport } from './routes/admin-email-queue'
 import { Route as AdminEmailOpsRouteImport } from './routes/admin-email-ops'
+import { Route as AdminEmailHealthRouteImport } from './routes/admin-email-health'
 import { Route as AdminEmailDeliveryRouteImport } from './routes/admin-email-delivery'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
@@ -216,6 +217,11 @@ const AdminEmailQueueRoute = AdminEmailQueueRouteImport.update({
 const AdminEmailOpsRoute = AdminEmailOpsRouteImport.update({
   id: '/admin-email-ops',
   path: '/admin-email-ops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEmailHealthRoute = AdminEmailHealthRouteImport.update({
+  id: '/admin-email-health',
+  path: '/admin-email-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminEmailDeliveryRoute = AdminEmailDeliveryRouteImport.update({
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
@@ -601,6 +610,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
     | '/admin-emails'
@@ -666,6 +676,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
     | '/admin-emails'
@@ -731,6 +742,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
     | '/admin-emails'
@@ -797,6 +809,7 @@ export interface RootRouteChildren {
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminEmailDeliveryRoute: typeof AdminEmailDeliveryRoute
+  AdminEmailHealthRoute: typeof AdminEmailHealthRoute
   AdminEmailOpsRoute: typeof AdminEmailOpsRoute
   AdminEmailQueueRoute: typeof AdminEmailQueueRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
@@ -1054,6 +1067,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-email-ops'
       fullPath: '/admin-email-ops'
       preLoaderRoute: typeof AdminEmailOpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-email-health': {
+      id: '/admin-email-health'
+      path: '/admin-email-health'
+      fullPath: '/admin-email-health'
+      preLoaderRoute: typeof AdminEmailHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-email-delivery': {
@@ -1336,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminEmailDeliveryRoute: AdminEmailDeliveryRoute,
+  AdminEmailHealthRoute: AdminEmailHealthRoute,
   AdminEmailOpsRoute: AdminEmailOpsRoute,
   AdminEmailQueueRoute: AdminEmailQueueRoute,
   AdminEmailsRoute: AdminEmailsRoute,
