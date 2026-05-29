@@ -26,6 +26,13 @@ export type Product = {
   lowStockThreshold: number;
   viewsCount: number;
   createdAt: string;
+  // Dual-region independent admin-defined pricing (no currency conversion)
+  priceInr: number | null;
+  comparePriceInr: number | null;
+  priceUsd: number | null;
+  comparePriceUsd: number | null;
+  indiaVisible: boolean;
+  internationalVisible: boolean;
 };
 
 
