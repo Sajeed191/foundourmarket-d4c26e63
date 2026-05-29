@@ -2,7 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getRazorpayCreds, rzpFetch, mapRzpToken, type RzpToken } from "./razorpay.server";
+import {
+  getRazorpayCreds,
+  rzpFetch,
+  mapRzpToken,
+  verifyPaymentSignature,
+  type RzpToken,
+} from "./razorpay.server";
 
 type Ctx = { supabase: any; userId: string; claims: any };
 
