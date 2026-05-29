@@ -72,6 +72,34 @@ export function AdminFloatingToolbar() {
                 <X className="size-3.5" />
               </button>
             </div>
+            <button
+              onClick={toggle}
+              className={cn(
+                "mb-2 flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all",
+                adminMode
+                  ? "border-accent/50 bg-accent/15"
+                  : "border-white/5 bg-white/[0.02] hover:border-accent/30",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <Pencil className={cn("size-3.5", adminMode ? "text-accent" : "text-muted-foreground")} />
+                <span className="text-xs font-medium text-foreground">Admin Mode</span>
+              </span>
+              <span
+                className={cn(
+                  "relative h-5 w-9 rounded-full transition-colors",
+                  adminMode ? "bg-accent" : "bg-white/15",
+                )}
+                aria-hidden
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 size-4 rounded-full bg-white transition-transform",
+                    adminMode ? "translate-x-[1.125rem]" : "translate-x-0.5",
+                  )}
+                />
+              </span>
+            </button>
             <div className="grid grid-cols-3 gap-1">
               {ACTIONS.map((a) => (
                 <Link
