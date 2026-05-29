@@ -133,6 +133,14 @@ export async function enqueueOrderEmail(
       label: event,
       idempotency_key: messageId,
       queued_at: new Date().toISOString(),
+      ...(unsub
+        ? {
+            headers: {
+              'List-Unsubscribe': `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }
+        : {}),
     },
   })
 
