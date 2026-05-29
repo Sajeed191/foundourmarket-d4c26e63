@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ThreadSheet } from "@/routes/account_.support";
+import { notifySupportEvent } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/admin-support")({
   head: () => ({ meta: [{ title: "Support — Admin" }] }),
