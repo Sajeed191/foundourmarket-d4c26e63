@@ -68,6 +68,15 @@ export function ProductCardAdminControls({ product }: { product: Product }) {
 
   const actions = [
     {
+      label: "Quick edit",
+      icon: SlidersHorizontal,
+      onClick: (e: React.MouseEvent) => {
+        stop(e);
+        setOpen(false);
+        setQuickEdit(true);
+      },
+    },
+    {
       label: "Edit product",
       icon: Pencil,
       onClick: (e: React.MouseEvent) => {
