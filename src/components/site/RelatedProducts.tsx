@@ -54,11 +54,11 @@ export function RelatedProducts({
   if (loading || items.length === 0) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-      <div className="flex items-end justify-between gap-4 mb-8">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <div className="flex items-end justify-between gap-4 mb-5 sm:mb-7">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">{eyebrow}</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-display tracking-tight">{title}</h2>
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{eyebrow}</p>
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-display tracking-tight">{title}</h2>
         </div>
         <div className="hidden sm:flex items-center gap-2">
           <button
@@ -80,18 +80,21 @@ export function RelatedProducts({
 
       <div
         ref={scrollerRef}
-        className="flex gap-3 sm:gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2"
+        className="flex gap-2.5 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2"
         style={{ scrollbarWidth: "none" }}
       >
         {items.map((p) => (
           <div
             key={p.slug}
-            className="snap-start shrink-0 w-[68%] xs:w-[55%] sm:w-[42%] md:w-[31%] lg:w-[23%]"
+            className="snap-start shrink-0 w-[42%] xs:w-[38%] sm:w-[30%] md:w-[22%] lg:w-[18%]"
           >
-            <ProductCard product={p} />
+            <ProductCard product={p} compact />
           </div>
         ))}
       </div>
     </section>
+  );
+}
+
   );
 }
