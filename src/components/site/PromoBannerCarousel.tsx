@@ -186,7 +186,18 @@ export function PromoBannerCarousel({
             </div>
           </>
         )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setEditing(true)}
+            aria-label="Edit banners"
+            className="absolute right-3 top-3 z-10 grid size-8 place-items-center rounded-full border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+        )}
       </div>
+      {isAdmin && editing && <BannerAdminSheet onClose={() => setEditing(false)} onChanged={fetchBanners} />}
     </section>
   );
 }
