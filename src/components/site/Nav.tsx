@@ -184,22 +184,22 @@ export function Nav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-black/75 backdrop-blur-md"
+              transition={{ duration: 0.25 }}
+              className="absolute inset-0 bg-black/75"
               onClick={() => setOpen(false)}
             />
             <motion.aside
-              initial={{ x: "-100%", filter: "blur(12px)" }}
-              animate={{ x: 0, filter: "blur(0px)" }}
-              exit={{ x: "-100%", filter: "blur(12px)" }}
-              transition={{ type: "spring", stiffness: 320, damping: 36, mass: 0.9 }}
-              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)]"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 38, mass: 0.7 }}
+              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] [transform:translateZ(0)] will-change-transform"
             >
               {/* Background atmosphere */}
               <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-24 -left-16 size-72 rounded-full bg-accent/25 blur-[90px] animate-orb" />
-                <div className="absolute top-1/3 -right-20 size-64 rounded-full bg-accent/15 blur-[100px] animate-orb" style={{ animationDelay: "-7s" }} />
-                <div className="absolute -bottom-28 left-1/4 size-72 rounded-full bg-[oklch(0.55_0.14_30)]/20 blur-[110px] animate-orb" style={{ animationDelay: "-13s" }} />
+                <div className="absolute -top-24 -left-16 size-72 rounded-full bg-accent/25 blur-[80px]" />
+                <div className="absolute top-1/3 -right-20 size-64 rounded-full bg-accent/15 blur-[80px]" />
+                <div className="absolute -bottom-28 left-1/4 size-72 rounded-full bg-[oklch(0.55_0.14_30)]/20 blur-[80px]" />
                 <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-black/40" />
               </div>
 
