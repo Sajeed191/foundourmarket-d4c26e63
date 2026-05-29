@@ -57,7 +57,7 @@ function formatEta(daysFrom: number, daysTo: number) {
 function CheckoutPage() {
   const { user, loading } = useAuth();
   const { detailed, subtotalUSD, clear, count } = useCart();
-  const { region } = useRegion();
+  const { market } = useRegion();
   const {
     addresses, loading: addrLoading, create: createAddress,
     update: updateAddress, remove: removeAddress, setDefaultShipping,
@@ -83,7 +83,7 @@ function CheckoutPage() {
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
   const [reserveLeft, setReserveLeft] = useState(15 * 60);
 
-  const isIndia = region === "IN";
+  const isIndia = market === "india";
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
