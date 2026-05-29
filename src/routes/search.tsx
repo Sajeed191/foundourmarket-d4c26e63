@@ -17,7 +17,16 @@ export const Route = createFileRoute("/search")({
     max: typeof s.max === "number" ? s.max : s.max ? Number(s.max) : undefined,
     stock: typeof s.stock === "string" ? s.stock : undefined,
   }),
-  head: () => ({ meta: [{ title: "Search — FoundOurMarket™" }] }),
+  head: () => ({
+    meta: [
+      { title: "Search the Marketplace — FoundOurMarket™" },
+      { name: "description", content: "Search thousands of curated electronics, fashion, home, and fitness products on FoundOurMarket. Filter by category, price, and availability." },
+      { property: "og:title", content: "Search the Marketplace — FoundOurMarket™" },
+      { property: "og:description", content: "Search and filter thousands of curated products on FoundOurMarket." },
+      { property: "og:url", content: "https://foundourmarket.com/search" },
+    ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/search" }],
+  }),
   component: SearchPage,
 });
 

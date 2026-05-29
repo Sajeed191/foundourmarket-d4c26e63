@@ -15,7 +15,16 @@ import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
 
 export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Cart — FoundOurMarket™" }] }),
+  head: () => ({
+    meta: [
+      { title: "Your Cart — FoundOurMarket™" },
+      { name: "description", content: "Review the items in your FoundOurMarket cart, adjust quantities, and proceed to secure checkout for worldwide delivery." },
+      { property: "og:title", content: "Your Cart — FoundOurMarket™" },
+      { property: "og:description", content: "Review the items in your FoundOurMarket cart and check out securely." },
+      { property: "og:url", content: "https://foundourmarket.com/cart" },
+    ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/cart" }],
+  }),
   component: CartPage,
 });
 
