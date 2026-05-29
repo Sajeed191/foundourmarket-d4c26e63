@@ -160,6 +160,40 @@ export function BannerAdminSheet({ onClose, onChanged }: { onClose: () => void; 
     onChanged();
   }
 
+  async function reorder(id: string, direction: "up" | "down") {
+    // Optimistic swap for instant feel
+    setRows((prev) => {
+      const i = prev.findIndex((r) => r.id === id);
+      const j = direction === "up" ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+    const { error } = await supabase.rpc("reorder_banner", { _id: id, _direction: direction });
+    if (error) {
+      toast.error(error.message);
+    }
+    await load();
+    onChanged();
+  }
+
+  async function duplicate(r: BannerRow) {
+    const { id, ...rest } = r;
+    const { error } = await supabase
+      .from("banners")
+      .insert({ ...rest, title: `${r.title} (copy)`, active: false, sort_order: (r.sort_order ?? 0) + 1 });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    logActivity("banner_duplicate", "banner", id);
+    toast.success("Duplicated as draft");
+    await load();
+    onChanged();
+  }
+
+
   return (
     <AnimatePresence>
       <motion.div
