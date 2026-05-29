@@ -45,7 +45,7 @@ function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FoundOurMarket™ — Everything You Need. All In One Place." },
+      { title: "FoundOurMarket™ — Whatever You Need. All In One Place." },
       { name: "description", content: "Premium global marketplace. Curated electronics, fashion, home, fitness and more — delivered worldwide." },
     ],
   }),
@@ -179,7 +179,7 @@ function Home() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
           >
-            Everything you need.
+            Whatever you need.
             <br />
             <span className="text-gradient-ember">All in one place.</span>
           </motion.h1>
