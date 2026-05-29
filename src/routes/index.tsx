@@ -114,6 +114,9 @@ function Home() {
   const { products, loading: productsLoading } = useProducts();
   const { categories } = useCategories();
 
+  const { isProductAdmin } = useIsProductAdmin();
+  const [editCats, setEditCats] = useState(false);
+
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
