@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
@@ -73,6 +74,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackRoute = TrackRouteImport.update({
@@ -410,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/history': typeof AccountHistoryRoute
@@ -472,6 +479,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/history': typeof AccountHistoryRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
   '/account_/addresses': typeof AccountAddressesRoute
   '/account_/history': typeof AccountHistoryRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap.xml'
     | '/track'
+    | '/unsubscribe'
     | '/wishlist'
     | '/account/addresses'
     | '/account/history'
@@ -661,6 +671,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap.xml'
     | '/track'
+    | '/unsubscribe'
     | '/wishlist'
     | '/account/addresses'
     | '/account/history'
@@ -723,6 +734,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap.xml'
     | '/track'
+    | '/unsubscribe'
     | '/wishlist'
     | '/account_/addresses'
     | '/account_/history'
@@ -786,6 +798,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRoute
   AccountAddressesRoute: typeof AccountAddressesRoute
   AccountHistoryRoute: typeof AccountHistoryRoute
@@ -819,6 +832,13 @@ declare module '@tanstack/react-router' {
       path: '/wishlist'
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track': {
@@ -1301,6 +1321,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRoute,
   AccountAddressesRoute: AccountAddressesRoute,
   AccountHistoryRoute: AccountHistoryRoute,
