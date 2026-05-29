@@ -188,7 +188,6 @@ function FinancialPage() {
       forecast: forecastNext(months),
     };
   }, [data, granularity]);
-  }, [data, granularity]);
 
   const cur = data?.currency ?? "USD";
 
