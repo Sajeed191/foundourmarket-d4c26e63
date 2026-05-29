@@ -46,7 +46,7 @@ export function Footer() {
             <li><Link to="/category/$slug" params={{ slug: "fitness" }} className="hover:text-foreground transition-colors">Fitness</Link></li>
           </ul>
         </div>
-        <div className="space-y-3.5">
+        <div className="space-y-2.5">
           <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Support</h5>
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
