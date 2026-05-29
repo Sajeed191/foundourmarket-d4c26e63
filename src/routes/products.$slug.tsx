@@ -162,6 +162,15 @@ function ProductPage() {
                     <span className="bg-destructive/90 text-destructive-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest">Only {effectiveStock} left</span>
                   )}
                 </div>
+                {/* Floating stock pill — premium glass */}
+                {isOOS && (
+                  <div className="absolute top-4 right-16 z-10">
+                    <span className="relative flex items-center gap-1.5 backdrop-blur-xl bg-accent/15 border border-accent/30 text-accent text-[10px] font-semibold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest shadow-[0_8px_30px_-8px_oklch(0.74_0.19_49/0.6)]">
+                      <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+                      Sold out
+                    </span>
+                  </div>
+                )}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
                   <button
                     onClick={() => toggleWishlist(product.slug)}
