@@ -33,6 +33,7 @@ export type Product = {
   comparePriceUsd: number | null;
   indiaVisible: boolean;
   internationalVisible: boolean;
+  warranty: string;
 };
 
 
