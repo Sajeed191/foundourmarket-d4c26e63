@@ -133,6 +133,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
+  // Realtime sync: keep cart in sync across devices/tabs for logged-in users
+  useEffect(() => {
+    if (!user || !cartId) return;
+    const channel = supabase
+      .channel(`rt-cart-${cartId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cart_items", filter: `cart_id=eq.${cartId}` },
+        async () => {
+          const { data: rows } = await supabase
+            .from("cart_items")
+            .select("product_slug,quantity,saved_for_later")
+            .eq("cart_id", cartId);
+          setItems(
+            (rows ?? []).map((r) => ({
+              slug: r.product_slug,
+              qty: r.quantity,
+              savedForLater: !!r.saved_for_later,
+            })),
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, cartId]);
+
+
+
   // Persist guests to LS
   useEffect(() => {
     if (!user) writeLS(items);
