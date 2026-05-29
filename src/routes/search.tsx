@@ -88,6 +88,7 @@ function SearchPage() {
         priceUsd: r.price_usd != null ? Number(r.price_usd) : null,
         comparePriceUsd: r.compare_price_usd != null ? Number(r.compare_price_usd) : null,
         indiaVisible: r.india_visible ?? true, internationalVisible: r.international_visible ?? true,
+        warranty: r.warranty ?? "12 months",
       })));
       setLoading(false);
     });
