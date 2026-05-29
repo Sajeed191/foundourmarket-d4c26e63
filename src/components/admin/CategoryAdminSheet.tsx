@@ -333,7 +333,10 @@ export function CategoryAdminSheet({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={() => {
+          if (uploadingSlot || saving) return;
+          onClose();
+        }}
       >
         <input
           ref={fileRef}
