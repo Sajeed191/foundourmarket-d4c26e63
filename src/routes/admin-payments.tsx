@@ -198,16 +198,6 @@ function PaymentsInner() {
   const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
 
-  const totals = useMemo(() => {
-    const succeeded = payments.filter((p) => p.status === "succeeded");
-    return {
-      gross: succeeded.reduce((s, p) => s + Number(p.amount), 0),
-      count: succeeded.length,
-      refunded: refunds.filter((r) => r.status !== "failed").reduce((s, r) => s + Number(r.amount), 0),
-      failed: payments.filter((p) => p.status === "failed").length,
-    };
-  }, [payments, refunds]);
-
   if (loading) {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
   }
