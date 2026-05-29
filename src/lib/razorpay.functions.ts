@@ -25,12 +25,6 @@ const verifySchema = z.object({
   razorpayOrderId: z.string().min(1).max(120),
   razorpayPaymentId: z.string().min(1).max(120),
   razorpaySignature: z.string().min(1).max(256),
-});
-
-type SupaClient = Awaited<ReturnType<typeof requireSupabaseAuth>> extends never
-  ? never
-  : any;
-
 /** Re-price the cart entirely from trusted database values (anti-tampering). */
 async function repriceFromDb(
   supabase: any,
@@ -43,6 +37,21 @@ async function repriceFromDb(
     .select("slug,name,image,price")
     .in("slug", slugs);
   if (error) throw new Error("Could not load products.");
+
+  const bySlug = new Map<string, any>((products ?? []).map((p: any) => [p.slug, p]));
+  const lines = items.map((i) => {
+    const p = bySlug.get(i.slug);
+    if (!p) throw new Error(`Product unavailable: ${i.slug}`);
+    const unitUsd = Number(p.price);
+    return {
+      slug: i.slug,
+      name: p.name as string,
+      image: (p.image as string) ?? null,
+      unitUsd,
+      qty: i.qty,
+      lineUsd: +(unitUsd * i.qty).toFixed(2),
+    };
+  });
 
   const bySlug = new Map((products ?? []).map((p: any) => [p.slug, p]));
   const lines = items.map((i) => {
