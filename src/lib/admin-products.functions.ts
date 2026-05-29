@@ -17,6 +17,16 @@ async function assertStaff(supabase: any, userId: string) {
 
 const money = z.number().min(0).max(100_000_000).nullable();
 
+const PRODUCT_STATUSES = [
+  "draft",
+  "published",
+  "hidden",
+  "archived",
+  "scheduled",
+  "preorder",
+  "out_of_stock",
+] as const;
+
 const updateSchema = z.object({
   slug: z.string().min(1).max(200),
   // Pricing
@@ -24,11 +34,33 @@ const updateSchema = z.object({
   comparePriceInr: money.optional(),
   priceUsd: money.optional(),
   comparePriceUsd: money.optional(),
+  costPriceInr: money.optional(),
+  costPriceUsd: money.optional(),
+  shippingFeeInr: z.number().min(0).max(100_000_000).optional(),
+  shippingFeeUsd: z.number().min(0).max(100_000_000).optional(),
   // Visibility / region availability
   indiaVisible: z.boolean().optional(),
   internationalVisible: z.boolean().optional(),
   featured: z.boolean().optional(),
   inStock: z.boolean().optional(),
+  // Status / publishing
+  status: z.enum(PRODUCT_STATUSES).optional(),
+  preorder: z.boolean().optional(),
+  scheduledPublishAt: z.string().datetime().nullable().optional(),
+  scheduledExpiryAt: z.string().datetime().nullable().optional(),
+  // Payments
+  razorpayEnabled: z.boolean().optional(),
+  stripeEnabled: z.boolean().optional(),
+  paypalEnabled: z.boolean().optional(),
+  // Shipping & returns
+  codEnabled: z.boolean().optional(),
+  returnEligible: z.boolean().optional(),
+  replacementEligible: z.boolean().optional(),
+  returnWindowDays: z.number().int().min(0).max(365).optional(),
+  pickupSupported: z.boolean().optional(),
+  internationalShipping: z.boolean().optional(),
+  fragile: z.boolean().optional(),
+  customsInfo: z.string().max(5000).optional(),
   // Content
   name: z.string().min(1).max(300).optional(),
   tagline: z.string().max(500).optional(),
@@ -36,6 +68,9 @@ const updateSchema = z.object({
   category: z.string().min(1).max(120).optional(),
   image: z.string().min(1).max(2000).optional(),
   sku: z.string().max(120).nullable().optional(),
+  barcode: z.string().max(120).optional(),
+  warehouseLocation: z.string().max(200).optional(),
+  restockEta: z.string().max(200).optional(),
   // Inventory
   stockQuantity: z.number().int().min(0).max(10_000_000).optional(),
   lowStockThreshold: z.number().int().min(0).max(1_000_000).optional(),
