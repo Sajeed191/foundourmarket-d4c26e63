@@ -313,6 +313,23 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+function AnimatedHamburger({ open }: { open: boolean }) {
+  const line = "block h-[1.5px] rounded-full bg-current origin-center transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]";
+  return (
+    <div className="relative size-5 flex flex-col justify-center items-center gap-[4.5px]">
+      <span
+        className={`${line} w-5 ${open ? "rotate-45 translate-y-[3px]" : ""}`}
+      />
+      <span
+        className={`${line} w-5 ${open ? "opacity-0 scale-0" : "opacity-100 scale-100"}`}
+      />
+      <span
+        className={`${line} w-5 ${open ? "-rotate-45 -translate-y-[3px]" : ""}`}
+      />
+    </div>
+  );
+}
+
 function NavItem({
   icon: Icon, label, to, badge, accent, onNavigate,
 }: {
