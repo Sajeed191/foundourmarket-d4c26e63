@@ -146,7 +146,7 @@ function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pb-28 sm:pb-16">
+    <div className="min-h-screen pb-12 sm:pb-6">
       {/* Cinematic ambient background system — layered orbs, bloom & grid */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {/* base navy depth wash */}
