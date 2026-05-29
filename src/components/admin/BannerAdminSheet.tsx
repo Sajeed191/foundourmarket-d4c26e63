@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartphone } from "lucide-react";
+import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartphone, ArrowUp, ArrowDown, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
