@@ -615,9 +615,13 @@ function CheckoutPage() {
                   <h3 className="text-lg font-display font-semibold mb-1.5">Payment not completed</h3>
                   <p className="text-sm text-muted-foreground mb-6">{error ?? "Something went wrong. Your cart is safe."}</p>
                   <div className="flex flex-col gap-2">
-                    <button onClick={() => { setStage("review"); setError(null); }}
+                    <button onClick={() => { setError(null); if (payMethod === "cod") placeCod(); else payWithRazorpay(); }}
                       className="w-full bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110 inline-flex items-center justify-center gap-2">
                       <RotateCcw className="size-3.5" /> Retry payment
+                    </button>
+                    <button onClick={() => { setStage("review"); setError(null); }}
+                      className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground py-2">
+                      Review order
                     </button>
                     <Link to="/cart" className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground py-2">Back to cart</Link>
                   </div>
