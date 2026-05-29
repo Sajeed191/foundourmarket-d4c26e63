@@ -45,6 +45,7 @@ function writeLS(items: CartItem[]) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { products } = useProducts();
+  const { priceOf } = useRegion();
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
