@@ -221,6 +221,8 @@ export type Database = {
       banners: {
         Row: {
           active: boolean
+          clicks: number
+          countdown_to: string | null
           created_at: string
           cta_text: string | null
           draft_data: Json | null
@@ -229,21 +231,28 @@ export type Database = {
           height_px: number | null
           id: string
           image: string | null
+          impressions: number
           last_published_at: string | null
           link: string | null
           mobile_image: string | null
+          overlay_opacity: number
           pages: string[]
           region: string
           sort_order: number
           starts_at: string | null
+          status: string
           subtitle: string | null
+          text_align: string
           title: string
           type: string
           updated_at: string
+          video_url: string | null
           width_px: number | null
         }
         Insert: {
           active?: boolean
+          clicks?: number
+          countdown_to?: string | null
           created_at?: string
           cta_text?: string | null
           draft_data?: Json | null
@@ -252,21 +261,28 @@ export type Database = {
           height_px?: number | null
           id?: string
           image?: string | null
+          impressions?: number
           last_published_at?: string | null
           link?: string | null
           mobile_image?: string | null
+          overlay_opacity?: number
           pages?: string[]
           region?: string
           sort_order?: number
           starts_at?: string | null
+          status?: string
           subtitle?: string | null
+          text_align?: string
           title: string
           type?: string
           updated_at?: string
+          video_url?: string | null
           width_px?: number | null
         }
         Update: {
           active?: boolean
+          clicks?: number
+          countdown_to?: string | null
           created_at?: string
           cta_text?: string | null
           draft_data?: Json | null
@@ -275,17 +291,22 @@ export type Database = {
           height_px?: number | null
           id?: string
           image?: string | null
+          impressions?: number
           last_published_at?: string | null
           link?: string | null
           mobile_image?: string | null
+          overlay_opacity?: number
           pages?: string[]
           region?: string
           sort_order?: number
           starts_at?: string | null
+          status?: string
           subtitle?: string | null
+          text_align?: string
           title?: string
           type?: string
           updated_at?: string
+          video_url?: string | null
           width_px?: number | null
         }
         Relationships: []
@@ -2550,6 +2571,10 @@ export type Database = {
         Args: { _order_id: string; _reason?: string }
         Returns: undefined
       }
+      reorder_banner: {
+        Args: { _direction: string; _id: string }
+        Returns: undefined
+      }
       reserve_order_stock: {
         Args: { _order_id: string; _ttl_minutes?: number }
         Returns: undefined
@@ -2628,6 +2653,10 @@ export type Database = {
       }
       support_admin_unread_count: { Args: never; Returns: number }
       support_unread_count: { Args: never; Returns: number }
+      track_banner_event: {
+        Args: { _banner_id: string; _event: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

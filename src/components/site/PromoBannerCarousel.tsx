@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowRight, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +76,21 @@ export function PromoBannerCarousel({
     return () => clearInterval(id);
   }, [paused, banners.length]);
 
+  // Track an impression once per banner per mount (admins excluded).
+  const seen = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const cur = banners[idx];
+    if (!cur || isAdmin || seen.current.has(cur.id)) return;
+    seen.current.add(cur.id);
+    void supabase.rpc("track_banner_event", { _banner_id: cur.id, _event: "impression" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, banners, isAdmin]);
+
+  function trackClick(id: string) {
+    if (isAdmin) return;
+    void supabase.rpc("track_banner_event", { _banner_id: id, _event: "click" });
+  }
+
   // Admins always get an edit affordance, even when no banners exist yet.
   if (!banners.length) {
     if (!isAdmin) return null;
@@ -148,6 +163,7 @@ export function PromoBannerCarousel({
               {b.link && (
                 <motion.a
                   href={b.link}
+                  onClick={() => trackClick(b.id)}
                   initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35, duration: 0.6 }}
                   className="inline-flex items-center gap-2 self-start bg-accent text-accent-foreground px-5 py-2.5 rounded-full text-xs font-mono uppercase tracking-widest hover:gap-3 transition-all"
                 >

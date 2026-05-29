@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartphone } from "lucide-react";
+import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartphone, ArrowUp, ArrowDown, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
@@ -160,6 +160,40 @@ export function BannerAdminSheet({ onClose, onChanged }: { onClose: () => void; 
     onChanged();
   }
 
+  async function reorder(id: string, direction: "up" | "down") {
+    // Optimistic swap for instant feel
+    setRows((prev) => {
+      const i = prev.findIndex((r) => r.id === id);
+      const j = direction === "up" ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+    const { error } = await supabase.rpc("reorder_banner", { _id: id, _direction: direction });
+    if (error) {
+      toast.error(error.message);
+    }
+    await load();
+    onChanged();
+  }
+
+  async function duplicate(r: BannerRow) {
+    const { id, ...rest } = r;
+    const { error } = await supabase
+      .from("banners")
+      .insert({ ...rest, title: `${r.title} (copy)`, active: false, sort_order: (r.sort_order ?? 0) + 1 });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    logActivity("banner_duplicate", "banner", id);
+    toast.success("Duplicated as draft");
+    await load();
+    onChanged();
+  }
+
+
   return (
     <AnimatePresence>
       <motion.div
@@ -203,12 +237,29 @@ export function BannerAdminSheet({ onClose, onChanged }: { onClose: () => void; 
                 <Plus className="size-3.5" /> New banner
               </button>
               <ul className="space-y-2">
-                {rows.map((r) => (
+                {rows.map((r, i) => (
                   <li
                     key={r.id}
                     className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-2.5"
                   >
-                    <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+                    <div className="flex shrink-0 flex-col">
+                      <button
+                        onClick={() => reorder(r.id, "up")}
+                        disabled={i === 0}
+                        className="grid size-5 place-items-center rounded text-muted-foreground/60 hover:text-accent disabled:opacity-20"
+                        aria-label="Move up"
+                      >
+                        <ArrowUp className="size-3.5" />
+                      </button>
+                      <button
+                        onClick={() => reorder(r.id, "down")}
+                        disabled={i === rows.length - 1}
+                        className="grid size-5 place-items-center rounded text-muted-foreground/60 hover:text-accent disabled:opacity-20"
+                        aria-label="Move down"
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
+                    </div>
                     <div className="size-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]">
                       {r.image ? (
                         <img src={r.image} alt="" className="size-full object-cover" />
@@ -236,6 +287,13 @@ export function BannerAdminSheet({ onClose, onChanged }: { onClose: () => void; 
                       aria-label="Toggle active"
                     >
                       {r.active ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => duplicate(r)}
+                      className="grid size-7 shrink-0 place-items-center rounded-lg border border-white/10 text-muted-foreground hover:text-accent"
+                      aria-label="Duplicate"
+                    >
+                      <Copy className="size-3.5" />
                     </button>
                     <button
                       onClick={() => del(r.id)}
