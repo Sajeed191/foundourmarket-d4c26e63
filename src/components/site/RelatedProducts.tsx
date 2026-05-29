@@ -80,18 +80,19 @@ export function RelatedProducts({
 
       <div
         ref={scrollerRef}
-        className="flex gap-2 sm:gap-3.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
-        style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem" }}
+        className="flex gap-3 sm:gap-3.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
+        style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
       >
         {items.map((p) => (
           <div
             key={p.slug}
-            className="snap-start shrink-0 w-[48%] xs:w-[42%] sm:w-[30%] md:w-[22%] lg:w-[18%] rounded-2xl glow-border"
+            className="snap-start shrink-0 w-[58%] xs:w-[46%] sm:w-[30%] md:w-[22%] lg:w-[18%] last:mr-4 sm:last:mr-0 rounded-2xl glow-border"
           >
             <ProductCard product={p} compact />
           </div>
         ))}
       </div>
+
 
     </section>
   );
