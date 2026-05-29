@@ -207,10 +207,16 @@ export function RegionProvider({ children }: { children: ReactNode }) {
             }
           }
 
-          // Ambiguous / VPN / low confidence → require manual confirmation.
+          // Ambiguous / VPN / low confidence → require manual confirmation,
+          // but only if we've never shown the selector on this device.
           if (result) setMarket(result.region);
           setLocked(false);
-          setNeedsSelection(true);
+          if (promptAlreadySeen()) {
+            setNeedsSelection(false);
+          } else {
+            markPromptSeen();
+            setNeedsSelection(true);
+          }
         } else {
           // Guest: silent auto-detect, only prompt when ambiguous.
           const guestChoice =
