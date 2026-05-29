@@ -7,7 +7,7 @@ import { useWishlist } from "@/lib/wishlist";
 
 const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
   const { format } = useRegion();
   const { add } = useCart();
   const { has, toggle } = useWishlist();
@@ -24,7 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
   const showOnlyLeft = product.stockQuantity > 0 && product.stockQuantity <= 10;
 
   return (
-    <div className="group card-premium p-2.5 sm:p-3 overflow-hidden relative">
+    <div className={`group card-premium overflow-hidden relative ${compact ? "p-2 sm:p-2" : "p-2.5 sm:p-3"}`}>
       {/* Ember halo on hover */}
       <div
         aria-hidden
@@ -33,7 +33,7 @@ export function ProductCard({ product }: { product: Product }) {
       />
 
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className="relative aspect-square mb-3 sm:mb-4 rounded-xl overflow-hidden bg-black/40">
+        <div className={`relative aspect-square rounded-xl overflow-hidden bg-black/40 ${compact ? "mb-2 sm:mb-2" : "mb-3 sm:mb-4"}`}>
           {/* Glow on hover */}
           <div
             aria-hidden
@@ -60,7 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Bottom gradient for badges */}
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
+          <div className={`absolute flex flex-col gap-1 items-start ${compact ? "top-2 left-2" : "top-2.5 left-2.5 gap-1.5"}`}>
             {isHot && (
               <span className="bg-accent text-accent-foreground text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md shadow-[var(--shadow-ember)] tracking-wider">
                 HOT
@@ -91,61 +91,69 @@ export function ProductCard({ product }: { product: Product }) {
           <button
             onClick={(e) => { e.preventDefault(); toggle(product.slug); }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute top-2.5 right-2.5 size-8 grid place-items-center rounded-full backdrop-blur-md border transition-all duration-300 ${
+            className={`absolute grid place-items-center rounded-full backdrop-blur-md border transition-all duration-300 ${
+              compact
+                ? "top-2 right-2 size-7"
+                : "top-2.5 right-2.5 size-8"
+            } ${
               saved
                 ? "bg-accent/20 border-accent/50 text-accent scale-110"
                 : "bg-black/40 border-white/10 text-white/80 hover:bg-accent/20 hover:border-accent/50 hover:text-accent hover:scale-110"
             }`}
           >
-            <Heart className={`size-3.5 transition-all ${saved ? "fill-accent" : ""}`} />
+            <Heart className={`transition-all ${compact ? "size-3" : "size-3.5"} ${saved ? "fill-accent" : ""}`} />
           </button>
 
           {/* Quick add — slides up on hover (desktop) */}
           <button
             onClick={(e) => { e.preventDefault(); add(product.slug); }}
-            className="hidden sm:flex absolute inset-x-2.5 bottom-2.5 items-center justify-center gap-1.5 py-2 rounded-xl bg-accent text-accent-foreground text-[11px] font-semibold uppercase tracking-wider opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:brightness-110 shadow-[var(--shadow-ember)]"
+            className={`hidden sm:flex absolute items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground font-semibold uppercase tracking-wider opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:brightness-110 shadow-[var(--shadow-ember)] ${
+              compact
+                ? "inset-x-2 bottom-2 py-1.5 text-[10px]"
+                : "inset-x-2.5 bottom-2.5 py-2 text-[11px]"
+            }`}
           >
-            <Plus className="size-3.5" /> Quick Add
+            <Plus className={`${compact ? "size-3" : "size-3.5"}`} /> Quick Add
           </button>
         </div>
       </Link>
 
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="block px-1 relative">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className={`block relative ${compact ? "" : "px-1"}`}>
         <div className="flex justify-between items-start gap-2">
           <div className="min-w-0 flex-1">
-            <h4 className="font-medium text-sm truncate group-hover:text-accent transition-colors">{product.name}</h4>
-            <p className="text-[11px] text-muted-foreground truncate">{product.tagline}</p>
+            <h4 className={`font-medium truncate group-hover:text-accent transition-colors ${compact ? "text-[13px]" : "text-sm"}`}>{product.name}</h4>
+            <p className={`text-muted-foreground truncate ${compact ? "text-[10px]" : "text-[11px]"}`}>{product.tagline}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-display font-semibold text-sm tabular-nums">{format(product.price)}</p>
+            <p className={`font-display font-semibold tabular-nums ${compact ? "text-[13px]" : "text-sm"}`}>{format(product.price)}</p>
             {originalPrice && (
-              <p className="text-[10px] font-mono text-muted-foreground/70 line-through tabular-nums">{format(originalPrice)}</p>
+              <p className={`font-mono text-muted-foreground/70 line-through tabular-nums ${compact ? "text-[9px]" : "text-[10px]"}`}>{format(originalPrice)}</p>
             )}
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground min-w-0">
-            <Star className="size-3 fill-accent text-accent shrink-0" />
+        <div className={`flex items-center justify-between gap-2 ${compact ? "mt-1.5" : "mt-2"}`}>
+          <div className={`flex items-center gap-1 font-mono text-muted-foreground min-w-0 ${compact ? "text-[9px]" : "text-[10px]"}`}>
+            <Star className={`fill-accent text-accent shrink-0 ${compact ? "size-2.5" : "size-3"}`} />
             <span className="text-foreground/80">{product.rating}</span>
             <span className="opacity-50">({product.reviews})</span>
-            <span className="inline-flex items-center gap-0.5 ml-1.5 text-emerald-400/90" title="Verified seller">
-              <BadgeCheck className="size-3" />
+            <span className="inline-flex items-center gap-0.5 ml-1 text-emerald-400/90" title="Verified seller">
+              <BadgeCheck className={`${compact ? "size-2.5" : "size-3"}`} />
             </span>
           </div>
           <button
             onClick={(e) => { e.preventDefault(); add(product.slug); }}
-            className="sm:hidden text-[10px] font-mono uppercase tracking-widest text-accent"
+            className={`sm:hidden font-mono uppercase tracking-widest text-accent ${compact ? "text-[9px]" : "text-[10px]"}`}
           >
             Add +
           </button>
         </div>
         {showOnlyLeft && (
-          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-accent/90">
+          <p className={`font-mono uppercase tracking-wider text-accent/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
             Only {product.stockQuantity} left
           </p>
         )}
         {!product.inStock && (
-          <p className="mt-1 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+          <p className={`font-mono uppercase tracking-wider text-muted-foreground ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
             Out of stock
           </p>
         )}

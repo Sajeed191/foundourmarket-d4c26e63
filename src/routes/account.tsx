@@ -170,7 +170,7 @@ function AccountPage() {
       </div>
 
 
-      <div className="container-page py-4 sm:py-10 lg:py-14 space-y-5 sm:space-y-10">
+      <div className="container-page py-4 sm:py-8 lg:py-10 space-y-4 sm:space-y-7">
 
 
         {/* 1 — HEADER */}
@@ -573,7 +573,7 @@ function StatusBadge({ status }: { status: string }) {
 function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
   return (
     <div className="-mx-4 sm:mx-0">
-      <div className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-4 [-webkit-overflow-scrolling:touch]">
+      <div className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
         {items.map((p, i) => (
           <motion.div
             key={p.slug}
@@ -582,9 +582,9 @@ function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
             viewport={{ once: true, margin: "-40px" }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
-            className="snap-center shrink-0 w-[82%] xs:w-[72%] sm:w-[32%] lg:w-[31%] max-w-[300px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
+            className="snap-center shrink-0 w-[65%] xs:w-[58%] sm:w-[27%] lg:w-[25%] max-w-[240px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
           >
-            <ProductCard product={p as never} />
+            <ProductCard product={p as never} compact />
           </motion.div>
         ))}
       </div>
