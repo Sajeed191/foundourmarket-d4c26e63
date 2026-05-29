@@ -95,11 +95,9 @@ function EditProfilePage() {
           phone: phone.trim() || null,
           country: country.trim() || null,
           avatar_url: avatarUrl.trim() || null,
-        });
+        }, { onConflict: "id" });
       if (error) throw error;
-      await supabase.auth.updateUser({
-        data: { full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl.trim() },
-      });
+      await supabase.auth.updateUser({ data: { full_name: fullName.trim(), avatar_url: avatarUrl.trim() } });
       setSaved(true);
       toast.success("Profile updated");
       setTimeout(() => nav({ to: "/account" }), 900);
