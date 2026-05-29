@@ -44,8 +44,14 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           )
         }
 
-        // Verify the caller has a valid Supabase auth token.
-        // In TanStack, there is no Supabase gateway — we validate the JWT ourselves.
+        // Verify the caller is authorized to send branded transactional email.
+        // Two accepted callers:
+        //   1. Internal/server callers presenting the service-role key as bearer.
+        //   2. Signed-in staff (admin / super_admin / manager).
+        // A plain authenticated user must NOT be able to send arbitrary branded
+        // emails to arbitrary recipients (anti-phishing / anti-spam).
+        const STAFF_ROLES = ['admin', 'super_admin', 'manager']
+
         const authHeader = request.headers.get('Authorization')
         if (!authHeader?.startsWith('Bearer ')) {
           return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -53,10 +59,32 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
 
         const token = authHeader.slice('Bearer '.length).trim()
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
-        if (authError || !user) {
-          return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        // Internal service-role callers are trusted (used by server-side flows).
+        const isServiceRoleCaller = token === supabaseServiceKey
+
+        if (!isServiceRoleCaller) {
+          const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+
+          if (authError || !user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 })
+          }
+
+          // Enforce a server-side staff role check.
+          const { data: roleRows, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+
+          if (roleError) {
+            console.error('Failed to verify caller roles', { error: roleError })
+            return Response.json({ error: 'Failed to verify permissions' }, { status: 500 })
+          }
+
+          const roles = (roleRows ?? []).map((r) => r.role as string)
+          if (!roles.some((r) => STAFF_ROLES.includes(r))) {
+            return Response.json({ error: 'Forbidden' }, { status: 403 })
+          }
         }
 
         // Parse request body
