@@ -25,6 +25,8 @@ type Ctx = {
   savedDetailed: DetailedItem[];
   subtotalUSD: number;
   loading: boolean;
+  /** True once the cart has been loaded for the current auth state. */
+  hydrated: boolean;
 };
 
 const CartContext = createContext<Ctx | null>(null);
