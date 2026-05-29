@@ -251,7 +251,6 @@ function AdminPage() {
             { value: "subscribers", label: "Subscribers", icon: <Mail className="size-3.5" /> },
           ]}
         />
-        />
       </div>
 
       <AnimatePresence mode="wait">
