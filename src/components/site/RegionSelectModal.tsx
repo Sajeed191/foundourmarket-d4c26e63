@@ -68,10 +68,10 @@ export function RegionSelectModal() {
   return (
     <Dialog open={open}>
       <DialogContent
-        showCloseButton={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+        className="max-w-md [&>button]:hidden"
       >
         <div className="space-y-1 text-center">
           <h2 className="text-xl font-semibold tracking-tight">Choose your market</h2>
