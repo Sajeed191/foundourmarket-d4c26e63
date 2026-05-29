@@ -16,7 +16,7 @@ export function Footer() {
             FoundOurMarket<span className="text-accent">™</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-[38ch]">
-            Everything you need. All in one place. A premium independent marketplace sourcing top-quality products worldwide.
+            Whatever you need. All in one place. A premium independent marketplace sourcing top-quality products worldwide.
           </p>
           {/* Social icons */}
           <div className="flex items-center gap-2 pt-0.5">

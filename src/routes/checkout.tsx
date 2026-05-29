@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, ShieldCheck, MapPin, Plus, Lock, Smartphone, CreditCard,
   Landmark, Wallet, Truck, CheckCircle2, XCircle, RotateCcw, Globe, Sparkles,
+  Home, Briefcase, MapPinned, Pencil, Trash2, Star, ArrowRight, Clock,
+  PackageCheck, Headphones, BadgeCheck, ShieldHalf,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +20,12 @@ import { createRazorpayCustomer, syncRazorpayPaymentMethods } from "@/lib/paymen
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — FoundOurMarket™" }] }),
+  head: () => ({
+    meta: [
+      { title: "Secure Checkout — FoundOurMarket™" },
+      { name: "description", content: "Whatever you need. All in one place. Complete your order with secure, encrypted Razorpay checkout." },
+    ],
+  }),
   validateSearch: (search: Record<string, unknown>) => ({
     address: typeof search.address === "string" ? search.address : undefined,
   }),
@@ -31,11 +38,28 @@ const inrFmt = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 
 type Stage = "review" | "processing" | "verifying" | "success" | "failed";
 
+const ADDRESS_META: Record<string, { icon: typeof Home; label: string }> = {
+  home: { icon: Home, label: "Home" },
+  work: { icon: Briefcase, label: "Work" },
+  other: { icon: MapPinned, label: "Other" },
+};
+
+function formatEta(daysFrom: number, daysTo: number) {
+  const opts: Intl.DateTimeFormatOptions = { weekday: "short", month: "short", day: "numeric" };
+  const a = new Date(Date.now() + daysFrom * 86400000).toLocaleDateString(undefined, opts);
+  const b = new Date(Date.now() + daysTo * 86400000).toLocaleDateString(undefined, opts);
+  return `${a} – ${b}`;
+}
+
 function CheckoutPage() {
   const { user, loading } = useAuth();
   const { detailed, subtotalUSD, clear, count } = useCart();
   const { region } = useRegion();
-  const { addresses, loading: addrLoading, create: createAddress, defaultShipping, markUsed } = useAddresses();
+  const {
+    addresses, loading: addrLoading, create: createAddress,
+    update: updateAddress, remove: removeAddress, setDefaultShipping,
+    defaultShipping, markUsed,
+  } = useAddresses();
   const { address: addressParam } = Route.useSearch();
   const { settings } = useStoreSettings();
   const nav = useNavigate();
@@ -46,17 +70,14 @@ function CheckoutPage() {
   const ensureCustomer = useServerFn(createRazorpayCustomer);
   const syncMethods = useServerFn(syncRazorpayPaymentMethods);
 
-
   const [stage, setStage] = useState<Stage>("review");
   const [error, setError] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [addingAddress, setAddingAddress] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [payMethod, setPayMethod] = useState<"razorpay" | "cod">("razorpay");
-  const [promoInput, setPromoInput] = useState("");
-  const [promoBusy, setPromoBusy] = useState(false);
-  const [promoError, setPromoError] = useState<string | null>(null);
-  const [promo, setPromo] = useState<{ code: string; kind: "percent" | "fixed"; value: number } | null>(null);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  const [reserveLeft, setReserveLeft] = useState(15 * 60);
 
   const isIndia = region === "IN";
 
@@ -80,6 +101,13 @@ function CheckoutPage() {
     if (isIndia) loadRazorpay().catch(() => {});
   }, [isIndia]);
 
+  // Stock reservation countdown
+  useEffect(() => {
+    if (stage !== "review") return;
+    const t = setInterval(() => setReserveLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [stage]);
+
   const selectedAddress: Address | undefined = addresses.find((a) => a.id === selectedAddressId);
 
   // Force COD off if admin disabled it
@@ -89,37 +117,18 @@ function CheckoutPage() {
 
   const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
   const taxUSD = subtotalUSD * 0.08;
-  const discountUSD = promo
-    ? Math.min(subtotalUSD, promo.kind === "percent" ? +(subtotalUSD * (promo.value / 100)).toFixed(2) : promo.value)
-    : 0;
-  const totalUSD = Math.max(0, subtotalUSD + shippingUSD + taxUSD - discountUSD);
+  const totalUSD = Math.max(0, subtotalUSD + shippingUSD + taxUSD);
 
   const subtotalINR = toInr(subtotalUSD);
   const shippingINR = toInr(shippingUSD);
   const taxINR = toInr(taxUSD);
-  const discountINR = toInr(discountUSD);
-  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR - discountINR);
+  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR);
+  const savingsINR = shippingUSD === 0 ? toInr(9.99) : 0;
+  const itemsCount = useMemo(() => detailed.reduce((s, i) => s + i.qty, 0), [detailed]);
 
-  async function applyPromo() {
-    const code = promoInput.trim().toUpperCase();
-    if (!code) return;
-    setPromoBusy(true);
-    setPromoError(null);
-    const { data, error } = await supabase
-      .from("promo_codes")
-      .select("code,kind,value,min_subtotal,max_uses,uses")
-      .ilike("code", code)
-      .maybeSingle();
-    setPromoBusy(false);
-    if (error || !data) { setPromoError("Invalid or expired code"); return; }
-    if (Number(data.min_subtotal) > subtotalUSD) {
-      setPromoError(`Requires subtotal of at least $${Number(data.min_subtotal).toFixed(2)}`); return;
-    }
-    if (data.max_uses != null && data.uses >= data.max_uses) {
-      setPromoError("This code has reached its usage limit"); return;
-    }
-    setPromo({ code: data.code, kind: data.kind as "percent" | "fixed", value: Number(data.value) });
-  }
+  const eta = formatEta(3, 5);
+  const reserveMin = String(Math.floor(reserveLeft / 60)).padStart(2, "0");
+  const reserveSec = String(reserveLeft % 60).padStart(2, "0");
 
   async function payWithRazorpay() {
     if (!user || !selectedAddress) {
@@ -134,7 +143,7 @@ function CheckoutPage() {
         data: {
           items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
           addressId: selectedAddress.id,
-          promoCode: promo?.code ?? null,
+          promoCode: null,
         },
       });
 
@@ -145,7 +154,6 @@ function CheckoutPage() {
       } catch {
         /* saving methods is optional — continue checkout regardless */
       }
-
 
       const rzp = openRazorpay({
         key: created.keyId,
@@ -163,7 +171,6 @@ function CheckoutPage() {
         notes: { order_id: created.orderId },
         theme: { color: "#ff7a1a", backdrop_color: "#0a0a0f" },
         method: { emi: false, paylater: false },
-
         modal: {
           ondismiss: () => {
             setStage("failed");
@@ -187,7 +194,6 @@ function CheckoutPage() {
             clear();
             if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
             syncMethods().catch(() => {});
-
           } catch (e: any) {
             setStage("failed");
             setError(e?.message ?? "We couldn't verify your payment. If charged, it will auto-resolve.");
@@ -235,8 +241,8 @@ function CheckoutPage() {
           subtotal: subtotalINR,
           shipping: shippingINR,
           tax: taxINR,
-          discount: discountINR,
-          promo_code: promo?.code ?? null,
+          discount: 0,
+          promo_code: null,
           total: totalINR,
           contact_email: user.email,
           shipping_address: shippingSnapshot,
@@ -275,49 +281,82 @@ function CheckoutPage() {
     else payWithRazorpay();
   };
 
+  const busy = stage === "processing" || stage === "verifying";
+  const ctaLabel = stage === "processing"
+    ? "Opening payment…"
+    : stage === "verifying"
+      ? "Verifying…"
+      : payMethod === "cod"
+        ? "Place order"
+        : `Pay ${inrFmt(totalINR)}`;
+
   if (loading || !user) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
 
   /* ---------- terminal states ---------- */
   if (stage === "success") {
-    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} method={payMethod} nav={nav} />;
+    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} method={payMethod} eta={eta} nav={nav} />;
   }
 
   return (
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-16">
       <Atmosphere />
 
-      <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Secure Checkout</p>
-      <h1 className="text-fluid-2xl font-display font-semibold mb-5 sm:mb-6">Almost yours</h1>
+      <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2.5">Secure Checkout</p>
+      <h1 className="text-fluid-2xl font-display font-semibold mb-4 sm:mb-6 tracking-tight">Almost yours</h1>
 
       {!isIndia ? (
         <InternationalSoon />
       ) : (
         <>
-          <div className="mb-8 sm:mb-10 inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-3 sm:px-4 py-1.5 max-w-full">
-            <Lock className="size-3 text-emerald-400 shrink-0" />
-            <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 truncate">256-bit secured · Razorpay · INR</p>
+          <div className="mb-6 sm:mb-9 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-3 py-1.5">
+              <Lock className="size-3 text-emerald-400 shrink-0" />
+              <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">256-bit secured · INR</p>
+            </div>
+            {selectedAddress && (
+              <div className="inline-flex items-center gap-2 glass border border-white/10 rounded-full px-3 py-1.5">
+                <MapPin className="size-3 text-accent shrink-0" />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Delivering to {selectedAddress.city}
+                </p>
+              </div>
+            )}
           </div>
 
-          <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-6 lg:gap-12">
             <div className="lg:col-span-2 space-y-5 sm:space-y-6">
+              {/* Reservation strip */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2.5 rounded-xl border border-accent/20 bg-accent/[0.06] px-4 py-2.5">
+                <Clock className="size-3.5 text-accent shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Items reserved for{" "}
+                  <span className="font-mono text-accent tabular-nums">{reserveMin}:{reserveSec}</span>
+                </p>
+              </motion.div>
+
               {/* Shipping address */}
-              <div className="glass border border-white/10 rounded-2xl p-5 sm:p-6">
+              <section className="glass border border-white/10 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm uppercase tracking-widest font-medium inline-flex items-center gap-2">
                     <MapPin className="size-4 text-accent" /> Shipping address
                   </h2>
-                  {!addingAddress && (
+                  {!addingAddress && !editingId && (
                     <button type="button" onClick={() => setAddingAddress(true)}
-                      className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
-                      <Plus className="size-3" /> New address
+                      className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5 transition-colors active:scale-95">
+                      <Plus className="size-3" /> New
                     </button>
                   )}
                 </div>
 
                 {addrLoading ? (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  <div className="space-y-3">
+                    <div className="h-24 rounded-2xl bg-white/[0.03] animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-white/[0.03] animate-pulse" />
+                  </div>
                 ) : addingAddress || addresses.length === 0 ? (
                   <AddressForm
                     onSubmit={async (input) => {
@@ -328,74 +367,165 @@ function CheckoutPage() {
                     onCancel={addresses.length > 0 ? () => setAddingAddress(false) : undefined}
                     submitLabel="Save & use this address"
                   />
+                ) : editingId ? (
+                  <AddressForm
+                    initial={addresses.find((a) => a.id === editingId)}
+                    onSubmit={async (input) => {
+                      await updateAddress(editingId, input);
+                      setEditingId(null);
+                    }}
+                    onCancel={() => setEditingId(null)}
+                    submitLabel="Save changes"
+                  />
                 ) : (
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {addresses.map((a) => (
-                      <label key={a.id}
-                        className={`cursor-pointer border rounded-2xl p-4 transition-colors ${selectedAddressId === a.id ? "border-accent bg-accent/5" : "border-white/10 hover:border-accent/40"}`}>
-                        <input type="radio" name="address" value={a.id} checked={selectedAddressId === a.id}
-                          onChange={() => setSelectedAddressId(a.id)} className="sr-only" />
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-1">
-                          {a.label || "Address"}{a.is_default_shipping && " · Default"}
-                        </p>
-                        <p className="text-sm font-medium">{a.full_name}</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                          {a.line1}{a.line2 ? `, ${a.line2}` : ""}<br />
-                          {a.city}{a.state ? `, ${a.state}` : ""} {a.postal}<br />
-                          {a.country}
-                        </p>
-                      </label>
-                    ))}
+                    {addresses.map((a) => {
+                      const meta = ADDRESS_META[a.address_type] ?? ADDRESS_META.other;
+                      const Icon = meta.icon;
+                      const active = selectedAddressId === a.id;
+                      return (
+                        <motion.button
+                          key={a.id} type="button" onClick={() => setSelectedAddressId(a.id)}
+                          whileTap={{ scale: 0.98 }}
+                          className={`relative text-left border rounded-2xl p-4 transition-all duration-300 ${active ? "border-accent bg-accent/[0.07] shadow-[0_0_0_1px_var(--color-accent),0_12px_30px_-12px_color-mix(in_oklab,var(--color-accent)_45%,transparent)]" : "border-white/10 hover:border-accent/40"}`}>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`size-6 grid place-items-center rounded-lg ${active ? "bg-accent/15 text-accent" : "bg-white/[0.04] text-muted-foreground"}`}>
+                              <Icon className="size-3.5" />
+                            </span>
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-accent">{a.nickname || meta.label}</span>
+                            {a.is_default_shipping && (
+                              <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-400 inline-flex items-center gap-1">
+                                <Star className="size-2.5 fill-current" /> Default
+                              </span>
+                            )}
+                            <AnimatePresence>
+                              {active && (
+                                <motion.span
+                                  initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
+                                  className="ml-auto text-accent">
+                                  <CheckCircle2 className="size-4" />
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                          <p className="text-sm font-medium">{a.full_name}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                            {a.line1}{a.line2 ? `, ${a.line2}` : ""}<br />
+                            {a.city}{a.state ? `, ${a.state}` : ""} {a.postal}
+                          </p>
+                          <div className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] text-emerald-400">
+                            <PackageCheck className="size-3" /> Delivers {eta}
+                          </div>
+                          <div className="mt-3 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+                            <span onClick={(e) => { e.stopPropagation(); setEditingId(a.id); }}
+                              className="inline-flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
+                              <Pencil className="size-2.5" /> Edit
+                            </span>
+                            {!a.is_default_shipping && (
+                              <span onClick={(e) => { e.stopPropagation(); setDefaultShipping(a.id).catch(() => {}); }}
+                                className="inline-flex items-center gap-1 hover:text-emerald-400 transition-colors cursor-pointer">
+                                <Star className="size-2.5" /> Default
+                              </span>
+                            )}
+                            {addresses.length > 1 && (
+                              <span onClick={(e) => { e.stopPropagation(); removeAddress(a.id).catch(() => {}); }}
+                                className="inline-flex items-center gap-1 hover:text-destructive transition-colors cursor-pointer ml-auto">
+                                <Trash2 className="size-2.5" /> Delete
+                              </span>
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 )}
-              </div>
+              </section>
 
               {/* Payment method */}
-              <div className="glass border border-white/10 rounded-2xl p-5 sm:p-6">
+              <section className="glass border border-white/10 rounded-2xl p-5 sm:p-6">
                 <h2 className="text-sm uppercase tracking-widest font-medium mb-4 inline-flex items-center gap-2">
                   <CreditCard className="size-4 text-accent" /> Payment method
                 </h2>
 
-                <button type="button" onClick={() => setPayMethod("razorpay")}
-                  className={`w-full text-left border rounded-2xl p-4 transition-colors ${payMethod === "razorpay" ? "border-accent bg-accent/5" : "border-white/10 hover:border-accent/40"}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`size-2 rounded-full ${payMethod === "razorpay" ? "bg-accent" : "bg-muted-foreground/40"}`} />
-                    <span className="text-sm font-medium">Pay online (Razorpay)</span>
-                    <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-emerald-400">Recommended</span>
+                <motion.button type="button" onClick={() => setPayMethod("razorpay")} whileTap={{ scale: 0.99 }}
+                  className={`w-full text-left border rounded-2xl p-4 transition-all duration-300 ${payMethod === "razorpay" ? "border-accent bg-accent/[0.07] shadow-[0_0_0_1px_var(--color-accent),0_14px_34px_-14px_color-mix(in_oklab,var(--color-accent)_50%,transparent)]" : "border-white/10 hover:border-accent/40"}`}>
+                  <div className="flex items-center gap-2.5">
+                    <span className={`size-4 grid place-items-center rounded-full border ${payMethod === "razorpay" ? "border-accent" : "border-muted-foreground/40"}`}>
+                      <AnimatePresence>
+                        {payMethod === "razorpay" && (
+                          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="size-2 rounded-full bg-accent" />
+                        )}
+                      </AnimatePresence>
+                    </span>
+                    <span className="text-sm font-medium">Pay online</span>
+                    <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-emerald-400 inline-flex items-center gap-1">
+                      <BadgeCheck className="size-3" /> Recommended
+                    </span>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <UpiPill name="GPay" colors={["#1a73e8", "#ea4335", "#fbbc04", "#34a853"]} />
+                    <UpiPill name="PhonePe" colors={["#5f259f", "#5f259f"]} />
+                    <UpiPill name="Paytm" colors={["#00baf2", "#002970"]} />
                     <Tag icon={<Smartphone className="size-3" />} label="UPI" />
                     <Tag icon={<CreditCard className="size-3" />} label="Cards" />
                     <Tag icon={<Landmark className="size-3" />} label="Net Banking" />
                     <Tag icon={<Wallet className="size-3" />} label="Wallets" />
                   </div>
-                </button>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <ShieldCheck className="size-3 text-emerald-400" /> End-to-end encrypted · Powered by Razorpay
+                  </div>
+                </motion.button>
 
-                <div className={`mt-3 w-full text-left border rounded-2xl p-4 transition-colors ${!settings.cod_enabled ? "opacity-50" : payMethod === "cod" ? "border-accent bg-accent/5" : "border-white/10"}`}>
+                <div className={`mt-3 w-full text-left border rounded-2xl p-4 transition-all duration-300 ${!settings.cod_enabled ? "opacity-50" : payMethod === "cod" ? "border-accent bg-accent/[0.07]" : "border-white/10"}`}>
                   <button type="button" disabled={!settings.cod_enabled} onClick={() => setPayMethod("cod")}
                     className="w-full text-left disabled:cursor-not-allowed">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`size-4 grid place-items-center rounded-full border ${payMethod === "cod" ? "border-accent" : "border-muted-foreground/40"}`}>
+                        {payMethod === "cod" && <span className="size-2 rounded-full bg-accent" />}
+                      </span>
                       <Truck className="size-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Cash on Delivery</span>
                       <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                        {settings.cod_enabled ? "Available" : "Currently unavailable"}
+                        {settings.cod_enabled ? "Available" : "Unavailable"}
                       </span>
                     </div>
                   </button>
                 </div>
-              </div>
 
-              {error && stage === "review" && <p className="text-xs text-destructive">{error}</p>}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1"><ShieldHalf className="size-3 text-emerald-400" /> PCI-DSS</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1 opacity-50"><CreditCard className="size-3" /> EMI off</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1 opacity-50"><Clock className="size-3" /> Pay Later off</span>
+                </div>
+              </section>
+
+              {/* Trust & security */}
+              <section className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <TrustCard icon={<ShieldHalf className="size-4" />} title="PCI-DSS" sub="Compliant" />
+                <TrustCard icon={<Lock className="size-4" />} title="Encrypted" sub="256-bit SSL" />
+                <TrustCard icon={<BadgeCheck className="size-4" />} title="Razorpay" sub="Verified" />
+                <TrustCard icon={<RotateCcw className="size-4" />} title="Easy returns" sub="7-day window" />
+                <TrustCard icon={<Headphones className="size-4" />} title="Fast support" sub="24/7 help" />
+                <TrustCard icon={<PackageCheck className="size-4" />} title="Tracked" sub="Real-time" />
+              </section>
+
+              {error && stage === "review" && (
+                <p className="text-xs text-destructive flex items-center gap-1.5"><XCircle className="size-3.5" />{error}</p>
+              )}
             </div>
 
             {/* Summary */}
             <aside>
               <div className="glass border border-white/10 rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24">
-                <h2 className="text-lg font-medium mb-6">Summary</h2>
-                <ul className="space-y-3 mb-5 max-h-64 overflow-y-auto">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-lg font-medium">Summary</h2>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{itemsCount} item{itemsCount !== 1 ? "s" : ""}</span>
+                </div>
+
+                <ul className="space-y-3 mb-5 max-h-56 overflow-y-auto pr-1">
                   {detailed.map((i) => (
                     <li key={i.slug} className="flex items-center gap-3 text-sm">
-                      <img src={i.product.image} alt="" className="size-12 rounded-lg object-cover bg-black/30" />
+                      <img src={i.product.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover bg-black/30 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="truncate">{i.product.name}</p>
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
@@ -404,44 +534,66 @@ function CheckoutPage() {
                     </li>
                   ))}
                 </ul>
-                <div className="border-t border-white/10 pt-4 mb-4">
-                  {promo ? (
-                    <div className="flex items-center justify-between gap-2 bg-background/40 border border-white/10 rounded-full px-4 py-2">
-                      <div className="text-xs">
-                        <span className="font-mono uppercase tracking-widest text-accent">{promo.code}</span>
-                        <span className="text-muted-foreground ml-2">−{promo.kind === "percent" ? `${promo.value}%` : inrFmt(toInr(promo.value))}</span>
-                      </div>
-                      <button type="button" onClick={() => { setPromo(null); setPromoInput(""); }} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground">Remove</button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code"
-                        className="flex-1 bg-background/40 border border-white/10 rounded-full px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent uppercase tracking-widest font-mono" />
-                      <button type="button" onClick={applyPromo} disabled={promoBusy || !promoInput.trim()}
-                        className="px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border border-white/10 hover:bg-white/5 disabled:opacity-50 inline-flex items-center gap-1.5">
-                        {promoBusy && <Loader2 className="size-3 animate-spin" />}Apply
-                      </button>
-                    </div>
-                  )}
-                  {promoError && <p className="text-[11px] text-destructive mt-2">{promoError}</p>}
-                </div>
-                <dl className="space-y-2 text-sm border-t border-white/10 pt-4">
+
+                {savingsINR > 0 && (
+                  <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
+                    <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><Sparkles className="size-3.5" /> You saved</span>
+                    <span className="font-mono text-sm text-emerald-400">{inrFmt(savingsINR)}</span>
+                  </div>
+                )}
+
+                <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">
                   <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{inrFmt(subtotalINR)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? "Free" : inrFmt(shippingINR)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="font-mono">{inrFmt(taxINR)}</dd></div>
-                  {discountINR > 0 && <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="font-mono text-accent">−{inrFmt(discountINR)}</dd></div>}
-                  <div className="border-t border-white/10 pt-2 flex justify-between text-base"><dt className="font-medium">Total</dt><dd className="font-mono text-accent">{inrFmt(totalINR)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : inrFmt(shippingINR)}</dd></div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">(8% GST est.)</span></dt>
+                    <dd className="font-mono">{inrFmt(taxINR)}</dd>
+                  </div>
+                  <div className="border-t border-white/10 pt-3 flex justify-between items-end">
+                    <dt className="font-medium text-base">Total</dt>
+                    <dd className="text-right">
+                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{inrFmt(totalINR)}</span>
+                      <span className="block text-[10px] text-muted-foreground mt-1">Incl. all taxes</span>
+                    </dd>
+                  </div>
                 </dl>
-                <button disabled={!selectedAddress || stage === "processing" || stage === "verifying"}
-                  className="w-full mt-6 bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 inline-flex items-center justify-center gap-2">
-                  {(stage === "processing" || stage === "verifying") && <Loader2 className="size-3 animate-spin" />}
-                  {stage === "processing" ? "Opening payment…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order (COD)" : `Pay ${inrFmt(totalINR)}`}
+
+                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <PackageCheck className="size-3.5 text-accent" /> Estimated delivery {eta}
+                </div>
+
+                {/* Desktop CTA */}
+                <button disabled={!selectedAddress || busy}
+                  className="hidden lg:inline-flex w-full mt-5 group relative overflow-hidden bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 items-center justify-center gap-2">
+                  {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
+                  <span>{ctaLabel}</span>
+                  {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />}
                 </button>
-                <p className="text-[10px] text-muted-foreground text-center mt-3 font-mono uppercase tracking-widest inline-flex items-center justify-center gap-1.5 w-full">
-                  <ShieldCheck className="size-3" /> Encrypted · PCI-DSS compliant
+
+                <p className="hidden lg:flex text-[10px] text-muted-foreground text-center mt-3 font-mono uppercase tracking-widest items-center justify-center gap-1.5 w-full">
+                  <ShieldCheck className="size-3" /> Encrypted · PCI-DSS · 7-day returns
                 </p>
               </div>
             </aside>
+
+            {/* Mobile sticky CTA */}
+            <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 pointer-events-none">
+              <div className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
+                style={{ background: "color-mix(in oklab, var(--color-background) 78%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="pl-1.5 min-w-0">
+                    <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
+                    <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{inrFmt(totalINR)}</p>
+                  </div>
+                  <button disabled={!selectedAddress || busy}
+                    className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
+                    {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
+                    <span>{stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
+                    {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
           </form>
         </>
       )}
@@ -491,9 +643,35 @@ function CheckoutPage() {
 
 function Tag({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
+    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-muted-foreground">
       {icon}{label}
     </span>
+  );
+}
+
+function UpiPill({ name, colors }: { name: string; colors: string[] }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[10px] font-medium">
+      <span className="flex -space-x-0.5">
+        {colors.map((c, i) => (
+          <span key={i} className="size-1.5 rounded-full ring-1 ring-background" style={{ background: c }} />
+        ))}
+      </span>
+      {name}
+    </span>
+  );
+}
+
+function TrustCard({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
+  return (
+    <motion.div whileHover={{ y: -2 }}
+      className="glass border border-white/10 rounded-xl p-3 flex items-center gap-2.5">
+      <span className="size-8 grid place-items-center rounded-lg bg-accent/10 text-accent shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-xs font-medium leading-tight truncate">{title}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
+      </div>
+    </motion.div>
   );
 }
 
@@ -524,11 +702,10 @@ function InternationalSoon() {
   );
 }
 
-function SuccessScreen({ orderId, totalINR, method, nav }: {
-  orderId: string | null; totalINR: number; method: "razorpay" | "cod";
+function SuccessScreen({ orderId, totalINR, method, eta, nav }: {
+  orderId: string | null; totalINR: number; method: "razorpay" | "cod"; eta: string;
   nav: ReturnType<typeof useNavigate>;
 }) {
-  const eta = new Date(Date.now() + 5 * 86400000).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   return (
     <div className="relative min-h-[70vh] grid place-items-center px-6">
       <Atmosphere />
