@@ -296,3 +296,110 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     return { ok: true, orderId: order.id, alreadyPaid: false };
   });
+
+const refundSchema = z.object({
+  paymentId: z.string().uuid(),
+  amount: z.number().positive().max(100_000_000).optional(),
+  reason: z.string().trim().max(280).optional().nullable(),
+});
+
+/** Helper: ensure the caller is staff allowed to manage refunds. */
+async function assertRefundStaff(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (error) throw new Error("Could not verify permissions.");
+  const roles = (data ?? []).map((r) => r.role);
+  const allowed = ["admin", "super_admin", "manager"];
+  if (!roles.some((r) => allowed.includes(r))) {
+    throw new Error("You are not authorised to issue refunds.");
+  }
+}
+
+/**
+ * Admin — issue a real Razorpay refund against a captured payment.
+ * Records a pending refund row; the refund.processed webhook finalises it.
+ */
+export const createRazorpayRefund = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => refundSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    await assertRefundStaff(userId);
+
+    const { data: pay, error: pErr } = await supabaseAdmin
+      .from("payments")
+      .select("id,order_id,amount,currency,status,razorpay_payment_id")
+      .eq("id", data.paymentId)
+      .maybeSingle();
+    if (pErr || !pay) throw new Error("Payment not found.");
+    if (pay.status !== "succeeded") throw new Error("Only successful payments can be refunded.");
+    if (!pay.razorpay_payment_id) throw new Error("This payment has no Razorpay reference.");
+
+    // Guard against duplicate full refunds
+    const { data: priorRefunds } = await supabaseAdmin
+      .from("refunds")
+      .select("amount,status")
+      .eq("payment_id", pay.id);
+    const refundedSoFar = (priorRefunds ?? [])
+      .filter((r) => r.status !== "failed")
+      .reduce((s, r) => s + Number(r.amount), 0);
+    const maxRefundable = Number(pay.amount) - refundedSoFar;
+    if (maxRefundable <= 0) throw new Error("This payment is already fully refunded.");
+
+    const refundAmount = data.amount ? Math.min(data.amount, maxRefundable) : maxRefundable;
+
+    let rzpRefund;
+    try {
+      rzpRefund = await rzpFetch<{ id: string; amount: number; currency: string; status: string }>(
+        `/payments/${pay.razorpay_payment_id}/refund`,
+        {
+          method: "POST",
+          body: {
+            amount: Math.round(refundAmount * 100),
+            notes: { reason: data.reason ?? "admin_initiated", order_id: pay.order_id },
+          },
+        },
+      );
+    } catch (e: any) {
+      await supabaseAdmin.from("refunds").insert({
+        order_id: pay.order_id,
+        payment_id: pay.id,
+        razorpay_payment_id: pay.razorpay_payment_id,
+        amount: refundAmount,
+        currency: pay.currency,
+        reason: data.reason ?? null,
+        status: "failed",
+        notes: { error: String(e?.message ?? e) },
+      });
+      throw new Error(e?.message ?? "Refund request failed at the gateway.");
+    }
+
+    const { data: refundRow } = await supabaseAdmin
+      .from("refunds")
+      .insert({
+        order_id: pay.order_id,
+        payment_id: pay.id,
+        razorpay_refund_id: rzpRefund.id,
+        razorpay_payment_id: pay.razorpay_payment_id,
+        amount: (rzpRefund.amount ?? Math.round(refundAmount * 100)) / 100,
+        currency: rzpRefund.currency ?? pay.currency,
+        reason: data.reason ?? null,
+        status: rzpRefund.status === "processed" ? "processed" : "pending",
+        notes: { source: "admin_initiated" },
+      })
+      .select("id,status,amount")
+      .single();
+
+    // Mark order refunded when fully refunded
+    if (refundAmount >= maxRefundable) {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "refunded", payment_status: "refunded" })
+        .eq("id", pay.order_id);
+    }
+
+    return { ok: true, refund: refundRow };
+  });
+
