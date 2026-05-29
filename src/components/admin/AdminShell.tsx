@@ -163,16 +163,73 @@ export function AdminShell({
   const q = query.trim().toLowerCase();
 
   return (
-    <div className="relative min-h-screen flex w-full bg-background">
+    <div className="relative min-h-screen flex flex-col w-full bg-background">
       {/* Background atmosphere — ambient cinematic depth */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="orb animate-orb -top-32 left-1/4 size-[28rem] opacity-30" style={{ background: "var(--gradient-ember-soft)" }} />
         <div className="orb animate-float-soft bottom-0 right-0 size-[24rem] opacity-20" style={{ background: "var(--gradient-ember-soft)" }} />
         <div className="absolute inset-0" style={{ background: "radial-gradient(140% 100% at 50% -10%, oklch(1 0 0 / 0.015), transparent 50%), radial-gradient(120% 120% at 50% 120%, oklch(0 0 0 / 0.5), transparent 60%)" }} />
       </div>
+
+      {/* Top header — full width, above sidebar */}
+      <header className="relative z-30 sticky top-0 overflow-hidden bg-background/60 backdrop-blur-2xl border-b border-white/[0.05]">
+        {/* Ambient header lighting */}
+        <div className="pointer-events-none absolute -top-16 right-1/4 size-48 rounded-full opacity-25 animate-orb" style={{ background: "var(--gradient-ember-soft)", filter: "blur(44px)" }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+
+        {/* Top OS nav bar: left / center / right */}
+        <div className="relative px-3 lg:px-10 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          {/* LEFT — hamburger */}
+          <div className="flex items-center justify-start">
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="lg:hidden size-8 grid place-items-center rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-accent/25 transition-all duration-300 shadow-[0_4px_16px_-10px_oklch(0_0_0_/_0.6)] active:scale-95"
+              aria-label="Toggle menu"
+            >
+              <Menu className="size-[17px]" />
+            </button>
+          </div>
+
+          {/* CENTER — brand */}
+          <Link to="/" className="lg:hidden group inline-flex items-center gap-2 min-w-0">
+            <span className="relative size-6 shrink-0 rounded-lg bg-gradient-to-br from-accent to-primary grid place-items-center shadow-[0_5px_16px_-9px_oklch(0.74_0.19_49_/_0.6)]">
+              <Sparkles className="size-3 text-accent-foreground" />
+              <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/15" />
+            </span>
+            <span className="font-display text-[13px] tracking-tight truncate max-w-[9.5rem]">FoundOurMarket™</span>
+          </Link>
+          {/* Desktop breadcrumb/title sits in the center slot */}
+          <div className="hidden lg:block min-w-0">
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.32em] text-muted-foreground/80">
+              <span className="text-accent">Operator</span>
+              <span className="text-muted-foreground/40">/</span>
+              <span>{groupTitle}</span>
+            </div>
+            <h1 className="text-base md:text-lg font-display font-semibold truncate">{title}</h1>
+          </div>
+
+          {/* RIGHT — actions */}
+          <div className="flex items-center justify-end gap-2">{actions}</div>
+        </div>
+
+        {/* Mobile contextual title row */}
+        <div className="lg:hidden relative px-4 pb-2.5 -mt-0.5">
+          <div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
+            <span className="text-accent">Operator</span>
+            <span>/</span>
+            <span>{groupTitle}</span>
+          </div>
+          <h1 className="text-[15px] font-display font-semibold truncate">{title}</h1>
+        </div>
+        {subtitle && <p className="px-4 lg:px-10 pb-2.5 text-xs text-muted-foreground">{subtitle}</p>}
+      </header>
+
+      {/* Body row: sidebar under header + main */}
+      <div className="relative z-10 flex flex-1 min-h-0 w-full">
       {/* Sidebar — floating operator console */}
-      <aside className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40 w-[17.5rem] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none ${open ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"} h-screen p-3`}>
+      <aside className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-14 left-0 z-40 w-[17.5rem] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none ${open ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"} h-screen lg:h-[calc(100vh-3.5rem)] p-3`}>
         <div className="relative h-full flex flex-col rounded-[1.75rem] overflow-hidden glass-strong glass-reflect" style={{ boxShadow: "var(--shadow-float), 0 0 50px -22px oklch(0.74 0.19 49 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.06)" }}>
+
           {/* Ambient lighting */}
           <div className="orb animate-orb -top-16 -left-10 size-44 opacity-40" style={{ background: "var(--gradient-ember)" }} />
           <div className="orb animate-float-soft -bottom-20 -right-12 size-48 opacity-30" style={{ background: "var(--gradient-ember-soft)" }} />
@@ -351,61 +408,6 @@ export function AdminShell({
       </AnimatePresence>
       {/* Main */}
       <div className="relative z-10 flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-20 overflow-hidden bg-background/60 backdrop-blur-2xl border-b border-white/[0.05]">
-          {/* Ambient header lighting */}
-          <div className="pointer-events-none absolute -top-16 right-1/4 size-48 rounded-full opacity-25 animate-orb" style={{ background: "var(--gradient-ember-soft)", filter: "blur(44px)" }} />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
-
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-
-          {/* Top OS nav bar: left / center / right */}
-          <div className="relative px-3 lg:px-10 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            {/* LEFT — hamburger */}
-            <div className="flex items-center justify-start">
-              <button
-                onClick={() => setOpen(true)}
-                className="lg:hidden size-8 grid place-items-center rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-accent/25 transition-all duration-300 shadow-[0_4px_16px_-10px_oklch(0_0_0_/_0.6)] active:scale-95"
-                aria-label="Open menu"
-              >
-                <Menu className="size-[17px]" />
-              </button>
-            </div>
-
-            {/* CENTER — brand */}
-            <Link to="/" className="lg:hidden group inline-flex items-center gap-2 min-w-0">
-              <span className="relative size-6 shrink-0 rounded-lg bg-gradient-to-br from-accent to-primary grid place-items-center shadow-[0_5px_16px_-9px_oklch(0.74_0.19_49_/_0.6)]">
-                <Sparkles className="size-3 text-accent-foreground" />
-                <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/15" />
-              </span>
-              <span className="font-display text-[13px] tracking-tight truncate max-w-[9.5rem]">FoundOurMarket™</span>
-            </Link>
-            {/* Desktop breadcrumb/title sits in the center slot */}
-            <div className="hidden lg:block min-w-0">
-              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.32em] text-muted-foreground/80">
-                <span className="text-accent">Operator</span>
-                <span className="text-muted-foreground/40">/</span>
-                <span>{groupTitle}</span>
-              </div>
-              <h1 className="text-base md:text-lg font-display font-semibold truncate">{title}</h1>
-            </div>
-
-            {/* RIGHT — actions */}
-            <div className="flex items-center justify-end gap-2">{actions}</div>
-          </div>
-
-
-          {/* Mobile contextual title row */}
-          <div className="lg:hidden relative px-4 pb-2.5 -mt-0.5">
-            <div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
-              <span className="text-accent">Operator</span>
-              <span>/</span>
-              <span>{groupTitle}</span>
-            </div>
-            <h1 className="text-[15px] font-display font-semibold truncate">{title}</h1>
-          </div>
-          {subtitle && <p className="px-4 lg:px-10 pb-2.5 text-xs text-muted-foreground">{subtitle}</p>}
-        </header>
-
         <main className="flex-1 px-5 lg:px-10 py-8">
           <motion.div
             key={path}
@@ -417,9 +419,11 @@ export function AdminShell({
           </motion.div>
         </main>
       </div>
+      </div>
     </div>
   );
 }
+
 
 export function logActivity(action: string, entity_type?: string, entity_id?: string, metadata?: Record<string, unknown>) {
   supabase.from("admin_activity_logs").insert({
