@@ -50,7 +50,7 @@ function CartPage() {
     [detailed],
   );
 
-  const discount = coupon?.discount ?? 0;
+  const discount = promo?.discount ?? 0;
   const shipping = ship ? ship.shippingUsd : subtotalUSD > FREE_SHIP_THRESHOLD ? 0 : 9.99;
   const tax = subtotalUSD * 0.08;
   const total = Math.max(0, subtotalUSD + shipping + tax - discount);
