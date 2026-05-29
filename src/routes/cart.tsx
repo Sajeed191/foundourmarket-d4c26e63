@@ -270,7 +270,9 @@ function CartPage() {
               <dl className="space-y-3 text-sm">
                 <Row label="Subtotal" value={format(subtotalUSD)} />
                 {savings > 0 && <Row label="Item savings" value={`−${format(savings)}`} accent />}
-                {discount > 0 && <Row label={`Coupon (${coupon?.code})`} value={`−${format(discount)}`} accent />}
+                {discount > 0 && (
+                  <Row label={promo?.label ?? "Discount applied"} value={`−${format(discount)}`} accent />
+                )}
                 <Row label="Shipping" value={shipping === 0 ? "Free" : format(shipping)} />
                 <Row label="Tax (est.)" value={format(tax)} />
                 {ship?.etaIso && (
