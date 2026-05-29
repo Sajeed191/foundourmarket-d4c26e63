@@ -34,7 +34,40 @@ export type Product = {
   indiaVisible: boolean;
   internationalVisible: boolean;
   warranty: string;
+  // Admin OS fields
+  status: ProductStatus;
+  costPriceInr: number | null;
+  costPriceUsd: number | null;
+  shippingFeeInr: number;
+  shippingFeeUsd: number;
+  razorpayEnabled: boolean;
+  stripeEnabled: boolean;
+  paypalEnabled: boolean;
+  codEnabled: boolean;
+  returnEligible: boolean;
+  replacementEligible: boolean;
+  returnWindowDays: number;
+  pickupSupported: boolean;
+  internationalShipping: boolean;
+  fragile: boolean;
+  customsInfo: string;
+  barcode: string;
+  warehouseLocation: string;
+  restockEta: string;
+  preorder: boolean;
+  reservedQuantity: number;
+  scheduledPublishAt: string | null;
+  scheduledExpiryAt: string | null;
 };
+
+export type ProductStatus =
+  | "draft"
+  | "published"
+  | "hidden"
+  | "archived"
+  | "scheduled"
+  | "preorder"
+  | "out_of_stock";
 
 
 export type ProductImage = { id: string; url: string; alt: string | null; sortOrder: number };
