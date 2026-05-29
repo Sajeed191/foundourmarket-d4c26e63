@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2, Scale,
-  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon,
+  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
