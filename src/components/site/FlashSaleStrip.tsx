@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
+import { AdminProductOverlay } from "@/components/admin/AdminProductOverlay";
 
 type FlashSale = {
   id: string;
