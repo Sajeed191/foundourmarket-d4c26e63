@@ -149,6 +149,7 @@ function CheckoutPage() {
         order_id: created.razorpayOrderId,
         name: "FoundOurMarket™",
         description: `Order ${created.orderId.slice(0, 8)}`,
+        ...(customerId ? { customer_id: customerId, save: 1 } : {}),
         prefill: {
           name: selectedAddress.full_name,
           email: user.email ?? undefined,
@@ -157,6 +158,7 @@ function CheckoutPage() {
         notes: { order_id: created.orderId },
         theme: { color: "#ff7a1a", backdrop_color: "#0a0a0f" },
         method: { emi: false, paylater: false },
+
         modal: {
           ondismiss: () => {
             setStage("failed");
