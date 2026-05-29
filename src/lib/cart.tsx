@@ -202,6 +202,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const remove = async (slug: string) => {
+    const existing = items.find((i) => i.slug === slug && !i.savedForLater);
+    if (existing) setLastRemoved({ slug, qty: existing.qty, at: Date.now() });
     setItems((p) => p.filter((i) => !(i.slug === slug && !i.savedForLater)));
     if (user && cartId) {
       await supabase
@@ -212,6 +214,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .eq("saved_for_later", false);
     }
   };
+
+  const undoRemove = async () => {
+    if (!lastRemoved) return;
+    const { slug, qty } = lastRemoved;
+    setLastRemoved(null);
+    await add(slug, qty);
+  };
+
+  const moveToWishlist = async (slug: string) => {
+    if (user) {
+      const { data: existing } = await supabase
+        .from("wishlist")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_slug", slug)
+        .maybeSingle();
+      if (!existing) {
+        await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
+      }
+    }
+    await remove(slug);
+  };
+
 
   const setQty = async (slug: string, qty: number) => {
     if (qty <= 0) return remove(slug);
