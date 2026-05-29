@@ -110,7 +110,7 @@ function rowToProduct(r: Row): Product {
   };
 }
 
-const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible";
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty";
 
 
 export async function fetchProducts(): Promise<Product[]> {
