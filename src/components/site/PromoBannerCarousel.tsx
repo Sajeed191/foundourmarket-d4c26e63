@@ -163,6 +163,7 @@ export function PromoBannerCarousel({
               {b.link && (
                 <motion.a
                   href={b.link}
+                  onClick={() => trackClick(b.id)}
                   initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35, duration: 0.6 }}
                   className="inline-flex items-center gap-2 self-start bg-accent text-accent-foreground px-5 py-2.5 rounded-full text-xs font-mono uppercase tracking-widest hover:gap-3 transition-all"
                 >
