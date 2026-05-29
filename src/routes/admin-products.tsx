@@ -706,6 +706,12 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
     in_stock: row?.in_stock ?? true, featured: row?.featured ?? false,
     sku: row?.sku ?? "", stock_quantity: row?.stock_quantity ?? 0,
     low_stock_threshold: row?.low_stock_threshold ?? 5, sort_order: row?.sort_order ?? nextSort,
+    price_inr: row?.price_inr != null ? String(row.price_inr) : "",
+    compare_price_inr: row?.compare_price_inr != null ? String(row.compare_price_inr) : "",
+    price_usd: row?.price_usd != null ? String(row.price_usd) : "",
+    compare_price_usd: row?.compare_price_usd != null ? String(row.compare_price_usd) : "",
+    india_visible: row?.india_visible ?? true,
+    international_visible: row?.international_visible ?? true,
   });
 
   function slugify(name: string) {
