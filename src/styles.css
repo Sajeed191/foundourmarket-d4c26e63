@@ -434,6 +434,16 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+.filter-select {
+  width: 100%;
+  background: oklch(1 0 0 / 0.03);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+}
+.filter-select:focus { outline: none; border-color: oklch(0.74 0.19 49 / 0.4); }
+
 /* Soft data pulse for live chart endpoint */
 @keyframes data-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
