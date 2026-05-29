@@ -283,6 +283,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
+    fireSupportEmail(ticketId, isStaff ? "staff_reply" : "customer_reply");
     setReply(""); setFiles([]);
   }
 
