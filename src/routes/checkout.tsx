@@ -20,6 +20,7 @@ import { AddressForm } from "@/components/site/AddressForm";
 import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder } from "@/lib/razorpay.functions";
 import { createRazorpayCustomer, syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
+import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
