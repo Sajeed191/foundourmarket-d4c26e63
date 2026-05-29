@@ -162,6 +162,15 @@ function ProductPage() {
                     <span className="bg-destructive/90 text-destructive-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest">Only {effectiveStock} left</span>
                   )}
                 </div>
+                {/* Floating stock pill — premium glass */}
+                {isOOS && (
+                  <div className="absolute top-4 right-16 z-10">
+                    <span className="relative flex items-center gap-1.5 backdrop-blur-xl bg-accent/15 border border-accent/30 text-accent text-[10px] font-semibold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest shadow-[0_8px_30px_-8px_oklch(0.74_0.19_49/0.6)]">
+                      <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+                      Sold out
+                    </span>
+                  </div>
+                )}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
                   <button
                     onClick={() => toggleWishlist(product.slug)}
@@ -204,10 +213,10 @@ function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">{product.tagline}</p>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-4 text-balance leading-[1.05]">{product.name}</h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{product.tagline}</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-2.5 text-balance leading-[1.05]">{product.name}</h1>
 
-            <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className={`size-3.5 ${i < Math.round(product.rating) ? "fill-accent text-accent" : "text-muted-foreground/40"}`} />
@@ -217,7 +226,10 @@ function ProductPage() {
               <a href="#reviews" className="text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">See reviews →</a>
             </div>
 
-            <div className="flex items-baseline gap-3 sm:gap-4 mb-4 flex-wrap">
+            {/* subtle gradient separator */}
+            <div aria-hidden className="h-px w-full mb-3 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
+
+            <div className="flex items-baseline gap-3 sm:gap-4 mb-3 flex-wrap">
               <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
               {originalPrice && (
                 <span className="text-sm font-mono text-muted-foreground line-through">{format(originalPrice)}</span>
@@ -227,8 +239,8 @@ function ProductPage() {
               )}
             </div>
 
+            <div className="flex flex-wrap items-center gap-2 mb-5 text-[10px] font-mono uppercase tracking-widest">
 
-            <div className="flex flex-wrap items-center gap-2 mb-6 text-[10px] font-mono uppercase tracking-widest">
               {isOOS ? (
                 <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground">Out of stock</span>
               ) : lowStock ? (

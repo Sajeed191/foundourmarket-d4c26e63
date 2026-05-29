@@ -11,15 +11,17 @@ import type { Product } from "@/lib/products";
 export function ProductRail({
   products,
   className = "",
+  compact = false,
 }: {
   products: Product[];
   className?: string;
+  compact?: boolean;
 }) {
   if (!products.length) return null;
   return (
     <div className={`sm:hidden -mx-4 ${className}`}>
       <div
-        className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pb-3 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex overflow-x-auto snap-x snap-mandatory px-4 pb-3 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${compact ? "gap-2.5" : "gap-3"}`}
         style={{
           scrollPaddingLeft: "1rem",
           scrollPaddingRight: "1rem",
@@ -30,9 +32,9 @@ export function ProductRail({
         {products.map((p) => (
           <div
             key={p.slug}
-            className="snap-start shrink-0 w-[68%] min-[420px]:w-[58%]"
+            className={`snap-start shrink-0 ${compact ? "w-[42%] min-[420px]:w-[36%]" : "w-[68%] min-[420px]:w-[58%]"}`}
           >
-            <ProductCard product={p} />
+            <ProductCard product={p} compact={compact} />
           </div>
         ))}
         {/* trailing spacer so last card can fully snap to start */}
@@ -41,3 +43,4 @@ export function ProductRail({
     </div>
   );
 }
+
