@@ -290,7 +290,7 @@ function CheckoutPage() {
         ? "Place order"
         : `Pay ${inrFmt(totalINR)}`;
 
-  if (loading || !user || (cartLoading && count === 0)) {
+  if (loading || !user || !cartHydrated) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
 
