@@ -191,51 +191,99 @@ function AdminPage() {
   const totalUnits = list.reduce((s, o) => s + o.order_items.reduce((a, i) => a + i.quantity, 0), 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-16">
-      <div className="relative overflow-hidden rounded-3xl glass-strong p-6 md:p-10 mb-10">
-        <div className="orb absolute -top-24 -left-24 size-72 opacity-60" style={{ background: "var(--gradient-ember-soft)" }} />
-        <div className="orb absolute -bottom-32 -right-20 size-80 opacity-40" style={{ background: "radial-gradient(circle, hsl(265 80% 60% / 0.5), transparent 70%)" }} />
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "42px 42px", maskImage: "radial-gradient(circle at 50% 30%, black, transparent 75%)" }} />
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      {/* Ambient background atmosphere */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="orb absolute -top-32 left-1/2 -translate-x-1/2 size-[40rem] opacity-40" style={{ background: "var(--gradient-ember)" }} />
+        <div className="orb absolute top-1/3 -right-40 size-[30rem] opacity-25" style={{ background: "radial-gradient(circle, oklch(0.55 0.18 280 / 0.5), transparent 70%)" }} />
+        <div className="orb absolute bottom-0 -left-40 size-[34rem] opacity-25" style={{ background: "var(--gradient-ember-soft)" }} />
+        <div className="absolute inset-0 opacity-[0.5]" style={{ background: "radial-gradient(ellipse at 50% 0%, transparent 40%, oklch(0.1 0.01 260 / 0.6) 100%)" }} />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative overflow-hidden rounded-[1.75rem] glass-strong glass-reflect noise-layer p-6 md:p-10 mb-8 shadow-[var(--shadow-float),0_40px_120px_-40px_oklch(0.74_0.19_49/0.25)]"
+      >
+        <div className="orb absolute -top-24 -left-24 size-72 opacity-60 animate-orb" style={{ background: "var(--gradient-ember-soft)" }} />
+        <div className="orb absolute -bottom-32 -right-20 size-80 opacity-40 animate-orb" style={{ background: "radial-gradient(circle, oklch(0.55 0.18 280 / 0.5), transparent 70%)" }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(oklch(1 0 0) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0) 1px, transparent 1px)", backgroundSize: "42px 42px", maskImage: "radial-gradient(circle at 50% 30%, black, transparent 75%)" }} />
 
         <div className="relative flex items-end justify-between flex-wrap gap-6">
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)] animate-pulse" />
-              Operator console
+              <span className="size-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)] animate-pulse" />
+              Operator Console
             </p>
-            <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight leading-[1.05]">
               Admin <span className="text-gradient-ember">Dashboard</span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-2 max-w-md">Real-time operations, catalog, and customer intelligence.</p>
+            <p className="text-sm text-muted-foreground mt-3 max-w-md">Real-time operations, catalog, and customer intelligence.</p>
           </div>
-          <div className="flex gap-2 flex-wrap max-w-2xl justify-end">
-            <button onClick={() => { setTab("products"); setEditing("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-full px-4 py-2 font-bold hover:brightness-110 shadow-[var(--shadow-ember)] transition-all"><Plus className="size-3.5" /> New Product</button>
-            <button onClick={() => { setTab("categories"); setEditingCat("new"); }} className="inline-flex items-center gap-2 text-xs uppercase tracking-widest border border-accent/40 text-accent rounded-full px-4 py-2 hover:bg-accent/10 transition-colors"><Plus className="size-3.5" /> New Category</button>
+          <div className="flex gap-2.5 flex-wrap max-w-2xl justify-end">
+            <motion.button
+              whileHover={{ y: -2, scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              onClick={() => { setTab("products"); setEditing("new"); }}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest bg-gradient-to-b from-accent to-[oklch(0.68_0.19_45)] text-accent-foreground rounded-full px-5 py-2.5 font-bold shadow-[var(--shadow-ember)] ring-1 ring-inset ring-white/20"
+            >
+              <Plus className="size-3.5" /> New Product
+            </motion.button>
+            <motion.button
+              whileHover={{ y: -2, scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              onClick={() => { setTab("categories"); setEditingCat("new"); }}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest glass rounded-full px-5 py-2.5 text-accent ring-1 ring-inset ring-accent/30 shadow-[0_8px_30px_-12px_oklch(0.74_0.19_49/0.5)]"
+            >
+              <Plus className="size-3.5" /> New Category
+            </motion.button>
           </div>
         </div>
 
-        <div className="relative flex gap-2 flex-wrap mt-6 pt-6 border-t border-border/40">
-          {[
-            { to: "/admin-live", icon: Activity, label: "Live" },
-            { to: "/admin-analytics", icon: BarChart3, label: "Analytics" },
-            { to: "/admin-financial", icon: Wallet, label: "Financial" },
-            { to: "/admin-traffic", icon: Globe, label: "Traffic" },
-            { to: "/admin-shipments", icon: Truck, label: "Shipments" },
-            { to: "/admin-returns", icon: RotateCcw, label: "Returns" },
-            { to: "/admin-inventory", icon: Boxes, label: "Inventory" },
-            { to: "/admin-customers", icon: Users, label: "Customers" },
-            { to: "/admin-marketing", icon: Megaphone, label: "Marketing" },
-            { to: "/admin-search", icon: Search, label: "Search" },
-            { to: "/admin-cms", icon: Pencil, label: "CMS" },
-            { to: "/admin-reports", icon: FileText, label: "Reports" },
-            { to: "/admin-activity", icon: Activity, label: "Activity" },
-          ].map(({ to, icon: Icon, label }) => (
-            <Link key={to} to={to} className="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest glass rounded-full px-3.5 py-2 hover:border-accent/40 hover:text-accent transition-all">
-              <Icon className="size-3.5" /> {label}
-            </Link>
-          ))}
+        <div className="relative mt-7 pt-6 border-t border-border/40">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-2.5">
+            {[
+              { to: "/admin-live", icon: Activity, label: "Live" },
+              { to: "/admin-analytics", icon: BarChart3, label: "Analytics" },
+              { to: "/admin-financial", icon: Wallet, label: "Financial" },
+              { to: "/admin-traffic", icon: Globe, label: "Traffic" },
+              { to: "/admin-shipments", icon: Truck, label: "Shipments" },
+              { to: "/admin-returns", icon: RotateCcw, label: "Returns" },
+              { to: "/admin-inventory", icon: Boxes, label: "Inventory" },
+              { to: "/admin-customers", icon: Users, label: "Customers" },
+              { to: "/admin-marketing", icon: Megaphone, label: "Marketing" },
+              { to: "/admin-search", icon: Search, label: "Search" },
+              { to: "/admin-cms", icon: Pencil, label: "CMS" },
+              { to: "/admin-reports", icon: FileText, label: "Reports" },
+              { to: "/admin-activity", icon: Activity, label: "Activity" },
+            ].map(({ to, icon: Icon, label }, i) => (
+              <motion.div
+                key={to}
+                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ delay: 0.15 + i * 0.03, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -4, scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to={to}
+                  className="group relative flex flex-col items-center justify-center gap-2 glass glass-reflect rounded-2xl aspect-square overflow-hidden text-muted-foreground hover:text-accent transition-colors"
+                >
+                  <span aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: "radial-gradient(circle at 50% 120%, oklch(0.74 0.19 49 / 0.25), transparent 70%)" }} />
+                  <span className="relative grid place-items-center size-9 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/10 group-hover:ring-accent/40 transition-all">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="relative text-[9px] sm:text-[10px] font-mono uppercase tracking-wider">{label}</span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
+      </motion.div>
+
 
       <div className="sticky top-2 z-30 mb-8">
         <SegmentedTabs
