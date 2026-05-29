@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "./auth";
+import { useIsAdmin } from "./use-admin";
 import { detectRegion, getMyRegion, lockMarketRegion } from "./region.functions";
 import type { MarketRegion } from "./region.functions";
 import type { Product } from "./products";
@@ -26,6 +27,10 @@ type Ctx = {
   needsSelection: boolean;
   loading: boolean;
   countryCode: string | null;
+  /** Staff accounts bypass the region lock and can view both markets. */
+  isAdmin: boolean;
+  /** Admin-only: temporarily preview a market without locking. */
+  setPreviewMarket: (region: MarketRegion) => void;
   /** Write-once region lock for the signed-in user. */
   lockMarket: (region: MarketRegion) => Promise<void>;
   /** Region price for a product (no currency conversion — admin-defined). */
@@ -48,6 +53,7 @@ function formatMoney(amount: number, currency: Currency): string {
 
 export function RegionProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const detect = useServerFn(detectRegion);
   const fetchMine = useServerFn(getMyRegion);
   const lockFn = useServerFn(lockMarketRegion);
@@ -75,6 +81,18 @@ export function RegionProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       try {
         if (user) {
+          // Staff/admin accounts are exempt from the region lock entirely.
+          if (isAdmin) {
+            setLocked(false);
+            setNeedsSelection(false);
+            try {
+              const d = await detect();
+              if (!cancelled) setCountryCode(d.countryCode);
+            } catch {
+              /* ignore */
+            }
+            return;
+          }
           const mine = await fetchMine();
           if (cancelled) return;
           if (mine.region) {
@@ -123,7 +141,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, fetchMine, detect]);
+  }, [user, authLoading, isAdmin, fetchMine, detect]);
 
   const lockMarket = useCallback(
     async (region: MarketRegion) => {
@@ -135,6 +153,11 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     },
     [lockFn, countryCode],
   );
+
+  // Admin-only market preview (no lock, no persistence).
+  const setPreviewMarket = useCallback((region: MarketRegion) => {
+    setMarket(region);
+  }, []);
 
   const currency: Currency = market === "india" ? "INR" : "USD";
   const symbol = currency === "INR" ? "₹" : "$";
@@ -174,6 +197,8 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         needsSelection,
         loading,
         countryCode,
+        isAdmin,
+        setPreviewMarket,
         lockMarket,
         priceOf,
         compareOf,

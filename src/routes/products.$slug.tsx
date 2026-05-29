@@ -18,6 +18,8 @@ import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, type ProductImage, type ProductVariant } from "@/lib/products";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
+import { useIsAdmin } from "@/lib/use-admin";
+import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
@@ -90,6 +92,7 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
   const { format, priceOf, compareOf } = useRegion();
+  const { isAdmin } = useIsAdmin();
   const { add } = useCart();
   const { record } = useRecentlyViewed();
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
@@ -308,6 +311,8 @@ function ProductPage() {
                 <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent/15 text-accent px-2.5 py-1 rounded-full border border-accent/30">Save {product.discount}%</span>
               )}
             </div>
+
+            {isAdmin && <AdminProductPanel product={product} />}
 
             {/* Trust indicators */}
             <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">
