@@ -34,6 +34,7 @@ import { Route as AdminMarketingRouteImport } from './routes/admin-marketing'
 import { Route as AdminLiveRouteImport } from './routes/admin-live'
 import { Route as AdminInventoryRouteImport } from './routes/admin-inventory'
 import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
+import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
@@ -187,6 +188,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
 const AdminFinancialRoute = AdminFinancialRouteImport.update({
   id: '/admin-financial',
   path: '/admin-financial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEmailsRoute = AdminEmailsRouteImport.update({
+  id: '/admin-emails',
+  path: '/admin-emails',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
@@ -346,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
+  '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-live': typeof AdminLiveRoute
@@ -402,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
+  '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-live': typeof AdminLiveRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
+  '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-live': typeof AdminLiveRoute
@@ -517,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customers'
+    | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
     | '/admin-live'
@@ -573,6 +583,7 @@ export interface FileRouteTypes {
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customers'
+    | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
     | '/admin-live'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customers'
+    | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
     | '/admin-live'
@@ -686,6 +698,7 @@ export interface RootRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminEmailsRoute: typeof AdminEmailsRoute
   AdminFinancialRoute: typeof AdminFinancialRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLiveRoute: typeof AdminLiveRoute
@@ -907,6 +920,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-financial'
       fullPath: '/admin-financial'
       preLoaderRoute: typeof AdminFinancialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-emails': {
+      id: '/admin-emails'
+      path: '/admin-emails'
+      fullPath: '/admin-emails'
+      preLoaderRoute: typeof AdminEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-customers': {
@@ -1153,6 +1173,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminEmailsRoute: AdminEmailsRoute,
   AdminFinancialRoute: AdminFinancialRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLiveRoute: AdminLiveRoute,
