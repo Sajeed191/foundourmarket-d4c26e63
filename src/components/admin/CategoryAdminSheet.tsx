@@ -297,7 +297,7 @@ export function CategoryAdminSheet({
       return;
     }
     toast.success("Duplicated as draft");
-    logActivity("category_create", "category", null, { slug: copy.slug, duplicated: true });
+    logActivity("category_create", "category", undefined, { slug: copy.slug, duplicated: true });
     await load();
     invalidateCategories();
     onChanged();
