@@ -443,7 +443,7 @@ function ProductPage() {
                 <SpecRow k="Rating" v={`${product.rating} / 5`} />
                 <SpecRow k="Reviews" v={String(product.reviews)} />
                 <SpecRow k="Availability" v={isOOS ? "Out of stock" : `${effectiveStock} in stock`} />
-                <SpecRow k="Warranty" v="12 months" />
+                <SpecRow k="Warranty" v={product.warranty || "12 months"} />
               </dl>
             </Accordion>
 
