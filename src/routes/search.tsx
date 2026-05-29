@@ -76,20 +76,7 @@ function SearchPage() {
       if (cancelled) return;
       let rows = data ?? [];
       if (search.stock === "in") rows = rows.filter((r: any) => r.in_stock);
-      setResults(rows.map((r: any) => ({
-        slug: r.slug, name: r.name, tagline: r.tagline ?? "", category: r.category,
-        price: Number(r.price), rating: Number(r.rating), reviews: r.reviews,
-        image: resolveImage(r.image), description: r.description ?? "",
-        inStock: r.in_stock, discount: r.discount ?? undefined, featured: r.featured ?? false,
-        sku: r.sku ?? null, stockQuantity: r.stock_quantity ?? 0, lowStockThreshold: r.low_stock_threshold ?? 5,
-        viewsCount: r.views_count ?? 0, createdAt: r.created_at ?? "",
-        priceInr: r.price_inr != null ? Number(r.price_inr) : null,
-        comparePriceInr: r.compare_price_inr != null ? Number(r.compare_price_inr) : null,
-        priceUsd: r.price_usd != null ? Number(r.price_usd) : null,
-        comparePriceUsd: r.compare_price_usd != null ? Number(r.compare_price_usd) : null,
-        indiaVisible: r.india_visible ?? true, internationalVisible: r.international_visible ?? true,
-        warranty: r.warranty ?? "12 months",
-      })));
+      setResults(rows.map((r: any) => rowToProduct(r)));
       setLoading(false);
     });
     return () => { cancelled = true; };
