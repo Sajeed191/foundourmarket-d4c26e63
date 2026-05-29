@@ -1213,6 +1213,36 @@ export type Database = {
         }
         Relationships: []
       }
+      razorpay_customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          phone: string | null
+          razorpay_customer_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          razorpay_customer_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          razorpay_customer_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recommendation_events: {
         Row: {
           category: string | null
@@ -1436,6 +1466,57 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          expiry_month: number | null
+          expiry_year: number | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          payment_type: string
+          provider: string
+          razorpay_customer_id: string
+          razorpay_token_id: string
+          updated_at: string
+          upi_vpa: string | null
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          expiry_month?: number | null
+          expiry_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          payment_type?: string
+          provider?: string
+          razorpay_customer_id: string
+          razorpay_token_id: string
+          updated_at?: string
+          upi_vpa?: string | null
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          expiry_month?: number | null
+          expiry_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          payment_type?: string
+          provider?: string
+          razorpay_customer_id?: string
+          razorpay_token_id?: string
+          updated_at?: string
+          upi_vpa?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       search_logs: {
         Row: {
           clicked_product_slug: string | null
@@ -1632,6 +1713,42 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+        }
+        Relationships: []
+      }
+      tokenization_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          metadata: Json
+          payment_type: string | null
+          razorpay_customer_id: string | null
+          razorpay_token_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          metadata?: Json
+          payment_type?: string | null
+          razorpay_customer_id?: string | null
+          razorpay_token_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          metadata?: Json
+          payment_type?: string | null
+          razorpay_customer_id?: string | null
+          razorpay_token_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
