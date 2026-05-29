@@ -185,6 +185,7 @@ function CheckoutPage() {
             setPlacedOrderId(created.orderId);
             setStage("success");
             clear();
+            if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
             syncMethods().catch(() => {});
 
           } catch (e: any) {
