@@ -119,30 +119,45 @@ function OrderDetailPage() {
             <span className="text-sm font-medium">This order was cancelled.</span>
           </div>
         ) : (
-          <ol className="grid grid-cols-4 gap-1 sm:gap-2 relative">
-            <div className="absolute top-5 left-[12.5%] right-[12.5%] h-px bg-border -z-0" aria-hidden />
-            <div
-              className="absolute top-5 left-[12.5%] h-px bg-accent -z-0 transition-all duration-700"
-              style={{ width: `${Math.max(0, currentIdx) / 3 * 75}%` }}
-              aria-hidden
-            />
-            {STATUSES.map((s, i) => {
-              const done = i <= currentIdx;
-              const Icon = s.icon;
-              return (
-                <li key={s.key} className="flex flex-col items-center text-center relative z-10">
-                  <div className={`size-10 rounded-full grid place-items-center border-2 bg-card transition-colors ${done ? "bg-accent border-accent text-accent-foreground" : "border-border text-muted-foreground"}`}>
-                    <Icon className="size-4" />
-                  </div>
-                  <span className={`mt-2 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest leading-tight ${done ? "text-foreground" : "text-muted-foreground"}`}>
-                    {s.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+          <>
+            <ol className="grid grid-cols-4 gap-1 sm:gap-2 relative">
+              <div className="absolute top-5 left-[12.5%] right-[12.5%] h-px bg-border -z-0" aria-hidden />
+              <div
+                className="absolute top-5 left-[12.5%] h-px bg-accent -z-0 transition-all duration-700"
+                style={{ width: `${Math.max(0, currentIdx) / 3 * 75}%` }}
+                aria-hidden
+              />
+              {STATUSES.map((s, i) => {
+                const done = i <= currentIdx;
+                const Icon = s.icon;
+                return (
+                  <li key={s.key} className="flex flex-col items-center text-center relative z-10">
+                    <div className={`size-10 rounded-full grid place-items-center border-2 bg-card transition-colors ${done ? "bg-accent border-accent text-accent-foreground" : "border-border text-muted-foreground"}`}>
+                      <Icon className="size-4" />
+                    </div>
+                    <span className={`mt-2 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest leading-tight ${done ? "text-foreground" : "text-muted-foreground"}`}>
+                      {s.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+
+            <div className="mt-6 pt-5 border-t border-border flex items-center gap-3">
+              <div className="size-10 rounded-full grid place-items-center bg-accent/10 text-accent shrink-0">
+                {order.status === "delivered" ? <Package className="size-4" /> : <Truck className="size-4" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {order.status === "delivered" ? "Delivered" : "Estimated delivery"}
+                </p>
+                <p className="text-sm font-medium">{etaLabel}</p>
+              </div>
+            </div>
+          </>
         )}
       </motion.div>
+
 
       <div className="grid lg:grid-cols-3 gap-6">
         <motion.div
