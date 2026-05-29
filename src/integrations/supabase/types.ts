@@ -710,6 +710,63 @@ export type Database = {
         }
         Relationships: []
       }
+      inbox_placement_tests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          gmail_address: string | null
+          gmail_checked_at: string | null
+          gmail_message_id: string | null
+          gmail_placement: string | null
+          id: string
+          outlook_address: string | null
+          outlook_checked_at: string | null
+          outlook_message_id: string | null
+          outlook_placement: string | null
+          status: string
+          subject: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          gmail_address?: string | null
+          gmail_checked_at?: string | null
+          gmail_message_id?: string | null
+          gmail_placement?: string | null
+          id?: string
+          outlook_address?: string | null
+          outlook_checked_at?: string | null
+          outlook_message_id?: string | null
+          outlook_placement?: string | null
+          status?: string
+          subject: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          gmail_address?: string | null
+          gmail_checked_at?: string | null
+          gmail_message_id?: string | null
+          gmail_placement?: string | null
+          id?: string
+          outlook_address?: string | null
+          outlook_checked_at?: string | null
+          outlook_message_id?: string | null
+          outlook_placement?: string | null
+          status?: string
+          subject?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_logs: {
         Row: {
           actor_id: string | null
