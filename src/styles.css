@@ -199,6 +199,59 @@
   color: transparent;
 }
 
+/* ---- Cinematic card variation system ---- */
+/* Elevated card: lifted, brighter top-light, deeper float shadow */
+.card-elevated {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(1 0 0 / 0.07), transparent 55%),
+    linear-gradient(180deg, oklch(0.205 0.013 260), oklch(0.15 0.009 260));
+  border: 1px solid oklch(1 0 0 / 0.09);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
+  transition: transform 0.5s var(--ease-out-expo), border-color 0.3s ease, box-shadow 0.4s ease;
+}
+.card-elevated:hover {
+  transform: translateY(-5px);
+  border-color: oklch(0.74 0.19 49 / 0.45);
+  box-shadow: var(--shadow-float), 0 0 70px -22px oklch(0.74 0.19 49 / 0.4);
+}
+
+/* Outlined glass card: thin luminous border, minimal fill */
+.card-outline {
+  position: relative;
+  background: oklch(1 0 0 / 0.018);
+  border: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 0.45s var(--ease-out-expo), border-color 0.3s ease, background 0.3s ease;
+}
+.card-outline:hover {
+  transform: translateY(-3px);
+  border-color: oklch(0.74 0.19 49 / 0.5);
+  background: oklch(0.74 0.19 49 / 0.04);
+}
+
+/* Gradient ambient card: warm ember-washed feature surface */
+.card-ambient {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 110% at 0% 0%, oklch(0.74 0.19 49 / 0.16), transparent 55%),
+    linear-gradient(160deg, oklch(0.2 0.02 60), oklch(0.145 0.009 260));
+  border: 1px solid oklch(0.74 0.19 49 / 0.22);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 50px -24px oklch(0.74 0.19 49 / 0.45);
+  transition: transform 0.5s var(--ease-out-expo), box-shadow 0.4s ease, border-color 0.3s ease;
+}
+.card-ambient:hover {
+  transform: translateY(-4px);
+  border-color: oklch(0.74 0.19 49 / 0.45);
+  box-shadow: 0 26px 70px -26px oklch(0.74 0.19 49 / 0.6);
+}
+
+
 /* Glass input with floating-label spacing + neon focus glow */
 .input-glass {
   width: 100%;

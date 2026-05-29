@@ -147,10 +147,28 @@ function AccountPage() {
 
   return (
     <div className="min-h-screen pb-28 sm:pb-16">
-      {/* Ambient page glow */}
+      {/* Cinematic ambient background system — layered orbs, bloom & grid */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
+        {/* base navy depth wash */}
+        <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 50% -10%, oklch(0.17 0.02 265 / 0.9), transparent 60%)" }} />
+        {/* top ember bloom */}
+        <div className="absolute top-[-22%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50 animate-glow" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
+        {/* drifting warm orb */}
+        <div className="absolute top-[30%] -right-[10%] size-[460px] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-ember)", filter: "blur(110px)" }} />
+        {/* drifting violet orb for depth */}
+        <div className="absolute bottom-[-10%] -left-[8%] size-[420px] rounded-full opacity-35 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
+        {/* ultra-subtle grid texture, vignetted */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage:
+              "linear-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.6) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+            maskImage: "radial-gradient(ellipse at 50% 30%, black 20%, transparent 80%)",
+          }}
+        />
       </div>
+
 
       <div className="container-page py-4 sm:py-10 lg:py-14 space-y-5 sm:space-y-10">
 
@@ -811,27 +829,53 @@ function WhyShopWithUs() {
     { icon: Truck, title: "Fast Delivery", desc: "Reliable standard shipping" },
     { icon: Headphones, title: "24/7 Support", desc: "We're always here" },
   ];
+  const [feature, ...rest] = items;
+  const Feature = feature.icon;
   return (
     <motion.section {...fadeUp}>
       <SectionHeader title="Why shop with us" eyebrow="The FoundOurMarket promise" />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
-        {items.map((it, idx) => {
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        {/* Featured asymmetric ambient card */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease }}
+          whileHover={{ y: -4 }}
+          className="card-ambient noise-layer glass-reflect col-span-2 row-span-2 p-5 sm:p-6 flex flex-col justify-between gap-4 min-h-[180px]"
+        >
+          <div aria-hidden className="pointer-events-none absolute -top-10 -left-6 size-44 rounded-full blur-3xl opacity-50 animate-ambient" style={{ background: "var(--gradient-ember)" }} />
+          <span className="relative size-14 rounded-2xl bg-accent/20 text-accent grid place-items-center ring-1 ring-accent/40 shadow-[0_0_28px_-6px_var(--color-accent)]">
+            <Feature className="size-6" />
+          </span>
+          <div className="relative">
+            <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent mb-1.5">Why us</p>
+            <p className="text-lg sm:text-xl font-display font-semibold leading-tight">{feature.title}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-[28ch]">{feature.desc} — built into every order, on every continent.</p>
+          </div>
+        </motion.div>
+
+        {/* Varied supporting tiles */}
+        {rest.map((it, idx) => {
           const Icon = it.icon;
+          const variant = idx % 2 === 0 ? "card-elevated" : "card-outline";
           return (
             <motion.div
               key={it.title}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, ease, delay: idx * 0.05 }}
+              transition={{ duration: 0.4, ease, delay: idx * 0.06 }}
               whileHover={{ y: -3 }}
-              className="card-premium p-3.5 sm:p-4 flex flex-col items-center text-center gap-2 hover:ring-1 hover:ring-accent/30 transition-all"
+              className={`group ${variant} p-3.5 sm:p-4 flex flex-col items-start gap-2.5`}
             >
-              <span className="size-10 rounded-xl bg-accent/10 text-accent grid place-items-center shadow-[0_0_18px_-6px_var(--color-accent)]">
-                <Icon className="size-[18px]" />
+              <span className="size-11 rounded-xl bg-accent/12 text-accent grid place-items-center shadow-[0_0_20px_-7px_var(--color-accent)] group-hover:bg-accent/22 group-hover:shadow-[0_0_24px_-6px_var(--color-accent)] transition-all">
+                <Icon className="size-5" />
               </span>
-              <p className="text-[12px] sm:text-[13px] font-medium leading-tight">{it.title}</p>
-              <p className="text-[10px] text-muted-foreground leading-snug">{it.desc}</p>
+              <div>
+                <p className="text-[12px] sm:text-[13px] font-medium leading-tight">{it.title}</p>
+                <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{it.desc}</p>
+              </div>
             </motion.div>
           );
         })}
@@ -839,6 +883,7 @@ function WhyShopWithUs() {
     </motion.section>
   );
 }
+
 
 function ProfileCompletion({ user, profile }: { user: { email?: string | null; user_metadata?: Record<string, unknown> }; profile: Profile | null }) {
   const meta = user.user_metadata ?? {};
