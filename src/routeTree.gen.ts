@@ -61,6 +61,7 @@ import { Route as AccountHistoryRouteImport } from './routes/account_.history'
 import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicExpireOrdersRouteImport } from './routes/api/public/expire-orders'
+import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.payment-methods.add'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -323,6 +324,12 @@ const ApiPublicExpireOrdersRoute = ApiPublicExpireOrdersRouteImport.update({
   path: '/api/public/expire-orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountPaymentMethodsAddRoute =
+  AccountPaymentMethodsAddRouteImport.update({
+    id: '/account_/payment-methods/add',
+    path: '/account/payment-methods/add',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -429,6 +437,7 @@ export interface FileRoutesByTo {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -484,6 +493,7 @@ export interface FileRoutesById {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
 }
@@ -540,6 +550,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -594,6 +605,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   id:
@@ -648,6 +660,7 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/account_/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
   fileRoutesById: FileRoutesById
@@ -700,6 +713,7 @@ export interface RootRouteChildren {
   PagesReturnsRoute: typeof PagesReturnsRoute
   PagesShippingRoute: typeof PagesShippingRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
+  AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
@@ -1070,6 +1084,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicExpireOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account_/payment-methods/add': {
+      id: '/account_/payment-methods/add'
+      path: '/account/payment-methods/add'
+      fullPath: '/account/payment-methods/add'
+      preLoaderRoute: typeof AccountPaymentMethodsAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1151,6 +1172,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagesReturnsRoute: PagesReturnsRoute,
   PagesShippingRoute: PagesShippingRoute,
   ProductsSlugRoute: ProductsSlugRoute,
+  AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }

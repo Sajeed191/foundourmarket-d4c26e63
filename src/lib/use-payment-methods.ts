@@ -38,6 +38,8 @@ export function usePaymentMethods() {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const listFn = useServerFn(listSavedPaymentMethods);
   const removeFn = useServerFn(deletePaymentMethod);
   const defaultFn = useServerFn(setDefaultPaymentMethod);
@@ -81,9 +83,14 @@ export function usePaymentMethods() {
   const sync = useCallback(async () => {
     if (!user) return;
     setSyncing(true);
+    setSyncError(null);
     try {
       await syncFn();
       await load();
+      if (mounted.current) setLastSynced(new Date());
+    } catch (e: any) {
+      if (mounted.current) setSyncError(e?.message ?? "Sync failed");
+      throw e;
     } finally {
       if (mounted.current) setSyncing(false);
     }
@@ -106,5 +113,5 @@ export function usePaymentMethods() {
     [defaultFn],
   );
 
-  return { methods, loading, syncing, load, sync, remove, makeDefault };
+  return { methods, loading, syncing, lastSynced, syncError, load, sync, remove, makeDefault };
 }

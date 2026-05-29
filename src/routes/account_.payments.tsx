@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { usePaymentMethods, isExpired, type PaymentMethod } from "@/lib/use-payment-methods";
 
@@ -137,11 +138,32 @@ function MethodCard({
   );
 }
 
+const TABS = [
+  { key: "all", label: "All" },
+  { key: "card", label: "Cards" },
+  { key: "upi", label: "UPI" },
+  { key: "wallet", label: "Wallets" },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
+
+function timeAgo(d: Date | null) {
+  if (!d) return null;
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 10) return "just now";
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  return `${h}h ago`;
+}
+
 function PaymentsPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const { methods, loading: mLoading, syncing, sync, remove, makeDefault } = usePaymentMethods();
+  const { methods, loading: mLoading, syncing, lastSynced, syncError, sync, remove, makeDefault } =
+    usePaymentMethods();
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<Tab>("all");
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -149,10 +171,17 @@ function PaymentsPage() {
 
   const counts = useMemo(() => {
     return {
-      cards: methods.filter((m) => m.payment_type === "card").length,
+      all: methods.length,
+      card: methods.filter((m) => m.payment_type === "card").length,
       upi: methods.filter((m) => m.payment_type === "upi").length,
+      wallet: methods.filter((m) => m.payment_type === "wallet").length,
     };
   }, [methods]);
+
+  const filtered = useMemo(
+    () => (tab === "all" ? methods : methods.filter((m) => m.payment_type === tab)),
+    [methods, tab],
+  );
 
   async function handle(action: () => Promise<void>) {
     setBusy(true);
@@ -160,6 +189,15 @@ function PaymentsPage() {
       await action();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function doSync() {
+    try {
+      await sync();
+      toast.success("Payment methods synced");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Sync failed. Try again.");
     }
   }
 
@@ -172,7 +210,7 @@ function PaymentsPage() {
   }
 
   return (
-    <div className="container-page py-10 sm:py-16 max-w-4xl">
+    <div className="container-page py-10 sm:py-16 max-w-4xl pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link to="/account" className="hover:text-foreground transition">Account</Link>
@@ -184,17 +222,32 @@ function PaymentsPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Payment Methods</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {counts.cards} card{counts.cards !== 1 ? "s" : ""} · {counts.upi} UPI · tokenized by Razorpay
+              {counts.card} card{counts.card !== 1 ? "s" : ""} · {counts.upi} UPI · tokenized by Razorpay
             </p>
           </div>
-          <button
-            onClick={() => handle(sync)}
-            disabled={syncing}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-foreground/90 transition hover:bg-white/10 disabled:opacity-50"
-          >
-            <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} />
-            Sync
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={doSync}
+              disabled={syncing}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-foreground/90 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync"}
+            </button>
+            <span className="text-[10px] text-muted-foreground">
+              {syncError ? (
+                <span className="inline-flex items-center gap-1 text-destructive">
+                  <AlertTriangle className="size-3" /> Sync failed
+                </span>
+              ) : lastSynced ? (
+                <span className="inline-flex items-center gap-1">
+                  <CheckCircle2 className="size-3 text-emerald-400" /> Synced {timeAgo(lastSynced)}
+                </span>
+              ) : (
+                "Up to date"
+              )}
+            </span>
+          </div>
         </div>
       </motion.div>
 
@@ -203,7 +256,24 @@ function PaymentsPage() {
         We never store your full card number or CVV. Methods are securely tokenized through Razorpay.
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      {/* Tabs */}
+      <div className="mt-6 flex gap-1.5 overflow-x-auto -mx-1 px-1">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-mono uppercase tracking-widest transition ${
+              tab === t.key
+                ? "bg-primary text-primary-foreground"
+                : "border border-white/10 bg-white/5 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label} <span className="opacity-60">({counts[t.key]})</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <AnimatePresence mode="popLayout">
           {mLoading ? (
             <>
@@ -211,20 +281,35 @@ function PaymentsPage() {
                 <div key={i} className="h-44 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
               ))}
             </>
-          ) : methods.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="sm:col-span-2 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-10 text-center"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="sm:col-span-2 relative overflow-hidden rounded-2xl border border-dashed border-primary/25 bg-white/[0.03] p-12 text-center"
             >
-              <CreditCard className="mx-auto size-8 text-muted-foreground" />
-              <h3 className="mt-3 font-medium">No saved payment methods yet</h3>
-              <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Save a card or UPI securely at checkout — tick “Save this method” and it appears here instantly.
+              <span className="pointer-events-none absolute left-1/2 top-0 size-48 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+              <div className="relative mx-auto grid size-16 place-items-center rounded-2xl border border-primary/30 bg-primary/10 text-primary animate-float-soft">
+                <CreditCard className="size-7" />
+              </div>
+              <h3 className="relative mt-4 font-medium">
+                {methods.length === 0 ? "No saved payment methods yet" : "Nothing in this category"}
+              </h3>
+              <p className="relative mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                {methods.length === 0
+                  ? "Add a UPI, card or wallet securely — tokenized by Razorpay, ready for one-tap checkout."
+                  : "Try a different tab or add a new method."}
               </p>
+              {methods.length === 0 && (
+                <Link
+                  to="/account/payment-methods/add"
+                  className="relative mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-[#ff9a4a] px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_30px_-8px_rgba(255,122,26,0.6)] transition active:scale-95"
+                >
+                  <Plus className="size-4" /> Add your first payment method
+                </Link>
+              )}
             </motion.div>
           ) : (
-            methods.map((m) => (
+            filtered.map((m) => (
               <MethodCard
                 key={m.id}
                 m={m}
@@ -240,7 +325,7 @@ function PaymentsPage() {
       {/* Sticky add button (mobile-first) */}
       <div className="sticky bottom-4 mt-8 flex justify-center">
         <Link
-          to="/checkout"
+          to="/account/payment-methods/add"
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-[#ff9a4a] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_30px_-8px_rgba(255,122,26,0.6)] transition active:scale-95"
         >
           <Plus className="size-4" />
@@ -249,8 +334,7 @@ function PaymentsPage() {
       </div>
 
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
-        <CheckCircle2 className="inline size-3 text-emerald-400" /> New cards are saved during a secure checkout
-        and synced here automatically.
+        <CheckCircle2 className="inline size-3 text-emerald-400" /> Methods are tokenized securely and synced here in realtime.
       </p>
     </div>
   );

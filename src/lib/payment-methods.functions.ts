@@ -2,7 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getRazorpayCreds, rzpFetch, mapRzpToken, type RzpToken } from "./razorpay.server";
+import {
+  getRazorpayCreds,
+  rzpFetch,
+  mapRzpToken,
+  verifyPaymentSignature,
+  type RzpToken,
+} from "./razorpay.server";
 
 type Ctx = { supabase: any; userId: string; claims: any };
 
@@ -267,4 +273,134 @@ export const setDefaultPaymentMethod = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error("Could not set default payment method.");
     return { ok: true };
+  });
+
+/* ---------------------------------------------------------------------------
+ * Dedicated "add payment method" setup flow (tokenization via a tiny auth
+ * charge that is immediately refunded). Real Razorpay, no demo data.
+ * ------------------------------------------------------------------------- */
+
+const SETUP_AMOUNT_PAISE = 200; // ₹2 validation charge, auto-refunded after tokenization
+
+/** Step 1 — create a small Razorpay order tied to the user's customer for tokenization. */
+export const createTokenizationSetup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, claims } = context as Ctx;
+    const { keyId } = getRazorpayCreds();
+    const { customerId } = await ensureRazorpayCustomer(userId, claims);
+
+    const order = await rzpFetch<{ id: string; amount: number; currency: string }>("/orders", {
+      method: "POST",
+      body: {
+        amount: SETUP_AMOUNT_PAISE,
+        currency: "INR",
+        customer_id: customerId,
+        notes: { purpose: "save_payment_method", user_id: userId },
+      },
+    });
+
+    await supabaseAdmin.from("tokenization_logs").insert({
+      user_id: userId,
+      razorpay_customer_id: customerId,
+      status: "setup_created",
+      metadata: { razorpay_order_id: order.id },
+    });
+
+    return {
+      keyId,
+      customerId,
+      razorpayOrderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    };
+  });
+
+const verifySetupSchema = z.object({
+  razorpayOrderId: z.string().min(1).max(120),
+  razorpayPaymentId: z.string().min(1).max(120),
+  razorpaySignature: z.string().min(1).max(256),
+});
+
+/**
+ * Step 2 — verify the handshake, refund the validation charge, then sync the
+ * newly tokenized method(s) into our DB. Returns how many tokens are now saved.
+ */
+export const verifyTokenizationSetup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => verifySetupSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId, claims } = context as Ctx;
+
+    const valid = verifyPaymentSignature(
+      data.razorpayOrderId,
+      data.razorpayPaymentId,
+      data.razorpaySignature,
+    );
+    if (!valid) {
+      await supabaseAdmin.from("tokenization_logs").insert({
+        user_id: userId,
+        status: "setup_failed",
+        error: "signature_verification_failed",
+      });
+      throw new Error("Could not verify this payment method.");
+    }
+
+    // Refund the tiny validation charge — best effort, never blocks tokenization.
+    try {
+      await rzpFetch(`/payments/${data.razorpayPaymentId}/refund`, {
+        method: "POST",
+        body: { notes: { reason: "save_payment_method_validation" } },
+      });
+    } catch {
+      /* refund may be async/auto-captured later; continue */
+    }
+
+    const { customerId } = await ensureRazorpayCustomer(userId, claims);
+
+    let tokens: RzpToken[] = [];
+    try {
+      const res = await rzpFetch<{ items?: RzpToken[] }>(`/customers/${customerId}/tokens`);
+      tokens = res.items ?? [];
+    } catch (e: any) {
+      await supabaseAdmin.from("tokenization_logs").insert({
+        user_id: userId,
+        razorpay_customer_id: customerId,
+        status: "sync_failed",
+        error: String(e?.message ?? e),
+      });
+      throw new Error("Saved, but could not refresh your methods. Try Sync.");
+    }
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const live = tokens.filter((t) => !t.expired_at || t.expired_at > nowSec);
+
+    const { data: existing } = await supabaseAdmin
+      .from("saved_payment_methods")
+      .select("id")
+      .eq("user_id", userId);
+    const hadNone = !existing?.length;
+
+    if (live.length) {
+      const rows = live.map((t, i) => {
+        const mapped = mapRzpToken(t, customerId, userId);
+        return {
+          ...mapped,
+          is_default: hadNone && i === 0 ? true : undefined,
+          updated_at: new Date().toISOString(),
+        };
+      });
+      await supabaseAdmin
+        .from("saved_payment_methods")
+        .upsert(rows, { onConflict: "user_id,razorpay_token_id" });
+    }
+
+    await supabaseAdmin.from("tokenization_logs").insert({
+      user_id: userId,
+      razorpay_customer_id: customerId,
+      status: "setup_completed",
+      metadata: { count: live.length },
+    });
+
+    return { ok: true, saved: live.length };
   });
