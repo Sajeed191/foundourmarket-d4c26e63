@@ -301,17 +301,18 @@ export function AdminShell({
                             {active && (
                               <motion.span
                                 layoutId="admin-active-indicator"
-                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/15 via-accent/5 to-transparent ring-1 ring-inset ring-accent/20 shadow-[inset_0_0_24px_-12px_oklch(0.74_0.19_49_/_0.8)]"
-                                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent/[0.12] via-accent/[0.04] to-transparent ring-1 ring-inset ring-accent/15 shadow-[inset_0_0_20px_-14px_oklch(0.74_0.19_49_/_0.7)]"
+                                transition={{ type: "spring", stiffness: 320, damping: 34 }}
                               />
                             )}
                             {active && (
                               <motion.span
                                 layoutId="admin-active-bar"
-                                className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-accent shadow-[0_0_12px_2px_oklch(0.74_0.19_49_/_0.7)]"
-                                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] rounded-r bg-accent shadow-[0_0_10px_1px_oklch(0.74_0.19_49_/_0.55)]"
+                                transition={{ type: "spring", stiffness: 320, damping: 32 }}
                               />
                             )}
+
                             <it.icon className={`relative size-4 shrink-0 transition-transform duration-300 group-hover:scale-110 ${active ? "drop-shadow-[0_0_6px_oklch(0.74_0.19_49_/_0.6)]" : ""}`} />
                             <span className="relative truncate flex-1">{it.label}</span>
                             <ChevronRight className={`relative size-3.5 shrink-0 transition-all duration-300 ${active ? "opacity-70" : "opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0"}`} />
