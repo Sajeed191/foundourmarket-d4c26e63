@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard } from "lucide-react";
+import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
+import {
+  ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
+  Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
+  ChevronRight, LifeBuoy, Settings, ShieldCheck, FileText, Mail, LogIn,
+} from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
@@ -49,6 +53,25 @@ export function Nav() {
     { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion" },
     { to: "/category/$slug", params: { slug: "home" }, label: "Home" },
   ] as const;
+
+  const categories = [
+    { to: "/", label: "Shop", icon: Store },
+    { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics", icon: Smartphone },
+    { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion", icon: Shirt },
+    { to: "/category/$slug", params: { slug: "home" }, label: "Home", icon: HomeIcon },
+  ] as const;
+
+  const quickActions = [
+    { to: "/account" as const, label: "Orders", icon: Package, badge: null as number | null },
+    { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishSlugs.size },
+    { to: "/cart" as const, label: "Cart", icon: ShoppingBag, badge: count },
+    { to: "/" as const, label: "Track Order", icon: Truck, badge: null as number | null },
+  ];
+
+  const displayName = user
+    ? ((user.user_metadata?.full_name as string) || (user.email?.split("@")[0] ?? "Account"))
+    : "FoundOurMarket™";
+  const initial = (displayName?.[0] ?? "F").toUpperCase();
 
   const { scrollY } = useScroll();
   const lastY = useRef(0);
@@ -134,50 +157,184 @@ export function Nav() {
 
 
       {/* Mobile drawer */}
-      {open && (
-        <div className="fixed inset-0 z-[60] md:hidden">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-[82%] max-w-xs bg-background border-r border-border flex flex-col animate-slide-in-right" style={{ animationName: "slide-in-left" }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <Link to="/" onClick={() => setOpen(false)} className="text-base font-display tracking-tighter uppercase font-semibold flex items-center gap-2">
-                <img src={logoSrc} alt="FoundOurMarket logo" className="size-7 rounded-lg object-cover ring-1 ring-white/10" />
-                FoundOurMarket<span className="text-accent">™</span>
-              </Link>
-              <button onClick={() => setOpen(false)} aria-label="Close menu" className="size-9 rounded-full grid place-items-center hover:bg-white/5">
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto py-4">
-              <p className="px-5 mb-3 text-[10px] font-mono uppercase tracking-[0.3em] text-accent">Browse</p>
-              <ul className="flex flex-col">
-                {navLinks.map((l) => (
-                  <li key={l.label}>
-                    <Link
-                      to={l.to}
-                      params={"params" in l ? l.params : undefined as never}
-                      onClick={() => setOpen(false)}
-                      className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5 transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <p className="px-5 mt-6 mb-3 text-[10px] font-mono uppercase tracking-[0.3em] text-accent">Account</p>
-              <ul className="flex flex-col">
-                <li><Link to={user ? "/account" : "/auth"} onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">{user ? "My Account" : "Sign In"}</Link></li>
-                <li><Link to="/wishlist" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Wishlist · {wishSlugs.size}</Link></li>
-                <li><Link to="/cart" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium hover:bg-white/5">Cart · {count}</Link></li>
-                {isAdmin && <li><Link to="/admin" onClick={() => setOpen(false)} className="block px-5 py-3 text-sm uppercase tracking-widest font-medium text-accent hover:bg-white/5">Admin Panel</Link></li>}
-              </ul>
-            </div>
-            <div className="px-5 py-4 border-t border-border flex justify-center">
-              <CurrencySwitcher />
-            </div>
+      <AnimatePresence>
+        {open && (
+          <div className="fixed inset-0 z-[60] md:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 bg-black/75 backdrop-blur-md"
+              onClick={() => setOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: "-100%", filter: "blur(12px)" }}
+              animate={{ x: 0, filter: "blur(0px)" }}
+              exit={{ x: "-100%", filter: "blur(12px)" }}
+              transition={{ type: "spring", stiffness: 320, damping: 36, mass: 0.9 }}
+              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)]"
+            >
+              {/* Background atmosphere */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute -top-24 -left-16 size-72 rounded-full bg-accent/25 blur-[90px] animate-orb" />
+                <div className="absolute top-1/3 -right-20 size-64 rounded-full bg-accent/15 blur-[100px] animate-orb" style={{ animationDelay: "-7s" }} />
+                <div className="absolute -bottom-28 left-1/4 size-72 rounded-full bg-[oklch(0.55_0.14_30)]/20 blur-[110px] animate-orb" style={{ animationDelay: "-13s" }} />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-black/40" />
+              </div>
+
+              <div className="relative flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                  <Link to="/" onClick={() => setOpen(false)} className="text-sm font-display tracking-tight font-semibold flex items-center gap-2">
+                    <img src={logoSrc} alt="FoundOurMarket logo" className="size-7 rounded-lg object-cover ring-1 ring-white/10" />
+                    FoundOurMarket<span className="text-accent">™</span>
+                  </Link>
+                  <button onClick={() => setOpen(false)} aria-label="Close menu" className="size-9 rounded-full grid place-items-center glass hover:bg-white/10 active:scale-95 transition">
+                    <X className="size-4.5" />
+                  </button>
+                </div>
+
+                {/* Profile card */}
+                <div className="px-4 pb-2">
+                  <Link
+                    to={user ? "/account" : "/auth"}
+                    onClick={() => setOpen(false)}
+                    className="group relative flex items-center gap-3 rounded-2xl glass-strong glass-reflect px-3.5 py-3 active:scale-[0.98] transition-transform"
+                  >
+                    <span className="relative shrink-0">
+                      <span aria-hidden className="absolute inset-0 -m-1 rounded-full bg-accent/40 blur-md animate-glow" />
+                      <span className="relative grid place-items-center size-11 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-base ring-1 ring-white/20 overflow-hidden">
+                        {user?.user_metadata?.avatar_url
+                          ? <img src={user.user_metadata.avatar_url as string} alt="" className="size-full object-cover" />
+                          : (initial)}
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] text-muted-foreground">{user ? "Welcome back" : "Welcome to"}</span>
+                      <span className="block truncate text-sm font-semibold">{displayName}</span>
+                    </span>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition" />
+                  </Link>
+                </div>
+
+                {/* Quick actions */}
+                <div className="px-4 py-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {quickActions.map((q) => (
+                      <Link
+                        key={q.label}
+                        to={q.to}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 rounded-xl glass px-3 py-2.5 hover:bg-white/10 active:scale-[0.97] transition"
+                      >
+                        <q.icon className="size-4 text-accent shrink-0" />
+                        <span className="text-xs font-medium truncate">{q.label}</span>
+                        {q.badge != null && q.badge > 0 && (
+                          <span className="ml-auto min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold grid place-items-center">{q.badge}</span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scrollable nav */}
+                <div className="flex-1 overflow-y-auto px-4 py-2 space-y-5">
+                  <Section label="Categories">
+                    <div className="space-y-1.5">
+                      {categories.map((c, i) => (
+                        <motion.div
+                          key={c.label}
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.08 + i * 0.05, type: "spring", stiffness: 300, damping: 30 }}
+                        >
+                          <Link
+                            to={c.to}
+                            params={"params" in c ? c.params : undefined as never}
+                            onClick={() => setOpen(false)}
+                            className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.98] transition"
+                          >
+                            <span className="grid place-items-center size-9 rounded-lg bg-accent/15 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_-4px_var(--color-accent)] transition">
+                              <c.icon className="size-4.5" />
+                            </span>
+                            <span className="flex-1 text-sm font-medium">{c.label}</span>
+                            <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </Section>
+
+                  <Section label="Account">
+                    <NavItem icon={user ? User : LogIn} label={user ? "My Account" : "Sign In"} to={user ? "/account" : "/auth"} onNavigate={() => setOpen(false)} />
+                    <NavItem icon={Heart} label="Wishlist" to="/wishlist" badge={wishSlugs.size} onNavigate={() => setOpen(false)} />
+                    <NavItem icon={ShoppingBag} label="Cart" to="/cart" badge={count} onNavigate={() => setOpen(false)} />
+                    {isAdmin && <NavItem icon={LayoutDashboard} label="Admin Panel" to="/admin" accent onNavigate={() => setOpen(false)} />}
+                  </Section>
+
+                  <Section label="Support">
+                    <NavItem icon={LifeBuoy} label="Help Center" to="/" onNavigate={() => setOpen(false)} />
+                    <NavItem icon={Truck} label="Track Order" to="/" onNavigate={() => setOpen(false)} />
+                  </Section>
+                </div>
+
+                {/* Footer */}
+                <div className="relative border-t border-white/10 px-4 pt-3 pb-4 space-y-3">
+                  <div className="flex justify-center">
+                    <div className="glass rounded-full px-1 py-1 ring-1 ring-white/10 shadow-[0_0_24px_-12px_var(--color-accent)]">
+                      <CurrencySwitcher />
+                    </div>
+                  </div>
+                  <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Privacy</Link>
+                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Terms</Link>
+                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Support</Link>
+                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Contact</Link>
+                  </nav>
+                </div>
+              </div>
+            </motion.aside>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
       <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
+
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="px-1 mb-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground/70">{label}</p>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function NavItem({
+  icon: Icon, label, to, badge, accent, onNavigate,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  to: string;
+  badge?: number;
+  accent?: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/5 active:scale-[0.98] transition ${accent ? "text-accent" : ""}`}
+    >
+      <Icon className={`size-4 ${accent ? "text-accent" : "text-muted-foreground group-hover:text-foreground"} transition`} />
+      <span className="flex-1 text-sm font-medium">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="min-w-5 h-5 px-1.5 rounded-full bg-accent/15 text-accent text-[10px] font-bold grid place-items-center">{badge}</span>
+      )}
+    </Link>
+  );
+}
+
