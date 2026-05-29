@@ -135,9 +135,10 @@ function ProductPage() {
             className="lg:sticky lg:top-28 lg:self-start"
           >
             <div className="relative">
-              {/* Ambient halo */}
-              <div aria-hidden className="absolute -inset-6 -z-10 rounded-[2.5rem] opacity-60" style={{ background: "var(--gradient-ember-soft)", filter: "blur(60px)" }} />
-              <div className="relative aspect-square card-premium rounded-3xl overflow-hidden group">
+              {/* Cinematic ambient backlight */}
+              <div aria-hidden className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 animate-pulse" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
+              <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
+              <div className="relative aspect-square card-premium rounded-3xl overflow-hidden group shadow-[0_40px_80px_-30px_oklch(0_0_0/0.7)]">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={activeImage?.id}
@@ -150,6 +151,10 @@ function ProductPage() {
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] group-hover:scale-110"
                   />
                 </AnimatePresence>
+                {/* premium glass overlay gradient */}
+                <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
+                {/* badges */}
+
                 {/* badges */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 items-start z-10">
                   {product.featured && (
