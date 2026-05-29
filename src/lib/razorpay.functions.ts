@@ -276,23 +276,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
 
-        razorpay_payment_id: data.razorpayPaymentId,
-        signature: data.razorpaySignature,
-        demo: false,
-        meta: { reason: "signature_verification_failed" },
-      });
-      throw new Error("Payment verification failed.");
-    }
 
-    // Mark order paid
-    await supabaseAdmin
-      .from("orders")
-      .update({
-        status: "paid",
-        payment_status: "succeeded",
-        razorpay_payment_id: data.razorpayPaymentId,
-      })
-      .eq("id", order.id);
 
     // Record the payment (idempotent on razorpay_payment_id)
     const { data: existingPay } = await supabaseAdmin
