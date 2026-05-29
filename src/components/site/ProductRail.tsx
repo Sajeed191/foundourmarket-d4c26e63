@@ -32,7 +32,7 @@ export function ProductRail({
         {products.map((p) => (
           <div
             key={p.slug}
-            className={`snap-start shrink-0 ${compact ? "w-[42%] min-[420px]:w-[36%]" : "w-[68%] min-[420px]:w-[58%]"}`}
+            className={`snap-start shrink-0 ${compact ? "w-[48%] min-[420px]:w-[40%]" : "w-[72%] min-[420px]:w-[62%]"}`}
           >
             <ProductCard product={p} compact={compact} />
           </div>
