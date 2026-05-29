@@ -40,6 +40,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as PagesShippingRouteImport } from './routes/pages.shipping'
 import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
@@ -211,6 +212,11 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagesShippingRoute = PagesShippingRouteImport.update({
+  id: '/pages/shipping',
+  path: '/pages/shipping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesReturnsRoute = PagesReturnsRouteImport.update({
   id: '/pages/returns',
   path: '/pages/returns',
@@ -333,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
+  '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesByTo {
@@ -381,6 +388,7 @@ export interface FileRoutesByTo {
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
+  '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesById {
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
+  '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRouteTypes {
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
+    | '/pages/shipping'
     | '/products/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
+    | '/pages/shipping'
     | '/products/$slug'
   id:
     | '__root__'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
+    | '/pages/shipping'
     | '/products/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -622,6 +634,7 @@ export interface RootRouteChildren {
   OrdersIdRoute: typeof OrdersIdRoute
   PagesSlugRoute: typeof PagesSlugRoute
   PagesReturnsRoute: typeof PagesReturnsRoute
+  PagesShippingRoute: typeof PagesShippingRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
 }
 
@@ -844,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pages/shipping': {
+      id: '/pages/shipping'
+      path: '/pages/shipping'
+      fullPath: '/pages/shipping'
+      preLoaderRoute: typeof PagesShippingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pages/returns': {
       id: '/pages/returns'
       path: '/pages/returns'
@@ -1025,8 +1045,19 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersIdRoute: OrdersIdRoute,
   PagesSlugRoute: PagesSlugRoute,
   PagesReturnsRoute: PagesReturnsRoute,
+  PagesShippingRoute: PagesShippingRoute,
   ProductsSlugRoute: ProductsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
