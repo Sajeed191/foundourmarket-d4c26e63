@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -192,25 +192,25 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 const prof = profiles[r.user_id];
                 const name = prof?.full_name || "Anonymous";
                 return (
-                  <li key={r.id} className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="size-8 rounded-full bg-muted overflow-hidden grid place-items-center text-xs font-mono shrink-0">
+                  <li key={r.id} className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-4 sm:p-5 shadow-[0_18px_40px_-24px_oklch(0_0_0/0.8)] transition-all hover:border-accent/30 hover:-translate-y-0.5">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <div className="size-9 rounded-full bg-muted overflow-hidden grid place-items-center text-xs font-mono shrink-0 ring-1 ring-white/10">
                         {prof?.avatar_url ? <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-display flex items-center gap-1.5 truncate">
                           {name}
                           <span className="inline-flex items-center gap-1 text-[8px] font-mono uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full shrink-0">
-                            <Star className="size-2 fill-emerald-400 text-emerald-400" /> Verified
+                            <CheckCircle2 className="size-2.5" /> Verified Purchase
                           </span>
                         </p>
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
                           {new Date(r.created_at).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="ml-auto flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`size-3 ${i < r.rating ? "fill-accent text-accent" : "text-muted-foreground/40"}`} />
+                          <Star key={i} className={`size-3 ${i < r.rating ? "fill-accent text-accent drop-shadow-[0_0_5px_oklch(0.74_0.19_49/0.6)]" : "text-muted-foreground/30"}`} />
                         ))}
                       </div>
                     </div>

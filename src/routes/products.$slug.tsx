@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, Shield, RotateCcw, Star, Minus, Plus, Loader2, Scale,
-  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon,
+  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -116,6 +116,11 @@ function ProductPage() {
 
   return (
     <>
+      {/* Layered cinematic ambient lighting */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-32 -left-24 size-[36rem] rounded-full opacity-50 animate-orb" style={{ background: "var(--gradient-ember-soft)", filter: "blur(110px)" }} />
+        <div className="absolute top-1/3 -right-32 size-[34rem] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-24 lg:pb-16">
         {/* Breadcrumb */}
         <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6 sm:mb-8 truncate">
@@ -218,30 +223,45 @@ function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{product.tagline}</p>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-2.5 text-balance leading-[1.05]">{product.name}</h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent/90 mb-2.5">{product.tagline}</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-3.5 text-balance leading-[1.12]">{product.name}</h1>
 
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`size-3.5 ${i < Math.round(product.rating) ? "fill-accent text-accent" : "text-muted-foreground/40"}`} />
+                  <Star key={i} className={`size-3.5 ${i < Math.round(product.rating) ? "fill-accent text-accent drop-shadow-[0_0_6px_oklch(0.74_0.19_49/0.6)]" : "text-muted-foreground/30"}`} />
                 ))}
               </div>
-              <span className="text-xs font-mono text-muted-foreground">{product.rating} · {product.reviews} reviews</span>
+              <span className="text-xs font-mono text-muted-foreground/70">{product.rating} · {product.reviews} reviews</span>
               <a href="#reviews" className="text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">See reviews →</a>
             </div>
 
             {/* subtle gradient separator */}
-            <div aria-hidden className="h-px w-full mb-3 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
+            <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
 
-            <div className="flex items-baseline gap-3 sm:gap-4 mb-3 flex-wrap">
+            <div className="flex items-baseline gap-3 sm:gap-4 mb-4 flex-wrap">
               <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
               {originalPrice && (
-                <span className="text-sm font-mono text-muted-foreground line-through">{format(originalPrice)}</span>
+                <span className="text-sm font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
               )}
               {product.discount && (
-                <span className="text-[10px] font-mono uppercase tracking-widest bg-accent/15 text-accent px-2 py-1 rounded-full">Save {product.discount}%</span>
+                <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent/15 text-accent px-2.5 py-1 rounded-full border border-accent/30">Save {product.discount}%</span>
               )}
+            </div>
+
+            {/* Trust indicators */}
+            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">
+              {[
+                { icon: Shield, label: "Secure Checkout" },
+                { icon: Truck, label: "Global Shipping" },
+                { icon: RotateCcw, label: "Easy Returns" },
+                { icon: BadgeCheck, label: "Trusted Seller" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground/80">
+                  <Icon className="size-3 text-accent shrink-0" />
+                  <span className="truncate">{label}</span>
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 mb-5 text-[10px] font-mono uppercase tracking-widest">
@@ -257,7 +277,7 @@ function ProductPage() {
                   <CheckCircle2 className="size-3" /> In stock
                 </span>
               )}
-              {effectiveSku && <span className="text-muted-foreground">SKU: {effectiveSku}</span>}
+              {effectiveSku && <span className="text-muted-foreground/60">SKU: {effectiveSku}</span>}
             </div>
 
             {/* Variants */}
@@ -337,7 +357,7 @@ function ProductPage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-6 sm:pt-8 border-t border-border">
               {[
                 { icon: Truck, label: "Free shipping over $50" },
-                { icon: RotateCcw, label: "30-day returns" },
+                { icon: RotateCcw, label: "7 Days Return" },
                 { icon: Shield, label: "Secure checkout" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="glass rounded-2xl p-3 sm:p-4 text-center">
@@ -352,7 +372,7 @@ function ProductPage() {
 
             {/* Specs */}
             <Accordion title="Specifications" icon={Package} defaultOpen>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <dl className="glass rounded-2xl px-4 sm:px-5 py-1 divide-y divide-border/50">
                 <SpecRow k="Category" v={product.category} />
                 <SpecRow k="SKU" v={effectiveSku || "—"} />
                 <SpecRow k="Rating" v={`${product.rating} / 5`} />
@@ -408,36 +428,38 @@ function ProductPage() {
       
 
       {/* Sticky mobile purchase dock */}
-      <div className="sm:hidden fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] inset-x-0 z-40 px-3">
-        <div className="glass-strong rounded-2xl p-2 flex items-center gap-2 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.8)]">
+      <div className="sm:hidden fixed bottom-[calc(6.25rem+env(safe-area-inset-bottom))] inset-x-0 z-40 px-3">
+        <div className="rounded-2xl p-1.5 flex items-center gap-1.5 border border-white/10 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9)]" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)" }}>
           <button
             onClick={() => toggleWishlist(product.slug)}
             aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
-            className={`size-11 grid place-items-center rounded-xl border shrink-0 transition-all active:scale-95 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/5 border-white/10 text-white/80 hover:text-accent"}`}
+            className={`size-10 grid place-items-center rounded-xl border shrink-0 transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/[0.03] border-white/10 text-white/60 hover:text-accent"}`}
           >
             <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
           </button>
-          <div className="flex flex-col leading-none mr-0.5 shrink-0">
-            <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground">Total</span>
-            <span className="text-sm font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+          <div className="flex flex-col leading-none px-1 shrink-0">
+            <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
+            <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
           </div>
           <button
             onClick={handleAdd}
             disabled={isOOS}
-            className="flex-1 bg-white/8 border border-white/10 text-foreground font-semibold py-3 rounded-xl text-[11px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+            className="w-10 shrink-0 grid place-items-center bg-white/[0.04] border border-white/10 text-white/70 rounded-xl py-2.5 transition-all active:scale-90 disabled:opacity-40 hover:text-accent"
+            aria-label={isOOS ? "Notify me" : "Add to cart"}
           >
-            {isOOS ? "Notify Me" : "Add to Cart"}
+            <ShoppingBagIcon className="size-4" />
           </button>
           <Link
             to="/cart"
             onClick={() => !isOOS && add(product.slug, qty)}
             aria-disabled={isOOS}
-            className={`flex-1 text-center bg-accent text-accent-foreground font-semibold py-3 rounded-xl text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
+            className={`flex-1 text-center bg-accent text-accent-foreground font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
           >
-            Buy Now
+            {isOOS ? "Notify Me" : "Buy Now"}
           </Link>
         </div>
       </div>
+
 
     </>
   );
@@ -446,10 +468,10 @@ function ProductPage() {
 
 function SpecRow({ k, v }: { k: string; v: string }) {
   return (
-    <>
-      <dt className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground self-center">{k}</dt>
-      <dd className="text-foreground truncate">{v}</dd>
-    </>
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <dt className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">{k}</dt>
+      <dd className="text-sm font-medium text-foreground truncate text-right">{v}</dd>
+    </div>
   );
 }
 

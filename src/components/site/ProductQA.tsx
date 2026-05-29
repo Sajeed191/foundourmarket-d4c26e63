@@ -125,8 +125,15 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
-        <div className="py-12 text-center border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted-foreground">No questions yet. Be the first to ask!</p>
+        <div className="py-14 px-6 text-center rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl shadow-[0_18px_40px_-24px_oklch(0_0_0/0.8)]">
+          <div className="relative mx-auto mb-4 size-16 grid place-items-center">
+            <div aria-hidden className="absolute inset-0 rounded-full opacity-60" style={{ background: "var(--gradient-ember-soft)", filter: "blur(18px)" }} />
+            <div className="relative size-14 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+              <MessageCircleQuestion className="size-6" />
+            </div>
+          </div>
+          <p className="text-base font-display mb-1">Be the first to ask</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">No questions yet — start the conversation and get answers from our team.</p>
         </div>
       ) : (
         <ul className="space-y-4">
