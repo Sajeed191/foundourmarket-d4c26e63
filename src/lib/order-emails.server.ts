@@ -90,12 +90,16 @@ export async function enqueueOrderEmail(
   if (!entry) return { ok: false, reason: 'template_missing' }
 
   const addr = (order.shipping_address ?? {}) as Record<string, any>
+  // Issue/reuse a one-click unsubscribe token for the footer link + headers.
+  const unsub = await buildUnsubscribeLinks(recipient)
+
   const props: OrderEmailProps = {
     orderNumber: String(order.id).slice(0, 8).toUpperCase(),
     customerName: typeof addr.full_name === 'string' ? addr.full_name.split(' ')[0] : undefined,
     amount: money(order.total as number, order.currency as string),
     trackingNumber: (order.tracking_number as string | null) ?? undefined,
     carrier: (order.carrier as string | null) ?? undefined,
+    unsubscribeUrl: unsub?.pageUrl,
     refundAmount:
       event === 'refund-processed'
         ? money(extra.refundAmount ?? (order.total as number), extra.refundCurrency ?? (order.currency as string))
