@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { NotificationBell } from "@/components/site/NotificationBell";
 
 type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
 
@@ -421,7 +422,13 @@ export function AdminShell({
             </div>
 
             {/* RIGHT — actions */}
-            <div className="flex items-center justify-end gap-2">{actions}</div>
+            <div className="flex items-center justify-end gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-emerald-400/90">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_oklch(0.7_0.17_160_/_0.6)]" /> Synced
+              </span>
+              <NotificationBell />
+              {actions}
+            </div>
           </div>
 
 

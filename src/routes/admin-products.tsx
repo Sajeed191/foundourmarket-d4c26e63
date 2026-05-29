@@ -5,7 +5,7 @@ import {
   Package, Search, Plus, Minus, Loader2, Download, Radio, Star, StarOff,
   Eye, EyeOff, Copy, ExternalLink, Link2, Trash2, Pencil, Boxes,
   TrendingUp, AlertTriangle, CheckCircle2, X, SlidersHorizontal, BarChart3,
-  Layers, IndianRupee, Flame, Upload,
+  Layers, IndianRupee, Flame, Upload, ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -69,6 +69,7 @@ function ProductsInner() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState<Record<string, Stat>>({});
   const [revenueToday, setRevenueToday] = useState(0);
+  const [ordersToday, setOrdersToday] = useState(0);
   const [pulse, setPulse] = useState(false);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,9 +108,13 @@ function ProductsInner() {
     const map: Record<string, Stat> = {};
     const todayKey = new Date().toISOString().slice(0, 10);
     let today = 0;
+    let ordersTodayCount = 0;
     for (const o of rows) {
       const paid = o.payment_status === "paid" || o.status === "paid" || o.status === "fulfilled";
-      if (o.created_at.slice(0, 10) === todayKey && paid) today += Number(o.total) || 0;
+      if (o.created_at.slice(0, 10) === todayKey) {
+        ordersTodayCount += 1;
+        if (paid) today += Number(o.total) || 0;
+      }
       for (const it of o.order_items ?? []) {
         if (!it.product_slug) continue;
         const s = (map[it.product_slug] ??= { units: 0, revenue: 0, orders: 0 });
@@ -120,6 +125,7 @@ function ProductsInner() {
     }
     setStats(map);
     setRevenueToday(today);
+    setOrdersToday(ordersTodayCount);
   }, []);
 
   const reloadAll = useCallback(() => {
@@ -256,9 +262,11 @@ function ProductsInner() {
     const oos = list.filter((p) => p.stock_quantity <= 0).length;
     const low = list.filter((p) => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold).length;
     let best: { name: string; units: number } | null = null;
+    let viewed: { name: string; views: number } | null = null;
     for (const p of list) {
       const u = stats[p.slug]?.units ?? 0;
       if (!best || u > best.units) best = { name: p.name, units: u };
+      if (!viewed || p.views_count > viewed.views) viewed = { name: p.name, views: p.views_count };
     }
     return {
       total: list.length,
@@ -267,6 +275,8 @@ function ProductsInner() {
       featured: list.filter((p) => p.featured).length,
       oos, low,
       best: best && best.units > 0 ? best.name : "—",
+      mostViewed: viewed && viewed.views > 0 ? viewed.name : "—",
+      inventoryValue: list.reduce((s, p) => s + Number(p.price) * p.stock_quantity, 0),
     };
   }, [products, stats]);
 
@@ -333,7 +343,10 @@ function ProductsInner() {
     { icon: AlertTriangle, label: "Low stock", value: String(kpis.low) },
     { icon: X, label: "Out of stock", value: String(kpis.oos) },
     { icon: IndianRupee, label: "Revenue today", value: inr(revenueToday) },
+    { icon: ShoppingCart, label: "Orders today", value: String(ordersToday) },
+    { icon: Boxes, label: "Inventory value", value: inr(kpis.inventoryValue) },
     { icon: Flame, label: "Best seller", value: kpis.best, wide: true },
+    { icon: Eye, label: "Most viewed", value: kpis.mostViewed, wide: true },
   ];
 
   return (
