@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
+import { AdminProductOverlay } from "@/components/admin/AdminProductOverlay";
 
 type FlashSale = {
   id: string;
@@ -104,29 +105,34 @@ export function FlashSaleStrip() {
             const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
             const salePrice = p.price * (1 - sale.discount_percent / 100);
             return (
-              <Link
+              <AdminProductOverlay
                 key={p.slug}
-                to="/products/$slug"
-                params={{ slug: p.slug }}
-                className="snap-start shrink-0 w-[42%] xs:w-[38%] sm:w-[26%] lg:w-[20%] group"
+                product={p}
+                className="snap-start shrink-0 w-[42%] xs:w-[38%] sm:w-[26%] lg:w-[20%]"
               >
-                <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 ring-1 ring-white/10">
-                  <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-active:scale-105 transition-transform" />
-                  <span className="absolute top-1.5 left-1.5 bg-accent text-accent-foreground text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md">
-                    −{sale.discount_percent}%
-                  </span>
-                </div>
-                <p className="mt-2 text-[11px] font-medium truncate">{p.name}</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-xs font-display font-semibold text-accent tabular-nums">{format(salePrice)}</span>
-                  <span className="text-[10px] font-mono line-through text-muted-foreground tabular-nums">{format(p.price)}</span>
-                </div>
-                {showOnlyLeft && (
-                  <p className="text-[9px] font-mono uppercase tracking-wider text-accent/90 mt-0.5">
-                    Only {p.stockQuantity} left
-                  </p>
-                )}
-              </Link>
+                <Link
+                  to="/products/$slug"
+                  params={{ slug: p.slug }}
+                  className="block group"
+                >
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 ring-1 ring-white/10">
+                    <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-active:scale-105 transition-transform" />
+                    <span className="absolute top-1.5 right-1.5 bg-accent text-accent-foreground text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md">
+                      −{sale.discount_percent}%
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] font-medium truncate">{p.name}</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs font-display font-semibold text-accent tabular-nums">{format(salePrice)}</span>
+                    <span className="text-[10px] font-mono line-through text-muted-foreground tabular-nums">{format(p.price)}</span>
+                  </div>
+                  {showOnlyLeft && (
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-accent/90 mt-0.5">
+                      Only {p.stockQuantity} left
+                    </p>
+                  )}
+                </Link>
+              </AdminProductOverlay>
             );
           })}
         </div>

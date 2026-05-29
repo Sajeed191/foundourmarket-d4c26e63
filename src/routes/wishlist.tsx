@@ -6,6 +6,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
+import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({ meta: [{ title: "Wishlist — FoundOurMarket™" }] }),
@@ -64,7 +65,8 @@ function WishlistPage() {
       ) : (
         <ul className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-card">
           {items.map((p) => (
-            <li key={p.slug} className="flex items-center gap-4 p-4 sm:p-5">
+            <li key={p.slug} className="relative flex items-center gap-4 p-4 sm:p-5">
+              <ProductCardAdminControls product={p} />
               <Link to="/products/$slug" params={{ slug: p.slug }} className="shrink-0">
                 <img src={p.image} alt={p.name} loading="lazy" className="size-20 sm:size-24 rounded-xl object-cover bg-black/40" />
               </Link>
