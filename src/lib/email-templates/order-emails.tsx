@@ -37,11 +37,13 @@ function Shell({
   heading,
   intro,
   children,
+  unsubscribeUrl,
 }: {
   badge: string
   heading: string
   intro: string
   children?: React.ReactNode
+  unsubscribeUrl?: string
 }) {
   return (
     <Html>
