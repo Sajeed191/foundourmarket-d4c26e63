@@ -239,6 +239,23 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .select("id,user_id,total,currency,razorpay_order_id,payment_status")
       .eq("id", data.orderId)
       .maybeSingle();
+    if (oErr || !order) throw new Error("Order not found.");
+    if (order.user_id !== userId) throw new Error("Not authorised for this order.");
+    if (order.razorpay_order_id !== data.razorpayOrderId) {
+      throw new Error("Order mismatch.");
+    }
+
+    // Idempotency: already paid → succeed without duplicating
+    if (order.payment_status === "succeeded") {
+      return { ok: true, orderId: order.id, alreadyPaid: true };
+    }
+
+    const valid = verifyPaymentSignature(
+      data.razorpayOrderId,
+      data.razorpayPaymentId,
+      data.razorpaySignature,
+    );
+
     if (!valid) {
       await supabaseAdmin.rpc("release_order_stock", {
         _order_id: order.id,
