@@ -359,39 +359,40 @@ export function AdminShell({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
           {/* Top OS nav bar: left / center / right */}
-          <div className="relative px-3 lg:px-10 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="relative px-3 lg:px-10 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             {/* LEFT — hamburger */}
             <div className="flex items-center justify-start">
               <button
                 onClick={() => setOpen(true)}
-                className="lg:hidden size-8 grid place-items-center rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-accent/30 transition-all duration-300 shadow-[0_4px_16px_-8px_oklch(0_0_0_/_0.6)]"
+                className="lg:hidden size-8 grid place-items-center rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-accent/25 transition-all duration-300 shadow-[0_4px_16px_-10px_oklch(0_0_0_/_0.6)] active:scale-95"
                 aria-label="Open menu"
               >
-                <Menu className="size-[18px]" />
+                <Menu className="size-[17px]" />
               </button>
             </div>
 
             {/* CENTER — brand */}
             <Link to="/" className="lg:hidden group inline-flex items-center gap-2 min-w-0">
-              <span className="relative size-7 shrink-0 rounded-lg bg-gradient-to-br from-accent to-primary grid place-items-center shadow-[0_6px_18px_-8px_oklch(0.74_0.19_49_/_0.7)]">
-                <Sparkles className="size-3.5 text-accent-foreground" />
-                <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/20" />
+              <span className="relative size-6 shrink-0 rounded-lg bg-gradient-to-br from-accent to-primary grid place-items-center shadow-[0_5px_16px_-9px_oklch(0.74_0.19_49_/_0.6)]">
+                <Sparkles className="size-3 text-accent-foreground" />
+                <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/15" />
               </span>
-              <span className="font-display text-sm tracking-tight truncate">FoundOurMarket™</span>
+              <span className="font-display text-[13px] tracking-tight truncate max-w-[9.5rem]">FoundOurMarket™</span>
             </Link>
             {/* Desktop breadcrumb/title sits in the center slot */}
             <div className="hidden lg:block min-w-0">
-              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.32em] text-muted-foreground/80">
                 <span className="text-accent">Operator</span>
-                <span>/</span>
+                <span className="text-muted-foreground/40">/</span>
                 <span>{groupTitle}</span>
               </div>
               <h1 className="text-base md:text-lg font-display font-semibold truncate">{title}</h1>
             </div>
 
             {/* RIGHT — actions */}
-            <div className="flex items-center justify-end gap-1.5 flex-wrap">{actions}</div>
+            <div className="flex items-center justify-end gap-2">{actions}</div>
           </div>
+
 
           {/* Mobile contextual title row */}
           <div className="lg:hidden relative px-4 pb-2.5 -mt-0.5">
