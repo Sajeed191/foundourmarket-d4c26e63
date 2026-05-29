@@ -18,6 +18,9 @@ export type RazorpayOptions = {
   notes?: Record<string, string>;
   theme?: { color?: string; backdrop_color?: string };
   method?: Record<string, boolean>;
+  customer_id?: string;
+  save?: 0 | 1;
+
   config?: unknown;
   handler: (response: RazorpayResponse) => void;
   modal?: { ondismiss?: () => void; escape?: boolean; backdropclose?: boolean };
