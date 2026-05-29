@@ -874,8 +874,9 @@ function WhyShopWithUs() {
                 <Icon className="size-5" />
               </span>
               <div>
-                <p className="text-[12px] sm:text-[13px] font-medium leading-tight">{it.title}</p>
-                <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{it.desc}</p>
+                <p className="text-[13px] font-medium leading-tight">{it.title}</p>
+                <p className="text-[11px] text-muted-foreground leading-snug mt-1">{it.desc}</p>
+
               </div>
             </motion.div>
           );
