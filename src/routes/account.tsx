@@ -561,12 +561,17 @@ function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
+          whileHover={{ y: -4 }}
           transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
-          className="snap-start shrink-0 w-[46%] xs:w-[44%] sm:w-[32%] lg:w-[31%]"
+          className="snap-start shrink-0 w-[46%] xs:w-[44%] sm:w-[32%] lg:w-[31%] rounded-2xl transition-shadow duration-500 hover:shadow-[0_18px_50px_-20px_oklch(0.74_0.19_49/0.5)]"
         >
           <ProductCard product={p as never} />
         </motion.div>
       ))}
+    </div>
+  );
+}
+
     </div>
   );
 }
