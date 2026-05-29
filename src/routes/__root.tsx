@@ -87,6 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "FoundOurMarket™ | Premium Global Marketplace" },
       { property: "og:description", content: "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://foundourmarket.com/" },
       { property: "og:site_name", content: "FoundOurMarket" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0a0a0a" },
