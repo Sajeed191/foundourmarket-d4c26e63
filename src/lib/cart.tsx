@@ -331,6 +331,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         savedDetailed,
         subtotalUSD,
         loading,
+        hydrated,
       }}
     >
       {children}
