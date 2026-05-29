@@ -5,7 +5,7 @@ import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 export function Footer() {
   const { region, setRegion } = useRegion();
   return (
-    <footer className="relative px-4 sm:px-6 py-10 sm:py-12 border-t border-border bg-background safe-bottom overflow-hidden">
+    <footer className="relative px-4 sm:px-6 py-6 sm:py-8 border-t border-border bg-background safe-bottom overflow-hidden">
       {/* Ambient divider glow */}
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[60%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.5 }} />
       <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[70%] h-40 opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
