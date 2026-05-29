@@ -7,6 +7,9 @@ import { invalidateProducts } from "@/lib/use-products";
 import { invalidateCategories, type Category } from "@/lib/use-categories";
 import { resolveImage } from "@/lib/products";
 import { DashboardOverview } from "@/components/admin/DashboardOverview";
+import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
+import { AnimatePresence, motion } from "framer-motion";
+import { LayoutDashboard } from "lucide-react";
 
 
 export const Route = createFileRoute("/admin")({
