@@ -7,7 +7,49 @@ import { renderMarkdown } from "@/lib/cms";
 type Post = { slug: string; title: string; excerpt: string | null; body: string; cover_image: string | null; author: string | null; published_at: string; meta_title: string | null; meta_description: string | null };
 
 export const Route = createFileRoute("/blog/$slug")({
-  head: ({ params }) => ({ meta: [{ title: `${params.slug} — Journal — FoundOurMarket™` }] }),
+  loader: async ({ params }) => {
+    const { data } = await supabase.from("cms_posts").select("slug,title,excerpt,cover_image,author,published_at,meta_title,meta_description")
+      .eq("slug", params.slug)
+      .not("published_at", "is", null).lte("published_at", new Date().toISOString())
+      .maybeSingle();
+    return { post: data as (Pick<Post, "slug" | "title" | "excerpt" | "cover_image" | "author" | "published_at" | "meta_title" | "meta_description">) | null };
+  },
+  head: ({ params, loaderData }) => {
+    const post = loaderData?.post;
+    const url = `https://foundourmarket.com/blog/${params.slug}`;
+    const title = post ? (post.meta_title || `${post.title} — Journal — FoundOurMarket™`) : `${params.slug} — Journal — FoundOurMarket™`;
+    const description = post
+      ? (post.meta_description || post.excerpt || `Read "${post.title}" on the FoundOurMarket Journal.`)
+      : "Stories, guides, and editorial from FoundOurMarket.";
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: url },
+    ];
+    if (post?.cover_image) {
+      meta.push({ property: "og:image", content: post.cover_image });
+      meta.push({ name: "twitter:image", content: post.cover_image });
+    }
+    const scripts = post
+      ? [{
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            image: post.cover_image || undefined,
+            datePublished: post.published_at,
+            author: post.author ? { "@type": "Person", name: post.author } : undefined,
+            description: post.excerpt || undefined,
+            mainEntityOfPage: url,
+          }),
+        }]
+      : [];
+    return { meta, links: [{ rel: "canonical", href: url }], scripts };
+  },
   component: BlogPost,
 });
 
