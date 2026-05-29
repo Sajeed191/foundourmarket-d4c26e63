@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
  * server function, so the controls are a pure UX surface.
  */
 export function ProductCardAdminControls({ product }: { product: Product }) {
-  const { isAdmin } = useIsAdmin();
+  const { isProductAdmin: isAdmin } = useIsProductAdmin();
   const navigate = useNavigate();
   const update = useServerFn(adminUpdateProduct);
   const del = useServerFn(adminDeleteProduct);
