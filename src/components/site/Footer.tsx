@@ -37,7 +37,7 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <div className="space-y-3.5">
+        <div className="space-y-2.5">
           <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Shop</h5>
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/category/$slug" params={{ slug: "electronics" }} className="hover:text-foreground transition-colors">Electronics</Link></li>
