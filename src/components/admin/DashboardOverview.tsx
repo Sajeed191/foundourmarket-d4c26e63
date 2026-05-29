@@ -153,89 +153,109 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
     },
   ];
 
+  const secondary = metrics.slice(1);
+
   return (
     <div className="space-y-5">
-      {/* Horizontal swipeable metric carousel */}
-      <div className="-mx-1 flex gap-3 overflow-x-auto no-scrollbar px-1 pb-1 snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
-        {metrics.map((m, i) => (
+      {/* Asymmetric bento: featured analytics panel + compact metric tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Featured cinematic revenue analytics panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ type: "spring", stiffness: 220, damping: 26 }}
+          className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden card-premium rounded-2xl p-4 sm:p-5"
+        >
+          <div className="pointer-events-none absolute -top-20 left-1/4 size-72 rounded-full opacity-40" style={{ background: "var(--gradient-ember)", filter: "blur(44px)" }} />
+          <div className="pointer-events-none absolute -bottom-24 -right-10 size-56 rounded-full opacity-25" style={{ background: "radial-gradient(circle, oklch(0.55 0.18 280 / 0.6), transparent 70%)", filter: "blur(40px)" }} />
+
+          <div className="relative flex items-start justify-between mb-3">
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-accent inline-flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)] animate-pulse" /> Live revenue · {period}d
+              </p>
+              <p className="text-3xl sm:text-4xl font-display font-semibold tabular-nums tracking-tight mt-1">${stats.revenue.toFixed(2)}</p>
+              <div className="mt-1"><TrendBadge delta={stats.delta} period={stats.half} /></div>
+            </div>
+            <div className="inline-flex rounded-full border border-border bg-background/60 p-0.5">
+              {([7, 14, 30] as const).map((p) => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full transition-colors ${period === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {p}d
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative">
+            <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-40 sm:h-48" preserveAspectRatio="none"
+              onMouseLeave={() => setHover(null)}
+              onMouseMove={(e) => {
+                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                const rel = ((e.clientX - rect.left) / rect.width) * w;
+                const idx = Math.round((rel - pad) / stepX);
+                setHover(Math.max(0, Math.min(points.length - 1, idx)));
+              }}
+            >
+              <defs>
+                <linearGradient id="spark" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.42" />
+                  <stop offset="55%" stopColor="currentColor" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="sparkline" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="oklch(0.78 0.17 60)" />
+                  <stop offset="100%" stopColor="oklch(0.72 0.2 45)" />
+                </linearGradient>
+              </defs>
+              <g className="text-accent">
+                <motion.path d={areaPath} fill="url(#spark)"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} />
+                <motion.path d={linePath} fill="none" stroke="url(#sparkline)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
+                  style={{ filter: "drop-shadow(0 3px 12px oklch(0.74 0.19 49 / 0.6))" }}
+                  initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: "easeOut" }} />
+                {hover !== null && (
+                  <line x1={points[hover][0]} y1={pad} x2={points[hover][0]} y2={h - pad} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.35" />
+                )}
+                {hover !== null && <circle cx={points[hover][0]} cy={points[hover][1]} r={4.5} fill="currentColor" style={{ filter: "drop-shadow(0 0 6px oklch(0.74 0.19 49 / 0.9))" }} />}
+                {end && <circle className="animate-data-pulse" cx={end[0]} cy={end[1]} r={3} fill="currentColor" />}
+                {end && <circle cx={end[0]} cy={end[1]} r={3} fill="currentColor" />}
+              </g>
+            </svg>
+
+            {hover !== null && (
+              <div className="pointer-events-none absolute -top-1 z-10 glass-strong rounded-xl px-3 py-1.5 text-center"
+                style={{ left: `${(points[hover][0] / w) * 100}%`, transform: "translateX(-50%)" }}>
+                <p className="font-mono text-accent text-xs">${stats.buckets[hover].revenue.toFixed(2)}</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {stats.buckets[hover].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between mt-1.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+            <span>{stats.buckets[0].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+            <span className="text-accent">${stats.last.toFixed(0)} · past {stats.half}d</span>
+            <span>{stats.buckets[stats.buckets.length - 1].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+          </div>
+        </motion.div>
+
+        {/* Compact metric tiles */}
+        {secondary.map((m, i) => (
           <motion.div
             key={m.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, type: "spring", stiffness: 260, damping: 26 }}
+            initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ delay: 0.1 + i * 0.06, type: "spring", stiffness: 260, damping: 26 }}
+            whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            className="snap-center shrink-0 w-[44vw] sm:w-auto"
+            className="col-span-1"
           >
             <Stat {...m} />
           </motion.div>
         ))}
       </div>
 
-      {/* Cinematic revenue chart */}
-      <div className="relative overflow-hidden card-premium rounded-2xl p-4">
-        <div className="pointer-events-none absolute -top-16 left-1/4 size-56 rounded-full opacity-40" style={{ background: "var(--gradient-ember)", filter: "blur(36px)" }} />
-        <div className="relative flex items-center justify-between mb-3">
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Last {period} days</p>
-            <h2 className="text-base font-medium mt-0.5">Revenue</h2>
-          </div>
-          <div className="inline-flex rounded-full border border-border bg-background/60 p-0.5">
-            {([7, 14, 30] as const).map((p) => (
-              <button key={p} onClick={() => setPeriod(p)}
-                className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full transition-colors ${period === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                {p}d
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative">
-          <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32" preserveAspectRatio="none"
-            onMouseLeave={() => setHover(null)}
-            onMouseMove={(e) => {
-              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-              const rel = ((e.clientX - rect.left) / rect.width) * w;
-              const idx = Math.round((rel - pad) / stepX);
-              setHover(Math.max(0, Math.min(points.length - 1, idx)));
-            }}
-          >
-            <defs>
-              <linearGradient id="spark" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.32" />
-                <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <g className="text-accent">
-              <motion.path d={areaPath} fill="url(#spark)"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} />
-              <motion.path d={linePath} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
-                style={{ filter: "drop-shadow(0 2px 8px oklch(0.74 0.19 49 / 0.5))" }}
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: "easeOut" }} />
-              {hover !== null && (
-                <line x1={points[hover][0]} y1={pad} x2={points[hover][0]} y2={h - pad} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
-              )}
-              {hover !== null && <circle cx={points[hover][0]} cy={points[hover][1]} r={3.5} fill="currentColor" />}
-              {end && <circle className="animate-data-pulse" cx={end[0]} cy={end[1]} r={2.5} fill="currentColor" />}
-              {end && <circle cx={end[0]} cy={end[1]} r={2.5} fill="currentColor" />}
-            </g>
-          </svg>
-
-          {hover !== null && (
-            <div className="pointer-events-none absolute -top-1 z-10 glass-strong rounded-xl px-3 py-1.5 text-center"
-              style={{ left: `${(points[hover][0] / w) * 100}%`, transform: "translateX(-50%)" }}>
-              <p className="font-mono text-accent text-xs">${stats.buckets[hover].revenue.toFixed(2)}</p>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
-                {stats.buckets[hover].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-              </p>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-between mt-1.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
-          <span>{stats.buckets[0].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-          <span className="text-accent">${stats.last.toFixed(0)} · past {stats.half}d</span>
-          <span>{stats.buckets[stats.buckets.length - 1].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-        </div>
-      </div>
 
       {/* Collapsible modules */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
