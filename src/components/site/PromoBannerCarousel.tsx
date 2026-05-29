@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/lib/use-admin";
+import { BannerAdminSheet } from "@/components/admin/BannerAdminSheet";
 
 type Banner = {
   id: string;
   title: string;
   subtitle: string | null;
   image: string | null;
+  mobile_image: string | null;
   link: string | null;
   cta_text: string | null;
   sort_order: number;
