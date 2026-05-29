@@ -8,8 +8,15 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
+import { markTicketRead } from "@/lib/use-support-unread";
+import { notifySupportEvent } from "@/lib/support.functions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+/** Fire-and-forget branded support email; never blocks or surfaces errors to the user. */
+function fireSupportEmail(ticketId: string, event: "created" | "customer_reply" | "staff_reply") {
+  void notifySupportEvent({ data: { ticketId, event } }).catch(() => {});
+}
 
 export const Route = createFileRoute("/account_/support")({
   head: () => ({
