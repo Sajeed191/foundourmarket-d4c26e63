@@ -54,6 +54,25 @@ export function Nav() {
     { to: "/category/$slug", params: { slug: "home" }, label: "Home" },
   ] as const;
 
+  const categories = [
+    { to: "/", label: "Shop", icon: Store },
+    { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics", icon: Smartphone },
+    { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion", icon: Shirt },
+    { to: "/category/$slug", params: { slug: "home" }, label: "Home", icon: HomeIcon },
+  ] as const;
+
+  const quickActions = [
+    { to: "/account" as const, label: "Orders", icon: Package, badge: null as number | null },
+    { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishSlugs.size },
+    { to: "/cart" as const, label: "Cart", icon: ShoppingBag, badge: count },
+    { to: "/" as const, label: "Track Order", icon: Truck, badge: null as number | null },
+  ];
+
+  const displayName = user
+    ? ((user.user_metadata?.full_name as string) || (user.email?.split("@")[0] ?? "Account"))
+    : "FoundOurMarket™";
+  const initial = (displayName?.[0] ?? "F").toUpperCase();
+
   const { scrollY } = useScroll();
   const lastY = useRef(0);
   const [hidden, setHidden] = useState(false);
