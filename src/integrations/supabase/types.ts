@@ -1935,6 +1935,68 @@ export type Database = {
         }
         Relationships: []
       }
+      support_canned_replies: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_internal_notes: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_internal_notes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           attachments: Json
@@ -1973,8 +2035,38 @@ export type Database = {
           },
         ]
       }
+      support_ticket_reads: {
+        Row: {
+          id: string
+          last_read_at: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_reads_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
+          assigned_to: string | null
           category: string
           created_at: string
           id: string
@@ -1985,10 +2077,12 @@ export type Database = {
           resolved_at: string | null
           status: string
           subject: string
+          tags: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           category?: string
           created_at?: string
           id?: string
@@ -1999,10 +2093,12 @@ export type Database = {
           resolved_at?: string | null
           status?: string
           subject: string
+          tags?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           category?: string
           created_at?: string
           id?: string
@@ -2013,6 +2109,7 @@ export type Database = {
           resolved_at?: string | null
           status?: string
           subject?: string
+          tags?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -2350,6 +2447,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      support_admin_unread_count: { Args: never; Returns: number }
+      support_unread_count: { Args: never; Returns: number }
     }
     Enums: {
       app_role:
