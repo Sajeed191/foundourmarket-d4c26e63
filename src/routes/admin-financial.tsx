@@ -175,6 +175,10 @@ function FinancialPage() {
     const months = monthlyBreakdown(data);
     return {
       summary, months,
+      ext: extendedMetrics(data, summary),
+      products: productProfitability(data),
+      taxRows: taxReport(data),
+      cohorts: cohortRetention(data),
       series: revenueSeries(data, granularity),
       expenses: expenseBreakdown(summary),
       reasons: refundReasons(data),
@@ -183,6 +187,7 @@ function FinancialPage() {
       anomalies: detectAnomalies(data, summary, months),
       forecast: forecastNext(months),
     };
+  }, [data, granularity]);
   }, [data, granularity]);
 
   const cur = data?.currency ?? "USD";
