@@ -146,7 +146,7 @@ function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pb-12 sm:pb-6">
+    <div className="min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-8">
       {/* Cinematic ambient background system — layered orbs, bloom & grid */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {/* base navy depth wash */}
@@ -582,7 +582,7 @@ function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
             viewport={{ once: true, margin: "-40px" }}
             whileHover={{ y: -4 }}
             transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
-            className="snap-center shrink-0 w-[65%] xs:w-[58%] sm:w-[27%] lg:w-[25%] max-w-[240px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
+            className="snap-center shrink-0 w-[52%] xs:w-[48%] sm:w-[27%] lg:w-[25%] max-w-[185px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
           >
             <ProductCard product={p as never} compact />
           </motion.div>
