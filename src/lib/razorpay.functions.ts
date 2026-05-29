@@ -165,6 +165,22 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       throw new Error("Could not record order items.");
     }
 
+    // Atomically reserve stock (row-locked, anti-oversell). 15 min TTL.
+    const { error: reserveErr } = await supabaseAdmin.rpc("reserve_order_stock", {
+      _order_id: order.id,
+      _ttl_minutes: 15,
+    });
+    if (reserveErr) {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "payment_failed", payment_status: "failed" })
+        .eq("id", order.id);
+      throw new Error(
+        /insufficient stock/i.test(reserveErr.message)
+          ? "Some items just went out of stock. Please review your cart."
+          : "Could not reserve inventory for this order.",
+      );
+    }
 
     // Create the Razorpay order (amount in paise)
     let rzpOrder;
@@ -182,7 +198,8 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
         },
       );
     } catch (e: any) {
-      // Roll the pending order into a failed state so it doesn't dangle
+      // Roll the pending order into a failed state and give the reserved stock back
+      await supabaseAdmin.rpc("release_order_stock", { _order_id: order.id, _reason: "gateway_error" });
       await supabaseAdmin
         .from("orders")
         .update({ status: "payment_failed", payment_status: "failed" })
