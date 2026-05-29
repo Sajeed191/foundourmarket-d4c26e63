@@ -71,27 +71,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Trust + payment badges */}
-      <div className="relative max-w-7xl mx-auto mt-8 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {[
-            { icon: ShieldCheck, text: "Buyer Protection" },
-            { icon: Lock, text: "Secure Checkout" },
-            { icon: CreditCard, text: "Encrypted Payments" },
-          ].map(({ icon: Icon, text }) => (
-            <span key={text} className="inline-flex items-center gap-1.5 rounded-full glass px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              <Icon className="size-3.5 text-accent" /> {text}
-            </span>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {["VISA", "MC", "AMEX", "UPI", "PayPal"].map((p) => (
-            <span key={p} className="px-2 py-1 rounded-md bg-white/[0.06] border border-border text-[9px] font-mono font-semibold tracking-wider text-muted-foreground">
-              {p}
-            </span>
-          ))}
-        </div>
-      </div>
 
       <div className="relative max-w-7xl mx-auto mt-6 pt-5 border-t border-border flex flex-col md:flex-row justify-between gap-3 text-center md:text-left">
         <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket. All rights reserved.</p>
