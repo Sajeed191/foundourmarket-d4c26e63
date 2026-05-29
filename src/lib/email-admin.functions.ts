@@ -178,3 +178,35 @@ export const getEmailOps = createServerFn({ method: "POST" })
       suppressed: suppressed.slice(0, data.limit),
     };
   });
+
+type QueueRow = {
+  queue: string;
+  queued: number;
+  in_flight: number;
+  dlq: number;
+  archived: number;
+};
+
+/** Admin — live pgmq email queue depths (queued / in-flight / DLQ / archived). */
+export const getEmailQueueStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context as { userId: string };
+    await assertEmailStaff(userId);
+
+    const { data, error } = await supabaseAdmin.rpc("email_queue_status");
+    if (error) throw new Error(error.message);
+
+    const queues = (data as QueueRow[] | null) ?? [];
+    const totals = queues.reduce(
+      (acc, q) => ({
+        queued: acc.queued + Number(q.queued ?? 0),
+        in_flight: acc.in_flight + Number(q.in_flight ?? 0),
+        dlq: acc.dlq + Number(q.dlq ?? 0),
+        archived: acc.archived + Number(q.archived ?? 0),
+      }),
+      { queued: 0, in_flight: 0, dlq: 0, archived: 0 },
+    );
+
+    return { queues, totals, fetchedAt: new Date().toISOString() };
+  });
