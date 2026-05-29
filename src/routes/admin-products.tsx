@@ -31,12 +31,17 @@ type Product = {
   stock_quantity: number; reserved_quantity: number; low_stock_threshold: number;
   views_count: number; sku: string | null; rating: number; reviews: number;
   sort_order: number; created_at: string;
+  price_inr: number | null; compare_price_inr: number | null;
+  price_usd: number | null; compare_price_usd: number | null;
+  india_visible: boolean; international_visible: boolean;
 };
 type Category = { slug: string; name: string };
 type Stat = { units: number; revenue: number; orders: number };
 
 const inr = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(v) || 0);
+const usd = (v: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(Number(v) || 0);
 
 type StockHealth = "oos" | "critical" | "low" | "ok";
 function health(p: Product): StockHealth {
@@ -701,6 +706,12 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
     in_stock: row?.in_stock ?? true, featured: row?.featured ?? false,
     sku: row?.sku ?? "", stock_quantity: row?.stock_quantity ?? 0,
     low_stock_threshold: row?.low_stock_threshold ?? 5, sort_order: row?.sort_order ?? nextSort,
+    price_inr: row?.price_inr != null ? String(row.price_inr) : "",
+    compare_price_inr: row?.compare_price_inr != null ? String(row.compare_price_inr) : "",
+    price_usd: row?.price_usd != null ? String(row.price_usd) : "",
+    compare_price_usd: row?.compare_price_usd != null ? String(row.compare_price_usd) : "",
+    india_visible: row?.india_visible ?? true,
+    international_visible: row?.international_visible ?? true,
   });
 
   function slugify(name: string) {
@@ -718,8 +729,37 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
     setUploading(false);
   }
 
+  const num = (v: string) => (v.trim() === "" ? null : Number(v));
+  const priceInr = num(form.price_inr);
+  const cmpInr = num(form.compare_price_inr);
+  const priceUsd = num(form.price_usd);
+  const cmpUsd = num(form.compare_price_usd);
+
+  const validation = useMemo(() => {
+    const errs: string[] = [];
+    if (form.india_visible && (priceInr == null || priceInr <= 0))
+      errs.push("India is visible but the INR price is missing or zero.");
+    if (form.international_visible && (priceUsd == null || priceUsd <= 0))
+      errs.push("International is visible but the USD price is missing or zero.");
+    if (!form.india_visible && !form.international_visible)
+      errs.push("Product is hidden in both regions — it won't appear in any storefront.");
+    for (const [p, c, label] of [
+      [priceInr, cmpInr, "INR"], [priceUsd, cmpUsd, "USD"],
+    ] as const) {
+      if (c != null && p != null && c <= p)
+        errs.push(`${label} compare-at price must be higher than the selling price to show a discount.`);
+    }
+    return errs;
+  }, [form.india_visible, form.international_visible, priceInr, cmpInr, priceUsd, cmpUsd]);
+
+  const discPct = (p: number | null, c: number | null) =>
+    p != null && c != null && c > p ? Math.round(((c - p) / c) * 100) : null;
+  const inrDisc = discPct(priceInr, cmpInr);
+  const usdDisc = discPct(priceUsd, cmpUsd);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (validation.length) { setError(validation[0]); return; }
     setSaving(true); setError(null);
     const payload = {
       slug: form.slug.trim() || slugify(form.name), name: form.name.trim(),
@@ -730,6 +770,9 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
       in_stock: form.in_stock, featured: form.featured, sku: form.sku.trim() || null,
       stock_quantity: Number(form.stock_quantity) || 0, low_stock_threshold: Number(form.low_stock_threshold) || 0,
       sort_order: Number(form.sort_order) || 0,
+      price_inr: priceInr, compare_price_inr: cmpInr,
+      price_usd: priceUsd, compare_price_usd: cmpUsd,
+      india_visible: form.india_visible, international_visible: form.international_visible,
     };
     const { error: err } = row
       ? await supabase.from("products").update(payload).eq("id", row.id)
@@ -783,12 +826,63 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
             </select>
           </div>
           <EField label="SKU" value={form.sku} onChange={(v) => setForm({ ...form, sku: v })} />
-          <EField label="Price (INR)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
-          <EField label="Cost (INR)" type="number" value={form.cost} onChange={(v) => setForm({ ...form, cost: v })} />
+          <EField label="Base price (legacy)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <EField label="Cost" type="number" value={form.cost} onChange={(v) => setForm({ ...form, cost: v })} />
           <EField label="Discount %" type="number" value={form.discount?.toString() ?? ""} onChange={(v) => setForm({ ...form, discount: v ? Number(v) : null })} />
           <EField label="Stock qty" type="number" value={String(form.stock_quantity)} onChange={(v) => setForm({ ...form, stock_quantity: Number(v) || 0 })} />
           <EField label="Low stock threshold" type="number" value={String(form.low_stock_threshold)} onChange={(v) => setForm({ ...form, low_stock_threshold: Number(v) || 0 })} />
           <EField label="Sort order" type="number" value={String(form.sort_order)} onChange={(v) => setForm({ ...form, sort_order: Number(v) || 0 })} />
+
+          {/* ── Dual-region pricing ── */}
+          <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+            {/* India / INR */}
+            <div className={`rounded-2xl border p-3.5 space-y-3 ${form.india_visible ? "border-accent/30 bg-accent/[0.04]" : "border-white/10 bg-white/[0.02] opacity-70"}`}>
+              <label className="flex items-center justify-between gap-2 text-sm font-display">
+                <span className="inline-flex items-center gap-1.5"><IndianRupee className="size-3.5 text-accent" /> India · INR</span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <input type="checkbox" checked={form.india_visible} onChange={(e) => setForm({ ...form, india_visible: e.target.checked })} className="accent-[var(--accent)]" />
+                  {form.india_visible ? "Visible" : "Hidden"}
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <EField label="Price ₹" type="number" value={form.price_inr} onChange={(v) => setForm({ ...form, price_inr: v })} />
+                <EField label="Compare-at ₹" type="number" value={form.compare_price_inr} onChange={(v) => setForm({ ...form, compare_price_inr: v })} />
+              </div>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center justify-between">
+                <span>{priceInr != null && priceInr > 0 ? inr(priceInr) : "— set a price"}</span>
+                {inrDisc != null && <span className="text-emerald-400">−{inrDisc}% off {inr(cmpInr!)}</span>}
+              </div>
+            </div>
+            {/* International / USD */}
+            <div className={`rounded-2xl border p-3.5 space-y-3 ${form.international_visible ? "border-accent/30 bg-accent/[0.04]" : "border-white/10 bg-white/[0.02] opacity-70"}`}>
+              <label className="flex items-center justify-between gap-2 text-sm font-display">
+                <span className="inline-flex items-center gap-1.5">🌍 International · USD</span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <input type="checkbox" checked={form.international_visible} onChange={(e) => setForm({ ...form, international_visible: e.target.checked })} className="accent-[var(--accent)]" />
+                  {form.international_visible ? "Visible" : "Hidden"}
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <EField label="Price $" type="number" value={form.price_usd} onChange={(v) => setForm({ ...form, price_usd: v })} />
+                <EField label="Compare-at $" type="number" value={form.compare_price_usd} onChange={(v) => setForm({ ...form, compare_price_usd: v })} />
+              </div>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center justify-between">
+                <span>{priceUsd != null && priceUsd > 0 ? usd(priceUsd) : "— set a price"}</span>
+                {usdDisc != null && <span className="text-emerald-400">−{usdDisc}% off {usd(cmpUsd!)}</span>}
+              </div>
+            </div>
+          </div>
+
+          {validation.length > 0 && (
+            <div className="col-span-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1.5">
+              {validation.map((v) => (
+                <p key={v} className="flex items-start gap-2 text-[11px] text-amber-300">
+                  <AlertTriangle className="size-3.5 shrink-0 mt-px" /> {v}
+                </p>
+              ))}
+            </div>
+          )}
+
           <div className="col-span-2">
             <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Description</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
@@ -801,7 +895,7 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
         {error && <p className="text-xs text-destructive mt-4">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
           <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest border border-white/10 hover:bg-white/5">Cancel</button>
-          <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
+          <button type="submit" disabled={saving || validation.length > 0} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
             {saving ? "Saving…" : "Save product"}
           </button>
         </div>
