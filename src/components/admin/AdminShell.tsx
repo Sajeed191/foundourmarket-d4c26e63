@@ -49,7 +49,8 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Catalog",
     items: [
-      { to: "/admin?tab=products", label: "Products", icon: Package },
+      { to: "/admin-products", label: "Products", icon: Package },
+
       { to: "/admin?tab=categories", label: "Categories", icon: Boxes },
     ],
   },
