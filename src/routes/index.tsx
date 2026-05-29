@@ -1,22 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap, Flame } from "lucide-react";
+import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap, Flame, BadgeCheck } from "lucide-react";
 import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { FlashSaleStrip } from "@/components/site/FlashSaleStrip";
-import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { HomePersonalized } from "@/components/site/HomePersonalized";
 import { PromoBannerCarousel } from "@/components/site/PromoBannerCarousel";
 import { ProductRail } from "@/components/site/ProductRail";
-
-
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
@@ -45,7 +41,6 @@ function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix
   useEffect(() => { if (inView) mv.set(to); }, [inView, to, mv]);
   return <motion.span ref={ref}>{display}</motion.span>;
 }
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,6 +76,34 @@ function Reveal({ children, className, delay = 0 }: { children: React.ReactNode;
   );
 }
 
+/* Cinematic ambient divider — layered glow between sections */
+function CinematicDivider() {
+  return (
+    <div aria-hidden className="relative h-px max-w-7xl mx-auto my-2 sm:my-4">
+      <div className="absolute inset-x-6 sm:inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+      <div className="absolute left-1/2 -translate-x-1/2 -top-10 h-20 w-[60%] rounded-full opacity-40 blur-3xl" style={{ background: "var(--gradient-ember-soft)" }} />
+    </div>
+  );
+}
+
+function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All" }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string }) {
+  return (
+    <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
+      <div>
+        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
+          {Icon && <Icon className="size-3" />} {eyebrow}
+        </p>
+        <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
+      </div>
+      {href && (
+        <Link to={href} className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
+          {hrefLabel}
+        </Link>
+      )}
+    </Reveal>
+  );
+}
+
 function Home() {
   const { products, loading: productsLoading } = useProducts();
   const { categories } = useCategories();
@@ -99,7 +122,12 @@ function Home() {
   );
 
   const trending = useMemo(
-    () => [...products].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0)).slice(0, 4),
+    () => [...products].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0)).slice(0, 8),
+    [products]
+  );
+
+  const recommended = useMemo(
+    () => [...products].sort((a, b) => (b.rating * b.reviews) - (a.rating * a.reviews)).slice(0, 8),
     [products]
   );
 
@@ -108,30 +136,18 @@ function Home() {
     [products]
   );
 
-  const bestSellers = useMemo(
-    () => [...products].sort((a, b) => (b.rating * b.reviews) - (a.rating * a.reviews)).slice(0, 4),
-    [products]
-  );
-
-
-  const dealProducts = useMemo(
-    () => products.filter((p) => (p.discount ?? 0) > 0).slice(0, 4),
-    [products]
-  );
-
   return (
     <>
       {/* Sticky announcement bar — homepage only */}
       <AnnouncementBar />
 
-      {/* Hero — cinematic */}
-      <section className="relative pt-10 sm:pt-16 md:pt-24 pb-12 sm:pb-20 md:pb-28 px-4 sm:px-6 overflow-hidden">
-
-        {/* Floating gradient orbs */}
+      {/* 1 · Cinematic Hero */}
+      <section className="relative pt-10 sm:pt-16 md:pt-24 pb-10 sm:pb-16 md:pb-20 px-4 sm:px-6 overflow-hidden">
+        {/* Layered ambient mesh + orbs */}
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="orb animate-orb" style={{ width: 520, height: 520, top: "10%", left: "55%", background: "var(--gradient-ember)" }} />
-          <div className="orb animate-orb" style={{ width: 460, height: 460, top: "30%", left: "10%", background: "var(--gradient-violet)", animationDelay: "-7s" }} />
-          <div className="orb animate-orb" style={{ width: 380, height: 380, top: "65%", left: "70%", background: "radial-gradient(circle at 50% 50%, oklch(0.7 0.15 220 / 0.18), transparent 65%)", animationDelay: "-14s" }} />
+          <div className="orb animate-orb" style={{ width: 520, height: 520, top: "8%", left: "55%", background: "var(--gradient-ember)" }} />
+          <div className="orb animate-orb" style={{ width: 460, height: 460, top: "28%", left: "8%", background: "var(--gradient-violet)", animationDelay: "-7s" }} />
+          <div className="orb animate-orb" style={{ width: 380, height: 380, top: "62%", left: "70%", background: "radial-gradient(circle at 50% 50%, oklch(0.7 0.15 220 / 0.16), transparent 65%)", animationDelay: "-14s" }} />
           <div
             className="absolute inset-0 opacity-[0.04]"
             style={{
@@ -141,7 +157,6 @@ function Home() {
               maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
             }}
           />
-          {/* cinematic light sweep */}
           <motion.div
             initial={{ x: "-30%", opacity: 0 }}
             animate={{ x: "130%", opacity: [0, 0.5, 0] }}
@@ -151,7 +166,6 @@ function Home() {
         </div>
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
-
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
@@ -163,7 +177,7 @@ function Home() {
           <motion.h1
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-6 sm:mb-8"
+            className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
           >
             Everything you need.
             <br />
@@ -172,9 +186,9 @@ function Home() {
 
           <motion.p
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.7 }}
-            className="text-fluid-base text-muted-foreground max-w-2xl mx-auto text-balance mb-10 sm:mb-12 px-2"
+            className="text-fluid-base text-muted-foreground max-w-xl mx-auto text-balance mb-8 sm:mb-10 px-2"
           >
-            A premium independent marketplace sourcing top-quality products from across the world — delivered to your door with cinematic precision.
+            A premium independent marketplace, sourcing top-quality products from across the world — delivered with cinematic precision.
           </motion.p>
 
           <motion.form
@@ -208,7 +222,7 @@ function Home() {
 
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
-            className="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3"
+            className="mt-7 sm:mt-9 flex flex-wrap justify-center gap-3"
           >
             <Link to="/category/$slug" params={{ slug: "electronics" }} className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-foreground text-background text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:brightness-110 hover:-translate-y-0.5 transition-all">
               Explore Products <ArrowRight className="size-3.5" />
@@ -218,10 +232,10 @@ function Home() {
             </a>
           </motion.div>
 
-          {/* Live stats — floating layered cards */}
+          {/* Floating live stats */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55, duration: 0.8 }}
-            className="mt-14 sm:mt-20 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
+            className="mt-12 sm:mt-16 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
           >
             {[
               { value: "180+", label: "Countries", hint: "Worldwide reach" },
@@ -233,7 +247,8 @@ function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 + i * 0.08, duration: 0.6 }}
-                className="glass-strong rounded-2xl px-3 sm:px-6 py-4 sm:py-6 text-left"
+                whileHover={{ y: -4 }}
+                className="glass-strong glass-reflect rounded-2xl px-3 sm:px-6 py-4 sm:py-6 text-left"
               >
                 <div className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">{s.value}</div>
                 <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5">{s.label}</div>
@@ -244,64 +259,52 @@ function Home() {
         </div>
       </section>
 
-      {/* Trust Strip */}
-      <section className="border-y border-border bg-white/[0.015] backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {/* 2 · Featured Collection Banner */}
+      <section className="px-4 sm:px-6 pt-2 sm:pt-4">
+        <PromoBannerCarousel types={["hero"]} maxItems={3} eyebrow="Featured Collection" />
+        <FlashSaleStrip />
+      </section>
+
+      <CinematicDivider />
+
+      {/* 3 · Trust & Benefits — compact premium glass cards */}
+      <section className="px-4 sm:px-6 py-8 sm:py-12 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { icon: Truck, label: "Worldwide Shipping" },
-            { icon: Shield, label: "Secure Payments" },
-            { icon: Star, label: "Curated Quality" },
-            { icon: Headset, label: "24/7 Support" },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-3 group">
-              <div className="size-10 grid place-items-center rounded-xl bg-accent/10 text-accent shrink-0 group-hover:bg-accent/20 group-hover:scale-105 transition-all">
-                <Icon className="size-4" />
+            { icon: Truck, title: "Worldwide Shipping", desc: "Tracked delivery to 180+ countries." },
+            { icon: Shield, title: "Secure Payments", desc: "Bank-grade encryption on checkout." },
+            { icon: Star, title: "Curated Quality", desc: "Hand-verified, premium-only catalog." },
+            { icon: Headset, title: "24/7 Support", desc: "Real humans, ready anytime." },
+          ].map((b, i) => (
+            <Reveal key={b.title} delay={i}>
+              <div className="group relative h-full glass glass-reflect rounded-2xl p-4 sm:p-5 overflow-hidden hover:border-accent/40 transition-colors">
+                <div aria-hidden className="absolute -top-10 -right-10 size-28 rounded-full opacity-0 group-hover:opacity-60 blur-2xl transition-opacity" style={{ background: "var(--gradient-ember-soft)" }} />
+                <div className="relative size-9 sm:size-10 grid place-items-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20 mb-3 group-hover:scale-105 group-hover:shadow-[0_0_22px_-6px_var(--color-accent)] transition-all">
+                  <b.icon className="size-4" />
+                </div>
+                <h4 className="relative text-xs sm:text-sm font-medium mb-1">{b.title}</h4>
+                <p className="relative text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
               </div>
-              <span className="text-[11px] sm:text-xs font-medium uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* Trust badges strip (compact, denser) */}
-      <TrustBadgesStrip />
-
-      {/* Hero banner slider — admin-managed, capped at 3 */}
-      <PromoBannerCarousel types={["hero"]} maxItems={3} eyebrow="Featured" />
-
-      {/* Flash sale (admin-controlled — hidden when no active sale) */}
-      <FlashSaleStrip />
-
-
-
-
-      {/* Categories */}
-      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-        <Reveal className="flex justify-between items-end mb-6 sm:mb-8 gap-4">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Browse</p>
-            <h2 className="text-fluid-2xl font-display tracking-tight">Featured Categories</h2>
-          </div>
-          <Link to="/search" className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-            View All
-          </Link>
-        </Reveal>
+      {/* Categories — premium interactive discovery */}
+      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+        <SectionHeader eyebrow="Browse" title="Featured Categories" href="/search" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {categories.map((cat, i) => (
             <Reveal key={cat.slug} delay={i} className="h-full">
               <Link
                 to="/category/$slug"
                 params={{ slug: cat.slug }}
-                className="group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/40 transition-all hover:-translate-y-1"
+                className="group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/50 transition-all hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-24px_oklch(0.74_0.19_49_/_0.45)]"
               >
                 <div className="absolute inset-0 grid place-items-center text-6xl font-display font-bold text-white/[0.04] group-hover:text-accent/20 transition-colors">
                   {String(i + 1).padStart(2, "0")}
                 </div>
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ background: "var(--gradient-ember)" }}
-                />
-                {/* shimmer sweep */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "var(--gradient-ember)" }} />
                 <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1400ms] ease-out bg-gradient-to-r from-transparent via-white/[0.08] to-transparent skew-x-12" />
                 <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-end z-10">
                   <p className="font-mono text-[10px] text-accent mb-1">{String(i + 1).padStart(2, "0")}</p>
@@ -314,137 +317,99 @@ function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      {products.some((p) => p.featured) && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
-          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Handpicked</p>
-              <h2 className="text-fluid-2xl font-display tracking-tight">Featured Products</h2>
-            </div>
-          </Reveal>
-          <ProductRail products={products.filter((p) => p.featured).slice(0, 8)} />
-          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {products.filter((p) => p.featured).slice(0, 4).map((p, i) => (
-              <Reveal key={p.slug} delay={i}>
-                <ProductCard product={p} />
-              </Reveal>
-            ))}
-          </div>
-        </section>
-      )}
+      <CinematicDivider />
 
-      {/* Trending Now */}
+      {/* 4 · Trending Products [product section 1/3] */}
       {productsLoading ? (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
-      ) : null}
-      {trending.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
-          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
-                <Flame className="size-3" /> Hot Right Now
-              </p>
-              <h2 className="text-fluid-2xl font-display tracking-tight">Trending Products</h2>
-            </div>
-            <Link to="/search" className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-              See All
-            </Link>
-          </Reveal>
+      ) : trending.length > 0 && (
+        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+          <SectionHeader eyebrow="Hot Right Now" title="Trending Products" icon={Flame} href="/search" hrefLabel="See All" />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {trending.map((p, i) => (
+            {trending.slice(0, 4).map((p, i) => (
               <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
             ))}
           </div>
         </section>
       )}
 
-      {/* Mid-page promo banners — collections / featured campaigns */}
-      <PromoBannerCarousel types={["promo"]} maxItems={2} aspectClassName="aspect-[16/6] sm:aspect-[21/7]" />
+      <CinematicDivider />
 
-      {/* New Arrivals */}
+      {/* 5 · Why Shop With Us */}
+      <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-8 sm:mb-12">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
+          <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {[
+            { icon: Shield, title: "Secure by default", desc: "Encrypted checkout with trusted global gateways." },
+            { icon: Globe2, title: "Truly worldwide", desc: "Fast, tracked delivery from global hubs." },
+            { icon: Award, title: "Verified sellers", desc: "Every supplier hand-vetted before listing." },
+            { icon: Sparkles, title: "Premium only", desc: "No filler, no fakes — a curated catalog." },
+          ].map((f, i) => (
+            <Reveal key={f.title} delay={i}>
+              <div className="group relative h-full glass glass-reflect rounded-2xl p-5 sm:p-6 overflow-hidden hover:-translate-y-1 hover:border-accent/40 transition-all">
+                <div aria-hidden className="absolute -top-12 -right-12 size-32 rounded-full opacity-0 group-hover:opacity-60 blur-2xl transition-opacity" style={{ background: "var(--gradient-ember-soft)" }} />
+                <div className="relative size-10 rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20 grid place-items-center mb-4 group-hover:shadow-[0_0_22px_-6px_var(--color-accent)] transition-all">
+                  <f.icon className="size-5" />
+                </div>
+                <h4 className="relative text-sm sm:text-base font-medium mb-2">{f.title}</h4>
+                <p className="relative text-xs sm:text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <CinematicDivider />
+
+      {/* 6 · Recommended Products [product section 2/3] */}
+      {recommended.length > 0 && (
+        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+          <SectionHeader eyebrow="Curated For You" title="Recommended Products" icon={Award} href="/search" hrefLabel="See All" />
+          <ProductRail products={recommended} />
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            {recommended.slice(0, 4).map((p, i) => (
+              <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Mid-page campaign banner */}
+      <section className="px-4 sm:px-6 py-2">
+        <PromoBannerCarousel types={["promo"]} maxItems={2} aspectClassName="aspect-[16/6] sm:aspect-[21/7]" />
+      </section>
+
+      {/* 7 · New Arrivals [product section 3/3] */}
       {newArrivals.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
-
-          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
-                <Sparkles className="size-3" /> Just Landed
-              </p>
-              <h2 className="text-fluid-2xl font-display tracking-tight">New Arrivals</h2>
-            </div>
-            <Link to="/search" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-              View All
-            </Link>
-          </Reveal>
+        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+          <SectionHeader eyebrow="Just Landed" title="New Arrivals" icon={Sparkles} href="/search" />
           <ProductRail products={newArrivals} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {newArrivals.map((p, i) => (
-              <Reveal key={p.slug} delay={i % 4}><ProductCard product={p} /></Reveal>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Best Sellers */}
-      {bestSellers.length > 0 && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto scroll-mt-24">
-          <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
-                <Award className="size-3" /> Top Rated
-              </p>
-              <h2 className="text-fluid-2xl font-display tracking-tight">Best Sellers</h2>
-            </div>
-            <Link to="/search" className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
-              See All
-            </Link>
-          </Reveal>
-          <ProductRail products={bestSellers} />
-          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {bestSellers.map((p, i) => (
+            {newArrivals.slice(0, 4).map((p, i) => (
               <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
             ))}
           </div>
         </section>
       )}
 
+      <CinematicDivider />
 
-
-      {/* Deals strip */}
-      {dealProducts.length > 0 && (
-        <section className="px-4 sm:px-6 py-14 sm:py-20 max-w-7xl mx-auto">
-          <Reveal className="rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/10 via-card to-card p-6 sm:p-10">
-            <div className="flex flex-wrap items-end justify-between gap-4 mb-6 sm:mb-8">
-              <div>
-                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Limited Time</p>
-                <h2 className="text-fluid-xl font-display tracking-tight">Save on Curator Picks</h2>
-              </div>
-              <Link to="/search" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1">All deals →</Link>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-              {dealProducts.map((p) => <ProductCard key={p.slug} product={p} />)}
-            </div>
-          </Reveal>
-        </section>
-      )}
-
-      <HomePersonalized />
-
-      
-
-      {/* Live Marketplace Stats */}
-      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-10 sm:mb-14">
+      {/* 8 · Social Proof — live engine + verified reviews */}
+      <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-8 sm:mb-12">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
           </p>
-          <h2 className="text-fluid-2xl font-display tracking-tight">A global engine, in motion.</h2>
+          <h2 className="text-fluid-2xl font-display tracking-tight">Trusted by buyers worldwide</h2>
         </Reveal>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8 sm:mb-12">
           {[
             { icon: Globe2, value: 180, suffix: "+", label: "Countries served" },
             { icon: Users, value: 48230, suffix: "", label: "Active shoppers" },
@@ -452,7 +417,7 @@ function Home() {
             { icon: ShoppingBag, value: 17, suffix: "/min", label: "Orders right now" },
           ].map((s, i) => (
             <Reveal key={s.label} delay={i}>
-              <div className="group relative glass-strong rounded-2xl p-5 sm:p-7 h-full overflow-hidden">
+              <div className="group relative glass-strong glass-reflect rounded-2xl p-5 sm:p-7 h-full overflow-hidden">
                 <div aria-hidden className="absolute -top-12 -right-12 size-40 rounded-full opacity-40 group-hover:opacity-70 transition-opacity blur-2xl" style={{ background: "var(--gradient-ember-soft)" }} />
                 <div className="relative flex items-center justify-between mb-5">
                   <div className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center ring-1 ring-accent/20">
@@ -468,55 +433,30 @@ function Home() {
             </Reveal>
           ))}
         </div>
-      </section>
 
-      {/* Why Choose Us */}
-      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-12 sm:mb-16">
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
-          <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
           {[
-            { icon: Shield, title: "Secure Payments", desc: "Bank-grade encryption on every transaction with trusted global gateways." },
-            { icon: Globe2, title: "Worldwide Shipping", desc: "Fast, tracked delivery to 180+ countries from our global distribution hubs." },
-            { icon: Award, title: "Trusted Sellers", desc: "Every supplier hand-verified. Only premium products make it to the marketplace." },
-            { icon: Sparkles, title: "Premium Quality", desc: "Curated catalog — no filler, no fakes. Every item meets our quality bar." },
-            { icon: Package, title: "Fast Delivery", desc: "Reliable shipping. Most orders arrive within 5–10 business days." },
-            { icon: Headset, title: "24/7 Support", desc: "Real humans, ready to help — anytime, anywhere in the world." },
-          ].map((f, i) => (
-            <Reveal key={f.title} delay={i % 3}>
-              <div className="glass rounded-2xl p-6 sm:p-8 h-full hover:border-accent/40 transition-colors">
-                <div className="size-10 rounded-xl bg-accent/10 text-accent grid place-items-center mb-4">
-                  <f.icon className="size-5" />
-                </div>
-                <h4 className="text-base sm:text-lg font-medium mb-2 sm:mb-3">{f.title}</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials grid */}
-      <section className="px-4 sm:px-6 py-16 sm:py-24 md:py-28">
-        <Reveal className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Loved Worldwide</p>
-          <h2 className="text-fluid-2xl font-display tracking-tight">What buyers are saying</h2>
-        </Reveal>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {[
-            { quote: "Completely redefined how I source premium goods. The quality of the marketplace is unmatched.", name: "Marcus Thorne", role: "Curator · London" },
-            { quote: "Fast shipping, gorgeous packaging, and every item felt hand-picked just for me.", name: "Ayaka Mori", role: "Designer · Tokyo" },
-            { quote: "Their support team is the best I've dealt with from any online store, full stop.", name: "Diego Alvarez", role: "Founder · Madrid" },
+            { quote: "Completely redefined how I source premium goods. The quality is unmatched.", name: "Marcus Thorne", role: "Curator · London" },
+            { quote: "Fast shipping, gorgeous packaging, and every item felt hand-picked for me.", name: "Ayaka Mori", role: "Designer · Tokyo" },
+            { quote: "The best support I've dealt with from any online store, full stop.", name: "Diego Alvarez", role: "Founder · Madrid" },
           ].map((t, i) => (
             <Reveal key={t.name} delay={i}>
-              <figure className="glass rounded-2xl p-6 sm:p-8 h-full flex flex-col">
-                <Quote className="size-5 text-accent mb-4 opacity-70" />
+              <figure className="group relative glass glass-reflect rounded-2xl p-6 sm:p-7 h-full flex flex-col overflow-hidden hover:-translate-y-1 transition-transform">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex gap-0.5 text-accent">
+                    {Array.from({ length: 5 }).map((_, s) => <Star key={s} className="size-3.5 fill-current" />)}
+                  </div>
+                  <Quote className="size-5 text-accent opacity-60" />
+                </div>
                 <blockquote className="text-sm sm:text-base leading-relaxed text-pretty flex-1">"{t.quote}"</blockquote>
-                <figcaption className="mt-6 pt-5 border-t border-border">
-                  <div className="text-sm font-medium">{t.name}</div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">{t.role}</div>
+                <figcaption className="mt-6 pt-5 border-t border-border flex items-center justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-medium">{t.name}</div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">{t.role}</div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-accent shrink-0">
+                    <BadgeCheck className="size-3.5" /> Verified
+                  </span>
                 </figcaption>
               </figure>
             </Reveal>
@@ -524,23 +464,23 @@ function Home() {
         </div>
       </section>
 
+      <CinematicDivider />
 
-      {/* Newsletter */}
-      <section className="px-4 sm:px-6 py-10 sm:py-14 md:py-16">
-        <Reveal className="max-w-3xl mx-auto bg-card border border-border p-6 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
+      {/* 9 · Join The Inner Circle */}
+      <section className="px-4 sm:px-6 py-12 sm:py-16">
+        <Reveal className="max-w-3xl mx-auto glass-strong glass-reflect p-7 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
+          <div aria-hidden className="absolute -top-24 -left-24 size-64 rounded-full opacity-50 blur-3xl" style={{ background: "var(--gradient-violet)" }} />
+          <div aria-hidden className="absolute -bottom-24 -right-24 size-64 rounded-full opacity-60 blur-3xl" style={{ background: "var(--gradient-ember)" }} />
           <div className="relative z-10">
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Inner Circle</p>
-            <h2 className="text-fluid-2xl font-display tracking-tight mb-4">Join the Inner Circle</h2>
-            <p className="text-muted-foreground mb-8 text-pretty">
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
+              <Sparkles className="size-3" /> Inner Circle
+            </p>
+            <h2 className="text-fluid-2xl font-display tracking-tight mb-3">Join the Inner Circle</h2>
+            <p className="text-muted-foreground mb-7 text-pretty max-w-lg mx-auto">
               Exclusive drops and curator insights — plus 10% off your first order.
             </p>
             <NewsletterForm source="homepage" />
           </div>
-          <div
-            aria-hidden
-            className="absolute -bottom-24 -right-24 size-64 rounded-full"
-            style={{ background: "var(--gradient-ember)", filter: "blur(60px)" }}
-          />
         </Reveal>
       </section>
     </>
