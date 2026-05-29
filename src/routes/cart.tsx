@@ -40,7 +40,7 @@ function CartPage() {
   } = useCart();
   const { format } = useRegion();
 
-  const [coupon, setCoupon] = useState<CouponState>(null);
+  const [promo] = useState<AutoPromo>(null);
   const [ship, setShip] = useState<ShipState>(null);
 
   const lineItems = useMemo(() => detailed.map((i) => ({ slug: i.slug, qty: i.qty })), [detailed]);
