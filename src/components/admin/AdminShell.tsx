@@ -229,9 +229,10 @@ export function AdminShell({
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="relative overflow-hidden rounded-2xl glass p-3 flex items-center gap-3"
               style={{ boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.06), 0 14px 36px -22px oklch(0 0 0 / 0.7)" }}
-            >
-              <div className="pointer-events-none absolute -top-8 -right-6 size-20 rounded-full opacity-25" style={{ background: "var(--gradient-ember-soft)", filter: "blur(22px)" }} />
-              <div className="relative size-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/[0.08] grid place-items-center ring-1 ring-inset ring-white/10 shrink-0">
+              {[
+                { icon: TrendingUp, label: "Revenue today", value: new Intl.NumberFormat("en-IN", { notation: "compact", style: "currency", currency: "INR", maximumFractionDigits: 1 }).format(live.revenue), span: "col-span-3", big: true },
+                { icon: ShoppingCart, label: "Orders today", value: String(live.orders), span: "col-span-2", big: false },
+
                 <span className="font-display text-sm text-accent uppercase">{user?.email?.[0] ?? "F"}</span>
                 <motion.span
                   className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-card"
