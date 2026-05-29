@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Search, Download, RotateCcw, Loader2, CheckCircle2, XCircle,
-  Radio, Webhook, ShieldCheck, ShieldAlert, X, IndianRupee, ToggleLeft, ToggleRight,
+  Radio, Webhook, ShieldCheck, ShieldAlert, X, IndianRupee, ToggleLeft, ToggleRight, ChevronLeft, ChevronRight,
+
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,41 +78,91 @@ function PaymentsPage() {
   );
 }
 
+const PAGE_SIZE = 100;
+
 function PaymentsInner() {
   const [tab, setTab] = useState<"transactions" | "refunds" | "webhooks">("transactions");
   const [payments, setPayments] = useState<Payment[]>([]);
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [drawer, setDrawer] = useState<Payment | null>(null);
   const [pulse, setPulse] = useState(false);
   const [cod, setCod] = useState<boolean | null>(null);
+  const [stats, setStats] = useState({ gross: 0, count: 0, refunded: 0, failed: 0 });
 
   const refundFn = useServerFn(createRazorpayRefund);
   const [refundBusy, setRefundBusy] = useState<string | null>(null);
   const [refundMsg, setRefundMsg] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const [p, r, w, s] = await Promise.all([
-      supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(500),
+  // Debounce search input → server query
+  useEffect(() => {
+    const t = setTimeout(() => setSearchTerm(query), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Reset to first page whenever filters change
+  useEffect(() => { setPage(0); }, [searchTerm, statusFilter]);
+
+  // Paginated transactions fetch (server-side range + count)
+  const loadPayments = useCallback(async () => {
+    setTableLoading(true);
+    let qb = supabase
+      .from("payments")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false });
+    if (statusFilter !== "all") qb = qb.eq("status", statusFilter);
+    const term = searchTerm.trim();
+    if (term) {
+      const safe = term.replace(/[%,()]/g, "");
+      if (safe) {
+        qb = qb.or(
+          `transaction_id.ilike.%${safe}%,razorpay_payment_id.ilike.%${safe}%,method.ilike.%${safe}%`,
+        );
+      }
+    }
+    const from = page * PAGE_SIZE;
+    qb = qb.range(from, from + PAGE_SIZE - 1);
+    const { data, count } = await qb;
+    setPayments((data as Payment[]) ?? []);
+    setTotalCount(count ?? 0);
+    setTableLoading(false);
+  }, [statusFilter, searchTerm, page]);
+
+  // Aggregate KPIs + refunds/webhooks/settings (independent of pagination)
+  const loadAux = useCallback(async () => {
+    const [succ, fail, r, w, s] = await Promise.all([
+      supabase.from("payments").select("amount").eq("status", "succeeded"),
+      supabase.from("payments").select("id", { count: "exact", head: true }).eq("status", "failed"),
       supabase.from("refunds").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("webhook_logs").select("id,event,signature_valid,status,error,created_at").order("created_at", { ascending: false }).limit(200),
       supabase.from("store_settings").select("cod_enabled").limit(1).maybeSingle(),
     ]);
-    setPayments((p.data as Payment[]) ?? []);
-    setRefunds((r.data as Refund[]) ?? []);
+    const succeeded = (succ.data as { amount: number }[]) ?? [];
+    const refundRows = (r.data as Refund[]) ?? [];
+    setRefunds(refundRows);
     setLogs((w.data as WebhookLog[]) ?? []);
     setCod(s.data ? !!s.data.cod_enabled : false);
-    setLoading(false);
+    setStats({
+      gross: succeeded.reduce((sum, p) => sum + Number(p.amount), 0),
+      count: succeeded.length,
+      failed: fail.count ?? 0,
+      refunded: refundRows.filter((rf) => rf.status !== "failed").reduce((sum, rf) => sum + Number(rf.amount), 0),
+    });
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadPayments(); }, [loadPayments]);
+  useEffect(() => { loadAux().finally(() => setLoading(false)); }, [loadAux]);
 
   // Realtime sync across payments / refunds / webhooks
   useEffect(() => {
-    const ping = () => { setPulse(true); setTimeout(() => setPulse(false), 1200); load(); };
+    const ping = () => { setPulse(true); setTimeout(() => setPulse(false), 1200); loadPayments(); loadAux(); };
     const ch = supabase
       .channel("admin-payments-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, ping)
@@ -118,7 +170,7 @@ function PaymentsInner() {
       .on("postgres_changes", { event: "*", schema: "public", table: "webhook_logs" }, ping)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [load]);
+  }, [loadPayments, loadAux]);
 
   async function toggleCod() {
     if (cod === null) return;
@@ -143,25 +195,10 @@ function PaymentsInner() {
     }
   }
 
-  const filteredPayments = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return payments.filter((p) => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
-      if (!q) return true;
-      return [p.transaction_id, p.order_id, p.razorpay_payment_id, p.method, p.user_id]
-        .some((v) => (v ?? "").toLowerCase().includes(q));
-    });
-  }, [payments, query, statusFilter]);
+  // Server already filtered + paginated; render rows as-is.
+  const filteredPayments = payments;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const totals = useMemo(() => {
-    const succeeded = payments.filter((p) => p.status === "succeeded");
-    return {
-      gross: succeeded.reduce((s, p) => s + Number(p.amount), 0),
-      count: succeeded.length,
-      refunded: refunds.filter((r) => r.status !== "failed").reduce((s, r) => s + Number(r.amount), 0),
-      failed: payments.filter((p) => p.status === "failed").length,
-    };
-  }, [payments, refunds]);
 
   if (loading) {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
@@ -171,10 +208,11 @@ function PaymentsInner() {
     <div className="space-y-6">
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={IndianRupee} label="Gross collected" value={inr(totals.gross)} />
-        <Kpi icon={CheckCircle2} label="Successful" value={String(totals.count)} />
-        <Kpi icon={RotateCcw} label="Refunded" value={inr(totals.refunded)} />
-        <Kpi icon={XCircle} label="Failed" value={String(totals.failed)} />
+        <Kpi icon={IndianRupee} label="Gross collected" value={inr(stats.gross)} />
+        <Kpi icon={CheckCircle2} label="Successful" value={String(stats.count)} />
+        <Kpi icon={RotateCcw} label="Refunded" value={inr(stats.refunded)} />
+        <Kpi icon={XCircle} label="Failed" value={String(stats.failed)} />
+
       </div>
 
       {/* Controls */}
@@ -281,6 +319,34 @@ function PaymentsInner() {
               />
             </div>
           </div>
+
+          {/* Pagination */}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              {tableLoading && <Loader2 className="size-3 animate-spin text-accent" />}
+              {totalCount > 0
+                ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, totalCount)} of ${totalCount}`
+                : "0 results"}
+            </span>
+            <div className="inline-flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || tableLoading}
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="size-3.5" /> Prev
+              </button>
+              <span className="tabular-nums">Page {page + 1} / {pageCount}</span>
+              <button
+                onClick={() => setPage((p) => (p + 1 < pageCount ? p + 1 : p))}
+                disabled={page + 1 >= pageCount || tableLoading}
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next <ChevronRight className="size-3.5" />
+              </button>
+            </div>
+          </div>
+
 
         </>
       )}
