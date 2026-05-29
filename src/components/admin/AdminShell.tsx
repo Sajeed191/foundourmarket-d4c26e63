@@ -162,6 +162,7 @@ export function AdminShell({
 
   const q = query.trim().toLowerCase();
 
+  return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Sidebar — floating operator console */}
       <aside className={`fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40 w-[17.5rem] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none ${open ? "translate-x-0" : "-translate-x-[110%] lg:translate-x-0"} h-screen p-3`}>
