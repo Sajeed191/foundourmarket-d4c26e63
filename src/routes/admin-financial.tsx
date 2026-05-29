@@ -272,20 +272,49 @@ function FinancialPage() {
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {loading || !m ? (
-          Array.from({ length: 10 }).map((_, i) => <SkeletonTile key={i} />)
+          Array.from({ length: 14 }).map((_, i) => <SkeletonTile key={i} />)
         ) : (
           <>
             <StatTile big label="Total Revenue" accent="amber" icon={<TrendingUp className="size-4" />} value={<AnimatedMoney value={m.summary.revenue} currency={cur} />} sub={`${m.summary.paidOrders} paid orders`} delay={0} />
-            <StatTile label="Cost of Goods" accent="rose" icon={<TrendingDown className="size-4" />} value={<AnimatedMoney value={m.summary.cogs} currency={cur} />} delay={0.04} />
+            <StatTile label="Gross Revenue" accent="amber" icon={<Banknote className="size-4" />} value={<AnimatedMoney value={m.ext.grossRevenue} currency={cur} />} sub="pre tax & shipping" delay={0.02} />
+            <StatTile label="Net Revenue" accent="emerald" icon={<Wallet className="size-4" />} value={<AnimatedMoney value={m.ext.netRevenue} currency={cur} />} sub="after refunds" delay={0.04} />
+            <StatTile label="Cost of Goods" accent="rose" icon={<TrendingDown className="size-4" />} value={<AnimatedMoney value={m.summary.cogs} currency={cur} />} delay={0.06} />
             <StatTile label="Gross Profit" accent="teal" icon={<Wallet className="size-4" />} value={<AnimatedMoney value={m.summary.grossProfit} currency={cur} />} delay={0.08} />
             <StatTile label="Net Earnings" accent="emerald" icon={<PiggyBank className="size-4" />} value={<AnimatedMoney value={m.summary.netEarnings} currency={cur} />} delay={0.12} />
             <StatTile label="Profit Margin" accent="violet" icon={<Percent className="size-4" />} value={<span className="tabular-nums">{m.summary.margin.toFixed(1)}%</span>} delay={0.16} />
-            <StatTile label="Refunds" accent="rose" icon={<RotateCcw className="size-4" />} value={<AnimatedMoney value={m.summary.refunds} currency={cur} />} delay={0.2} />
-            <StatTile label="Shipping" accent="teal" icon={<Truck className="size-4" />} value={<AnimatedMoney value={m.summary.shipping} currency={cur} />} delay={0.24} />
+            <StatTile label="Refund Rate" accent="rose" icon={<RotateCcw className="size-4" />} value={<span className="tabular-nums">{m.ext.refundRate.toFixed(1)}%</span>} sub={fmt(m.summary.refunds, cur)} delay={0.2} />
+            <StatTile label="Repeat Rate" accent="teal" icon={<Repeat className="size-4" />} value={<span className="tabular-nums">{m.ext.repeatRate.toFixed(1)}%</span>} sub={`${m.ext.repeatCustomers}/${m.ext.customers} customers`} delay={0.22} />
+            <StatTile label="Customer LTV" accent="violet" icon={<Users className="size-4" />} value={<AnimatedMoney value={m.ext.ltv} currency={cur} decimals />} delay={0.24} />
+            <StatTile label="Shipping" accent="teal" icon={<Truck className="size-4" />} value={<AnimatedMoney value={m.summary.shipping} currency={cur} />} delay={0.26} />
             <StatTile label="Tax Collected" accent="violet" icon={<Receipt className="size-4" />} value={<AnimatedMoney value={m.summary.tax} currency={cur} />} delay={0.28} />
+            <StatTile label="Failed Payments" accent="rose" icon={<XCircle className="size-4" />} value={<span className="tabular-nums">{m.ext.failedPayments}</span>} sub={`${m.ext.failedRate.toFixed(1)}% · ${fmt(m.ext.failedAmount, cur)}`} delay={0.3} />
             <StatTile label="Pending Payouts" accent="amber" icon={<Banknote className="size-4" />} value={<AnimatedMoney value={m.summary.pendingPayouts} currency={cur} />} delay={0.32} />
             <StatTile label="Avg Order Value" accent="emerald" icon={<ShoppingCart className="size-4" />} value={<AnimatedMoney value={m.summary.aov} currency={cur} decimals />} delay={0.36} />
           </>
+        )}
+      </div>
+
+      {/* Financial health score */}
+      {m && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ease: EASE }}
+          className="mb-6 flex items-center gap-4 rounded-2xl glass glass-reflect px-4 py-4 border border-accent/15">
+          <div className="relative size-16 shrink-0 grid place-items-center">
+            <svg viewBox="0 0 36 36" className="size-16 -rotate-90">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="3" />
+              <motion.circle cx="18" cy="18" r="15.5" fill="none" stroke={m.ext.healthScore >= 70 ? "#34d399" : m.ext.healthScore >= 40 ? "#f59e0b" : "#f43f5e"} strokeWidth="3" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 15.5}
+                initial={{ strokeDashoffset: 2 * Math.PI * 15.5 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 15.5 * (1 - m.ext.healthScore / 100) }}
+                transition={{ duration: 1, ease: EASE }} />
+            </svg>
+            <span className="absolute inset-0 grid place-items-center font-display text-lg font-semibold tabular-nums">{m.ext.healthScore}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground flex items-center gap-1.5"><HeartPulse className="size-3 text-accent" /> Financial Health Score</p>
+            <p className="text-sm mt-0.5">{m.ext.healthScore >= 70 ? "Strong — margins, retention and payment success are healthy." : m.ext.healthScore >= 40 ? "Stable — watch refund rate and margins for upside." : "At risk — refunds, margins or failed payments need attention."}</p>
+          </div>
+        </motion.div>
+      )}
         )}
       </div>
 
