@@ -135,9 +135,10 @@ function ProductPage() {
             className="lg:sticky lg:top-28 lg:self-start"
           >
             <div className="relative">
-              {/* Ambient halo */}
-              <div aria-hidden className="absolute -inset-6 -z-10 rounded-[2.5rem] opacity-60" style={{ background: "var(--gradient-ember-soft)", filter: "blur(60px)" }} />
-              <div className="relative aspect-square card-premium rounded-3xl overflow-hidden group">
+              {/* Cinematic ambient backlight */}
+              <div aria-hidden className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 animate-pulse" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
+              <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
+              <div className="relative aspect-square card-premium rounded-3xl overflow-hidden group shadow-[0_40px_80px_-30px_oklch(0_0_0/0.7)]">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={activeImage?.id}
@@ -150,6 +151,10 @@ function ProductPage() {
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] group-hover:scale-110"
                   />
                 </AnimatePresence>
+                {/* premium glass overlay gradient */}
+                <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
+                {/* badges */}
+
                 {/* badges */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 items-start z-10">
                   {product.featured && (
@@ -402,31 +407,42 @@ function ProductPage() {
       <RelatedProducts product={product} />
       
 
-      {/* Sticky mobile CTA */}
+      {/* Sticky mobile purchase dock */}
       <div className="sm:hidden fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] inset-x-0 z-40 px-3">
-        <div className="glass-strong rounded-2xl px-2.5 py-2.5 flex items-center gap-2">
-          <div className="flex items-center bg-white/5 rounded-full">
-            <button onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease" className="size-10 grid place-items-center">
-              <Minus className="size-4" />
-            </button>
-            <span className="w-7 text-center font-mono text-sm tabular-nums">{qty}</span>
-            <button onClick={() => setQty(qty + 1)} aria-label="Increase" className="size-10 grid place-items-center">
-              <Plus className="size-4" />
-            </button>
+        <div className="glass-strong rounded-2xl p-2 flex items-center gap-2 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.8)]">
+          <button
+            onClick={() => toggleWishlist(product.slug)}
+            aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
+            className={`size-11 grid place-items-center rounded-xl border shrink-0 transition-all active:scale-95 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/5 border-white/10 text-white/80 hover:text-accent"}`}
+          >
+            <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+          </button>
+          <div className="flex flex-col leading-none mr-0.5 shrink-0">
+            <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground">Total</span>
+            <span className="text-sm font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
           </div>
           <button
             onClick={handleAdd}
             disabled={isOOS}
-            className="flex-1 bg-accent text-accent-foreground font-semibold py-3 rounded-full text-xs uppercase tracking-widest disabled:opacity-50 shadow-[var(--shadow-ember)]"
+            className="flex-1 bg-white/8 border border-white/10 text-foreground font-semibold py-3 rounded-xl text-[11px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
           >
-            {isOOS ? "Out of stock" : `Add — ${format(effectivePrice * qty)}`}
+            {isOOS ? "Notify Me" : "Add to Cart"}
           </button>
+          <Link
+            to="/cart"
+            onClick={() => !isOOS && add(product.slug, qty)}
+            aria-disabled={isOOS}
+            className={`flex-1 text-center bg-accent text-accent-foreground font-semibold py-3 rounded-xl text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
+          >
+            Buy Now
+          </Link>
         </div>
       </div>
 
     </>
   );
 }
+
 
 function SpecRow({ k, v }: { k: string; v: string }) {
   return (
