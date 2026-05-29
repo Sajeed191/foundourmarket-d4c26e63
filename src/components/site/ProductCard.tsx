@@ -8,11 +8,12 @@ import { useWishlist } from "@/lib/wishlist";
 const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
-  const { format } = useRegion();
+  const { format, priceOf, compareOf } = useRegion();
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
-  const originalPrice = product.discount ? product.price * (1 + product.discount / 100) : null;
+  const price = priceOf(product);
+  const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
 
   const isNew = product.createdAt
     ? Date.now() - new Date(product.createdAt).getTime() < FOURTEEN_DAYS
