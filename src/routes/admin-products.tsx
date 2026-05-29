@@ -31,6 +31,9 @@ type Product = {
   stock_quantity: number; reserved_quantity: number; low_stock_threshold: number;
   views_count: number; sku: string | null; rating: number; reviews: number;
   sort_order: number; created_at: string;
+  price_inr: number | null; compare_price_inr: number | null;
+  price_usd: number | null; compare_price_usd: number | null;
+  india_visible: boolean; international_visible: boolean;
 };
 type Category = { slug: string; name: string };
 type Stat = { units: number; revenue: number; orders: number };
