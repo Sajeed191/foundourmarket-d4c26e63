@@ -62,7 +62,7 @@ function BlogPost() {
   useEffect(() => {
     let active = true;
     function fetchPost() {
-      supabase.from("cms_posts").select("*").eq("slug", slug)
+      supabase.from("cms_posts").select("slug,title,excerpt,body,cover_image,author,published_at,meta_title,meta_description").eq("slug", slug)
         .not("published_at", "is", null).lte("published_at", new Date().toISOString())
         .maybeSingle().then(({ data }) => {
           if (!active) return;
