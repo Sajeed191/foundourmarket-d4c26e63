@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Loader2, Undo2,
+  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
