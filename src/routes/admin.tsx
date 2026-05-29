@@ -579,6 +579,8 @@ function AdminPage() {
           }
         </>
       )}
+      </motion.div>
+      </AnimatePresence>
 
 
 
