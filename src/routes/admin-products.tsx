@@ -895,7 +895,7 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
         {error && <p className="text-xs text-destructive mt-4">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
           <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest border border-white/10 hover:bg-white/5">Cancel</button>
-          <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
+          <button type="submit" disabled={saving || validation.length > 0} className="px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50">
             {saving ? "Saving…" : "Save product"}
           </button>
         </div>
