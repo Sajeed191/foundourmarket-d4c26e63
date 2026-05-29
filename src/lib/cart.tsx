@@ -133,6 +133,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           })),
         );
         setLoading(false);
+        setLoadedFor(user.id);
       }
     })();
     return () => {
