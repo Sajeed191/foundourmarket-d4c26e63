@@ -266,6 +266,20 @@ function CartPage() {
 
             <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-5">Order Summary</h2>
+
+              {/* Total savings highlight */}
+              {totalSavings > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 flex items-center justify-between rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5"
+                >
+                  <span className="text-xs font-medium inline-flex items-center gap-1.5 text-accent">
+                    <Sparkles className="size-3.5" /> Total savings
+                  </span>
+                  <span className="font-mono text-sm font-semibold text-accent">{format(totalSavings)}</span>
+                </motion.div>
+              )}
+
               <dl className="space-y-3 text-sm">
                 <Row label="Subtotal" value={format(subtotalUSD)} />
                 {savings > 0 && <Row label="Item savings" value={`−${format(savings)}`} accent />}
@@ -280,7 +294,7 @@ function CartPage() {
                     <dd>{new Date(ship.etaIso).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</dd>
                   </div>
                 )}
-                <div className="border-t border-border pt-3 flex justify-between text-base">
+                <div className="border-t border-border pt-3 flex justify-between items-baseline text-base">
                   <dt className="font-medium">Total</dt>
                   <motion.dd key={total} initial={{ scale: 1.08 }} animate={{ scale: 1 }} className="font-mono text-accent">{format(total)}</motion.dd>
                 </div>
@@ -294,12 +308,23 @@ function CartPage() {
                 <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
 
+              {/* Razorpay trust badge */}
+              <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+                <ShieldCheck className="size-3.5 text-accent" />
+                <span>Secured by <span className="text-foreground font-medium">Razorpay</span> · 256-bit encrypted</span>
+              </div>
+
               <div className="mt-4 grid grid-cols-3 gap-2 text-[9px] text-muted-foreground uppercase tracking-widest text-center">
                 <span className="inline-flex flex-col items-center gap-1"><ShieldCheck className="size-4 text-accent" /> Secure</span>
                 <span className="inline-flex flex-col items-center gap-1"><Truck className="size-4 text-accent" /> Tracked</span>
                 <span className="inline-flex flex-col items-center gap-1"><RotateCcw className="size-4 text-accent" /> Easy returns</span>
               </div>
+
+              <p className="mt-4 pt-4 border-t border-border text-[11px] leading-relaxed text-muted-foreground">
+                Free 7-day returns on eligible items. Refunds processed to your original payment method within 3–5 business days.
+              </p>
             </div>
+
           </div>
         </aside>
       </div>
