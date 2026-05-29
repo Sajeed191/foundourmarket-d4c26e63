@@ -135,7 +135,7 @@ function FinancialPage() {
   const [granularity, setGranularity] = useState<Granularity>("month");
   const [range, setRange] = useState(365);
   const [live, setLive] = useState(false);
-  const debounce = useRef<ReturnType<typeof setTimeout>>();
+  const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const load = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
