@@ -344,7 +344,8 @@ export function AdminShell({
         {open && (
           <motion.button
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
+            className="lg:hidden fixed top-14 inset-x-0 bottom-0 z-20 bg-black/70 backdrop-blur-sm"
+
             className="lg:hidden fixed inset-0 z-30 bg-black/70 backdrop-blur-sm"
             aria-label="Close menu"
           />
