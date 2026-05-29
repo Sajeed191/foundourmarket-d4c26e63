@@ -53,6 +53,7 @@ function CartPage() {
   const shipping = ship ? ship.shippingUsd : subtotalUSD > FREE_SHIP_THRESHOLD ? 0 : 9.99;
   const tax = subtotalUSD * 0.08;
   const total = Math.max(0, subtotalUSD + shipping + tax - discount);
+  const totalSavings = savings + discount;
 
   const remaining = Math.max(0, FREE_SHIP_THRESHOLD - subtotalUSD);
   const progress = Math.min(100, (subtotalUSD / FREE_SHIP_THRESHOLD) * 100);
