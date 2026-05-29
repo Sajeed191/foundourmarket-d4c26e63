@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type OrderRec = {
   id: string;
+  user_id: string | null;
   status: string;
   payment_status: string;
   total: number;
@@ -52,7 +53,7 @@ export async function fetchFinancialData(days = 365): Promise<FinancialData> {
   const [ordersRes, productsRes, returnsRes, paymentsRes, viewsRes] = await Promise.all([
     supabase
       .from("orders")
-      .select("id,status,payment_status,total,subtotal,shipping,tax,discount,currency,contact_email,shipping_address,created_at,order_items(name,quantity,product_slug,unit_price,line_total)")
+      .select("id,user_id,status,payment_status,total,subtotal,shipping,tax,discount,currency,contact_email,shipping_address,created_at,order_items(name,quantity,product_slug,unit_price,line_total)")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(1000),
@@ -318,3 +319,149 @@ export function forecastNext(months: MonthRow[]): { label: string; revenue: numb
     net: linReg(months.map((m) => m.net)),
   };
 }
+
+/* ============================================================
+ * Extended enterprise metrics — all derived from real records.
+ * ============================================================ */
+
+const customerKey = (o: OrderRec) => (o.user_id || o.contact_email || "").toLowerCase();
+
+export type ExtendedMetrics = {
+  grossRevenue: number;      // sum of order subtotals (pre shipping/tax/discount)
+  netRevenue: number;        // revenue minus refunds
+  refundRate: number;        // refunds / revenue (%)
+  customers: number;         // distinct paying customers
+  repeatCustomers: number;   // customers with 2+ paid orders
+  repeatRate: number;        // repeat / customers (%)
+  ltv: number;               // revenue per paying customer
+  failedPayments: number;    // count of failed payment attempts
+  failedAmount: number;      // value of failed payments
+  failedRate: number;        // failed / all payment attempts (%)
+  healthScore: number;       // 0–100 composite financial health
+};
+
+export function extendedMetrics(d: FinancialData, s: Summary): ExtendedMetrics {
+  let grossRevenue = 0;
+  const ordersByCustomer = new Map<string, number>();
+
+  for (const o of d.orders) {
+    if (!isPaidOrder(o)) continue;
+    grossRevenue += Number(o.subtotal) || 0;
+    const k = customerKey(o);
+    if (k) ordersByCustomer.set(k, (ordersByCustomer.get(k) ?? 0) + 1);
+  }
+
+  const customers = ordersByCustomer.size;
+  const repeatCustomers = [...ordersByCustomer.values()].filter((n) => n >= 2).length;
+
+  const FAILED = new Set(["failed", "declined", "error", "cancelled", "canceled"]);
+  let failedPayments = 0, failedAmount = 0;
+  for (const p of d.payments) {
+    if (FAILED.has((p.status ?? "").toLowerCase())) {
+      failedPayments += 1;
+      failedAmount += Number(p.amount) || 0;
+    }
+  }
+  const totalAttempts = d.payments.length || 0;
+
+  const refundRate = s.revenue > 0 ? (s.refunds / s.revenue) * 100 : 0;
+  const netRevenue = s.revenue - s.refunds;
+
+  // Composite health score (real-signal weighted, clamped 0–100)
+  let health = 50;
+  health += Math.max(-25, Math.min(25, s.margin)); // margin contribution
+  health -= Math.min(20, refundRate);              // refund drag
+  health += repeatCustomers > 0 && customers > 0 ? Math.min(15, (repeatCustomers / customers) * 30) : 0;
+  health -= totalAttempts > 0 ? Math.min(15, (failedPayments / totalAttempts) * 40) : 0;
+  health = Math.max(0, Math.min(100, Math.round(health)));
+
+  return {
+    grossRevenue,
+    netRevenue,
+    refundRate,
+    customers,
+    repeatCustomers,
+    repeatRate: customers > 0 ? (repeatCustomers / customers) * 100 : 0,
+    ltv: customers > 0 ? s.revenue / customers : 0,
+    failedPayments,
+    failedAmount,
+    failedRate: totalAttempts > 0 ? (failedPayments / totalAttempts) * 100 : 0,
+    healthScore: health,
+  };
+}
+
+export type ProductProfit = { slug: string; name: string; units: number; revenue: number; cost: number; profit: number; margin: number };
+
+export function productProfitability(d: FinancialData): ProductProfit[] {
+  const costMap = new Map(d.products.map((p) => [p.slug, Number(p.cost) || 0]));
+  const map = new Map<string, ProductProfit>();
+  for (const o of d.orders) {
+    if (!isPaidOrder(o)) continue;
+    for (const it of o.order_items ?? []) {
+      const slug = it.product_slug ?? it.name;
+      const rec = map.get(slug) ?? { slug, name: it.name, units: 0, revenue: 0, cost: 0, profit: 0, margin: 0 };
+      const qty = it.quantity ?? 0;
+      rec.units += qty;
+      rec.revenue += Number(it.line_total) || (Number(it.unit_price) || 0) * qty;
+      rec.cost += (costMap.get(it.product_slug ?? "") ?? 0) * qty;
+      map.set(slug, rec);
+    }
+  }
+  for (const rec of map.values()) {
+    rec.profit = rec.revenue - rec.cost;
+    rec.margin = rec.revenue > 0 ? (rec.profit / rec.revenue) * 100 : 0;
+  }
+  return [...map.values()].sort((a, b) => b.profit - a.profit).slice(0, 8);
+}
+
+export type TaxRow = { month: string; label: string; taxable: number; tax: number; orders: number };
+
+export function taxReport(d: FinancialData): TaxRow[] {
+  const map = new Map<string, TaxRow>();
+  for (const o of d.orders) {
+    if (!isPaidOrder(o)) continue;
+    const k = o.created_at.slice(0, 7);
+    const rec = map.get(k) ?? { month: k, label: new Date(k + "-01").toLocaleDateString(undefined, { month: "short", year: "2-digit" }), taxable: 0, tax: 0, orders: 0 };
+    rec.taxable += Number(o.subtotal) || 0;
+    rec.tax += Number(o.tax) || 0;
+    rec.orders += 1;
+    map.set(k, rec);
+  }
+  return [...map.values()].sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12);
+}
+
+export type CohortRow = { cohort: string; label: string; size: number; m0: number; m1: number; m2: number };
+
+/** Customer retention cohorts by first-order month — counts repeat activity in following months. */
+export function cohortRetention(d: FinancialData): CohortRow[] {
+  // first order month per customer
+  const first = new Map<string, string>();
+  const activity = new Map<string, Set<string>>(); // customer -> set of active months
+  for (const o of [...d.orders].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
+    if (!isPaidOrder(o)) continue;
+    const k = customerKey(o);
+    if (!k) continue;
+    const month = o.created_at.slice(0, 7);
+    if (!first.has(k)) first.set(k, month);
+    if (!activity.has(k)) activity.set(k, new Set());
+    activity.get(k)!.add(month);
+  }
+
+  const monthIndex = (m: string) => { const [y, mo] = m.split("-").map(Number); return y * 12 + (mo - 1); };
+  const cohorts = new Map<string, CohortRow>();
+  for (const [cust, fm] of first) {
+    const rec = cohorts.get(fm) ?? { cohort: fm, label: new Date(fm + "-01").toLocaleDateString(undefined, { month: "short", year: "2-digit" }), size: 0, m0: 0, m1: 0, m2: 0 };
+    rec.size += 1;
+    rec.m0 += 1;
+    const base = monthIndex(fm);
+    const active = activity.get(cust)!;
+    for (const am of active) {
+      const diff = monthIndex(am) - base;
+      if (diff === 1) rec.m1 += 1;
+      if (diff === 2) rec.m2 += 1;
+    }
+    cohorts.set(fm, rec);
+  }
+  return [...cohorts.values()].sort((a, b) => b.cohort.localeCompare(a.cohort)).slice(0, 6);
+}
+

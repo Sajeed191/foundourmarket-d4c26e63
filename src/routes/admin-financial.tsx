@@ -9,13 +9,15 @@ import {
   Wallet, TrendingUp, TrendingDown, Receipt, Truck, Download, FileText,
   Search, Bell, RotateCcw, Percent, Banknote, PiggyBank, AlertTriangle,
   RefreshCw, Sparkles, ShoppingCart, Globe, Radio, Loader2,
+  Users, Repeat, HeartPulse, XCircle, Boxes, Activity,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchFinancialData, computeSummary, monthlyBreakdown, revenueSeries,
   expenseBreakdown, refundReasons, salesSources, countryRevenue,
-  detectAnomalies, forecastNext, type FinancialData, type Granularity,
+  detectAnomalies, forecastNext, extendedMetrics, productProfitability,
+  taxReport, cohortRetention, type FinancialData, type Granularity,
 } from "@/lib/financial-metrics";
 
 export const Route = createFileRoute("/admin-financial")({
@@ -173,6 +175,10 @@ function FinancialPage() {
     const months = monthlyBreakdown(data);
     return {
       summary, months,
+      ext: extendedMetrics(data, summary),
+      products: productProfitability(data),
+      taxRows: taxReport(data),
+      cohorts: cohortRetention(data),
       series: revenueSeries(data, granularity),
       expenses: expenseBreakdown(summary),
       reasons: refundReasons(data),
@@ -266,22 +272,49 @@ function FinancialPage() {
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {loading || !m ? (
-          Array.from({ length: 10 }).map((_, i) => <SkeletonTile key={i} />)
+          Array.from({ length: 14 }).map((_, i) => <SkeletonTile key={i} />)
         ) : (
           <>
             <StatTile big label="Total Revenue" accent="amber" icon={<TrendingUp className="size-4" />} value={<AnimatedMoney value={m.summary.revenue} currency={cur} />} sub={`${m.summary.paidOrders} paid orders`} delay={0} />
-            <StatTile label="Cost of Goods" accent="rose" icon={<TrendingDown className="size-4" />} value={<AnimatedMoney value={m.summary.cogs} currency={cur} />} delay={0.04} />
+            <StatTile label="Gross Revenue" accent="amber" icon={<Banknote className="size-4" />} value={<AnimatedMoney value={m.ext.grossRevenue} currency={cur} />} sub="pre tax & shipping" delay={0.02} />
+            <StatTile label="Net Revenue" accent="emerald" icon={<Wallet className="size-4" />} value={<AnimatedMoney value={m.ext.netRevenue} currency={cur} />} sub="after refunds" delay={0.04} />
+            <StatTile label="Cost of Goods" accent="rose" icon={<TrendingDown className="size-4" />} value={<AnimatedMoney value={m.summary.cogs} currency={cur} />} delay={0.06} />
             <StatTile label="Gross Profit" accent="teal" icon={<Wallet className="size-4" />} value={<AnimatedMoney value={m.summary.grossProfit} currency={cur} />} delay={0.08} />
             <StatTile label="Net Earnings" accent="emerald" icon={<PiggyBank className="size-4" />} value={<AnimatedMoney value={m.summary.netEarnings} currency={cur} />} delay={0.12} />
             <StatTile label="Profit Margin" accent="violet" icon={<Percent className="size-4" />} value={<span className="tabular-nums">{m.summary.margin.toFixed(1)}%</span>} delay={0.16} />
-            <StatTile label="Refunds" accent="rose" icon={<RotateCcw className="size-4" />} value={<AnimatedMoney value={m.summary.refunds} currency={cur} />} delay={0.2} />
-            <StatTile label="Shipping" accent="teal" icon={<Truck className="size-4" />} value={<AnimatedMoney value={m.summary.shipping} currency={cur} />} delay={0.24} />
+            <StatTile label="Refund Rate" accent="rose" icon={<RotateCcw className="size-4" />} value={<span className="tabular-nums">{m.ext.refundRate.toFixed(1)}%</span>} sub={fmt(m.summary.refunds, cur)} delay={0.2} />
+            <StatTile label="Repeat Rate" accent="teal" icon={<Repeat className="size-4" />} value={<span className="tabular-nums">{m.ext.repeatRate.toFixed(1)}%</span>} sub={`${m.ext.repeatCustomers}/${m.ext.customers} customers`} delay={0.22} />
+            <StatTile label="Customer LTV" accent="violet" icon={<Users className="size-4" />} value={<AnimatedMoney value={m.ext.ltv} currency={cur} decimals />} delay={0.24} />
+            <StatTile label="Shipping" accent="teal" icon={<Truck className="size-4" />} value={<AnimatedMoney value={m.summary.shipping} currency={cur} />} delay={0.26} />
             <StatTile label="Tax Collected" accent="violet" icon={<Receipt className="size-4" />} value={<AnimatedMoney value={m.summary.tax} currency={cur} />} delay={0.28} />
+            <StatTile label="Failed Payments" accent="rose" icon={<XCircle className="size-4" />} value={<span className="tabular-nums">{m.ext.failedPayments}</span>} sub={`${m.ext.failedRate.toFixed(1)}% · ${fmt(m.ext.failedAmount, cur)}`} delay={0.3} />
             <StatTile label="Pending Payouts" accent="amber" icon={<Banknote className="size-4" />} value={<AnimatedMoney value={m.summary.pendingPayouts} currency={cur} />} delay={0.32} />
             <StatTile label="Avg Order Value" accent="emerald" icon={<ShoppingCart className="size-4" />} value={<AnimatedMoney value={m.summary.aov} currency={cur} decimals />} delay={0.36} />
           </>
         )}
       </div>
+
+      {/* Financial health score */}
+      {m && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ease: EASE }}
+          className="mb-6 flex items-center gap-4 rounded-2xl glass glass-reflect px-4 py-4 border border-accent/15">
+          <div className="relative size-16 shrink-0 grid place-items-center">
+            <svg viewBox="0 0 36 36" className="size-16 -rotate-90">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="3" />
+              <motion.circle cx="18" cy="18" r="15.5" fill="none" stroke={m.ext.healthScore >= 70 ? "#34d399" : m.ext.healthScore >= 40 ? "#f59e0b" : "#f43f5e"} strokeWidth="3" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 15.5}
+                initial={{ strokeDashoffset: 2 * Math.PI * 15.5 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 15.5 * (1 - m.ext.healthScore / 100) }}
+                transition={{ duration: 1, ease: EASE }} />
+            </svg>
+            <span className="absolute inset-0 grid place-items-center font-display text-lg font-semibold tabular-nums">{m.ext.healthScore}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground flex items-center gap-1.5"><HeartPulse className="size-3 text-accent" /> Financial Health Score</p>
+            <p className="text-sm mt-0.5">{m.ext.healthScore >= 70 ? "Strong — margins, retention and payment success are healthy." : m.ext.healthScore >= 40 ? "Stable — watch refund rate and margins for upside." : "At risk — refunds, margins or failed payments need attention."}</p>
+          </div>
+        </motion.div>
+      )}
 
       {/* charts */}
       <div className="grid gap-4 lg:grid-cols-2 mb-4">
@@ -437,6 +470,88 @@ function FinancialPage() {
           </table>
         </div>
       </Panel>
+
+      {/* Product profitability */}
+      <div className="mt-4">
+        <Panel title="Product Profitability" icon={<Boxes className="size-4" />} delay={0.1}>
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground/80 border-b border-white/[0.07]">
+                <tr>
+                  {["Product", "Units", "Revenue", "Cost", "Profit", "Margin"].map((h, i) => (
+                    <th key={h} className={`py-2.5 px-3 ${i === 0 ? "text-left" : "text-right"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {m?.products.map((p) => (
+                  <tr key={p.slug} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
+                    <td className="px-3 py-2 text-xs truncate max-w-[180px]">{p.name}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs">{p.units}</td>
+                    <td className="px-3 py-2 text-right font-mono text-accent text-xs">{fmt(p.revenue, cur)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs text-muted-foreground">{fmt(p.cost, cur)}</td>
+                    <td className={`px-3 py-2 text-right font-mono text-xs ${p.profit >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{fmt(p.profit, cur)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs">{p.margin.toFixed(1)}%</td>
+                  </tr>
+                ))}
+                {(!m || m.products.length === 0) && <tr><td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No product sales for this range.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2 mt-4">
+        {/* Tax report */}
+        <Panel title="Tax Report (GST / VAT)" icon={<Receipt className="size-4" />} delay={0.12}
+          actions={<span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/70">Filing-ready</span>}>
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-sm min-w-[360px]">
+              <thead className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground/80 border-b border-white/[0.07]">
+                <tr><th className="py-2.5 px-3 text-left">Period</th><th className="px-3 text-right">Taxable</th><th className="px-3 text-right">Tax</th><th className="px-3 text-right">Orders</th></tr>
+              </thead>
+              <tbody>
+                {m?.taxRows.map((t) => (
+                  <tr key={t.month} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
+                    <td className="px-3 py-2 font-mono text-xs">{t.label}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs text-muted-foreground">{fmt(t.taxable, cur)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs text-violet-300">{fmt(t.tax, cur)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs">{t.orders}</td>
+                  </tr>
+                ))}
+                {(!m || m.taxRows.length === 0) && <tr><td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No tax collected yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+
+        {/* Cohort retention */}
+        <Panel title="Cohort Retention" icon={<Activity className="size-4" />} delay={0.14}>
+          {!m || m.cohorts.length === 0 ? <EmptyState icon={<Users className="size-4" />} label="Not enough customer history yet." /> : (
+            <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-sm min-w-[360px]">
+                <thead className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground/80 border-b border-white/[0.07]">
+                  <tr><th className="py-2.5 px-3 text-left">Cohort</th><th className="px-3 text-right">Size</th><th className="px-3 text-right">M+1</th><th className="px-3 text-right">M+2</th></tr>
+                </thead>
+                <tbody>
+                  {m.cohorts.map((c) => {
+                    const r1 = c.size > 0 ? (c.m1 / c.size) * 100 : 0;
+                    const r2 = c.size > 0 ? (c.m2 / c.size) * 100 : 0;
+                    return (
+                      <tr key={c.cohort} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
+                        <td className="px-3 py-2 font-mono text-xs">{c.label}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs">{c.size}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs" style={{ color: `oklch(0.75 0.13 160 / ${0.3 + r1 / 140})` }}>{r1.toFixed(0)}%</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs" style={{ color: `oklch(0.75 0.13 160 / ${0.3 + r2 / 140})` }}>{r2.toFixed(0)}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2 mt-4 pb-24 lg:pb-8">
         {/* Recent transactions */}
