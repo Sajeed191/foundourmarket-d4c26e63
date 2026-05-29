@@ -121,8 +121,11 @@ export function PromoBannerCarousel({
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0"
           >
-            {b.image ? (
-              <img src={b.image} alt={b.title} className="w-full h-full object-cover" />
+            {b.image || b.mobile_image ? (
+              <picture>
+                {b.mobile_image && <source media="(max-width: 640px)" srcSet={b.mobile_image} />}
+                <img src={b.image ?? b.mobile_image ?? ""} alt={b.title} className="w-full h-full object-cover" />
+              </picture>
             ) : (
               <div className="absolute inset-0" style={{ background: "var(--gradient-ember)", opacity: 0.5 }} />
             )}
