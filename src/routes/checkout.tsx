@@ -733,8 +733,8 @@ function SuccessScreen({ orderId, totalINR, method, eta, nav }: {
         <div className="flex flex-col gap-2">
           {orderId && (
             <button onClick={() => nav({ to: "/orders/$id", params: { id: orderId } })}
-              className="w-full bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110">
-              View order
+              className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110">
+              <Truck className="size-3.5" /> Track your order
             </button>
           )}
           {orderId && (
