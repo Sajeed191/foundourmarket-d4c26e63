@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { usePaymentMethods, isExpired, type PaymentMethod } from "@/lib/use-payment-methods";
 
