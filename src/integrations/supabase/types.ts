@@ -923,7 +923,9 @@ export type Database = {
           expires_at: string | null
           fulfillment_status: string
           id: string
+          market_region: string | null
           payment_method: string | null
+          payment_provider: string | null
           payment_status: string
           promo_code: string | null
           razorpay_order_id: string | null
@@ -948,7 +950,9 @@ export type Database = {
           expires_at?: string | null
           fulfillment_status?: string
           id?: string
+          market_region?: string | null
           payment_method?: string | null
+          payment_provider?: string | null
           payment_status?: string
           promo_code?: string | null
           razorpay_order_id?: string | null
@@ -973,7 +977,9 @@ export type Database = {
           expires_at?: string | null
           fulfillment_status?: string
           id?: string
+          market_region?: string | null
           payment_method?: string | null
+          payment_provider?: string | null
           payment_status?: string
           promo_code?: string | null
           razorpay_order_id?: string | null
@@ -1237,6 +1243,8 @@ export type Database = {
       products: {
         Row: {
           category: string
+          compare_price_inr: number | null
+          compare_price_usd: number | null
           cost: number
           created_at: string
           description: string | null
@@ -1245,9 +1253,13 @@ export type Database = {
           id: string
           image: string | null
           in_stock: boolean
+          india_visible: boolean
+          international_visible: boolean
           low_stock_threshold: number
           name: string
           price: number
+          price_inr: number | null
+          price_usd: number | null
           rating: number
           reserved_quantity: number
           reviews: number
@@ -1262,6 +1274,8 @@ export type Database = {
         }
         Insert: {
           category: string
+          compare_price_inr?: number | null
+          compare_price_usd?: number | null
           cost?: number
           created_at?: string
           description?: string | null
@@ -1270,9 +1284,13 @@ export type Database = {
           id?: string
           image?: string | null
           in_stock?: boolean
+          india_visible?: boolean
+          international_visible?: boolean
           low_stock_threshold?: number
           name: string
           price?: number
+          price_inr?: number | null
+          price_usd?: number | null
           rating?: number
           reserved_quantity?: number
           reviews?: number
@@ -1287,6 +1305,8 @@ export type Database = {
         }
         Update: {
           category?: string
+          compare_price_inr?: number | null
+          compare_price_usd?: number | null
           cost?: number
           created_at?: string
           description?: string | null
@@ -1295,9 +1315,13 @@ export type Database = {
           id?: string
           image?: string | null
           in_stock?: boolean
+          india_visible?: boolean
+          international_visible?: boolean
           low_stock_threshold?: number
           name?: string
           price?: number
+          price_inr?: number | null
+          price_usd?: number | null
           rating?: number
           reserved_quantity?: number
           reviews?: number
@@ -1318,12 +1342,15 @@ export type Database = {
           avatar_url: string | null
           birth_date: string | null
           country: string | null
+          country_code: string | null
           created_at: string
           full_name: string | null
           gender: string | null
           id: string
           language: string | null
+          market_region: string | null
           phone: string | null
+          region_locked_at: string | null
           timezone: string | null
           updated_at: string
         }
@@ -1332,12 +1359,15 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           country?: string | null
+          country_code?: string | null
           created_at?: string
           full_name?: string | null
           gender?: string | null
           id: string
           language?: string | null
+          market_region?: string | null
           phone?: string | null
+          region_locked_at?: string | null
           timezone?: string | null
           updated_at?: string
         }
@@ -1346,12 +1376,15 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           country?: string | null
+          country_code?: string | null
           created_at?: string
           full_name?: string | null
           gender?: string | null
           id?: string
           language?: string | null
+          market_region?: string | null
           phone?: string | null
+          region_locked_at?: string | null
           timezone?: string | null
           updated_at?: string
         }
@@ -2190,6 +2223,8 @@ export type Database = {
         }
         Returns: {
           category: string
+          compare_price_inr: number | null
+          compare_price_usd: number | null
           cost: number
           created_at: string
           description: string | null
@@ -2198,9 +2233,13 @@ export type Database = {
           id: string
           image: string | null
           in_stock: boolean
+          india_visible: boolean
+          international_visible: boolean
           low_stock_threshold: number
           name: string
           price: number
+          price_inr: number | null
+          price_usd: number | null
           rating: number
           reserved_quantity: number
           reviews: number

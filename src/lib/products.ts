@@ -26,6 +26,13 @@ export type Product = {
   lowStockThreshold: number;
   viewsCount: number;
   createdAt: string;
+  // Dual-region independent admin-defined pricing (no currency conversion)
+  priceInr: number | null;
+  comparePriceInr: number | null;
+  priceUsd: number | null;
+  comparePriceUsd: number | null;
+  indiaVisible: boolean;
+  internationalVisible: boolean;
 };
 
 
@@ -64,7 +71,13 @@ type Row = {
   discount: number | null; featured?: boolean | null;
   sku?: string | null; stock_quantity?: number | null; low_stock_threshold?: number | null;
   views_count?: number | null; created_at?: string | null;
+  price_inr?: number | string | null; compare_price_inr?: number | string | null;
+  price_usd?: number | string | null; compare_price_usd?: number | string | null;
+  india_visible?: boolean | null; international_visible?: boolean | null;
 };
+
+const num = (v: number | string | null | undefined): number | null =>
+  v === null || v === undefined ? null : Number(v);
 
 function rowToProduct(r: Row): Product {
   return {
@@ -85,10 +98,16 @@ function rowToProduct(r: Row): Product {
     lowStockThreshold: r.low_stock_threshold ?? 5,
     viewsCount: r.views_count ?? 0,
     createdAt: r.created_at ?? "",
+    priceInr: num(r.price_inr),
+    comparePriceInr: num(r.compare_price_inr),
+    priceUsd: num(r.price_usd),
+    comparePriceUsd: num(r.compare_price_usd),
+    indiaVisible: r.india_visible ?? true,
+    internationalVisible: r.international_visible ?? true,
   };
 }
 
-const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at";
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible";
 
 
 export async function fetchProducts(): Promise<Product[]> {
