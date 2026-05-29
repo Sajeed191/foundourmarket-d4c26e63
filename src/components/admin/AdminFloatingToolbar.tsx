@@ -44,6 +44,7 @@ const ACTIONS: Action[] = [
  */
 export function AdminFloatingToolbar() {
   const { isAdmin, loading } = useIsAdmin();
+  const { adminMode, toggle } = useAdminMode();
   const [open, setOpen] = useState(false);
 
   if (loading || !isAdmin) return null;
