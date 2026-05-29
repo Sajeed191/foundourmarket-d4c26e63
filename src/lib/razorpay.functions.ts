@@ -30,8 +30,6 @@ const verifySchema = z.object({
 /** Re-price the cart entirely from trusted database values (anti-tampering). */
 async function repriceFromDb(
   supabase: any,
-
-  supabase: any,
   items: { slug: string; qty: number }[],
   promoCode?: string | null,
 ) {
@@ -57,20 +55,6 @@ async function repriceFromDb(
     };
   });
 
-  const bySlug = new Map((products ?? []).map((p: any) => [p.slug, p]));
-  const lines = items.map((i) => {
-    const p = bySlug.get(i.slug);
-    if (!p) throw new Error(`Product unavailable: ${i.slug}`);
-    const unitUsd = Number(p.price);
-    return {
-      slug: i.slug,
-      name: p.name as string,
-      image: (p.image as string) ?? null,
-      unitUsd,
-      qty: i.qty,
-      lineUsd: +(unitUsd * i.qty).toFixed(2),
-    };
-  });
 
   const subtotalUSD = +lines.reduce((s, l) => s + l.lineUsd, 0).toFixed(2);
   const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
