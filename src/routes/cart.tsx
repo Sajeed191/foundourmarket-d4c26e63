@@ -33,6 +33,20 @@ function unitPricing(price: number, discount?: number) {
   return { sale: price, original, save: original - price, discount: discount ?? 0 };
 }
 
+async function shareProduct(slug: string, name: string) {
+  const url = `${window.location.origin}/products/${slug}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: name, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Product link copied");
+    }
+  } catch {
+    /* user cancelled share — no-op */
+  }
+}
+
 function CartPage() {
   const {
     detailed, savedDetailed, setQty, remove, saveForLater, moveToCart,
