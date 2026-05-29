@@ -188,7 +188,7 @@ export function AdminProductPanel({ product }: { product: Product }) {
       {/* Floating admin toolbar */}
       <div className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 sm:bottom-6">
         <div className="flex items-center gap-1 rounded-full border border-accent/30 bg-background/70 px-2 py-1.5 backdrop-blur-2xl shadow-[0_10px_40px_-10px_oklch(0.74_0.19_49/0.5)]">
-          <span className="hidden sm:flex items-center gap-1.5 pl-2 pr-1 text-[10px] font-mono uppercase tracking-widest text-accent">
+          <span className="flex items-center gap-1.5 pl-2 pr-1 text-[10px] font-mono uppercase tracking-widest text-accent">
             <ShieldCheck className="size-3.5" /> Admin
           </span>
           <ToolbarBtn icon={Pencil} label="Edit" onClick={() => setOpen(true)} />
