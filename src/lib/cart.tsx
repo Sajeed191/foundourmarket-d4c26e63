@@ -6,6 +6,7 @@ import { useAuth } from "./auth";
 
 type CartItem = { slug: string; qty: number; savedForLater?: boolean };
 type DetailedItem = CartItem & { product: Product };
+type RemovedItem = { slug: string; qty: number; at: number };
 
 type Ctx = {
   items: CartItem[];
@@ -15,6 +16,9 @@ type Ctx = {
   clear: () => Promise<void>;
   saveForLater: (slug: string) => Promise<void>;
   moveToCart: (slug: string) => Promise<void>;
+  moveToWishlist: (slug: string) => Promise<void>;
+  undoRemove: () => Promise<void>;
+  lastRemoved: RemovedItem | null;
   count: number;
   detailed: DetailedItem[];
   savedDetailed: DetailedItem[];
@@ -43,6 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastRemoved, setLastRemoved] = useState<RemovedItem | null>(null);
   const mergedRef = useRef(false);
 
   // Load LS on first mount (guests)
@@ -128,6 +133,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
+  // Realtime sync: keep cart in sync across devices/tabs for logged-in users
+  useEffect(() => {
+    if (!user || !cartId) return;
+    const channel = supabase
+      .channel(`rt-cart-${cartId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cart_items", filter: `cart_id=eq.${cartId}` },
+        async () => {
+          const { data: rows } = await supabase
+            .from("cart_items")
+            .select("product_slug,quantity,saved_for_later")
+            .eq("cart_id", cartId);
+          setItems(
+            (rows ?? []).map((r) => ({
+              slug: r.product_slug,
+              qty: r.quantity,
+              savedForLater: !!r.saved_for_later,
+            })),
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, cartId]);
+
+
+
   // Persist guests to LS
   useEffect(() => {
     if (!user) writeLS(items);
@@ -167,6 +202,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const remove = async (slug: string) => {
+    const existing = items.find((i) => i.slug === slug && !i.savedForLater);
+    if (existing) setLastRemoved({ slug, qty: existing.qty, at: Date.now() });
     setItems((p) => p.filter((i) => !(i.slug === slug && !i.savedForLater)));
     if (user && cartId) {
       await supabase
@@ -177,6 +214,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .eq("saved_for_later", false);
     }
   };
+
+  const undoRemove = async () => {
+    if (!lastRemoved) return;
+    const { slug, qty } = lastRemoved;
+    setLastRemoved(null);
+    await add(slug, qty);
+  };
+
+  const moveToWishlist = async (slug: string) => {
+    if (user) {
+      const { data: existing } = await supabase
+        .from("wishlist")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_slug", slug)
+        .maybeSingle();
+      if (!existing) {
+        await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
+      }
+    }
+    await remove(slug);
+  };
+
 
   const setQty = async (slug: string, qty: number) => {
     if (qty <= 0) return remove(slug);
@@ -254,6 +314,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clear,
         saveForLater,
         moveToCart,
+        moveToWishlist,
+        undoRemove,
+        lastRemoved,
         count,
         detailed,
         savedDetailed,
