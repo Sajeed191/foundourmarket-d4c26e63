@@ -95,11 +95,9 @@ function EditProfilePage() {
           phone: phone.trim() || null,
           country: country.trim() || null,
           avatar_url: avatarUrl.trim() || null,
-        });
+        }, { onConflict: "id" });
       if (error) throw error;
-      await supabase.auth.updateUser({
-        data: { full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl.trim() },
-      });
+      await supabase.auth.updateUser({ data: { full_name: fullName.trim(), avatar_url: avatarUrl.trim() } });
       setSaved(true);
       toast.success("Profile updated");
       setTimeout(() => nav({ to: "/account" }), 900);
@@ -139,7 +137,7 @@ function EditProfilePage() {
       </div>
 
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-12 lg:py-16">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 lg:pt-16 pb-32 sm:pb-12 lg:pb-16">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
           <Link to="/account" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground hover:text-accent mb-6 transition-colors">
             <ArrowLeft className="size-3.5" /> Back to account

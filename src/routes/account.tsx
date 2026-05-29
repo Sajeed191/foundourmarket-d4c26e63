@@ -37,6 +37,12 @@ type Order = {
   order_items: { name: string; quantity: number; image: string | null }[];
 };
 
+type Profile = {
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+};
+
 const ease = [0.16, 1, 0.3, 1] as const;
 const fadeUp = {
   initial: { opacity: 0, y: 14 },
@@ -57,6 +63,7 @@ function AccountPage() {
   const { format } = useRegion();
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const { slugs: wishSlugs } = useWishlist();
   const { unread } = useNotifications();
   const { products } = useProducts();
@@ -68,20 +75,29 @@ function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("orders")
-      .select("id,status,total,currency,created_at,order_items(name,quantity,image)")
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => setOrders((data as Order[]) ?? []));
+    Promise.all([
+      supabase
+        .from("orders")
+        .select("id,status,total,currency,created_at,order_items(name,quantity,image)")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("profiles")
+        .select("full_name,phone,avatar_url")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]).then(([ordersResult, profileResult]) => {
+      setOrders((ordersResult.data as Order[]) ?? []);
+      setProfile((profileResult.data as Profile | null) ?? null);
+    });
   }, [user]);
 
   const firstName = useMemo(() => {
-    const full = (user?.user_metadata?.full_name as string | undefined) ?? "";
+    const full = profile?.full_name ?? (user?.user_metadata?.full_name as string | undefined) ?? "";
     return full.split(" ")[0] || user?.email?.split("@")[0] || "there";
-  }, [user]);
+  }, [profile, user]);
 
-  const avatarUrl = (user?.user_metadata?.avatar_url as string | undefined) ?? "";
+  const avatarUrl = profile?.avatar_url ?? (user?.user_metadata?.avatar_url as string | undefined) ?? "";
 
   const stats = useMemo(() => {
     const list = orders ?? [];
@@ -209,7 +225,7 @@ function AccountPage() {
             </div>
 
             {/* Profile completion — full width below for balanced spacing */}
-            <ProfileCompletion user={user} />
+            <ProfileCompletion user={user} profile={profile} />
           </div>
         </motion.header>
         </div>
@@ -817,13 +833,13 @@ function WhyShopWithUs() {
   );
 }
 
-function ProfileCompletion({ user }: { user: { email?: string | null; user_metadata?: Record<string, unknown> } }) {
+function ProfileCompletion({ user, profile }: { user: { email?: string | null; user_metadata?: Record<string, unknown> }; profile: Profile | null }) {
   const meta = user.user_metadata ?? {};
   const checks = [
     !!user.email,
-    !!meta.full_name,
-    !!meta.avatar_url,
-    !!meta.phone,
+    !!(profile?.full_name ?? meta.full_name),
+    !!(profile?.avatar_url ?? meta.avatar_url),
+    !!profile?.phone,
   ];
   const done = checks.filter(Boolean).length;
   const pct = Math.round((done / checks.length) * 100);
