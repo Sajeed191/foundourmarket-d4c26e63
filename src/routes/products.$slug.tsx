@@ -20,6 +20,7 @@ import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
+import { AdminImageManager } from "@/components/admin/AdminImageManager";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
@@ -260,8 +261,16 @@ function ProductPage() {
                     <Share2 className="size-4" />
                   </button>
                 </div>
+                {isAdmin && (
+                  <AdminImageManager
+                    product={product}
+                    images={galleryImages.filter((g) => g.id !== "main")}
+                    onChanged={setImages}
+                  />
+                )}
               </div>
             </div>
+
 
             {galleryImages.length > 1 && (
               <div className="mt-4 grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-3">
