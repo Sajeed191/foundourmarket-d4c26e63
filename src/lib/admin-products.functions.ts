@@ -2,16 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const STAFF_ROLES = ["admin", "super_admin", "manager", "editor"];
+const PRODUCT_ADMIN_ROLES = ["admin", "super_admin"];
 
 async function assertStaff(supabase: any, userId: string) {
   const { data } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", STAFF_ROLES);
+    .in("role", PRODUCT_ADMIN_ROLES);
   if (!data || data.length === 0) {
-    throw new Error("Forbidden: staff access required.");
+    throw new Error("Forbidden: admin access required.");
   }
 }
 

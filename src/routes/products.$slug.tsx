@@ -18,7 +18,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, type ProductImage, type ProductVariant } from "@/lib/products";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
-import { useIsAdmin } from "@/lib/use-admin";
+import { useIsProductAdmin } from "@/lib/use-admin";
 import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
 import { toast } from "sonner";
 
@@ -92,7 +92,7 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
   const { format, priceOf, compareOf } = useRegion();
-  const { isAdmin } = useIsAdmin();
+  const { isProductAdmin: isAdmin } = useIsProductAdmin();
   const { add } = useCart();
   const { record } = useRecentlyViewed();
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();

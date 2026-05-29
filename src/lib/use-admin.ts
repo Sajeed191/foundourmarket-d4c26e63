@@ -56,3 +56,42 @@ export function useIsAdmin() {
 
   return { isAdmin, loading };
 }
+
+const PRODUCT_ADMIN_ROLES: ("admin" | "super_admin")[] = ["admin", "super_admin"];
+
+/**
+ * Stricter gate for product editing — only true admins (admin / super_admin),
+ * NOT general staff. Mirrors the products RLS policy so the UI never shows
+ * controls that would fail server-side.
+ */
+export function useIsProductAdmin() {
+  const { user, loading: authLoading } = useAuth();
+  const [isProductAdmin, setIsProductAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (authLoading) return;
+    if (!user) {
+      setIsProductAdmin(false);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", PRODUCT_ADMIN_ROLES)
+      .then(({ data }) => {
+        if (!active) return;
+        setIsProductAdmin(!!data && data.length > 0);
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user, authLoading]);
+
+  return { isProductAdmin, loading };
+}
