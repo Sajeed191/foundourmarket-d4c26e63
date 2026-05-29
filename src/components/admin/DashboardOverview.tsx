@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { TrendingUp, ShoppingBag, Users, Package, AlertTriangle, ArrowUpRight, ArrowDownRight, Star, Clock } from "lucide-react";
 import { resolveImage } from "@/lib/products";
+import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 
 type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
@@ -30,8 +32,27 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: "Delivered", cancelled: "Cancelled",
 };
 
+// Smooth Catmull-Rom → cubic bezier path for cinematic curved lines
+function smoothPath(pts: readonly (readonly [number, number])[]) {
+  if (pts.length < 2) return "";
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
 export function DashboardOverview({ orders, products, customersCount }: Props) {
   const [period, setPeriod] = useState<Period>(14);
+  const [hover, setHover] = useState<number | null>(null);
 
   const stats = useMemo(() => {
     const list = orders ?? [];
@@ -104,87 +125,123 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
   }, [orders, products, period]);
 
   const max = Math.max(1, ...stats.buckets.map((b) => b.revenue));
-  const w = 600, h = 120, pad = 8;
+  const w = 600, h = 130, pad = 8;
   const stepX = (w - pad * 2) / Math.max(1, stats.buckets.length - 1);
   const points = stats.buckets.map((b, i) => {
     const x = pad + i * stepX;
     const y = h - pad - (b.revenue / max) * (h - pad * 2);
     return [x, y] as const;
   });
-  const linePath = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const linePath = smoothPath(points);
   const areaPath = `${linePath} L${(pad + (stats.buckets.length - 1) * stepX).toFixed(1)},${h - pad} L${pad},${h - pad} Z`;
+  const end = points[points.length - 1];
+
+  const metrics = [
+    { icon: <TrendingUp className="size-4" />, label: "Revenue", value: `$${stats.revenue.toFixed(2)}`, sub: <TrendBadge delta={stats.delta} period={stats.half} /> },
+    { icon: <ShoppingBag className="size-4" />, label: "Orders", value: stats.ordersCount, sub: <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">AOV ${stats.aov.toFixed(2)}</span> },
+    { icon: <Users className="size-4" />, label: "Customers", value: customersCount, sub: null },
+    {
+      icon: <Package className="size-4" />, label: "Products", value: products?.length ?? 0,
+      sub: stats.outOfStock.length > 0 || stats.lowStock.length > 0 ? (
+        <span className="text-[10px] font-mono uppercase tracking-widest text-accent inline-flex items-center gap-1">
+          <AlertTriangle className="size-3" />
+          {stats.outOfStock.length > 0 && `${stats.outOfStock.length} OOS`}
+          {stats.outOfStock.length > 0 && stats.lowStock.length > 0 && " · "}
+          {stats.lowStock.length > 0 && `${stats.lowStock.length} low`}
+        </span>
+      ) : <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">All in stock</span>,
+    },
+  ];
 
   return (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-8">
-        <Stat icon={<TrendingUp className="size-4" />} label="Revenue" value={`$${stats.revenue.toFixed(2)}`}
-          sub={<TrendBadge delta={stats.delta} period={stats.half} />} />
-        <Stat icon={<ShoppingBag className="size-4" />} label="Orders" value={stats.ordersCount}
-          sub={<span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">AOV ${stats.aov.toFixed(2)}</span>} />
-        <Stat icon={<Users className="size-4" />} label="Customers" value={customersCount} />
-        <Stat icon={<Package className="size-4" />} label="Products" value={products?.length ?? 0}
-          sub={
-            stats.outOfStock.length > 0 || stats.lowStock.length > 0 ? (
-              <span className="text-[10px] font-mono uppercase tracking-widest text-accent inline-flex items-center gap-1">
-                <AlertTriangle className="size-3" />
-                {stats.outOfStock.length > 0 && `${stats.outOfStock.length} OOS`}
-                {stats.outOfStock.length > 0 && stats.lowStock.length > 0 && " · "}
-                {stats.lowStock.length > 0 && `${stats.lowStock.length} low`}
-              </span>
-            ) : <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">All in stock</span>
-          } />
+    <div className="space-y-5">
+      {/* Horizontal swipeable metric carousel */}
+      <div className="-mx-1 flex gap-3 overflow-x-auto no-scrollbar px-1 pb-1 snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
+        {metrics.map((m, i) => (
+          <motion.div
+            key={m.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, type: "spring", stiffness: 260, damping: 26 }}
+            whileTap={{ scale: 0.97 }}
+            className="snap-center shrink-0 w-[44vw] sm:w-auto"
+          >
+            <Stat {...m} />
+          </motion.div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-        <div className="lg:col-span-2 card-premium rounded-2xl p-5">
-          <div className="flex items-baseline justify-between mb-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Last {period} days</p>
-              <h2 className="text-lg font-medium mt-1">Revenue</h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="inline-flex rounded-full border border-border bg-background p-0.5">
-                {([7, 14, 30] as const).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPeriod(p)}
-                    className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full transition-colors ${period === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {p}d
-                  </button>
-                ))}
-              </div>
-              <div className="text-right">
-                <p className="font-mono text-accent">${stats.last.toFixed(2)}</p>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">past {stats.half}d</p>
-              </div>
-            </div>
+      {/* Cinematic revenue chart */}
+      <div className="relative overflow-hidden card-premium rounded-2xl p-4">
+        <div className="pointer-events-none absolute -top-16 left-1/4 size-56 rounded-full opacity-40" style={{ background: "var(--gradient-ember)", filter: "blur(36px)" }} />
+        <div className="relative flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Last {period} days</p>
+            <h2 className="text-base font-medium mt-0.5">Revenue</h2>
           </div>
-          <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32" preserveAspectRatio="none">
+          <div className="inline-flex rounded-full border border-border bg-background/60 p-0.5">
+            {([7, 14, 30] as const).map((p) => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full transition-colors ${period === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {p}d
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative">
+          <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32" preserveAspectRatio="none"
+            onMouseLeave={() => setHover(null)}
+            onMouseMove={(e) => {
+              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+              const rel = ((e.clientX - rect.left) / rect.width) * w;
+              const idx = Math.round((rel - pad) / stepX);
+              setHover(Math.max(0, Math.min(points.length - 1, idx)));
+            }}
+          >
             <defs>
               <linearGradient id="spark" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" />
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.32" />
                 <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
               </linearGradient>
             </defs>
             <g className="text-accent">
-              <path d={areaPath} fill="url(#spark)" />
-              <path d={linePath} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-              {points.map(([x, y], i) => (
-                <circle key={i} cx={x} cy={y} r={stats.buckets[i].revenue > 0 ? 2 : 0} fill="currentColor" />
-              ))}
+              <motion.path d={areaPath} fill="url(#spark)"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} />
+              <motion.path d={linePath} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
+                style={{ filter: "drop-shadow(0 2px 8px oklch(0.74 0.19 49 / 0.5))" }}
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: "easeOut" }} />
+              {hover !== null && (
+                <line x1={points[hover][0]} y1={pad} x2={points[hover][0]} y2={h - pad} stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
+              )}
+              {hover !== null && <circle cx={points[hover][0]} cy={points[hover][1]} r={3.5} fill="currentColor" />}
+              {end && <circle className="animate-data-pulse" cx={end[0]} cy={end[1]} r={2.5} fill="currentColor" />}
+              {end && <circle cx={end[0]} cy={end[1]} r={2.5} fill="currentColor" />}
             </g>
           </svg>
-          <div className="flex justify-between mt-2 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
-            <span>{stats.buckets[0].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-            <span>{stats.buckets[stats.buckets.length - 1].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-          </div>
-        </div>
 
-        <div className="card-premium rounded-2xl p-5">
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Pipeline</p>
-          <h2 className="text-lg font-medium mt-1 mb-4">Order status</h2>
-          <ul className="space-y-3">
+          {hover !== null && (
+            <div className="pointer-events-none absolute -top-1 z-10 glass-strong rounded-xl px-3 py-1.5 text-center"
+              style={{ left: `${(points[hover][0] / w) * 100}%`, transform: "translateX(-50%)" }}>
+              <p className="font-mono text-accent text-xs">${stats.buckets[hover].revenue.toFixed(2)}</p>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+                {stats.buckets[hover].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-between mt-1.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+          <span>{stats.buckets[0].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+          <span className="text-accent">${stats.last.toFixed(0)} · past {stats.half}d</span>
+          <span>{stats.buckets[stats.buckets.length - 1].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+        </div>
+      </div>
+
+      {/* Collapsible modules */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CollapsibleModule eyebrow="Pipeline" title="Order status"
+          badge={stats.pendingCount > 0 ? <span className="text-[9px] font-mono uppercase tracking-widest text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20">{stats.pendingCount} live</span> : undefined}>
+          <ul className="space-y-2.5">
             {(["pending", "processing", "shipped", "delivered", "cancelled"] as const).map((s) => {
               const count = stats.statusCounts[s] ?? 0;
               const pct = stats.ordersCount > 0 ? (count / stats.ordersCount) * 100 : 0;
@@ -195,36 +252,23 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
                     <span className="text-foreground">{count}</span>
                   </div>
                   <div className="h-1 rounded-full bg-background overflow-hidden">
-                    <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                    <motion.div className="h-full bg-accent" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ type: "spring", stiffness: 120, damping: 22 }} />
                   </div>
                 </li>
               );
             })}
           </ul>
-          {stats.pendingCount > 0 && (
-            <p className="mt-4 text-[10px] font-mono uppercase tracking-widest text-accent inline-flex items-center gap-1">
-              <AlertTriangle className="size-3" /> {stats.pendingCount} need attention
-            </p>
-          )}
-        </div>
-      </div>
+        </CollapsibleModule>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        <div className="card-premium rounded-2xl p-5">
-          <div className="flex justify-between items-baseline mb-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Bestsellers</p>
-              <h2 className="text-lg font-medium mt-1">Top products</h2>
-            </div>
-          </div>
+        <CollapsibleModule eyebrow="Bestsellers" title="Top products">
           {stats.topProducts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No sales yet.</p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {stats.topProducts.map((p, i) => (
                 <li key={i} className="flex items-center gap-3">
                   <span className="font-mono text-[10px] text-muted-foreground w-4">{i + 1}</span>
-                  <div className="size-10 rounded-lg overflow-hidden bg-background border border-border shrink-0">
+                  <div className="size-9 rounded-lg overflow-hidden bg-background border border-border shrink-0">
                     {p.image && <img src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -236,19 +280,13 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
               ))}
             </ul>
           )}
-        </div>
+        </CollapsibleModule>
 
-        <div className="card-premium rounded-2xl p-5">
-          <div className="flex justify-between items-baseline mb-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Recent activity</p>
-              <h2 className="text-lg font-medium mt-1">Latest orders</h2>
-            </div>
-          </div>
+        <CollapsibleModule eyebrow="Recent activity" title="Latest orders">
           {stats.recentOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">No orders yet.</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border/60">
               {stats.recentOrders.map((o) => (
                 <li key={o.id} className="py-2.5 flex items-center gap-3">
                   <Clock className="size-3.5 text-muted-foreground shrink-0" />
@@ -264,21 +302,14 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
               ))}
             </ul>
           )}
-        </div>
-      </div>
+        </CollapsibleModule>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        <div className="card-premium rounded-2xl p-5">
-          <div className="flex justify-between items-baseline mb-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Inventory alerts</p>
-              <h2 className="text-lg font-medium mt-1">Stock health</h2>
-            </div>
-          </div>
+        <CollapsibleModule eyebrow="Inventory alerts" title="Stock health"
+          badge={(stats.outOfStock.length + stats.lowStock.length) > 0 ? <span className="text-[9px] font-mono uppercase tracking-widest text-destructive px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20">{stats.outOfStock.length + stats.lowStock.length}</span> : undefined}>
           {stats.outOfStock.length === 0 && stats.lowStock.length === 0 ? (
             <p className="text-sm text-muted-foreground">All products are well-stocked.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {stats.outOfStock.length > 0 && (
                 <div className="p-3 rounded-xl border border-destructive/30 bg-destructive/5">
                   <p className="text-[10px] font-mono uppercase tracking-widest text-destructive mb-2 inline-flex items-center gap-1">
@@ -312,15 +343,9 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
               )}
             </div>
           )}
-        </div>
+        </CollapsibleModule>
 
-        <div className="card-premium rounded-2xl p-5">
-          <div className="flex justify-between items-baseline mb-4">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Catalog health</p>
-              <h2 className="text-lg font-medium mt-1">Highest rated</h2>
-            </div>
-          </div>
+        <CollapsibleModule eyebrow="Catalog health" title="Highest rated" defaultOpen={false}>
           {stats.topRated.length === 0 ? (
             <p className="text-sm text-muted-foreground">No reviews yet.</p>
           ) : (
@@ -341,22 +366,22 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
               ))}
             </ul>
           )}
-        </div>
+        </CollapsibleModule>
       </div>
-    </>
+    </div>
   );
 }
 
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="card-premium relative overflow-hidden rounded-2xl p-5 group">
-      <div className="absolute -top-12 -right-12 size-32 rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(24px)" }} />
-      <div className="relative flex items-center gap-2 mb-3">
+    <div className="card-premium relative overflow-hidden rounded-2xl p-4 h-full group">
+      <div className="absolute -top-12 -right-12 size-32 rounded-full opacity-30 group-hover:opacity-70 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(24px)" }} />
+      <div className="relative flex items-center gap-2 mb-2.5">
         <span className="grid place-items-center size-7 rounded-lg bg-accent/10 border border-accent/20 text-accent">{icon}</span>
-        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground truncate">{label}</span>
       </div>
-      <p className="relative text-3xl font-display font-semibold tabular-nums tracking-tight">{value}</p>
-      {sub && <div className="relative mt-2">{sub}</div>}
+      <p className="relative text-2xl font-display font-semibold tabular-nums tracking-tight">{value}</p>
+      {sub && <div className="relative mt-1.5">{sub}</div>}
     </div>
   );
 }
@@ -366,7 +391,7 @@ function TrendBadge({ delta, period }: { delta: number; period: number }) {
   const Icon = up ? ArrowUpRight : ArrowDownRight;
   return (
     <span className={`text-[10px] font-mono uppercase tracking-widest inline-flex items-center gap-1 ${up ? "text-accent" : "text-muted-foreground"}`}>
-      <Icon className="size-3" /> {Math.abs(delta).toFixed(0)}% vs prior {period}d
+      <Icon className="size-3" /> {Math.abs(delta).toFixed(0)}% vs {period}d
     </span>
   );
 }
