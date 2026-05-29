@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, Search, Download, RotateCcw, Loader2, CheckCircle2, XCircle,
-  Radio, Webhook, ShieldCheck, ShieldAlert, X, IndianRupee, ToggleLeft, ToggleRight,
+  Radio, Webhook, ShieldCheck, ShieldAlert, X, IndianRupee, ToggleLeft, ToggleRight, ChevronLeft, ChevronRight,
+
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
