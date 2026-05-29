@@ -130,6 +130,23 @@
 }
 .animate-ambient { animation: ambient-pulse 5s ease-in-out infinite; }
 
+/* Animated savings/discount chip glow */
+@keyframes save-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.45), 0 0 14px -4px oklch(0.74 0.19 49 / 0.5); }
+  50% { box-shadow: 0 0 0 3px oklch(0.74 0.19 49 / 0), 0 0 22px -2px oklch(0.74 0.19 49 / 0.7); }
+}
+.animate-save { animation: save-pulse 2.4s ease-in-out infinite; }
+
+/* Soft glow border for floating recommendation cards */
+.glow-border {
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.05), 0 18px 40px -24px oklch(0 0 0 / 0.8);
+  transition: box-shadow 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo);
+}
+.glow-border:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 0 1px oklch(0.74 0.19 49 / 0.4), 0 0 40px -10px oklch(0.74 0.19 49 / 0.45), 0 26px 60px -28px oklch(0 0 0 / 0.85);
+}
+
 /* Subtle film-grain noise texture overlay (use as ::before via .noise-layer) */
 .noise-layer::before {
   content: "";
