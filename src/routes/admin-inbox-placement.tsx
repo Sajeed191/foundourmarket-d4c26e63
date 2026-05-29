@@ -69,7 +69,7 @@ function InboxPlacementPage() {
   const [gmail, setGmail] = useState("");
   const [outlook, setOutlook] = useState("");
 
-  const seeds = useQuery({ queryKey: ["seed-inboxes"], queryFn: () => fetchSeeds({ data: {} }) });
+  const seeds = useQuery({ queryKey: ["seed-inboxes"], queryFn: () => fetchSeeds(undefined) });
 
   useEffect(() => {
     if (seeds.data) {
