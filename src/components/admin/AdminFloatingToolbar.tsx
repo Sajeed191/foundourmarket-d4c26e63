@@ -160,6 +160,8 @@ export function AdminFloatingToolbar() {
           )}
         />
       </motion.button>
+
+      <StorefrontDashboardPanel open={dashboard} onClose={() => setDashboard(false)} />
     </div>
   );
 }
