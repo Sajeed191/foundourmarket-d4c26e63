@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { downloadInvoice } from "@/lib/invoice";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
