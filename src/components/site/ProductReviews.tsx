@@ -104,7 +104,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     onAggregateChange?.();
   };
 
+  return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 border-t border-border/60">
+
       <h2 className="text-xl sm:text-2xl font-display tracking-tight mb-6">Customer Reviews</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
