@@ -184,16 +184,16 @@ export function Nav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-black/75 backdrop-blur-md"
+              transition={{ duration: 0.25 }}
+              className="absolute inset-0 bg-black/75"
               onClick={() => setOpen(false)}
             />
             <motion.aside
-              initial={{ x: "-100%", filter: "blur(12px)" }}
-              animate={{ x: 0, filter: "blur(0px)" }}
-              exit={{ x: "-100%", filter: "blur(12px)" }}
-              transition={{ type: "spring", stiffness: 320, damping: 36, mass: 0.9 }}
-              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)]"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 38, mass: 0.7 }}
+              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] [transform:translateZ(0)] will-change-transform"
             >
               {/* Background atmosphere */}
               <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
