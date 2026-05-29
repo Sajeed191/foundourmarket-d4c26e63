@@ -56,7 +56,7 @@ function formatEta(daysFrom: number, daysTo: number) {
 
 function CheckoutPage() {
   const { user, loading } = useAuth();
-  const { detailed, subtotalUSD, clear, count, loading: cartLoading } = useCart();
+  const { detailed, subtotalUSD, clear, count, hydrated: cartHydrated } = useCart();
   const { market } = useRegion();
   const {
     addresses, loading: addrLoading, create: createAddress,
