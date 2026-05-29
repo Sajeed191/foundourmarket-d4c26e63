@@ -1,9 +1,11 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Heart, Star, Plus, BadgeCheck } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
+import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 
 const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
