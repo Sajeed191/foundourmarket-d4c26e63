@@ -30,7 +30,7 @@ export function Footer() {
                 key={label}
                 href="#"
                 aria-label={label}
-                className="size-9 grid place-items-center rounded-xl glass text-muted-foreground hover:text-accent hover:border-accent/40 hover:-translate-y-0.5 transition-all"
+                className="size-8 grid place-items-center rounded-xl glass text-muted-foreground hover:text-accent hover:border-accent/40 hover:-translate-y-0.5 transition-all"
               >
                 <Icon className="size-4" />
               </a>
