@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   fetchFinancialData, computeSummary, monthlyBreakdown, revenueSeries,
   expenseBreakdown, refundReasons, salesSources, countryRevenue,
-  detectAnomalies, forecastNext, type FinancialData, type Granularity,
+  detectAnomalies, forecastNext, extendedMetrics, productProfitability,
+  taxReport, cohortRetention, type FinancialData, type Granularity,
 } from "@/lib/financial-metrics";
 
 export const Route = createFileRoute("/admin-financial")({
