@@ -16,54 +16,81 @@ export type Database = {
     Tables: {
       addresses: {
         Row: {
+          address_type: string
+          alternate_phone: string | null
           city: string
           country: string
           created_at: string
+          delivery_notes: string | null
           full_name: string
           id: string
           is_default_billing: boolean
           is_default_shipping: boolean
           label: string | null
+          landmark: string | null
+          last_used_at: string | null
+          latitude: number | null
           line1: string
           line2: string | null
+          longitude: number | null
+          nickname: string | null
           phone: string | null
           postal: string
           state: string | null
           updated_at: string
+          use_count: number
           user_id: string
         }
         Insert: {
+          address_type?: string
+          alternate_phone?: string | null
           city: string
           country: string
           created_at?: string
+          delivery_notes?: string | null
           full_name: string
           id?: string
           is_default_billing?: boolean
           is_default_shipping?: boolean
           label?: string | null
+          landmark?: string | null
+          last_used_at?: string | null
+          latitude?: number | null
           line1: string
           line2?: string | null
+          longitude?: number | null
+          nickname?: string | null
           phone?: string | null
           postal: string
           state?: string | null
           updated_at?: string
+          use_count?: number
           user_id: string
         }
         Update: {
+          address_type?: string
+          alternate_phone?: string | null
           city?: string
           country?: string
           created_at?: string
+          delivery_notes?: string | null
           full_name?: string
           id?: string
           is_default_billing?: boolean
           is_default_shipping?: boolean
           label?: string | null
+          landmark?: string | null
+          last_used_at?: string | null
+          latitude?: number | null
           line1?: string
           line2?: string | null
+          longitude?: number | null
+          nickname?: string | null
           phone?: string | null
           postal?: string
           state?: string | null
           updated_at?: string
+          use_count?: number
           user_id?: string
         }
         Relationships: []
