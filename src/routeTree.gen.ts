@@ -25,6 +25,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
+import { Route as AdminSupportRouteImport } from './routes/admin-support'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
 import { Route as AdminSearchRouteImport } from './routes/admin-search'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
@@ -58,6 +59,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AccountSupportRouteImport } from './routes/account_.support'
 import { Route as AccountSecurityRouteImport } from './routes/account_.security'
 import { Route as AccountReturnsRouteImport } from './routes/account_.returns'
 import { Route as AccountProfileRouteImport } from './routes/account_.profile'
@@ -153,6 +155,11 @@ const AuthRoute = AuthRouteImport.update({
 const AdminTrafficRoute = AdminTrafficRouteImport.update({
   id: '/admin-traffic',
   path: '/admin-traffic',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/admin-support',
+  path: '/admin-support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
@@ -320,6 +327,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AccountSupportRoute = AccountSupportRouteImport.update({
+  id: '/account_/support',
+  path: '/account/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountSecurityRoute = AccountSecurityRouteImport.update({
   id: '/account_/security',
   path: '/account/security',
@@ -430,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
@@ -455,6 +468,7 @@ export interface FileRoutesByFullPath {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
+  '/account/support': typeof AccountSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -497,6 +511,7 @@ export interface FileRoutesByTo {
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
@@ -522,6 +537,7 @@ export interface FileRoutesByTo {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
+  '/account/support': typeof AccountSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -565,6 +581,7 @@ export interface FileRoutesById {
   '/admin-returns': typeof AdminReturnsRoute
   '/admin-search': typeof AdminSearchRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
@@ -590,6 +607,7 @@ export interface FileRoutesById {
   '/account_/profile': typeof AccountProfileRoute
   '/account_/returns': typeof AccountReturnsRoute
   '/account_/security': typeof AccountSecurityRoute
+  '/account_/support': typeof AccountSupportRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -634,6 +652,7 @@ export interface FileRouteTypes {
     | '/admin-returns'
     | '/admin-search'
     | '/admin-shipments'
+    | '/admin-support'
     | '/admin-traffic'
     | '/auth'
     | '/blog'
@@ -659,6 +678,7 @@ export interface FileRouteTypes {
     | '/account/profile'
     | '/account/returns'
     | '/account/security'
+    | '/account/support'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -701,6 +721,7 @@ export interface FileRouteTypes {
     | '/admin-returns'
     | '/admin-search'
     | '/admin-shipments'
+    | '/admin-support'
     | '/admin-traffic'
     | '/auth'
     | '/blog'
@@ -726,6 +747,7 @@ export interface FileRouteTypes {
     | '/account/profile'
     | '/account/returns'
     | '/account/security'
+    | '/account/support'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -768,6 +790,7 @@ export interface FileRouteTypes {
     | '/admin-returns'
     | '/admin-search'
     | '/admin-shipments'
+    | '/admin-support'
     | '/admin-traffic'
     | '/auth'
     | '/blog'
@@ -793,6 +816,7 @@ export interface FileRouteTypes {
     | '/account_/profile'
     | '/account_/returns'
     | '/account_/security'
+    | '/account_/support'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -836,6 +860,7 @@ export interface RootRouteChildren {
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminSearchRoute: typeof AdminSearchRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminTrafficRoute: typeof AdminTrafficRoute
   AuthRoute: typeof AuthRouteWithChildren
   BlogRoute: typeof BlogRouteWithChildren
@@ -861,6 +886,7 @@ export interface RootRouteChildren {
   AccountProfileRoute: typeof AccountProfileRoute
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
+  AccountSupportRoute: typeof AccountSupportRoute
   CategorySlugRoute: typeof CategorySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OrdersIdRoute: typeof OrdersIdRoute
@@ -989,6 +1015,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-traffic'
       fullPath: '/admin-traffic'
       preLoaderRoute: typeof AdminTrafficRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-support': {
+      id: '/admin-support'
+      path: '/admin-support'
+      fullPath: '/admin-support'
+      preLoaderRoute: typeof AdminSupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-shipments': {
@@ -1222,6 +1255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/account_/support': {
+      id: '/account_/support'
+      path: '/account/support'
+      fullPath: '/account/support'
+      preLoaderRoute: typeof AccountSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/security': {
       id: '/account_/security'
       path: '/account/security'
@@ -1391,6 +1431,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminReturnsRoute: AdminReturnsRoute,
   AdminSearchRoute: AdminSearchRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminTrafficRoute: AdminTrafficRoute,
   AuthRoute: AuthRouteWithChildren,
   BlogRoute: BlogRouteWithChildren,
@@ -1416,6 +1457,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountProfileRoute: AccountProfileRoute,
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
+  AccountSupportRoute: AccountSupportRoute,
   CategorySlugRoute: CategorySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OrdersIdRoute: OrdersIdRoute,
