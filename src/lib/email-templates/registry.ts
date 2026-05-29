@@ -31,6 +31,10 @@ import {
   accountVerificationTemplate,
   passwordResetTemplate,
 } from './account-emails'
+import {
+  supportCustomerTemplate,
+  supportAdminTemplate,
+} from './support-emails'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'test-email': testEmailTemplate,
@@ -43,4 +47,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeTemplate,
   'account-verification': accountVerificationTemplate,
   'password-reset': passwordResetTemplate,
+  'support-customer-update': supportCustomerTemplate,
+  'support-admin-alert': supportAdminTemplate,
 }
