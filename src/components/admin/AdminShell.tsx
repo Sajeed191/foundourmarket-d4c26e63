@@ -255,8 +255,9 @@ export function AdminShell({
           <div className="relative px-3 pt-3 shrink-0">
             <div className="grid grid-cols-5 gap-2">
               {[
-                { icon: TrendingUp, label: "Revenue", value: "$14k", span: "col-span-3", big: true },
-                { icon: ShoppingCart, label: "Orders", value: "128", span: "col-span-2", big: false },
+                { icon: TrendingUp, label: "Revenue today", value: new Intl.NumberFormat("en-IN", { notation: "compact", style: "currency", currency: "INR", maximumFractionDigits: 1 }).format(live.revenue), span: "col-span-3", big: true },
+                { icon: ShoppingCart, label: "Orders today", value: String(live.orders), span: "col-span-2", big: false },
+
               ].map((w, i) => (
                 <motion.div
                   key={w.label}
