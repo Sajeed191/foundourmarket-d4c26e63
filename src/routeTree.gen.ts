@@ -62,6 +62,7 @@ import { Route as AccountAddressesRouteImport } from './routes/account_.addresse
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicExpireOrdersRouteImport } from './routes/api/public/expire-orders'
 import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.payment-methods.add'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -330,6 +331,12 @@ const AccountPaymentMethodsAddRoute =
     path: '/account/payment-methods/add',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -440,6 +448,7 @@ export interface FileRoutesByTo {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -496,6 +505,7 @@ export interface FileRoutesById {
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -608,6 +619,7 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -663,6 +675,7 @@ export interface FileRouteTypes {
     | '/account_/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -716,6 +729,7 @@ export interface RootRouteChildren {
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1091,6 +1105,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPaymentMethodsAddRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1175,6 +1196,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
