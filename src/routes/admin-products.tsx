@@ -343,7 +343,10 @@ function ProductsInner() {
     { icon: AlertTriangle, label: "Low stock", value: String(kpis.low) },
     { icon: X, label: "Out of stock", value: String(kpis.oos) },
     { icon: IndianRupee, label: "Revenue today", value: inr(revenueToday) },
+    { icon: ShoppingCart, label: "Orders today", value: String(ordersToday) },
+    { icon: Boxes, label: "Inventory value", value: inr(kpis.inventoryValue) },
     { icon: Flame, label: "Best seller", value: kpis.best, wide: true },
+    { icon: Eye, label: "Most viewed", value: kpis.mostViewed, wide: true },
   ];
 
   return (
