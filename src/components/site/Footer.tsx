@@ -3,7 +3,7 @@ import { useRegion } from "@/lib/region";
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 
 export function Footer() {
-  const { region, setRegion } = useRegion();
+  const { market } = useRegion();
   return (
     <footer className="relative px-4 sm:px-6 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(8rem+env(safe-area-inset-bottom))] md:py-6 border-t border-border bg-background overflow-hidden">
       {/* Ambient divider glow */}
@@ -57,16 +57,11 @@ export function Footer() {
         </div>
         <div className="space-y-2.5">
           <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Region</h5>
-          <select
-            value={region}
-            onChange={(e) => setRegion(e.target.value as "IN" | "INTL")}
-            className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-xs uppercase font-mono hover:border-accent/40 focus:border-accent/60 transition-colors outline-none"
-          >
-            <option value="INTL">International · USD ($)</option>
-            <option value="IN">India · INR (₹)</option>
-          </select>
+          <div className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-xs uppercase font-mono">
+            {market === "india" ? "India · INR (₹)" : "International · USD ($)"}
+          </div>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            {region === "IN" ? "Pricing in ₹. Razorpay/UPI at checkout." : "Pricing in USD. International cards & PayPal."}
+            {market === "india" ? "Pricing in ₹. Razorpay/UPI at checkout." : "Pricing in USD. International cards & PayPal."}
           </p>
         </div>
       </div>
