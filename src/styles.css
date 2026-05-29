@@ -429,3 +429,14 @@
 .cta-primary:hover { transform: translateY(-1px); }
 .cta-primary:active { transform: translateY(0); }
 
+
+/* Hide scrollbars for horizontal swipe rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Soft data pulse for live chart endpoint */
+@keyframes data-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(2.2); }
+}
+.animate-data-pulse { animation: data-pulse 2.2s ease-in-out infinite; transform-origin: center; }
