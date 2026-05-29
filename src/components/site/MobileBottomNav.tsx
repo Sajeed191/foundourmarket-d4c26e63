@@ -62,7 +62,8 @@ export function MobileBottomNav() {
                     </span>
                   )}
                 </motion.span>
-                <span className={`relative truncate max-w-full text-[9px] font-semibold ${active ? "opacity-100" : "opacity-80"}`}>{label}</span>
+                <span className={`relative truncate max-w-full text-[10px] font-semibold tracking-wide ${active ? "opacity-100" : "opacity-80"}`}>{label}</span>
+
               </Link>
             </li>
           );
