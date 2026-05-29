@@ -5,7 +5,7 @@ import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 export function Footer() {
   const { region, setRegion } = useRegion();
   return (
-    <footer className="relative px-4 sm:px-6 py-6 sm:py-8 border-t border-border bg-background safe-bottom overflow-hidden">
+    <footer className="relative px-4 sm:px-6 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pt-8 sm:pb-[calc(8rem+env(safe-area-inset-bottom))] md:py-8 border-t border-border bg-background overflow-hidden">
       {/* Ambient divider glow */}
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[60%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.5 }} />
       <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[70%] h-40 opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
@@ -72,12 +72,12 @@ export function Footer() {
       </div>
 
 
-      <div className="relative max-w-7xl mx-auto mt-6 pt-5 border-t border-border flex flex-col md:flex-row justify-between gap-3 text-center md:text-left">
+      <div className="relative max-w-7xl mx-auto mt-6 pt-5 border-t border-border flex flex-col md:flex-row justify-between items-center md:items-start gap-4 text-center md:text-left">
         <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket. All rights reserved.</p>
-        <div className="flex flex-wrap justify-center md:justify-end gap-4 sm:gap-6 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-          <Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground">Privacy</Link>
-          <Link to="/pages/$slug" params={{ slug: "terms" }} className="hover:text-foreground">Terms</Link>
-          <Link to="/returns" className="hover:text-foreground">Refunds</Link>
+        <div className="flex w-full max-w-sm flex-wrap justify-center gap-1.5 rounded-2xl border border-border/70 bg-card/35 p-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest backdrop-blur-xl md:w-auto md:max-w-none md:justify-end md:gap-5 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <Link to="/pages/$slug" params={{ slug: "privacy" }} className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Privacy</Link>
+          <Link to="/pages/$slug" params={{ slug: "terms" }} className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Terms</Link>
+          <Link to="/returns" className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Refunds</Link>
         </div>
       </div>
     </footer>
