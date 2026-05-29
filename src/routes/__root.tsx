@@ -18,6 +18,7 @@ import { WishlistProvider } from "@/lib/wishlist";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
+import { RegionSelectModal } from "@/components/site/RegionSelectModal";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 import { CompareTray } from "@/components/site/CompareTray";
 import { InstallPrompt } from "@/components/site/InstallPrompt";
@@ -175,6 +176,7 @@ function RootComponent() {
                   </main>
                   {!isAuthRoute && <Footer />}
                   {!isAuthRoute && <MobileBottomNav />}
+                  <RegionSelectModal />
                   <CompareTray />
                   <InstallPrompt />
                   <Toaster position="bottom-center" richColors />
