@@ -239,24 +239,11 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .select("id,user_id,total,currency,razorpay_order_id,payment_status")
       .eq("id", data.orderId)
       .maybeSingle();
-    if (oErr || !order) throw new Error("Order not found.");
-    if (order.user_id !== userId) throw new Error("Not authorised for this order.");
-    if (order.razorpay_order_id !== data.razorpayOrderId) {
-      throw new Error("Order mismatch.");
-    }
-
-    // Idempotency: already paid → succeed without duplicating
-    if (order.payment_status === "succeeded") {
-      return { ok: true, orderId: order.id, alreadyPaid: true };
-    }
-
-    const valid = verifyPaymentSignature(
-      data.razorpayOrderId,
-      data.razorpayPaymentId,
-      data.razorpaySignature,
-    );
-
     if (!valid) {
+      await supabaseAdmin.rpc("release_order_stock", {
+        _order_id: order.id,
+        _reason: "signature_failed",
+      });
       await supabaseAdmin
         .from("orders")
         .update({ status: "payment_failed", payment_status: "failed" })
@@ -270,6 +257,25 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
         currency: order.currency,
         transaction_id: data.razorpayPaymentId,
         razorpay_order_id: data.razorpayOrderId,
+        razorpay_payment_id: data.razorpayPaymentId,
+        signature: data.razorpaySignature,
+        demo: false,
+        meta: { reason: "signature_verification_failed" },
+      });
+      throw new Error("Payment verification failed.");
+    }
+
+    // Commit reserved stock permanently, then mark the order paid.
+    await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        status: "paid",
+        payment_status: "succeeded",
+        razorpay_payment_id: data.razorpayPaymentId,
+      })
+      .eq("id", order.id);
+
         razorpay_payment_id: data.razorpayPaymentId,
         signature: data.razorpaySignature,
         demo: false,
