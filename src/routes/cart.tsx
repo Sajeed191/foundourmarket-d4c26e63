@@ -262,8 +262,8 @@ function CartPage() {
         {/* Order summary */}
         <aside className="lg:col-span-1">
           <div className="lg:sticky lg:top-24 space-y-4">
-            <CouponBox lineItems={lineItems} coupon={coupon} setCoupon={setCoupon} disabled={count === 0} />
             <ShippingBox subtotalUSD={subtotalUSD} ship={ship} setShip={setShip} format={format} />
+
 
             <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-5">Order Summary</h2>
