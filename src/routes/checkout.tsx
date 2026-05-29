@@ -262,6 +262,7 @@ function CheckoutPage() {
       setPlacedOrderId(order.id);
       setStage("success");
       clear();
+      if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
     } catch (e: any) {
       setStage("failed");
       setError(e?.message ?? "Could not place your COD order.");
