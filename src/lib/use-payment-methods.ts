@@ -38,6 +38,8 @@ export function usePaymentMethods() {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const listFn = useServerFn(listSavedPaymentMethods);
   const removeFn = useServerFn(deletePaymentMethod);
   const defaultFn = useServerFn(setDefaultPaymentMethod);
