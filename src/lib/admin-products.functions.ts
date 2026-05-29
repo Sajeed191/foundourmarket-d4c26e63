@@ -34,6 +34,7 @@ const updateSchema = z.object({
   tagline: z.string().max(500).optional(),
   description: z.string().max(20_000).optional(),
   category: z.string().min(1).max(120).optional(),
+  image: z.string().min(1).max(2000).optional(),
   sku: z.string().max(120).nullable().optional(),
   // Inventory
   stockQuantity: z.number().int().min(0).max(10_000_000).optional(),
@@ -70,6 +71,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       tagline: "tagline",
       description: "description",
       category: "category",
+      image: "image",
       sku: "sku",
       stockQuantity: "stock_quantity",
       lowStockThreshold: "low_stock_threshold",
