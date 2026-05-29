@@ -218,30 +218,45 @@ function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{product.tagline}</p>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-2.5 text-balance leading-[1.05]">{product.name}</h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent/90 mb-2.5">{product.tagline}</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-3.5 text-balance leading-[1.12]">{product.name}</h1>
 
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`size-3.5 ${i < Math.round(product.rating) ? "fill-accent text-accent" : "text-muted-foreground/40"}`} />
+                  <Star key={i} className={`size-3.5 ${i < Math.round(product.rating) ? "fill-accent text-accent drop-shadow-[0_0_6px_oklch(0.74_0.19_49/0.6)]" : "text-muted-foreground/30"}`} />
                 ))}
               </div>
-              <span className="text-xs font-mono text-muted-foreground">{product.rating} · {product.reviews} reviews</span>
+              <span className="text-xs font-mono text-muted-foreground/70">{product.rating} · {product.reviews} reviews</span>
               <a href="#reviews" className="text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">See reviews →</a>
             </div>
 
             {/* subtle gradient separator */}
-            <div aria-hidden className="h-px w-full mb-3 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
+            <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
 
-            <div className="flex items-baseline gap-3 sm:gap-4 mb-3 flex-wrap">
+            <div className="flex items-baseline gap-3 sm:gap-4 mb-4 flex-wrap">
               <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
               {originalPrice && (
-                <span className="text-sm font-mono text-muted-foreground line-through">{format(originalPrice)}</span>
+                <span className="text-sm font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
               )}
               {product.discount && (
-                <span className="text-[10px] font-mono uppercase tracking-widest bg-accent/15 text-accent px-2 py-1 rounded-full">Save {product.discount}%</span>
+                <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent/15 text-accent px-2.5 py-1 rounded-full border border-accent/30">Save {product.discount}%</span>
               )}
+            </div>
+
+            {/* Trust indicators */}
+            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">
+              {[
+                { icon: Shield, label: "Secure Checkout" },
+                { icon: Truck, label: "Global Shipping" },
+                { icon: RotateCcw, label: "Easy Returns" },
+                { icon: BadgeCheck, label: "Trusted Seller" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground/80">
+                  <Icon className="size-3 text-accent shrink-0" />
+                  <span className="truncate">{label}</span>
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 mb-5 text-[10px] font-mono uppercase tracking-widest">
@@ -257,7 +272,7 @@ function ProductPage() {
                   <CheckCircle2 className="size-3" /> In stock
                 </span>
               )}
-              {effectiveSku && <span className="text-muted-foreground">SKU: {effectiveSku}</span>}
+              {effectiveSku && <span className="text-muted-foreground/60">SKU: {effectiveSku}</span>}
             </div>
 
             {/* Variants */}
