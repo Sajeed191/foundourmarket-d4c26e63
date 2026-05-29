@@ -8,6 +8,7 @@ import {
   rzpFetch,
   verifyPaymentSignature,
 } from "./razorpay.server";
+import { enqueueOrderEmail } from "./order-emails.server";
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),
