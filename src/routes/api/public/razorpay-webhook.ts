@@ -228,6 +228,11 @@ async function handleEvent(event: string, payload: any) {
           .from("orders")
           .update({ status: "refunded", payment_status: "refunded" })
           .eq("id", pay.order_id);
+
+        await enqueueOrderEmail(pay.order_id, "refund-processed", {
+          refundAmount: (refundEntity?.amount ?? 0) / 100,
+          refundCurrency: refundEntity?.currency ?? "INR",
+        });
       }
       break;
     }
