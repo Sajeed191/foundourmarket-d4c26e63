@@ -76,21 +76,33 @@ function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([
+    const loadOrders = () =>
       supabase
         .from("orders")
         .select("id,status,total,discount,currency,created_at,order_items(name,quantity,image)")
         .order("created_at", { ascending: false })
-        .limit(20),
-      supabase
-        .from("profiles")
-        .select("full_name,phone,avatar_url")
-        .eq("id", user.id)
-        .maybeSingle(),
-    ]).then(([ordersResult, profileResult]) => {
-      setOrders((ordersResult.data as Order[]) ?? []);
-      setProfile((profileResult.data as Profile | null) ?? null);
-    });
+        .limit(20)
+        .then(({ data }) => setOrders((data as Order[]) ?? []));
+
+    loadOrders();
+    supabase
+      .from("profiles")
+      .select("full_name,phone,avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setProfile((data as Profile | null) ?? null));
+
+    const channel = supabase
+      .channel(`account-orders:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
+        () => loadOrders(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const firstName = useMemo(() => {
