@@ -1,5 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Heart, Star, Plus, BadgeCheck } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
