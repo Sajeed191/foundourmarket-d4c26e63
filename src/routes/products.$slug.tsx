@@ -367,7 +367,7 @@ function ProductPage() {
 
             {/* Specs */}
             <Accordion title="Specifications" icon={Package} defaultOpen>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <dl className="glass rounded-2xl px-4 sm:px-5 py-1 divide-y divide-border/50">
                 <SpecRow k="Category" v={product.category} />
                 <SpecRow k="SKU" v={effectiveSku || "—"} />
                 <SpecRow k="Rating" v={`${product.rating} / 5`} />
