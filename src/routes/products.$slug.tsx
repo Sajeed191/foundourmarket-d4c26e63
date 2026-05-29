@@ -312,6 +312,8 @@ function ProductPage() {
               )}
             </div>
 
+            {isAdmin && <AdminProductPanel product={product} />}
+
             {/* Trust indicators */}
             <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">
               {[
