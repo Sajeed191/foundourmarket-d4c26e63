@@ -8,7 +8,7 @@ import {
 import {
   Wallet, TrendingUp, TrendingDown, Receipt, Truck, Download, FileText,
   Search, Bell, RotateCcw, Percent, Banknote, PiggyBank, AlertTriangle,
-  RefreshCw, Sparkles, ShoppingCart, Globe, ChevronDown, Radio, Loader2,
+  RefreshCw, Sparkles, ShoppingCart, Globe, Radio, Loader2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
