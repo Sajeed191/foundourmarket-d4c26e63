@@ -24,7 +24,23 @@ import type { Product } from "@/lib/products";
 import { adminUpdateProduct } from "@/lib/admin-products.functions";
 import { invalidateProducts } from "@/lib/use-products";
 
-type Patch = Parameters<typeof adminUpdateProduct>[0]["data"];
+type Patch = {
+  name?: string;
+  tagline?: string;
+  description?: string;
+  category?: string;
+  sku?: string | null;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  priceInr?: number | null;
+  comparePriceInr?: number | null;
+  priceUsd?: number | null;
+  comparePriceUsd?: number | null;
+  indiaVisible?: boolean;
+  internationalVisible?: boolean;
+  featured?: boolean;
+  inStock?: boolean;
+};
 
 const numOrNull = (v: string): number | null => {
   const t = v.trim();
