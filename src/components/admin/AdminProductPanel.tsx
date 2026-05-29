@@ -186,7 +186,7 @@ export function AdminProductPanel({ product }: { product: Product }) {
       </div>
 
       {/* Floating admin toolbar */}
-      <div className="fixed bottom-20 left-1/2 z-40 w-[calc(100vw-1.5rem)] max-w-[420px] -translate-x-1/2 sm:bottom-6 sm:w-auto">
+      <div className="fixed bottom-[calc(10.75rem+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100vw-1.5rem)] max-w-[420px] -translate-x-1/2 sm:bottom-6 sm:w-auto">
         <div className="flex flex-wrap items-center justify-center gap-1 rounded-3xl border border-accent/30 bg-background/70 px-2 py-1.5 backdrop-blur-2xl shadow-[0_10px_40px_-10px_oklch(0.74_0.19_49/0.5)] sm:flex-nowrap sm:rounded-full">
           <span className="flex items-center gap-1.5 pl-2 pr-1 text-[10px] font-mono uppercase tracking-widest text-accent">
             <ShieldCheck className="size-3.5" /> Admin
