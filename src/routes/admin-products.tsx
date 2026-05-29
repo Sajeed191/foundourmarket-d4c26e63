@@ -826,12 +826,63 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
             </select>
           </div>
           <EField label="SKU" value={form.sku} onChange={(v) => setForm({ ...form, sku: v })} />
-          <EField label="Price (INR)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
-          <EField label="Cost (INR)" type="number" value={form.cost} onChange={(v) => setForm({ ...form, cost: v })} />
+          <EField label="Base price (legacy)" type="number" required value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
+          <EField label="Cost" type="number" value={form.cost} onChange={(v) => setForm({ ...form, cost: v })} />
           <EField label="Discount %" type="number" value={form.discount?.toString() ?? ""} onChange={(v) => setForm({ ...form, discount: v ? Number(v) : null })} />
           <EField label="Stock qty" type="number" value={String(form.stock_quantity)} onChange={(v) => setForm({ ...form, stock_quantity: Number(v) || 0 })} />
           <EField label="Low stock threshold" type="number" value={String(form.low_stock_threshold)} onChange={(v) => setForm({ ...form, low_stock_threshold: Number(v) || 0 })} />
           <EField label="Sort order" type="number" value={String(form.sort_order)} onChange={(v) => setForm({ ...form, sort_order: Number(v) || 0 })} />
+
+          {/* ── Dual-region pricing ── */}
+          <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+            {/* India / INR */}
+            <div className={`rounded-2xl border p-3.5 space-y-3 ${form.india_visible ? "border-accent/30 bg-accent/[0.04]" : "border-white/10 bg-white/[0.02] opacity-70"}`}>
+              <label className="flex items-center justify-between gap-2 text-sm font-display">
+                <span className="inline-flex items-center gap-1.5"><IndianRupee className="size-3.5 text-accent" /> India · INR</span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <input type="checkbox" checked={form.india_visible} onChange={(e) => setForm({ ...form, india_visible: e.target.checked })} className="accent-[var(--accent)]" />
+                  {form.india_visible ? "Visible" : "Hidden"}
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <EField label="Price ₹" type="number" value={form.price_inr} onChange={(v) => setForm({ ...form, price_inr: v })} />
+                <EField label="Compare-at ₹" type="number" value={form.compare_price_inr} onChange={(v) => setForm({ ...form, compare_price_inr: v })} />
+              </div>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center justify-between">
+                <span>{priceInr != null && priceInr > 0 ? inr(priceInr) : "— set a price"}</span>
+                {inrDisc != null && <span className="text-emerald-400">−{inrDisc}% off {inr(cmpInr!)}</span>}
+              </div>
+            </div>
+            {/* International / USD */}
+            <div className={`rounded-2xl border p-3.5 space-y-3 ${form.international_visible ? "border-accent/30 bg-accent/[0.04]" : "border-white/10 bg-white/[0.02] opacity-70"}`}>
+              <label className="flex items-center justify-between gap-2 text-sm font-display">
+                <span className="inline-flex items-center gap-1.5">🌍 International · USD</span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <input type="checkbox" checked={form.international_visible} onChange={(e) => setForm({ ...form, international_visible: e.target.checked })} className="accent-[var(--accent)]" />
+                  {form.international_visible ? "Visible" : "Hidden"}
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <EField label="Price $" type="number" value={form.price_usd} onChange={(v) => setForm({ ...form, price_usd: v })} />
+                <EField label="Compare-at $" type="number" value={form.compare_price_usd} onChange={(v) => setForm({ ...form, compare_price_usd: v })} />
+              </div>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center justify-between">
+                <span>{priceUsd != null && priceUsd > 0 ? usd(priceUsd) : "— set a price"}</span>
+                {usdDisc != null && <span className="text-emerald-400">−{usdDisc}% off {usd(cmpUsd!)}</span>}
+              </div>
+            </div>
+          </div>
+
+          {validation.length > 0 && (
+            <div className="col-span-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1.5">
+              {validation.map((v) => (
+                <p key={v} className="flex items-start gap-2 text-[11px] text-amber-300">
+                  <AlertTriangle className="size-3.5 shrink-0 mt-px" /> {v}
+                </p>
+              ))}
+            </div>
+          )}
+
           <div className="col-span-2">
             <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Description</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
