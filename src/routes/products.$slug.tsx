@@ -439,10 +439,6 @@ function ProductPage() {
 }
 
 
-    </>
-  );
-}
-
 function SpecRow({ k, v }: { k: string; v: string }) {
   return (
     <>
