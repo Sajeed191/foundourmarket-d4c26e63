@@ -48,6 +48,7 @@ import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as HelpSellerAssistanceRouteImport } from './routes/help.seller-assistance'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -60,9 +61,12 @@ import { Route as AccountOrdersRouteImport } from './routes/account_.orders'
 import { Route as AccountNotificationsRouteImport } from './routes/account_.notifications'
 import { Route as AccountHistoryRouteImport } from './routes/account_.history'
 import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicExpireOrdersRouteImport } from './routes/api/public/expire-orders'
 import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.payment-methods.add'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -260,6 +264,11 @@ const HelpSellerAssistanceRoute = HelpSellerAssistanceRouteImport.update({
   path: '/seller-assistance',
   getParentRoute: () => HelpRoute,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -320,6 +329,11 @@ const AccountAddressesRoute = AccountAddressesRouteImport.update({
   path: '/account/addresses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRazorpayWebhookRoute =
   ApiPublicRazorpayWebhookRouteImport.update({
     id: '/api/public/razorpay-webhook',
@@ -335,6 +349,18 @@ const AccountPaymentMethodsAddRoute =
   AccountPaymentMethodsAddRouteImport.update({
     id: '/account_/payment-methods/add',
     path: '/account/payment-methods/add',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailQueueProcessRoute =
@@ -390,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
@@ -399,7 +426,10 @@ export interface FileRoutesByFullPath {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -447,6 +477,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
@@ -456,7 +487,10 @@ export interface FileRoutesByTo {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -505,6 +539,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
@@ -514,7 +549,10 @@ export interface FileRoutesById {
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -564,6 +602,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/email/unsubscribe'
     | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
@@ -573,7 +612,10 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -621,6 +663,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/email/unsubscribe'
     | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
@@ -630,7 +673,10 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -678,6 +724,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
+    | '/email/unsubscribe'
     | '/help/seller-assistance'
     | '/orders/$id'
     | '/pages/$slug'
@@ -687,7 +734,10 @@ export interface FileRouteTypes {
     | '/account_/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -734,6 +784,7 @@ export interface RootRouteChildren {
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OrdersIdRoute: typeof OrdersIdRoute
   PagesSlugRoute: typeof PagesSlugRoute
   PagesReturnsRoute: typeof PagesReturnsRoute
@@ -742,7 +793,10 @@ export interface RootRouteChildren {
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1020,6 +1074,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HelpSellerAssistanceRouteImport
       parentRoute: typeof HelpRoute
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -1104,6 +1165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAddressesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/razorpay-webhook': {
       id: '/api/public/razorpay-webhook'
       path: '/api/public/razorpay-webhook'
@@ -1123,6 +1191,20 @@ declare module '@tanstack/react-router' {
       path: '/account/payment-methods/add'
       fullPath: '/account/payment-methods/add'
       preLoaderRoute: typeof AccountPaymentMethodsAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
@@ -1209,6 +1291,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
   CategorySlugRoute: CategorySlugRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OrdersIdRoute: OrdersIdRoute,
   PagesSlugRoute: PagesSlugRoute,
   PagesReturnsRoute: PagesReturnsRoute,
@@ -1217,7 +1300,10 @@ const rootRouteChildren: RootRouteChildren = {
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

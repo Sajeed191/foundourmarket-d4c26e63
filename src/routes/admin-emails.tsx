@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getEmailActivity } from "@/lib/email-admin.functions";
+import { sendTestEmail } from "@/lib/email-test.functions";
 
 export const Route = createFileRoute("/admin-emails")({
   head: () => ({ meta: [{ title: "Email settings — Admin" }] }),
@@ -52,6 +53,84 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest ring-1 ring-inset ${cls}`}>
       {status}
     </span>
+  );
+}
+
+function TestSender({ onSent }: { onSent: () => void }) {
+  const send = useServerFn(sendTestEmail);
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleSend = async () => {
+    setResult(null);
+    setSending(true);
+    try {
+      const res: any = await send({
+        data: { recipientEmail: email.trim(), message: message.trim() || undefined },
+      });
+      if (res?.success) {
+        setResult({ ok: true, text: `Test email queued to ${res.recipient}. Check the activity log below.` });
+        setEmail("");
+        setMessage("");
+        onSent();
+      } else if (res?.reason === "email_suppressed") {
+        setResult({ ok: false, text: "That address is on the suppression list — not sent." });
+      } else {
+        setResult({ ok: false, text: "Could not send the test email." });
+      }
+    } catch (err: any) {
+      setResult({ ok: false, text: String(err?.message ?? "Could not send the test email.") });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  return (
+    <section className="card-premium rounded-2xl p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Send className="size-4 text-accent" />
+        <h2 className="text-sm font-medium">Send a test email</h2>
+      </div>
+      <p className="text-[11px] text-muted-foreground mb-4">
+        Deliver a branded cyber-dark test email to any address to confirm deliverability.
+      </p>
+
+      <div className="space-y-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="recipient@example.com"
+          className="w-full rounded-xl border border-border/60 bg-white/[0.02] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-accent/40"
+        />
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Optional custom message…"
+          rows={2}
+          maxLength={600}
+          className="w-full resize-none rounded-xl border border-border/60 bg-white/[0.02] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-accent/40"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!valid || sending}
+          className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[12px] font-medium uppercase tracking-widest text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {sending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+          {sending ? "Sending…" : "Send test email"}
+        </button>
+        {result && (
+          <p className={`text-[12px] flex items-center gap-1.5 ${result.ok ? "text-emerald-400" : "text-destructive"}`}>
+            {result.ok ? <CheckCircle2 className="size-3.5" /> : <AlertTriangle className="size-3.5" />}
+            {result.text}
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -162,6 +241,9 @@ function EmailsPage() {
             </div>
           </section>
         </div>
+
+        {/* Test sender */}
+        <TestSender onSent={() => refetch()} />
 
         {/* Activity logs */}
         <section className="card-premium rounded-2xl p-5">
