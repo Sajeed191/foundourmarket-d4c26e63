@@ -14,18 +14,31 @@ export type Notification = {
   created_at: string;
 };
 
+export type NotificationCategory = "order" | "payment" | "security" | "other";
+
+export function categoryOf(n: Pick<Notification, "type">): NotificationCategory {
+  const t = n.type;
+  if (t === "order_status" || t === "shipment" || t === "return") return "order";
+  if (t === "payment") return "payment";
+  if (t === "security") return "security";
+  return "other";
+}
+
 type Ctx = {
   items: Notification[];
   unread: number;
   loading: boolean;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  clearAll: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
 const NotificationsCtx = createContext<Ctx>({
   items: [], unread: 0, loading: false,
-  markRead: async () => {}, markAllRead: async () => {}, refresh: async () => {},
+  markRead: async () => {}, markAllRead: async () => {},
+  remove: async () => {}, clearAll: async () => {}, refresh: async () => {},
 });
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
@@ -41,7 +54,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
     setItems((data ?? []) as Notification[]);
     setLoading(false);
   }, [user]);
@@ -54,10 +67,17 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .channel(`notifications:${user.id}`)
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => setItems((prev) => [payload.new as Notification, ...prev].slice(0, 50)))
+        (payload) => setItems((prev) => {
+          const n = payload.new as Notification;
+          if (prev.some((p) => p.id === n.id)) return prev;
+          return [n, ...prev].slice(0, 100);
+        }))
       .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => setItems((prev) => prev.map(n => n.id === (payload.new as Notification).id ? payload.new as Notification : n)))
+      .on("postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => setItems((prev) => prev.filter(n => n.id !== (payload.old as { id: string }).id)))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -73,11 +93,21 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setItems(prev => prev.map(n => n.read_at ? n : { ...n, read_at: now }));
     await supabase.from("notifications").update({ read_at: now }).eq("user_id", user.id).is("read_at", null);
   };
+  const remove = async (id: string) => {
+    if (!user) return;
+    setItems(prev => prev.filter(n => n.id !== id));
+    await supabase.from("notifications").delete().eq("id", id);
+  };
+  const clearAll = async () => {
+    if (!user) return;
+    setItems([]);
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+  };
 
   const unread = items.filter(n => !n.read_at).length;
 
   return (
-    <NotificationsCtx.Provider value={{ items, unread, loading, markRead, markAllRead, refresh }}>
+    <NotificationsCtx.Provider value={{ items, unread, loading, markRead, markAllRead, remove, clearAll, refresh }}>
       {children}
     </NotificationsCtx.Provider>
   );
