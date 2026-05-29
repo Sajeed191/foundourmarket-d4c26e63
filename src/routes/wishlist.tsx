@@ -6,6 +6,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
+import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({ meta: [{ title: "Wishlist — FoundOurMarket™" }] }),
