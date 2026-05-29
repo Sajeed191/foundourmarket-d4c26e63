@@ -194,10 +194,10 @@ async function handleEvent(event: string, payload: any) {
         .eq("razorpay_refund_id", refundEntity?.id)
         .maybeSingle();
 
-      if (!existingRefund && refundEntity?.id) {
+      if (!existingRefund && refundEntity?.id && pay?.order_id) {
         await supabaseAdmin.from("refunds").insert({
-          order_id: pay?.order_id ?? null,
-          payment_id: pay?.id ?? null,
+          order_id: pay.order_id,
+          payment_id: pay.id,
           razorpay_refund_id: refundEntity?.id,
           razorpay_payment_id: rzpPaymentId,
           amount: (refundEntity?.amount ?? 0) / 100,
@@ -205,6 +205,8 @@ async function handleEvent(event: string, payload: any) {
           status: "processed",
           notes: { source: "webhook.refund.processed" },
         });
+      } else if (existingRefund) {
+
       } else if (existingRefund) {
         await supabaseAdmin
           .from("refunds")
