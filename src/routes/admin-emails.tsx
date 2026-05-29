@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getEmailActivity } from "@/lib/email-admin.functions";
+import { sendTestEmail } from "@/lib/email-test.functions";
 
 export const Route = createFileRoute("/admin-emails")({
   head: () => ({ meta: [{ title: "Email settings — Admin" }] }),
