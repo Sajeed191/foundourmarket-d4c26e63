@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useIsProductAdmin } from "@/lib/use-admin";
+import { useAdminMode } from "@/lib/admin-mode";
 import type { Product } from "@/lib/products";
 import {
   adminUpdateProduct,
@@ -25,11 +26,13 @@ import { cn } from "@/lib/utils";
 
 /**
  * Admin-only quick-action layer for a product card. Renders nothing for
- * customers (gated on useIsAdmin). Every mutation runs through a staff-gated
- * server function, so the controls are a pure UX surface.
+ * customers (gated on useIsAdmin) and only appears when global Admin Mode is
+ * active. Every mutation runs through a staff-gated server function, so the
+ * controls are a pure UX surface.
  */
 export function ProductCardAdminControls({ product }: { product: Product }) {
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
+  const { adminMode } = useAdminMode();
   const navigate = useNavigate();
   const update = useServerFn(adminUpdateProduct);
   const del = useServerFn(adminDeleteProduct);
