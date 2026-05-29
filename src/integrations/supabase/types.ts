@@ -164,6 +164,60 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          active: boolean
+          countdown_to: string | null
+          created_at: string
+          cta_text: string | null
+          ends_at: string | null
+          icon: string
+          id: string
+          link: string | null
+          message: string
+          pages: string[]
+          region: string
+          sort_order: number
+          starts_at: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          countdown_to?: string | null
+          created_at?: string
+          cta_text?: string | null
+          ends_at?: string | null
+          icon?: string
+          id?: string
+          link?: string | null
+          message: string
+          pages?: string[]
+          region?: string
+          sort_order?: number
+          starts_at?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          countdown_to?: string | null
+          created_at?: string
+          cta_text?: string | null
+          ends_at?: string | null
+          icon?: string
+          id?: string
+          link?: string | null
+          message?: string
+          pages?: string[]
+          region?: string
+          sort_order?: number
+          starts_at?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -177,6 +231,9 @@ export type Database = {
           image: string | null
           last_published_at: string | null
           link: string | null
+          mobile_image: string | null
+          pages: string[]
+          region: string
           sort_order: number
           starts_at: string | null
           subtitle: string | null
@@ -197,6 +254,9 @@ export type Database = {
           image?: string | null
           last_published_at?: string | null
           link?: string | null
+          mobile_image?: string | null
+          pages?: string[]
+          region?: string
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
@@ -217,6 +277,9 @@ export type Database = {
           image?: string | null
           last_published_at?: string | null
           link?: string | null
+          mobile_image?: string | null
+          pages?: string[]
+          region?: string
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
