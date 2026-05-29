@@ -87,6 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "FoundOurMarket™ | Premium Global Marketplace" },
       { property: "og:description", content: "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://foundourmarket.com/" },
       { property: "og:site_name", content: "FoundOurMarket" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0a0a0a" },
@@ -103,6 +104,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/logo.jpeg", type: "image/jpeg" },
       { rel: "apple-touch-icon", href: "/logo.jpeg" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "FoundOurMarket",
+          url: "https://foundourmarket.com/",
+          logo: "https://foundourmarket.com/logo.jpeg",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "FoundOurMarket",
+          url: "https://foundourmarket.com/",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://foundourmarket.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,

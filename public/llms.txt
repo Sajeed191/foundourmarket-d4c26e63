@@ -1,0 +1,20 @@
+# FoundOurMarket
+
+> Premium global marketplace — curated electronics, fashion, home, fitness and more, delivered worldwide with secure checkout and trusted sellers.
+
+FoundOurMarket is an international shopping destination bringing together quality products from around the world in one place.
+
+## Pages
+
+- [Home](/): Featured products, categories, and deals.
+- [Search](/search): Browse and filter the full product catalog.
+- [Deals](/deals): Current discounts and flash sales.
+- [Blog](/blog): Stories, guides, and editorial from FoundOurMarket.
+- [Track Order](/track): Look up order and shipment status.
+- [Compare](/compare): Compare products side by side.
+- [Help](/help): Support, FAQs, and customer assistance.
+
+## Optional
+
+- [Shipping](/pages/shipping): Shipping options and delivery times.
+- [Returns](/pages/returns): Return and refund policy.

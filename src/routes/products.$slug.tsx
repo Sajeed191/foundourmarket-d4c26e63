@@ -15,15 +15,74 @@ import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
 import { useCompare } from "@/hooks/use-compare";
 import { useWishlist } from "@/lib/wishlist";
-import { fetchProductImages, fetchProductVariants, type ProductImage, type ProductVariant } from "@/lib/products";
+import { fetchProductImages, fetchProductVariants, fetchProduct, type ProductImage, type ProductVariant } from "@/lib/products";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
-  head: ({ params }) => ({
-    meta: [{ title: `${params.slug} — FoundOurMarket™` }],
-  }),
+  loader: async ({ params }) => {
+    const product = await fetchProduct(params.slug);
+    return { product };
+  },
+  head: ({ params, loaderData }) => {
+    const p = loaderData?.product;
+    const url = `https://foundourmarket.com/products/${params.slug}`;
+    const title = p ? `${p.name} — FoundOurMarket™` : `${params.slug} — FoundOurMarket™`;
+    const description = p
+      ? (p.description?.slice(0, 160) || `${p.name} — ${p.tagline}. Shop ${p.category} on FoundOurMarket with secure checkout and worldwide delivery.`)
+      : "Shop premium products on FoundOurMarket with secure checkout and worldwide delivery.";
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "product" },
+      { property: "og:url", content: url },
+    ];
+    if (p?.image) {
+      meta.push({ property: "og:image", content: p.image });
+      meta.push({ name: "twitter:image", content: p.image });
+    }
+    const scripts = p
+      ? [
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: p.name,
+              image: p.image,
+              description: p.description || p.tagline,
+              category: p.category,
+              sku: p.sku ?? undefined,
+              offers: {
+                "@type": "Offer",
+                price: p.price,
+                priceCurrency: "USD",
+                availability: p.inStock
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+                url,
+              },
+            }),
+          },
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Shop", item: "https://foundourmarket.com/" },
+                { "@type": "ListItem", position: 2, name: p.category, item: `https://foundourmarket.com/category/${p.category}` },
+                { "@type": "ListItem", position: 3, name: p.name, item: url },
+              ],
+            }),
+          },
+        ]
+      : [];
+    return { meta, links: [{ rel: "canonical", href: url }], scripts };
+  },
   component: ProductPage,
 });
 
@@ -209,7 +268,7 @@ function ProductPage() {
                     aria-label={`View image ${i + 1}`}
                     className={`aspect-square rounded-xl overflow-hidden border transition-all bg-card ${i === activeImg ? "border-accent ring-2 ring-accent/30 shadow-[var(--shadow-ember)]" : "border-border opacity-60 hover:opacity-100 hover:border-accent/40"}`}
                   >
-                    <img src={img.url} alt={img.alt || ""} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={img.url} alt={img.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>

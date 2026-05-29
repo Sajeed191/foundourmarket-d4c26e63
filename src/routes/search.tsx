@@ -17,7 +17,16 @@ export const Route = createFileRoute("/search")({
     max: typeof s.max === "number" ? s.max : s.max ? Number(s.max) : undefined,
     stock: typeof s.stock === "string" ? s.stock : undefined,
   }),
-  head: () => ({ meta: [{ title: "Search — FoundOurMarket™" }] }),
+  head: () => ({
+    meta: [
+      { title: "Search the Marketplace — FoundOurMarket™" },
+      { name: "description", content: "Search thousands of curated electronics, fashion, home, and fitness products on FoundOurMarket. Filter by category, price, and availability." },
+      { property: "og:title", content: "Search the Marketplace — FoundOurMarket™" },
+      { property: "og:description", content: "Search and filter thousands of curated products on FoundOurMarket." },
+      { property: "og:url", content: "https://foundourmarket.com/search" },
+    ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/search" }],
+  }),
   component: SearchPage,
 });
 
@@ -124,6 +133,7 @@ function SearchPage() {
         <div className="flex items-center gap-3">
           <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">{loading ? "…" : `${results.length} results`}</span>
           <select value={search.sort ?? "relevance"} onChange={(e) => update({ sort: e.target.value })}
+            aria-label="Sort search results"
             className="bg-background border border-border rounded-full px-3 py-2 text-[11px] font-mono uppercase tracking-widest focus:outline-none focus:border-accent">
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>

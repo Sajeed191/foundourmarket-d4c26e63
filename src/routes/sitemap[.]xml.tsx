@@ -4,9 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const origin = `${url.protocol}//${url.host}`;
+      GET: async () => {
+        const origin = "https://foundourmarket.com";
         const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
 
         const [products, categories, pages, posts] = await Promise.all([
@@ -20,8 +19,14 @@ export const Route = createFileRoute("/sitemap.xml")({
         const urls: { loc: string; lastmod?: string }[] = [
           { loc: `${origin}/` },
           { loc: `${origin}/search` },
+          { loc: `${origin}/deals` },
           { loc: `${origin}/blog` },
           { loc: `${origin}/track` },
+          { loc: `${origin}/compare` },
+          { loc: `${origin}/returns` },
+          { loc: `${origin}/help` },
+          { loc: `${origin}/pages/shipping` },
+          { loc: `${origin}/pages/returns` },
         ];
         (products.data ?? []).forEach((p: any) => urls.push({ loc: `${origin}/products/${p.slug}`, lastmod: p.updated_at }));
         (categories.data ?? []).forEach((c: any) => urls.push({ loc: `${origin}/category/${c.slug}` }));

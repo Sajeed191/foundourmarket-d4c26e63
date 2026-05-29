@@ -6,10 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 type Post = { slug: string; title: string; excerpt: string | null; cover_image: string | null; author: string | null; published_at: string };
 
 export const Route = createFileRoute("/blog")({
-  head: () => ({ meta: [
-    { title: "Journal — FoundOurMarket™" },
-    { name: "description", content: "Stories, guides, and editorial from FoundOurMarket." },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: "Journal — FoundOurMarket™" },
+      { name: "description", content: "Stories, guides, and editorial from FoundOurMarket — shopping tips, product spotlights, and inspiration for a curated global lifestyle." },
+      { property: "og:title", content: "Journal — FoundOurMarket™" },
+      { property: "og:description", content: "Stories, guides, and editorial from FoundOurMarket." },
+      { property: "og:url", content: "https://foundourmarket.com/blog" },
+    ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/blog" }],
+  }),
   component: BlogIndex,
 });
 
@@ -46,7 +52,7 @@ function BlogIndex() {
             <Link key={p.slug} to="/blog/$slug" params={{ slug: p.slug }} className="group">
               {p.cover_image && (
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl mb-4 bg-muted">
-                  <img src={p.cover_image} alt={p.title} className="size-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={p.cover_image} alt={`${p.title} — article cover`} className="size-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
               )}
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">

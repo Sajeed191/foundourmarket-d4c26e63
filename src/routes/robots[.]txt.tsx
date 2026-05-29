@@ -3,9 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const origin = `${url.protocol}//${url.host}`;
+      GET: async () => {
+        const origin = "https://foundourmarket.com";
         const body = [
           "User-agent: *",
           "Allow: /",

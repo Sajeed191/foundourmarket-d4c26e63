@@ -42,7 +42,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           />
           <img
             src={product.image}
-            alt={product.name}
+            alt={`${product.name} — ${product.tagline || product.category}`}
             loading="lazy"
             width={800}
             height={800}

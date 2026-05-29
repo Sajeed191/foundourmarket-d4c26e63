@@ -47,7 +47,11 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "FoundOurMarket™ — Whatever You Need. All In One Place." },
       { name: "description", content: "Premium global marketplace. Curated electronics, fashion, home, fitness and more — delivered worldwide." },
+      { property: "og:title", content: "FoundOurMarket™ — Premium Global Marketplace" },
+      { property: "og:description", content: "Curated electronics, fashion, home, fitness and more — delivered worldwide with secure checkout." },
+      { property: "og:url", content: "https://foundourmarket.com/" },
     ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/" }],
   }),
   component: Home,
 });
@@ -179,7 +183,8 @@ function Home() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
           >
-            Whatever you need.
+            <span className="sr-only">FoundOurMarket — Premium Global Marketplace. </span>
+            <span aria-hidden="true">Whatever you need.</span>
             <br />
             <span className="text-gradient-ember">All in one place.</span>
           </motion.h1>
