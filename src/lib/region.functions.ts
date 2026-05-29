@@ -5,31 +5,105 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type MarketRegion = "india" | "international";
 
+/** Server-side detection signals — never trusted blindly on the client. */
+export type EdgeGeo = {
+  suggested: MarketRegion;
+  countryCode: string | null;
+  /** 0–100 confidence the edge layer assigns to its suggestion. */
+  edgeConfidence: number;
+  /** True when the IP looks like a datacenter / proxy / VPN / Tor exit. */
+  vpnSuspected: boolean;
+  /** Edge-reported IANA timezone, when the platform provides it. */
+  timezone: string | null;
+};
+
+// ASN / org substrings that strongly indicate hosting / proxy infrastructure.
+const DATACENTER_HINTS = [
+  "amazon", "aws", "google", "gcp", "microsoft", "azure", "digitalocean",
+  "ovh", "hetzner", "linode", "vultr", "oracle", "cloudflare", "leaseweb",
+  "choopa", "m247", "datacamp", "hosting", "colocation", "server", "vpn",
+  "proxy", "tor", "relay", "datacenter", "data center",
+];
+
 /**
- * Suggest a market region from edge geo headers + browser locale.
- * This is only a suggestion for the selection modal — the user always confirms,
- * and the choice is locked server-side via `lockMarketRegion`.
+ * Layer 1 — Edge Geo-IP. Reads Cloudflare / Vercel / generic edge headers and
+ * returns a region suggestion plus a confidence score and VPN/proxy signal.
+ * Fast, runs before hydration. The client combines this with timezone + locale.
  */
-export const detectRegion = createServerFn({ method: "GET" }).handler(async () => {
-  // Cloudflare / edge geo header
-  const country =
-    (getRequestHeader("cf-ipcountry") ||
-      getRequestHeader("x-vercel-ip-country") ||
-      getRequestHeader("x-country") ||
-      "").toUpperCase();
+export const detectRegion = createServerFn({ method: "GET" }).handler(
+  async (): Promise<EdgeGeo> => {
+    const country =
+      (getRequestHeader("cf-ipcountry") ||
+        getRequestHeader("x-vercel-ip-country") ||
+        getRequestHeader("x-country") ||
+        "").toUpperCase();
 
-  const lang = (getRequestHeader("accept-language") || "").toLowerCase();
+    const timezone =
+      getRequestHeader("x-vercel-ip-timezone") ||
+      getRequestHeader("cf-timezone") ||
+      null;
 
-  let suggested: MarketRegion = "international";
-  if (country === "IN" || lang.includes("-in") || lang.startsWith("hi")) {
-    suggested = "india";
-  }
+    const lang = (getRequestHeader("accept-language") || "").toLowerCase();
 
-  return {
-    suggested,
-    countryCode: country || null,
-  };
-});
+    // Proxy / datacenter / Tor heuristics from edge-provided headers.
+    const asnOrg = (
+      getRequestHeader("cf-connecting-asn-org") ||
+      getRequestHeader("x-asn-org") ||
+      ""
+    ).toLowerCase();
+    const viaHeader = getRequestHeader("via") || "";
+    const forwarded = getRequestHeader("x-forwarded-for") || "";
+    const torHeader = (getRequestHeader("cf-tor") || "").toLowerCase();
+    const threatScore = Number(getRequestHeader("cf-threat-score") || "0");
+
+    const vpnSuspected =
+      DATACENTER_HINTS.some((h) => asnOrg.includes(h)) ||
+      torHeader === "true" ||
+      threatScore >= 30 ||
+      // Multiple hops in XFF often signals chained proxies.
+      forwarded.split(",").filter(Boolean).length > 2 ||
+      /\bproxy\b/i.test(viaHeader);
+
+    // Score the suggestion. Country header is the strongest single signal.
+    let suggested: MarketRegion = "international";
+    let edgeConfidence = 0;
+
+    const isIndiaTz = timezone === "Asia/Kolkata";
+    const isIndiaLang = lang.includes("-in") || lang.startsWith("hi");
+
+    if (country === "IN") {
+      suggested = "india";
+      edgeConfidence = 85;
+      if (isIndiaTz) edgeConfidence += 10;
+      if (isIndiaLang) edgeConfidence += 5;
+    } else if (country) {
+      suggested = "international";
+      edgeConfidence = 85;
+      // Conflicting locale lowers confidence (e.g. NRI on Indian locale abroad).
+      if (isIndiaLang || isIndiaTz) edgeConfidence -= 25;
+    } else {
+      // No country header — fall back to weaker locale/timezone signals.
+      if (isIndiaTz || isIndiaLang) {
+        suggested = "india";
+        edgeConfidence = 40;
+      } else {
+        suggested = "international";
+        edgeConfidence = 35;
+      }
+    }
+
+    // VPN/proxy collapses confidence so the client forces manual confirmation.
+    if (vpnSuspected) edgeConfidence = Math.min(edgeConfidence, 30);
+
+    return {
+      suggested,
+      countryCode: country || null,
+      edgeConfidence: Math.max(0, Math.min(100, edgeConfidence)),
+      vpnSuspected,
+      timezone,
+    };
+  },
+);
 
 /**
  * Permanently lock the authenticated user's market region.

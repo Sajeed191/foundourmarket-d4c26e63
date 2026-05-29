@@ -72,7 +72,7 @@ const OPTIONS: Option[] = [
  * Two-step cinematic flow: pick a market, then confirm the permanent lock.
  */
 export function RegionSelectModal() {
-  const { needsSelection, market, countryCode, lockMarket, loading, isAdmin } =
+  const { needsSelection, market, countryCode, lockMarket, loading, isAdmin, vpnSuspected } =
     useRegion();
   const [choice, setChoice] = useState<MarketRegion | null>(null);
   const [step, setStep] = useState<"select" | "confirm">("select");
@@ -144,11 +144,15 @@ export function RegionSelectModal() {
                 <DialogDescription className="text-sm text-muted-foreground">
                   Pricing, currency and payments are tailored to your region.
                 </DialogDescription>
-                {countryCode && (
+                {vpnSuspected ? (
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-amber-400/80">
+                    Network check · please confirm your market
+                  </p>
+                ) : countryCode ? (
                   <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
                     Detected location · {countryCode}
                   </p>
-                )}
+                ) : null}
               </div>
 
               <div className="mt-5 grid gap-3">
