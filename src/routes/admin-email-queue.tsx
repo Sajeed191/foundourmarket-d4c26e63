@@ -71,7 +71,7 @@ function EmailQueuePage() {
 
   const queueQ = useQuery({
     queryKey: ["email-queue-status"],
-    queryFn: () => fetchQueue({ data: {} }),
+    queryFn: () => fetchQueue(),
     refetchInterval: 15000,
   }) as any;
 

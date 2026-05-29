@@ -36,6 +36,7 @@ import { Route as AdminLiveRouteImport } from './routes/admin-live'
 import { Route as AdminInventoryRouteImport } from './routes/admin-inventory'
 import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
 import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
+import { Route as AdminEmailQueueRouteImport } from './routes/admin-email-queue'
 import { Route as AdminEmailOpsRouteImport } from './routes/admin-email-ops'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
@@ -204,6 +205,11 @@ const AdminFinancialRoute = AdminFinancialRouteImport.update({
 const AdminEmailsRoute = AdminEmailsRouteImport.update({
   id: '/admin-emails',
   path: '/admin-emails',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEmailQueueRoute = AdminEmailQueueRouteImport.update({
+  id: '/admin-email-queue',
+  path: '/admin-email-queue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminEmailOpsRoute = AdminEmailOpsRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
+  '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
+  '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
@@ -518,6 +526,7 @@ export interface FileRoutesById {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customers': typeof AdminCustomersRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
+  '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-inventory': typeof AdminInventoryRoute
@@ -583,6 +592,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-ops'
+    | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-ops'
+    | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
@@ -709,6 +720,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customers'
     | '/admin-email-ops'
+    | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-financial'
     | '/admin-inventory'
@@ -773,6 +785,7 @@ export interface RootRouteChildren {
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminEmailOpsRoute: typeof AdminEmailOpsRoute
+  AdminEmailQueueRoute: typeof AdminEmailQueueRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminFinancialRoute: typeof AdminFinancialRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
@@ -1014,6 +1027,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-emails'
       fullPath: '/admin-emails'
       preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-email-queue': {
+      id: '/admin-email-queue'
+      path: '/admin-email-queue'
+      fullPath: '/admin-email-queue'
+      preLoaderRoute: typeof AdminEmailQueueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-email-ops': {
@@ -1296,6 +1316,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminEmailOpsRoute: AdminEmailOpsRoute,
+  AdminEmailQueueRoute: AdminEmailQueueRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminFinancialRoute: AdminFinancialRoute,
   AdminInventoryRoute: AdminInventoryRoute,
