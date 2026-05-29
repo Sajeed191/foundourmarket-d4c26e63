@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveImage, rowToProduct, type Product } from "@/lib/products";
+import { rowToProduct, type Product } from "@/lib/products";
 import { useCategories } from "@/lib/use-categories";
 import { ProductCard } from "@/components/site/ProductCard";
 
