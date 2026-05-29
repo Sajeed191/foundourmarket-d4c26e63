@@ -73,6 +73,9 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       sku: "sku",
       stockQuantity: "stock_quantity",
       lowStockThreshold: "low_stock_threshold",
+      rating: "rating",
+      reviews: "reviews",
+      warranty: "warranty",
     };
     for (const [key, col] of Object.entries(map)) {
       if (key in data && (data as any)[key] !== undefined) {
