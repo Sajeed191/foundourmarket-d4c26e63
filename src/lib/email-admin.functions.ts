@@ -327,3 +327,107 @@ export const getOrderEmailDelivery = createServerFn({ method: "POST" })
 
     return { orders: ordersOut, totals, events: ORDER_EMAIL_EVENTS.map((ev) => ({ event: ev, label: EVENT_LABELS[ev] })) };
   });
+
+const deliverabilitySchema = z.object({
+  range: z.enum(["7d", "30d", "90d"]).default("30d"),
+});
+
+type DeliverRow = {
+  message_id: string | null;
+  id: string;
+  status: string;
+  created_at: string;
+};
+
+/** Admin — bounce/complaint/delivery rates bucketed over time. */
+export const getEmailDeliverability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => deliverabilitySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    await assertEmailStaff(userId);
+
+    const days = data.range === "7d" ? 7 : data.range === "90d" ? 90 : 30;
+    const since = new Date(Date.now() - days * 864e5).toISOString();
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("email_send_log")
+      .select("id, message_id, status, created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(10000);
+
+    if (error) throw new Error(error.message);
+
+    // Deduplicate to latest status per message_id.
+    const seen = new Set<string>();
+    const latest: DeliverRow[] = [];
+    for (const r of (rows as DeliverRow[]) ?? []) {
+      const key = r.message_id ?? r.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      latest.push(r);
+    }
+
+    // Bucket by day (or week for 90d).
+    const weekly = data.range === "90d";
+    const bucketMs = weekly ? 7 * 864e5 : 864e5;
+    const buckets = new Map<
+      string,
+      { ts: number; sent: number; bounced: number; complained: number; failed: number; total: number }
+    >();
+
+    const keyFor = (iso: string) => {
+      const t = new Date(iso).getTime();
+      const bucketStart = Math.floor(t / bucketMs) * bucketMs;
+      return { key: new Date(bucketStart).toISOString().slice(0, 10), ts: bucketStart };
+    };
+
+    let totalSent = 0, totalBounced = 0, totalComplained = 0, totalFailed = 0, totalAttempted = 0;
+
+    for (const r of latest) {
+      // "Attempted" = anything that left the queue (not pending/suppressed).
+      if (r.status === "pending" || r.status === "suppressed") continue;
+      const { key, ts } = keyFor(r.created_at);
+      const b = buckets.get(key) ?? { ts, sent: 0, bounced: 0, complained: 0, failed: 0, total: 0 };
+      b.total += 1;
+      totalAttempted += 1;
+      if (r.status === "sent") { b.sent += 1; totalSent += 1; }
+      else if (r.status === "bounced") { b.bounced += 1; totalBounced += 1; }
+      else if (r.status === "complained") { b.complained += 1; totalComplained += 1; }
+      else { b.failed += 1; totalFailed += 1; }
+      buckets.set(key, b);
+    }
+
+    const series = Array.from(buckets.values())
+      .sort((a, b) => a.ts - b.ts)
+      .map((b) => ({
+        date: new Date(b.ts).toISOString().slice(0, 10),
+        sent: b.sent,
+        bounced: b.bounced,
+        complained: b.complained,
+        failed: b.failed,
+        total: b.total,
+        deliveryRate: b.total ? +((b.sent / b.total) * 100).toFixed(1) : 0,
+        bounceRate: b.total ? +((b.bounced / b.total) * 100).toFixed(1) : 0,
+        complaintRate: b.total ? +((b.complained / b.total) * 100).toFixed(2) : 0,
+      }));
+
+    const pct = (n: number) => (totalAttempted ? +((n / totalAttempted) * 100).toFixed(2) : 0);
+
+    return {
+      series,
+      bucket: weekly ? "week" : "day",
+      totals: {
+        attempted: totalAttempted,
+        sent: totalSent,
+        bounced: totalBounced,
+        complained: totalComplained,
+        failed: totalFailed,
+        deliveryRate: pct(totalSent),
+        bounceRate: pct(totalBounced),
+        complaintRate: pct(totalComplained),
+        failureRate: pct(totalFailed),
+      },
+    };
+  });
