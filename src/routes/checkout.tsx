@@ -10,14 +10,14 @@ import {
 import { toast } from "sonner";
 import { downloadInvoice } from "@/lib/invoice";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
 import { useAddresses, type Address } from "@/lib/use-addresses";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
-import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder } from "@/lib/razorpay.functions";
+import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder, placeCodOrder } from "@/lib/razorpay.functions";
 import { createRazorpayCustomer, syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
@@ -70,6 +70,7 @@ function CheckoutPage() {
   const createOrder = useServerFn(createRazorpayOrder);
   const verifyPayment = useServerFn(verifyRazorpayPayment);
   const cancelOrder = useServerFn(cancelRazorpayOrder);
+  const placeCodOrderFn = useServerFn(placeCodOrder);
   const ensureCustomer = useServerFn(createRazorpayCustomer);
   const syncMethods = useServerFn(syncRazorpayPaymentMethods);
 
@@ -249,50 +250,17 @@ function CheckoutPage() {
     setError(null);
     setStage("processing");
     try {
-      const shippingSnapshot = {
-        full_name: selectedAddress.full_name,
-        phone: selectedAddress.phone,
-        line1: selectedAddress.line1,
-        line2: selectedAddress.line2,
-        city: selectedAddress.city,
-        state: selectedAddress.state,
-        postal: selectedAddress.postal,
-        country: selectedAddress.country,
-      };
-      const { data: order, error: oErr } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          status: "confirmed",
-          currency: "INR",
-          subtotal: subtotalINR,
-          shipping: shippingINR,
-          tax: taxINR,
-          discount: 0,
-          promo_code: null,
-          total: totalINR,
-          contact_email: user.email,
-          shipping_address: shippingSnapshot,
-          payment_method: "cod",
-          payment_status: "pending",
-        })
-        .select("id")
-        .single();
-      if (oErr) throw oErr;
+      // Order totals and line prices are computed server-side from trusted
+      // database prices — never from client state (anti price-tampering).
+      const placed = await placeCodOrderFn({
+        data: {
+          items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
+          addressId: selectedAddress.id,
+          promoCode: null,
+        },
+      });
 
-      const items = detailed.map((i) => ({
-        order_id: order.id,
-        product_slug: i.slug,
-        name: i.product.name,
-        image: i.product.image,
-        unit_price: toInr(i.product.price),
-        quantity: i.qty,
-        line_total: toInr(i.product.price) * i.qty,
-      }));
-      const { error: iErr } = await supabase.from("order_items").insert(items);
-      if (iErr) throw iErr;
-
-      setPlacedOrderId(order.id);
+      setPlacedOrderId(placed.orderId);
       setStage("success");
       clear();
       if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
@@ -301,6 +269,7 @@ function CheckoutPage() {
       setError(e?.message ?? "Could not place your COD order.");
     }
   }
+
 
   const placeOrder = (e: React.FormEvent) => {
     e.preventDefault();

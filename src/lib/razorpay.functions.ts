@@ -123,8 +123,10 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (addrErr || !addr) throw new Error("Shipping address not found.");
 
-    // Create the pending order first (status pending, INR)
-    const { data: order, error: oErr } = await supabase
+    // Create the pending order first (status pending, INR).
+    // Use the admin client so order writes go only through this trusted,
+    // server-priced path (direct user inserts are blocked by RLS).
+    const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: userId,
@@ -355,6 +357,107 @@ export const cancelRazorpayOrder = createServerFn({ method: "POST" })
       .eq("id", order.id)
       .eq("payment_status", "pending");
     return { ok: true };
+  });
+
+
+const codSchema = z.object({
+  items: z.array(lineItemSchema).min(1).max(100),
+  addressId: z.string().uuid(),
+  promoCode: z.string().trim().max(64).optional().nullable(),
+});
+
+/**
+ * Place a Cash-on-Delivery order. All money figures are recomputed from
+ * trusted database prices server-side — the client never supplies totals,
+ * unit prices, or line totals (anti price-tampering). Stock is reserved and
+ * committed atomically.
+ */
+export const placeCodOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => codSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId, claims } = context as {
+      supabase: any;
+      userId: string;
+      claims?: { email?: string };
+    };
+
+    const priced = await repriceFromDb(supabase, data.items, data.promoCode);
+    if (priced.inr.totalINR < 1) {
+      throw new Error("Order total must be at least ₹1.");
+    }
+
+    // Load shipping address (RLS guarantees ownership of the row)
+    const { data: addr, error: addrErr } = await supabase
+      .from("addresses")
+      .select("full_name,phone,line1,line2,city,state,postal,country")
+      .eq("id", data.addressId)
+      .maybeSingle();
+    if (addrErr || !addr) throw new Error("Shipping address not found.");
+
+    // Create the order with server-computed INR figures
+    const { data: order, error: oErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id: userId,
+        status: "confirmed",
+        currency: "INR",
+        subtotal: priced.inr.subtotalINR,
+        shipping: priced.inr.shippingINR,
+        tax: priced.inr.taxINR,
+        discount: priced.inr.discountINR,
+        promo_code: priced.appliedPromo,
+        total: priced.inr.totalINR,
+        contact_email: claims?.email ?? null,
+        shipping_address: addr,
+        payment_method: "cod",
+        payment_status: "pending",
+      })
+      .select("id")
+      .single();
+    if (oErr || !order) throw new Error("Could not create order.");
+
+    // Snapshot line items with trusted, server-computed prices
+    const orderItems = priced.lines.map((l) => {
+      const unitInr = Math.round(l.unitUsd * USD_TO_INR);
+      return {
+        order_id: order.id,
+        product_slug: l.slug,
+        name: l.name,
+        image: l.image,
+        unit_price: unitInr,
+        quantity: l.qty,
+        line_total: unitInr * l.qty,
+      };
+    });
+    const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
+    if (oiErr) {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "payment_failed", payment_status: "failed" })
+        .eq("id", order.id);
+      throw new Error("Could not record order items.");
+    }
+
+    // Reserve then commit stock atomically (anti-oversell).
+    const { error: reserveErr } = await supabaseAdmin.rpc("reserve_order_stock", {
+      _order_id: order.id,
+      _ttl_minutes: 15,
+    });
+    if (reserveErr) {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "payment_failed", payment_status: "failed" })
+        .eq("id", order.id);
+      throw new Error(
+        /insufficient stock/i.test(reserveErr.message)
+          ? "Some items just went out of stock. Please review your cart."
+          : "Could not reserve inventory for this order.",
+      );
+    }
+    await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
+
+    return { ok: true, orderId: order.id, total: priced.inr.totalINR };
   });
 
 
