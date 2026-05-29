@@ -25,8 +25,12 @@ const verifySchema = z.object({
   razorpayOrderId: z.string().min(1).max(120),
   razorpayPaymentId: z.string().min(1).max(120),
   razorpaySignature: z.string().min(1).max(256),
+});
+
 /** Re-price the cart entirely from trusted database values (anti-tampering). */
 async function repriceFromDb(
+  supabase: any,
+
   supabase: any,
   items: { slug: string; qty: number }[],
   promoCode?: string | null,
