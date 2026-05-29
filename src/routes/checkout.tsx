@@ -20,6 +20,7 @@ import { AddressForm } from "@/components/site/AddressForm";
 import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder } from "@/lib/razorpay.functions";
 import { createRazorpayCustomer, syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
+import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -111,6 +112,30 @@ function CheckoutPage() {
   }, [stage]);
 
   const selectedAddress: Address | undefined = addresses.find((a) => a.id === selectedAddressId);
+
+  // Realtime pincode serviceability for the selected address
+  const checkPincode = useServerFn(validatePincode);
+  const [service, setService] = useState<ServiceabilityResult | null>(null);
+  const [serviceChecking, setServiceChecking] = useState(false);
+  const selectedPostal = selectedAddress?.postal ?? null;
+
+  useEffect(() => {
+    if (!selectedPostal) {
+      setService(null);
+      setServiceChecking(false);
+      return;
+    }
+    let cancelled = false;
+    setService(null);
+    setServiceChecking(true);
+    checkPincode({ data: { postal: selectedPostal } })
+      .then((r) => { if (!cancelled) setService(r); })
+      .catch(() => { if (!cancelled) setService(null); })
+      .finally(() => { if (!cancelled) setServiceChecking(false); });
+    return () => { cancelled = true; };
+  }, [selectedPostal, checkPincode]);
+
+  const serviceable = service?.serviceable === true;
 
   // Force COD off if admin disabled it
   useEffect(() => {
@@ -279,6 +304,10 @@ function CheckoutPage() {
 
   const placeOrder = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!serviceable) {
+      setError(service?.message ?? "This address isn't serviceable yet.");
+      return;
+    }
     if (payMethod === "cod") placeCod();
     else payWithRazorpay();
   };
@@ -317,11 +346,27 @@ function CheckoutPage() {
               <Lock className="size-3 text-emerald-400 shrink-0" />
               <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">256-bit secured · INR</p>
             </div>
-            {selectedAddress && (
+            {selectedAddress && serviceChecking && (
+              <div className="inline-flex items-center gap-2 glass border border-white/10 rounded-full px-3 py-1.5">
+                <Loader2 className="size-3 text-accent shrink-0 animate-spin" />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Checking pincode {selectedAddress.postal}…
+                </p>
+              </div>
+            )}
+            {selectedAddress && !serviceChecking && serviceable && (
               <div className="inline-flex items-center gap-2 glass border border-white/10 rounded-full px-3 py-1.5">
                 <MapPin className="size-3 text-accent shrink-0" />
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                  Delivering to {selectedAddress.city}
+                  Delivering to {service?.city ?? selectedAddress.city} {selectedAddress.postal}
+                </p>
+              </div>
+            )}
+            {selectedAddress && !serviceChecking && service && !serviceable && (
+              <div className="inline-flex items-center gap-2 bg-destructive/10 border border-destructive/30 rounded-full px-3 py-1.5">
+                <XCircle className="size-3 text-destructive shrink-0" />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-destructive">
+                  {service.message}
                 </p>
               </div>
             )}
@@ -565,10 +610,10 @@ function CheckoutPage() {
                 </div>
 
                 {/* Desktop CTA */}
-                <button disabled={!selectedAddress || busy}
+                <button disabled={!selectedAddress || busy || !serviceable}
                   className="hidden lg:inline-flex w-full mt-5 group relative overflow-hidden bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 items-center justify-center gap-2">
                   {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                  <span>{ctaLabel}</span>
+                  <span>{!serviceable && selectedAddress ? (serviceChecking ? "Checking delivery…" : "Not deliverable") : ctaLabel}</span>
                   {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />}
                 </button>
 
@@ -587,10 +632,10 @@ function CheckoutPage() {
                     <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
                     <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{inrFmt(totalINR)}</p>
                   </div>
-                  <button disabled={!selectedAddress || busy}
+                  <button disabled={!selectedAddress || busy || !serviceable}
                     className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
                     {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                    <span>{stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
+                    <span>{!serviceable && selectedAddress ? (serviceChecking ? "Checking…" : "Not deliverable") : stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
                     {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
                   </button>
                 </div>
