@@ -90,8 +90,8 @@ function CheckoutPage() {
   }, [loading, user, nav]);
 
   useEffect(() => {
-    if (!cartLoading && count === 0 && stage !== "success") nav({ to: "/cart" });
-  }, [cartLoading, count, nav, stage]);
+    if (!loading && user && cartHydrated && count === 0 && stage !== "success") nav({ to: "/cart" });
+  }, [loading, user, cartHydrated, count, nav, stage]);
 
   useEffect(() => {
     if (selectedAddressId) return;
