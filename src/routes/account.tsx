@@ -299,7 +299,7 @@ function AccountPage() {
             <ActionCard to="/account/returns" icon={RotateCcw} title="Returns" subtitle="Requests & status" />
             <ActionCard to="/deals" icon={Gift} title="Offers" subtitle="Deals & promos" />
             <ActionCard to="/search" icon={Tag} title="Categories" subtitle="Browse all" />
-            <ActionCard to="/help" icon={Headphones} title="Support" subtitle="24/7 available" />
+            <ActionCard to="/account/support" icon={Headphones} title="Support" subtitle="Tickets & chat" badge={supportUnread || undefined} />
           </div>
         </motion.section>
 
