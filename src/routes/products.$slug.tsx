@@ -89,7 +89,7 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
-  const { format } = useRegion();
+  const { format, priceOf, compareOf } = useRegion();
   const { add } = useCart();
   const { record } = useRecentlyViewed();
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
@@ -152,12 +152,13 @@ function ProductPage() {
   const activeImage = galleryImages[activeImg] ?? galleryImages[0];
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
-  const effectivePrice = selectedVariant?.priceOverride ?? product.price;
+  const basePrice = priceOf(product);
+  const effectivePrice = selectedVariant?.priceOverride ?? basePrice;
   const effectiveStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
   const effectiveSku = selectedVariant?.sku ?? product.sku;
   const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
   const isOOS = effectiveStock <= 0;
-  const originalPrice = product.discount ? effectivePrice * (1 + product.discount / 100) : null;
+  const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
 
   const handleAdd = () => {
     add(product.slug, qty);
