@@ -237,16 +237,32 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-10 p-1 rounded-full glass-strong w-fit overflow-x-auto">
-        {(["overview", "orders", "products", "categories", "promos", "customers", "subscribers"] as Tab[]).map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-2 text-xs uppercase tracking-widest font-mono transition-all rounded-full whitespace-nowrap ${tab === t ? "bg-accent text-accent-foreground shadow-[var(--shadow-ember)]" : "text-muted-foreground hover:text-foreground"}`}>
-            {t}
-          </button>
-        ))}
+      <div className="sticky top-2 z-30 mb-8">
+        <SegmentedTabs<Tab>
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "overview", label: "Overview", icon: <LayoutDashboard className="size-3.5" /> },
+            { value: "orders", label: "Orders", icon: <Truck className="size-3.5" /> },
+            { value: "products", label: "Products", icon: <Package className="size-3.5" /> },
+            { value: "categories", label: "Categories", icon: <Boxes className="size-3.5" /> },
+            { value: "promos", label: "Promos", icon: <Ticket className="size-3.5" /> },
+            { value: "customers", label: "Customers", icon: <Users className="size-3.5" /> },
+            { value: "subscribers", label: "Subscribers", icon: <Mail className="size-3.5" /> },
+          ]}
+        />
       </div>
 
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      >
       {tab === "overview" && (
+        <>
         <>
           <DashboardOverview orders={orders} products={products} customersCount={customers.length} />
           <h2 className="text-xl font-medium mb-6">Recent orders</h2>
