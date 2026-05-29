@@ -618,18 +618,18 @@ function InsightStat({ label, value, accent, small, truncate }: { label: string;
 }
 
 
-function FooterAction({ icon: Icon, label, to }: { icon: typeof Package; label: string; to: string }) {
-  return (
-    <Link
-      to={to}
-      className="group flex flex-col items-center justify-center gap-2 rounded-2xl glass p-4 hover:border-accent/40 hover:text-accent hover:-translate-y-0.5 transition-all"
-    >
+function FooterAction({ icon: Icon, label, to, onClick }: { icon: typeof Package; label: string; to?: string; onClick?: () => void }) {
+  const inner = (
+    <>
       <span className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center group-hover:bg-accent/20 transition-colors">
         <Icon className="size-4" />
       </span>
       <span className="text-[11px] uppercase tracking-widest">{label}</span>
-    </Link>
+    </>
   );
+  const cls = "group flex flex-col items-center justify-center gap-2 rounded-2xl glass p-4 hover:border-accent/40 hover:text-accent hover:-translate-y-0.5 transition-all";
+  if (onClick) return <button onClick={onClick} className={cls}>{inner}</button>;
+  return <Link to={to!} className={cls}>{inner}</Link>;
 }
 
 function EmptyState({ icon: Icon = Star, title, body, cta, extra }: { icon?: typeof Package; title: string; body: string; cta?: React.ReactNode; extra?: React.ReactNode }) {
