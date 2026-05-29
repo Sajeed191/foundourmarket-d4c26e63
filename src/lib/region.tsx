@@ -141,7 +141,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, fetchMine, detect]);
+  }, [user, authLoading, isAdmin, fetchMine, detect]);
 
   const lockMarket = useCallback(
     async (region: MarketRegion) => {
@@ -153,6 +153,11 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     },
     [lockFn, countryCode],
   );
+
+  // Admin-only market preview (no lock, no persistence).
+  const setPreviewMarket = useCallback((region: MarketRegion) => {
+    setMarket(region);
+  }, []);
 
   const currency: Currency = market === "india" ? "INR" : "USD";
   const symbol = currency === "INR" ? "₹" : "$";
