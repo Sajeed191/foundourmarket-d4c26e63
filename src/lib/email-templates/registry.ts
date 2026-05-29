@@ -18,7 +18,21 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 import { template as testEmailTemplate } from './test-email'
+import {
+  orderConfirmedTemplate,
+  paymentVerifiedTemplate,
+  shippedTemplate,
+  outForDeliveryTemplate,
+  deliveredTemplate,
+  refundProcessedTemplate,
+} from './order-emails'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'test-email': testEmailTemplate,
+  'order-confirmed': orderConfirmedTemplate,
+  'payment-verified': paymentVerifiedTemplate,
+  'order-shipped': shippedTemplate,
+  'out-for-delivery': outForDeliveryTemplate,
+  'order-delivered': deliveredTemplate,
+  'refund-processed': refundProcessedTemplate,
 }
