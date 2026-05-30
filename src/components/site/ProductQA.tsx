@@ -70,6 +70,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .eq("id", id);
     if (!error) {
       setAnswerDrafts((d) => ({ ...d, [id]: "" }));
+      setEditingId(null);
       load();
     }
   }
