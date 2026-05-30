@@ -107,6 +107,17 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-fin-scale", group: "System", icon: "BarChart3", label: "Scale Winning Campaign", to: "/admin-financial?view=campaigns", roles: MANAGER, action: "cmd_fin_scale", keywords: "scale winning campaign increase budget roi profit" },
   { id: "qa-fin-pause", group: "System", icon: "AlertTriangle", label: "Pause Losing Campaign", to: "/admin-financial?view=campaigns", roles: MANAGER, action: "cmd_fin_pause", keywords: "pause losing campaign negative roi stop budget" },
   { id: "qa-fin-launch", group: "System", icon: "Megaphone", label: "Launch Profit Campaign", to: "/admin-financial?view=recommendations", roles: MANAGER, action: "cmd_fin_launch", keywords: "launch profit campaign high margin vip retention" },
+  // Executive Business Intelligence
+  { id: "qa-exec-open", group: "System", icon: "Crown", label: "Open Executive Dashboard", to: "/admin-executive", roles: MANAGER, action: "cmd_exec_open", keywords: "executive dashboard ceo owner board business intelligence overview command center" },
+  { id: "qa-exec-health", group: "System", icon: "HeartPulse", label: "Show Business Health", to: "/admin-executive?view=health", roles: MANAGER, action: "cmd_exec_health", keywords: "business health company health score risk band overall" },
+  { id: "qa-exec-risks", group: "System", icon: "AlertTriangle", label: "Show Executive Risks", to: "/admin-executive?view=risks", roles: MANAGER, action: "cmd_exec_risks", keywords: "executive business risks critical threats margin collapse churn crisis" },
+  { id: "qa-exec-opportunities", group: "System", icon: "Sparkles", label: "Show Executive Opportunities", to: "/admin-executive?view=opportunities", roles: MANAGER, action: "cmd_exec_opportunities", keywords: "executive business opportunities growth scale winners revenue upside" },
+  { id: "qa-exec-insights", group: "System", icon: "Lightbulb", label: "Show Executive Insights", to: "/admin-executive?view=insights", roles: MANAGER, action: "cmd_exec_insights", keywords: "executive ai insights what happened why what to do confidence" },
+  { id: "qa-exec-profit", group: "System", icon: "TrendingUp", label: "Show Profit Drivers", to: "/admin-executive?view=profit", roles: MANAGER, action: "cmd_exec_profit", keywords: "profit drivers top products categories campaigns segments regions" },
+  { id: "qa-exec-loss", group: "System", icon: "TrendingDown", label: "Show Loss Drivers", to: "/admin-executive?view=loss", roles: MANAGER, action: "cmd_exec_loss", keywords: "loss drivers worst products campaigns refund support inventory loss" },
+  { id: "qa-exec-regions", group: "System", icon: "Globe", label: "Show Regional Intelligence", to: "/admin-executive?view=regions", roles: MANAGER, action: "cmd_exec_regions", keywords: "regional intelligence region revenue profit margin geography zones" },
+  { id: "qa-exec-timeline", group: "System", icon: "Activity", label: "Show Executive Timeline", to: "/admin-executive?view=timeline", roles: MANAGER, action: "cmd_exec_timeline", keywords: "executive timeline events orders returns admin activity feed" },
+  { id: "qa-exec-snapshot", group: "System", icon: "Gauge", label: "Show Business Snapshot", to: "/admin-executive?view=snapshot", roles: MANAGER, action: "cmd_exec_snapshot", keywords: "business snapshot today revenue profit orders new customers refunds" },
   { id: "qa-activity", group: "System", icon: "Activity", label: "Activity log", to: "/admin-activity", roles: ["admin", "super_admin"], action: "cmd_activity_log", keywords: "audit" },
   { id: "qa-dashboard", group: "System", icon: "LayoutDashboard", label: "Dashboard", to: "/admin", roles: ["admin", "super_admin", "manager", "support", "editor", "fulfillment", "warehouse_staff"], action: "cmd_dashboard" },
 ];
@@ -165,6 +176,17 @@ export function interpretNaturalLanguage(q: string): string | null {
     return "qa-prod-marketing";
   }
   if (s.includes("feature") && s.includes("product")) return "qa-prod-feature";
+  // Executive Business Intelligence natural language (before financial executive block)
+  if (s.includes("ceo") || s.includes("owner dashboard") || (s.includes("executive") && s.includes("dashboard"))) return "qa-exec-open";
+  if ((s.includes("business") || s.includes("company")) && s.includes("health")) return "qa-exec-health";
+  if ((s.includes("business") || s.includes("company")) && s.includes("risk")) return "qa-exec-risks";
+  if ((s.includes("business") || s.includes("company")) && s.includes("opportunit")) return "qa-exec-opportunities";
+  if (s.includes("profit") && s.includes("driver")) return "qa-exec-profit";
+  if (s.includes("loss") && s.includes("driver")) return "qa-exec-loss";
+  if (s.includes("executive") && s.includes("insight")) return "qa-exec-insights";
+  if (s.includes("executive") && s.includes("timeline")) return "qa-exec-timeline";
+  if (s.includes("regional") && s.includes("intelligence")) return "qa-exec-regions";
+  if (s.includes("executive") && s.includes("summary")) return "qa-exec-open";
   // Financial ↔ Marketing natural language (before generic campaign + financial blocks)
   if (s.includes("executive") || (s.includes("summary") && (s.includes("profit") || s.includes("revenue") || s.includes("overview")))) return "qa-fin-executive";
   if (s.includes("top") && s.includes("campaign")) return "qa-fin-top-campaigns";
