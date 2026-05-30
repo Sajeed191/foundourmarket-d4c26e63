@@ -25,6 +25,7 @@ import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
 import { AdminCommandCenter } from "@/components/admin/AdminCommandCenter";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
+import { AdminMobileBar } from "@/components/admin/AdminMobileBar";
 import { CompareTray } from "@/components/site/CompareTray";
 import { InstallPrompt } from "@/components/site/InstallPrompt";
 import { registerServiceWorker } from "@/lib/pwa";
@@ -183,6 +184,7 @@ function RootComponent() {
                     </main>
                     {!isAuthRoute && <Footer />}
                     {!isAuthRoute && <MobileBottomNav />}
+                    {!isAuthRoute && <AdminMobileBar />}
                     <RegionSelectModal />
                     {!isAuthRoute && <AdminFloatingToolbar />}
                     {!isAuthRoute && <AdminOverlayIndicator />}
