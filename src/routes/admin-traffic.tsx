@@ -5,6 +5,8 @@ import { Globe, Users, Eye, MousePointerClick, Loader2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
+import { includeSeedInAnalytics } from "@/lib/seed-filter";
+
 
 export const Route = createFileRoute("/admin-traffic")({
   head: () => ({ meta: [{ title: "Traffic — Admin" }] }),
