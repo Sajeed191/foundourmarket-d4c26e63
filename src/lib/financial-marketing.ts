@@ -285,7 +285,7 @@ export function regionalProfitability(d: FinancialMarketingData): RegionalProfit
     const cCost = camps.reduce((a, c) => a + c.metrics.cost, 0);
     const cProfit = camps.reduce((a, c) => a + c.metrics.profit, 0);
 
-    const fallbackCust = custStats.find((s) => s.region === region)?.count ?? 0;
+    const fallbackCust = custStats.find((s) => s.region === region)?.customers ?? 0;
 
     return {
       region,
