@@ -164,7 +164,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => { registerServiceWorker(); }, []);
-  useEffect(() => { trackPageView(pathname); }, [pathname]);
+  useEffect(() => {
+    trackPageView(pathname);
+    void captureAttribution();
+  }, [pathname]);
 
   const isAuthRoute = pathname.startsWith("/auth");
 
