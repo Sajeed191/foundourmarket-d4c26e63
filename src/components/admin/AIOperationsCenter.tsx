@@ -216,6 +216,10 @@ export function AIOperationsCenter({ focusView }: { focusView?: string }) {
         })}
       </div>
 
+      {/* Fraud & Security integration */}
+      <SecuritySummaryCard />
+
+
       {/* tabs */}
       <div className="flex flex-wrap items-center gap-2">
         {([["actions", "Actions"], ["assistants", "Assistants"], ["briefing", "Briefing & Report"], ["outcomes", "Outcomes"]] as const).map(([id, label]) => (
