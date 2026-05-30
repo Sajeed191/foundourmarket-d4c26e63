@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
@@ -97,10 +97,35 @@ function DriverList({ rows, currency, positive = true }: { rows: DriverRow[]; cu
   );
 }
 
+const VIEW_ANCHORS: Record<string, string> = {
+  health: "health",
+  snapshot: "today",
+  opportunities: "opportunities",
+  risks: "risks",
+  insights: "insights",
+  regions: "regions",
+  profit: "profit-drivers",
+  loss: "loss-drivers",
+  timeline: "timeline",
+};
+
 export function ExecutiveDashboard({ focusView }: { focusView?: string }) {
   const { model, today, timeline, loading, currency } = useExecutiveIntelligence();
   const [busy, setBusy] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!focusView || loading || !model) return;
+    const anchor = VIEW_ANCHORS[focusView];
+    if (!anchor) return;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(anchor);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("deep-link-flash");
+      setTimeout(() => el.classList.remove("deep-link-flash"), 2000);
+    });
+  }, [focusView, loading, model]);
 
   const act = useCallback(async (id: string, fn: () => Promise<{ error?: string }>) => {
     setBusy(id);
