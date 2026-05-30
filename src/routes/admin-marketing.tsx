@@ -121,15 +121,17 @@ function MarketingPage() {
   return (
     <AdminShell title="Marketing" subtitle="Banners, announcements and flash sales — draft & publish workflow" allow={["admin","super_admin","manager","editor"]}>
       <div className="flex gap-1 mb-6 border-b border-border">
-        {(["banners", "flash", "badges"] as const).map((t) => (
+        {(["banners", "flash", "badges", "testimonials"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-3 text-xs uppercase tracking-widest font-mono border-b-2 -mb-px ${tab === t ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {t === "banners" ? "Banners" : t === "flash" ? "Flash sales" : "Badges"}
+            {t === "banners" ? "Banners" : t === "flash" ? "Flash sales" : t === "badges" ? "Badges" : "Testimonials"}
           </button>
         ))}
       </div>
 
       {tab === "badges" && <BadgeSettingsEditor />}
+
+      {tab === "testimonials" && <TestimonialsEditor />}
 
       {tab === "banners" && (
         <>
