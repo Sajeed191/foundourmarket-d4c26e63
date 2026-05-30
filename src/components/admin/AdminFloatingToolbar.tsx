@@ -192,6 +192,47 @@ export function AdminFloatingToolbar() {
                 <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Analytics</span>
               </Link>
             </div>
+            <Link
+              to="/admin-customer-intelligence"
+              search={{ view: "marketing" } as never}
+              onClick={() => setOpen(false)}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2.5 transition-all hover:bg-accent/20"
+            >
+              <Users className="size-3.5 text-accent" />
+              <span className="text-xs font-medium text-foreground">Customer Marketing</span>
+              <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-accent">
+                Targeting
+              </span>
+            </Link>
+            <div className="mb-2 grid grid-cols-3 gap-1">
+              <Link
+                to="/admin-customer-intelligence"
+                search={{ view: "audiences" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Users className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Audiences</span>
+              </Link>
+              <Link
+                to="/admin-customer-intelligence"
+                search={{ view: "vip" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Crown className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">VIP</span>
+              </Link>
+              <Link
+                to="/admin-customer-intelligence"
+                search={{ view: "atrisk" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <RotateCcw className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Winback</span>
+              </Link>
+            </div>
             <button
               onClick={() => {
                 setOpen(false);
