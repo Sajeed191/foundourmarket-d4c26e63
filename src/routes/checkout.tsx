@@ -308,7 +308,7 @@ function CheckoutPage() {
 
   /* ---------- terminal states ---------- */
   if (stage === "success") {
-    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} method={payMethod} eta={eta} nav={nav} />;
+    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} market={market} method={payMethod} eta={eta} nav={nav} />;
   }
 
   return (
