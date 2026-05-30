@@ -830,6 +830,33 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_sections: {
+        Row: {
+          created_at: string
+          eyebrow: string
+          id: string
+          key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eyebrow?: string
+          id?: string
+          key: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eyebrow?: string
+          id?: string
+          key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inbox_placement_tests: {
         Row: {
           created_at: string

@@ -6,6 +6,9 @@ import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { CategoryAdminSheet } from "@/components/admin/CategoryAdminSheet";
+import { useHomepageSections, saveHomepageSection } from "@/lib/use-homepage-sections";
+import { toast } from "sonner";
+import { Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ProductCard } from "@/components/site/ProductCard";
@@ -93,19 +96,105 @@ function CinematicDivider() {
   );
 }
 
-function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All" }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string }) {
+function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean }) {
+  const [editing, setEditing] = useState(false);
+  const [draftEyebrow, setDraftEyebrow] = useState(eyebrow);
+  const [draftTitle, setDraftTitle] = useState(title);
+  const [saving, setSaving] = useState(false);
+
+  function open() {
+    setDraftEyebrow(eyebrow);
+    setDraftTitle(title);
+    setEditing(true);
+  }
+
+  async function save() {
+    if (!sectionKey) return;
+    setSaving(true);
+    try {
+      await saveHomepageSection(sectionKey, {
+        eyebrow: draftEyebrow.trim() || eyebrow,
+        title: draftTitle.trim() || title,
+      });
+      toast.success("Section heading updated");
+      setEditing(false);
+    } catch (e) {
+      toast.error("Save failed", { description: e instanceof Error ? e.message : "Try again." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
-      <div>
+      <div className="min-w-0">
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
           {Icon && <Icon className="size-3" />} {eyebrow}
         </p>
-        <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
+          {editable && sectionKey && (
+            <button
+              onClick={open}
+              aria-label="Edit section heading"
+              className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent/20"
+            >
+              <Pencil className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       {href && (
         <Link to={href} className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
           {hrefLabel}
         </Link>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" onClick={() => !saving && setEditing(false)}>
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 w-full max-w-sm rounded-3xl border border-accent/25 bg-background/95 p-5 backdrop-blur-2xl shadow-[0_30px_80px_-20px_oklch(0.74_0.19_49/0.5)]"
+          >
+            <p className="mb-4 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
+              <Pencil className="size-3" /> Edit section heading
+            </p>
+            <label className="mb-3 block">
+              <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Eyebrow</span>
+              <input
+                value={draftEyebrow}
+                onChange={(e) => setDraftEyebrow(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card/80 px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/55"
+              />
+            </label>
+            <label className="mb-5 block">
+              <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Title</span>
+              <input
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card/80 px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/55"
+              />
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setEditing(false)}
+                disabled={saving}
+                className="rounded-xl border border-border px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+                Save heading
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Reveal>
   );
@@ -114,6 +203,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
 function Home() {
   const { products, loading: productsLoading } = useProducts();
   const { categories } = useCategories();
+  const { sections } = useHomepageSections();
 
   const { isProductAdmin } = useIsProductAdmin();
   const [editCats, setEditCats] = useState(false);
@@ -372,7 +462,7 @@ function Home() {
         </section>
       ) : trending.length > 0 && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow="Hot Right Now" title="Trending Products" icon={Flame} href="/search" hrefLabel="See All" />
+          <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {trending.slice(0, 4).map((p, i) => (
@@ -416,7 +506,7 @@ function Home() {
       {/* 6 · Recommended Products [product section 2/3] */}
       {recommended.length > 0 && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow="Curated For You" title="Recommended Products" icon={Award} href="/search" hrefLabel="See All" />
+          <SectionHeader eyebrow={sections.recommended.eyebrow} title={sections.recommended.title} icon={Award} href="/search" hrefLabel="See All" sectionKey="recommended" editable={isProductAdmin} />
           <ProductRail products={recommended} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {recommended.slice(0, 4).map((p, i) => (
@@ -434,7 +524,7 @@ function Home() {
       {/* 7 · New Arrivals [product section 3/3] */}
       {newArrivals.length > 0 && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow="Just Landed" title="New Arrivals" icon={Sparkles} href="/search" />
+          <SectionHeader eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} href="/search" sectionKey="new_arrivals" editable={isProductAdmin} />
           <ProductRail products={newArrivals} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {newArrivals.slice(0, 4).map((p, i) => (
