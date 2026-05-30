@@ -348,23 +348,14 @@ export function deriveOps(raw: RawOps): OrderOps {
 }
 
 export async function fetchOrderOps(limit = 400): Promise<OrderOps> {
-  // RPC is not in the generated types yet; cast through unknown.
-  const { data, error } = await (supabase.rpc as unknown as (
-    fn: string, args: Record<string, unknown>,
-  ) => Promise<{ data: RawOps | null; error: { message: string } | null }>)(
-    "admin_order_operations", { _limit: limit },
-  );
-  if (error) throw new Error(error.message);
+  const { getOrderOpsFn } = await import("@/lib/admin-ops.functions");
+  const data = (await getOrderOpsFn({ data: { limit } })) as RawOps | null;
   if (!data) throw new Error("No data returned");
   return deriveOps(data);
 }
 
 export async function fetchStaffPerformance(): Promise<StaffPerformance[]> {
-  const { data, error } = await (supabase.rpc as unknown as (
-    fn: string,
-  ) => Promise<{ data: { staff: StaffPerformance[] } | null; error: { message: string } | null }>)(
-    "admin_staff_performance",
-  );
-  if (error) throw new Error(error.message);
+  const { getStaffPerformanceFn } = await import("@/lib/admin-ops.functions");
+  const data = (await getStaffPerformanceFn()) as { staff: StaffPerformance[] } | null;
   return data?.staff ?? [];
 }
