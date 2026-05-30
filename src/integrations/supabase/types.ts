@@ -3956,6 +3956,7 @@ export type Database = {
         Returns: Json
       }
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
+      admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
       delete_email: {
