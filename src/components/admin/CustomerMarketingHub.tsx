@@ -35,7 +35,7 @@ function growthIcon(g: CustomerAudience["growth"]) {
   return <Minus className="size-3 text-muted-foreground" />;
 }
 
-export function CustomerMarketingHub({ rows }: { rows: CustomerIntel[] }) {
+export function CustomerMarketingHub({ rows, focusKey }: { rows: CustomerIntel[]; focusKey?: AudienceKey | null }) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
