@@ -17,13 +17,8 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
 
-  const isNew = product.createdAt
-    ? Date.now() - new Date(product.createdAt).getTime() < FOURTEEN_DAYS
-    : false;
-  const isHot = (product.viewsCount ?? 0) >= 200;
-  const isLimited =
-    product.stockQuantity > 0 &&
-    product.stockQuantity <= Math.max(5, product.lowStockThreshold ?? 5);
+  const badgeSettings = useBadgeSettings();
+  const badges = computeBadges(product, badgeSettings);
   const showOnlyLeft = product.stockQuantity > 0 && product.stockQuantity <= 10;
 
   return (
