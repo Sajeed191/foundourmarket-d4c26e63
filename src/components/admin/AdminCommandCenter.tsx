@@ -272,6 +272,22 @@ export function AdminCommandCenter() {
                 ))}
               </CommandGroup>
             )}
+
+            {/* Automation Control — real executable actions */}
+            {filteredAutoCommands.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="Automation Control">
+                  {filteredAutoCommands.map((c) => (
+                    <CommandItem key={c.id} value={c.id} onSelect={() => selectAutoCommand(c)} className="gap-3">
+                      <Icon name={c.icon} className={`size-4 ${c.danger ? "text-rose-400" : "text-accent"}`} />
+                      <span className="flex-1 truncate">{c.label}</span>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-accent/70">{c.navigateOnly ? "Open" : "Run"}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
 
           <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
