@@ -481,9 +481,9 @@ function Home() {
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
-      ) : trending.length > 0 && (
+      ) : trending.length > 0 && (sections.trending.active || isProductAdmin) && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} />
+          <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} active={sections.trending.active} />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {trending.slice(0, 4).map((p, i) => (
