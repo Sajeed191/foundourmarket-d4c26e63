@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { includeSeedInAnalytics } from "@/lib/seed-filter";
+
 
 /** Real, backend-derived snapshot used to seed the Live Activity console.
  * Every figure is read from the database under admin RLS — no mock values. */
