@@ -1172,6 +1172,35 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaign_alerts: {
+        Row: {
+          alert_key: string
+          campaign_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          alert_key: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          alert_key?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaign_alerts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_campaigns: {
         Row: {
           audience_size: number
@@ -3470,6 +3499,10 @@ export type Database = {
       track_category_event: {
         Args: { _event: string; _id: string }
         Returns: undefined
+      }
+      try_fire_campaign_alert: {
+        Args: { _alert_key: string; _campaign_id: string }
+        Returns: boolean
       }
       upsert_editor_draft: {
         Args: {
