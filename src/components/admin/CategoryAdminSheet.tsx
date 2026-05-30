@@ -148,6 +148,21 @@ export function CategoryAdminSheet({
     [editing, original],
   );
 
+  const entityId = editing?.id ?? "new";
+  const [showVersions, setShowVersions] = useState(false);
+  const [recovery, setRecovery] = useState<
+    { data: Partial<Row>; savedAt: string | null; device?: string | null } | null
+  >(null);
+
+  // Autosave the open editor + protect against accidental navigation.
+  const autosave = useAutosave({
+    entityType: "category",
+    entityId,
+    value: editing ?? {},
+    enabled: !!editing && dirty,
+  });
+  useUnsavedGuard(dirty);
+
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("categories")
