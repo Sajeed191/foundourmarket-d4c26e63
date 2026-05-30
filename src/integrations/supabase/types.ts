@@ -3081,6 +3081,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          detail: Json
+          id: string
+          source_ip: string | null
+          success: boolean
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          source_ip?: string | null
+          success: boolean
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          source_ip?: string | null
+          success?: boolean
+          target?: string | null
+        }
+        Relationships: []
+      }
       seed_runs: {
         Row: {
           counts: Json
@@ -4598,6 +4634,51 @@ export type Database = {
       }
       support_admin_unread_count: { Args: never; Returns: number }
       support_unread_count: { Args: never; Returns: number }
+      svc_admin_order_operations: {
+        Args: { _actor: string; _limit?: number }
+        Returns: Json
+      }
+      svc_admin_staff_performance: { Args: { _actor: string }; Returns: Json }
+      svc_admin_user_directory: { Args: { _actor: string }; Returns: Json }
+      svc_retry_all_failed_executions: {
+        Args: { _actor: string }
+        Returns: Json
+      }
+      svc_retry_failed_execution: {
+        Args: { _actor: string; p_execution_id: string }
+        Returns: Json
+      }
+      svc_run_marketing_automations: {
+        Args: {
+          _actor: string
+          p_force?: boolean
+          p_only_automation?: string
+          p_triggered_by?: string
+        }
+        Returns: Json
+      }
+      svc_set_automation_settings: {
+        Args: {
+          _actor: string
+          p_emergency: boolean
+          p_global: boolean
+          p_maintenance: boolean
+        }
+        Returns: {
+          emergency_stop: boolean
+          global_pause: boolean
+          id: boolean
+          maintenance_mode: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "automation_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       track_banner_event: {
         Args: { _banner_id: string; _event: string }
         Returns: undefined
