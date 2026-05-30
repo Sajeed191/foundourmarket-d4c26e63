@@ -137,8 +137,12 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   const [countryCode, setCountryCode] = useState<string | null>(null);
   const [autoDetected, setAutoDetected] = useState(false);
   const [confidence, setConfidence] = useState(0);
+  const [reasons, setReasons] = useState<string[]>([]);
+  const [detectionTier, setDetectionTier] = useState<DetectionTier | null>(null);
+  const [softConfirm, setSoftConfirm] = useState(false);
   const [vpnSuspected, setVpnSuspected] = useState(false);
   const [loading, setLoading] = useState(true);
+
 
   // Read any cached suggestion immediately (avoids flash on reload).
   useEffect(() => {
