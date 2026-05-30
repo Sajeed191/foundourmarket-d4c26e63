@@ -190,7 +190,7 @@ export function MarketingExecutionsCenter({ automations, estAudience, initialVie
       </div>
 
       {/* Health + Safety */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div id="automation-health" className="grid lg:grid-cols-2 gap-4 scroll-mt-24">>
         <HealthCard health={health} />
         <SafetyPanel settings={settings} onChanged={setSettings} />
       </div>
