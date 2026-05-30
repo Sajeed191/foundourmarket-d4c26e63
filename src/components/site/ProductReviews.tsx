@@ -27,6 +27,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editHoverRating, setEditHoverRating] = useState(0);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+
 
   const load = async () => {
     setLoading(true);
@@ -61,19 +66,25 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [productSlug]);
 
   const resetForm = () => {
-    setEditingId(null);
     setRating(5);
     setHoverRating(0);
     setTitle("");
     setBody("");
   };
 
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditRating(5);
+    setEditHoverRating(0);
+    setEditTitle("");
+    setEditBody("");
+  };
+
   const startEdit = (r: Review) => {
     setEditingId(r.id);
-    setRating(r.rating);
-    setTitle(r.title ?? "");
-    setBody(r.body ?? "");
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    setEditRating(r.rating);
+    setEditTitle(r.title ?? "");
+    setEditBody(r.body ?? "");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -81,16 +92,13 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     if (!user) return;
     setSubmitting(true);
     setError(null);
-    const payload = {
+    const { error: err } = await supabase.from("product_reviews").insert({
       product_slug: productSlug,
       user_id: user.id,
       rating,
       title: title.trim() || null,
       body: body.trim() || null,
-    };
-    const { error: err } = editingId
-      ? await supabase.from("product_reviews").update(payload).eq("id", editingId)
-      : await supabase.from("product_reviews").insert(payload);
+    });
     setSubmitting(false);
     if (err) {
       setError(err.message);
@@ -101,13 +109,36 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     onAggregateChange?.();
   };
 
+  const saveEdit = async (id: string) => {
+    if (!user) return;
+    setSubmitting(true);
+    setError(null);
+    const { error: err } = await supabase
+      .from("product_reviews")
+      .update({
+        rating: editRating,
+        title: editTitle.trim() || null,
+        body: editBody.trim() || null,
+      })
+      .eq("id", id);
+    setSubmitting(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    cancelEdit();
+    await load();
+    onAggregateChange?.();
+  };
+
+
   const remove = async (id: string) => {
     if (!confirm("Delete this review?")) return;
     setSubmitting(true);
     const { error: err } = await supabase.from("product_reviews").delete().eq("id", id);
     setSubmitting(false);
     if (err) { setError(err.message); return; }
-    if (editingId === id) resetForm();
+    if (editingId === id) cancelEdit();
     await load();
     onAggregateChange?.();
   };
@@ -121,7 +152,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
         <div className="lg:col-span-1">
           {user ? (
             <form onSubmit={submit} className="bg-card/60 backdrop-blur-xl border border-border rounded-2xl p-4 sm:p-5">
-              <h3 className="text-sm font-display mb-3">{editingId ? "Update your review" : "Write a review"}</h3>
+              <h3 className="text-sm font-display mb-3">Write a review</h3>
 
               <div className="flex items-center gap-1 mb-4">
                 {Array.from({ length: 5 }).map((_, i) => {
@@ -158,27 +189,16 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 className="w-full bg-background/60 border border-border rounded-lg px-3 py-2 text-sm mb-3 transition-all focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25 focus:shadow-[0_0_20px_-6px_oklch(0.74_0.19_49/0.55)]"
               />
 
-              {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50"
-                >
-                  {submitting ? "Saving…" : editingId ? "Update" : "Submit"}
-                </button>
-                {editingId && (
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    disabled={submitting}
-                    className="px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-border hover:bg-white/5"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+              {error && !editingId && <p className="text-xs text-red-400 mb-3">{error}</p>}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50"
+              >
+                {submitting && !editingId ? "Saving…" : "Submit"}
+              </button>
             </form>
+
           ) : (
             <div className="bg-card border border-border rounded-2xl p-6">
               <p className="text-sm text-muted-foreground mb-4">Sign in to leave a review.</p>
@@ -202,6 +222,64 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 const isOwn = user?.id === r.user_id;
                 return (
                   <li key={r.id} className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-4 sm:p-5 shadow-[0_18px_40px_-24px_oklch(0_0_0/0.8)] transition-all hover:border-accent/30 hover:-translate-y-0.5">
+                    {editingId === r.id ? (
+                      <div>
+                        <div className="flex items-center gap-1 mb-3">
+                          {Array.from({ length: 5 }).map((_, i) => {
+                            const value = i + 1;
+                            const active = (editHoverRating || editRating) >= value;
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onMouseEnter={() => setEditHoverRating(value)}
+                                onMouseLeave={() => setEditHoverRating(0)}
+                                onClick={() => setEditRating(value)}
+                                aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+                                className="p-1"
+                              >
+                                <Star className={`size-5 ${active ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <input
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          maxLength={120}
+                          placeholder="Title (optional)"
+                          className="w-full bg-background/60 border border-border rounded-lg px-3 py-2 text-sm mb-2.5 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25"
+                        />
+                        <textarea
+                          value={editBody}
+                          onChange={(e) => setEditBody(e.target.value)}
+                          maxLength={2000}
+                          rows={3}
+                          placeholder="Share your thoughts…"
+                          className="w-full bg-background/60 border border-border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25"
+                        />
+                        {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => saveEdit(r.id)}
+                            disabled={submitting}
+                            className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground hover:brightness-110 disabled:opacity-50"
+                          >
+                            {submitting ? "Saving…" : "Update"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            disabled={submitting}
+                            className="px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-border hover:bg-white/5"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
                     <div className="flex items-center gap-3 mb-2.5">
                       <div className="size-9 rounded-full bg-muted overflow-hidden grid place-items-center text-xs font-mono shrink-0 ring-1 ring-white/10">
                         {prof?.avatar_url ? <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
@@ -243,8 +321,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         </button>
                       </div>
                     )}
+                      </>
+                    )}
                   </li>
                 );
+
 
               })}
             </ul>
