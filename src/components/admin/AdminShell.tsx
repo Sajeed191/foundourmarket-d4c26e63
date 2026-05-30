@@ -42,6 +42,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Operations",
     items: [
+      { to: "/admin-orders-ops", label: "Order Operations", icon: PackageCheck, roles: ["admin", "super_admin", "manager", "support", "fulfillment", "warehouse_staff"] },
       { to: "/admin-shipments", label: "Shipments", icon: Truck, roles: ["admin", "super_admin", "manager", "fulfillment", "warehouse_staff"] },
       { to: "/admin-returns", label: "Returns", icon: RotateCcw, roles: ["admin", "super_admin", "manager", "support"] },
       { to: "/admin-inventory", label: "Inventory", icon: Boxes, roles: ["admin", "super_admin", "manager", "warehouse_staff"] },
