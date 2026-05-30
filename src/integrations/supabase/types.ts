@@ -218,6 +218,63 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_settings: {
+        Row: {
+          bestseller_enabled: boolean
+          bestseller_sales_min: number
+          fast_selling_enabled: boolean
+          fast_selling_per_day_min: number
+          hot_deal_discount_min: number
+          hot_deal_enabled: boolean
+          id: boolean
+          limited_stock_enabled: boolean
+          limited_stock_max: number
+          max_badges: number
+          new_arrival_days: number
+          new_arrival_enabled: boolean
+          trending_enabled: boolean
+          trending_views_min: number
+          trending_wishlist_min: number
+          updated_at: string
+        }
+        Insert: {
+          bestseller_enabled?: boolean
+          bestseller_sales_min?: number
+          fast_selling_enabled?: boolean
+          fast_selling_per_day_min?: number
+          hot_deal_discount_min?: number
+          hot_deal_enabled?: boolean
+          id?: boolean
+          limited_stock_enabled?: boolean
+          limited_stock_max?: number
+          max_badges?: number
+          new_arrival_days?: number
+          new_arrival_enabled?: boolean
+          trending_enabled?: boolean
+          trending_views_min?: number
+          trending_wishlist_min?: number
+          updated_at?: string
+        }
+        Update: {
+          bestseller_enabled?: boolean
+          bestseller_sales_min?: number
+          fast_selling_enabled?: boolean
+          fast_selling_per_day_min?: number
+          hot_deal_discount_min?: number
+          hot_deal_enabled?: boolean
+          id?: boolean
+          limited_stock_enabled?: boolean
+          limited_stock_max?: number
+          max_badges?: number
+          new_arrival_days?: number
+          new_arrival_enabled?: boolean
+          trending_enabled?: boolean
+          trending_views_min?: number
+          trending_wishlist_min?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -1459,6 +1516,7 @@ export type Database = {
           shipping_fee_usd: number
           sku: string | null
           slug: string
+          sold_count: number
           sort_order: number
           status: string
           stock_quantity: number
@@ -1468,6 +1526,7 @@ export type Database = {
           views_count: number
           warehouse_location: string | null
           warranty: string
+          wishlist_count: number
         }
         Insert: {
           barcode?: string | null
@@ -1513,6 +1572,7 @@ export type Database = {
           shipping_fee_usd?: number
           sku?: string | null
           slug: string
+          sold_count?: number
           sort_order?: number
           status?: string
           stock_quantity?: number
@@ -1522,6 +1582,7 @@ export type Database = {
           views_count?: number
           warehouse_location?: string | null
           warranty?: string
+          wishlist_count?: number
         }
         Update: {
           barcode?: string | null
@@ -1567,6 +1628,7 @@ export type Database = {
           shipping_fee_usd?: number
           sku?: string | null
           slug?: string
+          sold_count?: number
           sort_order?: number
           status?: string
           stock_quantity?: number
@@ -1576,6 +1638,7 @@ export type Database = {
           views_count?: number
           warehouse_location?: string | null
           warranty?: string
+          wishlist_count?: number
         }
         Relationships: []
       }
@@ -2712,6 +2775,7 @@ export type Database = {
           shipping_fee_usd: number
           sku: string | null
           slug: string
+          sold_count: number
           sort_order: number
           status: string
           stock_quantity: number
@@ -2721,6 +2785,7 @@ export type Database = {
           views_count: number
           warehouse_location: string | null
           warranty: string
+          wishlist_count: number
         }[]
         SetofOptions: {
           from: "*"

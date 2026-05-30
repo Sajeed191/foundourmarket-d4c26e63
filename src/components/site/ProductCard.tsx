@@ -5,8 +5,9 @@ import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
+import { useBadgeSettings } from "@/lib/use-badge-settings";
+import { computeBadges } from "@/lib/badges";
 
-const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
   const { format, priceOf, compareOf } = useRegion();
@@ -16,13 +17,8 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
 
-  const isNew = product.createdAt
-    ? Date.now() - new Date(product.createdAt).getTime() < FOURTEEN_DAYS
-    : false;
-  const isHot = (product.viewsCount ?? 0) >= 200;
-  const isLimited =
-    product.stockQuantity > 0 &&
-    product.stockQuantity <= Math.max(5, product.lowStockThreshold ?? 5);
+  const badgeSettings = useBadgeSettings();
+  const badges = computeBadges(product, badgeSettings);
   const showOnlyLeft = product.stockQuantity > 0 && product.stockQuantity <= 10;
 
   return (
@@ -64,32 +60,22 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className={`absolute flex flex-col gap-1 items-start ${compact ? "top-2 left-2" : "top-2.5 left-2.5 gap-1.5"}`}>
-            {isHot && (
-              <span className="bg-accent text-accent-foreground text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md shadow-[var(--shadow-ember)] tracking-wider">
-                HOT
+            {badges.map((b) => (
+              <span
+                key={b.key}
+                className={`inline-flex items-center gap-1 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider ${b.className}`}
+              >
+                <span aria-hidden>{b.emoji}</span>
+                {b.label}
               </span>
-            )}
-            {isNew && !isHot && (
-              <span className="bg-emerald-500/90 text-white text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider">
-                NEW
-              </span>
-            )}
-            {isLimited && (
-              <span className="bg-red-500/90 text-white text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider">
-                LIMITED
-              </span>
-            )}
-            {product.featured && !isHot && !isNew && (
-              <span className="backdrop-blur-md bg-white/10 border border-white/15 text-white text-[10px] font-semibold font-mono px-2 py-0.5 rounded-full tracking-wider">
-                FEATURED
-              </span>
-            )}
-            {product.discount && (
+            ))}
+            {product.discount ? (
               <span className="bg-accent/90 text-accent-foreground text-[10px] font-bold font-mono px-2 py-0.5 rounded-full">
                 −{product.discount}%
               </span>
-            )}
+            ) : null}
           </div>
+
 
           <button
             onClick={(e) => { e.preventDefault(); toggle(product.slug); }}
