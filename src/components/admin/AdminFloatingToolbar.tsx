@@ -19,6 +19,7 @@ import {
   LayoutTemplate,
   Brain,
   Gem,
+  Rocket,
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
@@ -151,6 +152,46 @@ export function AdminFloatingToolbar() {
                 Visual
               </span>
             </Link>
+            <Link
+              to="/admin-marketing-automation"
+              onClick={() => setOpen(false)}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2.5 transition-all hover:bg-accent/20"
+            >
+              <Megaphone className="size-3.5 text-accent" />
+              <span className="text-xs font-medium text-foreground">Marketing Automation</span>
+              <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-accent">
+                Engine
+              </span>
+            </Link>
+            <div className="mb-2 grid grid-cols-3 gap-1">
+              <Link
+                to="/admin-marketing-automation"
+                search={{ action: "create" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Rocket className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Launch</span>
+              </Link>
+              <Link
+                to="/admin-marketing-automation"
+                search={{ tab: "automations" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Activity className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Automate</span>
+              </Link>
+              <Link
+                to="/admin-marketing-automation"
+                search={{ action: "analytics" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <BarChart3 className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Analytics</span>
+              </Link>
+            </div>
             <button
               onClick={() => {
                 setOpen(false);

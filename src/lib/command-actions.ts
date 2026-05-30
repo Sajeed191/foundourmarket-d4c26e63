@@ -57,6 +57,11 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-mkt-vip", group: "Marketing", icon: "Crown", label: "Create VIP campaign", to: "/admin-marketing-automation?action=create&template=vip_rewards", roles: EDITOR, action: "cmd_mkt_vip", keywords: "vip rewards campaign" },
   { id: "qa-mkt-clearance", group: "Marketing", icon: "Boxes", label: "Create clearance campaign", to: "/admin-marketing-automation?action=create&template=clearance", roles: EDITOR, action: "cmd_mkt_clearance", keywords: "clearance discount inventory sale" },
   { id: "qa-mkt-winback", group: "Marketing", icon: "Users", label: "Create winback campaign", to: "/admin-marketing-automation?action=create&template=winback", roles: EDITOR, action: "cmd_mkt_winback", keywords: "winback re-engage dormant lapsed" },
+  { id: "qa-mkt-lowstock", group: "Marketing", icon: "AlertTriangle", label: "Create low-stock campaign", to: "/admin-marketing-automation?action=create&template=low_stock", roles: EDITOR, action: "cmd_mkt_lowstock", keywords: "low stock inventory clearance reorder campaign" },
+  { id: "qa-mkt-roi", group: "Marketing", icon: "BarChart3", label: "Show campaign ROI", to: "/admin-marketing-automation?action=analytics", roles: EDITOR, action: "cmd_mkt_roi", keywords: "campaign roi return profit revenue performance" },
+  { id: "qa-mkt-alerts", group: "Marketing", icon: "AlertTriangle", label: "Show campaign alerts", to: "/admin-marketing-automation?action=analytics", roles: EDITOR, action: "cmd_mkt_alerts", keywords: "campaign alerts underperforming overperforming warning" },
+  { id: "qa-mkt-top", group: "Marketing", icon: "Rocket", label: "Show top campaigns", to: "/admin-marketing-automation?action=analytics", roles: EDITOR, action: "cmd_mkt_top", keywords: "top best campaigns performance leaderboard" },
+  { id: "qa-mkt-health", group: "Marketing", icon: "Activity", label: "Automation health", to: "/admin-marketing-automation?tab=automations", roles: EDITOR, action: "cmd_mkt_health", keywords: "automation health rules status active" },
   { id: "qa-mkt-analytics", group: "Marketing", icon: "BarChart3", label: "Campaign analytics", to: "/admin-marketing-automation?action=analytics", roles: EDITOR, action: "cmd_mkt_analytics", keywords: "campaign analytics roi performance revenue" },
   // System
   { id: "qa-analytics", group: "System", icon: "BarChart3", label: "Analytics", to: "/admin-analytics", roles: ["admin", "super_admin", "manager", "support", "editor", "fulfillment", "warehouse_staff"], action: "cmd_analytics" },
@@ -94,6 +99,20 @@ export function interpretNaturalLanguage(q: string): string | null {
   if (s.includes("new customer")) return "qa-cust-new";
   if (s.includes("loyal") || s.includes("customer insight") || s.includes("customer intelligence")) return "qa-cust-intel";
   if (s.includes("refund") || s.includes("return")) return "qa-returns";
+  // Marketing automation natural language
+  if (s.includes("campaign") || s.includes("automation")) {
+    const make = s.includes("create") || s.includes("new") || s.includes("launch") || s.includes("make");
+    if (make && s.includes("vip")) return "qa-mkt-vip";
+    if (make && (s.includes("winback") || s.includes("win back") || s.includes("win-back") || s.includes("dormant") || s.includes("lapsed"))) return "qa-mkt-winback";
+    if (make && s.includes("clearance")) return "qa-mkt-clearance";
+    if (make && (s.includes("low stock") || s.includes("low-stock") || s.includes("lowstock"))) return "qa-mkt-lowstock";
+    if (make) return "qa-mkt-create";
+    if (s.includes("roi")) return "qa-mkt-roi";
+    if (s.includes("alert")) return "qa-mkt-alerts";
+    if (s.includes("top") || s.includes("best")) return "qa-mkt-top";
+    if (s.includes("health") || s.includes("automation")) return "qa-mkt-health";
+    return "qa-mkt-auto";
+  }
   if (test("revenue") || test("financial") || test("money")) return "qa-financial";
   return null;
 }
