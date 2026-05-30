@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircleQuestion, Loader2, Send, Trash2, CheckCircle2 } from "lucide-react";
+import { MessageCircleQuestion, Loader2, Send, Trash2, CheckCircle2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -22,6 +22,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -69,6 +70,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .eq("id", id);
     if (!error) {
       setAnswerDrafts((d) => ({ ...d, [id]: "" }));
+      setEditingId(null);
       load();
     }
   }
@@ -157,7 +159,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                   )}
                 </div>
 
-                {q.answer ? (
+                {q.answer && editingId !== q.id ? (
                   <div className="mt-4 ml-11 flex items-start gap-3 p-4 bg-accent/5 border border-accent/20 rounded-xl">
                     <span className="size-8 shrink-0 rounded-full bg-accent text-accent-foreground grid place-items-center font-mono text-xs font-bold">A</span>
                     <div className="flex-1">
@@ -166,8 +168,20 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                       </div>
                       <p className="text-sm leading-relaxed">{q.answer}</p>
                     </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setEditingId(q.id);
+                          setAnswerDrafts((d) => ({ ...d, [q.id]: q.answer ?? "" }));
+                        }}
+                        aria-label="Edit answer"
+                        className="text-muted-foreground hover:text-accent transition-colors"
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                    )}
                   </div>
-                ) : canAnswer ? (
+                ) : canAnswer || (isAdmin && editingId === q.id) ? (
                   <div className="mt-4 ml-11 flex gap-2">
                     <input
                       value={answerDrafts[q.id] ?? ""}
@@ -179,8 +193,19 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                       onClick={() => postAnswer(q.id)}
                       className="bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition-all"
                     >
-                      Reply
+                      {editingId === q.id ? "Update" : "Reply"}
                     </button>
+                    {editingId === q.id && (
+                      <button
+                        onClick={() => {
+                          setEditingId(null);
+                          setAnswerDrafts((d) => ({ ...d, [q.id]: "" }));
+                        }}
+                        className="px-3 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <p className="mt-3 ml-11 text-[11px] font-mono text-muted-foreground italic">Awaiting reply…</p>
