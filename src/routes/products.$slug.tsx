@@ -118,6 +118,16 @@ function ProductPage() {
   }, [product?.slug, record]);
 
   useEffect(() => {
+    if (!product) return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [product?.slug]);
+
+  useEffect(() => {
     if (!slug) return;
     let active = true;
     Promise.all([fetchProductImages(slug), fetchProductVariants(slug)]).then(([imgs, vars]) => {
@@ -515,7 +525,9 @@ function ProductPage() {
       <div id="reviews">
         <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
       </div>
-      <ProductQA productSlug={product.slug} />
+      <div id="questions">
+        <ProductQA productSlug={product.slug} />
+      </div>
       <RelatedProducts product={product} />
       
 
