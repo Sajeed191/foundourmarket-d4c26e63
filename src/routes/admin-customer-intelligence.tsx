@@ -16,6 +16,7 @@ import {
   fmtCurrency, SEGMENT_COLOR, churnColor,
   type CustomerIntel, type CustomerSegment, type Region,
 } from "@/lib/customer-intelligence";
+import { CustomerMarketingHub } from "@/components/admin/CustomerMarketingHub";
 
 export const Route = createFileRoute("/admin-customer-intelligence")({
   head: () => ({ meta: [{ title: "Customer Intelligence — Admin" }] }),
