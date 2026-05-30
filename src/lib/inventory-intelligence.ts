@@ -324,7 +324,7 @@ export function computeHealth(intel: ProductIntel[]): Health {
     if (p.stock <= 0) outOfStock += 1;
     else if (p.classification === "low") lowStock += 1;
     else inStock += 1;
-    if (p.status === "preorder" || (p.stock <= 0 && p.restockEta)) incoming += 1;
+    if (p.status === "preorder") incoming += 1;
     if (p.riskScore >= 60 || p.classification === "dead" || p.classification === "overstock") {
       atRisk += p.cost * p.stock;
     }
