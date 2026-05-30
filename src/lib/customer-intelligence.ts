@@ -225,7 +225,8 @@ export function buildCustomerIntel(data: IntelData): CustomerIntel[] {
     ordersByUser.set(o.user_id, arr);
   });
 
-  const base: Omit<CustomerIntel, "rfm" | "segment" | "churnRisk" | "tags" | "active" | "trend">[] = [];
+  type BaseRow = Omit<CustomerIntel, "rfm" | "segment" | "churnRisk" | "tags" | "active" | "trend"> & { _trendDelta: number };
+  const base: BaseRow[] = [];
 
   for (const p of profiles) {
     const userOrders = (ordersByUser.get(p.id) ?? []).filter((o) => isPaid(o.status, o.payment_status));
