@@ -93,12 +93,12 @@ export async function fetchPersonalizedSlugs(limit = 8): Promise<string[]> {
     }
     const topCats = [...catScore.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c]) => c);
     if (!topCats.length) return fetchTrendingSlugs(limit);
-    const { data: prods } = await supabase.from("products")
+    const { data: prods } = await (supabase.from as any)("products_public")
       .select("slug, rating, views_count, category")
       .in("category", topCats)
       .order("rating", { ascending: false })
       .limit(limit * 3);
-    const ranked = (prods ?? [])
+    const ranked = ((prods ?? []) as { slug: string }[])
       .filter((p) => !seen.has(p.slug))
       .slice(0, limit)
       .map((p) => p.slug);

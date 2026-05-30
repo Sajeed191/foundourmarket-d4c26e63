@@ -9,7 +9,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
 
         const [products, categories, pages, posts] = await Promise.all([
-          sb.from("products").select("slug,updated_at"),
+          sb.from("products_public").select("slug,updated_at"),
           sb.from("categories").select("slug"),
           sb.from("cms_pages").select("slug,updated_at").eq("published", true),
           sb.from("cms_posts").select("slug,updated_at,published_at")

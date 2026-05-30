@@ -182,14 +182,15 @@ export function rowToProduct(r: Row): Product {
   };
 }
 
-const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,cost_price_inr,cost_price_usd,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,barcode,warehouse_location,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at";
+// Public catalog columns only — sensitive fields (cost, cost prices, barcode,
+// warehouse_location, admin_notes) are NOT exposed via the products_public view.
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at";
 
 
 export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
-    .from("products")
+    .from("products_public")
     .select(SELECT_COLS)
-    .is("deleted_at", null)
     .order("sort_order", { ascending: true });
   if (error || !data) return [];
   return (data as Row[]).map(rowToProduct);
@@ -197,14 +198,14 @@ export async function fetchProducts(): Promise<Product[]> {
 
 export async function fetchProductsBySlugs(slugs: string[]): Promise<Product[]> {
   if (!slugs.length) return [];
-  const { data } = await supabase.from("products").select(SELECT_COLS).in("slug", slugs);
+  const { data } = await supabase.from("products_public").select(SELECT_COLS).in("slug", slugs);
   const map = new Map((data as Row[] ?? []).map((r) => [r.slug, rowToProduct(r)]));
   return slugs.map((s) => map.get(s)).filter((p): p is Product => !!p);
 }
 
 export async function fetchProduct(slug: string): Promise<Product | null> {
   const { data } = await supabase
-    .from("products")
+    .from("products_public")
     .select(SELECT_COLS)
     .eq("slug", slug)
     .maybeSingle();
