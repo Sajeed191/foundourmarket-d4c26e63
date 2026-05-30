@@ -211,7 +211,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
                 className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
-                Save heading
+                Save changes
               </button>
             </div>
           </div>
