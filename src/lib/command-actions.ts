@@ -99,6 +99,20 @@ export function interpretNaturalLanguage(q: string): string | null {
   if (s.includes("new customer")) return "qa-cust-new";
   if (s.includes("loyal") || s.includes("customer insight") || s.includes("customer intelligence")) return "qa-cust-intel";
   if (s.includes("refund") || s.includes("return")) return "qa-returns";
+  // Marketing automation natural language
+  if (s.includes("campaign") || s.includes("automation")) {
+    const make = s.includes("create") || s.includes("new") || s.includes("launch") || s.includes("make");
+    if (make && s.includes("vip")) return "qa-mkt-vip";
+    if (make && (s.includes("winback") || s.includes("win back") || s.includes("win-back") || s.includes("dormant") || s.includes("lapsed"))) return "qa-mkt-winback";
+    if (make && s.includes("clearance")) return "qa-mkt-clearance";
+    if (make && (s.includes("low stock") || s.includes("low-stock") || s.includes("lowstock"))) return "qa-mkt-lowstock";
+    if (make) return "qa-mkt-create";
+    if (s.includes("roi")) return "qa-mkt-roi";
+    if (s.includes("alert")) return "qa-mkt-alerts";
+    if (s.includes("top") || s.includes("best")) return "qa-mkt-top";
+    if (s.includes("health") || s.includes("automation")) return "qa-mkt-health";
+    return "qa-mkt-auto";
+  }
   if (test("revenue") || test("financial") || test("money")) return "qa-financial";
   return null;
 }
