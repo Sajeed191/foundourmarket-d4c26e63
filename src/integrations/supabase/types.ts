@@ -152,6 +152,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_recommendation_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          rec_key: string
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rec_key: string
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rec_key?: string
+          user_id?: string
+          vote?: string
+        }
+        Relationships: []
+      }
       ai_recommendations: {
         Row: {
           acted_at: string | null
@@ -161,19 +185,27 @@ export type Database = {
           assigned_to: string | null
           category: string
           confidence: number
+          conversion_impact: number | null
           created_at: string
           created_by: string | null
+          customer_impact: number | null
           deep_link: string | null
+          executed_at: string | null
           id: string
           impact: number
+          inventory_impact: number | null
           outcome: string | null
           outcome_value: number | null
           payload: Json
           priority: string
+          profit_impact: number | null
           reasoning: string | null
           rec_key: string
+          revenue_impact: number | null
           snooze_until: string | null
+          source_timestamp: string | null
           status: string
+          success_score: number | null
           title: string
           updated_at: string
         }
@@ -185,19 +217,27 @@ export type Database = {
           assigned_to?: string | null
           category?: string
           confidence?: number
+          conversion_impact?: number | null
           created_at?: string
           created_by?: string | null
+          customer_impact?: number | null
           deep_link?: string | null
+          executed_at?: string | null
           id?: string
           impact?: number
+          inventory_impact?: number | null
           outcome?: string | null
           outcome_value?: number | null
           payload?: Json
           priority?: string
+          profit_impact?: number | null
           reasoning?: string | null
           rec_key: string
+          revenue_impact?: number | null
           snooze_until?: string | null
+          source_timestamp?: string | null
           status?: string
+          success_score?: number | null
           title: string
           updated_at?: string
         }
@@ -209,19 +249,27 @@ export type Database = {
           assigned_to?: string | null
           category?: string
           confidence?: number
+          conversion_impact?: number | null
           created_at?: string
           created_by?: string | null
+          customer_impact?: number | null
           deep_link?: string | null
+          executed_at?: string | null
           id?: string
           impact?: number
+          inventory_impact?: number | null
           outcome?: string | null
           outcome_value?: number | null
           payload?: Json
           priority?: string
+          profit_impact?: number | null
           reasoning?: string | null
           rec_key?: string
+          revenue_impact?: number | null
           snooze_until?: string | null
+          source_timestamp?: string | null
           status?: string
+          success_score?: number | null
           title?: string
           updated_at?: string
         }
