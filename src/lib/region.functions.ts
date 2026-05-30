@@ -133,16 +133,16 @@ export const lockMarketRegion = createServerFn({ method: "POST" })
       return { region: existing.market_region as MarketRegion, alreadyLocked: true };
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        market_region: data.region,
-        country_code: data.countryCode ?? null,
-      })
-      .eq("id", userId);
+    // Self-assignment routine records rich history (method + actor) and refuses
+    // to overwrite an already-locked region server-side (defence in depth).
+    const { data: locked, error } = await supabase.rpc("self_lock_region", {
+      _region: data.region,
+      _country: data.countryCode ?? null,
+      _method: "self",
+    });
 
     if (error) throw new Error(error.message || "Could not set your region.");
-    return { region: data.region, alreadyLocked: false };
+    return { region: (locked ?? data.region) as MarketRegion, alreadyLocked: false };
   });
 
 /** Read the authenticated user's locked region (null until they choose). */
