@@ -5,6 +5,8 @@ import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartph
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 
 export type BannerRow = {
   id: string;
@@ -64,10 +66,25 @@ export function BannerAdminSheet({
 }) {
   const [rows, setRows] = useState<BannerRow[]>([]);
   const [editing, setEditing] = useState<Partial<BannerRow> | null>(null);
+  const [original, setOriginal] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"image" | "mobile_image" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadTarget = useRef<"image" | "mobile_image">("image");
+
+  const entityId = editing?.id ?? "new";
+  const protection = useEditorProtection({
+    entityType: "banner",
+    entityId,
+    value: editing as Record<string, unknown> | null,
+    baseline: original,
+    enabled: !!editing,
+  });
+
+  function openEditor(row: Partial<BannerRow>) {
+    setEditing(row);
+    setOriginal(JSON.stringify(row));
+  }
 
   async function load() {
     const { data, error } = await supabase.from("banners").select("*").order("sort_order");
@@ -130,9 +147,9 @@ export function BannerAdminSheet({
       starts_at: editing.starts_at ?? null,
       ends_at: editing.ends_at ?? null,
     };
-    const { error } = editing.id
-      ? await supabase.from("banners").update(payload).eq("id", editing.id)
-      : await supabase.from("banners").insert(payload);
+    const { data: saved, error } = editing.id
+      ? await supabase.from("banners").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("banners").insert(payload).select("id").single();
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -140,6 +157,12 @@ export function BannerAdminSheet({
     }
     toast.success(editing.id ? "Banner updated" : "Banner created");
     logActivity(editing.id ? "banner_update" : "banner_create", "banner", editing.id, { type: payload.type });
+    await protection.recordVersion(
+      (editing.id ?? saved?.id ?? entityId) as string,
+      payload as Record<string, unknown>,
+      editing.id ? "Updated" : "Created banner",
+    );
+    await protection.markClean();
     setEditing(null);
     await load();
     onChanged();
@@ -256,7 +279,7 @@ export function BannerAdminSheet({
           {!editing && (
             <>
               <button
-                onClick={() => setEditing(blank(defaultType))}
+                onClick={() => openEditor(blank(defaultType))}
                 className="mb-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground"
               >
                 <Plus className="size-3.5" /> New banner
@@ -294,7 +317,7 @@ export function BannerAdminSheet({
                         </div>
                       )}
                     </div>
-                    <button onClick={() => setEditing(r)} className="min-w-0 flex-1 text-left">
+                    <button onClick={() => openEditor(r)} className="min-w-0 flex-1 text-left">
                       <p className={cn("truncate text-sm", !r.active && "text-muted-foreground line-through")}>
                         {r.title}
                       </p>
@@ -340,6 +363,22 @@ export function BannerAdminSheet({
 
           {editing && (
             <div className="space-y-4">
+              <EditorSaveBar
+                state={protection.state}
+                lastSavedAt={protection.lastSavedAt}
+                recovery={protection.recovery}
+                onRestore={() => {
+                  const d = protection.restoreDraft();
+                  if (d) setEditing(d as Partial<BannerRow>);
+                }}
+                onDismiss={() => void protection.dismissDraft()}
+                entityType="banner"
+                entityId={entityId}
+                onRestoreVersion={(snap) => setEditing(snap as Partial<BannerRow>)}
+                onDuplicateVersion={(snap) =>
+                  setEditing({ ...(snap as Partial<BannerRow>), id: undefined, title: `${(snap as BannerRow).title} (copy)` })
+                }
+              />
               <div className="grid grid-cols-2 gap-3">
                 <ImagePicker
                   label="Desktop image"

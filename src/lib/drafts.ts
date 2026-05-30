@@ -199,3 +199,14 @@ export function diffFields(
   }
   return changed;
 }
+
+/** Recent version snapshots across all entities (dashboard "Latest Edits"). */
+export async function fetchRecentVersions(limit = 20): Promise<EntityVersion[]> {
+  const { data, error } = await supabase
+    .from("entity_versions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data as EntityVersion[]) ?? [];
+}

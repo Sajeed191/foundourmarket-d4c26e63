@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, ShoppingBag, Users, Package, AlertTriangle, ArrowUpRight, ArrowDownRight, Star, Clock } from "lucide-react";
 import { resolveImage } from "@/lib/products";
 import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
+import { DraftActivityWidget } from "@/components/admin/DraftActivityWidget";
 
 type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
@@ -388,6 +389,8 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
           )}
         </CollapsibleModule>
       </div>
+
+      <DraftActivityWidget />
     </div>
   );
 }

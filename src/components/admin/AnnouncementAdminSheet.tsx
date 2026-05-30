@@ -12,6 +12,8 @@ import {
 } from "@/lib/announcement-icons";
 import { cn } from "@/lib/utils";
 import type { Announcement } from "@/components/site/AnnouncementBar";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 
 const REGIONS = ["all", "india", "international"] as const;
 const PAGE_OPTIONS = ["home", "shop", "product", "category", "cart", "checkout", "deals"] as const;
@@ -44,7 +46,22 @@ const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [editing, setEditing] = useState<Partial<Row> | null>(null);
+  const [original, setOriginal] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const entityId = editing?.id ?? "new";
+  const protection = useEditorProtection({
+    entityType: "announcement",
+    entityId,
+    value: editing as Record<string, unknown> | null,
+    baseline: original,
+    enabled: !!editing,
+  });
+
+  function openEditor(row: Partial<Row>) {
+    setEditing(row);
+    setOriginal(JSON.stringify(row));
+  }
 
   async function load() {
     const { data, error } = await supabase.from("announcements").select("*").order("sort_order");
@@ -78,9 +95,9 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
       ends_at: editing.ends_at ?? null,
       countdown_to: editing.countdown_to ?? null,
     };
-    const { error } = editing.id
-      ? await supabase.from("announcements").update(payload).eq("id", editing.id)
-      : await supabase.from("announcements").insert(payload);
+    const { data: saved, error } = editing.id
+      ? await supabase.from("announcements").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("announcements").insert(payload).select("id").single();
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -90,6 +107,12 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
     logActivity(editing.id ? "announcement_update" : "announcement_create", "announcement", editing.id, {
       type: payload.type,
     });
+    await protection.recordVersion(
+      (editing.id ?? saved?.id ?? entityId) as string,
+      payload as Record<string, unknown>,
+      editing.id ? "Updated" : "Created announcement",
+    );
+    await protection.markClean();
     setEditing(null);
     await load();
     onChanged();
@@ -155,7 +178,7 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
           {!editing && (
             <>
               <button
-                onClick={() => setEditing(blank())}
+                onClick={() => openEditor(blank())}
                 className="mb-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground"
               >
                 <Plus className="size-3.5" /> New announcement
@@ -168,7 +191,7 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
                   >
                     <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
                     <AnnouncementIcon icon={r.icon} className="size-4 shrink-0 text-accent" />
-                    <button onClick={() => setEditing(r)} className="min-w-0 flex-1 text-left">
+                    <button onClick={() => openEditor(r)} className="min-w-0 flex-1 text-left">
                       <p className={cn("truncate text-sm", !r.active && "text-muted-foreground line-through")}>
                         {r.message}
                       </p>
@@ -207,6 +230,23 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
 
           {editing && (
             <div className="space-y-4">
+              <EditorSaveBar
+                state={protection.state}
+                lastSavedAt={protection.lastSavedAt}
+                recovery={protection.recovery}
+                onRestore={() => {
+                  const d = protection.restoreDraft();
+                  if (d) setEditing(d as Partial<Row>);
+                }}
+                onDismiss={() => void protection.dismissDraft()}
+                entityType="announcement"
+                entityId={entityId}
+                onRestoreVersion={(snap) => setEditing(snap as Partial<Row>)}
+                onDuplicateVersion={(snap) =>
+                  setEditing({ ...(snap as Partial<Row>), id: undefined })
+                }
+              />
+
               <Field label="Message">
                 <textarea
                   value={editing.message ?? ""}
