@@ -72,8 +72,17 @@ function MarketingAutomationPage() {
     if (action === "analytics") setTab("dashboard");
     const tabs: Tab[] = ["dashboard", "campaigns", "automations", "recommendations"];
     if (tabParam && (tabs as string[]).includes(tabParam)) setTab(tabParam as Tab);
+    if (campaignParam) {
+      setTab("campaigns");
+      setFocusCampaign(campaignParam);
+      requestAnimationFrame(() => {
+        document.getElementById(`campaign-${campaignParam}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      logActivity("marketing_campaign_deeplink_open", "marketing", campaignParam, {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, template, tabParam, loading]);
+  }, [action, template, tabParam, campaignParam, loading]);
 
   const filteredCampaigns = useMemo(() => {
     if (!intel) return [];
