@@ -42,6 +42,7 @@ const ACTIONS: Action[] = [
   { label: "Categories", icon: FolderTree, to: "/admin-inventory" },
   { label: "Inventory", icon: Boxes, to: "/admin-inventory" },
   { label: "Intelligence", icon: Brain, to: "/admin-inventory-intelligence" },
+  { label: "Customers", icon: Gem, to: "/admin-customer-intelligence" },
   { label: "Orders", icon: ShoppingBag, to: "/admin-shipments" },
   { label: "Marketing", icon: Megaphone, to: "/admin-marketing" },
   { label: "Analytics", icon: BarChart3, to: "/admin-analytics" },
