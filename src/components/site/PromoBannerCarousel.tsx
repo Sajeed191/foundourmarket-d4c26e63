@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminEditing } from "@/lib/admin-overlay";
 import { BannerAdminSheet } from "@/components/admin/BannerAdminSheet";
+import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
+
+async function setBannerActive(id: string, next: boolean) {
+  const { error } = await supabase.from("banners").update({ active: next }).eq("id", id);
+  if (error) throw error;
+}
 
 type Banner = {
   id: string;
@@ -15,6 +21,7 @@ type Banner = {
   link: string | null;
   cta_text: string | null;
   sort_order: number;
+  active: boolean;
 };
 
 type Props = {
@@ -43,21 +50,23 @@ export function PromoBannerCarousel({
   const [editing, setEditing] = useState(false);
 
   function fetchBanners() {
-    supabase
+    let q = supabase
       .from("banners")
       .select("id,title,subtitle,image,mobile_image,link,cta_text,sort_order,active,starts_at,ends_at,type")
-      .eq("active", true)
       .in("type", types)
-      .order("sort_order")
-      .then(({ data }) => {
-        const now = Date.now();
-        const valid = ((data as any[]) ?? []).filter(
-          (b) =>
-            (!b.starts_at || new Date(b.starts_at).getTime() <= now) &&
-            (!b.ends_at || new Date(b.ends_at).getTime() >= now),
-        );
-        setBanners(maxItems ? valid.slice(0, maxItems) : valid);
-      });
+      .order("sort_order");
+    // Customers only see active banners; admins see hidden ones too (to toggle).
+    if (!canEdit) q = q.eq("active", true);
+    q.then(({ data }) => {
+      const now = Date.now();
+      const valid = ((data as any[]) ?? []).filter(
+        (b) =>
+          canEdit ||
+          ((!b.starts_at || new Date(b.starts_at).getTime() <= now) &&
+            (!b.ends_at || new Date(b.ends_at).getTime() >= now)),
+      );
+      setBanners(maxItems ? valid.slice(0, maxItems) : valid);
+    });
   }
 
   useEffect(() => {
@@ -68,7 +77,7 @@ export function PromoBannerCarousel({
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [types.join("-"), maxItems]);
+  }, [types.join("-"), maxItems, canEdit]);
 
 
 
@@ -123,7 +132,7 @@ export function PromoBannerCarousel({
         </p>
       )}
       <div
-        className={`relative max-w-7xl mx-auto rounded-3xl overflow-hidden border border-border bg-card ${aspectClassName} group`}
+        className={`relative max-w-7xl mx-auto rounded-3xl overflow-hidden border border-border bg-card ${aspectClassName} group ${canEdit && !b.active ? "opacity-60" : ""}`}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -206,13 +215,21 @@ export function PromoBannerCarousel({
         )}
 
         {canEdit && (
-          <button
-            onClick={() => setEditing(true)}
-            aria-label="Edit banners"
-            className="absolute right-3 top-3 z-10 grid size-8 place-items-center rounded-full border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15"
-          >
-            <Pencil className="size-3.5" />
-          </button>
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+            <InlineActiveToggle
+              active={b.active}
+              label="Banner"
+              size="sm"
+              onToggle={(next) => setBannerActive(b.id, next)}
+            />
+            <button
+              onClick={() => setEditing(true)}
+              aria-label="Edit banners"
+              className="grid size-8 place-items-center rounded-full border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15"
+            >
+              <Pencil className="size-3.5" />
+            </button>
+          </div>
         )}
       </div>
       {canEdit && editing && <BannerAdminSheet onClose={() => setEditing(false)} onChanged={fetchBanners} />}

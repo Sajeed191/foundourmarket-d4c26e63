@@ -80,3 +80,16 @@ export async function saveHomepageSection(
   if (error) throw error;
   await load();
 }
+
+/** Inline quick-toggle for a section's active state (admin overlay). */
+export async function toggleHomepageSection(key: string, next: boolean) {
+  const current = (cache ?? DEFAULTS)[key] ?? DEFAULTS[key];
+  const { error } = await supabase
+    .from("homepage_sections")
+    .upsert(
+      { key, eyebrow: current?.eyebrow ?? "", title: current?.title ?? "", active: next },
+      { onConflict: "key" },
+    );
+  if (error) throw error;
+  await load();
+}

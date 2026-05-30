@@ -2,11 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap, Flame, BadgeCheck, Pencil } from "lucide-react";
-import { useCategories } from "@/lib/use-categories";
+import { useCategories, useAdminCategories, toggleCategoryVisible } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { useProductAdminEditing } from "@/lib/admin-overlay";
 import { CategoryAdminSheet } from "@/components/admin/CategoryAdminSheet";
-import { useHomepageSections, saveHomepageSection } from "@/lib/use-homepage-sections";
+import { useHomepageSections, saveHomepageSection, toggleHomepageSection } from "@/lib/use-homepage-sections";
+import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,10 +137,13 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
         </p>
         <div className="flex items-center gap-2">
           <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
-          {editable && !active && (
-            <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-              Inactive
-            </span>
+          {editable && sectionKey && (
+            <InlineActiveToggle
+              active={active}
+              label="Section"
+              size="sm"
+              onToggle={(next) => toggleHomepageSection(sectionKey, next)}
+            />
           )}
           {editable && sectionKey && (
             <button
@@ -223,10 +227,13 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
 
 function Home() {
   const { products, loading: productsLoading } = useProducts();
-  const { categories } = useCategories();
+  const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
 
   const { canEdit: isProductAdmin } = useProductAdminEditing();
+  const { categories: adminCategories } = useAdminCategories(isProductAdmin);
+  // Admins see every category (incl. hidden) so they can toggle visibility inline.
+  const categories = isProductAdmin ? adminCategories : publicCategories;
   const [editCats, setEditCats] = useState(false);
 
   const nav = useNavigate();
@@ -428,11 +435,12 @@ function Home() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {categories.map((cat, i) => (
             <Reveal key={cat.slug} delay={i} className="h-full">
+              <div className="relative h-full">
               <Link
                 to="/category/$slug"
                 params={{ slug: cat.slug }}
                 onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                className="group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/50 transition-all hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-24px_oklch(0.74_0.19_49_/_0.45)]"
+                className={`group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/50 transition-all hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-24px_oklch(0.74_0.19_49_/_0.45)] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
               >
                 {cat.image ? (
                   <img
@@ -465,6 +473,17 @@ function Home() {
                   <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">{categoryCounts[cat.slug] ?? 0} items</p>
                 </div>
               </Link>
+              {isProductAdmin && (
+                <div className="absolute left-2 top-2 z-20">
+                  <InlineActiveToggle
+                    active={cat.homepage_visible}
+                    label="Category"
+                    size="sm"
+                    onToggle={(next) => toggleCategoryVisible(cat.id, next)}
+                  />
+                </div>
+              )}
+              </div>
             </Reveal>
           ))}
         </div>

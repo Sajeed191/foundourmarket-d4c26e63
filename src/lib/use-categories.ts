@@ -40,6 +40,7 @@ function bindRealtime() {
     .channel("categories-live")
     .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => {
       invalidateCategories();
+      if (adminCache !== null) loadAdminCategories(true);
     })
     .subscribe();
 }
@@ -92,4 +93,47 @@ export function useCategories() {
     };
   }, []);
   return { categories, loading };
+}
+
+/* ----------------------------- Admin overlay ----------------------------- */
+
+let adminCache: Category[] | null = null;
+const adminSubscribers = new Set<(c: Category[]) => void>();
+
+/** Admin loader — ALL categories (incl. hidden/draft) so staff can toggle. */
+async function loadAdminCategories(force = false): Promise<Category[]> {
+  if (adminCache && !force) return adminCache;
+  const { data } = await supabase
+    .from("categories")
+    .select(CATEGORY_COLUMNS)
+    .order("sort_order", { ascending: true });
+  const list = (data as Category[] | null) ?? [];
+  adminCache = list;
+  adminSubscribers.forEach((s) => s(list));
+  return list;
+}
+
+/** Live list of every category for admin surfaces. */
+export function useAdminCategories(enabled: boolean) {
+  const [categories, setCategories] = useState<Category[]>(adminCache ?? []);
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    bindRealtime();
+    const sub = (c: Category[]) => { if (active) setCategories(c); };
+    adminSubscribers.add(sub);
+    loadAdminCategories().then((c) => { if (active) setCategories(c); });
+    return () => { active = false; adminSubscribers.delete(sub); };
+  }, [enabled]);
+  return { categories };
+}
+
+/** Flip a category's homepage visibility inline (admin overlay). */
+export async function toggleCategoryVisible(id: string, next: boolean) {
+  const { error } = await supabase
+    .from("categories")
+    .update({ homepage_visible: next })
+    .eq("id", id);
+  if (error) throw error;
+  await Promise.all([loadAdminCategories(true), loadCategories(true)]);
 }

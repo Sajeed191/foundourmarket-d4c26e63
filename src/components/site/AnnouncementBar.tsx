@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminEditing } from "@/lib/admin-overlay";
 import { AnnouncementIcon } from "@/lib/announcement-icons";
 import { AnnouncementAdminSheet } from "@/components/admin/AnnouncementAdminSheet";
+import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
+
+async function setAnnouncementActive(id: string, next: boolean) {
+  const { error } = await supabase.from("announcements").update({ active: next }).eq("id", id);
+  if (error) throw error;
+}
 import { cn } from "@/lib/utils";
 
 export type Announcement = {
@@ -75,9 +81,10 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
         const now = Date.now();
         const valid = ((data as Announcement[]) ?? []).filter(
           (a) =>
-            a.active &&
-            (!a.starts_at || new Date(a.starts_at).getTime() <= now) &&
-            (!a.ends_at || new Date(a.ends_at).getTime() >= now) &&
+            (canEdit ||
+              (a.active &&
+                (!a.starts_at || new Date(a.starts_at).getTime() <= now) &&
+                (!a.ends_at || new Date(a.ends_at).getTime() >= now))) &&
             (a.pages.length === 0 || a.pages.includes(page)),
         );
         setItems(valid.length ? valid : loaded ? [] : FALLBACK);
@@ -95,7 +102,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, canEdit]);
 
   useEffect(() => {
     if (items.length < 2) return;
@@ -161,16 +168,26 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
         </div>
 
         {canEdit && (
-          <button
-            onClick={() => setEditing(true)}
-            aria-label="Edit announcements"
-            className={cn(
-              "absolute right-2 top-1/2 -translate-y-1/2 z-10 grid size-6 place-items-center rounded-full",
-              "border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15",
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1.5">
+            {current && !String(current.id).startsWith("f") && (
+              <InlineActiveToggle
+                active={current.active}
+                label="Announcement"
+                size="sm"
+                onToggle={(next) => setAnnouncementActive(current.id, next)}
+              />
             )}
-          >
-            <Pencil className="size-3" />
-          </button>
+            <button
+              onClick={() => setEditing(true)}
+              aria-label="Edit announcements"
+              className={cn(
+                "grid size-6 place-items-center rounded-full",
+                "border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15",
+              )}
+            >
+              <Pencil className="size-3" />
+            </button>
+          </div>
         )}
       </div>
 
