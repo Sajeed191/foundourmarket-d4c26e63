@@ -20,11 +20,22 @@ export type NotificationCategory =
   | "payment"
   | "support"
   | "promotion"
+  | "executive"
   | "system"
   | "other";
 
+const EXECUTIVE_TYPES = [
+  "critical_business_risk", "revenue_spike", "profit_opportunity",
+  "margin_collapse", "inventory_crisis", "customer_churn_risk", "support_crisis",
+  "executive", "business_risk", "business_health",
+];
+
 export function categoryOf(n: Pick<Notification, "type">): NotificationCategory {
   const t = (n.type || "").toLowerCase();
+  if (EXECUTIVE_TYPES.includes(t) || t.startsWith("executive") || t.startsWith("business_") ||
+    t.includes("margin_collapse") || t.includes("revenue_spike") || t.includes("profit_opportunity") ||
+    t.includes("churn_risk") || t.includes("business_risk"))
+    return "executive";
   if (t.includes("ship") || t.includes("tracking") || t.includes("delivery") || t === "return")
     return "shipping";
   if (t.includes("order")) return "order";
