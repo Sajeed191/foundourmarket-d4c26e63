@@ -1924,37 +1924,94 @@ export type Database = {
       }
       product_reviews: {
         Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
+          admin_reply_by: string | null
           body: string | null
           created_at: string
+          fake_reasons: string | null
+          fake_score: number | null
+          featured: boolean
+          helpful_count: number
           id: string
+          is_flagged: boolean
           is_seeded: boolean
+          media: Json
+          moderation_analyzed_at: string | null
+          not_helpful_count: number
+          pinned: boolean
           product_slug: string
           rating: number
+          report_count: number
+          sentiment: string | null
+          sentiment_analyzed_at: string | null
+          sentiment_score: number | null
+          sentiment_summary: string | null
+          status: string
           title: string | null
           updated_at: string
           user_id: string
+          verified_purchase: boolean
         }
         Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          admin_reply_by?: string | null
           body?: string | null
           created_at?: string
+          fake_reasons?: string | null
+          fake_score?: number | null
+          featured?: boolean
+          helpful_count?: number
           id?: string
+          is_flagged?: boolean
           is_seeded?: boolean
+          media?: Json
+          moderation_analyzed_at?: string | null
+          not_helpful_count?: number
+          pinned?: boolean
           product_slug: string
           rating: number
+          report_count?: number
+          sentiment?: string | null
+          sentiment_analyzed_at?: string | null
+          sentiment_score?: number | null
+          sentiment_summary?: string | null
+          status?: string
           title?: string | null
           updated_at?: string
           user_id: string
+          verified_purchase?: boolean
         }
         Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          admin_reply_by?: string | null
           body?: string | null
           created_at?: string
+          fake_reasons?: string | null
+          fake_score?: number | null
+          featured?: boolean
+          helpful_count?: number
           id?: string
+          is_flagged?: boolean
           is_seeded?: boolean
+          media?: Json
+          moderation_analyzed_at?: string | null
+          not_helpful_count?: number
+          pinned?: boolean
           product_slug?: string
           rating?: number
+          report_count?: number
+          sentiment?: string | null
+          sentiment_analyzed_at?: string | null
+          sentiment_score?: number | null
+          sentiment_summary?: string | null
+          status?: string
           title?: string | null
           updated_at?: string
           user_id?: string
+          verified_purchase?: boolean
         }
         Relationships: []
       }
@@ -2570,6 +2627,76 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          review_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          review_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          review_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
             referencedColumns: ["id"]
           },
         ]
@@ -3520,6 +3647,7 @@ export type Database = {
             }
             Returns: undefined
           }
+      product_trust_score: { Args: { _slug: string }; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -3529,6 +3657,10 @@ export type Database = {
         }[]
       }
       refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
+      refresh_review_vote_counts: {
+        Args: { _review_id: string }
+        Returns: undefined
+      }
       release_order_stock: {
         Args: { _order_id: string; _reason?: string }
         Returns: undefined
@@ -3546,6 +3678,7 @@ export type Database = {
         Args: { _order_id: string; _ttl_minutes?: number }
         Returns: undefined
       }
+      review_dashboard: { Args: never; Returns: Json }
       save_entity_version: {
         Args: {
           _changed_fields?: string[]
