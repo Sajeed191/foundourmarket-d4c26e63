@@ -24,6 +24,7 @@ export const Route = createFileRoute("/admin-marketing-automation")({
   validateSearch: (s: Record<string, unknown>) => ({
     action: typeof s.action === "string" ? s.action : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
+    tab: typeof s.tab === "string" ? s.tab : undefined,
   }),
   component: MarketingAutomationPage,
 });
