@@ -218,7 +218,7 @@ function CustomerIntelPage() {
       </div>
 
       {/* VIP DETECTION + ALERTS */}
-      <div className="mt-6 grid lg:grid-cols-2 gap-4">
+      <div id="ci-vip" className="mt-6 grid lg:grid-cols-2 gap-4 scroll-mt-20">
         <div className="card-premium rounded-2xl p-5">
           <h2 className="text-sm font-display font-semibold mb-4 flex items-center gap-2"><Crown className="size-4 text-accent" /> Top Spenders</h2>
           <div className="space-y-1.5">
