@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
+import { useCommandCenter } from "@/lib/command-center";
+import { Command as CommandIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StorefrontDashboardPanel } from "@/components/admin/StorefrontDashboardPanel";
 import { BulkVisibilityPanel } from "@/components/admin/BulkVisibilityPanel";
@@ -52,6 +54,7 @@ const ACTIONS: Action[] = [
 export function AdminFloatingToolbar() {
   const { isAdmin, loading } = useIsAdmin();
   const { adminMode, toggle } = useAdminMode();
+  const { setOpen: setCmdOpen } = useCommandCenter();
   const [open, setOpen] = useState(false);
   const [dashboard, setDashboard] = useState(false);
   const [bulk, setBulk] = useState(false);
@@ -81,6 +84,19 @@ export function AdminFloatingToolbar() {
                 <X className="size-3.5" />
               </button>
             </div>
+            <button
+              onClick={() => {
+                setOpen(false);
+                setCmdOpen(true);
+              }}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl border border-accent/40 bg-accent/15 px-3 py-2.5 transition-all hover:bg-accent/25"
+            >
+              <CommandIcon className="size-3.5 text-accent" />
+              <span className="text-xs font-medium text-foreground">Command Center</span>
+              <span className="ml-auto hidden items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent sm:flex">
+                <kbd className="rounded bg-accent/20 px-1 py-0.5">⌘K</kbd>
+              </span>
+            </button>
             <button
               onClick={toggle}
               className={cn(

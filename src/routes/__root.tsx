@@ -22,6 +22,8 @@ import { RegionSelectModal } from "@/components/site/RegionSelectModal";
 import { AdminFloatingToolbar } from "@/components/admin/AdminFloatingToolbar";
 import { AdminOverlayIndicator } from "@/components/admin/AdminOverlayIndicator";
 import { AdminModeProvider } from "@/lib/admin-mode";
+import { CommandCenterProvider } from "@/lib/command-center";
+import { AdminCommandCenter } from "@/components/admin/AdminCommandCenter";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 import { CompareTray } from "@/components/site/CompareTray";
 import { InstallPrompt } from "@/components/site/InstallPrompt";
@@ -173,6 +175,7 @@ function RootComponent() {
             <RegionProvider>
               <CartProvider>
                 <AdminModeProvider>
+                 <CommandCenterProvider>
                   <div className="min-h-screen flex flex-col">
                     {!isAuthRoute && <Nav />}
                     <main className={isAuthRoute ? "flex-1" : "flex-1"}>
@@ -183,10 +186,12 @@ function RootComponent() {
                     <RegionSelectModal />
                     {!isAuthRoute && <AdminFloatingToolbar />}
                     {!isAuthRoute && <AdminOverlayIndicator />}
+                    {!isAuthRoute && <AdminCommandCenter />}
                     <CompareTray />
                     <InstallPrompt />
                     <Toaster position="bottom-center" richColors />
                   </div>
+                 </CommandCenterProvider>
                 </AdminModeProvider>
               </CartProvider>
             </RegionProvider>

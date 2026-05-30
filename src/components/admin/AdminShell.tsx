@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
 
@@ -118,6 +119,7 @@ export function AdminShell({
   const [query, setQuery] = useState("");
   const [live, setLive] = useState<{ revenue: number; orders: number }>({ revenue: 0, orders: 0 });
   const { count: supportUnread } = useAdminSupportUnread();
+  const cmd = useCommandCenter();
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
   useEffect(() => { setOpen(false); }, [path]);
@@ -313,7 +315,12 @@ export function AdminShell({
                 className="w-full bg-white/[0.025] border border-white/[0.08] rounded-xl pl-9 pr-12 py-2.5 text-xs placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/40 focus:bg-white/[0.04] focus:shadow-[inset_0_1px_2px_oklch(0_0_0_/_0.4),0_0_0_3px_oklch(0.74_0.19_49_/_0.08),0_0_26px_-10px_oklch(0.74_0.19_49_/_0.45)] transition-all duration-500"
                 style={{ boxShadow: "inset 0 1px 2px oklch(0 0 0 / 0.35)" }}
               />
-              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center rounded-md border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground/60">⌘K</kbd>
+              <button
+                type="button"
+                onClick={() => cmd.setOpen(true)}
+                aria-label="Open command center"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center rounded-md border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground/60 hover:border-accent/40 hover:text-accent transition-colors"
+              >⌘K</button>
             </div>
           </div>
 
