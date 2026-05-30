@@ -137,10 +137,13 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
         </p>
         <div className="flex items-center gap-2">
           <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
-          {editable && !active && (
-            <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-              Inactive
-            </span>
+          {editable && sectionKey && (
+            <InlineActiveToggle
+              active={active}
+              label="Section"
+              size="sm"
+              onToggle={(next) => toggleHomepageSection(sectionKey, next)}
+            />
           )}
           {editable && sectionKey && (
             <button
