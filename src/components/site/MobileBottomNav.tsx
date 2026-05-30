@@ -4,12 +4,21 @@ import { motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
+import { useAdminMode } from "@/lib/admin-mode";
+import { useIsAdmin } from "@/lib/use-admin";
 
 export function MobileBottomNav() {
   const { count } = useCart();
   const { user } = useAuth();
   const { slugs } = useWishlist();
+  const { adminMode } = useAdminMode();
+  const { isAdmin } = useIsAdmin();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Hand the bottom dock over to the admin bar when a staff member is actively
+  // managing the store, so the two navigations never stack.
+  if (adminMode && isAdmin) return null;
+
 
   const items: { to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
