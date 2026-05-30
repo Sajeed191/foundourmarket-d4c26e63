@@ -72,8 +72,19 @@ const OPTIONS: Option[] = [
  * Two-step cinematic flow: pick a market, then confirm the permanent lock.
  */
 export function RegionSelectModal() {
-  const { needsSelection, market, countryCode, lockMarket, loading, isAdmin, vpnSuspected } =
-    useRegion();
+  const {
+    needsSelection,
+    market,
+    countryCode,
+    lockMarket,
+    loading,
+    isAdmin,
+    vpnSuspected,
+    softConfirm,
+    confidence,
+    confirmDetectedRegion,
+    rejectDetectedRegion,
+  } = useRegion();
   const [choice, setChoice] = useState<MarketRegion | null>(null);
   const [step, setStep] = useState<"select" | "confirm">("select");
   const [saving, setSaving] = useState(false);
@@ -86,8 +97,62 @@ export function RegionSelectModal() {
     }
   }, [needsSelection, market]);
 
+  // Lightweight one-tap confirmation for 70–89 confidence detections.
+  const softOpen = softConfirm && !needsSelection && !loading && !isAdmin;
+  const detected = OPTIONS.find((o) => o.id === market) ?? OPTIONS[1];
+  if (softOpen) {
+    return (
+      <Dialog open>
+        <DialogContent
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          className="max-w-sm overflow-hidden border-white/10 bg-background/85 p-6 backdrop-blur-2xl [&>button]:hidden"
+        >
+          <div className="space-y-2 text-center">
+            <span className="mx-auto grid size-12 place-items-center rounded-2xl border border-white/10 bg-black/30 text-2xl">
+              {detected.flag}
+            </span>
+            <DialogTitle className="text-lg font-display font-semibold tracking-tight">
+              Continue with {detected.title} pricing?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              We detected your region as {detected.title}{" "}
+              <span className="text-foreground">({detected.currency})</span>.
+              {confidence ? (
+                <span className="mt-1 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70">
+                  Confidence {confidence}%
+                </span>
+              ) : null}
+            </DialogDescription>
+          </div>
+          <div className="mt-5 flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={rejectDetectedRegion}>
+              Choose region
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={saving}
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await confirmDetectedRegion();
+                } catch {
+                  setSaving(false);
+                }
+              }}
+            >
+              {saving ? "Confirming…" : "Yes, continue"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const open = needsSelection && !loading && !isAdmin;
   const selected = OPTIONS.find((o) => o.id === choice) ?? null;
+
 
   async function confirm() {
     if (!choice || saving) return;
