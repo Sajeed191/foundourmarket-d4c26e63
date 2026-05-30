@@ -47,13 +47,17 @@ export type SectionStat = {
 /** Aggregate section impressions/clicks over the last `days` days. */
 export async function fetchSectionAnalytics(days: number): Promise<SectionStat[]> {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
-  const { data, error } = await supabase
+  const includeSeed = await includeSeedInAnalytics();
+  let query = supabase
     .from("analytics_events")
     .select("event,metadata")
     .in("event", ["section_impression", "section_click"])
     .gte("created_at", since)
     .limit(10000);
+  if (!includeSeed) query = query.eq("is_seeded", false);
+  const { data, error } = await query;
   if (error || !data) return [];
+
 
   const map = new Map<string, { impressions: number; clicks: number }>();
   for (const row of data as { event: string; metadata: Record<string, unknown> | null }[]) {
