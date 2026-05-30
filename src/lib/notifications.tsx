@@ -14,13 +14,27 @@ export type Notification = {
   created_at: string;
 };
 
-export type NotificationCategory = "order" | "payment" | "security" | "other";
+export type NotificationCategory =
+  | "order"
+  | "shipping"
+  | "payment"
+  | "support"
+  | "promotion"
+  | "system"
+  | "other";
 
 export function categoryOf(n: Pick<Notification, "type">): NotificationCategory {
-  const t = n.type;
-  if (t === "order_status" || t === "shipment" || t === "return") return "order";
-  if (t === "payment") return "payment";
-  if (t === "security") return "security";
+  const t = (n.type || "").toLowerCase();
+  if (t.includes("ship") || t.includes("tracking") || t.includes("delivery") || t === "return")
+    return "shipping";
+  if (t.includes("order")) return "order";
+  if (t.includes("payment") || t.includes("refund") || t.includes("invoice")) return "payment";
+  if (t.includes("support") || t.includes("ticket") || t === "question" || t === "review")
+    return "support";
+  if (t.includes("promo") || t.includes("marketing") || t.includes("deal") || t.includes("sale"))
+    return "promotion";
+  if (t.includes("security") || t.includes("system") || t.includes("alert") || t.includes("stock"))
+    return "system";
   return "other";
 }
 
