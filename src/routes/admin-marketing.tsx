@@ -423,8 +423,23 @@ function FlashEditor({ row, onClose, onSaved }: { row: Flash | null; onClose: ()
     ends_at: row?.ends_at?.slice(0, 16) ?? "", active: row?.active ?? true,
     product_slugs: (row?.product_slugs ?? []).join(", "),
   });
+  const [baseline] = useState(() => JSON.stringify({
+    name: row?.name ?? "", discount_percent: row?.discount_percent ?? 20,
+    starts_at: row?.starts_at?.slice(0, 16) ?? new Date().toISOString().slice(0, 16),
+    ends_at: row?.ends_at?.slice(0, 16) ?? "", active: row?.active ?? true,
+    product_slugs: (row?.product_slugs ?? []).join(", "),
+  }));
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const entityId = row?.id ?? "new";
+  const protection = useEditorProtection({
+    entityType: "flash_sale",
+    entityId,
+    value: f as Record<string, unknown>,
+    baseline,
+    enabled: true,
+  });
 
   async function actuallySave() {
     setSaving(true);
@@ -435,12 +450,20 @@ function FlashEditor({ row, onClose, onSaved }: { row: Flash | null; onClose: ()
       active: f.active,
       product_slugs: f.product_slugs.split(",").map((s) => s.trim()).filter(Boolean),
     };
-    const { error } = row ? await supabase.from("flash_sales").update(payload).eq("id", row.id) : await supabase.from("flash_sales").insert(payload);
+    const { data: saved, error } = row
+      ? await supabase.from("flash_sales").update(payload).eq("id", row.id).select("id").single()
+      : await supabase.from("flash_sales").insert(payload).select("id").single();
     setSaving(false);
     setConfirmOpen(false);
     if (error) { toast.error(error.message); return; }
     toast.success(f.active ? "Flash sale is live" : "Flash sale saved");
     logActivity(row ? "flash_update" : "flash_create", "flash_sale", row?.id);
+    await protection.recordVersion(
+      (row?.id ?? saved?.id ?? entityId) as string,
+      payload as Record<string, unknown>,
+      row ? "Updated" : "Created flash sale",
+    );
+    await protection.markClean();
     onSaved();
   }
 
