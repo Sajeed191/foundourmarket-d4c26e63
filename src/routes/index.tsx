@@ -610,34 +610,50 @@ function Home() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
-          {[
-            { quote: "Completely redefined how I source premium goods. The quality is unmatched.", name: "Marcus Thorne", role: "Curator · London" },
-            { quote: "Fast shipping, gorgeous packaging, and every item felt hand-picked for me.", name: "Ayaka Mori", role: "Designer · Tokyo" },
-            { quote: "The best support I've dealt with from any online store, full stop.", name: "Diego Alvarez", role: "Founder · Madrid" },
-          ].map((t, i) => (
-            <Reveal key={t.name} delay={i}>
-              <figure className="group relative glass glass-reflect rounded-2xl p-6 sm:p-7 h-full flex flex-col overflow-hidden hover:-translate-y-1 transition-transform">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex gap-0.5 text-accent">
-                    {Array.from({ length: 5 }).map((_, s) => <Star key={s} className="size-3.5 fill-current" />)}
-                  </div>
-                  <Quote className="size-5 text-accent opacity-60" />
-                </div>
-                <blockquote className="text-sm sm:text-base leading-relaxed text-pretty flex-1">"{t.quote}"</blockquote>
-                <figcaption className="mt-6 pt-5 border-t border-border flex items-center justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-medium">{t.name}</div>
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">{t.role}</div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-accent shrink-0">
-                    <BadgeCheck className="size-3.5" /> Verified
-                  </span>
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
+        {(() => {
+          const testimonials = [
+            { quote: "Completely redefined how I source premium goods. The quality is unmatched.", name: "Marcus Thorne", role: "Curator", flag: "🇬🇧", country: "United Kingdom" },
+            { quote: "Fast shipping, gorgeous packaging, and every item felt hand-picked for me.", name: "Ayaka Mori", role: "Designer", flag: "🇯🇵", country: "Japan" },
+            { quote: "The best support I've dealt with from any online store, full stop.", name: "Diego Alvarez", role: "Founder", flag: "🇪🇸", country: "Spain" },
+          ];
+          return (
+            <>
+              {/* Mobile: compact swipeable carousel with dots + autorotate */}
+              <TestimonialsCarousel items={testimonials} />
+
+              {/* Desktop: compact grid */}
+              <div className="hidden md:grid grid-cols-3 gap-5">
+                {testimonials.map((t, i) => (
+                  <Reveal key={t.name} delay={i}>
+                    <figure className="group relative glass glass-reflect rounded-2xl p-5 h-full flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-200">
+                      <div className="flex gap-0.5 text-accent mb-2.5">
+                        {Array.from({ length: 5 }).map((_, s) => <Star key={s} className="size-3.5 fill-current" />)}
+                      </div>
+                      <blockquote className="text-sm leading-relaxed text-pretty flex-1">"{t.quote}"</blockquote>
+                      <figcaption className="mt-4 pt-3.5 border-t border-border flex items-center gap-3">
+                        <span className="size-9 shrink-0 grid place-items-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/30 text-xs font-semibold">
+                          {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                            {t.name}
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wide text-accent">
+                              <BadgeCheck className="size-3" /> Verified
+                            </span>
+                          </div>
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <span aria-hidden>{t.flag}</span> {t.country}
+                          </div>
+                        </div>
+                      </figcaption>
+                    </figure>
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          );
+        })()}
+
       </section>
 
       <CinematicDivider />
