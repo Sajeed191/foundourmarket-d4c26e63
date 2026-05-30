@@ -328,6 +328,62 @@ function AdminLivePage() {
           push({ kind: "admin", title: a.action, body: a.entity_type ? `${a.entity_type}${a.entity_id ? `:${a.entity_id.slice(0, 8)}` : ""}` : undefined, link: "/admin-activity" });
         })
       ),
+
+      sub("live-payments", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "payments" }, (p) => {
+          const pay = p.new as { order_id: string | null; amount: number; currency: string; status: string; method: string | null };
+          const st = String(pay.status ?? "").toLowerCase();
+          const failed = ["failed", "declined", "error", "cancelled", "canceled"].includes(st);
+          push({
+            kind: failed ? "payment_failed" : "payment",
+            title: failed ? `Payment failed · ${pay.method ?? "card"}` : `Payment captured · ${pay.method ?? "card"}`,
+            body: `${pay.currency ?? ""} ${Number(pay.amount).toFixed(2)}`,
+            amount: failed ? undefined : Number(pay.amount),
+            link: pay.order_id ? `/orders/${pay.order_id}` : undefined,
+          });
+        })
+      ),
+
+      sub("live-refunds", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "refunds" }, (p) => {
+          const r = p.new as { order_id: string | null; amount: number; currency: string; status: string; reason: string | null };
+          push({ kind: "refund", title: `Refund ${r.status ?? "issued"}`, body: `${r.currency ?? ""} ${Number(r.amount).toFixed(2)}${r.reason ? ` · ${r.reason}` : ""}`, link: r.order_id ? `/orders/${r.order_id}` : "/admin-returns" });
+        })
+      ),
+
+      sub("live-reviews", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "product_reviews" }, (p) => {
+          const r = p.new as { product_slug: string | null; rating: number; title: string | null };
+          push({ kind: "review", title: `${r.rating}★ review${r.title ? ` · ${r.title}` : ""}`, body: r.product_slug ?? undefined, link: r.product_slug ? `/products/${r.product_slug}` : undefined });
+        })
+      ),
+
+      sub("live-support", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_tickets" }, (p) => {
+          const t = p.new as { subject: string | null; category: string | null; priority: string | null };
+          push({ kind: "support", title: t.subject || "New support ticket", body: `${t.category ?? "general"} · ${t.priority ?? "normal"}`, link: "/admin-support" });
+        })
+      ),
+
+      sub("live-ai-recs", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "ai_recommendations" }, (p) => {
+          const r = p.new as { title: string | null; category: string | null; priority: string | null; deep_link: string | null };
+          push({ kind: "ai_rec", title: r.title || "AI recommendation", body: `${r.category ?? "ops"} · ${r.priority ?? "normal"} priority`, link: r.deep_link || "/admin-ai-operations" });
+        })
+      ),
+
+      sub("live-automations", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_executions" }, (p) => {
+          const a = p.new as { trigger_key: string | null; status: string | null; matched_count: number | null; action_taken: string | null; summary: string | null; error: string | null };
+          const failed = String(a.status ?? "").toUpperCase().includes("FAIL");
+          push({
+            kind: failed ? "automation_failed" : "automation",
+            title: failed ? `Automation failed · ${a.trigger_key ?? ""}` : (a.action_taken || a.summary || `Automation ran · ${a.trigger_key ?? ""}`),
+            body: failed ? (a.error ?? undefined) : `${a.matched_count ?? 0} matched`,
+            link: "/admin-marketing-automation?view=health",
+          });
+        })
+      ),
     ];
 
     return () => { channels.forEach((c) => supabase.removeChannel(c)); };
