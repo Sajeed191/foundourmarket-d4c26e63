@@ -4,7 +4,7 @@ import { motion, useInView, useMotionValue, useSpring, useTransform } from "fram
 import { Search, Shield, Truck, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Quote, Users, ShoppingBag, Zap, Flame, BadgeCheck, Pencil } from "lucide-react";
 import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
-import { useIsProductAdmin } from "@/lib/use-admin";
+import { useProductAdminEditing } from "@/lib/admin-overlay";
 import { CategoryAdminSheet } from "@/components/admin/CategoryAdminSheet";
 import { useHomepageSections, saveHomepageSection } from "@/lib/use-homepage-sections";
 import { toast } from "sonner";
@@ -226,7 +226,7 @@ function Home() {
   const { categories } = useCategories();
   const { sections } = useHomepageSections();
 
-  const { isProductAdmin } = useIsProductAdmin();
+  const { canEdit: isProductAdmin } = useProductAdminEditing();
   const [editCats, setEditCats] = useState(false);
 
   const nav = useNavigate();
