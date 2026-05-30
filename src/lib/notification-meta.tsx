@@ -1,5 +1,5 @@
 import {
-  Bell, Package, Truck, CreditCard, LifeBuoy, Tag, ShieldAlert, Crown,
+  Bell, Package, Truck, CreditCard, LifeBuoy, Tag, ShieldAlert, Crown, Sparkles,
 } from "lucide-react";
 import type { NotificationCategory } from "@/lib/notifications";
 
