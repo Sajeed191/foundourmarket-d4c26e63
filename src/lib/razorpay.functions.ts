@@ -20,10 +20,19 @@ const lineItemSchema = z.object({
   qty: z.number().int().min(1).max(99),
 });
 
+const attributionSchema = z
+  .object({
+    session_id: z.string().max(120).optional().nullable(),
+    utm: z.record(z.string().max(200)).optional().nullable(),
+  })
+  .optional()
+  .nullable();
+
 const createSchema = z.object({
   items: z.array(lineItemSchema).min(1).max(100),
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
+  attribution: attributionSchema,
 });
 
 const verifySchema = z.object({
@@ -156,6 +165,8 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
         shipping_address: addr,
         payment_method: "razorpay",
         payment_status: "pending",
+        attribution_session_id: data.attribution?.session_id ?? null,
+        attribution_utm: (data.attribution?.utm ?? {}) as never,
       })
       .select("id")
       .single();
@@ -376,6 +387,7 @@ const codSchema = z.object({
   items: z.array(lineItemSchema).min(1).max(100),
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
+  attribution: attributionSchema,
 });
 
 /**
@@ -425,6 +437,8 @@ export const placeCodOrder = createServerFn({ method: "POST" })
         shipping_address: addr,
         payment_method: "cod",
         payment_status: "pending",
+        attribution_session_id: data.attribution?.session_id ?? null,
+        attribution_utm: (data.attribution?.utm ?? {}) as never,
       })
       .select("id")
       .single();

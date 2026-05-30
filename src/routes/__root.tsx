@@ -30,6 +30,7 @@ import { CompareTray } from "@/components/site/CompareTray";
 import { InstallPrompt } from "@/components/site/InstallPrompt";
 import { registerServiceWorker } from "@/lib/pwa";
 import { trackPageView } from "@/lib/analytics";
+import { captureAttribution } from "@/lib/marketing-tracking";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -164,7 +165,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => { registerServiceWorker(); }, []);
-  useEffect(() => { trackPageView(pathname); }, [pathname]);
+  useEffect(() => {
+    trackPageView(pathname);
+    void captureAttribution();
+  }, [pathname]);
 
   const isAuthRoute = pathname.startsWith("/auth");
 

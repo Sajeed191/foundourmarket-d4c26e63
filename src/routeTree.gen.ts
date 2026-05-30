@@ -40,6 +40,7 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
 import { Route as AdminOrdersOpsRouteImport } from './routes/admin-orders-ops'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
+import { Route as AdminMarketingMetricsRouteImport } from './routes/admin-marketing-metrics'
 import { Route as AdminMarketingAutomationRouteImport } from './routes/admin-marketing-automation'
 import { Route as AdminMarketingRouteImport } from './routes/admin-marketing'
 import { Route as AdminLiveRouteImport } from './routes/admin-live'
@@ -89,6 +90,8 @@ import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicTrackOpenRouteImport } from './routes/api/public/track.open'
+import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/track.click'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -243,6 +246,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
 const AdminMediaRoute = AdminMediaRouteImport.update({
   id: '/admin-media',
   path: '/admin-media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMarketingMetricsRoute = AdminMarketingMetricsRouteImport.update({
+  id: '/admin-marketing-metrics',
+  path: '/admin-marketing-metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMarketingAutomationRoute =
@@ -498,6 +506,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicTrackOpenRoute = ApiPublicTrackOpenRouteImport.update({
+  id: '/api/public/track/open',
+  path: '/api/public/track/open',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrackClickRoute = ApiPublicTrackClickRouteImport.update({
+  id: '/api/public/track/click',
+  path: '/api/public/track/click',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -522,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
+  '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
@@ -577,6 +596,8 @@ export interface FileRoutesByFullPath {
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/track/click': typeof ApiPublicTrackClickRoute
+  '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -604,6 +625,7 @@ export interface FileRoutesByTo {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
+  '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
@@ -659,6 +681,8 @@ export interface FileRoutesByTo {
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/track/click': typeof ApiPublicTrackClickRoute
+  '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -687,6 +711,7 @@ export interface FileRoutesById {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
+  '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
@@ -742,6 +767,8 @@ export interface FileRoutesById {
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/track/click': typeof ApiPublicTrackClickRoute
+  '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -771,6 +798,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-marketing-automation'
+    | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
     | '/admin-orders-ops'
@@ -826,6 +854,8 @@ export interface FileRouteTypes {
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/track/click'
+    | '/api/public/track/open'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -853,6 +883,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-marketing-automation'
+    | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
     | '/admin-orders-ops'
@@ -908,6 +939,8 @@ export interface FileRouteTypes {
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/track/click'
+    | '/api/public/track/open'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -935,6 +968,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-marketing-automation'
+    | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
     | '/admin-orders-ops'
@@ -990,6 +1024,8 @@ export interface FileRouteTypes {
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/track/click'
+    | '/api/public/track/open'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -1018,6 +1054,7 @@ export interface RootRouteChildren {
   AdminLiveRoute: typeof AdminLiveRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminMarketingAutomationRoute: typeof AdminMarketingAutomationRoute
+  AdminMarketingMetricsRoute: typeof AdminMarketingMetricsRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersOpsRoute: typeof AdminOrdersOpsRoute
@@ -1070,6 +1107,8 @@ export interface RootRouteChildren {
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicTrackClickRoute: typeof ApiPublicTrackClickRoute
+  ApiPublicTrackOpenRoute: typeof ApiPublicTrackOpenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -1292,6 +1331,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-media'
       fullPath: '/admin-media'
       preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-marketing-metrics': {
+      id: '/admin-marketing-metrics'
+      path: '/admin-marketing-metrics'
+      fullPath: '/admin-marketing-metrics'
+      preLoaderRoute: typeof AdminMarketingMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-marketing-automation': {
@@ -1637,6 +1683,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/track/open': {
+      id: '/api/public/track/open'
+      path: '/api/public/track/open'
+      fullPath: '/api/public/track/open'
+      preLoaderRoute: typeof ApiPublicTrackOpenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/track/click': {
+      id: '/api/public/track/click'
+      path: '/api/public/track/click'
+      fullPath: '/api/public/track/click'
+      preLoaderRoute: typeof ApiPublicTrackClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1693,6 +1753,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLiveRoute: AdminLiveRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminMarketingAutomationRoute: AdminMarketingAutomationRoute,
+  AdminMarketingMetricsRoute: AdminMarketingMetricsRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersOpsRoute: AdminOrdersOpsRoute,
@@ -1745,6 +1806,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicTrackClickRoute: ApiPublicTrackClickRoute,
+  ApiPublicTrackOpenRoute: ApiPublicTrackOpenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
