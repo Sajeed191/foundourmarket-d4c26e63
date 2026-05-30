@@ -15,6 +15,7 @@ import {
   Settings2,
   Loader2,
   ShieldCheck,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import { invalidateProducts } from "@/lib/use-products";
 import { useEditorProtection } from "@/hooks/use-editor-protection";
 import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 import { logActivity } from "@/components/admin/AdminShell";
+import { ProductMarketingPanel } from "@/components/admin/ProductMarketingPanel";
 
 type Patch = {
   name?: string;
@@ -70,6 +72,7 @@ const numOrNull = (v: string): number | null => {
 export function AdminProductPanel({ product }: { product: Product }) {
   const update = useServerFn(adminUpdateProduct);
   const [open, setOpen] = useState(false);
+  const [marketing, setMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // form state
@@ -267,6 +270,7 @@ export function AdminProductPanel({ product }: { product: Product }) {
               save({ inStock: next }, next ? "Published" : "Archived");
             }}
           />
+          <ToolbarBtn icon={Megaphone} label="Marketing" onClick={() => setMarketing(true)} />
           <ToolbarBtn icon={Settings2} label="Manage" onClick={() => setOpen(true)} />
         </div>
       </div>
@@ -451,7 +455,10 @@ export function AdminProductPanel({ product }: { product: Product }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {marketing && <ProductMarketingPanel product={product} onClose={() => setMarketing(false)} />}
     </>
+
   );
 }
 
