@@ -232,7 +232,7 @@ export function PromoBannerCarousel({
           </div>
         )}
       </div>
-      {canEdit && editing && <BannerAdminSheet onClose={() => setEditing(false)} onChanged={fetchBanners} />}
+      {canEdit && editing && <BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} />}
     </section>
   );
 }
