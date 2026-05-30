@@ -14,10 +14,13 @@ type Question = {
   created_at: string;
 };
 
+type ProfileMap = Record<string, { full_name: string | null; avatar_url: string | null }>;
+
 export function ProductQA({ productSlug }: { productSlug: string }) {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);
+  const [profiles, setProfiles] = useState<ProfileMap>({});
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +34,18 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .select("*")
       .eq("product_slug", productSlug)
       .order("created_at", { ascending: false });
-    setItems((data ?? []) as Question[]);
+    const list = (data ?? []) as Question[];
+    setItems(list);
+    const ids = Array.from(new Set(list.map((q) => q.user_id)));
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", ids);
+      const map: ProfileMap = {};
+      (profs ?? []).forEach((p: any) => { map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
+      setProfiles(map);
+    }
     setLoading(false);
   }
 
