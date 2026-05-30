@@ -17,7 +17,8 @@ export const Route = createFileRoute("/admin-orders-ops")({
   component: OrderOpsPage,
 });
 
-const ALLOW = ["admin", "super_admin", "manager", "support", "fulfillment", "warehouse_staff"] as const;
+type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
+const ALLOW: Role[] = ["admin", "super_admin", "manager", "support", "fulfillment", "warehouse_staff"];
 const inr = (n: number) => "₹" + Math.round(n || 0).toLocaleString("en-IN");
 const num = (n: number) => Math.round(n || 0).toLocaleString("en-IN");
 const timeAgo = (s: string | null) => {
