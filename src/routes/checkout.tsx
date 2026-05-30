@@ -558,7 +558,7 @@ function CheckoutPage() {
                         <p className="truncate">{i.product.name}</p>
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
                       </div>
-                      <span className="font-mono text-xs">{fmt(toInr(i.product.price * i.qty))}</span>
+                      <span className="font-mono text-xs">{fmt(priceOf(i.product) * i.qty)}</span>
                     </li>
                   ))}
                 </ul>
