@@ -25,6 +25,7 @@ export const Route = createFileRoute("/admin-marketing-automation")({
     action: typeof s.action === "string" ? s.action : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
     tab: typeof s.tab === "string" ? s.tab : undefined,
+    campaign: typeof s.campaign === "string" ? s.campaign : undefined,
   }),
   component: MarketingAutomationPage,
 });
