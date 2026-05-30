@@ -533,31 +533,15 @@ function ProductsInner() {
         </div>
       </div>
 
-      {/* Bulk actions dock */}
-      <AnimatePresence>
-        {selected.size > 0 && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-2xl"
-          >
-            <div className="glass-strong border border-accent/20 rounded-2xl p-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar"
-              style={{ boxShadow: "0 0 40px -16px oklch(0.74 0.19 49 / 0.5)" }}>
-              <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono px-2">
-                <span className="text-accent font-semibold">{selected.size}</span> selected
-              </span>
-              <button onClick={() => setSelected(new Set())} className="shrink-0 size-7 grid place-items-center rounded-full hover:bg-white/5"><X className="size-3.5" /></button>
-              <div className="h-5 w-px bg-white/10 shrink-0" />
-              <BulkBtn onClick={() => bulk("activate")} icon={Eye} label="Activate" />
-              <BulkBtn onClick={() => bulk("deactivate")} icon={EyeOff} label="Deactivate" />
-              <BulkBtn onClick={() => bulk("feature")} icon={Star} label="Feature" />
-              <BulkBtn onClick={() => bulk("unfeature")} icon={StarOff} label="Unfeature" />
-              <BulkBtn onClick={exportCsv} icon={Download} label="Export" />
-              <BulkBtn onClick={() => bulk("delete")} icon={Trash2} label="Delete" danger busy={busy === "bulk"} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bulk actions dock — full bulk operations engine */}
+      <BulkActionBar
+        ids={[...selected].filter((id) => filtered.some((p) => p.id === id))}
+        rows={filtered.filter((p) => selected.has(p.id)) as unknown as (Record<string, unknown> & { id: string })[]}
+        categories={categories}
+        mode={view === "recycle" ? "recycle" : "normal"}
+        onClear={() => setSelected(new Set())}
+        onDone={() => { setSelected(new Set()); loadProducts(); invalidateProducts(); }}
+      />
 
       {editing && (
         <ProductEditor
