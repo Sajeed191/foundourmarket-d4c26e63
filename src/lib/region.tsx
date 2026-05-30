@@ -301,32 +301,35 @@ export function RegionProvider({ children }: { children: ReactNode }) {
           const result = await runDetection().catch(() => null);
           if (cancelled) return;
 
-          if (
-            result &&
-            !result.conflicting &&
-            !result.vpnSuspected &&
-            result.confidence >= CONFIDENCE_THRESHOLD
-          ) {
-            // Confident → render correct pricing instantly, no popup.
+          if (result && result.tier === "auto") {
+            // >=90 confidence → render correct pricing instantly, no popup.
             setMarket(result.region);
             setAutoDetected(true);
             setNeedsSelection(false);
-            if (typeof window !== "undefined") {
-              localStorage.setItem(LS_KEY, result.region);
-            }
+            setSoftConfirm(false);
+            persistRegion(result.region);
           } else {
-            // Ambiguous → let the guest choose, but only once per device.
             if (result) setMarket(result.region);
             setAutoDetected(false);
             if (promptAlreadySeen()) {
               setNeedsSelection(false);
+              setSoftConfirm(false);
             } else {
               markPromptSeen();
-              setNeedsSelection(true);
+              if (result && result.tier === "confirm") {
+                // 70–89 → lightweight one-tap confirmation.
+                setSoftConfirm(true);
+                setNeedsSelection(false);
+              } else {
+                // <70 / VPN → full picker before pricing is trusted.
+                setSoftConfirm(false);
+                setNeedsSelection(true);
+              }
             }
           }
           setLocked(false);
         }
+
       } catch {
         // Auth/session not ready or detection failed — fall back to a safe
         // guest state instead of crashing the whole app.
