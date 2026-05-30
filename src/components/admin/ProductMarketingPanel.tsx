@@ -16,7 +16,7 @@ import {
   createProductFlashSale, setProductFeatured, SCORE_LABELS,
   type ProductMarketing, type ProductCampaignRow, type ProductScores,
 } from "@/lib/product-marketing";
-import { fmtCurrency, fmtNum, pct, STATUS_COLOR, type Campaign } from "@/lib/marketing-automation";
+import { fmtCurrency, fmtNum, pct, STATUS_COLOR } from "@/lib/marketing-automation";
 import { supabase } from "@/integrations/supabase/client";
 
 type Tab = "overview" | "campaigns" | "actions";
