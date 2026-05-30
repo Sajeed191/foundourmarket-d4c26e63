@@ -27,6 +27,7 @@ import { invalidateProducts } from "@/lib/use-products";
 import { useEditorProtection } from "@/hooks/use-editor-protection";
 import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 import { logActivity } from "@/components/admin/AdminShell";
+import { ProductMarketingPanel } from "@/components/admin/ProductMarketingPanel";
 
 type Patch = {
   name?: string;
