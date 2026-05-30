@@ -1389,6 +1389,42 @@ export type Database = {
           },
         ]
       }
+      marketplace_settings: {
+        Row: {
+          auto_approve_vendors: boolean
+          created_at: string
+          default_commission_rate: number
+          enabled: boolean
+          id: string
+          min_payout_amount: number
+          notes: string | null
+          payout_currency: string
+          updated_at: string
+        }
+        Insert: {
+          auto_approve_vendors?: boolean
+          created_at?: string
+          default_commission_rate?: number
+          enabled?: boolean
+          id?: string
+          min_payout_amount?: number
+          notes?: string | null
+          payout_currency?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_approve_vendors?: boolean
+          created_at?: string
+          default_commission_rate?: number
+          enabled?: boolean
+          id?: string
+          min_payout_amount?: number
+          notes?: string | null
+          payout_currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           alt: string | null
@@ -3379,6 +3415,289 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vendor_analytics: {
+        Row: {
+          commission: number
+          created_at: string
+          day: string
+          id: string
+          metadata: Json
+          orders: number
+          revenue: number
+          units: number
+          vendor_id: string
+        }
+        Insert: {
+          commission?: number
+          created_at?: string
+          day: string
+          id?: string
+          metadata?: Json
+          orders?: number
+          revenue?: number
+          units?: number
+          vendor_id: string
+        }
+        Update: {
+          commission?: number
+          created_at?: string
+          day?: string
+          id?: string
+          metadata?: Json
+          orders?: number
+          revenue?: number
+          units?: number
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_analytics_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_commissions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_id: string | null
+          payout_id: string | null
+          rate: number | null
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string | null
+          payout_id?: string | null
+          rate?: number | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string | null
+          payout_id?: string | null
+          rate?: number | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_commissions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: string | null
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          processed_at: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payouts_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          product_slug: string
+          updated_at: string
+          vendor_id: string
+          vendor_price: number | null
+          vendor_sku: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          product_slug: string
+          updated_at?: string
+          vendor_id: string
+          vendor_price?: number | null
+          vendor_sku?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          product_slug?: string
+          updated_at?: string
+          vendor_id?: string
+          vendor_price?: number | null
+          vendor_sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_support_tickets: {
+        Row: {
+          assigned_to: string | null
+          body: string | null
+          created_at: string
+          id: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_support_tickets_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          business_name: string
+          commission_rate: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          metadata: Json
+          owner_user_id: string | null
+          slug: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          commission_rate?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          owner_user_id?: string | null
+          slug?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          commission_rate?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          metadata?: Json
+          owner_user_id?: string | null
+          slug?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

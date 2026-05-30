@@ -25,6 +25,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminVendorsRouteImport } from './routes/admin-vendors'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
 import { Route as AdminSupportRouteImport } from './routes/admin-support'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
@@ -164,6 +165,11 @@ const BlogRoute = BlogRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminVendorsRoute = AdminVendorsRouteImport.update({
+  id: '/admin-vendors',
+  path: '/admin-vendors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTrafficRoute = AdminTrafficRouteImport.update({
@@ -509,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
+  '/admin-vendors': typeof AdminVendorsRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -587,6 +594,7 @@ export interface FileRoutesByTo {
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
+  '/admin-vendors': typeof AdminVendorsRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -666,6 +674,7 @@ export interface FileRoutesById {
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
+  '/admin-vendors': typeof AdminVendorsRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -746,6 +755,7 @@ export interface FileRouteTypes {
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
+    | '/admin-vendors'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -824,6 +834,7 @@ export interface FileRouteTypes {
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
+    | '/admin-vendors'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -902,6 +913,7 @@ export interface FileRouteTypes {
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
+    | '/admin-vendors'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -981,6 +993,7 @@ export interface RootRouteChildren {
   AdminShipmentsRoute: typeof AdminShipmentsRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminTrafficRoute: typeof AdminTrafficRoute
+  AdminVendorsRoute: typeof AdminVendorsRoute
   AuthRoute: typeof AuthRouteWithChildren
   BlogRoute: typeof BlogRouteWithChildren
   BuilderRoute: typeof BuilderRoute
@@ -1135,6 +1148,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-vendors': {
+      id: '/admin-vendors'
+      path: '/admin-vendors'
+      fullPath: '/admin-vendors'
+      preLoaderRoute: typeof AdminVendorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-traffic': {
@@ -1624,6 +1644,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminShipmentsRoute: AdminShipmentsRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminTrafficRoute: AdminTrafficRoute,
+  AdminVendorsRoute: AdminVendorsRoute,
   AuthRoute: AuthRouteWithChildren,
   BlogRoute: BlogRouteWithChildren,
   BuilderRoute: BuilderRoute,
