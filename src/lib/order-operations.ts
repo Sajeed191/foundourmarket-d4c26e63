@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+/* order-operations: data routed through staff-gated server functions (P1-8). */
 
 /**
  * Order Operations & Fulfillment Intelligence Engine.
