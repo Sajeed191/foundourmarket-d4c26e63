@@ -114,7 +114,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
     [current],
   );
 
-  if (!current && !isAdmin) return null;
+  if (!current && !canEdit) return null;
 
   return (
     <>
@@ -162,7 +162,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
           </AnimatePresence>
         </div>
 
-        {isAdmin && (
+        {canEdit && (
           <button
             onClick={() => setEditing(true)}
             aria-label="Edit announcements"
@@ -176,7 +176,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
         )}
       </div>
 
-      {isAdmin && editing && <AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} />}
+      {canEdit && editing && <AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} />}
     </>
   );
 }
