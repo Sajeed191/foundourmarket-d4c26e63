@@ -649,12 +649,7 @@ function Home() {
           ))}
         </div>
 
-        {(() => {
-          const testimonials = [
-            { quote: "Completely redefined how I source premium goods. The quality is unmatched.", name: "Marcus Thorne", role: "Curator", flag: "🇬🇧", country: "United Kingdom" },
-            { quote: "Fast shipping, gorgeous packaging, and every item felt hand-picked for me.", name: "Ayaka Mori", role: "Designer", flag: "🇯🇵", country: "Japan" },
-            { quote: "The best support I've dealt with from any online store, full stop.", name: "Diego Alvarez", role: "Founder", flag: "🇪🇸", country: "Spain" },
-          ];
+        {testimonials.length > 0 && (() => {
           return (
             <>
               {/* Mobile: compact swipeable carousel with dots + autorotate */}
