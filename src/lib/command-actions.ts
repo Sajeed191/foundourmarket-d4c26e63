@@ -41,6 +41,11 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-inv-intel", group: "Inventory", icon: "Cpu", label: "Inventory intelligence", to: "/admin-inventory-intelligence", roles: WAREHOUSE, action: "cmd_inv_intel", keywords: "forecast risk predict" },
   { id: "qa-inv-risk", group: "Inventory", icon: "AlertTriangle", label: "View risk products", to: "/admin-inventory-intelligence?view=risk", roles: WAREHOUSE, action: "cmd_inv_risk", keywords: "low stock out of stock risk" },
   { id: "qa-inventory", group: "Inventory", icon: "Boxes", label: "Adjust stock", to: "/admin-inventory", roles: WAREHOUSE, action: "cmd_inventory", keywords: "stock quantity" },
+  { id: "qa-inv-opps", group: "Inventory", icon: "Megaphone", label: "Inventory marketing opportunities", to: "/admin-inventory-intelligence?view=opportunities", roles: MANAGER, action: "cmd_inv_opps", keywords: "inventory marketing opportunities clearance overstock bestseller promote score" },
+  { id: "qa-inv-clearance", group: "Inventory", icon: "ArrowDownRight", label: "Create clearance campaign", to: "/admin-inventory-intelligence?view=opportunities", roles: MANAGER, action: "cmd_inv_clearance", keywords: "clearance dead inventory discount campaign clear stock" },
+  { id: "qa-inv-overstock", group: "Inventory", icon: "Layers", label: "Create overstock campaign", to: "/admin-inventory-intelligence?view=opportunities", roles: MANAGER, action: "cmd_inv_overstock", keywords: "overstock excess inventory bundle campaign" },
+  { id: "qa-inv-back", group: "Inventory", icon: "Rocket", label: "Create back-in-stock campaign", to: "/admin-inventory-intelligence?view=opportunities", roles: MANAGER, action: "cmd_inv_back", keywords: "back in stock restock waitlist campaign" },
+  { id: "qa-inv-score", group: "Inventory", icon: "Gauge", label: "Inventory marketing score", to: "/admin-inventory-intelligence?view=opportunities", roles: MANAGER, action: "cmd_inv_score", keywords: "inventory marketing score promotion clearance demand velocity margin" },
   // Content / CMS
   { id: "qa-create-banner", group: "Content", icon: "Image", label: "Create banner", to: "/admin-cms?new=banner", roles: EDITOR, action: "cmd_create_banner" },
   { id: "qa-create-announcement", group: "Content", icon: "Megaphone", label: "Create announcement", to: "/admin-marketing?new=announcement", roles: EDITOR, action: "cmd_create_announcement" },
@@ -103,6 +108,12 @@ export function interpretNaturalLanguage(q: string): string | null {
   if ((s.includes("high value") || s.includes("high-value") || s.includes("big spender")) && !s.includes("product")) return "qa-cust-highvalue";
   if (s.includes("new customer")) return "qa-cust-new";
   if (s.includes("loyal") || s.includes("customer insight") || s.includes("customer intelligence")) return "qa-cust-intel";
+  // Inventory ↔ Marketing natural language (before generic campaign block)
+  if ((s.includes("inventory") || s.includes("stock")) && (s.includes("opportunit") || s.includes("marketing"))) return "qa-inv-opps";
+  if (s.includes("inventory") && s.includes("score")) return "qa-inv-score";
+  if ((s.includes("clearance") || (s.includes("dead") && s.includes("inventory"))) && (s.includes("create") || s.includes("campaign") || s.includes("launch"))) return "qa-inv-clearance";
+  if (s.includes("overstock")) return "qa-inv-overstock";
+  if ((s.includes("back in stock") || s.includes("back-in-stock") || s.includes("restock")) && (s.includes("campaign") || s.includes("create") || s.includes("launch"))) return "qa-inv-back";
   if (s.includes("refund") || s.includes("return")) return "qa-returns";
   // Product ↔ Marketing natural language (check before generic campaign block)
   if (s.includes("product") && (s.includes("campaign") || s.includes("marketing") || s.includes("promotion") || s.includes("promote"))) {

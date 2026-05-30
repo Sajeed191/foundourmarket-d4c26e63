@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { InventoryMarketingHub } from "@/components/admin/InventoryMarketingHub";
 import { downloadCSV } from "@/lib/admin-queries";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -140,7 +141,11 @@ function IntelPage() {
         )}
       </Section>
 
+      {/* Inventory ↔ Marketing integration */}
+      <InventoryMarketingHub intel={intel} />
+
       {/* Dashboard widgets */}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         <WidgetList title="Products at risk" icon={<ShieldAlert className="size-4 text-destructive" />} items={atRisk.slice(0, 6)}
           render={(p) => <RiskRow key={p.slug} p={p} />} empty="No products at risk." />
