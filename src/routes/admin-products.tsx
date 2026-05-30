@@ -41,6 +41,7 @@ type Product = {
   specifications?: Record<string, string> | null; attributes?: Record<string, string> | null;
   admin_notes?: string | null; bestseller?: boolean; trending?: boolean;
   scheduled_publish_at?: string | null;
+  deleted_at?: string | null;
 };
 
 type Category = { slug: string; name: string };
