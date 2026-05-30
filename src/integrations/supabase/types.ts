@@ -412,12 +412,16 @@ export type Database = {
           action_taken: string | null
           actor_id: string | null
           automation_id: string | null
+          blocked: boolean
           campaign_id: string | null
           created_at: string
           details: Json
+          duration_ms: number
           error: string | null
+          failed_permanently: boolean
           id: string
           matched_count: number
+          retry_count: number
           run_id: string
           status: string
           summary: string | null
@@ -428,12 +432,16 @@ export type Database = {
           action_taken?: string | null
           actor_id?: string | null
           automation_id?: string | null
+          blocked?: boolean
           campaign_id?: string | null
           created_at?: string
           details?: Json
+          duration_ms?: number
           error?: string | null
+          failed_permanently?: boolean
           id?: string
           matched_count?: number
+          retry_count?: number
           run_id: string
           status?: string
           summary?: string | null
@@ -444,12 +452,16 @@ export type Database = {
           action_taken?: string | null
           actor_id?: string | null
           automation_id?: string | null
+          blocked?: boolean
           campaign_id?: string | null
           created_at?: string
           details?: Json
+          duration_ms?: number
           error?: string | null
+          failed_permanently?: boolean
           id?: string
           matched_count?: number
+          retry_count?: number
           run_id?: string
           status?: string
           summary?: string | null
@@ -465,6 +477,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      automation_settings: {
+        Row: {
+          emergency_stop: boolean
+          global_pause: boolean
+          id: boolean
+          maintenance_mode: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          emergency_stop?: boolean
+          global_pause?: boolean
+          id?: boolean
+          maintenance_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          emergency_stop?: boolean
+          global_pause?: boolean
+          id?: boolean
+          maintenance_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       badge_settings: {
         Row: {
@@ -4204,11 +4243,25 @@ export type Database = {
         Args: { _order_id: string; _ttl_minutes?: number }
         Returns: undefined
       }
-      review_dashboard: { Args: never; Returns: Json }
-      run_marketing_automations: {
-        Args: { p_force?: boolean; p_triggered_by?: string }
+      retry_all_failed_executions: { Args: never; Returns: Json }
+      retry_failed_execution: {
+        Args: { p_execution_id: string }
         Returns: Json
       }
+      review_dashboard: { Args: never; Returns: Json }
+      run_marketing_automations:
+        | {
+            Args: { p_force?: boolean; p_triggered_by?: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_force?: boolean
+              p_only_automation?: string
+              p_triggered_by?: string
+            }
+            Returns: Json
+          }
       save_entity_version: {
         Args: {
           _changed_fields?: string[]
@@ -4321,6 +4374,27 @@ export type Database = {
       seed_reviews: { Args: { _count?: number }; Returns: number }
       seed_shipments: { Args: never; Returns: number }
       seed_support: { Args: { _count?: number }; Returns: number }
+      set_automation_settings: {
+        Args: {
+          p_emergency: boolean
+          p_global: boolean
+          p_maintenance: boolean
+        }
+        Returns: {
+          emergency_stop: boolean
+          global_pause: boolean
+          id: boolean
+          maintenance_mode: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "automation_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       support_admin_unread_count: { Args: never; Returns: number }
       support_unread_count: { Args: never; Returns: number }
       track_banner_event: {
