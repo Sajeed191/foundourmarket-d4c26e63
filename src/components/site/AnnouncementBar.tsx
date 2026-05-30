@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminEditing } from "@/lib/admin-overlay";
 import { AnnouncementIcon } from "@/lib/announcement-icons";
 import { AnnouncementAdminSheet } from "@/components/admin/AnnouncementAdminSheet";
