@@ -36,9 +36,8 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-const USD_TO_INR = 83;
-const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-const inrFmt = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+import { computeOrderTotals, formatMoney } from "@/lib/pricing";
+
 
 type Stage = "review" | "processing" | "verifying" | "success" | "failed";
 
@@ -58,7 +57,8 @@ function formatEta(daysFrom: number, daysTo: number) {
 function CheckoutPage() {
   const { user, loading } = useAuth();
   const { detailed, subtotalUSD, clear, count, hydrated: cartHydrated } = useCart();
-  const { market } = useRegion();
+  const { market, priceOf } = useRegion();
+  const fmt = (n: number) => formatMoney(market, n);
   const { internationalLive, loading: gatewaysLoading } = usePaymentGateways();
   const {
     addresses, loading: addrLoading, create: createAddress,
@@ -145,15 +145,13 @@ function CheckoutPage() {
     if (!settings.cod_enabled && payMethod === "cod") setPayMethod("razorpay");
   }, [settings.cod_enabled, payMethod]);
 
-  const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
-  const taxUSD = subtotalUSD * 0.08;
-  const totalUSD = Math.max(0, subtotalUSD + shippingUSD + taxUSD);
-
-  const subtotalINR = toInr(subtotalUSD);
-  const shippingINR = toInr(shippingUSD);
-  const taxINR = toInr(taxUSD);
-  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR);
-  const savingsINR = shippingUSD === 0 ? toInr(9.99) : 0;
+  // Region-native totals — identical math to the server re-pricer, no conversion.
+  const totals = computeOrderTotals(market, subtotalUSD);
+  const subtotalINR = totals.subtotal;
+  const shippingINR = totals.shipping;
+  const taxINR = totals.tax;
+  const totalINR = totals.total;
+  const savingsINR = totals.shipping === 0 ? (market === "india" ? 99 : 9.99) : 0;
   const itemsCount = useMemo(() => detailed.reduce((s, i) => s + i.qty, 0), [detailed]);
 
   const eta = formatEta(3, 5);
@@ -302,7 +300,7 @@ function CheckoutPage() {
       ? "Verifying…"
       : payMethod === "cod"
         ? "Place order"
-        : `Pay ${inrFmt(totalINR)}`;
+        : `Pay ${fmt(totalINR)}`;
 
   if (loading || !user || !cartHydrated) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -310,7 +308,7 @@ function CheckoutPage() {
 
   /* ---------- terminal states ---------- */
   if (stage === "success") {
-    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} method={payMethod} eta={eta} nav={nav} />;
+    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} market={market} method={payMethod} eta={eta} nav={nav} />;
   }
 
   return (
@@ -560,7 +558,7 @@ function CheckoutPage() {
                         <p className="truncate">{i.product.name}</p>
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
                       </div>
-                      <span className="font-mono text-xs">{inrFmt(toInr(i.product.price * i.qty))}</span>
+                      <span className="font-mono text-xs">{fmt(priceOf(i.product) * i.qty)}</span>
                     </li>
                   ))}
                 </ul>
@@ -568,21 +566,21 @@ function CheckoutPage() {
                 {savingsINR > 0 && (
                   <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
                     <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><Sparkles className="size-3.5" /> You saved</span>
-                    <span className="font-mono text-sm text-emerald-400">{inrFmt(savingsINR)}</span>
+                    <span className="font-mono text-sm text-emerald-400">{fmt(savingsINR)}</span>
                   </div>
                 )}
 
                 <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{inrFmt(subtotalINR)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : inrFmt(shippingINR)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{fmt(subtotalINR)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : fmt(shippingINR)}</dd></div>
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">(8% GST est.)</span></dt>
-                    <dd className="font-mono">{inrFmt(taxINR)}</dd>
+                    <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">({market === "india" ? "18% GST" : "8%"} est.)</span></dt>
+                    <dd className="font-mono">{fmt(taxINR)}</dd>
                   </div>
                   <div className="border-t border-white/10 pt-3 flex justify-between items-end">
                     <dt className="font-medium text-base">Total</dt>
                     <dd className="text-right">
-                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{inrFmt(totalINR)}</span>
+                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{fmt(totalINR)}</span>
                       <span className="block text-[10px] text-muted-foreground mt-1">Incl. all taxes</span>
                     </dd>
                   </div>
@@ -613,7 +611,7 @@ function CheckoutPage() {
                 <div className="flex items-center gap-3">
                   <div className="pl-1.5 min-w-0">
                     <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
-                    <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{inrFmt(totalINR)}</p>
+                    <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{fmt(totalINR)}</p>
                   </div>
                   <button disabled={!selectedAddress || busy || !serviceable}
                     className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
@@ -767,10 +765,12 @@ function InternationalSoon({ live, loading }: { live: boolean; loading: boolean 
   );
 }
 
-function SuccessScreen({ orderId, totalINR, method, eta, nav }: {
-  orderId: string | null; totalINR: number; method: "razorpay" | "cod"; eta: string;
+function SuccessScreen({ orderId, totalINR, market, method, eta, nav }: {
+  orderId: string | null; totalINR: number; market: "india" | "international";
+  method: "razorpay" | "cod"; eta: string;
   nav: ReturnType<typeof useNavigate>;
 }) {
+  const inrFmt = (n: number) => formatMoney(market, n);
   const [downloading, setDownloading] = useState(false);
   return (
     <div className="relative min-h-[70vh] grid place-items-center px-6">

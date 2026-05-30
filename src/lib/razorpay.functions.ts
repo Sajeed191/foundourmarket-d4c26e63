@@ -3,11 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  USD_TO_INR,
   getRazorpayCreds,
   rzpFetch,
   verifyPaymentSignature,
 } from "./razorpay.server";
+import {
+  type Region,
+  computeOrderTotals,
+  roundMoney,
+  toMinorUnits,
+} from "./pricing";
 import { enqueueOrderEmail } from "./order-emails.server";
 
 const lineItemSchema = z.object({
@@ -28,16 +33,35 @@ const verifySchema = z.object({
   razorpaySignature: z.string().min(1).max(256),
 });
 
-/** Re-price the cart entirely from trusted database values (anti-tampering). */
+/**
+ * Resolve the authoritative market region for a user. Locked profile region
+ * wins; otherwise we fall back to International. The client never supplies the
+ * region used for billing — it is read from trusted server state.
+ */
+async function resolveRegion(supabase: any, userId: string): Promise<Region> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("market_region")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.market_region === "india" ? "india" : "international";
+}
+
+/**
+ * Re-price the cart entirely from trusted database values (anti-tampering).
+ * Prices are read from the admin-configured region columns (price_inr for
+ * India, price_usd for International) — NO hardcoded currency conversion.
+ */
 async function repriceFromDb(
   supabase: any,
+  region: Region,
   items: { slug: string; qty: number }[],
   promoCode?: string | null,
 ) {
   const slugs = items.map((i) => i.slug);
   const { data: products, error } = await supabase
     .from("products")
-    .select("slug,name,image,price")
+    .select("slug,name,image,price_inr,price_usd")
     .in("slug", slugs);
   if (error) throw new Error("Could not load products.");
 
@@ -45,23 +69,24 @@ async function repriceFromDb(
   const lines = items.map((i) => {
     const p = bySlug.get(i.slug);
     if (!p) throw new Error(`Product unavailable: ${i.slug}`);
-    const unitUsd = Number(p.price);
+    const raw = region === "india" ? p.price_inr : p.price_usd;
+    if (raw == null) {
+      throw new Error(`Pricing unavailable for ${i.slug} in your region.`);
+    }
+    const unit = roundMoney(region, Number(raw));
     return {
       slug: i.slug,
       name: p.name as string,
       image: (p.image as string) ?? null,
-      unitUsd,
+      unit,
       qty: i.qty,
-      lineUsd: +(unitUsd * i.qty).toFixed(2),
+      lineTotal: roundMoney(region, unit * i.qty),
     };
   });
 
+  const subtotal = roundMoney(region, lines.reduce((s, l) => s + l.lineTotal, 0));
 
-  const subtotalUSD = +lines.reduce((s, l) => s + l.lineUsd, 0).toFixed(2);
-  const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
-  const taxUSD = +(subtotalUSD * 0.08).toFixed(2);
-
-  let discountUSD = 0;
+  let discount = 0;
   let appliedPromo: string | null = null;
   if (promoCode) {
     const { data: promo } = await supabase
@@ -71,32 +96,20 @@ async function repriceFromDb(
       .maybeSingle();
     if (
       promo &&
-      Number(promo.min_subtotal) <= subtotalUSD &&
+      Number(promo.min_subtotal) <= subtotal &&
       (promo.max_uses == null || promo.uses < promo.max_uses)
     ) {
-      discountUSD =
+      discount =
         promo.kind === "percent"
-          ? +(subtotalUSD * (Number(promo.value) / 100)).toFixed(2)
-          : Math.min(subtotalUSD, Number(promo.value));
+          ? roundMoney(region, subtotal * (Number(promo.value) / 100))
+          : Math.min(subtotal, Number(promo.value));
       appliedPromo = promo.code;
     }
   }
 
-  const totalUSD = Math.max(0, +(subtotalUSD + shippingUSD + taxUSD - discountUSD).toFixed(2));
+  const totals = computeOrderTotals(region, subtotal, discount);
 
-  // Convert to INR (whole rupees) for Razorpay
-  const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-  const subtotalINR = toInr(subtotalUSD);
-  const shippingINR = toInr(shippingUSD);
-  const taxINR = toInr(taxUSD);
-  const discountINR = toInr(discountUSD);
-  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR - discountINR);
-
-  return {
-    lines,
-    appliedPromo,
-    inr: { subtotalINR, shippingINR, taxINR, discountINR, totalINR },
-  };
+  return { region, lines, appliedPromo, totals };
 }
 
 /**
@@ -110,9 +123,10 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     const { supabase, userId } = context as { supabase: any; userId: string };
     const { keyId } = getRazorpayCreds();
 
-    const priced = await repriceFromDb(supabase, data.items, data.promoCode);
-    if (priced.inr.totalINR < 1) {
-      throw new Error("Order total must be at least ₹1.");
+    const region = await resolveRegion(supabase, userId);
+    const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
+    if (priced.totals.total < 1) {
+      throw new Error("Order total is too low to process.");
     }
 
     // Load shipping address (RLS guarantees ownership)
@@ -123,7 +137,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (addrErr || !addr) throw new Error("Shipping address not found.");
 
-    // Create the pending order first (status pending, INR).
+    // Create the pending order first (status pending) in the region's currency.
     // Use the admin client so order writes go only through this trusted,
     // server-priced path (direct user inserts are blocked by RLS).
     const { data: order, error: oErr } = await supabaseAdmin
@@ -131,13 +145,13 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       .insert({
         user_id: userId,
         status: "pending",
-        currency: "INR",
-        subtotal: priced.inr.subtotalINR,
-        shipping: priced.inr.shippingINR,
-        tax: priced.inr.taxINR,
-        discount: priced.inr.discountINR,
+        currency: priced.totals.currency,
+        subtotal: priced.totals.subtotal,
+        shipping: priced.totals.shipping,
+        tax: priced.totals.tax,
+        discount: priced.totals.discount,
         promo_code: priced.appliedPromo,
-        total: priced.inr.totalINR,
+        total: priced.totals.total,
         shipping_address: addr,
         payment_method: "razorpay",
         payment_status: "pending",
@@ -146,19 +160,16 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       .single();
     if (oErr || !order) throw new Error("Could not create order.");
 
-    // Snapshot line items (INR) so fulfillment + admin have full detail.
-    const orderItems = priced.lines.map((l) => {
-      const unitInr = Math.round(l.unitUsd * USD_TO_INR);
-      return {
-        order_id: order.id,
-        product_slug: l.slug,
-        name: l.name,
-        image: l.image,
-        unit_price: unitInr,
-        quantity: l.qty,
-        line_total: unitInr * l.qty,
-      };
-    });
+    // Snapshot line items in the region's native currency for fulfilment + admin.
+    const orderItems = priced.lines.map((l) => ({
+      order_id: order.id,
+      product_slug: l.slug,
+      name: l.name,
+      image: l.image,
+      unit_price: l.unit,
+      quantity: l.qty,
+      line_total: l.lineTotal,
+    }));
     const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
     if (oiErr) {
       await supabaseAdmin
@@ -185,7 +196,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       );
     }
 
-    // Create the Razorpay order (amount in paise)
+    // Create the Razorpay order (amount in the smallest currency unit).
     let rzpOrder;
     try {
       rzpOrder = await rzpFetch<{ id: string; amount: number; currency: string }>(
@@ -193,8 +204,8 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
         {
           method: "POST",
           body: {
-            amount: priced.inr.totalINR * 100,
-            currency: "INR",
+            amount: toMinorUnits(priced.totals.total),
+            currency: priced.totals.currency,
             receipt: order.id,
             notes: { db_order_id: order.id, user_id: userId },
           },
@@ -222,7 +233,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       amount: rzpOrder.amount,
       currency: rzpOrder.currency,
       keyId,
-      totals: priced.inr,
+      totals: priced.totals,
     };
   });
 
@@ -382,9 +393,10 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       claims?: { email?: string };
     };
 
-    const priced = await repriceFromDb(supabase, data.items, data.promoCode);
-    if (priced.inr.totalINR < 1) {
-      throw new Error("Order total must be at least ₹1.");
+    const region = await resolveRegion(supabase, userId);
+    const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
+    if (priced.totals.total < 1) {
+      throw new Error("Order total is too low to process.");
     }
 
     // Load shipping address (RLS guarantees ownership of the row)
@@ -395,19 +407,19 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (addrErr || !addr) throw new Error("Shipping address not found.");
 
-    // Create the order with server-computed INR figures
+    // Create the order with server-computed, region-native figures
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: userId,
         status: "confirmed",
-        currency: "INR",
-        subtotal: priced.inr.subtotalINR,
-        shipping: priced.inr.shippingINR,
-        tax: priced.inr.taxINR,
-        discount: priced.inr.discountINR,
+        currency: priced.totals.currency,
+        subtotal: priced.totals.subtotal,
+        shipping: priced.totals.shipping,
+        tax: priced.totals.tax,
+        discount: priced.totals.discount,
         promo_code: priced.appliedPromo,
-        total: priced.inr.totalINR,
+        total: priced.totals.total,
         contact_email: claims?.email ?? null,
         shipping_address: addr,
         payment_method: "cod",
@@ -417,19 +429,16 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       .single();
     if (oErr || !order) throw new Error("Could not create order.");
 
-    // Snapshot line items with trusted, server-computed prices
-    const orderItems = priced.lines.map((l) => {
-      const unitInr = Math.round(l.unitUsd * USD_TO_INR);
-      return {
-        order_id: order.id,
-        product_slug: l.slug,
-        name: l.name,
-        image: l.image,
-        unit_price: unitInr,
-        quantity: l.qty,
-        line_total: unitInr * l.qty,
-      };
-    });
+    // Snapshot line items with trusted, server-computed region-native prices
+    const orderItems = priced.lines.map((l) => ({
+      order_id: order.id,
+      product_slug: l.slug,
+      name: l.name,
+      image: l.image,
+      unit_price: l.unit,
+      quantity: l.qty,
+      line_total: l.lineTotal,
+    }));
     const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
     if (oiErr) {
       await supabaseAdmin
@@ -457,7 +466,7 @@ export const placeCodOrder = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
 
-    return { ok: true, orderId: order.id, total: priced.inr.totalINR };
+    return { ok: true, orderId: order.id, total: priced.totals.total };
   });
 
 
