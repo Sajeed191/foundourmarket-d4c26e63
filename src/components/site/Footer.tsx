@@ -1,9 +1,30 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useRegion } from "@/lib/region";
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 
 export function Footer() {
   const { market } = useRegion();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const compact = pathname.startsWith("/checkout");
+
+  // Minimal, low-distraction footer during checkout to reduce abandonment.
+  if (compact) {
+    return (
+      <footer className="relative px-4 sm:px-6 py-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-4 border-t border-border bg-background">
+        <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[50%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.4 }} />
+        <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket™</p>
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+            <Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link to="/pages/$slug" params={{ slug: "terms" }} className="hover:text-foreground transition-colors">Terms &amp; Conditions</Link>
+            <Link to="/returns" className="hover:text-foreground transition-colors">Refund Policy</Link>
+            <Link to="/help" className="hover:text-foreground transition-colors">Contact Us</Link>
+          </nav>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="relative px-4 sm:px-6 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(8rem+env(safe-area-inset-bottom))] md:py-6 border-t border-border bg-background overflow-hidden">
       {/* Ambient divider glow */}
