@@ -466,7 +466,7 @@ export const placeCodOrder = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
 
-    return { ok: true, orderId: order.id, total: priced.inr.totalINR };
+    return { ok: true, orderId: order.id, total: priced.totals.total };
   });
 
 
