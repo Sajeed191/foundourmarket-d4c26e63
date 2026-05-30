@@ -12,6 +12,8 @@ import {
 } from "@/lib/announcement-icons";
 import { cn } from "@/lib/utils";
 import type { Announcement } from "@/components/site/AnnouncementBar";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 
 const REGIONS = ["all", "india", "international"] as const;
 const PAGE_OPTIONS = ["home", "shop", "product", "category", "cart", "checkout", "deals"] as const;
