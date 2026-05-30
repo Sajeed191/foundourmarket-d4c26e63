@@ -52,6 +52,12 @@ export const QUICK_ACTIONS: QuickAction[] = [
   // Marketing
   { id: "qa-marketing", group: "Marketing", icon: "Megaphone", label: "Promotions", to: "/admin-marketing", roles: EDITOR, action: "cmd_open_marketing" },
   { id: "qa-flash-sale", group: "Marketing", icon: "Zap", label: "Launch flash sale", to: "/admin-marketing?new=flash", roles: MANAGER, action: "cmd_flash_sale", keywords: "discount sale" },
+  { id: "qa-mkt-auto", group: "Marketing", icon: "Zap", label: "Marketing automation", to: "/admin-marketing-automation", roles: EDITOR, action: "cmd_mkt_auto", keywords: "automation campaign roi engine" },
+  { id: "qa-mkt-create", group: "Marketing", icon: "Rocket", label: "Create campaign", to: "/admin-marketing-automation?action=create", roles: EDITOR, action: "cmd_mkt_create", keywords: "new campaign promotion launch" },
+  { id: "qa-mkt-vip", group: "Marketing", icon: "Crown", label: "Create VIP campaign", to: "/admin-marketing-automation?action=create&template=vip_rewards", roles: EDITOR, action: "cmd_mkt_vip", keywords: "vip rewards campaign" },
+  { id: "qa-mkt-clearance", group: "Marketing", icon: "Boxes", label: "Create clearance campaign", to: "/admin-marketing-automation?action=create&template=clearance", roles: EDITOR, action: "cmd_mkt_clearance", keywords: "clearance discount inventory sale" },
+  { id: "qa-mkt-winback", group: "Marketing", icon: "Users", label: "Create winback campaign", to: "/admin-marketing-automation?action=create&template=winback", roles: EDITOR, action: "cmd_mkt_winback", keywords: "winback re-engage dormant lapsed" },
+  { id: "qa-mkt-analytics", group: "Marketing", icon: "BarChart3", label: "Campaign analytics", to: "/admin-marketing-automation?action=analytics", roles: EDITOR, action: "cmd_mkt_analytics", keywords: "campaign analytics roi performance revenue" },
   // System
   { id: "qa-analytics", group: "System", icon: "BarChart3", label: "Analytics", to: "/admin-analytics", roles: ["admin", "super_admin", "manager", "support", "editor", "fulfillment", "warehouse_staff"], action: "cmd_analytics" },
   { id: "qa-financial", group: "System", icon: "Wallet", label: "Financial dashboard", to: "/admin-financial", roles: MANAGER, action: "cmd_financial", keywords: "revenue money" },
