@@ -68,8 +68,10 @@ function MarketingAutomationPage() {
     if (action === "create") setCreating({ templateKey: template });
     else if (template) { setCreating({ templateKey: template }); }
     if (action === "analytics") setTab("dashboard");
+    const tabs: Tab[] = ["dashboard", "campaigns", "automations", "recommendations"];
+    if (tabParam && (tabs as string[]).includes(tabParam)) setTab(tabParam as Tab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, template, loading]);
+  }, [action, template, tabParam, loading]);
 
   const filteredCampaigns = useMemo(() => {
     if (!intel) return [];
