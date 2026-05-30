@@ -4867,6 +4867,14 @@ export type Database = {
       }
       svc_admin_staff_performance: { Args: { _actor: string }; Returns: Json }
       svc_admin_user_directory: { Args: { _actor: string }; Returns: Json }
+      svc_campaign_metrics: {
+        Args: { p_since: string; p_window_days: number }
+        Returns: Json
+      }
+      svc_campaign_timeline: {
+        Args: { p_campaign: string; p_since: string }
+        Returns: Json
+      }
       svc_retry_all_failed_executions: {
         Args: { _actor: string }
         Returns: Json
