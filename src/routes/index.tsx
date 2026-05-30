@@ -96,15 +96,17 @@ function CinematicDivider() {
   );
 }
 
-function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean }) {
+function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [draftEyebrow, setDraftEyebrow] = useState(eyebrow);
   const [draftTitle, setDraftTitle] = useState(title);
+  const [draftActive, setDraftActive] = useState(active);
   const [saving, setSaving] = useState(false);
 
   function open() {
     setDraftEyebrow(eyebrow);
     setDraftTitle(title);
+    setDraftActive(active);
     setEditing(true);
   }
 
@@ -115,8 +117,9 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
       await saveHomepageSection(sectionKey, {
         eyebrow: draftEyebrow.trim() || eyebrow,
         title: draftTitle.trim() || title,
+        active: draftActive,
       });
-      toast.success("Section heading updated");
+      toast.success("Section updated");
       setEditing(false);
     } catch (e) {
       toast.error("Save failed", { description: e instanceof Error ? e.message : "Try again." });
@@ -133,10 +136,15 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
         </p>
         <div className="flex items-center gap-2">
           <h2 className="text-fluid-2xl font-display tracking-tight">{title}</h2>
+          {editable && !active && (
+            <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+              Inactive
+            </span>
+          )}
           {editable && sectionKey && (
             <button
               onClick={open}
-              aria-label="Edit section heading"
+              aria-label="Edit section"
               className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent/20"
             >
               <Pencil className="size-3.5" />
@@ -158,7 +166,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
             className="relative z-10 w-full max-w-sm rounded-3xl border border-accent/25 bg-background/95 p-5 backdrop-blur-2xl shadow-[0_30px_80px_-20px_oklch(0.74_0.19_49/0.5)]"
           >
             <p className="mb-4 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
-              <Pencil className="size-3" /> Edit section heading
+              <Pencil className="size-3" /> Edit section
             </p>
             <label className="mb-3 block">
               <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Eyebrow</span>
@@ -168,7 +176,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
                 className="w-full rounded-xl border border-border bg-card/80 px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/55"
               />
             </label>
-            <label className="mb-5 block">
+            <label className="mb-4 block">
               <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Title</span>
               <input
                 value={draftTitle}
@@ -176,6 +184,19 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
                 className="w-full rounded-xl border border-border bg-card/80 px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/55"
               />
             </label>
+            <button
+              type="button"
+              onClick={() => setDraftActive((v) => !v)}
+              className={`mb-5 flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${draftActive ? "border-accent/50 bg-accent/15" : "border-border bg-card hover:border-accent/30"}`}
+            >
+              <span className="text-left">
+                <span className="block text-xs font-medium text-foreground">Active on homepage</span>
+                <span className="block text-[10px] text-muted-foreground">{draftActive ? "Visible to shoppers" : "Hidden from shoppers"}</span>
+              </span>
+              <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${draftActive ? "bg-accent" : "bg-white/15"}`} aria-hidden>
+                <span className={`absolute top-0.5 size-4 rounded-full bg-white transition-transform ${draftActive ? "translate-x-[1.125rem]" : "translate-x-0.5"}`} />
+              </span>
+            </button>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setEditing(false)}
@@ -190,7 +211,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
                 className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
-                Save heading
+                Save changes
               </button>
             </div>
           </div>
@@ -460,9 +481,9 @@ function Home() {
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
-      ) : trending.length > 0 && (
+      ) : trending.length > 0 && (sections.trending.active || isProductAdmin) && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} />
+          <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} active={sections.trending.active} />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {trending.slice(0, 4).map((p, i) => (
@@ -504,9 +525,9 @@ function Home() {
       <CinematicDivider />
 
       {/* 6 · Recommended Products [product section 2/3] */}
-      {recommended.length > 0 && (
+      {recommended.length > 0 && (sections.recommended.active || isProductAdmin) && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow={sections.recommended.eyebrow} title={sections.recommended.title} icon={Award} href="/search" hrefLabel="See All" sectionKey="recommended" editable={isProductAdmin} />
+          <SectionHeader eyebrow={sections.recommended.eyebrow} title={sections.recommended.title} icon={Award} href="/search" hrefLabel="See All" sectionKey="recommended" editable={isProductAdmin} active={sections.recommended.active} />
           <ProductRail products={recommended} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {recommended.slice(0, 4).map((p, i) => (
@@ -522,9 +543,9 @@ function Home() {
       </section>
 
       {/* 7 · New Arrivals [product section 3/3] */}
-      {newArrivals.length > 0 && (
+      {newArrivals.length > 0 && (sections.new_arrivals.active || isProductAdmin) && (
         <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
-          <SectionHeader eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} href="/search" sectionKey="new_arrivals" editable={isProductAdmin} />
+          <SectionHeader eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} href="/search" sectionKey="new_arrivals" editable={isProductAdmin} active={sections.new_arrivals.active} />
           <ProductRail products={newArrivals} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {newArrivals.slice(0, 4).map((p, i) => (

@@ -5,14 +5,15 @@ export type HomepageSection = {
   key: string;
   eyebrow: string;
   title: string;
+  active: boolean;
 };
 
 export type SectionMap = Record<string, HomepageSection>;
 
 const DEFAULTS: SectionMap = {
-  trending: { key: "trending", eyebrow: "Hot Right Now", title: "Trending Products" },
-  recommended: { key: "recommended", eyebrow: "Curated For You", title: "Recommended Products" },
-  new_arrivals: { key: "new_arrivals", eyebrow: "Just Landed", title: "New Arrivals" },
+  trending: { key: "trending", eyebrow: "Hot Right Now", title: "Trending Products", active: true },
+  recommended: { key: "recommended", eyebrow: "Curated For You", title: "Recommended Products", active: true },
+  new_arrivals: { key: "new_arrivals", eyebrow: "Just Landed", title: "New Arrivals", active: true },
 };
 
 let cache: SectionMap | null = null;
@@ -21,10 +22,10 @@ const subscribers = new Set<(m: SectionMap) => void>();
 async function load(): Promise<SectionMap> {
   const { data } = await supabase
     .from("homepage_sections")
-    .select("key,eyebrow,title");
+    .select("key,eyebrow,title,active");
   const map: SectionMap = { ...DEFAULTS };
-  (data ?? []).forEach((row) => {
-    map[row.key] = { key: row.key, eyebrow: row.eyebrow, title: row.title };
+  (data ?? []).forEach((row: { key: string; eyebrow: string; title: string; active?: boolean | null }) => {
+    map[row.key] = { key: row.key, eyebrow: row.eyebrow, title: row.title, active: row.active ?? true };
   });
   cache = map;
   subscribers.forEach((s) => s(map));
@@ -66,10 +67,16 @@ export function useHomepageSections() {
   return { sections };
 }
 
-export async function saveHomepageSection(key: string, patch: { eyebrow: string; title: string }) {
+export async function saveHomepageSection(
+  key: string,
+  patch: { eyebrow: string; title: string; active: boolean },
+) {
   const { error } = await supabase
     .from("homepage_sections")
-    .upsert({ key, eyebrow: patch.eyebrow, title: patch.title }, { onConflict: "key" });
+    .upsert(
+      { key, eyebrow: patch.eyebrow, title: patch.title, active: patch.active },
+      { onConflict: "key" },
+    );
   if (error) throw error;
   await load();
 }

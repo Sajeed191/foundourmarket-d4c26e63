@@ -832,6 +832,7 @@ export type Database = {
       }
       homepage_sections: {
         Row: {
+          active: boolean
           created_at: string
           eyebrow: string
           id: string
@@ -840,6 +841,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           eyebrow?: string
           id?: string
@@ -848,6 +850,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           eyebrow?: string
           id?: string
