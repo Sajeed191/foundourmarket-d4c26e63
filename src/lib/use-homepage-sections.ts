@@ -67,10 +67,16 @@ export function useHomepageSections() {
   return { sections };
 }
 
-export async function saveHomepageSection(key: string, patch: { eyebrow: string; title: string }) {
+export async function saveHomepageSection(
+  key: string,
+  patch: { eyebrow: string; title: string; active: boolean },
+) {
   const { error } = await supabase
     .from("homepage_sections")
-    .upsert({ key, eyebrow: patch.eyebrow, title: patch.title }, { onConflict: "key" });
+    .upsert(
+      { key, eyebrow: patch.eyebrow, title: patch.title, active: patch.active },
+      { onConflict: "key" },
+    );
   if (error) throw error;
   await load();
 }
