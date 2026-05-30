@@ -6,6 +6,9 @@ import { useCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { CategoryAdminSheet } from "@/components/admin/CategoryAdminSheet";
+import { useHomepageSections, saveHomepageSection } from "@/lib/use-homepage-sections";
+import { toast } from "sonner";
+import { Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ProductCard } from "@/components/site/ProductCard";
