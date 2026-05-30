@@ -1,0 +1,1 @@
+ALTER TABLE public.product_reviews DROP CONSTRAINT IF EXISTS product_reviews_product_slug_user_id_key;
