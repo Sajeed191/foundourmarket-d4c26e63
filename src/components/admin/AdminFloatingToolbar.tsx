@@ -23,6 +23,11 @@ import {
   Users,
   Crown,
   RotateCcw,
+  Wallet,
+  TrendingUp,
+  Target,
+  Percent,
+  Sparkles,
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
