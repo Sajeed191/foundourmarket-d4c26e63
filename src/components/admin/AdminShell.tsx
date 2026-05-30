@@ -375,6 +375,19 @@ export function AdminShell({
                                 {supportUnread > 99 ? "99+" : supportUnread}
                               </span>
                             )}
+                            {it.to === "/admin-customer-intelligence" && intel && (intel.vip + intel.atRisk + intel.newCustomers) > 0 && (
+                              <span className="relative flex items-center gap-1">
+                                {intel.vip > 0 && (
+                                  <span title="VIP customers" className="min-w-4 h-4 px-1 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-inset ring-amber-400/30 text-[8px] font-bold font-mono grid place-items-center">{intel.vip > 99 ? "99+" : intel.vip}</span>
+                                )}
+                                {intel.atRisk > 0 && (
+                                  <span title="At-risk customers" className="min-w-4 h-4 px-1 rounded-full bg-destructive/15 text-destructive ring-1 ring-inset ring-destructive/30 text-[8px] font-bold font-mono grid place-items-center">{intel.atRisk > 99 ? "99+" : intel.atRisk}</span>
+                                )}
+                                {intel.newCustomers > 0 && (
+                                  <span title="New customers (30d)" className="min-w-4 h-4 px-1 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30 text-[8px] font-bold font-mono grid place-items-center">{intel.newCustomers > 99 ? "99+" : intel.newCustomers}</span>
+                                )}
+                              </span>
+                            )}
                             <ChevronRight className={`relative size-3.5 shrink-0 transition-all duration-300 ${active ? "opacity-70" : "opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0"}`} />
 
                           </Link>
