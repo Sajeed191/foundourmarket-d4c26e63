@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { includeSeedInAnalytics } from "@/lib/seed-filter";
+
 
 export type OrderRow = {
   id: string; user_id: string; status: string; payment_status: string;
