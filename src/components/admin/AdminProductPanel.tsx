@@ -43,6 +43,13 @@ type Patch = {
   rating?: number;
   reviews?: number;
   warranty?: string;
+  returnEligible?: boolean;
+  replacementEligible?: boolean;
+  codEnabled?: boolean;
+  pickupSupported?: boolean;
+  internationalShipping?: boolean;
+  fragile?: boolean;
+  returnWindowDays?: number;
 };
 
 const numOrNull = (v: string): number | null => {
