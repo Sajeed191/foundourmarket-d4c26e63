@@ -16,6 +16,7 @@ import {
   fetchOrders, fetchProducts, bucketByDay, downloadCSV,
   type OrderRow, type ProductRow,
 } from "@/lib/admin-queries";
+import { SectionAnalyticsPanel } from "@/components/admin/SectionAnalyticsPanel";
 
 export const Route = createFileRoute("/admin-analytics")({
   head: () => ({
