@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminEditing } from "@/lib/admin-overlay";
 import { AnnouncementIcon } from "@/lib/announcement-icons";
 import { AnnouncementAdminSheet } from "@/components/admin/AnnouncementAdminSheet";
+import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
+
+async function setAnnouncementActive(id: string, next: boolean) {
+  const { error } = await supabase.from("announcements").update({ active: next }).eq("id", id);
+  if (error) throw error;
+}
 import { cn } from "@/lib/utils";
 
 export type Announcement = {
