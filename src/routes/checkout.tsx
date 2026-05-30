@@ -300,7 +300,7 @@ function CheckoutPage() {
       ? "Verifying…"
       : payMethod === "cod"
         ? "Place order"
-        : `Pay ${inrFmt(totalINR)}`;
+        : `Pay ${fmt(totalINR)}`;
 
   if (loading || !user || !cartHydrated) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -558,7 +558,7 @@ function CheckoutPage() {
                         <p className="truncate">{i.product.name}</p>
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
                       </div>
-                      <span className="font-mono text-xs">{inrFmt(toInr(i.product.price * i.qty))}</span>
+                      <span className="font-mono text-xs">{fmt(toInr(i.product.price * i.qty))}</span>
                     </li>
                   ))}
                 </ul>
@@ -566,21 +566,21 @@ function CheckoutPage() {
                 {savingsINR > 0 && (
                   <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
                     <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><Sparkles className="size-3.5" /> You saved</span>
-                    <span className="font-mono text-sm text-emerald-400">{inrFmt(savingsINR)}</span>
+                    <span className="font-mono text-sm text-emerald-400">{fmt(savingsINR)}</span>
                   </div>
                 )}
 
                 <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{inrFmt(subtotalINR)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : inrFmt(shippingINR)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{fmt(subtotalINR)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : fmt(shippingINR)}</dd></div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">(8% GST est.)</span></dt>
-                    <dd className="font-mono">{inrFmt(taxINR)}</dd>
+                    <dd className="font-mono">{fmt(taxINR)}</dd>
                   </div>
                   <div className="border-t border-white/10 pt-3 flex justify-between items-end">
                     <dt className="font-medium text-base">Total</dt>
                     <dd className="text-right">
-                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{inrFmt(totalINR)}</span>
+                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{fmt(totalINR)}</span>
                       <span className="block text-[10px] text-muted-foreground mt-1">Incl. all taxes</span>
                     </dd>
                   </div>
@@ -611,7 +611,7 @@ function CheckoutPage() {
                 <div className="flex items-center gap-3">
                   <div className="pl-1.5 min-w-0">
                     <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
-                    <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{inrFmt(totalINR)}</p>
+                    <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{fmt(totalINR)}</p>
                   </div>
                   <button disabled={!selectedAddress || busy || !serviceable}
                     className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
