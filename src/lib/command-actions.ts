@@ -108,6 +108,12 @@ export function interpretNaturalLanguage(q: string): string | null {
   if ((s.includes("high value") || s.includes("high-value") || s.includes("big spender")) && !s.includes("product")) return "qa-cust-highvalue";
   if (s.includes("new customer")) return "qa-cust-new";
   if (s.includes("loyal") || s.includes("customer insight") || s.includes("customer intelligence")) return "qa-cust-intel";
+  // Inventory ↔ Marketing natural language (before generic campaign block)
+  if ((s.includes("inventory") || s.includes("stock")) && (s.includes("opportunit") || s.includes("marketing"))) return "qa-inv-opps";
+  if (s.includes("inventory") && s.includes("score")) return "qa-inv-score";
+  if ((s.includes("clearance") || (s.includes("dead") && s.includes("inventory"))) && (s.includes("create") || s.includes("campaign") || s.includes("launch"))) return "qa-inv-clearance";
+  if (s.includes("overstock")) return "qa-inv-overstock";
+  if ((s.includes("back in stock") || s.includes("back-in-stock") || s.includes("restock")) && (s.includes("campaign") || s.includes("create") || s.includes("launch"))) return "qa-inv-back";
   if (s.includes("refund") || s.includes("return")) return "qa-returns";
   // Product ↔ Marketing natural language (check before generic campaign block)
   if (s.includes("product") && (s.includes("campaign") || s.includes("marketing") || s.includes("promotion") || s.includes("promote"))) {
