@@ -1733,6 +1733,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_gateways: {
+        Row: {
+          configured: boolean | null
+          created_at: string
+          display_name: string
+          enabled: boolean
+          last_checked_at: string | null
+          mode: string
+          provider: string
+          publishable_key_present: boolean
+          secret_key_present: boolean
+          supports_region: string
+          updated_at: string
+          webhook_configured: boolean
+        }
+        Insert: {
+          configured?: boolean | null
+          created_at?: string
+          display_name: string
+          enabled?: boolean
+          last_checked_at?: string | null
+          mode?: string
+          provider: string
+          publishable_key_present?: boolean
+          secret_key_present?: boolean
+          supports_region?: string
+          updated_at?: string
+          webhook_configured?: boolean
+        }
+        Update: {
+          configured?: boolean | null
+          created_at?: string
+          display_name?: string
+          enabled?: boolean
+          last_checked_at?: string | null
+          mode?: string
+          provider?: string
+          publishable_key_present?: boolean
+          secret_key_present?: boolean
+          supports_region?: string
+          updated_at?: string
+          webhook_configured?: boolean
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
