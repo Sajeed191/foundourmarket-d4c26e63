@@ -66,10 +66,25 @@ export function BannerAdminSheet({
 }) {
   const [rows, setRows] = useState<BannerRow[]>([]);
   const [editing, setEditing] = useState<Partial<BannerRow> | null>(null);
+  const [original, setOriginal] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"image" | "mobile_image" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadTarget = useRef<"image" | "mobile_image">("image");
+
+  const entityId = editing?.id ?? "new";
+  const protection = useEditorProtection({
+    entityType: "banner",
+    entityId,
+    value: editing as Record<string, unknown> | null,
+    baseline: original,
+    enabled: !!editing,
+  });
+
+  function openEditor(row: Partial<BannerRow>) {
+    setEditing(row);
+    setOriginal(JSON.stringify(row));
+  }
 
   async function load() {
     const { data, error } = await supabase.from("banners").select("*").order("sort_order");
