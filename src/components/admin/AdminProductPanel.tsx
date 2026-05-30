@@ -455,7 +455,10 @@ export function AdminProductPanel({ product }: { product: Product }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {marketing && <ProductMarketingPanel product={product} onClose={() => setMarketing(false)} />}
     </>
+
   );
 }
 
