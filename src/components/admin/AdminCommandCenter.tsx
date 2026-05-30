@@ -4,6 +4,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image as ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
