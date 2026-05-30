@@ -20,6 +20,7 @@ import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { RegionSelectModal } from "@/components/site/RegionSelectModal";
 import { AdminFloatingToolbar } from "@/components/admin/AdminFloatingToolbar";
+import { AdminOverlayIndicator } from "@/components/admin/AdminOverlayIndicator";
 import { AdminModeProvider } from "@/lib/admin-mode";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 import { CompareTray } from "@/components/site/CompareTray";
@@ -181,6 +182,7 @@ function RootComponent() {
                     {!isAuthRoute && <MobileBottomNav />}
                     <RegionSelectModal />
                     {!isAuthRoute && <AdminFloatingToolbar />}
+                    {!isAuthRoute && <AdminOverlayIndicator />}
                     <CompareTray />
                     <InstallPrompt />
                     <Toaster position="bottom-center" richColors />
