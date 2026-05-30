@@ -1016,6 +1016,108 @@ export type Database = {
         }
         Relationships: []
       }
+      media_assets: {
+        Row: {
+          alt: string | null
+          bucket: string
+          created_at: string
+          entity_ref: string | null
+          entity_type: string
+          height: number | null
+          id: string
+          large_url: string | null
+          medium_url: string | null
+          mime: string | null
+          original_name: string | null
+          path: string
+          size_bytes: number | null
+          tags: string[]
+          thumb_url: string | null
+          updated_at: string
+          uploaded_by: string | null
+          url: string
+          usage_count: number
+          width: number | null
+        }
+        Insert: {
+          alt?: string | null
+          bucket?: string
+          created_at?: string
+          entity_ref?: string | null
+          entity_type?: string
+          height?: number | null
+          id?: string
+          large_url?: string | null
+          medium_url?: string | null
+          mime?: string | null
+          original_name?: string | null
+          path: string
+          size_bytes?: number | null
+          tags?: string[]
+          thumb_url?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          url: string
+          usage_count?: number
+          width?: number | null
+        }
+        Update: {
+          alt?: string | null
+          bucket?: string
+          created_at?: string
+          entity_ref?: string | null
+          entity_type?: string
+          height?: number | null
+          id?: string
+          large_url?: string | null
+          medium_url?: string | null
+          mime?: string | null
+          original_name?: string | null
+          path?: string
+          size_bytes?: number | null
+          tags?: string[]
+          thumb_url?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          url?: string
+          usage_count?: number
+          width?: number | null
+        }
+        Relationships: []
+      }
+      media_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          asset_id: string | null
+          created_at: string
+          entity_ref: string | null
+          entity_type: string | null
+          id: string
+          meta: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          asset_id?: string | null
+          created_at?: string
+          entity_ref?: string | null
+          entity_type?: string | null
+          id?: string
+          meta?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          asset_id?: string | null
+          created_at?: string
+          entity_ref?: string | null
+          entity_type?: string | null
+          id?: string
+          meta?: Json
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
@@ -2842,6 +2944,16 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
+      log_media_event: {
+        Args: {
+          _action: string
+          _asset_id?: string
+          _entity_ref?: string
+          _entity_type?: string
+          _meta?: Json
+        }
+        Returns: string
+      }
       manage_user_role: {
         Args: {
           _grant: boolean
@@ -2850,6 +2962,42 @@ export type Database = {
           _target_user_id: string
         }
         Returns: undefined
+      }
+      media_library_search: {
+        Args: {
+          _entity_type?: string
+          _limit?: number
+          _offset?: number
+          _q?: string
+        }
+        Returns: {
+          alt: string | null
+          bucket: string
+          created_at: string
+          entity_ref: string | null
+          entity_type: string
+          height: number | null
+          id: string
+          large_url: string | null
+          medium_url: string | null
+          mime: string | null
+          original_name: string | null
+          path: string
+          size_bytes: number | null
+          tags: string[]
+          thumb_url: string | null
+          updated_at: string
+          uploaded_by: string | null
+          url: string
+          usage_count: number
+          width: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "media_assets"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       move_to_dlq: {
         Args: {
