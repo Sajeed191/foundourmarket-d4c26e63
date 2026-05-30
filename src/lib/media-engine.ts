@@ -392,8 +392,8 @@ export async function searchMediaLibrary(params: {
   offset?: number;
 }): Promise<MediaAsset[]> {
   const { data, error } = await supabase.rpc("media_library_search", {
-    _q: params.q ?? null,
-    _entity_type: params.entityType ?? null,
+    _q: params.q ?? undefined,
+    _entity_type: params.entityType ?? undefined,
     _limit: params.limit ?? 40,
     _offset: params.offset ?? 0,
   });
