@@ -147,7 +147,7 @@ function MarketingAutomationPage() {
 
         {/* tabs */}
         <div className="flex gap-1 overflow-x-auto pb-1">
-          {([["dashboard", "Dashboard"], ["campaigns", "Campaigns"], ["automations", "Automations"], ["recommendations", "AI Recommendations"]] as [Tab, string][]).map(([k, l]) => (
+          {([["dashboard", "Dashboard"], ["campaigns", "Campaigns"], ["automations", "Automations"], ["recommendations", "AI Recommendations"], ["executions", "Executions"]] as [Tab, string][]).map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)}
               className={`h-8 px-3.5 rounded-full text-xs whitespace-nowrap transition-colors ${tab === k ? "bg-accent text-accent-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground"}`}>
               {l}{k === "recommendations" && recs.length ? ` (${recs.length})` : ""}
@@ -166,6 +166,9 @@ function MarketingAutomationPage() {
         )}
         {tab === "recommendations" && (
           <RecommendationsTab recs={recs} onAct={(k) => setCreating({ templateKey: k })} navCustomers={() => nav({ to: "/admin-customer-intelligence" })} navInventory={() => nav({ to: "/admin-inventory-intelligence" })} />
+        )}
+        {tab === "executions" && (
+          <MarketingExecutionsCenter automations={intel.automations} estAudience={estAudience} initialView={execView} />
         )}
       </div>
 
