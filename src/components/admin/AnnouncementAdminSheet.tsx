@@ -95,9 +95,9 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
       ends_at: editing.ends_at ?? null,
       countdown_to: editing.countdown_to ?? null,
     };
-    const { error } = editing.id
-      ? await supabase.from("announcements").update(payload).eq("id", editing.id)
-      : await supabase.from("announcements").insert(payload);
+    const { data: saved, error } = editing.id
+      ? await supabase.from("announcements").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("announcements").insert(payload).select("id").single();
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -107,6 +107,12 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
     logActivity(editing.id ? "announcement_update" : "announcement_create", "announcement", editing.id, {
       type: payload.type,
     });
+    await protection.recordVersion(
+      (editing.id ?? saved?.id ?? entityId) as string,
+      payload as Record<string, unknown>,
+      editing.id ? "Updated" : "Created announcement",
+    );
+    await protection.markClean();
     setEditing(null);
     await load();
     onChanged();
