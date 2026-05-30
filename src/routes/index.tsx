@@ -21,6 +21,9 @@ import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { PromoBannerCarousel } from "@/components/site/PromoBannerCarousel";
 import { ProductRail } from "@/components/site/ProductRail";
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
+import { RecommendationStrip } from "@/components/site/RecommendationStrip";
+import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
+import { fetchPersonalizedSlugs } from "@/lib/personalization";
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
