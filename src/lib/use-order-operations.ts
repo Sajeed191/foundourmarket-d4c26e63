@@ -48,6 +48,7 @@ export function useOrderOperations(limit = 400) {
       .on("postgres_changes", { event: "*", schema: "public", table: "returns" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "refunds" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_logs" }, trigger)
       .subscribe();
     const poll = setInterval(() => load(true), 30000);
     return () => { void supabase.removeChannel(ch); clearInterval(poll); if (debounce.current) clearTimeout(debounce.current); };
