@@ -161,7 +161,7 @@ function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-8">
+    <div>
       {/* Cinematic ambient background system — layered orbs, bloom & grid */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         {/* base navy depth wash */}
