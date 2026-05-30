@@ -9,7 +9,7 @@ import {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image as ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Loader2, Sparkles, Clock, Pin, PinOff, Search, ArrowRight,
-  Gem, Crown, UserPlus, Bell, Lightbulb, Play, Pause, ShieldAlert, ShieldCheck, Wrench, Search, Target,
+  Gem, Crown, UserPlus, Bell, Lightbulb, Play, Pause, ShieldAlert, ShieldCheck, Wrench, Target,
   type LucideIcon,
 } from "lucide-react";
 import { useCommandCenter, pushRecentSearch, getRecentSearches, pushRecentAction, getRecentActions, getPinned, togglePinned, type RecentAction } from "@/lib/command-center";
@@ -23,7 +23,7 @@ const ICONS: Record<string, LucideIcon> = {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image: ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Gem, Crown, UserPlus, Bell, Lightbulb,
-  Play, Pause, ShieldAlert, ShieldCheck, Wrench, Search, Target: AlertTriangle,
+  Play, Pause, ShieldAlert, ShieldCheck, Wrench, Search, Target,
 
 };
 
