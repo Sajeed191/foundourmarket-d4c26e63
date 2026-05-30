@@ -40,10 +40,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     setItems(list);
     const ids = Array.from(new Set(list.map((q) => q.user_id)));
     if (ids.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", ids);
+      const { data: profs } = await supabase.rpc("get_public_profiles", { _ids: ids });
       const map: ProfileMap = {};
       (profs ?? []).forEach((p: any) => { map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
       setProfiles(map);
