@@ -26,7 +26,7 @@ function TrafficPage() {
 
   useEffect(() => {
     const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
-    includeSeedInAnalytics().then((includeSeed) => {
+    includeSeedInAnalytics().then((includeSeed: boolean) => {
       let pvQuery = supabase.from("page_views").select("path,created_at,session_id,referrer,device").gte("created_at", since).order("created_at", { ascending: false }).limit(5000);
       if (!includeSeed) pvQuery = pvQuery.eq("is_seeded", false);
       pvQuery.then(({ data }) => setPv((data as PV[]) ?? []));
