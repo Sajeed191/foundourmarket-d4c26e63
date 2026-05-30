@@ -296,6 +296,7 @@ function OrderOpsPage() {
             <TabsTrigger value="delivery">Delivery</TabsTrigger>
             <TabsTrigger value="returns">Returns & Refunds</TabsTrigger>
             <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
           </TabsList>
 
           {/* WAR ROOM */}
