@@ -608,14 +608,14 @@ function mapExecution(r: Record<string, unknown>): AutomationExecution {
 
 /** Run the automation engine immediately (staff only, forced). */
 export async function runAutomations(): Promise<{ summary?: RunSummary; error?: string }> {
-  const { data, error } = await supabase.rpc("run_marketing_automations", {
-    p_force: true,
-    p_triggered_by: "manual",
-  } as never);
-  if (error) return { error: error.message };
-  const summary = (data ?? {}) as RunSummary;
-  logActivity("marketing_automation_run", "marketing", undefined, summary as unknown as Record<string, unknown>);
-  return { summary };
+  try {
+    const data = await runAutomationsFn();
+    const summary = (data ?? {}) as RunSummary;
+    logActivity("marketing_automation_run", "marketing", undefined, summary as unknown as Record<string, unknown>);
+    return { summary };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed to run automations" };
+  }
 }
 
 /** Load the most recent automation executions for the audit log. */
