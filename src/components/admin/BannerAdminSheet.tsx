@@ -5,6 +5,8 @@ import { Plus, Trash2, X, Loader2, GripVertical, Eye, EyeOff, ImagePlus, Smartph
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 
 export type BannerRow = {
   id: string;
