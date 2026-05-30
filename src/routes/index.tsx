@@ -227,10 +227,13 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
 
 function Home() {
   const { products, loading: productsLoading } = useProducts();
-  const { categories } = useCategories();
+  const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
 
   const { canEdit: isProductAdmin } = useProductAdminEditing();
+  const { categories: adminCategories } = useAdminCategories(isProductAdmin);
+  // Admins see every category (incl. hidden) so they can toggle visibility inline.
+  const categories = isProductAdmin ? adminCategories : publicCategories;
   const [editCats, setEditCats] = useState(false);
 
   const nav = useNavigate();
