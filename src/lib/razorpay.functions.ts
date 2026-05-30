@@ -59,7 +59,8 @@ async function repriceFromDb(
   promoCode?: string | null,
 ) {
   const slugs = items.map((i) => i.slug);
-  const { data: products, error } = await supabase
+  // Trusted server-side read via admin client (base products table is staff-only RLS).
+  const { data: products, error } = await supabaseAdmin
     .from("products")
     .select("slug,name,image,price_inr,price_usd")
     .in("slug", slugs);
