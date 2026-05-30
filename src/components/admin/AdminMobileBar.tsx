@@ -45,7 +45,7 @@ type QuickAction = {
 
 /**
  * App-like bottom admin navigation for mobile/tablet. Renders only for staff
- * accounts while Admin Mode is active, turning the storefront into a管理
+ * accounts while Admin Mode is active, turning the storefront into a management
  * console without leaving the current screen. Pure UX surface — every
  * destination and action remains role-protected + RLS-enforced server-side.
  */
