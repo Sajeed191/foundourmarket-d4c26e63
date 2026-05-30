@@ -106,6 +106,7 @@ function ProductPage() {
   const [variantId, setVariantId] = useState<string | null>(null);
   const [fbtSlugs, setFbtSlugs] = useState<string[]>([]);
   const [alsoViewed, setAlsoViewed] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (product) {
