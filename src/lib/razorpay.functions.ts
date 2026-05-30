@@ -28,16 +28,35 @@ const verifySchema = z.object({
   razorpaySignature: z.string().min(1).max(256),
 });
 
-/** Re-price the cart entirely from trusted database values (anti-tampering). */
+/**
+ * Resolve the authoritative market region for a user. Locked profile region
+ * wins; otherwise we fall back to International. The client never supplies the
+ * region used for billing — it is read from trusted server state.
+ */
+async function resolveRegion(supabase: any, userId: string): Promise<Region> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("market_region")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.market_region === "india" ? "india" : "international";
+}
+
+/**
+ * Re-price the cart entirely from trusted database values (anti-tampering).
+ * Prices are read from the admin-configured region columns (price_inr for
+ * India, price_usd for International) — NO hardcoded currency conversion.
+ */
 async function repriceFromDb(
   supabase: any,
+  region: Region,
   items: { slug: string; qty: number }[],
   promoCode?: string | null,
 ) {
   const slugs = items.map((i) => i.slug);
   const { data: products, error } = await supabase
     .from("products")
-    .select("slug,name,image,price")
+    .select("slug,name,image,price_inr,price_usd")
     .in("slug", slugs);
   if (error) throw new Error("Could not load products.");
 
@@ -45,23 +64,24 @@ async function repriceFromDb(
   const lines = items.map((i) => {
     const p = bySlug.get(i.slug);
     if (!p) throw new Error(`Product unavailable: ${i.slug}`);
-    const unitUsd = Number(p.price);
+    const raw = region === "india" ? p.price_inr : p.price_usd;
+    if (raw == null) {
+      throw new Error(`Pricing unavailable for ${i.slug} in your region.`);
+    }
+    const unit = roundMoney(region, Number(raw));
     return {
       slug: i.slug,
       name: p.name as string,
       image: (p.image as string) ?? null,
-      unitUsd,
+      unit,
       qty: i.qty,
-      lineUsd: +(unitUsd * i.qty).toFixed(2),
+      lineTotal: roundMoney(region, unit * i.qty),
     };
   });
 
+  const subtotal = roundMoney(region, lines.reduce((s, l) => s + l.lineTotal, 0));
 
-  const subtotalUSD = +lines.reduce((s, l) => s + l.lineUsd, 0).toFixed(2);
-  const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
-  const taxUSD = +(subtotalUSD * 0.08).toFixed(2);
-
-  let discountUSD = 0;
+  let discount = 0;
   let appliedPromo: string | null = null;
   if (promoCode) {
     const { data: promo } = await supabase
@@ -71,32 +91,20 @@ async function repriceFromDb(
       .maybeSingle();
     if (
       promo &&
-      Number(promo.min_subtotal) <= subtotalUSD &&
+      Number(promo.min_subtotal) <= subtotal &&
       (promo.max_uses == null || promo.uses < promo.max_uses)
     ) {
-      discountUSD =
+      discount =
         promo.kind === "percent"
-          ? +(subtotalUSD * (Number(promo.value) / 100)).toFixed(2)
-          : Math.min(subtotalUSD, Number(promo.value));
+          ? roundMoney(region, subtotal * (Number(promo.value) / 100))
+          : Math.min(subtotal, Number(promo.value));
       appliedPromo = promo.code;
     }
   }
 
-  const totalUSD = Math.max(0, +(subtotalUSD + shippingUSD + taxUSD - discountUSD).toFixed(2));
+  const totals = computeOrderTotals(region, subtotal, discount);
 
-  // Convert to INR (whole rupees) for Razorpay
-  const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-  const subtotalINR = toInr(subtotalUSD);
-  const shippingINR = toInr(shippingUSD);
-  const taxINR = toInr(taxUSD);
-  const discountINR = toInr(discountUSD);
-  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR - discountINR);
-
-  return {
-    lines,
-    appliedPromo,
-    inr: { subtotalINR, shippingINR, taxINR, discountINR, totalINR },
-  };
+  return { region, lines, appliedPromo, totals };
 }
 
 /**
