@@ -11,7 +11,8 @@ import {
   RefreshCw, Sparkles, ShoppingCart, Globe, Radio, Loader2,
   Users, Repeat, HeartPulse, XCircle, Boxes, Activity,
 } from "lucide-react";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminShell, logActivity } from "@/components/admin/AdminShell";
+import { FinancialMarketingHub } from "@/components/admin/FinancialMarketingHub";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchFinancialData, computeSummary, monthlyBreakdown, revenueSeries,
