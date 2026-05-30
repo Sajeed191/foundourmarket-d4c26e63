@@ -33,6 +33,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
+import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
 import { Route as AdminMarketingRouteImport } from './routes/admin-marketing'
 import { Route as AdminLiveRouteImport } from './routes/admin-live'
@@ -197,6 +198,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/admin-payments',
   path: '/admin-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/admin-notifications',
+  path: '/admin-notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMediaRoute = AdminMediaRouteImport.update({
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-media': typeof AdminMediaRoute
+  '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -520,6 +527,7 @@ export interface FileRoutesByTo {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-media': typeof AdminMediaRoute
+  '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -592,6 +600,7 @@ export interface FileRoutesById {
   '/admin-live': typeof AdminLiveRoute
   '/admin-marketing': typeof AdminMarketingRoute
   '/admin-media': typeof AdminMediaRoute
+  '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -665,6 +674,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-media'
+    | '/admin-notifications'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -736,6 +746,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-media'
+    | '/admin-notifications'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -807,6 +818,7 @@ export interface FileRouteTypes {
     | '/admin-live'
     | '/admin-marketing'
     | '/admin-media'
+    | '/admin-notifications'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -879,6 +891,7 @@ export interface RootRouteChildren {
   AdminLiveRoute: typeof AdminLiveRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminMediaRoute: typeof AdminMediaRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-payments'
       fullPath: '/admin-payments'
       preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-notifications': {
+      id: '/admin-notifications'
+      path: '/admin-notifications'
+      fullPath: '/admin-notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-media': {
@@ -1466,6 +1486,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLiveRoute: AdminLiveRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminMediaRoute: AdminMediaRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReportsRoute: AdminReportsRoute,
