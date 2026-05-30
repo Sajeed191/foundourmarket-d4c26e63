@@ -117,3 +117,12 @@ export function useIsProductAdmin() {
   const s = useRoles();
   return { isProductAdmin: hasAny(s.roles, PRODUCT_ADMIN_ROLES), loading: s.loading };
 }
+
+/**
+ * Full staff role set for fine-grained permission gating (Command Center).
+ * Reads from the same shared cache as useIsAdmin — no extra DB queries.
+ */
+export function useStaffRoles() {
+  const s = useRoles();
+  return { roles: s.roles as Set<AppRole>, loading: s.loading };
+}
