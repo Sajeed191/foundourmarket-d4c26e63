@@ -4,23 +4,26 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image as ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Loader2, Sparkles, Clock, Pin, PinOff, Search, ArrowRight,
-  Gem, Crown, UserPlus, Bell, Lightbulb,
+  Gem, Crown, UserPlus, Bell, Lightbulb, Play, Pause, ShieldAlert, ShieldCheck, Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { useCommandCenter, pushRecentSearch, getRecentSearches, pushRecentAction, getRecentActions, getPinned, togglePinned, type RecentAction } from "@/lib/command-center";
 import { useStaffRoles } from "@/lib/use-admin";
 import { searchAll, type SearchResult, type Role } from "@/lib/command-search";
 import { actionsForRoles, interpretNaturalLanguage, QUICK_ACTIONS } from "@/lib/command-actions";
+import { automationCommandsForRoles, type AutomationCommand } from "@/lib/command-automation-actions";
 import { logActivity } from "@/components/admin/AdminShell";
 
 const ICONS: Record<string, LucideIcon> = {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image: ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Gem, Crown, UserPlus, Bell, Lightbulb,
+  Play, Pause, ShieldAlert, ShieldCheck, Wrench,
 };
 
 function Icon({ name, className }: { name?: string; className?: string }) {
@@ -47,8 +50,42 @@ export function AdminCommandCenter() {
   const [recents, setRecents] = useState<string[]>([]);
   const [recentActions, setRecentActions] = useState<RecentAction[]>([]);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [confirmCmd, setConfirmCmd] = useState<AutomationCommand | null>(null);
+  const [running, setRunning] = useState(false);
 
   const quickActions = useMemo(() => actionsForRoles(roles), [roles]);
+  const autoCommands = useMemo(() => automationCommandsForRoles(roles), [roles]);
+  const filteredAutoCommands = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return autoCommands;
+    return autoCommands.filter((c) => `${c.label} ${c.keywords}`.toLowerCase().includes(q));
+  }, [autoCommands, query]);
+
+  function selectAutoCommand(c: AutomationCommand) {
+    if (c.navigateOnly) {
+      logActivity(c.action, "automation_command", c.id, { label: c.label });
+      setOpen(false);
+      c.run().then((res) => { if (res.to) go(res.to); });
+      return;
+    }
+    setConfirmCmd(c);
+  }
+
+  async function executeAutoCommand() {
+    if (!confirmCmd || running) return;
+    setRunning(true);
+    try {
+      const res = await confirmCmd.run();
+      logActivity(confirmCmd.action, "automation_command", confirmCmd.id, { label: confirmCmd.label });
+      toast.success(res.message);
+      if (res.to) { setOpen(false); go(res.to); }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setRunning(false);
+      setConfirmCmd(null);
+    }
+  }
 
   useEffect(() => {
     if (open) {
@@ -131,6 +168,7 @@ export function AdminCommandCenter() {
 
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="overflow-hidden p-0 max-w-2xl gap-0 top-[12%] translate-y-0 sm:top-[15%]">
         <Command shouldFilter={false} className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.2em] [&_[cmdk-group-heading]]:text-muted-foreground">
@@ -235,6 +273,22 @@ export function AdminCommandCenter() {
                 ))}
               </CommandGroup>
             )}
+
+            {/* Automation Control — real executable actions */}
+            {filteredAutoCommands.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="Automation Control">
+                  {filteredAutoCommands.map((c) => (
+                    <CommandItem key={c.id} value={c.id} onSelect={() => selectAutoCommand(c)} className="gap-3">
+                      <Icon name={c.icon} className={`size-4 ${c.danger ? "text-rose-400" : "text-accent"}`} />
+                      <span className="flex-1 truncate">{c.label}</span>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-accent/70">{c.navigateOnly ? "Open" : "Run"}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
 
           <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
@@ -248,5 +302,26 @@ export function AdminCommandCenter() {
         </Command>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!confirmCmd} onOpenChange={(o) => { if (!o) setConfirmCmd(null); }}>
+      <DialogContent className="max-w-md">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Icon name={confirmCmd?.icon} className={`size-5 ${confirmCmd?.danger ? "text-rose-400" : "text-accent"}`} />
+            <h3 className="text-sm font-display font-semibold">{confirmCmd?.label}</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">{confirmCmd?.confirm}</p>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setConfirmCmd(null)} disabled={running}
+              className="h-9 px-3 rounded-xl bg-card border border-border text-xs hover:border-accent/40">Cancel</button>
+            <button onClick={executeAutoCommand} disabled={running}
+              className={`h-9 px-3 rounded-xl text-xs font-medium inline-flex items-center gap-2 ${confirmCmd?.danger ? "bg-rose-500 text-white" : "bg-accent text-accent-foreground"} disabled:opacity-50`}>
+              {running ? <Loader2 className="size-3.5 animate-spin" /> : null} Confirm
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

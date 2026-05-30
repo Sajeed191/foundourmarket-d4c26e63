@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { AISummaryCard } from "@/components/admin/AISummaryCard";
 import { SecuritySummaryCard } from "@/components/admin/SecuritySummaryCard";
 import { TrafficSummaryCard } from "@/components/admin/TrafficSummaryCard";
+import { AutomationSummaryWidget } from "@/components/admin/AutomationSummaryWidget";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const money = (n: number, c = "USD") =>
@@ -206,6 +207,10 @@ export function ExecutiveDashboard({ focusView }: { focusView?: string }) {
 
       {/* Traffic Intelligence summary */}
       <TrafficSummaryCard />
+
+      {/* Marketing Automation summary */}
+      <AutomationSummaryWidget />
+
 
 
 

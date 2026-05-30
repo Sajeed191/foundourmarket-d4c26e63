@@ -64,9 +64,12 @@ export function AutomationStatusBanner({ settings }: { settings: AutomationSetti
 
 /* ============================================================= main */
 
-export function MarketingExecutionsCenter({ automations, estAudience }: {
+export type ExecutionsView = "feed" | "failures" | "run" | "health";
+
+export function MarketingExecutionsCenter({ automations, estAudience, initialView }: {
   automations: Automation[];
   estAudience: number;
+  initialView?: ExecutionsView;
 }) {
   const [rows, setRows] = useState<AutomationExecution[] | null>(null);
   const [settings, setSettings] = useState<AutomationSettings | null>(null);
@@ -75,6 +78,15 @@ export function MarketingExecutionsCenter({ automations, estAudience }: {
   const [sortKey, setSortKey] = useState<"date" | "duration" | "matches" | "failures">("date");
   const [showRun, setShowRun] = useState(false);
   const [showFailures, setShowFailures] = useState(false);
+
+  // Deep-link: open the requested view once on mount / when it changes.
+  useEffect(() => {
+    if (initialView === "failures") setShowFailures(true);
+    else if (initialView === "run") setShowRun(true);
+    else if (initialView === "health") {
+      requestAnimationFrame(() => document.getElementById("automation-health")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }
+  }, [initialView]);
 
   const load = useCallback(async () => {
     const [ex, st] = await Promise.all([fetchExecutions(200), fetchAutomationSettings()]);
@@ -178,7 +190,7 @@ export function MarketingExecutionsCenter({ automations, estAudience }: {
       </div>
 
       {/* Health + Safety */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div id="automation-health" className="grid lg:grid-cols-2 gap-4 scroll-mt-24">
         <HealthCard health={health} />
         <SafetyPanel settings={settings} onChanged={setSettings} />
       </div>

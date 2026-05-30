@@ -21,7 +21,7 @@ import {
   type MarketingIntel, type Campaign, type RegionScope, type AudienceRow,
 } from "@/lib/marketing-automation";
 import { fetchAutomationSettings, type AutomationSettings } from "@/lib/marketing-automation";
-import { MarketingExecutionsCenter, AutomationStatusBanner } from "@/components/admin/MarketingExecutionsCenter";
+import { MarketingExecutionsCenter } from "@/components/admin/MarketingExecutionsCenter";
 
 export const Route = createFileRoute("/admin-marketing-automation")({
   head: () => ({ meta: [{ title: "Marketing Automation — Admin" }] }),
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/admin-marketing-automation")({
     template: typeof s.template === "string" ? s.template : undefined,
     tab: typeof s.tab === "string" ? s.tab : undefined,
     campaign: typeof s.campaign === "string" ? s.campaign : undefined,
+    view: typeof s.view === "string" ? s.view : undefined,
   }),
   component: MarketingAutomationPage,
 });
@@ -41,7 +42,7 @@ const MKT_ROLES = ["admin", "super_admin", "manager", "editor"] as unknown as Pa
 
 function MarketingAutomationPage() {
   const nav = useNavigate();
-  const { action, template, tab: tabParam, campaign: campaignParam } = Route.useSearch();
+  const { action, template, tab: tabParam, campaign: campaignParam, view } = Route.useSearch();
   const [intel, setIntel] = useState<MarketingIntel | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -74,8 +75,13 @@ function MarketingAutomationPage() {
     if (action === "create") setCreating({ templateKey: template });
     else if (template) { setCreating({ templateKey: template }); }
     if (action === "analytics") setTab("dashboard");
-    const tabs: Tab[] = ["dashboard", "campaigns", "automations", "recommendations"];
+    const tabs: Tab[] = ["dashboard", "campaigns", "automations", "recommendations", "executions"];
     if (tabParam && (tabs as string[]).includes(tabParam)) setTab(tabParam as Tab);
+    // Deep-link straight into the Executions Control Center (failures / health / run).
+    if (view) {
+      setTab("executions");
+      logActivity("marketing_automation_executions_deeplink", "marketing", undefined, { view });
+    }
     if (campaignParam) {
       setTab("campaigns");
       setFocusCampaign(campaignParam);
@@ -86,7 +92,7 @@ function MarketingAutomationPage() {
       logActivity("marketing_campaign_deeplink_open", "marketing", campaignParam, {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, template, tabParam, campaignParam, loading]);
+  }, [action, template, tabParam, campaignParam, view, loading]);
 
   const filteredCampaigns = useMemo(() => {
     if (!intel) return [];
@@ -99,6 +105,8 @@ function MarketingAutomationPage() {
   const alerts = useMemo(() => intel ? detectMarketingAlerts(intel) : [], [intel]);
   const tops = useMemo(() => topCampaigns(filteredCampaigns), [filteredCampaigns]);
   const upcoming = useMemo(() => upcomingCampaigns(filteredCampaigns), [filteredCampaigns]);
+  const estAudience = useMemo(() => audiences.reduce((a, r) => a + r.count, 0), [audiences]);
+  const execView = (view === "failures" || view === "run" || view === "health") ? view : undefined;
 
   async function refresh() { setRefreshing(true); await load(); }
 
@@ -139,7 +147,7 @@ function MarketingAutomationPage() {
 
         {/* tabs */}
         <div className="flex gap-1 overflow-x-auto pb-1">
-          {([["dashboard", "Dashboard"], ["campaigns", "Campaigns"], ["automations", "Automations"], ["recommendations", "AI Recommendations"]] as [Tab, string][]).map(([k, l]) => (
+          {([["dashboard", "Dashboard"], ["campaigns", "Campaigns"], ["automations", "Automations"], ["recommendations", "AI Recommendations"], ["executions", "Executions"]] as [Tab, string][]).map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)}
               className={`h-8 px-3.5 rounded-full text-xs whitespace-nowrap transition-colors ${tab === k ? "bg-accent text-accent-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground"}`}>
               {l}{k === "recommendations" && recs.length ? ` (${recs.length})` : ""}
@@ -158,6 +166,9 @@ function MarketingAutomationPage() {
         )}
         {tab === "recommendations" && (
           <RecommendationsTab recs={recs} onAct={(k) => setCreating({ templateKey: k })} navCustomers={() => nav({ to: "/admin-customer-intelligence" })} navInventory={() => nav({ to: "/admin-inventory-intelligence" })} />
+        )}
+        {tab === "executions" && (
+          <MarketingExecutionsCenter automations={intel.automations} estAudience={estAudience} initialView={execView} />
         )}
       </div>
 
