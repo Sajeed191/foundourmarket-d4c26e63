@@ -203,6 +203,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
 function Home() {
   const { products, loading: productsLoading } = useProducts();
   const { categories } = useCategories();
+  const { sections } = useHomepageSections();
 
   const { isProductAdmin } = useIsProductAdmin();
   const [editCats, setEditCats] = useState(false);
