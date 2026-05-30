@@ -15,11 +15,13 @@ import {
   X,
   Pencil,
   Activity,
+  Layers,
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
 import { cn } from "@/lib/utils";
 import { StorefrontDashboardPanel } from "@/components/admin/StorefrontDashboardPanel";
+import { BulkVisibilityPanel } from "@/components/admin/BulkVisibilityPanel";
 
 type Action = {
   label: string;
@@ -49,6 +51,7 @@ export function AdminFloatingToolbar() {
   const { adminMode, toggle } = useAdminMode();
   const [open, setOpen] = useState(false);
   const [dashboard, setDashboard] = useState(false);
+  const [bulk, setBulk] = useState(false);
 
   if (loading || !isAdmin) return null;
 
@@ -116,6 +119,19 @@ export function AdminFloatingToolbar() {
                 <span className="size-1.5 rounded-full bg-accent animate-pulse" /> Live
               </span>
             </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                setBulk(true);
+              }}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 transition-all hover:border-accent/30 hover:bg-accent/10"
+            >
+              <Layers className="size-3.5 text-accent" />
+              <span className="text-xs font-medium text-foreground">Bulk visibility</span>
+              <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+                Categories · Banners
+              </span>
+            </button>
             <div className="grid grid-cols-3 gap-1">
               {ACTIONS.map((a) => (
                 <Link
@@ -162,6 +178,7 @@ export function AdminFloatingToolbar() {
       </motion.button>
 
       <StorefrontDashboardPanel open={dashboard} onClose={() => setDashboard(false)} />
+      <BulkVisibilityPanel open={bulk} onClose={() => setBulk(false)} />
     </div>
   );
 }
