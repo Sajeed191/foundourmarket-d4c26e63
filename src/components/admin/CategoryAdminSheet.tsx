@@ -21,6 +21,7 @@ import {
   Upload,
   RotateCcw,
   Globe2,
+  History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
@@ -32,6 +33,19 @@ import {
   type CategoryRegion,
 } from "@/lib/use-categories";
 import { cn } from "@/lib/utils";
+import { useAutosave } from "@/hooks/use-autosave";
+import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
+import { SaveStateBadge } from "@/components/admin/SaveStateBadge";
+import { DraftRecoveryDialog } from "@/components/admin/DraftRecoveryDialog";
+import { VersionHistorySheet } from "@/components/admin/VersionHistorySheet";
+import {
+  fetchDraft,
+  discardDraft,
+  readLocalDraft,
+  saveVersion,
+  diffFields,
+  logAdminActivity,
+} from "@/lib/drafts";
 
 type Row = Category;
 type ImageSlot = "image" | "banner_image" | "mobile_image";
@@ -135,6 +149,21 @@ export function CategoryAdminSheet({
     [editing, original],
   );
 
+  const entityId = editing?.id ?? "new";
+  const [showVersions, setShowVersions] = useState(false);
+  const [recovery, setRecovery] = useState<
+    { data: Partial<Row>; savedAt: string | null; device?: string | null } | null
+  >(null);
+
+  // Autosave the open editor + protect against accidental navigation.
+  const autosave = useAutosave({
+    entityType: "category",
+    entityId,
+    value: editing ?? {},
+    enabled: !!editing && dirty,
+  });
+  useUnsavedGuard(dirty);
+
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("categories")
@@ -166,12 +195,42 @@ export function CategoryAdminSheet({
   function open(row: Partial<Row>) {
     setEditing(row);
     setOriginal(JSON.stringify(row));
+    // Look for a recoverable draft (local first for instant crash recovery,
+    // then the database-synced copy from another device/session).
+    const id = row.id ?? "new";
+    const local = readLocalDraft("category", id);
+    if (local) {
+      setRecovery({ data: local.data as Partial<Row>, savedAt: local.savedAt });
+    }
+    void fetchDraft("category", id).then((d) => {
+      if (d && (!local || new Date(d.updated_at) > new Date(local.savedAt))) {
+        setRecovery({
+          data: d.data as Partial<Row>,
+          savedAt: d.updated_at,
+          device: d.device_label,
+        });
+      }
+    });
+  }
+
+  function restoreDraft() {
+    if (recovery) {
+      setEditing(recovery.data);
+      void logAdminActivity("draft_recover", "category", entityId);
+    }
+    setRecovery(null);
+  }
+
+  async function dismissDraft() {
+    setRecovery(null);
+    await discardDraft("category", entityId).catch(() => {});
   }
 
   function tryClose() {
     if (dirty && !confirm("Discard unsaved changes?")) return;
     setEditing(null);
   }
+
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -235,15 +294,31 @@ export function CategoryAdminSheet({
       return;
     }
     toast.success(editing.id ? "Saved" : "Created");
+    // Record an immutable version snapshot with changed-field highlighting.
+    const changed = diffFields(
+      original ? (JSON.parse(original) as Record<string, unknown>) : {},
+      payload as Record<string, unknown>,
+    );
+    await saveVersion(
+      "category",
+      slug,
+      payload as Record<string, unknown>,
+      changed,
+      editing.id ? `Updated ${changed.length} field(s)` : "Created category",
+    ).catch(() => {});
     logActivity(editing.id ? "category_update" : "category_create", "category", editing.id, {
       slug,
       status: payload.status,
     });
+    // Clear autosave draft now that work is committed.
+    autosave.markClean();
+    await discardDraft("category", entityId).catch(() => {});
     setEditing(null);
     await load();
     invalidateCategories();
     onChanged();
   }
+
 
   async function reorder(row: Row, direction: "up" | "down") {
     setRows((prev) => {
@@ -714,19 +789,55 @@ export function CategoryAdminSheet({
                     Cancel
                   </button>
                 </div>
-                {dirty && (
-                  <p className="text-center text-[9px] font-mono uppercase tracking-widest text-amber-300/80">
-                    Unsaved changes
-                  </p>
-                )}
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <SaveStateBadge
+                    state={autosave.state}
+                    lastSavedAt={autosave.lastSavedAt}
+                  />
+                  {editing.id && (
+                    <button
+                      onClick={() => setShowVersions(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground"
+                    >
+                      <History className="size-3" /> History
+                    </button>
+                  )}
+                </div>
               </div>
+
             </div>
           )}
         </motion.div>
       </motion.div>
+
+      <DraftRecoveryDialog
+        open={!!recovery}
+        savedAt={recovery?.savedAt ?? null}
+        deviceLabel={recovery?.device}
+        onRestore={restoreDraft}
+        onDiscard={dismissDraft}
+      />
+      <VersionHistorySheet
+        open={showVersions}
+        onOpenChange={setShowVersions}
+        entityType="category"
+        entityId={editing?.slug ?? entityId}
+        onRestore={(snap) =>
+          setEditing((prev) => ({ ...(prev ?? {}), ...(snap as Partial<Row>) }))
+        }
+        onDuplicate={(snap) =>
+          setEditing({
+            ...(snap as Partial<Row>),
+            id: undefined,
+            slug: `${(snap as Row).slug ?? "category"}-copy`,
+            status: "draft",
+          })
+        }
+      />
     </AnimatePresence>
   );
 }
+
 
 const input =
   "w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent";

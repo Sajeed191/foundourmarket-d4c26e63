@@ -692,6 +692,45 @@ export type Database = {
         }
         Relationships: []
       }
+      editor_drafts: {
+        Row: {
+          base_snapshot: Json | null
+          created_at: string
+          data: Json
+          device_label: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_snapshot?: Json | null
+          created_at?: string
+          data?: Json
+          device_label?: string | null
+          entity_id?: string
+          entity_type: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_snapshot?: Json | null
+          created_at?: string
+          data?: Json
+          device_label?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           attempts: number
@@ -878,6 +917,39 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      entity_versions: {
+        Row: {
+          changed_fields: string[]
+          created_at: string
+          edited_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          snapshot: Json
+          summary: string | null
+        }
+        Insert: {
+          changed_fields?: string[]
+          created_at?: string
+          edited_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          snapshot: Json
+          summary?: string | null
+        }
+        Update: {
+          changed_fields?: string[]
+          created_at?: string
+          edited_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          snapshot?: Json
+          summary?: string | null
         }
         Relationships: []
       }
@@ -2940,6 +3012,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      discard_editor_draft: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: undefined
+      }
       email_queue_status: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -2977,6 +3053,15 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
+      log_admin_activity: {
+        Args: {
+          _action: string
+          _entity_id?: string
+          _entity_type?: string
+          _metadata?: Json
+        }
+        Returns: number
+      }
       log_media_event: {
         Args: {
           _action: string
@@ -3091,6 +3176,16 @@ export type Database = {
         Args: { _order_id: string; _ttl_minutes?: number }
         Returns: undefined
       }
+      save_entity_version: {
+        Args: {
+          _changed_fields?: string[]
+          _entity_id: string
+          _entity_type: string
+          _snapshot: Json
+          _summary?: string
+        }
+        Returns: string
+      }
       search_products: {
         Args: {
           category_filter?: string
@@ -3202,6 +3297,17 @@ export type Database = {
       track_category_event: {
         Args: { _event: string; _id: string }
         Returns: undefined
+      }
+      upsert_editor_draft: {
+        Args: {
+          _base_snapshot?: Json
+          _data: Json
+          _device_label?: string
+          _entity_id: string
+          _entity_type: string
+          _status?: string
+        }
+        Returns: string
       }
     }
     Enums: {
