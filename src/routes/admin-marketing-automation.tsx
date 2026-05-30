@@ -44,6 +44,7 @@ function MarketingAutomationPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [creating, setCreating] = useState<null | { templateKey?: string }>(null);
   const [region, setRegion] = useState<RegionScope>("all");
+  const [focusCampaign, setFocusCampaign] = useState<string | null>(null);
 
   async function load() {
     const data = await fetchMarketingIntel();
