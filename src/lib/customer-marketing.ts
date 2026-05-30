@@ -6,12 +6,12 @@ import {
   launchCampaign,
   pauseCampaign,
   TEMPLATE_BY_KEY,
-  mapCampaignRowFallback,
   type Campaign,
   type CampaignMetrics,
   type CampaignStatus,
   type RegionScope,
-} from "@/lib/customer-marketing-helpers";
+} from "@/lib/marketing-automation";
+import { mapCampaignRow } from "@/lib/inventory-marketing";
 
 /**
  * Customer ↔ Marketing Integration.
