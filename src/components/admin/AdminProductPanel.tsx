@@ -309,6 +309,22 @@ export function AdminProductPanel({ product }: { product: Product }) {
                 </button>
               </div>
 
+              <div className="mb-4">
+                <EditorSaveBar
+                  state={protection.state}
+                  lastSavedAt={protection.lastSavedAt}
+                  recovery={protection.recovery}
+                  onRestore={() => {
+                    const d = protection.restoreDraft();
+                    if (d) setF(d as ReturnType<typeof toForm>);
+                  }}
+                  onDismiss={() => void protection.dismissDraft()}
+                  entityType="product"
+                  entityId={product.slug}
+                  onRestoreVersion={(snap) => setF(snap as ReturnType<typeof toForm>)}
+                />
+              </div>
+
               <div className="space-y-4">
                 <Field label="Title">
                   <Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
