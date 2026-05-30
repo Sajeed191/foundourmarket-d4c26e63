@@ -51,6 +51,7 @@ export function AdminFloatingToolbar() {
   const { adminMode, toggle } = useAdminMode();
   const [open, setOpen] = useState(false);
   const [dashboard, setDashboard] = useState(false);
+  const [bulk, setBulk] = useState(false);
 
   if (loading || !isAdmin) return null;
 
