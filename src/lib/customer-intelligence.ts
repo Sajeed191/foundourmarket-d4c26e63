@@ -95,18 +95,18 @@ export type IntelData = {
 
 export async function fetchCustomerIntel(): Promise<IntelData> {
   const includeSeed = await includeSeedInAnalytics();
-  const seedFilter = <T extends { is_seeded?: boolean }>(q: T) =>
-    includeSeed ? q : (q as { eq: (c: string, v: boolean) => T }).eq("is_seeded", false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seedFilter = (q: any) => (includeSeed ? q : q.eq("is_seeded", false));
 
   const [profilesR, ordersR, itemsR, refundsR, ticketsR, reviewsR, questionsR, wishlistR, productsR] = await Promise.all([
-    seedFilter(supabase.from("profiles").select("id,full_name,phone,country,market_region,created_at").limit(20000) as never),
-    seedFilter(supabase.from("orders").select("id,user_id,total,status,payment_status,market_region,payment_method,contact_email,created_at").order("created_at", { ascending: false }).limit(50000) as never),
-    seedFilter(supabase.from("order_items").select("order_id,product_slug,name,quantity,line_total,unit_price").limit(100000) as never),
+    seedFilter(supabase.from("profiles").select("id,full_name,phone,country,market_region,created_at").limit(20000)),
+    seedFilter(supabase.from("orders").select("id,user_id,total,status,payment_status,market_region,payment_method,contact_email,created_at").order("created_at", { ascending: false }).limit(50000)),
+    seedFilter(supabase.from("order_items").select("order_id,product_slug,name,quantity,line_total,unit_price").limit(100000)),
     supabase.from("refunds").select("order_id,amount,status").limit(50000),
-    seedFilter(supabase.from("support_tickets").select("user_id,status").limit(50000) as never),
-    seedFilter(supabase.from("product_reviews").select("user_id").limit(50000) as never),
-    seedFilter(supabase.from("product_questions").select("user_id").limit(50000) as never),
-    seedFilter(supabase.from("wishlist").select("user_id").limit(50000) as never),
+    seedFilter(supabase.from("support_tickets").select("user_id,status").limit(50000)),
+    seedFilter(supabase.from("product_reviews").select("user_id").limit(50000)),
+    seedFilter(supabase.from("product_questions").select("user_id").limit(50000)),
+    seedFilter(supabase.from("wishlist").select("user_id").limit(50000)),
     supabase.from("products").select("slug,category,cost,cost_price_inr").limit(20000),
   ]);
 
