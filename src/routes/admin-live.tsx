@@ -222,6 +222,15 @@ function AdminLivePage() {
     return () => clearInterval(t);
   }, [loadMetrics]);
 
+  /* historical backfill — merge recent rows from every system into the stream */
+  useEffect(() => {
+    let alive = true;
+    fetchActivityHistory(40)
+      .then((hist) => { if (alive) setEvents((prev) => (prev.length ? prev : hist)); })
+      .catch(() => { /* ignore — realtime will populate */ });
+    return () => { alive = false; };
+  }, []);
+
   const push = useCallback((e: Omit<LiveEvent, "id" | "at" | "severity"> & { at?: number }) => {
     if (pausedRef.current) { setUnread((u) => u + 1); return; }
     setEvents((prev) => [
