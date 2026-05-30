@@ -5,13 +5,14 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone,
   FileText, Truck, RotateCcw, Pencil, Activity, Wallet, Globe, Search,
   Boxes, Loader2, ShieldAlert, Menu, X, Sparkles, TrendingUp, ShoppingCart,
-  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell,
+  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell, Gem,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
+import { useCustomerIntelSummary } from "@/lib/use-customer-intel-summary";
 
 type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
 
