@@ -12,6 +12,7 @@ import {
   Users, Repeat, HeartPulse, XCircle, Boxes, Activity,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
+import { AcquisitionSummary } from "@/components/admin/AcquisitionSummary";
 import { FinancialMarketingHub } from "@/components/admin/FinancialMarketingHub";
 import { supabase } from "@/integrations/supabase/client";
 import {
