@@ -69,6 +69,13 @@ export function CustomerMarketingHub({ rows, focusKey }: { rows: CustomerIntel[]
     [rows, audiences, campaigns],
   );
 
+  // Deep-link: auto-open the targeted audience panel.
+  useEffect(() => {
+    if (!focusKey || loading) return;
+    const aud = audByKey.get(focusKey);
+    if (aud) setFocus(aud);
+  }, [focusKey, loading, audByKey]);
+
   const run = useCallback(async (key: string, fn: () => Promise<{ error?: string }>, ok: string) => {
     setBusy(key);
     try {
