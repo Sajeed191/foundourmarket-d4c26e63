@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import {
+  runAutomationsFn, retryExecutionFn, retryAllFailedFn, setAutomationSettingsFn,
+} from "@/lib/marketing-admin.functions";
+import {
   fetchCustomerIntel, buildCustomerIntel, segmentStats, regionalStats,
   type CustomerIntel, type CustomerSegment, type Region,
 } from "@/lib/customer-intelligence";
