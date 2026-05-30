@@ -236,10 +236,12 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
                 {q.answer && editingId !== q.id ? (
                   <div className="mt-4 ml-11 flex items-start gap-3 p-4 bg-accent/5 border border-accent/20 rounded-xl">
-                    <span className="size-8 shrink-0 rounded-full bg-accent text-accent-foreground grid place-items-center font-mono text-xs font-bold">A</span>
+                    <span className="size-8 shrink-0 rounded-full overflow-hidden grid place-items-center ring-1 ring-accent/30 bg-card">
+                      <img src={brandLogo} alt="FoundOurMarket" className="w-full h-full object-cover" />
+                    </span>
                     <div className="flex-1">
                       <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent mb-1">
-                        <CheckCircle2 className="size-3" /> Official answer
+                        <CheckCircle2 className="size-3" /> FoundOurMarket · Official answer
                       </div>
                       <p className="text-sm leading-relaxed">{q.answer}</p>
                     </div>
