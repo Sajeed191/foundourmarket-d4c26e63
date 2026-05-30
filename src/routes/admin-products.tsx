@@ -926,8 +926,67 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
               className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
           </div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.in_stock} onChange={(e) => setForm({ ...form, in_stock: e.target.checked })} className="accent-[var(--accent)]" /> Active</label>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="accent-[var(--accent)]" /> Featured</label>
+
+          {/* ── Status & publishing ── */}
+          <div>
+            <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Status</label>
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="filter-select">
+              {["published", "draft", "hidden", "archived", "scheduled", "preorder", "out_of_stock"].map((s) => (
+                <option key={s} value={s} className="bg-background">{s.replace(/_/g, " ")}</option>
+              ))}
+            </select>
+          </div>
+          <EField label="Schedule publish at" type="datetime-local" value={form.scheduled_publish_at} onChange={(v) => setForm({ ...form, scheduled_publish_at: v })} />
+
+          {/* ── Badges & merchandising ── */}
+          <div className="col-span-2 flex flex-wrap gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.in_stock} onChange={(e) => setForm({ ...form, in_stock: e.target.checked })} className="accent-[var(--accent)]" /> Active</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="accent-[var(--accent)]" /> Featured</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.bestseller} onChange={(e) => setForm({ ...form, bestseller: e.target.checked })} className="accent-[var(--accent)]" /> Bestseller</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.trending} onChange={(e) => setForm({ ...form, trending: e.target.checked })} className="accent-[var(--accent)]" /> Trending</label>
+          </div>
+
+          {/* ── Tags & features ── */}
+          <EField label="Tags (comma separated)" value={form.tags} onChange={(v) => setForm({ ...form, tags: v })} className="col-span-2" />
+          <div className="col-span-2">
+            <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Feature highlights (one per line)</label>
+            <textarea value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} rows={3}
+              placeholder={"Waterproof design\nUSB-C fast charging"}
+              className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+          </div>
+
+          {/* ── Specifications & attributes (key: value per line) ── */}
+          <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Specifications (key: value)</label>
+              <textarea value={form.specifications} onChange={(e) => setForm({ ...form, specifications: e.target.value })} rows={4}
+                placeholder={"Weight: 250g\nMaterial: Aluminium"}
+                className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+            </div>
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Custom attributes (key: value)</label>
+              <textarea value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} rows={4}
+                placeholder={"Color: Midnight\nEdition: Limited"}
+                className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+            </div>
+          </div>
+
+          {/* ── SEO ── */}
+          <EField label="SEO title" value={form.seo_title} onChange={(v) => setForm({ ...form, seo_title: v })} className="col-span-2" />
+          <div className="col-span-2">
+            <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">SEO description</label>
+            <textarea value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} rows={2}
+              className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+          </div>
+          <EField label="Meta keywords (comma separated)" value={form.meta_keywords} onChange={(v) => setForm({ ...form, meta_keywords: v })} className="col-span-2" />
+
+          {/* ── Internal admin notes ── */}
+          <div className="col-span-2">
+            <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Internal admin notes (staff only)</label>
+            <textarea value={form.admin_notes} onChange={(e) => setForm({ ...form, admin_notes: e.target.value })} rows={2}
+              className="w-full bg-white/[0.03] border border-amber-500/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500/40" />
+          </div>
+
         </div>
 
         {error && <p className="text-xs text-destructive mt-4">{error}</p>}
