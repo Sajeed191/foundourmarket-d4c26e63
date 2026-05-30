@@ -99,7 +99,7 @@ function AdminRegionPage() {
   const pending = requests.filter((r) => r.status === "pending");
 
   return (
-    <AdminShell>
+    <AdminShell title="Region Management">
       <div className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-5 flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
