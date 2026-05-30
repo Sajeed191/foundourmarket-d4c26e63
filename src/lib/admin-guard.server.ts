@@ -59,7 +59,7 @@ export async function logSecurity(entry: SecurityAuditEntry): Promise<void> {
       target: entry.target ?? null,
       source_ip: clientIp(),
       success: entry.success,
-      detail: entry.detail ?? {},
+      detail: (entry.detail ?? {}) as never,
     });
   } catch {
     // Auditing must never break the request path.
