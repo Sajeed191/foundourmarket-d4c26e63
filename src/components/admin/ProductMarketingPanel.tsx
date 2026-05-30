@@ -340,7 +340,7 @@ function Actions({ data, product, run, busy, reload }: {
     <div className="space-y-5">
       <Section title="Quick Actions" icon={Zap}>
         <div className="grid grid-cols-2 gap-2">
-          <ActionBtn icon={Rocket} label="Launch Promotion" busy={busy === "tpl-flash_sale"} onClick={() => makeCampaign("flash_sale" in {} ? "flash_sale" : "schedule_promo", "Promotion", true)} />
+          <ActionBtn icon={Rocket} label="Launch Promotion" busy={busy === "tpl-schedule_promo"} onClick={() => makeCampaign("schedule_promo", "Promotion", true)} />
           <ActionBtn icon={Plus} label="Create Campaign" busy={busy === "tpl-recommended"} onClick={() => makeCampaign("recommended", "Campaign")} />
           <ActionBtn icon={Star} label="Feature Product" active={data.featured} busy={busy === "feature"} onClick={() => run("feature", () => setProductFeatured(product.slug, !data.featured), data.featured ? "Unfeatured" : "Featured product")} />
           <ActionBtn icon={Flame} label="Create Flash Sale" busy={busy === "flash"} onClick={() => run("flash", () => createProductFlashSale({ slug: product.slug, productName: product.name, discountPercent: 20, durationHours: 24 }), "Flash sale created")} />
