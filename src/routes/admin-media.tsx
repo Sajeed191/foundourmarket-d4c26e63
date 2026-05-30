@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Search, Trash2, Copy, Loader2, Images as ImagesIcon } from "lucide-react";
+import { Search, Trash2, Copy, Loader2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { MediaUploader } from "@/components/admin/MediaUploader";
 import {
