@@ -124,6 +124,11 @@ export function AdminCommandCenter() {
   const showIdle = query.trim().length < 2;
   const pinnedIds = new Set(pinned.map((p) => p.id));
 
+  // UX gate only — every action/route is still RLS + role protected server-side.
+  if (roles.size === 0) return null;
+
+
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="overflow-hidden p-0 max-w-2xl gap-0 top-[12%] translate-y-0 sm:top-[15%]">
