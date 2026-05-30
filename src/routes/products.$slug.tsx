@@ -293,6 +293,15 @@ function ProductPage() {
                 ))}
               </div>
             )}
+
+            <ImageLightbox
+              images={galleryImages}
+              index={activeImg}
+              open={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+              onIndexChange={setActiveImg}
+              alt={product.name}
+            />
           </motion.div>
 
 
