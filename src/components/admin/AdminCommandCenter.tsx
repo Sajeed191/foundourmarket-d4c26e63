@@ -23,7 +23,8 @@ const ICONS: Record<string, LucideIcon> = {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image: ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Gem, Crown, UserPlus, Bell, Lightbulb,
-  Play, Pause, ShieldAlert, ShieldCheck, Wrench,
+  Play, Pause, ShieldAlert, ShieldCheck, Wrench, Search, Target: AlertTriangle,
+
 };
 
 function Icon({ name, className }: { name?: string; className?: string }) {
