@@ -54,7 +54,8 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin")
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .in("role", ["admin", "super_admin", "manager", "support"])
       .then(({ data }) => setIsAdmin((data?.length ?? 0) > 0));
   }, [user]);
 
