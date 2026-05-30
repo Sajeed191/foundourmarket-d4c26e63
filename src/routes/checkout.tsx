@@ -145,15 +145,13 @@ function CheckoutPage() {
     if (!settings.cod_enabled && payMethod === "cod") setPayMethod("razorpay");
   }, [settings.cod_enabled, payMethod]);
 
-  const shippingUSD = subtotalUSD > 50 ? 0 : 9.99;
-  const taxUSD = subtotalUSD * 0.08;
-  const totalUSD = Math.max(0, subtotalUSD + shippingUSD + taxUSD);
-
-  const subtotalINR = toInr(subtotalUSD);
-  const shippingINR = toInr(shippingUSD);
-  const taxINR = toInr(taxUSD);
-  const totalINR = Math.max(0, subtotalINR + shippingINR + taxINR);
-  const savingsINR = shippingUSD === 0 ? toInr(9.99) : 0;
+  // Region-native totals — identical math to the server re-pricer, no conversion.
+  const totals = computeOrderTotals(market, subtotalUSD);
+  const subtotalINR = totals.subtotal;
+  const shippingINR = totals.shipping;
+  const taxINR = totals.tax;
+  const totalINR = totals.total;
+  const savingsINR = totals.shipping === 0 ? (market === "india" ? 99 : 9.99) : 0;
   const itemsCount = useMemo(() => detailed.reduce((s, i) => s + i.qty, 0), [detailed]);
 
   const eta = formatEta(3, 5);
