@@ -156,17 +156,35 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     if (authLoading) return;
     let cancelled = false;
 
-    /** Layers 1–3: edge geo-IP blended with browser timezone + locale. */
+    /** Multi-signal engine: edge geo-IP blended with browser + stored signals. */
     async function runDetection() {
       const edge = await detect();
-      const result = blendDetection(edge);
+      const result = blendDetection(edge, getPreviousChoice());
       if (!cancelled) {
         setCountryCode(result.countryCode);
         setConfidence(result.confidence);
+        setReasons(result.reasons);
+        setDetectionTier(result.tier);
         setVpnSuspected(result.vpnSuspected);
       }
+      // Fire-and-forget analytics for the Region Intelligence Center.
+      void track("region_detected", {
+        value: result.confidence,
+        metadata: {
+          region: result.region,
+          confidence: result.confidence,
+          tier: result.tier,
+          source: edge.countryCode ? "geo-ip+signals" : "signals",
+          countryCode: result.countryCode,
+          vpnSuspected: result.vpnSuspected,
+          conflicting: result.conflicting,
+          reasons: result.reasons,
+          loggedIn: !!user,
+        },
+      });
       return result;
     }
+
 
     (async () => {
       setLoading(true);
