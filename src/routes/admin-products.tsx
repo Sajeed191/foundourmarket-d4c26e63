@@ -320,7 +320,7 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, searchTerm, sort, stats]);
+  }, [products, cat, state, stock, searchTerm, sort, stats, view]);
 
   const topSellers = useMemo(() => {
     return [...(products ?? [])]
