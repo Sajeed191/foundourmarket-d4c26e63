@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { InventoryMarketingHub } from "@/components/admin/InventoryMarketingHub";
 import { downloadCSV } from "@/lib/admin-queries";
 import { supabase } from "@/integrations/supabase/client";
 import {
