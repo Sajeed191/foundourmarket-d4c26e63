@@ -234,9 +234,11 @@ export function FinancialMarketingHub({ data, focusView }: { data?: FinancialMar
           </tbody>
         </table>
       </div>
+      </div>
 
       {/* Customer + Product + Regional profitability */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div id="fm-customers" className="scroll-mt-24">
         <Card icon={<Users className="size-4 text-accent" />} title="Customer profitability">
           <ListRow label="VIP profit" value={`${fmt(cust.vipProfit)} · ${cust.vipShare.toFixed(0)}%`} tone="text-emerald-300" />
           {cust.mostProfitableSegments.map((s) => <ListRow key={`mp-${s.segment}`} label={s.segment} value={fmt(s.profit)} />)}
@@ -244,14 +246,18 @@ export function FinancialMarketingHub({ data, focusView }: { data?: FinancialMar
           <ListRow label="Refund-heavy" value={`${cust.refundHeavy.length}`} />
           <ListRow label="Support-heavy" value={`${cust.supportHeavy.length}`} />
         </Card>
+        </div>
 
+        <div id="fm-products" className="scroll-mt-24">
         <Card icon={<Package className="size-4 text-accent" />} title="Product profitability">
           <ListRow label="Profit / order" value={fmt(prod.profitPerOrder)} />
           <ListRow label="Profit / customer" value={fmt(prod.profitPerCustomer)} />
           {prod.mostProfitable.slice(0, 3).map((p) => <ListRow key={`top-${p.slug}`} label={trunc(p.name)} value={fmt(p.profit)} tone="text-emerald-300" />)}
           {prod.lowestMargin.slice(0, 2).map((p) => <ListRow key={`low-${p.slug}`} label={trunc(p.name)} value={`${p.margin.toFixed(0)}%`} tone="text-rose-300" />)}
         </Card>
+        </div>
 
+        <div id="fm-regions" className="scroll-mt-24">
         <Card icon={<Globe className="size-4 text-accent" />} title="Regional profitability">
           {regions.map((r) => (
             <div key={r.region} className="rounded-xl border border-border bg-white/[0.02] px-3 py-2.5 mb-2 last:mb-0">
@@ -267,6 +273,7 @@ export function FinancialMarketingHub({ data, focusView }: { data?: FinancialMar
             </div>
           ))}
         </Card>
+        </div>
       </div>
     </section>
   );
