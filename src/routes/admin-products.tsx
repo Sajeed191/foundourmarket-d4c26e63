@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { VirtualTable } from "@/components/admin/VirtualTable";
+import { BulkActionBar } from "@/components/admin/BulkActionBar";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
