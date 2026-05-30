@@ -186,10 +186,12 @@ function RootComponent() {
                     <RegionSelectModal />
                     {!isAuthRoute && <AdminFloatingToolbar />}
                     {!isAuthRoute && <AdminOverlayIndicator />}
+                    {!isAuthRoute && <AdminCommandCenter />}
                     <CompareTray />
                     <InstallPrompt />
                     <Toaster position="bottom-center" richColors />
                   </div>
+                 </CommandCenterProvider>
                 </AdminModeProvider>
               </CartProvider>
             </RegionProvider>
