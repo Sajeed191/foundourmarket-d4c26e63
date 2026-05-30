@@ -67,6 +67,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Marketing",
     items: [
       { to: "/admin-marketing", label: "Promotions", icon: Megaphone, roles: ["admin", "super_admin", "manager", "editor"] },
+      { to: "/admin-marketing-automation", label: "Marketing Automation", icon: Zap, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-search", label: "Search trends", icon: Search, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin?tab=subscribers", label: "Subscribers", icon: ShoppingBag },
     ],
