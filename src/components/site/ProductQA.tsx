@@ -26,6 +26,8 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   const [busy, setBusy] = useState(false);
   const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [questionDraft, setQuestionDraft] = useState("");
 
   async function load() {
     setLoading(true);
@@ -95,6 +97,21 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     load();
   }
 
+  async function saveQuestion(id: string) {
+    const text = questionDraft.trim();
+    if (!text) return;
+    const { error } = await supabase
+      .from("product_questions")
+      .update({ question: text })
+      .eq("id", id);
+    if (!error) {
+      setEditingQuestionId(null);
+      setQuestionDraft("");
+      load();
+    }
+  }
+
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-border">
       <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
@@ -156,6 +173,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
           {items.map((q) => {
             const canDelete = isAdmin || user?.id === q.user_id;
             const canAnswer = isAdmin && !q.answer;
+            const canEditQuestion = user?.id === q.user_id;
             const prof = profiles[q.user_id];
             const name = prof?.full_name || "Anonymous";
             return (
@@ -166,17 +184,55 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-display truncate">{name}</p>
-                    <p className="text-sm leading-relaxed mt-1">{q.question}</p>
+                    {editingQuestionId === q.id ? (
+                      <div className="mt-2">
+                        <textarea
+                          value={questionDraft}
+                          onChange={(e) => setQuestionDraft(e.target.value)}
+                          rows={3}
+                          maxLength={500}
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent resize-none"
+                        />
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => saveQuestion(q.id)}
+                            className="bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition-all"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => { setEditingQuestionId(null); setQuestionDraft(""); }}
+                            className="px-3 py-1.5 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed mt-1">{q.question}</p>
+                    )}
                     <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                       {new Date(q.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  {canDelete && (
-                    <button onClick={() => remove(q.id)} aria-label="Delete" className="text-muted-foreground hover:text-destructive transition-colors">
-                      <Trash2 className="size-4" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {canEditQuestion && editingQuestionId !== q.id && (
+                      <button
+                        onClick={() => { setEditingQuestionId(q.id); setQuestionDraft(q.question); }}
+                        aria-label="Edit question"
+                        className="text-muted-foreground hover:text-accent transition-colors"
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button onClick={() => remove(q.id)} aria-label="Delete" className="text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="size-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
+
 
 
                 {q.answer && editingId !== q.id ? (
