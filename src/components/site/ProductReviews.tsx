@@ -197,9 +197,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               >
                 {submitting && !editingId ? "Saving…" : "Submit"}
               </button>
-
-              </div>
             </form>
+
           ) : (
             <div className="bg-card border border-border rounded-2xl p-6">
               <p className="text-sm text-muted-foreground mb-4">Sign in to leave a review.</p>
