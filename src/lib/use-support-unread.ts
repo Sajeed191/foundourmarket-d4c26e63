@@ -20,11 +20,11 @@ export function useSupportUnread() {
     if (!user) { setCount(0); return }
     void refresh()
     const ch = supabase
-      .channel(`support-unread:${user.id}`)
+      .channel(`support-unread:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_reads', filter: `user_id=eq.${user.id}` }, () => refresh())
       .subscribe()
-    return () => { supabase.removeChannel(ch) }
+    return () => { void supabase.removeChannel(ch) }
   }, [user, refresh])
 
   return { count, refresh }
@@ -48,11 +48,11 @@ export function useAdminSupportUnread(enabled = true) {
     if (!user || !enabled) { setCount(0); return }
     void refresh()
     const ch = supabase
-      .channel(`admin-support-unread:${user.id}`)
+      .channel(`admin-support-unread:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_reads', filter: `user_id=eq.${user.id}` }, () => refresh())
       .subscribe()
-    return () => { supabase.removeChannel(ch) }
+    return () => { void supabase.removeChannel(ch) }
   }, [user, enabled, refresh])
 
   return { count, refresh }
