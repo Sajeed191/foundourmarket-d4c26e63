@@ -32,7 +32,7 @@ export const Route = createFileRoute("/admin-marketing-automation")({
   component: MarketingAutomationPage,
 });
 
-type Tab = "dashboard" | "campaigns" | "automations" | "recommendations";
+type Tab = "dashboard" | "campaigns" | "automations" | "recommendations" | "executions";
 
 const REGION_LABEL: Record<RegionScope, string> = { all: "All regions", india: "India", international: "International" };
 const MKT_ROLES = ["admin", "super_admin", "manager", "editor"] as unknown as Parameters<typeof AdminShell>[0]["allow"];
