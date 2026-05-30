@@ -2553,6 +2553,57 @@ export type Database = {
         }
         Relationships: []
       }
+      storefront_blocks: {
+        Row: {
+          active: boolean
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          publish_at: string | null
+          region: string
+          sort_order: number
+          status: string
+          subtitle: string
+          title: string
+          type: string
+          unpublish_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          publish_at?: string | null
+          region?: string
+          sort_order?: number
+          status?: string
+          subtitle?: string
+          title?: string
+          type: string
+          unpublish_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          publish_at?: string | null
+          region?: string
+          sort_order?: number
+          status?: string
+          subtitle?: string
+          title?: string
+          type?: string
+          unpublish_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       super_admin_bootstrap: {
         Row: {
           created_at: string
