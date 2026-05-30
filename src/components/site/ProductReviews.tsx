@@ -31,7 +31,14 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [editHoverRating, setEditHoverRating] = useState(0);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .in("role", ["admin", "super_admin", "manager", "support"])
+      .then(({ data }) => setIsAdmin((data?.length ?? 0) > 0));
+  }, [user]);
 
   const load = async () => {
     setLoading(true);
