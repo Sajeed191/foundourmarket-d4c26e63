@@ -241,6 +241,54 @@ export function AdminFloatingToolbar() {
                 <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Winback</span>
               </Link>
             </div>
+            <Link
+              to="/admin-financial"
+              search={{ view: "profit" } as never}
+              onClick={() => setOpen(false)}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2.5 transition-all hover:bg-accent/20"
+            >
+              <Wallet className="size-3.5 text-accent" />
+              <span className="text-xs font-medium text-foreground">Financial Marketing</span>
+              <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-accent">Profit</span>
+            </Link>
+            <div className="mb-2 grid grid-cols-2 gap-1">
+              <Link
+                to="/admin-financial"
+                search={{ view: "profit" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <TrendingUp className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Profit Intel</span>
+              </Link>
+              <Link
+                to="/admin-financial"
+                search={{ view: "campaigns" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Target className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Campaign ROI</span>
+              </Link>
+              <Link
+                to="/admin-financial"
+                search={{ view: "alerts" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Percent className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Margin Alerts</span>
+              </Link>
+              <Link
+                to="/admin-financial"
+                search={{ view: "recs" } as never}
+                onClick={() => setOpen(false)}
+                className="group flex flex-col items-center gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-1.5 py-2.5 text-center transition-all hover:border-accent/40 hover:bg-accent/10"
+              >
+                <Sparkles className="size-4 text-muted-foreground group-hover:text-accent" />
+                <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground">Profit Ops</span>
+              </Link>
+            </div>
             <button
               onClick={() => {
                 setOpen(false);
