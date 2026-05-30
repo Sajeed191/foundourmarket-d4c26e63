@@ -358,3 +358,13 @@ export async function fetchOrderOps(limit = 400): Promise<OrderOps> {
   if (!data) throw new Error("No data returned");
   return deriveOps(data);
 }
+
+export async function fetchStaffPerformance(): Promise<StaffPerformance[]> {
+  const { data, error } = await (supabase.rpc as unknown as (
+    fn: string,
+  ) => Promise<{ data: { staff: StaffPerformance[] } | null; error: { message: string } | null }>)(
+    "admin_staff_performance",
+  );
+  if (error) throw new Error(error.message);
+  return data?.staff ?? [];
+}
