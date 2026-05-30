@@ -112,6 +112,10 @@ function ProductPage() {
     if (product) {
       record(product.slug);
       recordEvent({ type: "view", productSlug: product.slug, category: product.category });
+      import("@/lib/visitor").then((m) => m.trackEvent("product_view", {
+        productSlug: product.slug,
+        metadata: { category: product.category, price: product.price },
+      })).catch(() => {});
       fetchFBT(product.slug, 4).then(setFbtSlugs);
       fetchAlsoViewed(product.slug, 6).then(setAlsoViewed);
     }
