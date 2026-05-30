@@ -37,6 +37,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
+import { Route as AdminOrdersOpsRouteImport } from './routes/admin-orders-ops'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
 import { Route as AdminMarketingAutomationRouteImport } from './routes/admin-marketing-automation'
@@ -227,6 +228,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/admin-payments',
   path: '/admin-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOrdersOpsRoute = AdminOrdersOpsRouteImport.update({
+  id: '/admin-orders-ops',
+  path: '/admin-orders-ops',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -518,6 +524,7 @@ export interface FileRoutesByFullPath {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -599,6 +606,7 @@ export interface FileRoutesByTo {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -681,6 +689,7 @@ export interface FileRoutesById {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-reports': typeof AdminReportsRoute
@@ -764,6 +773,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -845,6 +855,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -926,6 +937,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
     | '/admin-reports'
@@ -1008,6 +1020,7 @@ export interface RootRouteChildren {
   AdminMarketingAutomationRoute: typeof AdminMarketingAutomationRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminOrdersOpsRoute: typeof AdminOrdersOpsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -1258,6 +1271,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-payments'
       fullPath: '/admin-payments'
       preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-orders-ops': {
+      id: '/admin-orders-ops'
+      path: '/admin-orders-ops'
+      fullPath: '/admin-orders-ops'
+      preLoaderRoute: typeof AdminOrdersOpsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-notifications': {
@@ -1675,6 +1695,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMarketingAutomationRoute: AdminMarketingAutomationRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminOrdersOpsRoute: AdminOrdersOpsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReportsRoute: AdminReportsRoute,

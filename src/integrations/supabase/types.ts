@@ -3955,6 +3955,7 @@ export type Database = {
         Args: { _action: string; _ids: string[]; _params?: Json }
         Returns: Json
       }
+      admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
       delete_email: {
