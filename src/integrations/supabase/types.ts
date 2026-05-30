@@ -152,6 +152,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_recommendations: {
+        Row: {
+          acted_at: string | null
+          acted_by: string | null
+          action_kind: string | null
+          affected_systems: string[]
+          assigned_to: string | null
+          category: string
+          confidence: number
+          created_at: string
+          created_by: string | null
+          deep_link: string | null
+          id: string
+          impact: number
+          outcome: string | null
+          outcome_value: number | null
+          payload: Json
+          priority: string
+          reasoning: string | null
+          rec_key: string
+          snooze_until: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acted_at?: string | null
+          acted_by?: string | null
+          action_kind?: string | null
+          affected_systems?: string[]
+          assigned_to?: string | null
+          category?: string
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          deep_link?: string | null
+          id?: string
+          impact?: number
+          outcome?: string | null
+          outcome_value?: number | null
+          payload?: Json
+          priority?: string
+          reasoning?: string | null
+          rec_key: string
+          snooze_until?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acted_at?: string | null
+          acted_by?: string | null
+          action_kind?: string | null
+          affected_systems?: string[]
+          assigned_to?: string | null
+          category?: string
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          deep_link?: string | null
+          id?: string
+          impact?: number
+          outcome?: string | null
+          outcome_value?: number | null
+          payload?: Json
+          priority?: string
+          reasoning?: string | null
+          rec_key?: string
+          snooze_until?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
