@@ -178,7 +178,7 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
           {!editing && (
             <>
               <button
-                onClick={() => setEditing(blank())}
+                onClick={() => openEditor(blank())}
                 className="mb-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground"
               >
                 <Plus className="size-3.5" /> New announcement
@@ -191,7 +191,7 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
                   >
                     <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
                     <AnnouncementIcon icon={r.icon} className="size-4 shrink-0 text-accent" />
-                    <button onClick={() => setEditing(r)} className="min-w-0 flex-1 text-left">
+                    <button onClick={() => openEditor(r)} className="min-w-0 flex-1 text-left">
                       <p className={cn("truncate text-sm", !r.active && "text-muted-foreground line-through")}>
                         {r.message}
                       </p>
