@@ -382,9 +382,6 @@ export function buildMarketingRecommendations(intel: MarketingIntel): MarketingR
   return out.sort((a, b) => b.impact - a.impact);
 }
 
-declare module "@/lib/inventory-intelligence" {
-  interface ProductIntel { wishlistDemand?: () => boolean }
-}
 
 /* ---------------------------------------------- notification alerts */
 
