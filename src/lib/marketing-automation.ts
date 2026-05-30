@@ -761,23 +761,29 @@ export async function setAutomationSettings(
   next: Pick<AutomationSettings, "emergency_stop" | "global_pause" | "maintenance_mode">,
   reason?: string,
 ): Promise<{ settings?: AutomationSettings; error?: string }> {
-  const { data, error } = await supabase.rpc("set_automation_settings", {
-    p_emergency: next.emergency_stop,
-    p_global: next.global_pause,
-    p_maintenance: next.maintenance_mode,
-  } as never);
-  if (error) return { error: error.message };
-  logActivity("marketing_automation_controls", "automation_settings", "global", { ...next, reason: reason ?? null });
-  const r = (data ?? {}) as Record<string, unknown>;
-  return {
-    settings: {
-      emergency_stop: r.emergency_stop === true,
-      global_pause: r.global_pause === true,
-      maintenance_mode: r.maintenance_mode === true,
-      updated_by: (r.updated_by as string) ?? null,
-      updated_at: (r.updated_at as string) ?? null,
-    },
-  };
+  try {
+    const data = await setAutomationSettingsFn({
+      data: {
+        emergency_stop: next.emergency_stop,
+        global_pause: next.global_pause,
+        maintenance_mode: next.maintenance_mode,
+        reason: reason ?? null,
+      },
+    });
+    logActivity("marketing_automation_controls", "automation_settings", "global", { ...next, reason: reason ?? null });
+    const r = (data ?? {}) as Record<string, unknown>;
+    return {
+      settings: {
+        emergency_stop: r.emergency_stop === true,
+        global_pause: r.global_pause === true,
+        maintenance_mode: r.maintenance_mode === true,
+        updated_by: (r.updated_by as string) ?? null,
+        updated_at: (r.updated_at as string) ?? null,
+      },
+    };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed to update controls" };
+  }
 }
 
 export function systemBlocked(s: AutomationSettings): boolean {
