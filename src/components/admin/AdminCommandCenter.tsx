@@ -8,6 +8,7 @@ import {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image as ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
   Activity, LayoutDashboard, FileText, Loader2, Sparkles, Clock, Pin, PinOff, Search, ArrowRight,
+  Gem, Crown, UserPlus, Bell, Lightbulb,
   type LucideIcon,
 } from "lucide-react";
 import { useCommandCenter, pushRecentSearch, getRecentSearches, pushRecentAction, getRecentActions, getPinned, togglePinned, type RecentAction } from "@/lib/command-center";
@@ -19,7 +20,7 @@ import { logActivity } from "@/components/admin/AdminShell";
 const ICONS: Record<string, LucideIcon> = {
   Package, PackagePlus, Tag, ShoppingBag, RotateCcw, Users, Cpu, AlertTriangle, Boxes,
   Image: ImageIcon, Megaphone, LayoutTemplate, Pencil, LifeBuoy, Zap, BarChart3, Wallet,
-  Activity, LayoutDashboard, FileText,
+  Activity, LayoutDashboard, FileText, Gem, Crown, UserPlus, Bell, Lightbulb,
 };
 
 function Icon({ name, className }: { name?: string; className?: string }) {

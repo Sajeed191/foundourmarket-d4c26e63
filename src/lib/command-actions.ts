@@ -30,6 +30,13 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-returns", group: "Orders", icon: "RotateCcw", label: "Refunds & returns", to: "/admin-returns", roles: SUPPORT, action: "cmd_open_returns", keywords: "refund return rma" },
   // Customers
   { id: "qa-customers", group: "Customers", icon: "Users", label: "Open customers", to: "/admin-customers", roles: SUPPORT, action: "cmd_open_customers" },
+  { id: "qa-cust-intel", group: "Customers", icon: "Gem", label: "Customer intelligence", to: "/admin-customer-intelligence", roles: SUPPORT, action: "cmd_cust_intel", keywords: "customer insights intelligence rfm segment churn loyal value analytics" },
+  { id: "qa-cust-vip", group: "Customers", icon: "Crown", label: "VIP customers", to: "/admin-customer-intelligence?view=vip", roles: SUPPORT, action: "cmd_cust_vip", keywords: "vip top spenders best customers high value" },
+  { id: "qa-cust-risk", group: "Customers", icon: "AlertTriangle", label: "At-risk customers", to: "/admin-customer-intelligence?view=risk", roles: SUPPORT, action: "cmd_cust_risk", keywords: "churn at risk leaving lost win back" },
+  { id: "qa-cust-new", group: "Customers", icon: "UserPlus", label: "New customers", to: "/admin-customer-intelligence?view=new", roles: SUPPORT, action: "cmd_cust_new", keywords: "new recent signups fresh" },
+  { id: "qa-cust-highvalue", group: "Customers", icon: "Gem", label: "High value customers", to: "/admin-customer-intelligence?view=high-value", roles: SUPPORT, action: "cmd_cust_highvalue", keywords: "high value big spenders ltv lifetime" },
+  { id: "qa-cust-alerts", group: "Customers", icon: "Bell", label: "Customer alerts", to: "/admin-customer-intelligence?view=alerts", roles: SUPPORT, action: "cmd_cust_alerts", keywords: "customer alerts churn vip order refund" },
+  { id: "qa-cust-recs", group: "Customers", icon: "Lightbulb", label: "Customer recommendations", to: "/admin-customer-intelligence?view=recommendations", roles: SUPPORT, action: "cmd_cust_recs", keywords: "recommendations promote winback suggestions" },
   // Inventory
   { id: "qa-inv-intel", group: "Inventory", icon: "Cpu", label: "Inventory intelligence", to: "/admin-inventory-intelligence", roles: WAREHOUSE, action: "cmd_inv_intel", keywords: "forecast risk predict" },
   { id: "qa-inv-risk", group: "Inventory", icon: "AlertTriangle", label: "View risk products", to: "/admin-inventory-intelligence?view=risk", roles: WAREHOUSE, action: "cmd_inv_risk", keywords: "low stock out of stock risk" },
@@ -75,6 +82,11 @@ export function interpretNaturalLanguage(q: string): string | null {
   if ((s.includes("create") || s.includes("new") || s.includes("launch")) && (s.includes("flash") || s.includes("sale"))) return "qa-flash-sale";
   if ((s.includes("create") || s.includes("new") || s.includes("add")) && s.includes("product")) return "qa-create-product";
   if (s.includes("forecast") || s.includes("predict")) return "qa-inv-intel";
+  if (s.includes("vip")) return "qa-cust-vip";
+  if (s.includes("churn") || (s.includes("at risk") && s.includes("customer")) || s.includes("at-risk")) return "qa-cust-risk";
+  if ((s.includes("high value") || s.includes("high-value") || s.includes("big spender")) && !s.includes("product")) return "qa-cust-highvalue";
+  if (s.includes("new customer")) return "qa-cust-new";
+  if (s.includes("loyal") || s.includes("customer insight") || s.includes("customer intelligence")) return "qa-cust-intel";
   if (s.includes("refund") || s.includes("return")) return "qa-returns";
   if (test("revenue") || test("financial") || test("money")) return "qa-financial";
   return null;

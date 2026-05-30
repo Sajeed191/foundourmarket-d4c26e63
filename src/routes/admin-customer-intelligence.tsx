@@ -19,6 +19,7 @@ import {
 
 export const Route = createFileRoute("/admin-customer-intelligence")({
   head: () => ({ meta: [{ title: "Customer Intelligence — Admin" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ view: typeof s.view === "string" ? s.view : undefined }),
   component: CustomerIntelPage,
 });
 
@@ -38,6 +39,7 @@ const SEGMENTS: CustomerSegment[] = [
 
 function CustomerIntelPage() {
   const nav = useNavigate();
+  const { view } = Route.useSearch();
   const [rows, setRows] = useState<CustomerIntel[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,6 +56,7 @@ function CustomerIntelPage() {
 
   useEffect(() => {
     load();
+    logActivity("customer_intel_dashboard_open", "customer", undefined, { view: view ?? null });
     const ch = supabase.channel("cust-intel-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
@@ -61,6 +64,22 @@ function CustomerIntelPage() {
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Deep-link views (?view=vip|risk|new|high-value|alerts|recommendations)
+  useEffect(() => {
+    if (!view || loading) return;
+    if (view === "risk") setSegment("At Risk");
+    else if (view === "new") setSegment("New Customers");
+    const anchorMap: Record<string, string> = {
+      vip: "ci-vip", "high-value": "ci-vip", alerts: "ci-alerts", recommendations: "ci-recs",
+      risk: "ci-explorer", new: "ci-explorer",
+    };
+    const id = anchorMap[view];
+    if (id) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    logActivity("customer_intel_segment_view", "customer", undefined, { view });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, loading]);
+
 
   const data = rows ?? [];
   const health = useMemo(() => computeHealth(data), [data]);
@@ -199,7 +218,7 @@ function CustomerIntelPage() {
       </div>
 
       {/* VIP DETECTION + ALERTS */}
-      <div className="mt-6 grid lg:grid-cols-2 gap-4">
+      <div id="ci-vip" className="mt-6 grid lg:grid-cols-2 gap-4 scroll-mt-20">
         <div className="card-premium rounded-2xl p-5">
           <h2 className="text-sm font-display font-semibold mb-4 flex items-center gap-2"><Crown className="size-4 text-accent" /> Top Spenders</h2>
           <div className="space-y-1.5">
@@ -215,7 +234,7 @@ function CustomerIntelPage() {
             {!vips.topSpenders.length && <p className="text-xs text-muted-foreground">No paid customers yet.</p>}
           </div>
         </div>
-        <div className="card-premium rounded-2xl p-5">
+        <div id="ci-alerts" className="card-premium rounded-2xl p-5 scroll-mt-20">
           <h2 className="text-sm font-display font-semibold mb-4 flex items-center gap-2"><AlertTriangle className="size-4 text-accent" /> Alerts</h2>
           <div className="space-y-1.5 max-h-72 overflow-y-auto">
             {alerts.map((a) => (
@@ -233,7 +252,7 @@ function CustomerIntelPage() {
       </div>
 
       {/* SMART RECOMMENDATIONS */}
-      <div className="mt-6 card-premium rounded-2xl p-5">
+      <div id="ci-recs" className="mt-6 card-premium rounded-2xl p-5 scroll-mt-20">
         <h2 className="text-sm font-display font-semibold mb-4 flex items-center gap-2"><Lightbulb className="size-4 text-accent" /> Smart Recommendations</h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
           {recs.map((r) => (
@@ -255,7 +274,7 @@ function CustomerIntelPage() {
       </div>
 
       {/* CUSTOMER EXPLORER */}
-      <div className="mt-6 card-premium rounded-2xl p-5">
+      <div id="ci-explorer" className="mt-6 card-premium rounded-2xl p-5 scroll-mt-20">
         <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
           <h2 className="text-sm font-display font-semibold flex items-center gap-2 flex-1"><Users className="size-4 text-accent" /> Customer Explorer</h2>
           <div className="relative">

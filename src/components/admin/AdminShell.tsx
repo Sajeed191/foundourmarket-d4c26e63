@@ -5,13 +5,14 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone,
   FileText, Truck, RotateCcw, Pencil, Activity, Wallet, Globe, Search,
   Boxes, Loader2, ShieldAlert, Menu, X, Sparkles, TrendingUp, ShoppingCart,
-  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell,
+  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell, Gem,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
+import { useCustomerIntelSummary } from "@/lib/use-customer-intel-summary";
 
 type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
 
@@ -49,6 +50,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Customers",
     items: [
       { to: "/admin-customers", label: "Customers", icon: Users, roles: ["admin", "super_admin", "manager", "support"] },
+      { to: "/admin-customer-intelligence", label: "Customer Intelligence", icon: Gem, roles: ["admin", "super_admin", "manager", "support"] },
       { to: "/admin-support", label: "Support", icon: LifeBuoy, roles: ["admin", "super_admin", "manager", "support"] },
     ],
   },
@@ -119,6 +121,7 @@ export function AdminShell({
   const [query, setQuery] = useState("");
   const [live, setLive] = useState<{ revenue: number; orders: number }>({ revenue: 0, orders: 0 });
   const { count: supportUnread } = useAdminSupportUnread();
+  const intel = useCustomerIntelSummary(!!user);
   const cmd = useCommandCenter();
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
@@ -370,6 +373,19 @@ export function AdminShell({
                             {it.to === "/admin-support" && supportUnread > 0 && (
                               <span className="relative min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center shadow-[0_0_10px_var(--color-accent)]">
                                 {supportUnread > 99 ? "99+" : supportUnread}
+                              </span>
+                            )}
+                            {it.to === "/admin-customer-intelligence" && intel && (intel.vip + intel.atRisk + intel.newCustomers) > 0 && (
+                              <span className="relative flex items-center gap-1">
+                                {intel.vip > 0 && (
+                                  <span title="VIP customers" className="min-w-4 h-4 px-1 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-inset ring-amber-400/30 text-[8px] font-bold font-mono grid place-items-center">{intel.vip > 99 ? "99+" : intel.vip}</span>
+                                )}
+                                {intel.atRisk > 0 && (
+                                  <span title="At-risk customers" className="min-w-4 h-4 px-1 rounded-full bg-destructive/15 text-destructive ring-1 ring-inset ring-destructive/30 text-[8px] font-bold font-mono grid place-items-center">{intel.atRisk > 99 ? "99+" : intel.atRisk}</span>
+                                )}
+                                {intel.newCustomers > 0 && (
+                                  <span title="New customers (30d)" className="min-w-4 h-4 px-1 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30 text-[8px] font-bold font-mono grid place-items-center">{intel.newCustomers > 99 ? "99+" : intel.newCustomers}</span>
+                                )}
                               </span>
                             )}
                             <ChevronRight className={`relative size-3.5 shrink-0 transition-all duration-300 ${active ? "opacity-70" : "opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0"}`} />
