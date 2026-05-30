@@ -50,7 +50,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 function MarketingPage() {
-  const [tab, setTab] = useState<"banners" | "flash">("banners");
+  const [tab, setTab] = useState<"banners" | "flash" | "badges">("banners");
   const [banners, setBanners] = useState<Banner[] | null>(null);
   const [flash, setFlash] = useState<Flash[] | null>(null);
   const [editingB, setEditingB] = useState<Banner | "new" | null>(null);
