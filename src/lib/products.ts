@@ -26,6 +26,8 @@ export type Product = {
   lowStockThreshold: number;
   viewsCount: number;
   createdAt: string;
+  soldCount: number;
+  wishlistCount: number;
   // Dual-region independent admin-defined pricing (no currency conversion)
   priceInr: number | null;
   comparePriceInr: number | null;
