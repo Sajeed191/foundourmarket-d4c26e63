@@ -34,7 +34,14 @@ type Product = {
   price_inr: number | null; compare_price_inr: number | null;
   price_usd: number | null; compare_price_usd: number | null;
   india_visible: boolean; international_visible: boolean;
+  status?: string | null;
+  tags?: string[] | null; features?: string[] | null; meta_keywords?: string[] | null;
+  seo_title?: string | null; seo_description?: string | null;
+  specifications?: Record<string, string> | null; attributes?: Record<string, string> | null;
+  admin_notes?: string | null; bestseller?: boolean; trending?: boolean;
+  scheduled_publish_at?: string | null;
 };
+
 type Category = { slug: string; name: string };
 type Stat = { units: number; revenue: number; orders: number };
 
