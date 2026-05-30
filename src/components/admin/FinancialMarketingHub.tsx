@@ -125,7 +125,7 @@ export function FinancialMarketingHub({ data, focusView }: { data?: FinancialMar
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-2 mb-5">
+        <div id="fm-alerts" className="grid gap-2 sm:grid-cols-2 mb-5 scroll-mt-24">
           {alerts.map((a) => (
             <div key={a.id} className={`flex items-start gap-2.5 rounded-xl glass px-3 py-2.5 border-l-2 ${a.severity === "high" ? "border-rose-400" : a.severity === "medium" ? "border-amber-400" : "border-sky-400"}`}>
               <AlertTriangle className={`size-3.5 mt-0.5 shrink-0 ${a.severity === "high" ? "text-rose-300" : a.severity === "medium" ? "text-amber-300" : "text-sky-300"}`} />
@@ -136,6 +136,7 @@ export function FinancialMarketingHub({ data, focusView }: { data?: FinancialMar
       )}
 
       {/* Profit analytics */}
+      <div id="fm-profit" className="scroll-mt-24">
       <SubHead icon={<Sparkles className="size-4 text-accent" />} title="Profit analytics" />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-5">
         <Kpi label="Gross Margin" value={`${pa.grossMargin.toFixed(1)}%`} />
