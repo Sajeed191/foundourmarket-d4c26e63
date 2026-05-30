@@ -840,69 +840,6 @@ function AnnouncementStrip() {
   );
 }
 
-function WhyShopWithUs() {
-  const items = [
-    { icon: Lock, title: "Secure Payments", desc: "256-bit SSL encryption" },
-    { icon: Globe, title: "Worldwide Shipping", desc: "Delivered to 100+ countries" },
-    { icon: BadgeCheck, title: "Trusted Quality", desc: "Authentic & verified" },
-    { icon: Truck, title: "Fast Delivery", desc: "Reliable standard shipping" },
-    { icon: Headphones, title: "24/7 Support", desc: "We're always here" },
-  ];
-  const [feature, ...rest] = items;
-  const Feature = feature.icon;
-  return (
-    <motion.section {...fadeUp}>
-      <SectionHeader title="Why shop with us" eyebrow="The FoundOurMarket promise" />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-        {/* Featured asymmetric ambient card */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
-          whileHover={{ y: -4 }}
-          className="card-ambient noise-layer glass-reflect col-span-2 row-span-2 p-5 sm:p-6 flex flex-col justify-between gap-4 min-h-[180px]"
-        >
-          <div aria-hidden className="pointer-events-none absolute -top-10 -left-6 size-44 rounded-full blur-3xl opacity-50 animate-ambient" style={{ background: "var(--gradient-ember)" }} />
-          <span className="relative size-14 rounded-2xl bg-accent/20 text-accent grid place-items-center ring-1 ring-accent/40 shadow-[0_0_28px_-6px_var(--color-accent)]">
-            <Feature className="size-6" />
-          </span>
-          <div className="relative">
-            <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent mb-1.5">Why us</p>
-            <p className="text-lg sm:text-xl font-display font-semibold leading-tight">{feature.title}</p>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-[28ch]">{feature.desc} — built into every order, on every continent.</p>
-          </div>
-        </motion.div>
-
-        {/* Varied supporting tiles */}
-        {rest.map((it, idx) => {
-          const Icon = it.icon;
-          const variant = idx % 2 === 0 ? "card-elevated" : "card-outline";
-          return (
-            <motion.div
-              key={it.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, ease, delay: idx * 0.06 }}
-              whileHover={{ y: -3 }}
-              className={`group ${variant} p-3.5 sm:p-4 flex flex-col items-start gap-2.5`}
-            >
-              <span className="size-11 rounded-xl bg-accent/12 text-accent grid place-items-center shadow-[0_0_20px_-7px_var(--color-accent)] group-hover:bg-accent/22 group-hover:shadow-[0_0_24px_-6px_var(--color-accent)] transition-all">
-                <Icon className="size-5" />
-              </span>
-              <div>
-                <p className="text-[13px] font-medium leading-tight">{it.title}</p>
-                <p className="text-[11px] text-muted-foreground leading-snug mt-1">{it.desc}</p>
-
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </motion.section>
-  );
-}
 
 
 function ProfileCompletion({ user, profile }: { user: { email?: string | null; user_metadata?: Record<string, unknown> }; profile: Profile | null }) {
