@@ -27,14 +27,14 @@ const TYPES = ["promo", "hero", "offer"] as const;
 const REGIONS = ["all", "india", "international"] as const;
 const PAGE_OPTIONS = ["home", "shop", "product", "category", "cart", "checkout", "deals"] as const;
 
-const blank = (): Partial<BannerRow> => ({
+const blank = (type: BannerRow["type"] = "promo"): Partial<BannerRow> => ({
   title: "",
   subtitle: null,
   image: null,
   mobile_image: null,
   link: null,
   cta_text: null,
-  type: "promo",
+  type,
   region: "all",
   pages: [],
   active: true,
