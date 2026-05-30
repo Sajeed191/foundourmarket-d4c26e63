@@ -437,6 +437,8 @@ export const placeCodOrder = createServerFn({ method: "POST" })
         shipping_address: addr,
         payment_method: "cod",
         payment_status: "pending",
+        attribution_session_id: data.attribution?.session_id ?? null,
+        attribution_utm: (data.attribution?.utm ?? {}) as never,
       })
       .select("id")
       .single();
