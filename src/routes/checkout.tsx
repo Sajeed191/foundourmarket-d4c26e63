@@ -289,7 +289,7 @@ function CheckoutPage() {
   useEffect(() => {
     if (stage === "success") {
       import("@/lib/visitor").then((m) => m.trackEvent("purchase", {
-        value: totalINR, metadata: { order_id: orderId, pay_method: payMethod },
+        value: totalINR, metadata: { order_id: placedOrderId, pay_method: payMethod },
       })).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
