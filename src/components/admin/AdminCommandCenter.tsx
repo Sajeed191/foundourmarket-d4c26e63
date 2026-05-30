@@ -84,7 +84,7 @@ export function AdminCommandCenter() {
     if (a.action) logActivity(a.action, "command", a.id, a.meta);
     else logActivity("cmd_navigate", "command", a.id ?? a.to, { label: a.label });
     setOpen(false);
-    nav({ to: a.to });
+    go(a.to);
   }
 
   function runSearchResult(r: SearchResult) {
@@ -92,7 +92,7 @@ export function AdminCommandCenter() {
     pushRecentAction({ id: r.id, label: r.title, to: r.to, icon: r.icon });
     logActivity("cmd_open_result", (r.meta?.kind as string) ?? r.group, r.id, { title: r.title });
     setOpen(false);
-    nav({ to: r.to });
+    go(r.to);
   }
 
   function onPin(e: React.MouseEvent, a: RecentAction) {
