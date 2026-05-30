@@ -631,18 +631,26 @@ export async function fetchExecutions(limit = 200): Promise<AutomationExecution[
 
 /** Retry a single failed execution. */
 export async function retryExecution(executionId: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc("retry_failed_execution", { p_execution_id: executionId } as never);
-  if (error) return { error: error.message };
-  logActivity("marketing_automation_retry", "automation_execution", executionId, {});
-  return {};
+  try {
+    await retryExecutionFn({ data: { executionId } });
+    logActivity("marketing_automation_retry", "automation_execution", executionId, {});
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed to retry execution" };
+  }
 }
 
 /** Retry every retryable failed execution. */
 export async function retryAllFailed(): Promise<{ count?: number; error?: string }> {
-  const { data, error } = await supabase.rpc("retry_all_failed_executions", {} as never);
-  if (error) return { error: error.message };
-  logActivity("marketing_automation_retry_all", "marketing", undefined, { count: data });
-  return { count: Number(data) || 0 };
+  try {
+    const data = await retryAllFailedFn();
+    const count = Number((data as { retried?: number })?.retried) || 0;
+    logActivity("marketing_automation_retry_all", "marketing", undefined, { count });
+    return { count };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed to retry executions" };
+  }
+}
 }
 
 export type ExecutionAnalytics = {
