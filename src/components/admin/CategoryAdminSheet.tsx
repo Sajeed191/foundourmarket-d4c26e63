@@ -194,12 +194,42 @@ export function CategoryAdminSheet({
   function open(row: Partial<Row>) {
     setEditing(row);
     setOriginal(JSON.stringify(row));
+    // Look for a recoverable draft (local first for instant crash recovery,
+    // then the database-synced copy from another device/session).
+    const id = row.id ?? "new";
+    const local = readLocalDraft("category", id);
+    if (local) {
+      setRecovery({ data: local.data as Partial<Row>, savedAt: local.savedAt });
+    }
+    void fetchDraft("category", id).then((d) => {
+      if (d && (!local || new Date(d.updated_at) > new Date(local.savedAt))) {
+        setRecovery({
+          data: d.data as Partial<Row>,
+          savedAt: d.updated_at,
+          device: d.device_label,
+        });
+      }
+    });
+  }
+
+  function restoreDraft() {
+    if (recovery) {
+      setEditing(recovery.data);
+      void logAdminActivity("draft_recover", "category", entityId);
+    }
+    setRecovery(null);
+  }
+
+  async function dismissDraft() {
+    setRecovery(null);
+    await discardDraft("category", entityId).catch(() => {});
   }
 
   function tryClose() {
     if (dirty && !confirm("Discard unsaved changes?")) return;
     setEditing(null);
   }
+
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
