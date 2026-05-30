@@ -651,7 +651,6 @@ export async function retryAllFailed(): Promise<{ count?: number; error?: string
     return { error: e instanceof Error ? e.message : "Failed to retry executions" };
   }
 }
-}
 
 export type ExecutionAnalytics = {
   totalRuns: number;
