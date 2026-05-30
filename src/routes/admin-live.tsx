@@ -249,7 +249,7 @@ function AdminLivePage() {
       channelStatus.current[name] = ok;
       const all = Object.values(channelStatus.current);
       if (all.some((v) => v === false)) setConn("error");
-      else if (all.length >= 6) setConn("live");
+      else if (all.length >= 12) setConn("live");
     };
 
     const sub = (name: string, builder: (ch: ReturnType<typeof supabase.channel>) => ReturnType<typeof supabase.channel>) => {
