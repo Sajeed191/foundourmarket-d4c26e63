@@ -21,7 +21,7 @@ import {
   type MarketingIntel, type Campaign, type RegionScope, type AudienceRow,
 } from "@/lib/marketing-automation";
 import { fetchAutomationSettings, type AutomationSettings } from "@/lib/marketing-automation";
-import { MarketingExecutionsCenter, AutomationStatusBanner } from "@/components/admin/MarketingExecutionsCenter";
+import { MarketingExecutionsCenter } from "@/components/admin/MarketingExecutionsCenter";
 
 export const Route = createFileRoute("/admin-marketing-automation")({
   head: () => ({ meta: [{ title: "Marketing Automation — Admin" }] }),
