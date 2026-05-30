@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_prefs: {
+        Row: {
+          categories: Json
+          created_at: string
+          email_critical: boolean
+          mode: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categories?: Json
+          created_at?: string
+          email_critical?: boolean
+          mode?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categories?: Json
+          created_at?: string
+          email_critical?: boolean
+          mode?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -1147,33 +1174,39 @@ export type Database = {
       }
       notifications: {
         Row: {
+          archived_at: string | null
           body: string | null
           created_at: string
           data: Json | null
           id: string
           link: string | null
+          priority: string
           read_at: string | null
           title: string
           type: string
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           body?: string | null
           created_at?: string
           data?: Json | null
           id?: string
           link?: string | null
+          priority?: string
           read_at?: string | null
           title: string
           type: string
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           body?: string | null
           created_at?: string
           data?: Json | null
           id?: string
           link?: string | null
+          priority?: string
           read_at?: string | null
           title?: string
           type?: string
@@ -3008,17 +3041,30 @@ export type Database = {
         }
         Returns: number
       }
-      notify_roles: {
-        Args: {
-          _body: string
-          _data: Json
-          _link: string
-          _roles: Database["public"]["Enums"]["app_role"][]
-          _title: string
-          _type: string
-        }
-        Returns: undefined
-      }
+      notify_roles:
+        | {
+            Args: {
+              _body: string
+              _data: Json
+              _link: string
+              _roles: Database["public"]["Enums"]["app_role"][]
+              _title: string
+              _type: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _body: string
+              _data: Json
+              _link: string
+              _priority?: string
+              _roles: Database["public"]["Enums"]["app_role"][]
+              _title: string
+              _type: string
+            }
+            Returns: undefined
+          }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
