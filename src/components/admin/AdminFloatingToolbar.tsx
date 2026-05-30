@@ -17,6 +17,7 @@ import {
   Activity,
   Layers,
   LayoutTemplate,
+  Brain,
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
@@ -37,6 +38,7 @@ const ACTIONS: Action[] = [
   { label: "Banners", icon: ImagePlus, to: "/admin-cms" },
   { label: "Categories", icon: FolderTree, to: "/admin-inventory" },
   { label: "Inventory", icon: Boxes, to: "/admin-inventory" },
+  { label: "Intelligence", icon: Brain, to: "/admin-inventory-intelligence" },
   { label: "Orders", icon: ShoppingBag, to: "/admin-shipments" },
   { label: "Marketing", icon: Megaphone, to: "/admin-marketing" },
   { label: "Analytics", icon: BarChart3, to: "/admin-analytics" },

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Boxes, AlertTriangle, TrendingDown, Package, Loader2, Plus, Minus, Download } from "lucide-react";
+import { Boxes, AlertTriangle, TrendingDown, Package, Loader2, Plus, Minus, Download, Brain } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,10 +39,15 @@ function InventoryPage() {
 
   return (
     <AdminShell title="Inventory" subtitle="Stock health, valuation and movement log" allow={["admin","super_admin","manager","warehouse_staff"]} actions={
-      <button onClick={() => products && downloadCSV("inventory.csv", products.map((p) => ({ slug: p.slug, name: p.name, stock: p.stock_quantity, reserved: p.reserved_quantity, threshold: p.low_stock_threshold, price: p.price, cost: p.cost, value: (Number(p.price) * p.stock_quantity).toFixed(2) })))}
-        className="inline-flex items-center gap-2 border border-border px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-mono hover:bg-white/5">
-        <Download className="size-3" /> Export
-      </button>
+      <div className="flex items-center gap-2">
+        <Link to="/admin-inventory-intelligence" className="inline-flex items-center gap-2 border border-accent/30 bg-accent/10 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-mono hover:bg-accent/20">
+          <Brain className="size-3" /> Intelligence
+        </Link>
+        <button onClick={() => products && downloadCSV("inventory.csv", products.map((p) => ({ slug: p.slug, name: p.name, stock: p.stock_quantity, reserved: p.reserved_quantity, threshold: p.low_stock_threshold, price: p.price, cost: p.cost, value: (Number(p.price) * p.stock_quantity).toFixed(2) })))}
+          className="inline-flex items-center gap-2 border border-border px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-mono hover:bg-white/5">
+          <Download className="size-3" /> Export
+        </button>
+      </div>
     }>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <KpiCard label="SKUs" value={stats.count} icon={<Package className="size-4" />} />
