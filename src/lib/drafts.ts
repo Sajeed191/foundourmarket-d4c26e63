@@ -146,7 +146,7 @@ export async function saveVersion(
     _entity_id: entityId,
     _snapshot: snapshot as never,
     _changed_fields: changedFields,
-    _summary: summary ?? null,
+    _summary: summary ?? undefined,
   });
   if (error) throw error;
 }
