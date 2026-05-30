@@ -43,6 +43,13 @@ type Patch = {
   rating?: number;
   reviews?: number;
   warranty?: string;
+  returnEligible?: boolean;
+  replacementEligible?: boolean;
+  codEnabled?: boolean;
+  pickupSupported?: boolean;
+  internationalShipping?: boolean;
+  fragile?: boolean;
+  returnWindowDays?: number;
 };
 
 const numOrNull = (v: string): number | null => {
@@ -86,6 +93,13 @@ export function AdminProductPanel({ product }: { product: Product }) {
       rating: String(p.rating),
       reviews: String(p.reviews),
       warranty: p.warranty ?? "12 months",
+      returnEligible: p.returnEligible,
+      replacementEligible: p.replacementEligible,
+      codEnabled: p.codEnabled,
+      pickupSupported: p.pickupSupported,
+      internationalShipping: p.internationalShipping,
+      fragile: p.fragile,
+      returnWindowDays: String(p.returnWindowDays ?? 7),
     };
   }
 
@@ -127,6 +141,13 @@ export function AdminProductPanel({ product }: { product: Product }) {
         rating: Math.min(5, Math.max(0, Number(f.rating) || 0)),
         reviews: Math.max(0, Math.round(Number(f.reviews) || 0)),
         warranty: f.warranty.trim() || "12 months",
+        returnEligible: f.returnEligible,
+        replacementEligible: f.replacementEligible,
+        codEnabled: f.codEnabled,
+        pickupSupported: f.pickupSupported,
+        internationalShipping: f.internationalShipping,
+        fragile: f.fragile,
+        returnWindowDays: Math.max(0, Math.min(365, Math.round(Number(f.returnWindowDays) || 0))),
       },
       "Product updated",
     );
@@ -343,6 +364,30 @@ export function AdminProductPanel({ product }: { product: Product }) {
                   <Toggle label="Visible globally" on={f.internationalVisible} onClick={() => setF({ ...f, internationalVisible: !f.internationalVisible })} />
                   <Toggle label="Featured" on={f.featured} onClick={() => setF({ ...f, featured: !f.featured })} />
                   <Toggle label="In stock / live" on={f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
+                </div>
+
+                {/* Eligibility & policies */}
+                <div className="rounded-2xl border border-accent/20 bg-white/[0.02] p-3.5">
+                  <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent">
+                    <ShieldCheck className="size-3.5" /> Return &amp; refund eligibility
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Toggle label="Return eligible" on={f.returnEligible} onClick={() => setF({ ...f, returnEligible: !f.returnEligible })} />
+                    <Toggle label="Replacement eligible" on={f.replacementEligible} onClick={() => setF({ ...f, replacementEligible: !f.replacementEligible })} />
+                    <Toggle label="Cash on delivery" on={f.codEnabled} onClick={() => setF({ ...f, codEnabled: !f.codEnabled })} />
+                    <Toggle label="Pickup supported" on={f.pickupSupported} onClick={() => setF({ ...f, pickupSupported: !f.pickupSupported })} />
+                    <Toggle label="International shipping" on={f.internationalShipping} onClick={() => setF({ ...f, internationalShipping: !f.internationalShipping })} />
+                    <Toggle label="Fragile item" on={f.fragile} onClick={() => setF({ ...f, fragile: !f.fragile })} />
+                  </div>
+                  <div className="mt-3">
+                    <Field label="Return / refund window (days)">
+                      <Input
+                        type="number"
+                        value={f.returnWindowDays}
+                        onChange={(e) => setF({ ...f, returnWindowDays: e.target.value })}
+                      />
+                    </Field>
+                  </div>
                 </div>
               </div>
 

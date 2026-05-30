@@ -21,6 +21,7 @@ import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
 import { AdminImageManager } from "@/components/admin/AdminImageManager";
+import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
@@ -105,6 +106,7 @@ function ProductPage() {
   const [variantId, setVariantId] = useState<string | null>(null);
   const [fbtSlugs, setFbtSlugs] = useState<string[]>([]);
   const [alsoViewed, setAlsoViewed] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -213,13 +215,18 @@ function ProductPage() {
                     key={activeImage?.id}
                     src={activeImage?.url || product.image}
                     alt={activeImage?.alt || product.name}
+                    onClick={() => setLightboxOpen(true)}
                     initial={{ opacity: 0, scale: 1.04 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] group-hover:scale-110"
+                    className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
                   />
                 </AnimatePresence>
+                {/* Tap-to-expand hint */}
+                <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[9px] font-mono uppercase tracking-widest text-white/80 backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100">
+                  Tap to view all
+                </span>
                 {/* premium glass overlay gradient */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
                 {/* badges */}
@@ -286,6 +293,15 @@ function ProductPage() {
                 ))}
               </div>
             )}
+
+            <ImageLightbox
+              images={galleryImages}
+              index={activeImg}
+              open={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+              onIndexChange={setActiveImg}
+              alt={product.name}
+            />
           </motion.div>
 
 
