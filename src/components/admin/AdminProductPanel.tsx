@@ -270,6 +270,7 @@ export function AdminProductPanel({ product }: { product: Product }) {
               save({ inStock: next }, next ? "Published" : "Archived");
             }}
           />
+          <ToolbarBtn icon={Megaphone} label="Marketing" onClick={() => setMarketing(true)} />
           <ToolbarBtn icon={Settings2} label="Manage" onClick={() => setOpen(true)} />
         </div>
       </div>
