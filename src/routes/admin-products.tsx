@@ -797,7 +797,21 @@ function ProductEditor({ row, categories, nextSort, onClose, onSaved }: {
       price_inr: priceInr, compare_price_inr: cmpInr,
       price_usd: priceUsd, compare_price_usd: cmpUsd,
       india_visible: form.india_visible, international_visible: form.international_visible,
+      status: form.status,
+      bestseller: form.bestseller, trending: form.trending,
+      tags: parseList(form.tags),
+      features: parseList(form.features),
+      meta_keywords: parseList(form.meta_keywords),
+      seo_title: form.seo_title.trim() || null,
+      seo_description: form.seo_description.trim() || null,
+      specifications: textToKv(form.specifications),
+      attributes: textToKv(form.attributes),
+      admin_notes: form.admin_notes.trim() || null,
+      scheduled_publish_at: form.scheduled_publish_at
+        ? new Date(form.scheduled_publish_at).toISOString()
+        : null,
     };
+
     const { error: err } = row
       ? await supabase.from("products").update(payload).eq("id", row.id)
       : await supabase.from("products").insert(payload);
