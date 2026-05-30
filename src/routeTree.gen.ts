@@ -60,6 +60,7 @@ import { Route as AdminCmsRouteImport } from './routes/admin-cms'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
 import { Route as AdminAiOperationsRouteImport } from './routes/admin-ai-operations'
 import { Route as AdminActivityRouteImport } from './routes/admin-activity'
+import { Route as AdminAcquisitionIntelligenceRouteImport } from './routes/admin-acquisition-intelligence'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
@@ -351,6 +352,12 @@ const AdminActivityRoute = AdminActivityRouteImport.update({
   path: '/admin-activity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAcquisitionIntelligenceRoute =
+  AdminAcquisitionIntelligenceRouteImport.update({
+    id: '/admin-acquisition-intelligence',
+    path: '/admin-acquisition-intelligence',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -521,6 +528,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -606,6 +614,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -692,6 +701,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
@@ -779,6 +789,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
     | '/admin-analytics'
@@ -864,6 +875,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
     | '/admin-analytics'
@@ -949,6 +961,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
     | '/admin-analytics'
@@ -1035,6 +1048,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
+  AdminAcquisitionIntelligenceRoute: typeof AdminAcquisitionIntelligenceRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminAiOperationsRoute: typeof AdminAiOperationsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
@@ -1473,6 +1487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-acquisition-intelligence': {
+      id: '/admin-acquisition-intelligence'
+      path: '/admin-acquisition-intelligence'
+      fullPath: '/admin-acquisition-intelligence'
+      preLoaderRoute: typeof AdminAcquisitionIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -1734,6 +1755,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
+  AdminAcquisitionIntelligenceRoute: AdminAcquisitionIntelligenceRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminAiOperationsRoute: AdminAiOperationsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,

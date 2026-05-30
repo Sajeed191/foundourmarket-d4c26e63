@@ -9,6 +9,7 @@ import {
   Boxes, Package, ChevronRight,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
+import { AcquisitionSummary } from "@/components/admin/AcquisitionSummary";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -123,6 +124,7 @@ function MarketingAutomationPage() {
   return (
     <AdminShell title="Marketing Automation" subtitle="Data-driven campaigns" allow={MKT_ROLES}>
       <div className="space-y-6">
+        <AcquisitionSummary title="Acquisition Intelligence" />
         {/* header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

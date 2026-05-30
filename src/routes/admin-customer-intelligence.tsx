@@ -8,6 +8,7 @@ import {
   LifeBuoy, Tag, Heart, MessageSquare, Star, ChevronRight, Lightbulb, Mail, Filter,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { AcquisitionSummary } from "@/components/admin/AcquisitionSummary";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { logActivity } from "@/components/admin/AdminShell";
 import { downloadCSV } from "@/lib/admin-queries";
@@ -186,6 +187,7 @@ function CustomerIntelPage() {
         </div>
       }
     >
+      <div className="mb-3"><AcquisitionSummary title="Acquisition Intelligence" /></div>
       {/* HEALTH OVERVIEW */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="Total Customers" value={fmtNum(health.total)} icon={<Users className="size-4" />} />

@@ -4861,6 +4861,10 @@ export type Database = {
       }
       support_admin_unread_count: { Args: never; Returns: number }
       support_unread_count: { Args: never; Returns: number }
+      svc_acquisition_metrics: {
+        Args: { p_since: string; p_window_days: number }
+        Returns: Json
+      }
       svc_admin_order_operations: {
         Args: { _actor: string; _limit?: number }
         Returns: Json

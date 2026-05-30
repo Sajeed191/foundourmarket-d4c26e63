@@ -12,6 +12,7 @@ import {
   Users, Repeat, HeartPulse, XCircle, Boxes, Activity,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
+import { AcquisitionSummary } from "@/components/admin/AcquisitionSummary";
 import { FinancialMarketingHub } from "@/components/admin/FinancialMarketingHub";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -241,6 +242,7 @@ function FinancialPage() {
       actions={navActions}
     >
       <Atmosphere />
+      <div className="mb-4"><AcquisitionSummary title="Acquisition Intelligence" /></div>
 
       {/* sticky filter bar */}
       <div className="sticky top-[3.25rem] lg:top-2 z-10 -mx-1 mb-5 px-1">

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { ExecutiveDashboard } from "@/components/admin/ExecutiveDashboard";
+import { AcquisitionSummary } from "@/components/admin/AcquisitionSummary";
 
 export const Route = createFileRoute("/admin-executive")({
   head: () => ({
@@ -23,6 +24,7 @@ function ExecutivePage() {
       subtitle="One screen. One source of truth. The entire business in 30 seconds."
       allow={["admin", "super_admin", "manager"]}
     >
+      <div className="mb-4"><AcquisitionSummary title="Acquisition Intelligence" /></div>
       <ExecutiveDashboard focusView={view} />
     </AdminShell>
   );
