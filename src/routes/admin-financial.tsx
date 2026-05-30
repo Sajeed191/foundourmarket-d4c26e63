@@ -241,6 +241,7 @@ function FinancialPage() {
       actions={navActions}
     >
       <Atmosphere />
+      <div className="mb-4"><AcquisitionSummary title="Acquisition Intelligence" /></div>
 
       {/* sticky filter bar */}
       <div className="sticky top-[3.25rem] lg:top-2 z-10 -mx-1 mb-5 px-1">
