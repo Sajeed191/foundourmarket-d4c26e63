@@ -297,6 +297,7 @@ function ProductsInner() {
 
   const filtered = useMemo(() => {
     let list = [...(products ?? [])];
+    list = view === "recycle" ? list.filter((p) => p.deleted_at) : list.filter((p) => !p.deleted_at);
     if (cat !== "all") list = list.filter((p) => p.category === cat);
     if (state === "active") list = list.filter((p) => p.in_stock);
     else if (state === "inactive") list = list.filter((p) => !p.in_stock);
