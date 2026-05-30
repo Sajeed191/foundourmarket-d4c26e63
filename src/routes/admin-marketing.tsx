@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Megaphone, Zap, Plus, Pencil, Trash2, X, Loader2, ChevronLeft, ChevronRight, Rocket, AlertCircle, CheckCircle2, Upload, History, Image as ImageIcon } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { PublishConfirm } from "@/components/admin/PublishConfirm";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
 import { BadgeSettingsEditor } from "@/components/admin/BadgeSettingsEditor";
 import { TestimonialsEditor } from "@/components/admin/TestimonialsEditor";
 import { supabase } from "@/integrations/supabase/client";
