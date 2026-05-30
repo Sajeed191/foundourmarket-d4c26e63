@@ -608,6 +608,13 @@ function FinancialPage() {
         </Panel>
       </div>
 
+      {/* Financial ↔ Marketing Integration */}
+      <div className="mt-6 pb-24 lg:pb-8">
+        <FinancialMarketingHub focusView={view} />
+      </div>
+
+
+
       {/* Mobile quick-action dock */}
       <FinanceDock onRefresh={() => load(true)} onCSV={exportCSV} onPDF={exportPDF} refreshing={refreshing} />
     </AdminShell>
