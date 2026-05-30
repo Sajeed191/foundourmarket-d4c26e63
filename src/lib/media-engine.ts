@@ -351,9 +351,9 @@ export async function logMediaEvent(
   try {
     await supabase.rpc("log_media_event", {
       _action: action,
-      _asset_id: opts.assetId ?? null,
-      _entity_type: opts.entityType ?? null,
-      _entity_ref: opts.entityRef ?? null,
+      _asset_id: opts.assetId ?? undefined,
+      _entity_type: opts.entityType ?? undefined,
+      _entity_ref: opts.entityRef ?? undefined,
       _meta: (opts.meta ?? {}) as never,
     });
   } catch {
