@@ -2,60 +2,32 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
-  ShoppingBag, UserPlus, Heart, Eye, RotateCcw, AlertTriangle,
-  Activity, Pause, Play, Trash2, Filter, Radio, TrendingUp,
+  ShoppingBag, UserPlus, AlertTriangle,
+  Pause, Play, Trash2, Filter, Radio, TrendingUp,
   Wifi, WifiOff, Database, Gauge, RefreshCw, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { fetchLiveMetrics, type LiveMetrics } from "@/lib/live-metrics";
+import {
+  ACTIVITY_META as KIND_META,
+  ALL_ACTIVITY_KINDS as ALL_KINDS,
+  fetchActivityHistory,
+  type ActivityKind as EventKind,
+  type ActivityEvent as LiveEvent,
+} from "@/lib/unified-activity";
 
 export const Route = createFileRoute("/admin-live")({
   head: () => ({
     meta: [
       { title: "Live Activity — Admin" },
-      { name: "description", content: "Realtime stream of orders, customer events, and system alerts." },
+      { name: "description", content: "Unified realtime operations stream across orders, payments, intelligence, support, and system alerts." },
     ],
   }),
   component: AdminLivePage,
 });
 
-type EventKind =
-  | "order_new" | "order_update"
-  | "signup" | "subscriber"
-  | "wishlist" | "cart" | "view" | "purchase"
-  | "return" | "low_stock" | "admin";
-
-type Severity = "info" | "success" | "warning" | "critical";
-
-type LiveEvent = {
-  id: string;
-  kind: EventKind;
-  title: string;
-  body?: string;
-  amount?: number;
-  link?: string;
-  at: number;
-  severity: Severity;
-};
-
-/* Refined, muted operator palette — amber / teal / crimson / violet / neutral */
-const KIND_META: Record<EventKind, { label: string; icon: typeof ShoppingBag; fg: string; dot: string; glow: string; severity: Severity }> = {
-  order_new:    { label: "New Order",       icon: ShoppingBag,   fg: "text-accent",       dot: "bg-accent",            glow: "oklch(0.74 0.19 49 / 0.4)",   severity: "success" },
-  order_update: { label: "Order Update",    icon: ShoppingBag,   fg: "text-teal-300",     dot: "bg-teal-400",          glow: "oklch(0.78 0.12 195 / 0.35)", severity: "info" },
-  signup:       { label: "Signup",          icon: UserPlus,      fg: "text-violet-300",   dot: "bg-violet-400",        glow: "oklch(0.6 0.16 290 / 0.35)",  severity: "info" },
-  subscriber:   { label: "Subscriber",      icon: UserPlus,      fg: "text-violet-300",   dot: "bg-violet-400",        glow: "oklch(0.6 0.16 290 / 0.35)",  severity: "info" },
-  wishlist:     { label: "Wishlist",        icon: Heart,         fg: "text-rose-300",     dot: "bg-rose-400",          glow: "oklch(0.65 0.16 15 / 0.32)",  severity: "info" },
-  cart:         { label: "Add to Cart",     icon: ShoppingBag,   fg: "text-accent",       dot: "bg-accent",            glow: "oklch(0.74 0.19 49 / 0.35)",  severity: "info" },
-  view:         { label: "Product View",    icon: Eye,           fg: "text-muted-foreground", dot: "bg-muted-foreground", glow: "oklch(0.7 0.018 260 / 0.25)", severity: "info" },
-  purchase:     { label: "Purchase Signal", icon: ShoppingBag,   fg: "text-teal-300",     dot: "bg-teal-400",          glow: "oklch(0.78 0.12 195 / 0.32)", severity: "success" },
-  return:       { label: "Return",          icon: RotateCcw,     fg: "text-amber-300",    dot: "bg-amber-400",         glow: "oklch(0.78 0.15 70 / 0.32)",  severity: "warning" },
-  low_stock:    { label: "Low Stock",       icon: AlertTriangle, fg: "text-rose-300",     dot: "bg-rose-400",          glow: "oklch(0.65 0.2 25 / 0.35)",   severity: "critical" },
-  admin:        { label: "Admin Action",    icon: Activity,      fg: "text-sky-300",      dot: "bg-sky-400",           glow: "oklch(0.7 0.13 230 / 0.32)",  severity: "info" },
-};
-
-const ALL_KINDS = Object.keys(KIND_META) as EventKind[];
-const FILTER_STORAGE_KEY = "fom_live_filter_v1";
+const FILTER_STORAGE_KEY = "fom_live_filter_v2";
 
 function timeAgo(ms: number): string {
   const d = Date.now() - ms;
@@ -249,6 +221,15 @@ function AdminLivePage() {
     return () => clearInterval(t);
   }, [loadMetrics]);
 
+  /* historical backfill — merge recent rows from every system into the stream */
+  useEffect(() => {
+    let alive = true;
+    fetchActivityHistory(40)
+      .then((hist) => { if (alive) setEvents((prev) => (prev.length ? prev : hist)); })
+      .catch(() => { /* ignore — realtime will populate */ });
+    return () => { alive = false; };
+  }, []);
+
   const push = useCallback((e: Omit<LiveEvent, "id" | "at" | "severity"> & { at?: number }) => {
     if (pausedRef.current) { setUnread((u) => u + 1); return; }
     setEvents((prev) => [
@@ -267,7 +248,7 @@ function AdminLivePage() {
       channelStatus.current[name] = ok;
       const all = Object.values(channelStatus.current);
       if (all.some((v) => v === false)) setConn("error");
-      else if (all.length >= 6) setConn("live");
+      else if (all.length >= 12) setConn("live");
     };
 
     const sub = (name: string, builder: (ch: ReturnType<typeof supabase.channel>) => ReturnType<typeof supabase.channel>) => {
@@ -344,6 +325,62 @@ function AdminLivePage() {
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_activity_logs" }, (p) => {
           const a = p.new as { action: string; entity_type?: string | null; entity_id?: string | null };
           push({ kind: "admin", title: a.action, body: a.entity_type ? `${a.entity_type}${a.entity_id ? `:${a.entity_id.slice(0, 8)}` : ""}` : undefined, link: "/admin-activity" });
+        })
+      ),
+
+      sub("live-payments", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "payments" }, (p) => {
+          const pay = p.new as { order_id: string | null; amount: number; currency: string; status: string; method: string | null };
+          const st = String(pay.status ?? "").toLowerCase();
+          const failed = ["failed", "declined", "error", "cancelled", "canceled"].includes(st);
+          push({
+            kind: failed ? "payment_failed" : "payment",
+            title: failed ? `Payment failed · ${pay.method ?? "card"}` : `Payment captured · ${pay.method ?? "card"}`,
+            body: `${pay.currency ?? ""} ${Number(pay.amount).toFixed(2)}`,
+            amount: failed ? undefined : Number(pay.amount),
+            link: pay.order_id ? `/orders/${pay.order_id}` : undefined,
+          });
+        })
+      ),
+
+      sub("live-refunds", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "refunds" }, (p) => {
+          const r = p.new as { order_id: string | null; amount: number; currency: string; status: string; reason: string | null };
+          push({ kind: "refund", title: `Refund ${r.status ?? "issued"}`, body: `${r.currency ?? ""} ${Number(r.amount).toFixed(2)}${r.reason ? ` · ${r.reason}` : ""}`, link: r.order_id ? `/orders/${r.order_id}` : "/admin-returns" });
+        })
+      ),
+
+      sub("live-reviews", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "product_reviews" }, (p) => {
+          const r = p.new as { product_slug: string | null; rating: number; title: string | null };
+          push({ kind: "review", title: `${r.rating}★ review${r.title ? ` · ${r.title}` : ""}`, body: r.product_slug ?? undefined, link: r.product_slug ? `/products/${r.product_slug}` : undefined });
+        })
+      ),
+
+      sub("live-support", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_tickets" }, (p) => {
+          const t = p.new as { subject: string | null; category: string | null; priority: string | null };
+          push({ kind: "support", title: t.subject || "New support ticket", body: `${t.category ?? "general"} · ${t.priority ?? "normal"}`, link: "/admin-support" });
+        })
+      ),
+
+      sub("live-ai-recs", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "ai_recommendations" }, (p) => {
+          const r = p.new as { title: string | null; category: string | null; priority: string | null; deep_link: string | null };
+          push({ kind: "ai_rec", title: r.title || "AI recommendation", body: `${r.category ?? "ops"} · ${r.priority ?? "normal"} priority`, link: r.deep_link || "/admin-ai-operations" });
+        })
+      ),
+
+      sub("live-automations", (ch) => ch
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_executions" }, (p) => {
+          const a = p.new as { trigger_key: string | null; status: string | null; matched_count: number | null; action_taken: string | null; summary: string | null; error: string | null };
+          const failed = String(a.status ?? "").toUpperCase().includes("FAIL");
+          push({
+            kind: failed ? "automation_failed" : "automation",
+            title: failed ? `Automation failed · ${a.trigger_key ?? ""}` : (a.action_taken || a.summary || `Automation ran · ${a.trigger_key ?? ""}`),
+            body: failed ? (a.error ?? undefined) : `${a.matched_count ?? 0} matched`,
+            link: "/admin-marketing-automation?view=health",
+          });
         })
       ),
     ];
