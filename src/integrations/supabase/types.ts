@@ -130,6 +130,7 @@ export type Database = {
           created_at: string
           event: string
           id: number
+          is_seeded: boolean
           metadata: Json | null
           path: string | null
           product_slug: string | null
@@ -142,6 +143,7 @@ export type Database = {
           created_at?: string
           event: string
           id?: number
+          is_seeded?: boolean
           metadata?: Json | null
           path?: string | null
           product_slug?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           created_at?: string
           event?: string
           id?: number
+          is_seeded?: boolean
           metadata?: Json | null
           path?: string | null
           product_slug?: string | null
@@ -1081,6 +1084,7 @@ export type Database = {
           created_at: string
           id: string
           image: string | null
+          is_seeded: boolean
           line_total: number
           name: string
           order_id: string
@@ -1092,6 +1096,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          is_seeded?: boolean
           line_total: number
           name: string
           order_id: string
@@ -1103,6 +1108,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          is_seeded?: boolean
           line_total?: number
           name?: string
           order_id?: string
@@ -1130,6 +1136,7 @@ export type Database = {
           expires_at: string | null
           fulfillment_status: string
           id: string
+          is_seeded: boolean
           market_region: string | null
           payment_method: string | null
           payment_provider: string | null
@@ -1157,6 +1164,7 @@ export type Database = {
           expires_at?: string | null
           fulfillment_status?: string
           id?: string
+          is_seeded?: boolean
           market_region?: string | null
           payment_method?: string | null
           payment_provider?: string | null
@@ -1184,6 +1192,7 @@ export type Database = {
           expires_at?: string | null
           fulfillment_status?: string
           id?: string
+          is_seeded?: boolean
           market_region?: string | null
           payment_method?: string | null
           payment_provider?: string | null
@@ -1210,6 +1219,7 @@ export type Database = {
           created_at: string
           device: string | null
           id: number
+          is_seeded: boolean
           path: string
           referrer: string | null
           session_id: string | null
@@ -1221,6 +1231,7 @@ export type Database = {
           created_at?: string
           device?: string | null
           id?: number
+          is_seeded?: boolean
           path: string
           referrer?: string | null
           session_id?: string | null
@@ -1232,6 +1243,7 @@ export type Database = {
           created_at?: string
           device?: string | null
           id?: number
+          is_seeded?: boolean
           path?: string
           referrer?: string | null
           session_id?: string | null
@@ -1249,6 +1261,7 @@ export type Database = {
           fee: number
           gateway_tax: number
           id: string
+          is_seeded: boolean
           meta: Json | null
           method: string
           order_id: string
@@ -1267,6 +1280,7 @@ export type Database = {
           fee?: number
           gateway_tax?: number
           id?: string
+          is_seeded?: boolean
           meta?: Json | null
           method: string
           order_id: string
@@ -1285,6 +1299,7 @@ export type Database = {
           fee?: number
           gateway_tax?: number
           id?: string
+          is_seeded?: boolean
           meta?: Json | null
           method?: string
           order_id?: string
@@ -1349,6 +1364,7 @@ export type Database = {
           answered_by: string | null
           created_at: string
           id: string
+          is_seeded: boolean
           product_slug: string
           question: string
           updated_at: string
@@ -1360,6 +1376,7 @@ export type Database = {
           answered_by?: string | null
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug: string
           question: string
           updated_at?: string
@@ -1371,6 +1388,7 @@ export type Database = {
           answered_by?: string | null
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug?: string
           question?: string
           updated_at?: string
@@ -1383,6 +1401,7 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          is_seeded: boolean
           product_slug: string
           rating: number
           title: string | null
@@ -1393,6 +1412,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug: string
           rating: number
           title?: string | null
@@ -1403,6 +1423,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug?: string
           rating?: number
           title?: string | null
@@ -1653,6 +1674,7 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          is_seeded: boolean
           language: string | null
           market_region: string | null
           phone: string | null
@@ -1670,6 +1692,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id: string
+          is_seeded?: boolean
           language?: string | null
           market_region?: string | null
           phone?: string | null
@@ -1687,6 +1710,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          is_seeded?: boolean
           language?: string | null
           market_region?: string | null
           phone?: string | null
@@ -1877,6 +1901,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_seeded: boolean
           order_item_id: string
           product_slug: string
           quantity: number
@@ -1886,6 +1911,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           order_item_id: string
           product_slug: string
           quantity: number
@@ -1895,6 +1921,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           order_item_id?: string
           product_slug?: string
           quantity?: number
@@ -1915,6 +1942,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_seeded: boolean
           notes: string | null
           order_id: string
           reason: string
@@ -1928,6 +1956,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           notes?: string | null
           order_id: string
           reason: string
@@ -1941,6 +1970,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           notes?: string | null
           order_id?: string
           reason?: string
@@ -2047,6 +2077,7 @@ export type Database = {
           clicked_product_slug: string | null
           created_at: string
           id: number
+          is_seeded: boolean
           query: string
           results_count: number
           session_id: string | null
@@ -2056,6 +2087,7 @@ export type Database = {
           clicked_product_slug?: string | null
           created_at?: string
           id?: number
+          is_seeded?: boolean
           query: string
           results_count?: number
           session_id?: string | null
@@ -2065,10 +2097,32 @@ export type Database = {
           clicked_product_slug?: string | null
           created_at?: string
           id?: number
+          is_seeded?: boolean
           query?: string
           results_count?: number
           session_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      seed_runs: {
+        Row: {
+          counts: Json
+          created_at: string
+          id: string
+          kind: string
+        }
+        Insert: {
+          counts?: Json
+          created_at?: string
+          id?: string
+          kind: string
+        }
+        Update: {
+          counts?: Json
+          created_at?: string
+          id?: string
+          kind?: string
         }
         Relationships: []
       }
@@ -2077,6 +2131,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_seeded: boolean
           location: string | null
           occurred_at: string
           shipment_id: string
@@ -2086,6 +2141,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_seeded?: boolean
           location?: string | null
           occurred_at?: string
           shipment_id: string
@@ -2095,6 +2151,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_seeded?: boolean
           location?: string | null
           occurred_at?: string
           shipment_id?: string
@@ -2116,6 +2173,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           id: string
+          is_seeded: boolean
           notes: string | null
           order_id: string
           shipped_at: string | null
@@ -2130,6 +2188,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          is_seeded?: boolean
           notes?: string | null
           order_id: string
           shipped_at?: string | null
@@ -2144,6 +2203,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          is_seeded?: boolean
           notes?: string | null
           order_id?: string
           shipped_at?: string | null
@@ -2209,18 +2269,21 @@ export type Database = {
         Row: {
           cod_enabled: boolean
           id: boolean
+          include_seed_in_analytics: boolean
           prepaid_discount_percent: number
           updated_at: string
         }
         Insert: {
           cod_enabled?: boolean
           id?: boolean
+          include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
           updated_at?: string
         }
         Update: {
           cod_enabled?: boolean
           id?: boolean
+          include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
           updated_at?: string
         }
@@ -2309,6 +2372,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          is_seeded: boolean
           sender_id: string
           sender_role: string
           ticket_id: string
@@ -2318,6 +2382,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          is_seeded?: boolean
           sender_id: string
           sender_role?: string
           ticket_id: string
@@ -2327,6 +2392,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          is_seeded?: boolean
           sender_id?: string
           sender_role?: string
           ticket_id?: string
@@ -2376,6 +2442,7 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          is_seeded: boolean
           last_message_at: string
           market_region: string | null
           order_id: string | null
@@ -2392,6 +2459,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_seeded?: boolean
           last_message_at?: string
           market_region?: string | null
           order_id?: string | null
@@ -2408,6 +2476,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_seeded?: boolean
           last_message_at?: string
           market_region?: string | null
           order_id?: string | null
@@ -2628,18 +2697,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_seeded: boolean
           product_slug: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_seeded?: boolean
           product_slug?: string
           user_id?: string
         }
@@ -2693,6 +2765,7 @@ export type Database = {
           id: string
         }[]
       }
+      get_seed_status: { Args: never; Returns: Json }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -2750,6 +2823,7 @@ export type Database = {
         Args: { _order_id: string; _reason?: string }
         Returns: undefined
       }
+      remove_seed_data: { Args: never; Returns: Json }
       reorder_banner: {
         Args: { _direction: string; _id: string }
         Returns: undefined
@@ -2836,6 +2910,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      seed_all: { Args: { _scale?: number }; Returns: Json }
+      seed_analytics: { Args: { _days?: number }; Returns: number }
+      seed_customers: { Args: { _count?: number }; Returns: number }
+      seed_orders: { Args: { _count?: number }; Returns: number }
+      seed_questions: { Args: { _count?: number }; Returns: number }
+      seed_returns: { Args: { _count?: number }; Returns: number }
+      seed_reviews: { Args: { _count?: number }; Returns: number }
+      seed_shipments: { Args: never; Returns: number }
+      seed_support: { Args: { _count?: number }; Returns: number }
       support_admin_unread_count: { Args: never; Returns: number }
       support_unread_count: { Args: never; Returns: number }
       track_banner_event: {
