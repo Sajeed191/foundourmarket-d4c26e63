@@ -9,6 +9,8 @@ import { resolveImage } from "@/lib/products";
 import { DashboardOverview } from "@/components/admin/DashboardOverview";
 import { MarketingAutomationCard } from "@/components/admin/MarketingAutomationCard";
 import { CustomerMarketingCard } from "@/components/admin/CustomerMarketingCard";
+import { FinancialMarketingCard } from "@/components/admin/FinancialMarketingCard";
+import { ExecutiveSummaryPanel } from "@/components/admin/ExecutiveSummaryPanel";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { AnimatePresence, motion } from "framer-motion";
 import { LayoutDashboard } from "lucide-react";
