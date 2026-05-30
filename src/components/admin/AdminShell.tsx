@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
 
