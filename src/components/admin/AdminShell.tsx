@@ -119,6 +119,7 @@ export function AdminShell({
   const [query, setQuery] = useState("");
   const [live, setLive] = useState<{ revenue: number; orders: number }>({ revenue: 0, orders: 0 });
   const { count: supportUnread } = useAdminSupportUnread();
+  const cmd = useCommandCenter();
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
   useEffect(() => { setOpen(false); }, [path]);
