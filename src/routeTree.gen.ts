@@ -53,6 +53,7 @@ import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCustomerIntelligenceRouteImport } from './routes/admin-customer-intelligence'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
+import { Route as AdminAiOperationsRouteImport } from './routes/admin-ai-operations'
 import { Route as AdminActivityRouteImport } from './routes/admin-activity'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
@@ -308,6 +309,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/admin-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAiOperationsRoute = AdminAiOperationsRouteImport.update({
+  id: '/admin-ai-operations',
+  path: '/admin-ai-operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
   id: '/admin-activity',
   path: '/admin-activity',
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
+  '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
@@ -551,6 +558,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
+  '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
@@ -629,6 +637,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/admin-activity': typeof AdminActivityRoute
+  '/admin-ai-operations': typeof AdminAiOperationsRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
@@ -708,6 +717,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/admin-activity'
+    | '/admin-ai-operations'
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customer-intelligence'
@@ -785,6 +795,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/admin-activity'
+    | '/admin-ai-operations'
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customer-intelligence'
@@ -862,6 +873,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/admin-activity'
+    | '/admin-ai-operations'
     | '/admin-analytics'
     | '/admin-cms'
     | '/admin-customer-intelligence'
@@ -940,6 +952,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AdminActivityRoute: typeof AdminActivityRoute
+  AdminAiOperationsRoute: typeof AdminAiOperationsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomerIntelligenceRoute: typeof AdminCustomerIntelligenceRoute
@@ -1320,6 +1333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-ai-operations': {
+      id: '/admin-ai-operations'
+      path: '/admin-ai-operations'
+      fullPath: '/admin-ai-operations'
+      preLoaderRoute: typeof AdminAiOperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-activity': {
       id: '/admin-activity'
       path: '/admin-activity'
@@ -1575,6 +1595,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AdminActivityRoute: AdminActivityRoute,
+  AdminAiOperationsRoute: AdminAiOperationsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomerIntelligenceRoute: AdminCustomerIntelligenceRoute,
