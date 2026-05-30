@@ -59,6 +59,7 @@ function CheckoutPage() {
   const { user, loading } = useAuth();
   const { detailed, subtotalUSD, clear, count, hydrated: cartHydrated } = useCart();
   const { market } = useRegion();
+  const { internationalLive, loading: gatewaysLoading } = usePaymentGateways();
   const {
     addresses, loading: addrLoading, create: createAddress,
     update: updateAddress, remove: removeAddress, setDefaultShipping,
