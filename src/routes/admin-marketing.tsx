@@ -304,9 +304,26 @@ function BannerEditor({ row, onClose, onSaved }: { row: Banner | null; onClose: 
     width_px: src.width_px ?? row?.width_px ?? 1600,
     height_px: src.height_px ?? row?.height_px ?? 600,
   });
+  const [baseline] = useState(() => JSON.stringify({
+    type: src.type ?? "hero", title: src.title ?? "", subtitle: src.subtitle ?? "",
+    image: src.image ?? "", link: src.link ?? "", cta_text: src.cta_text ?? "",
+    active: src.active ?? true, starts_at: src.starts_at?.slice(0, 10) ?? "",
+    ends_at: src.ends_at?.slice(0, 10) ?? "", sort_order: src.sort_order ?? 0,
+    width_px: src.width_px ?? row?.width_px ?? 1600,
+    height_px: src.height_px ?? row?.height_px ?? 600,
+  }));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const entityId = row?.id ?? "new";
+  const protection = useEditorProtection({
+    entityType: "banner",
+    entityId,
+    value: f as Record<string, unknown>,
+    baseline,
+    enabled: true,
+  });
 
   async function handleUpload(file: File) {
     if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
