@@ -152,9 +152,11 @@ function ProductPage() {
     );
   }
 
-  const galleryImages = images.length > 0
-    ? images
-    : [{ id: "main", url: product.image, alt: product.name, sortOrder: 0 }];
+  const galleryImages = (() => {
+    const main = { id: "main", url: product.image, alt: product.name, sortOrder: -1 };
+    const extras = images.filter((img) => img.url && img.url !== product.image);
+    return [main, ...extras];
+  })();
   const activeImage = galleryImages[activeImg] ?? galleryImages[0];
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
