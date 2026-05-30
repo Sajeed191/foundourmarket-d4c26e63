@@ -472,7 +472,7 @@ export async function fetchExecutiveTimeline(limit = 40): Promise<TimelineEvent[
   const since = new Date(Date.now() - 14 * DAY).toISOString();
   const [ordersRes, returnsRes, campRes, logsRes] = await Promise.all([
     supabase.from("orders").select("id,total,status,created_at").eq("is_seeded", false).gte("created_at", since).order("created_at", { ascending: false }).limit(limit),
-    supabase.from("returns").select("id,reason,refund_amount,status,created_at").eq("is_seeded", false).gte("created_at", since).order("created_at", { ascending: false }).limit(limit),
+    supabase.from("returns").select("id,reason,refund_amount,status,refund_status,created_at").eq("is_seeded", false).gte("created_at", since).order("created_at", { ascending: false }).limit(limit),
     supabase.from("marketing_campaigns").select("id,name,status,created_at,updated_at").order("updated_at", { ascending: false }).limit(limit),
     supabase.from("admin_activity_logs").select("id,action,entity_type,entity_id,created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(limit),
   ]);
@@ -482,13 +482,13 @@ export async function fetchExecutiveTimeline(limit = 40): Promise<TimelineEvent[
   for (const o of (ordersRes.data as { id: string; total: number; status: string; created_at: string }[]) ?? [])
     out.push({ id: `o-${o.id}`, kind: "order", title: "New order", detail: `${Number(o.total).toFixed(0)} · ${o.status}`, at: o.created_at });
 
-  for (const r of (returnsRes.data as { id: string; reason: string; refund_amount: number; status: string; created_at: string }[]) ?? [])
+  for (const r of (returnsRes.data as { id: string; reason: string; refund_amount: number; status: string; refund_status: string; created_at: string }[]) ?? [])
     out.push({ id: `r-${r.id}`, kind: isCompletedReturn(r) ? "refund" : "return", title: isCompletedReturn(r) ? "Refund processed" : "Return opened", detail: `${(r.reason || "—")} · ${Number(r.refund_amount).toFixed(0)}`, at: r.created_at });
 
   for (const c of (campRes.data as { id: string; name: string; status: string; created_at: string; updated_at: string }[]) ?? [])
     out.push({ id: `c-${c.id}`, kind: "campaign", title: `Campaign ${c.status}`, detail: c.name, at: c.updated_at || c.created_at });
 
-  for (const l of (logsRes.data as { id: string; action: string; entity_type: string | null; created_at: string }[]) ?? [])
+  for (const l of (logsRes.data as unknown as { id: number; action: string; entity_type: string | null; created_at: string }[]) ?? [])
     out.push({ id: `a-${l.id}`, kind: ADMIN_KIND[l.entity_type ?? ""] ?? "admin", title: l.action.replace(/_/g, " "), detail: l.entity_type ?? "admin action", at: l.created_at });
 
   return out.sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, limit);
