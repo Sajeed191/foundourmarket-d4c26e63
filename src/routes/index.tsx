@@ -525,7 +525,7 @@ function Home() {
           <ProductSkeletonGrid count={4} />
         </section>
       ) : trending.length > 0 && (sections.trending.active || isProductAdmin) && (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+        <SectionTracker sectionKey="trending" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24 block">
           <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} active={sections.trending.active} />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
@@ -533,7 +533,7 @@ function Home() {
               <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
             ))}
           </div>
-        </section>
+        </SectionTracker>
       )}
 
       <CinematicDivider />
