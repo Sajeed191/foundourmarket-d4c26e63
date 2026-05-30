@@ -30,6 +30,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
 import { Route as AdminSupportRouteImport } from './routes/admin-support'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
+import { Route as AdminSeoIntelligenceRouteImport } from './routes/admin-seo-intelligence'
 import { Route as AdminSeedRouteImport } from './routes/admin-seed'
 import { Route as AdminSecurityRouteImport } from './routes/admin-security'
 import { Route as AdminSearchRouteImport } from './routes/admin-search'
@@ -197,6 +198,11 @@ const AdminSupportRoute = AdminSupportRouteImport.update({
 const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
   id: '/admin-shipments',
   path: '/admin-shipments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSeoIntelligenceRoute = AdminSeoIntelligenceRouteImport.update({
+  id: '/admin-seo-intelligence',
+  path: '/admin-seo-intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSeedRoute = AdminSeedRouteImport.update({
@@ -559,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/admin-search': typeof AdminSearchRoute
   '/admin-security': typeof AdminSecurityRoute
   '/admin-seed': typeof AdminSeedRoute
+  '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -645,6 +652,7 @@ export interface FileRoutesByTo {
   '/admin-search': typeof AdminSearchRoute
   '/admin-security': typeof AdminSecurityRoute
   '/admin-seed': typeof AdminSeedRoute
+  '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -732,6 +740,7 @@ export interface FileRoutesById {
   '/admin-search': typeof AdminSearchRoute
   '/admin-security': typeof AdminSecurityRoute
   '/admin-seed': typeof AdminSeedRoute
+  '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -820,6 +829,7 @@ export interface FileRouteTypes {
     | '/admin-search'
     | '/admin-security'
     | '/admin-seed'
+    | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
@@ -906,6 +916,7 @@ export interface FileRouteTypes {
     | '/admin-search'
     | '/admin-security'
     | '/admin-seed'
+    | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
@@ -992,6 +1003,7 @@ export interface FileRouteTypes {
     | '/admin-search'
     | '/admin-security'
     | '/admin-seed'
+    | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-traffic'
@@ -1079,6 +1091,7 @@ export interface RootRouteChildren {
   AdminSearchRoute: typeof AdminSearchRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeedRoute: typeof AdminSeedRoute
+  AdminSeoIntelligenceRoute: typeof AdminSeoIntelligenceRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminTrafficRoute: typeof AdminTrafficRoute
@@ -1275,6 +1288,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-shipments'
       fullPath: '/admin-shipments'
       preLoaderRoute: typeof AdminShipmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-seo-intelligence': {
+      id: '/admin-seo-intelligence'
+      path: '/admin-seo-intelligence'
+      fullPath: '/admin-seo-intelligence'
+      preLoaderRoute: typeof AdminSeoIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-seed': {
@@ -1786,6 +1806,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSearchRoute: AdminSearchRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeedRoute: AdminSeedRoute,
+  AdminSeoIntelligenceRoute: AdminSeoIntelligenceRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminTrafficRoute: AdminTrafficRoute,
