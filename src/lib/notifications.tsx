@@ -21,6 +21,7 @@ export type NotificationCategory =
   | "support"
   | "promotion"
   | "executive"
+  | "ai"
   | "system"
   | "other";
 
@@ -30,8 +31,15 @@ const EXECUTIVE_TYPES = [
   "executive", "business_risk", "business_health",
 ];
 
+const AI_TYPES = [
+  "ai_critical_alert", "ai_profit_opportunity", "ai_growth_opportunity",
+  "ai_inventory_risk", "ai_customer_risk", "ai_marketing_risk", "ai_financial_risk",
+];
+
 export function categoryOf(n: Pick<Notification, "type">): NotificationCategory {
   const t = (n.type || "").toLowerCase();
+  if (AI_TYPES.includes(t) || t.startsWith("ai_"))
+    return "ai";
   if (EXECUTIVE_TYPES.includes(t) || t.startsWith("executive") || t.startsWith("business_") ||
     t.includes("margin_collapse") || t.includes("revenue_spike") || t.includes("profit_opportunity") ||
     t.includes("churn_risk") || t.includes("business_risk"))
