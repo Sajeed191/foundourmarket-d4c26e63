@@ -515,7 +515,9 @@ function ProductPage() {
       <div id="reviews">
         <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
       </div>
-      <ProductQA productSlug={product.slug} />
+      <div id="questions">
+        <ProductQA productSlug={product.slug} />
+      </div>
       <RelatedProducts product={product} />
       
 
