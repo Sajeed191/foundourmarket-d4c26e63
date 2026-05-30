@@ -23,6 +23,7 @@ function ExecutivePage() {
       subtitle="One screen. One source of truth. The entire business in 30 seconds."
       allow={["admin", "super_admin", "manager"]}
     >
+      <div className="mb-4"><AcquisitionSummary title="Acquisition Intelligence" /></div>
       <ExecutiveDashboard focusView={view} />
     </AdminShell>
   );
