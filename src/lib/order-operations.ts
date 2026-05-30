@@ -99,6 +99,11 @@ export type StaffSupport = {
 export type StaffActivity = {
   uid: string; full_name: string | null; avatar_url: string | null; actions: number; last_action: string | null;
 };
+export type StaffPerformance = {
+  uid: string; full_name: string | null; avatar_url: string | null; roles: string[];
+  packed: number; shipped: number; refunds_handled: number; total_actions: number;
+  last_action: string | null; avg_handling_hours: number | null;
+};
 
 export type RawOps = {
   generated_at: string;
