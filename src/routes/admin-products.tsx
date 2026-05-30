@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { VirtualTable } from "@/components/admin/VirtualTable";
+import { BulkActionBar } from "@/components/admin/BulkActionBar";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
@@ -40,6 +41,7 @@ type Product = {
   specifications?: Record<string, string> | null; attributes?: Record<string, string> | null;
   admin_notes?: string | null; bestseller?: boolean; trending?: boolean;
   scheduled_publish_at?: string | null;
+  deleted_at?: string | null;
 };
 
 type Category = { slug: string; name: string };
@@ -91,6 +93,7 @@ function ProductsInner() {
   const [sort, setSort] = useState<SortKey>("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [view, setView] = useState<"active" | "recycle">("active");
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -247,26 +250,6 @@ function ProductsInner() {
   function toggleSelect(id: string) {
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
-  async function bulk(action: "activate" | "deactivate" | "feature" | "unfeature" | "delete") {
-    const ids = [...selected];
-    if (!ids.length) return;
-    if (action === "delete" && !confirm(`Delete ${ids.length} products?`)) return;
-    setBusy("bulk");
-    let error = null as { message: string } | null;
-    if (action === "delete") ({ error } = await supabase.from("products").delete().in("id", ids));
-    else {
-      const patch = action === "activate" ? { in_stock: true } : action === "deactivate" ? { in_stock: false }
-        : action === "feature" ? { featured: true } : { featured: false };
-      ({ error } = await supabase.from("products").update(patch).in("id", ids));
-    }
-    setBusy(null);
-    if (error) { toast.error(error.message); return; }
-    logActivity(`bulk_${action}`, "product", undefined, { count: ids.length });
-    invalidateProducts();
-    setSelected(new Set());
-    toast.success(`${ids.length} products updated`);
-    loadProducts();
-  }
 
   // ---- Derived ----
   const kpis = useMemo(() => {
@@ -294,6 +277,7 @@ function ProductsInner() {
 
   const filtered = useMemo(() => {
     let list = [...(products ?? [])];
+    list = view === "recycle" ? list.filter((p) => p.deleted_at) : list.filter((p) => !p.deleted_at);
     if (cat !== "all") list = list.filter((p) => p.category === cat);
     if (state === "active") list = list.filter((p) => p.in_stock);
     else if (state === "inactive") list = list.filter((p) => !p.in_stock);
@@ -316,7 +300,7 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, searchTerm, sort, stats]);
+  }, [products, cat, state, stock, searchTerm, sort, stats, view]);
 
   const topSellers = useMemo(() => {
     return [...(products ?? [])]
@@ -413,6 +397,18 @@ function ProductsInner() {
         <button onClick={() => setEditing("new")}
           className="inline-flex items-center gap-1.5 rounded-xl bg-accent text-accent-foreground font-semibold px-3 py-2 text-[10px] uppercase tracking-widest hover:brightness-110">
           <Plus className="size-3.5" /> New
+        </button>
+        <button onClick={() => {
+            const ids = filtered.map((p) => p.id);
+            const all = ids.length > 0 && ids.every((i) => selected.has(i));
+            setSelected(all ? new Set() : new Set(ids));
+          }}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
+          <CheckCircle2 className="size-3.5" /> {filtered.length > 0 && filtered.every((p) => selected.has(p.id)) ? "None" : "All"}
+        </button>
+        <button onClick={() => { setSelected(new Set()); setView((v) => (v === "recycle" ? "active" : "recycle")); }}
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-colors ${view === "recycle" ? "border-accent/40 text-accent bg-accent/5" : "border-white/10 hover:bg-white/5"}`}>
+          <Trash2 className="size-3.5" /> {view === "recycle" ? "Bin" : "Bin"}
         </button>
       </div>
 
@@ -529,31 +525,15 @@ function ProductsInner() {
         </div>
       </div>
 
-      {/* Bulk actions dock */}
-      <AnimatePresence>
-        {selected.size > 0 && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-2xl"
-          >
-            <div className="glass-strong border border-accent/20 rounded-2xl p-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar"
-              style={{ boxShadow: "0 0 40px -16px oklch(0.74 0.19 49 / 0.5)" }}>
-              <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono px-2">
-                <span className="text-accent font-semibold">{selected.size}</span> selected
-              </span>
-              <button onClick={() => setSelected(new Set())} className="shrink-0 size-7 grid place-items-center rounded-full hover:bg-white/5"><X className="size-3.5" /></button>
-              <div className="h-5 w-px bg-white/10 shrink-0" />
-              <BulkBtn onClick={() => bulk("activate")} icon={Eye} label="Activate" />
-              <BulkBtn onClick={() => bulk("deactivate")} icon={EyeOff} label="Deactivate" />
-              <BulkBtn onClick={() => bulk("feature")} icon={Star} label="Feature" />
-              <BulkBtn onClick={() => bulk("unfeature")} icon={StarOff} label="Unfeature" />
-              <BulkBtn onClick={exportCsv} icon={Download} label="Export" />
-              <BulkBtn onClick={() => bulk("delete")} icon={Trash2} label="Delete" danger busy={busy === "bulk"} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bulk actions dock — full bulk operations engine */}
+      <BulkActionBar
+        ids={[...selected].filter((id) => filtered.some((p) => p.id === id))}
+        rows={filtered.filter((p) => selected.has(p.id)) as unknown as (Record<string, unknown> & { id: string })[]}
+        categories={categories}
+        mode={view === "recycle" ? "recycle" : "normal"}
+        onClear={() => setSelected(new Set())}
+        onDone={() => { setSelected(new Set()); loadProducts(); invalidateProducts(); }}
+      />
 
       {editing && (
         <ProductEditor

@@ -189,6 +189,7 @@ export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select(SELECT_COLS)
+    .is("deleted_at", null)
     .order("sort_order", { ascending: true });
   if (error || !data) return [];
   return (data as Row[]).map(rowToProduct);

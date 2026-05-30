@@ -1500,6 +1500,7 @@ export type Database = {
           bestseller: boolean
           category: string
           cod_enabled: boolean
+          collection: string | null
           compare_price_inr: number | null
           compare_price_usd: number | null
           cost: number
@@ -1507,20 +1508,27 @@ export type Database = {
           cost_price_usd: number | null
           created_at: string
           customs_info: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          delivery_estimate: string | null
           description: string | null
           discount: number | null
           featured: boolean
           features: string[]
           fragile: boolean
+          homepage_section: string | null
+          hot_deal: boolean
           id: string
           image: string | null
           in_stock: boolean
           india_visible: boolean
           international_shipping: boolean
           international_visible: boolean
+          inventory_tracking: boolean
           low_stock_threshold: number
           meta_keywords: string[]
           name: string
+          new_arrival: boolean
           paypal_enabled: boolean
           pickup_supported: boolean
           preorder: boolean
@@ -1540,6 +1548,7 @@ export type Database = {
           search_vector: unknown
           seo_description: string | null
           seo_title: string | null
+          shipping_class: string | null
           shipping_fee_inr: number
           shipping_fee_usd: number
           sku: string | null
@@ -1566,6 +1575,7 @@ export type Database = {
           bestseller?: boolean
           category: string
           cod_enabled?: boolean
+          collection?: string | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           cost?: number
@@ -1573,20 +1583,27 @@ export type Database = {
           cost_price_usd?: number | null
           created_at?: string
           customs_info?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
           featured?: boolean
           features?: string[]
           fragile?: boolean
+          homepage_section?: string | null
+          hot_deal?: boolean
           id?: string
           image?: string | null
           in_stock?: boolean
           india_visible?: boolean
           international_shipping?: boolean
           international_visible?: boolean
+          inventory_tracking?: boolean
           low_stock_threshold?: number
           meta_keywords?: string[]
           name: string
+          new_arrival?: boolean
           paypal_enabled?: boolean
           pickup_supported?: boolean
           preorder?: boolean
@@ -1606,6 +1623,7 @@ export type Database = {
           search_vector?: unknown
           seo_description?: string | null
           seo_title?: string | null
+          shipping_class?: string | null
           shipping_fee_inr?: number
           shipping_fee_usd?: number
           sku?: string | null
@@ -1632,6 +1650,7 @@ export type Database = {
           bestseller?: boolean
           category?: string
           cod_enabled?: boolean
+          collection?: string | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           cost?: number
@@ -1639,20 +1658,27 @@ export type Database = {
           cost_price_usd?: number | null
           created_at?: string
           customs_info?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
           featured?: boolean
           features?: string[]
           fragile?: boolean
+          homepage_section?: string | null
+          hot_deal?: boolean
           id?: string
           image?: string | null
           in_stock?: boolean
           india_visible?: boolean
           international_shipping?: boolean
           international_visible?: boolean
+          inventory_tracking?: boolean
           low_stock_threshold?: number
           meta_keywords?: string[]
           name?: string
+          new_arrival?: boolean
           paypal_enabled?: boolean
           pickup_supported?: boolean
           preorder?: boolean
@@ -1672,6 +1698,7 @@ export type Database = {
           search_vector?: unknown
           seo_description?: string | null
           seo_title?: string | null
+          shipping_class?: string | null
           shipping_fee_inr?: number
           shipping_fee_usd?: number
           sku?: string | null
@@ -2769,6 +2796,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_bulk_products: {
+        Args: { _action: string; _ids: string[]; _params?: Json }
+        Returns: Json
+      }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -2884,6 +2915,7 @@ export type Database = {
           bestseller: boolean
           category: string
           cod_enabled: boolean
+          collection: string | null
           compare_price_inr: number | null
           compare_price_usd: number | null
           cost: number
@@ -2891,20 +2923,27 @@ export type Database = {
           cost_price_usd: number | null
           created_at: string
           customs_info: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          delivery_estimate: string | null
           description: string | null
           discount: number | null
           featured: boolean
           features: string[]
           fragile: boolean
+          homepage_section: string | null
+          hot_deal: boolean
           id: string
           image: string | null
           in_stock: boolean
           india_visible: boolean
           international_shipping: boolean
           international_visible: boolean
+          inventory_tracking: boolean
           low_stock_threshold: number
           meta_keywords: string[]
           name: string
+          new_arrival: boolean
           paypal_enabled: boolean
           pickup_supported: boolean
           preorder: boolean
@@ -2924,6 +2963,7 @@ export type Database = {
           search_vector: unknown
           seo_description: string | null
           seo_title: string | null
+          shipping_class: string | null
           shipping_fee_inr: number
           shipping_fee_usd: number
           sku: string | null
