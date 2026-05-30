@@ -23,6 +23,9 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/products";
 import { adminUpdateProduct } from "@/lib/admin-products.functions";
 import { invalidateProducts } from "@/lib/use-products";
+import { useEditorProtection } from "@/hooks/use-editor-protection";
+import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
+import { logActivity } from "@/components/admin/AdminShell";
 
 type Patch = {
   name?: string;
