@@ -208,6 +208,10 @@ export function ExecutiveDashboard({ focusView }: { focusView?: string }) {
       {/* Traffic Intelligence summary */}
       <TrafficSummaryCard />
 
+      {/* Marketing Automation summary */}
+      <AutomationSummaryWidget />
+
+
 
 
 
