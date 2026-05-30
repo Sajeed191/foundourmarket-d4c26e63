@@ -435,11 +435,12 @@ function Home() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {categories.map((cat, i) => (
             <Reveal key={cat.slug} delay={i} className="h-full">
+              <div className="relative h-full">
               <Link
                 to="/category/$slug"
                 params={{ slug: cat.slug }}
                 onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                className="group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/50 transition-all hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-24px_oklch(0.74_0.19_49_/_0.45)]"
+                className={`group relative block aspect-square bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/50 transition-all hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-24px_oklch(0.74_0.19_49_/_0.45)] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
               >
                 {cat.image ? (
                   <img
@@ -472,6 +473,17 @@ function Home() {
                   <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">{categoryCounts[cat.slug] ?? 0} items</p>
                 </div>
               </Link>
+              {isProductAdmin && (
+                <div className="absolute left-2 top-2 z-20">
+                  <InlineActiveToggle
+                    active={cat.homepage_visible}
+                    label="Category"
+                    size="sm"
+                    onToggle={(next) => toggleCategoryVisible(cat.id, next)}
+                  />
+                </div>
+              )}
+              </div>
             </Reveal>
           ))}
         </div>
