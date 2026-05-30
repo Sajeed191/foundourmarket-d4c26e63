@@ -61,7 +61,6 @@ function useCountdown(target: string | null) {
  * a full CMS bottom sheet — customers never see it (RLS + role gated).
  */
 export function AnnouncementBar({ page = "home" }: { page?: string }) {
-  const { isAdmin } = useIsAdmin();
   const { canEdit } = useAdminEditing();
   const [items, setItems] = useState<Announcement[]>(FALLBACK);
   const [loaded, setLoaded] = useState(false);
