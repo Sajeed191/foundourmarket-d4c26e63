@@ -3030,6 +3030,81 @@ export type Database = {
         }
         Relationships: []
       }
+      region_assignment_history: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          method: string
+          previous_region: string | null
+          reason: string | null
+          region: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          previous_region?: string | null
+          reason?: string | null
+          region: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          previous_region?: string | null
+          reason?: string | null
+          region?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      region_change_requests: {
+        Row: {
+          created_at: string
+          current_region: string | null
+          id: string
+          reason: string
+          requested_region: string
+          resolved_at: string | null
+          review_note: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_region?: string | null
+          id?: string
+          reason: string
+          requested_region: string
+          resolved_at?: string | null
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_region?: string | null
+          id?: string
+          reason?: string
+          requested_region?: string
+          resolved_at?: string | null
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       return_items: {
         Row: {
           created_at: string
@@ -4586,6 +4661,16 @@ export type Database = {
         Args: { _action: string; _ids: string[]; _params?: Json }
         Returns: Json
       }
+      admin_change_region: {
+        Args: {
+          _actor: string
+          _method?: string
+          _reason?: string
+          _region: string
+          _target: string
+        }
+        Returns: string
+      }
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
@@ -4907,6 +4992,10 @@ export type Database = {
       seed_reviews: { Args: { _count?: number }; Returns: number }
       seed_shipments: { Args: never; Returns: number }
       seed_support: { Args: { _count?: number }; Returns: number }
+      self_lock_region: {
+        Args: { _country?: string; _method?: string; _region: string }
+        Returns: string
+      }
       set_automation_settings: {
         Args: {
           p_emergency: boolean
