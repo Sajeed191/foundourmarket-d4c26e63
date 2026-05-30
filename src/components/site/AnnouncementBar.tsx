@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsAdmin } from "@/lib/use-admin";
+import { useAdminEditing } from "@/lib/admin-overlay";
 import { AnnouncementIcon } from "@/lib/announcement-icons";
 import { AnnouncementAdminSheet } from "@/components/admin/AnnouncementAdminSheet";
 import { cn } from "@/lib/utils";
@@ -60,7 +60,7 @@ function useCountdown(target: string | null) {
  * a full CMS bottom sheet — customers never see it (RLS + role gated).
  */
 export function AnnouncementBar({ page = "home" }: { page?: string }) {
-  const { isAdmin } = useIsAdmin();
+  const { canEdit } = useAdminEditing();
   const [items, setItems] = useState<Announcement[]>(FALLBACK);
   const [loaded, setLoaded] = useState(false);
   const [i, setI] = useState(0);
@@ -112,7 +112,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
     [current],
   );
 
-  if (!current && !isAdmin) return null;
+  if (!current && !canEdit) return null;
 
   return (
     <>
@@ -160,7 +160,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
           </AnimatePresence>
         </div>
 
-        {isAdmin && (
+        {canEdit && (
           <button
             onClick={() => setEditing(true)}
             aria-label="Edit announcements"
@@ -174,7 +174,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
         )}
       </div>
 
-      {isAdmin && editing && <AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} />}
+      {canEdit && editing && <AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} />}
     </>
   );
 }
