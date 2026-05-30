@@ -230,6 +230,23 @@ export function AnnouncementAdminSheet({ onClose, onChanged }: { onClose: () => 
 
           {editing && (
             <div className="space-y-4">
+              <EditorSaveBar
+                state={protection.state}
+                lastSavedAt={protection.lastSavedAt}
+                recovery={protection.recovery}
+                onRestore={() => {
+                  const d = protection.restoreDraft();
+                  if (d) setEditing(d as Partial<Row>);
+                }}
+                onDismiss={() => void protection.dismissDraft()}
+                entityType="announcement"
+                entityId={entityId}
+                onRestoreVersion={(snap) => setEditing(snap as Partial<Row>)}
+                onDuplicateVersion={(snap) =>
+                  setEditing({ ...(snap as Partial<Row>), id: undefined })
+                }
+              />
+
               <Field label="Message">
                 <textarea
                   value={editing.message ?? ""}
