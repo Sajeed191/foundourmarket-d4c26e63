@@ -208,7 +208,7 @@ function AdminShipmentsPage() {
   }
 
   async function patchShipment(s: Shipment, patch: Partial<Shipment>) {
-    const { error } = await supabase.from("shipments").update(patch as Record<string, unknown>).eq("id", s.id);
+    const { error } = await supabase.from("shipments").update(patch as never).eq("id", s.id);
     if (error) { toast.error(error.message); return false; }
     setShipments((prev) => prev.map((x) => (x.id === s.id ? { ...x, ...patch } : x)));
     return true;
