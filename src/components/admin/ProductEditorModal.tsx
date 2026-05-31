@@ -387,10 +387,19 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               <Toggle checked={form.status === "hidden"} onChange={(v) => set({ status: v ? "hidden" : "published" })} label="Hidden" />
               <Toggle checked={form.bestseller} onChange={(v) => set({ bestseller: v })} label="Bestseller" />
               <Toggle checked={form.trending} onChange={(v) => set({ trending: v })} label="Trending" />
+              <Toggle checked={form.new_arrival} onChange={(v) => set({ new_arrival: v })} label="New Arrival" />
             </div>
-            <EField label="Tags (comma separated)" value={form.tags} onChange={(v) => set({ tags: v })} />
           </div>
         </CollapsibleModule>
+
+        {/* Media */}
+        <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="grid grid-cols-1 gap-3">
+            <EField label="Product Video URL" value={form.video_url} onChange={(v) => set({ video_url: v })} />
+            <EField label="Product Demo URL" value={form.demo_url} onChange={(v) => set({ demo_url: v })} />
+          </div>
+        </CollapsibleModule>
+
 
         {/* Advanced */}
         <CollapsibleModule eyebrow="Optional" title="Advanced (SEO & specs)" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
