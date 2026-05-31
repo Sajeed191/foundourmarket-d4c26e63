@@ -13,6 +13,7 @@ import { useOrderOperations } from "@/lib/use-order-operations";
 import { fetchOrderDetail } from "@/lib/order-operations";
 import type { EnrichedOrder, OrderOps, WarRoomTag, OrderDetail } from "@/lib/order-operations";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
+import { OrderActionCenter } from "@/components/admin/OrderActionCenter";
 
 export const Route = createFileRoute("/admin-orders-ops")({
   head: () => ({ meta: [{ title: "Order Operations Center — Admin" }] }),
@@ -199,10 +200,11 @@ function MonoRow({ k, v, copy }: { k: string; v: string | null | undefined; copy
   );
 }
 
-function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) {
+function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () => void; onRefresh: () => void }) {
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [bump, setBump] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -212,7 +214,7 @@ function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) 
       .catch((e) => { if (alive) setErr(e instanceof Error ? e.message : "Failed to load detail"); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [o.id]);
+  }, [o.id, bump]);
 
   const a = (detail?.order.shipping_address ?? o.shipping_address ?? {}) as Record<string, string | undefined>;
   const pay = detail?.payment;
@@ -245,6 +247,14 @@ function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) 
           <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Profit</div><div className={`text-sm font-semibold ${o.profit < 0 ? "text-destructive" : "text-emerald-400"}`}>{inr(o.profit)}</div></div>
           <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Risk</div><div className="text-sm font-semibold"><RiskBadge score={o.riskScore} /></div></div>
         </div>
+
+        <OrderActionCenter
+          orderId={o.id}
+          hasCustomer={!!o.user_id}
+          onDone={() => { setBump((b) => b + 1); onRefresh(); }}
+        />
+
+
 
         {/* Order Information */}
         <Section title="Order Information" icon={<ShoppingBag className="size-3" />}>
@@ -707,7 +717,7 @@ function OrderOpsPage() {
         </Tabs>
       </div>
 
-      {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} />}
+      {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} onRefresh={refresh} />}
     </AdminShell>
   );
 }

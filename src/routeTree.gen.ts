@@ -40,6 +40,7 @@ import { Route as AdminRegionRouteImport } from './routes/admin-region'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
 import { Route as AdminOrdersOpsRouteImport } from './routes/admin-orders-ops'
+import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
 import { Route as AdminMarketingMetricsRouteImport } from './routes/admin-marketing-metrics'
@@ -251,6 +252,11 @@ const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
 const AdminOrdersOpsRoute = AdminOrdersOpsRouteImport.update({
   id: '/admin-orders-ops',
   path: '/admin-orders-ops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/admin-orders',
+  path: '/admin-orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -577,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
@@ -667,6 +674,7 @@ export interface FileRoutesByTo {
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
@@ -758,6 +766,7 @@ export interface FileRoutesById {
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-notifications': typeof AdminNotificationsRoute
+  '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-products': typeof AdminProductsRoute
@@ -850,6 +859,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders'
     | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
@@ -940,6 +950,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders'
     | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
@@ -1030,6 +1041,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-metrics'
     | '/admin-media'
     | '/admin-notifications'
+    | '/admin-orders'
     | '/admin-orders-ops'
     | '/admin-payments'
     | '/admin-products'
@@ -1121,6 +1133,7 @@ export interface RootRouteChildren {
   AdminMarketingMetricsRoute: typeof AdminMarketingMetricsRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
   AdminOrdersOpsRoute: typeof AdminOrdersOpsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminProductsRoute: typeof AdminProductsRoute
@@ -1398,6 +1411,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-orders-ops'
       fullPath: '/admin-orders-ops'
       preLoaderRoute: typeof AdminOrdersOpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-orders': {
+      id: '/admin-orders'
+      path: '/admin-orders'
+      fullPath: '/admin-orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-notifications': {
@@ -1871,6 +1891,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMarketingMetricsRoute: AdminMarketingMetricsRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
   AdminOrdersOpsRoute: AdminOrdersOpsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminProductsRoute: AdminProductsRoute,
