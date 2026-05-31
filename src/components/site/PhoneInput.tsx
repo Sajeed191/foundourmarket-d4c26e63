@@ -72,9 +72,10 @@ export function PhoneInput({
   const rootRef = useRef<HTMLDivElement>(null);
   const autoDetected = useRef(false);
 
-  // Auto-detect country once, only when there is no value yet.
+  // Auto-detect country once, only when there is no value yet AND the parent
+  // has not supplied an authoritative region-derived default.
   useEffect(() => {
-    if (autoDetected.current || value) return;
+    if (autoDetected.current || value || !autoDetect) return;
     autoDetected.current = true;
     try {
       const locale = navigator.language || "";
@@ -85,7 +86,14 @@ export function PhoneInput({
     } catch {
       /* keep default */
     }
-  }, [value]);
+  }, [value, autoDetect]);
+
+  // Follow a region-derived default country while the field is still empty.
+  useEffect(() => {
+    if (value) return;
+    setCountry(defaultCountry);
+  }, [defaultCountry, value]);
+
 
   // Keep local country in sync if a parsed value arrives later (edit mode).
   useEffect(() => {
