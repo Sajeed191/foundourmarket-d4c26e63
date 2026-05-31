@@ -155,12 +155,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   }, [regionCountryName]);
 
 
-  // Auto city/state from Indian pincode
+  // Auto city/state from Indian pincode (and remember resolved data for the
+  // PIN ↔ City ↔ State consistency check + area autocomplete).
   useEffect(() => {
     const pin = (form.postal ?? "").trim();
     if (form.country !== "India") return;
     if (!/^\d{6}$/.test(pin)) {
-      if (pin.length === 0) setPinState("idle");
+      if (pin.length === 0) {
+        setPinState("idle");
+        setResolvedPin(null);
+      }
       return;
     }
     if (pin === lastPin.current) return;
@@ -172,9 +176,11 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       if (cancelled) return;
       if (r.valid) {
         setPinState("valid");
+        setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
         setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
       } else {
         setPinState("invalid");
+        setResolvedPin(null);
       }
     })();
     return () => {
@@ -182,12 +188,15 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     };
   }, [form.postal, form.country, validatePin]);
 
+  // Phase 1 — full structured GPS fill: reverse-geocode coordinates into every
+  // address field, detect the region, sync country, and store a confidence score.
   const useCurrentLocation = async () => {
     if (!navigator.geolocation) {
       setError("Location is not supported on this device.");
       return;
     }
     setGeoBusy(true);
+    setError(null);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -195,22 +204,44 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         set("longitude", longitude);
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${latitude}&lon=${longitude}`,
             { headers: { Accept: "application/json" } }
           );
           const j = await res.json();
           const a = j?.address ?? {};
-          if (a.country) countryTouched.current = true;
+
+          const line1 = [a.house_number, a.road || a.pedestrian || a.footway]
+            .filter(Boolean)
+            .join(" ");
+          const area = a.neighbourhood || a.suburb || a.quarter || a.hamlet || "";
+          const locality = a.suburb || a.city_district || a.residential || "";
+          const city = a.city || a.town || a.village || a.municipality || a.county || "";
+          const district = a.state_district || a.county || "";
+          const state = a.state || "";
+          const postal = a.postcode || "";
+          const country = a.country || "";
+
+          if (country) countryTouched.current = true;
+
+          const components = { line1, area, city, district, state, postal, country };
+          setGeo({
+            confidence: gpsFillConfidence(components),
+            source: "GPS + Reverse Geocode + Region Engine",
+          });
+
           setForm((p) => ({
             ...p,
-            line1: p.line1 || [a.road, a.house_number].filter(Boolean).join(" "),
-            city: a.city || a.town || a.village || a.county || p.city,
-            state: a.state || p.state,
-            postal: a.postcode || p.postal,
-            country: a.country || p.country,
+            line1: p.line1 || line1,
+            line2: p.line2 || [locality, area].filter(Boolean).join(", "),
+            landmark: p.landmark || (area && area !== locality ? area : p.landmark),
+            city: city || p.city,
+            state: state || p.state,
+            postal: postal || p.postal,
+            country: country || p.country,
           }));
         } catch {
-          /* coordinates saved even if reverse geocode fails */
+          // Coordinates are still saved even if reverse geocode fails.
+          setGeo({ confidence: 35, source: "GPS coordinates only" });
         }
         setGeoBusy(false);
       },
