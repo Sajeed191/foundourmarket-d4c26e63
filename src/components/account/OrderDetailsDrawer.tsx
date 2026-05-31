@@ -65,6 +65,7 @@ function fmtDate(d: string | Date | null | undefined, withTime = false) {
 
 export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { format } = useRegion();
   const cart = useCart();
   const nav = useNavigate();
