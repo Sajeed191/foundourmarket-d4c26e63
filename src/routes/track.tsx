@@ -647,13 +647,30 @@ function ShipmentDetails({ shipment }: { shipment: ShipmentInfo }) {
         weekday: "short", month: "short", day: "numeric",
       })
     : null;
+  const etaState = computeEta({
+    status: shipment.status,
+    estimatedDelivery: shipment.estimated_delivery,
+    actualDelivery: shipment.delivered_at,
+  });
+  const etaCls: Record<string, string> = {
+    delivered: "border-emerald-400/30 bg-emerald-400/10 text-emerald-400",
+    arriving_today: "border-violet-400/30 bg-violet-400/10 text-violet-400",
+    on_schedule: "border-sky-400/30 bg-sky-400/10 text-sky-400",
+    delayed: "border-destructive/30 bg-destructive/10 text-destructive",
+    unknown: "border-border bg-muted/30 text-muted-foreground",
+  };
   return (
     <div className="relative glass-strong rounded-3xl p-5 sm:p-6 ring-1 ring-white/10 overflow-hidden">
       <div className="flex items-center justify-between gap-3 mb-4">
         <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Shipment</p>
-        <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-accent/30 bg-accent/10 text-accent">
-          {SHIP_LABEL[shipment.status] ?? shipment.status}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border ${etaCls[etaState.state]}`}>
+            {etaState.label}
+          </span>
+          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-accent/30 bg-accent/10 text-accent">
+            {SHIP_LABEL[shipment.status] ?? shipment.status}
+          </span>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Pill icon={Truck} label={shipment.carrierLabel ?? "Assigning…"} hint="Courier" />
