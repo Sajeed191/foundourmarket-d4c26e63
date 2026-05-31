@@ -388,13 +388,37 @@ function TrackPage() {
                   <XCircle className="size-5 text-destructive" />
                   <span className="text-sm font-medium">This order was cancelled.</span>
                 </div>
+              ) : returned ? (
+                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
+                  <Package className="size-5 text-amber-500" />
+                  <span className="text-sm font-medium">This shipment was returned.</span>
+                </div>
+              ) : failed ? (
+                <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-2xl">
+                  <XCircle className="size-5 text-destructive" />
+                  <span className="text-sm font-medium">Delivery attempt failed — our team will retry shortly.</span>
+                </div>
               ) : (
                 <Timeline currentIdx={currentStatusIdx} />
               )}
             </motion.div>
 
+            {/* Real shipment details: carrier, tracking number + link, ETA */}
+            {result.shipment && (
+              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+                <ShipmentDetails shipment={result.shipment} />
+              </motion.div>
+            )}
+
+            {/* Real shipment event timeline */}
+            {result.events.length > 0 && (
+              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
+                <EventTimeline events={result.events} />
+              </motion.div>
+            )}
+
             {/* Carrier + ETA Countdown */}
-            {!cancelled && (
+            {!cancelled && !returned && !failed && (
               <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
                 <CarrierEta orderId={result.order.id} progress={currentStatusIdx} />
               </motion.div>
