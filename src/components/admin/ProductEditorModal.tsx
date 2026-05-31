@@ -351,6 +351,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               <p className="text-sm mt-1">{settings.free_shipping_threshold_usd != null ? usd(settings.free_shipping_threshold_usd) : "Not set"}</p>
             </div>
             <p className="col-span-2 text-[10px] text-muted-foreground">Free-shipping thresholds are global and managed in Store Settings → keeps a single source of truth across the platform.</p>
+            <EField label="Weight (kg)" type="number" value={form.weight} onChange={(v) => set({ weight: v })} />
+            <EField label="Shipping Class" value={form.shipping_class} onChange={(v) => set({ shipping_class: v })} />
+            <EField label="Length (cm)" type="number" value={form.length} onChange={(v) => set({ length: v })} />
+            <EField label="Width (cm)" type="number" value={form.width} onChange={(v) => set({ width: v })} />
+            <EField label="Height (cm)" type="number" value={form.height} onChange={(v) => set({ height: v })} className="col-span-2" />
             <div className="col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <Toggle checked={form.cod_enabled} onChange={(v) => set({ cod_enabled: v })} label="COD" />
               <Toggle checked={form.pickup_supported} onChange={(v) => set({ pickup_supported: v })} label="Pickup" />
