@@ -214,12 +214,26 @@ function CheckoutPage() {
         /* saving methods is optional — continue checkout regardless */
       }
 
-      // Stable, public HTTPS logo URL hosted on Cloud storage. Razorpay fetches
-      // the image server-side, so it must be reachable WITHOUT auth and regardless
-      // of publish state — the app's own origin (preview is auth-gated, custom
-      // domain 404s until published) is NOT a reliable source.
-      const logoUrl =
-        "https://jczcebzqxrwrblxvqpdg.supabase.co/storage/v1/object/public/media/brand/foundourmarket-checkout-logo.jpeg";
+      // Stable, public HTTPS logo hosted on Cloud storage. Razorpay fetches the
+      // image server-side, so it must be reachable WITHOUT auth and regardless of
+      // publish state — the app's own origin (preview is auth-gated, custom domain
+      // 404s until published) is NOT a reliable source.
+      // Primary: dedicated 512x512 transparent, tightly-cropped checkout logo.
+      // Fallback: FoundOurMarket™ favicon (never the generic "F" placeholder).
+      const LOGO_PRIMARY =
+        "https://jczcebzqxrwrblxvqpdg.supabase.co/storage/v1/object/public/media/brand/foundourmarket-razorpay-logo.png";
+      const LOGO_FALLBACK =
+        "https://jczcebzqxrwrblxvqpdg.supabase.co/storage/v1/object/public/media/brand/foundourmarket-favicon-fallback.png";
+      // Preflight the primary so a broken asset never leaves Razorpay showing its
+      // default "F" monogram — degrade to the branded favicon instead.
+      const logoUrl = await new Promise<string>((resolve) => {
+        const probe = new Image();
+        probe.onload = () => resolve(LOGO_PRIMARY);
+        probe.onerror = () => resolve(LOGO_FALLBACK);
+        probe.src = LOGO_PRIMARY;
+        // Don't block checkout if the network stalls.
+        setTimeout(() => resolve(LOGO_PRIMARY), 1500);
+      });
 
       const rzp = openRazorpay({
         key: created.keyId,
