@@ -5210,6 +5210,7 @@ export type Database = {
         Returns: Json
       }
       svc_executive_analytics: { Args: { _actor: string }; Returns: Json }
+      svc_marketing_intelligence: { Args: { _actor?: string }; Returns: Json }
       svc_payment_center: {
         Args: {
           _actor: string
