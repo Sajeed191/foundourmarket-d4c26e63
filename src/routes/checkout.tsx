@@ -318,6 +318,22 @@ function CheckoutPage() {
       // Final checkout payload (must contain NO customer_id; prefill only).
       console.log("RAZORPAY_PAYLOAD", rzpOptions);
 
+      // Production-domain audit: the origin Razorpay validates against its
+      // registered "Website Origins" is the page that opens Checkout —
+      // window.location.origin. This MUST be https://foundourmarket.com in prod.
+      const rzpKey = String(created.keyId ?? "");
+      console.log("RAZORPAY_CHECKOUT_INIT_DATA", {
+        origin: window.location.origin,
+        checkout_domain: "https://checkout.razorpay.com",
+        razorpay_key: rzpKey,
+        mode: rzpKey.startsWith("rzp_live")
+          ? "live"
+          : rzpKey.startsWith("rzp_test")
+            ? "test"
+            : "unknown",
+        order_id: created.razorpayOrderId,
+      });
+
       const rzp = openRazorpay(rzpOptions);
 
       rzp.on("payment.failed", (resp: any) => {
