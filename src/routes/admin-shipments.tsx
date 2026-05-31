@@ -178,12 +178,13 @@ function AdminShipmentsPage() {
         description: `Status updated to ${STATUS_LABEL[status]}`,
       });
       // mirror onto the order so order tracking + lists reflect instantly
-      const orderPatch: Record<string, unknown> = { fulfillment_status: ORDER_FULFILLMENT[status] };
+      const fulfillment = ORDER_FULFILLMENT[status];
+      const orderPatch: { fulfillment_status: string; status?: string } = { fulfillment_status: fulfillment };
       if (status === "delivered") orderPatch.status = "delivered";
       if (status === "cancelled") orderPatch.status = "cancelled";
       await supabase.from("orders").update(orderPatch).eq("id", s.order_id);
       setOrders((prev) => prev?.map((o) =>
-        o.id === s.order_id ? { ...o, fulfillment_status: orderPatch.fulfillment_status as string } : o) ?? prev);
+        o.id === s.order_id ? { ...o, fulfillment_status: fulfillment } : o) ?? prev);
       logActivity("shipment_status", "shipment", s.id, { status });
       toast.success(`Marked ${STATUS_LABEL[status]}`);
     }
