@@ -309,6 +309,14 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       currency: rzpOrder.currency,
       keyId,
       totals: priced.totals,
+      debug: {
+        detectedCountry: resolution.detectedCountry,
+        market: region,
+        currency: priced.totals.currency,
+        pricingSource: resolution.pricingSource,
+        confidence: resolution.confidence,
+        amountMinor: rzpOrder.amount,
+      },
     };
   });
 
