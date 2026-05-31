@@ -380,6 +380,25 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       throw new Error("Payment verification failed.");
     }
 
+    // Fetch the real payment entity so we can record the exact method used
+    // (upi / card / netbanking / wallet / emi / paylater) for health analytics.
+    let rzpMethod: string | null = null;
+    let rzpMethodMeta: Record<string, unknown> = {};
+    try {
+      const pay = await rzpFetch<any>(`/payments/${data.razorpayPaymentId}`);
+      rzpMethod = pay?.method ?? null;
+      rzpMethodMeta = {
+        rzp_method: pay?.method ?? null,
+        rzp_bank: pay?.bank ?? null,
+        rzp_wallet: pay?.wallet ?? null,
+        rzp_vpa: pay?.vpa ?? null,
+        rzp_card_network: pay?.card?.network ?? null,
+        rzp_card_type: pay?.card?.type ?? null,
+      };
+    } catch {
+      /* method enrichment is best-effort */
+    }
+
     // Commit reserved stock permanently, then mark the order paid.
     await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
     await supabaseAdmin
@@ -391,8 +410,6 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
 
-
-
     // Record the payment (idempotent on razorpay_payment_id)
     const { data: existingPay } = await supabaseAdmin
       .from("payments")
@@ -403,7 +420,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       await supabaseAdmin.from("payments").insert({
         order_id: order.id,
         user_id: userId,
-        method: "razorpay",
+        method: rzpMethod ?? "razorpay",
         status: "succeeded",
         amount: Number(order.total),
         currency: order.currency,
@@ -412,7 +429,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
         razorpay_payment_id: data.razorpayPaymentId,
         signature: data.razorpaySignature,
         demo: false,
-        meta: { verified_via: "checkout_handshake" },
+        meta: { verified_via: "checkout_handshake", ...rzpMethodMeta },
       });
     }
 
