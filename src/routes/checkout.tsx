@@ -349,7 +349,15 @@ function CheckoutPage() {
                 </p>
               </div>
             )}
-            {selectedAddress && !serviceChecking && service && !serviceable && (
+            {selectedAddress && !serviceChecking && serviceDown && (
+              <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1.5">
+                <Loader2 className="size-3 text-amber-400 shrink-0" />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-amber-400">
+                  Verification unavailable · we'll confirm before dispatch
+                </p>
+              </div>
+            )}
+            {selectedAddress && !serviceChecking && service && !serviceable && !serviceDown && (
               <div className="inline-flex items-center gap-2 bg-destructive/10 border border-destructive/30 rounded-full px-3 py-1.5">
                 <XCircle className="size-3 text-destructive shrink-0" />
                 <p className="text-[10px] font-mono uppercase tracking-widest text-destructive">
