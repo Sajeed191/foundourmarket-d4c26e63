@@ -25,11 +25,20 @@ export const getOrderOpsFn = createServerFn({ method: "POST" })
   .handler(async ({ data: input, context }) => {
     const { userId } = context as { userId: string };
     await requireStaff(userId, OPS_STAFF, "ops.order_operations");
+    console.log("[admin_order_operations] request started", { actor: userId, limit: input.limit ?? 400 });
+    const t0 = Date.now();
     const { data, error } = await adminRpc("svc_admin_order_operations", {
       _actor: userId,
       _limit: input.limit ?? 400,
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[admin_order_operations] rpc error", error.message);
+      throw new Error(error.message);
+    }
+    console.log("admin_order_operations success", {
+      ms: Date.now() - t0,
+      orders: Array.isArray((data as { orders?: unknown[] })?.orders) ? (data as { orders: unknown[] }).orders.length : null,
+    });
     return data;
   });
 
