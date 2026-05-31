@@ -167,10 +167,28 @@ function GrowthCenterPage() {
 
   const TABS: { k: Tab; label: string }[] = [
     { k: "overview", label: "Overview" }, { k: "segments", label: "Segments" },
+    { k: "revenue", label: "Revenue" }, { k: "automations", label: "Automations" },
     { k: "carts", label: "Abandoned carts" }, { k: "coupons", label: "Coupons" },
     { k: "products", label: "Products" }, { k: "campaigns", label: "Campaigns" },
     { k: "channels", label: "Channels" },
   ];
+
+  const segDefs: SegDef[] = d
+    ? SEG_DEFS.map((s) => {
+        const count = s.count(d);
+        const estRevenue =
+          s.key === "abandoned_cart" ? d.abandoned.value_at_risk :
+          s.buyer && count != null ? count * d.segments.avg_ltv : null;
+        return { key: s.key, label: s.label, count, estRevenue };
+      })
+    : [];
+
+  function exportExecs() {
+    void exportCsv("automation-executions", execs.map((e) => ({
+      trigger: e.trigger_key ?? "", action: e.action_taken ?? "", audience: e.matched_count ?? 0,
+      source: e.triggered_by ?? "", status: e.status, summary: e.summary ?? "", at: e.created_at,
+    })));
+  }
 
   return (
     <AdminShell title="Growth Center" subtitle="Segments, recovery, coupons, product marketing & automation intelligence — live data" allow={["admin", "super_admin", "manager"]}>
