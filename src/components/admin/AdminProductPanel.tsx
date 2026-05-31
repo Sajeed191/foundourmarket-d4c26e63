@@ -663,3 +663,87 @@ function Toggle({ label, on, onClick }: { label: string; on: boolean; onClick: (
     </button>
   );
 }
+
+function PriceBlock({
+  flag,
+  title,
+  symbol,
+  price,
+  compare,
+  cost,
+  onPrice,
+  onCompare,
+  onCost,
+}: {
+  flag: string;
+  title: string;
+  symbol: string;
+  price: string;
+  compare: string;
+  cost: string;
+  onPrice: (v: string) => void;
+  onCompare: (v: string) => void;
+  onCost: (v: string) => void;
+}) {
+  const p = Number(price) || 0;
+  const c = Number(cost) || 0;
+  const profit = p && c ? p - c : 0;
+  const margin = p && c ? (profit / p) * 100 : 0;
+  const positive = profit >= 0;
+  return (
+    <div className="rounded-2xl border border-accent/20 bg-white/[0.02] p-3.5">
+      <div className="mb-2.5 flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+        <span className="text-base">{flag}</span> {title}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <PriceInput label="Selling" symbol={symbol} value={price} onChange={onPrice} />
+        <PriceInput label="Compare at" symbol={symbol} value={compare} onChange={onCompare} />
+        <PriceInput label="Cost" symbol={symbol} value={cost} onChange={onCost} />
+      </div>
+      <div className="mt-2.5 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          <Tag className="size-3" /> Profit
+        </span>
+        <span className={cn("text-sm font-semibold", positive ? "text-emerald-400" : "text-red-400")}>
+          {symbol}
+          {profit.toFixed(2)}
+        </span>
+      </div>
+      <div className="mt-1.5 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          <Percent className="size-3" /> Margin
+        </span>
+        <span className={cn("text-sm font-semibold", positive ? "text-emerald-400" : "text-red-400")}>
+          {margin.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PriceInput({
+  label,
+  symbol,
+  value,
+  onChange,
+}: {
+  label: string;
+  symbol: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block text-[9px] font-mono uppercase tracking-widest text-muted-foreground/70">
+      {label}
+      <div className="mt-1 flex items-center rounded-lg border border-white/10 bg-black/20 px-2">
+        <span className="text-sm text-accent">{symbol}</span>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          inputMode="decimal"
+          className="w-full bg-transparent py-1.5 pl-1 text-sm text-foreground outline-none"
+        />
+      </div>
+    </label>
+  );
+}
