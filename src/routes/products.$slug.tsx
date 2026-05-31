@@ -362,7 +362,7 @@ function ProductPage() {
               {[
                 { icon: Shield, label: "Secure Checkout" },
                 { icon: Truck, label: "Global Shipping" },
-                { icon: RotateCcw, label: "Easy Returns" },
+                { icon: RotateCcw, label: product.returnEligible ? `${product.returnWindowDays}-Day Returns` : "No Returns" },
                 { icon: BadgeCheck, label: "Trusted Seller" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground/80">
