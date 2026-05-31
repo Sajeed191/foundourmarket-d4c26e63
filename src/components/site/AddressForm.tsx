@@ -239,7 +239,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   };
 
   const validateAll = () => {
-    const keys = ["full_name", "phone", "line1", "city", "postal", "country"];
+    const keys = ["full_name", "phone", "line1", "city", "postal", "country", "nickname"];
     const e: Record<string, string> = {};
     for (const k of keys) {
       const msg = fieldError(k);
