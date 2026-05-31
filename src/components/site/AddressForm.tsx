@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
-import type { Address, AddressInput, AddressType } from "@/lib/use-addresses";
+import { addressCompleteness, type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
