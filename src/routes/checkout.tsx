@@ -206,13 +206,11 @@ function CheckoutPage() {
 
 
 
-      let customerId: string | undefined;
-      try {
-        const c = await ensureCustomer();
-        customerId = c.customerId;
-      } catch {
-        /* saving methods is optional — continue checkout regardless */
-      }
+      // NOTE: Do NOT pass `customer_id` to Razorpay Checkout. Razorpay customer
+      // IDs (cust_xxx) are mode-specific — IDs created under the test account are
+      // invalid under live keys and trigger "Customer-id validation failed".
+      // Customer info is conveyed via `prefill` only.
+
 
       // Stable, public HTTPS logo hosted on Cloud storage. Razorpay fetches the
       // image server-side, so it must be reachable WITHOUT auth and regardless of
