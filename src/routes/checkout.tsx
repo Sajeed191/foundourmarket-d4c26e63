@@ -214,12 +214,12 @@ function CheckoutPage() {
         /* saving methods is optional — continue checkout regardless */
       }
 
-      // Absolute, publicly-fetchable logo URL (Razorpay fetches it server-side).
-      // Falls back to the production custom domain during SSR / non-browser.
+      // Stable, public HTTPS logo URL hosted on Cloud storage. Razorpay fetches
+      // the image server-side, so it must be reachable WITHOUT auth and regardless
+      // of publish state — the app's own origin (preview is auth-gated, custom
+      // domain 404s until published) is NOT a reliable source.
       const logoUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/logo.jpeg`
-          : "https://foundourmarket.com/logo.jpeg";
+        "https://jczcebzqxrwrblxvqpdg.supabase.co/storage/v1/object/public/media/brand/foundourmarket-checkout-logo.jpeg";
 
       const rzp = openRazorpay({
         key: created.keyId,
