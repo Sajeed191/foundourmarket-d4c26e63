@@ -4,9 +4,24 @@ import { supabase } from "@/integrations/supabase/client";
 export type StoreSettings = {
   cod_enabled: boolean;
   prepaid_discount_percent: number;
+  shipping_mode: "free" | "flat" | "region" | "product" | "category";
+  free_shipping_enabled: boolean;
+  flat_shipping_inr: number;
+  flat_shipping_usd: number;
+  free_shipping_threshold_inr: number | null;
+  free_shipping_threshold_usd: number | null;
 };
 
-const DEFAULTS: StoreSettings = { cod_enabled: false, prepaid_discount_percent: 0 };
+const DEFAULTS: StoreSettings = {
+  cod_enabled: false,
+  prepaid_discount_percent: 0,
+  shipping_mode: "product",
+  free_shipping_enabled: false,
+  flat_shipping_inr: 0,
+  flat_shipping_usd: 0,
+  free_shipping_threshold_inr: null,
+  free_shipping_threshold_usd: null,
+};
 
 /**
  * Live store settings (COD toggle, prepaid discount).
@@ -22,14 +37,11 @@ export function useStoreSettings() {
     const load = async () => {
       const { data } = await supabase
         .from("store_settings")
-        .select("cod_enabled,prepaid_discount_percent")
+        .select("cod_enabled,prepaid_discount_percent,shipping_mode,free_shipping_enabled,flat_shipping_inr,flat_shipping_usd,free_shipping_threshold_inr,free_shipping_threshold_usd")
         .limit(1)
         .maybeSingle();
       if (active && data) {
-        setSettings({
-          cod_enabled: !!data.cod_enabled,
-          prepaid_discount_percent: Number(data.prepaid_discount_percent) || 0,
-        });
+        setSettings(normalizeSettings(data));
       }
       if (active) setLoading(false);
     };
@@ -43,10 +55,7 @@ export function useStoreSettings() {
         (payload) => {
           const row = payload.new as Partial<StoreSettings> | null;
           if (row) {
-            setSettings({
-              cod_enabled: !!row.cod_enabled,
-              prepaid_discount_percent: Number(row.prepaid_discount_percent) || 0,
-            });
+            setSettings(normalizeSettings(row));
           }
         },
       )
@@ -59,4 +68,17 @@ export function useStoreSettings() {
   }, []);
 
   return { settings, loading };
+}
+
+function normalizeSettings(row: Partial<StoreSettings>): StoreSettings {
+  return {
+    cod_enabled: !!row.cod_enabled,
+    prepaid_discount_percent: Number(row.prepaid_discount_percent) || 0,
+    shipping_mode: row.shipping_mode ?? "product",
+    free_shipping_enabled: !!row.free_shipping_enabled,
+    flat_shipping_inr: Number(row.flat_shipping_inr) || 0,
+    flat_shipping_usd: Number(row.flat_shipping_usd) || 0,
+    free_shipping_threshold_inr: row.free_shipping_threshold_inr == null ? null : Number(row.free_shipping_threshold_inr),
+    free_shipping_threshold_usd: row.free_shipping_threshold_usd == null ? null : Number(row.free_shipping_threshold_usd),
+  };
 }
