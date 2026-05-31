@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import {
   getMarketingIntelligenceFn, logMarketingExportFn, type MarketingIntelligence,
 } from "@/lib/marketing-center.functions";
+import { getRevenueAttribution, type RevenueAttribution, type SegmentKey } from "@/lib/revenue-engine";
+import { SegmentActivationCenter, type SegDef, type ExecRow } from "@/components/admin/SegmentActivationCenter";
+import { AutomationMonitor } from "@/components/admin/AutomationMonitor";
 
 export const Route = createFileRoute("/admin-marketing-growth")({
   head: () => ({ meta: [{ title: "Growth Center — Admin" }] }),
@@ -56,7 +59,21 @@ function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: strin
   );
 }
 
-type Tab = "overview" | "segments" | "carts" | "coupons" | "products" | "campaigns" | "channels";
+type Tab = "overview" | "segments" | "revenue" | "automations" | "carts" | "coupons" | "products" | "campaigns" | "channels";
+
+const SEG_DEFS: { key: SegmentKey; label: string; count: (d: MarketingIntelligence) => number | null; buyer: boolean }[] = [
+  { key: "vip", label: "VIP", count: (d) => d.segments.vip, buyer: true },
+  { key: "high_value", label: "High Value", count: (d) => d.segments.vip, buyer: true },
+  { key: "high_ltv", label: "High LTV", count: (d) => d.segments.high_ltv, buyer: true },
+  { key: "frequent", label: "Frequent Buyers", count: (d) => d.segments.frequent, buyer: true },
+  { key: "dormant", label: "Dormant", count: (d) => d.segments.dormant, buyer: true },
+  { key: "winback", label: "Winback", count: (d) => d.segments.dormant, buyer: true },
+  { key: "new", label: "New Customers", count: (d) => d.segments.new, buyer: false },
+  { key: "refund_risk", label: "Refund Risk", count: (d) => d.segments.refund_risk, buyer: false },
+  { key: "abandoned_cart", label: "Abandoned Cart", count: (d) => d.segments.abandoned_cart, buyer: false },
+  { key: "wishlist", label: "Wishlist", count: () => null, buyer: false },
+  { key: "coupon_hunters", label: "Coupon Hunters", count: () => null, buyer: false },
+];
 
 function GrowthCenterPage() {
   const fetchIntel = useServerFn(getMarketingIntelligenceFn);
@@ -64,6 +81,9 @@ function GrowthCenterPage() {
   const [d, setD] = useState<MarketingIntelligence | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
+  const [execs, setExecs] = useState<ExecRow[]>([]);
+  const [attr, setAttr] = useState<RevenueAttribution | null>(null);
+  const [attrLoading, setAttrLoading] = useState(false);
   const tRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async (silent = false) => {
@@ -77,14 +97,38 @@ function GrowthCenterPage() {
     }
   }, [fetchIntel]);
 
-  useEffect(() => { void load(); }, [load]);
+  const loadExecs = useCallback(async () => {
+    const { data } = await supabase
+      .from("automation_executions")
+      .select("id, run_id, trigger_key, status, matched_count, action_taken, summary, details, campaign_id, triggered_by, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setExecs((data ?? []) as unknown as ExecRow[]);
+  }, []);
+
+  const loadAttr = useCallback(async () => {
+    setAttrLoading(true);
+    try {
+      setAttr(await getRevenueAttribution());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load revenue data");
+    } finally {
+      setAttrLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); void loadExecs(); }, [load, loadExecs]);
+  useEffect(() => {
+    if ((tab === "revenue" || tab === "overview") && !attr) void loadAttr();
+  }, [tab, attr, loadAttr]);
 
   // Realtime — debounced refresh on any growth-relevant change.
   useEffect(() => {
     const bump = () => {
       if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => void load(true), 1500);
+      tRef.current = setTimeout(() => { void load(true); void loadExecs(); void loadAttr(); }, 1500);
     };
+    const bumpExecs = () => { void loadExecs(); };
     const ch = supabase
       .channel("rt-growth-center")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, bump)
@@ -94,9 +138,11 @@ function GrowthCenterPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, bump)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, bump)
       .on("postgres_changes", { event: "*", schema: "public", table: "marketing_campaigns" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "promo_codes" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "automation_executions" }, bumpExecs)
       .subscribe();
     return () => { supabase.removeChannel(ch); if (tRef.current) clearTimeout(tRef.current); };
-  }, [load]);
+  }, [load, loadExecs, loadAttr]);
 
   const insights = useMemo(() => (d ? buildInsights(d) : []), [d]);
 
@@ -121,10 +167,28 @@ function GrowthCenterPage() {
 
   const TABS: { k: Tab; label: string }[] = [
     { k: "overview", label: "Overview" }, { k: "segments", label: "Segments" },
+    { k: "revenue", label: "Revenue" }, { k: "automations", label: "Automations" },
     { k: "carts", label: "Abandoned carts" }, { k: "coupons", label: "Coupons" },
     { k: "products", label: "Products" }, { k: "campaigns", label: "Campaigns" },
     { k: "channels", label: "Channels" },
   ];
+
+  const segDefs: SegDef[] = d
+    ? SEG_DEFS.map((s) => {
+        const count = s.count(d);
+        const estRevenue =
+          s.key === "abandoned_cart" ? d.abandoned.value_at_risk :
+          s.buyer && count != null ? count * d.segments.avg_ltv : null;
+        return { key: s.key, label: s.label, count, estRevenue };
+      })
+    : [];
+
+  function exportExecs() {
+    void exportCsv("automation-executions", execs.map((e) => ({
+      trigger: e.trigger_key ?? "", action: e.action_taken ?? "", audience: e.matched_count ?? 0,
+      source: e.triggered_by ?? "", status: e.status, summary: e.summary ?? "", at: e.created_at,
+    })));
+  }
 
   return (
     <AdminShell title="Growth Center" subtitle="Segments, recovery, coupons, product marketing & automation intelligence — live data" allow={["admin", "super_admin", "manager"]}>
@@ -185,6 +249,7 @@ function GrowthCenterPage() {
                   </div>
                 ))}
               </div>
+              <SegmentActivationCenter segments={segDefs} execs={execs} onActivated={() => { void loadExecs(); void loadAttr(); }} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Table title="By country" cols={["Country", "Customers", "Revenue"]} rows={d.segments_by_country.map((r) => [r.k, fmtN(r.customers), fmtM(r.revenue)])}
                   onExport={() => exportCsv("segments-by-country", d.segments_by_country)} />
@@ -193,6 +258,35 @@ function GrowthCenterPage() {
               </div>
             </div>
           )}
+
+          {tab === "revenue" && (
+            attrLoading && !attr ? (
+              <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+            ) : attr ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Stat icon={<TrendingUp className="size-3.5" />} label="Total revenue" value={fmtM(attr.total_revenue)} />
+                  <Stat icon={<ShoppingCart className="size-3.5" />} label="Recovered" value={fmtM(attr.recovered_revenue)} sub={`${fmtN(attr.recovered_orders)} orders`} />
+                  <Stat icon={<Ticket className="size-3.5" />} label="Coupon revenue" value={fmtM(attr.coupon_revenue)} sub={`${fmtN(attr.coupon_orders)} orders`} />
+                  <Stat icon={<Megaphone className="size-3.5" />} label="Campaign revenue" value={fmtM(attr.campaign_revenue)} sub={`ROI ${attr.campaign_roi}×`} />
+                  <Stat icon={<Rocket className="size-3.5" />} label="Repeat revenue" value={fmtM(attr.repeat_revenue)} sub={`${fmtN(attr.repeat_orders)} orders`} />
+                  <Stat icon={<Zap className="size-3.5" />} label="Winback revenue" value={fmtM(attr.winback_revenue)} />
+                  <Stat icon={<Bell className="size-3.5" />} label="Notif. conversion" value={(attr.notif_conversion_rate * 100).toFixed(1) + "%"} sub={`${fmtN(attr.notif_converted)}/${fmtN(attr.notif_sent)}`} />
+                  <Stat icon={<Download className="size-3.5" />} label="Campaign spend" value={fmtM(attr.campaign_spend)} />
+                </div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Attribution from live records · generated {new Date(attr.generated_at).toLocaleString()}
+                </p>
+              </div>
+            ) : (
+              <div className="grid place-items-center py-24 text-sm text-muted-foreground">No revenue data yet.</div>
+            )
+          )}
+
+          {tab === "automations" && (
+            <AutomationMonitor execs={execs} onExport={exportExecs} />
+          )}
+
 
           {tab === "carts" && (
             <div className="space-y-6">
