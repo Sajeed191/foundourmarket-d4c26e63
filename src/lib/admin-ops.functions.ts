@@ -9,7 +9,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireStaff, adminRpc, type StaffRole } from "./admin-guard.server";
+import { requireStaff, adminRpc, logSecurity, type StaffRole } from "./admin-guard.server";
 
 const OPS_STAFF: StaffRole[] = [
   "admin", "super_admin", "manager", "support", "fulfillment", "warehouse_staff",
