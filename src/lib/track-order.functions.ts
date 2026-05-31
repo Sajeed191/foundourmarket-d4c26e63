@@ -10,6 +10,14 @@ const schema = z.object({
 export const trackOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => schema.parse(input))
   .handler(async ({ data }) => {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        data.orderId,
+      );
+    if (!isUuid) {
+      return { found: false as const };
+    }
+
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .select("id, status, currency, subtotal, discount, tax, shipping, total, contact_email, shipping_address, created_at, updated_at")
