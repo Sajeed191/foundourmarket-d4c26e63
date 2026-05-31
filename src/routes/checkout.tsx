@@ -354,7 +354,7 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(12rem+env(safe-area-inset-bottom))] lg:pb-16">
       <Atmosphere />
 
       <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2.5">Secure Checkout</p>
