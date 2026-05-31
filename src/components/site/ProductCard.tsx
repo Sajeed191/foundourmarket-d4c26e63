@@ -10,12 +10,13 @@ import { computeBadges } from "@/lib/badges";
 
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
-  const { format, priceOf, compareOf } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
+  const shippingFee = shippingFeeOf(product);
 
   const badgeSettings = useBadgeSettings();
   const badges = computeBadges(product, badgeSettings);
