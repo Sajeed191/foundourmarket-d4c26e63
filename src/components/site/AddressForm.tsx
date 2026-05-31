@@ -345,7 +345,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     ) : null;
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <div className="space-y-3">
+      {/* Not a <form>: this component renders inside the checkout's own <form>,
+          and nested forms are invalid HTML (the browser flattens them, which
+          would make this button submit the outer order form). Submit on click. */}
       {/* Type selector */}
       <div className="grid grid-cols-3 gap-2">
         {TYPES.map((t) => {
