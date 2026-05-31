@@ -152,6 +152,7 @@ function OrdersPage() {
   const [recOpen, setRecOpen] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [showAllFailed, setShowAllFailed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -376,18 +377,26 @@ function OrdersPage() {
           </div>
         </div>
 
-        {/* Failed payment attempts (shown on All) */}
+        {/* Failed payment attempts (shown on All) — latest 2 by default */}
         {showFailedSection && (
           <section className="mb-5">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="size-3.5 text-rose-400" />
               <h2 className="text-[11px] font-mono uppercase tracking-[0.25em] text-rose-300">Failed Payments</h2>
+              <span className="text-[10px] font-mono text-muted-foreground">({failedOrders.length})</span>
             </div>
             <ul className="space-y-2">
-              {failedOrders.slice(0, 5).map((o) => (
+              {(showAllFailed ? failedOrders : failedOrders.slice(0, 2)).map((o) => (
                 <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} />
               ))}
             </ul>
+            {failedOrders.length > 2 && (
+              <button onClick={() => setShowAllFailed((s) => !s)}
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/30 bg-rose-500/[0.04] text-[10px] font-mono uppercase tracking-widest text-rose-300 hover:border-rose-500/50 active:scale-95 transition">
+                {showAllFailed ? "Show less" : `View all failed payments (${failedOrders.length})`}
+                <ChevronDown className={`size-3.5 transition-transform ${showAllFailed ? "rotate-180" : ""}`} />
+              </button>
+            )}
           </section>
         )}
 
@@ -533,7 +542,13 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
 
   return (
     <motion.li initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index, 8) * 0.03, duration: 0.3 }}>
-      <button onClick={onOpenDetails} className="w-full text-left group rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-3 hover:border-accent/40 transition-all active:scale-[0.995]">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpenDetails}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenDetails(); } }}
+        className="w-full text-left group rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-3 hover:border-accent/40 transition-all active:scale-[0.995] cursor-pointer"
+      >
         <div className="flex gap-3 items-center">
           <ProductStack items={items} />
           <div className="flex-1 min-w-0">
@@ -557,23 +572,26 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
         {isActive && <CompactTrack step={meta.step} />}
 
         {/* actions */}
-        <div className="mt-3 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-accent text-accent-foreground">
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenDetails(); }}
+            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
             View Details <ArrowRight className="size-3" />
-          </span>
+          </button>
           {isActive && (
             <Link to="/track" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
               <MapPin className="size-3" /> Track
             </Link>
           )}
           {isDelivered && (
-            <button onClick={(e) => { e.stopPropagation(); onReorder(); }} disabled={reordering}
+            <button type="button" onClick={(e) => { e.stopPropagation(); onReorder(); }} disabled={reordering}
               className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition disabled:opacity-50">
               {reordering ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />} Buy Again
             </button>
           )}
         </div>
-      </button>
+      </div>
     </motion.li>
   );
 }
