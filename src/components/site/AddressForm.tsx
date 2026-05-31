@@ -379,6 +379,24 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         Use current location
       </button>
 
+      {/* Location confidence after a GPS fill (Phase 1) */}
+      {geo && (
+        <div className="flex items-center justify-between rounded-2xl border border-accent/30 bg-accent/[0.06] px-3.5 py-2.5">
+          <div className="flex items-center gap-2">
+            <Navigation className="size-3.5 text-accent" />
+            <div>
+              <p className="text-[11px] font-medium text-accent">Location confidence {geo.confidence}%</p>
+              <p className="text-[10px] text-muted-foreground">Source: {geo.source}</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            {market === "india" ? "🇮🇳 India" : "🌍 International"}
+          </span>
+        </div>
+      )}
+
+
+
       {/* Smart, type-aware label (Phase 2) */}
       {form.address_type === "work" ? (
         <div>
