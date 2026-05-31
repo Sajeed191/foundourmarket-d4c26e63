@@ -332,7 +332,7 @@ function OrdersPage() {
             </div>
             <ul className="space-y-2">
               {failedOrders.slice(0, 5).map((o) => (
-                <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment(o)} />
+                <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} />
               ))}
             </ul>
           </section>
@@ -362,7 +362,7 @@ function OrdersPage() {
             <ul className="space-y-2.5">
               {filtered.slice(0, visible).map((o, i) =>
                 filter === "failed"
-                  ? <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment(o)} listItem />
+                  ? <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} listItem />
                   : <OrderCard key={o.id} order={o} index={i} format={format} onReorder={() => reorder(o)} reordering={reordering === o.id} />
               )}
             </ul>
