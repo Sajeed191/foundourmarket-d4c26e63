@@ -70,11 +70,15 @@ export function useStoreSettings() {
   return { settings, loading };
 }
 
-function normalizeSettings(row: Partial<StoreSettings>): StoreSettings {
+function normalizeSettings(row: Partial<StoreSettings> & { shipping_mode?: string | null }): StoreSettings {
+  const mode = row.shipping_mode;
   return {
     cod_enabled: !!row.cod_enabled,
     prepaid_discount_percent: Number(row.prepaid_discount_percent) || 0,
-    shipping_mode: row.shipping_mode ?? "product",
+    shipping_mode:
+      mode === "free" || mode === "flat" || mode === "region" || mode === "product" || mode === "category"
+        ? mode
+        : "product",
     free_shipping_enabled: !!row.free_shipping_enabled,
     flat_shipping_inr: Number(row.flat_shipping_inr) || 0,
     flat_shipping_usd: Number(row.flat_shipping_usd) || 0,
