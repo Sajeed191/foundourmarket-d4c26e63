@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { MessageCircleQuestion, Loader2, Send, Trash2, CheckCircle2, Pencil } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionDraft, setQuestionDraft] = useState("");
+  // Synchronous guard against rapid double taps (state updates are async).
+  const submittingRef = useRef(false);
 
   async function load() {
     setLoading(true);
@@ -96,13 +98,15 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     if (!user) return false;
     const text = draft.trim();
     if (!text) return false;
-    if (busy) return false; // guard against double submission
+    if (submittingRef.current || busy) return false; // guard against double submission
+    submittingRef.current = true;
     setBusy(true);
     const { error } = await supabase.from("product_questions").insert({
       product_slug: productSlug,
       user_id: user.id,
       question: text,
     });
+    submittingRef.current = false;
     setBusy(false);
     if (error) {
       console.error("[ProductQA] question insert failed", {
@@ -127,7 +131,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (submittingRef.current || busy) return;
     if (!draft.trim()) {
       toast.error("Please type a question first.");
       return;
@@ -286,7 +290,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm leading-relaxed mt-1">{q.question}</p>
+                      <p className="text-sm leading-relaxed mt-1 break-words whitespace-pre-wrap">{q.question}</p>
                     )}
                     <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                       {new Date(q.created_at).toLocaleDateString()}
@@ -321,7 +325,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                       <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent mb-1">
                         <CheckCircle2 className="size-3" /> FoundOurMarket · Official answer
                       </div>
-                      <p className="text-sm leading-relaxed">{q.answer}</p>
+                      <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{q.answer}</p>
                     </div>
                     {isAdmin && (
                       <button
