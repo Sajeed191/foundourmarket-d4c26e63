@@ -21,7 +21,7 @@ export const trackOrder = createServerFn({ method: "POST" })
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
-      .select("id, status, fulfillment_status, currency, subtotal, discount, tax, shipping, total, contact_email, shipping_address, created_at, updated_at")
+      .select("id, user_id, status, fulfillment_status, currency, subtotal, discount, tax, shipping, total, contact_email, shipping_address, created_at, updated_at")
       .eq("id", data.orderId)
       .maybeSingle();
 
