@@ -325,7 +325,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                       <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent mb-1">
                         <CheckCircle2 className="size-3" /> FoundOurMarket · Official answer
                       </div>
-                      <p className="text-sm leading-relaxed">{q.answer}</p>
+                      <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{q.answer}</p>
                     </div>
                     {isAdmin && (
                       <button
