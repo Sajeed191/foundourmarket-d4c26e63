@@ -16,6 +16,11 @@ import {
   Loader2,
   ShieldCheck,
   Megaphone,
+  Truck,
+  Percent,
+  RotateCcw,
+  Package,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +33,7 @@ import { useEditorProtection } from "@/hooks/use-editor-protection";
 import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 import { logActivity } from "@/components/admin/AdminShell";
 import { ProductMarketingPanel } from "@/components/admin/ProductMarketingPanel";
+import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 
 type Patch = {
   name?: string;
@@ -41,6 +47,8 @@ type Patch = {
   comparePriceInr?: number | null;
   priceUsd?: number | null;
   comparePriceUsd?: number | null;
+  costPriceInr?: number | null;
+  costPriceUsd?: number | null;
   shippingFeeInr?: number;
   shippingFeeUsd?: number;
   indiaVisible?: boolean;
@@ -106,6 +114,8 @@ export function AdminProductPanel({ product }: { product: Product }) {
       comparePriceInr: p.comparePriceInr != null ? String(p.comparePriceInr) : "",
       priceUsd: p.priceUsd != null ? String(p.priceUsd) : "",
       comparePriceUsd: p.comparePriceUsd != null ? String(p.comparePriceUsd) : "",
+      costPriceInr: p.costPriceInr != null ? String(p.costPriceInr) : "",
+      costPriceUsd: p.costPriceUsd != null ? String(p.costPriceUsd) : "",
       shippingFeeInr: String(p.shippingFeeInr ?? 0),
       shippingFeeUsd: String(p.shippingFeeUsd ?? 0),
       indiaVisible: p.indiaVisible,
@@ -155,6 +165,8 @@ export function AdminProductPanel({ product }: { product: Product }) {
       comparePriceInr: numOrNull(f.comparePriceInr),
       priceUsd: numOrNull(f.priceUsd),
       comparePriceUsd: numOrNull(f.comparePriceUsd),
+      costPriceInr: numOrNull(f.costPriceInr),
+      costPriceUsd: numOrNull(f.costPriceUsd),
       shippingFeeInr: Math.max(0, Number(f.shippingFeeInr) || 0),
       shippingFeeUsd: Math.max(0, Number(f.shippingFeeUsd) || 0),
       indiaVisible: f.indiaVisible,
@@ -335,137 +347,186 @@ export function AdminProductPanel({ product }: { product: Product }) {
                 />
               </div>
 
-              <div className="space-y-4">
-                <Field label="Title">
-                  <Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-                </Field>
-                <Field label="Short description / tagline">
-                  <Input value={f.tagline} onChange={(e) => setF({ ...f, tagline: e.target.value })} />
-                </Field>
-                <Field label="Description">
-                  <Textarea
-                    rows={5}
-                    value={f.description}
-                    onChange={(e) => setF({ ...f, description: e.target.value })}
-                  />
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Category">
-                    <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} />
-                  </Field>
-                  <Field label="SKU">
-                    <Input value={f.sku} onChange={(e) => setF({ ...f, sku: e.target.value })} />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Stock quantity">
-                    <Input
-                      type="number"
-                      value={f.stockQuantity}
-                      onChange={(e) => setF({ ...f, stockQuantity: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Low-stock threshold">
-                    <Input
-                      type="number"
-                      value={f.lowStockThreshold}
-                      onChange={(e) => setF({ ...f, lowStockThreshold: e.target.value })}
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <Field label="Rating (0–5)">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={f.rating}
-                      onChange={(e) => setF({ ...f, rating: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Reviews">
-                    <Input
-                      type="number"
-                      value={f.reviews}
-                      onChange={(e) => setF({ ...f, reviews: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Warranty">
-                    <Input
-                      value={f.warranty}
-                      onChange={(e) => setF({ ...f, warranty: e.target.value })}
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="₹ India price">
-                    <Input value={f.priceInr} onChange={(e) => setF({ ...f, priceInr: e.target.value })} />
-                  </Field>
-                  <Field label="₹ Compare at">
-                    <Input
-                      value={f.comparePriceInr}
-                      onChange={(e) => setF({ ...f, comparePriceInr: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="$ Intl price">
-                    <Input value={f.priceUsd} onChange={(e) => setF({ ...f, priceUsd: e.target.value })} />
-                  </Field>
-                  <Field label="$ Compare at">
-                    <Input
-                      value={f.comparePriceUsd}
-                      onChange={(e) => setF({ ...f, comparePriceUsd: e.target.value })}
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="₹ India shipping fee">
-                    <Input
-                      type="number"
-                      value={f.shippingFeeInr}
-                      onChange={(e) => setF({ ...f, shippingFeeInr: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="$ Intl shipping fee">
-                    <Input
-                      type="number"
-                      value={f.shippingFeeUsd}
-                      onChange={(e) => setF({ ...f, shippingFeeUsd: e.target.value })}
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Toggle label="Visible in India" on={f.indiaVisible} onClick={() => setF({ ...f, indiaVisible: !f.indiaVisible })} />
-                  <Toggle label="Visible globally" on={f.internationalVisible} onClick={() => setF({ ...f, internationalVisible: !f.internationalVisible })} />
-                  <Toggle label="Featured" on={f.featured} onClick={() => setF({ ...f, featured: !f.featured })} />
-                  <Toggle label="In stock / live" on={f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
-                </div>
-
-                {/* Eligibility & policies */}
-                <div className="rounded-2xl border border-accent/20 bg-white/[0.02] p-3.5">
-                  <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent">
-                    <ShieldCheck className="size-3.5" /> Return &amp; refund eligibility
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Toggle label="Return eligible" on={f.returnEligible} onClick={() => setF({ ...f, returnEligible: !f.returnEligible })} />
-                    <Toggle label="Replacement eligible" on={f.replacementEligible} onClick={() => setF({ ...f, replacementEligible: !f.replacementEligible })} />
-                    <Toggle label="Cash on delivery" on={f.codEnabled} onClick={() => setF({ ...f, codEnabled: !f.codEnabled })} />
-                    <Toggle label="Pickup supported" on={f.pickupSupported} onClick={() => setF({ ...f, pickupSupported: !f.pickupSupported })} />
-                    <Toggle label="International shipping" on={f.internationalShipping} onClick={() => setF({ ...f, internationalShipping: !f.internationalShipping })} />
-                    <Toggle label="Fragile item" on={f.fragile} onClick={() => setF({ ...f, fragile: !f.fragile })} />
-                  </div>
-                  <div className="mt-3">
-                    <Field label="Return / refund window (days)">
-                      <Input
-                        type="number"
-                        value={f.returnWindowDays}
-                        onChange={(e) => setF({ ...f, returnWindowDays: e.target.value })}
+              <div className="space-y-3">
+                {/* SECTION 1 — PRODUCT BASICS */}
+                <CollapsibleModule eyebrow="Section 1" title="Product basics" defaultOpen>
+                  <div className="space-y-3">
+                    <Field label="Product title">
+                      <Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+                    </Field>
+                    <Field label="Short tagline">
+                      <Input value={f.tagline} onChange={(e) => setF({ ...f, tagline: e.target.value })} />
+                    </Field>
+                    <Field label="Full description">
+                      <Textarea
+                        rows={5}
+                        value={f.description}
+                        onChange={(e) => setF({ ...f, description: e.target.value })}
                       />
                     </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Category">
+                        <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} />
+                      </Field>
+                      <Field label="SKU">
+                        <Input value={f.sku} onChange={(e) => setF({ ...f, sku: e.target.value })} />
+                      </Field>
+                    </div>
                   </div>
-                </div>
+                </CollapsibleModule>
+
+                {/* SECTION 2 — PRICING */}
+                <CollapsibleModule eyebrow="Section 2" title="Pricing & margins" defaultOpen={false}>
+                  <div className="space-y-3">
+                    <PriceBlock
+                      flag="🇮🇳"
+                      title="India"
+                      symbol="₹"
+                      price={f.priceInr}
+                      compare={f.comparePriceInr}
+                      cost={f.costPriceInr}
+                      onPrice={(v) => setF({ ...f, priceInr: v })}
+                      onCompare={(v) => setF({ ...f, comparePriceInr: v })}
+                      onCost={(v) => setF({ ...f, costPriceInr: v })}
+                    />
+                    <PriceBlock
+                      flag="🌍"
+                      title="International"
+                      symbol="$"
+                      price={f.priceUsd}
+                      compare={f.comparePriceUsd}
+                      cost={f.costPriceUsd}
+                      onPrice={(v) => setF({ ...f, priceUsd: v })}
+                      onCompare={(v) => setF({ ...f, comparePriceUsd: v })}
+                      onCost={(v) => setF({ ...f, costPriceUsd: v })}
+                    />
+                  </div>
+                </CollapsibleModule>
+
+                {/* SECTION 3 — INVENTORY */}
+                <CollapsibleModule eyebrow="Section 3" title="Inventory" defaultOpen={false}>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Stock quantity">
+                        <Input
+                          type="number"
+                          value={f.stockQuantity}
+                          onChange={(e) => setF({ ...f, stockQuantity: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Low-stock threshold">
+                        <Input
+                          type="number"
+                          value={f.lowStockThreshold}
+                          onChange={(e) => setF({ ...f, lowStockThreshold: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Toggle label="In stock / live" on={f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
+                      <Toggle label="Out of stock" on={!f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Rating (0–5)">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={f.rating}
+                          onChange={(e) => setF({ ...f, rating: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Reviews">
+                        <Input
+                          type="number"
+                          value={f.reviews}
+                          onChange={(e) => setF({ ...f, reviews: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </CollapsibleModule>
+
+                {/* SECTION 4 — SHIPPING */}
+                <CollapsibleModule
+                  eyebrow="Section 4"
+                  title="Shipping"
+                  defaultOpen={false}
+                  badge={<Truck className="size-4 text-accent" />}
+                >
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="🇮🇳 India charge (₹)">
+                        <Input
+                          type="number"
+                          value={f.shippingFeeInr}
+                          onChange={(e) => setF({ ...f, shippingFeeInr: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="🌍 Intl charge ($)">
+                        <Input
+                          type="number"
+                          value={f.shippingFeeUsd}
+                          onChange={(e) => setF({ ...f, shippingFeeUsd: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                    <p className="rounded-lg border border-accent/15 bg-accent/[0.05] px-3 py-2 text-[10px] leading-relaxed text-muted-foreground">
+                      Set ₹0 / $0 for free shipping. These values flow through the shared
+                      pricing engine to the product page, cards, cart, checkout, payment & orders.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Toggle label="International shipping" on={f.internationalShipping} onClick={() => setF({ ...f, internationalShipping: !f.internationalShipping })} />
+                      <Toggle label="Cash on delivery" on={f.codEnabled} onClick={() => setF({ ...f, codEnabled: !f.codEnabled })} />
+                      <Toggle label="Pickup supported" on={f.pickupSupported} onClick={() => setF({ ...f, pickupSupported: !f.pickupSupported })} />
+                      <Toggle label="Fragile item" on={f.fragile} onClick={() => setF({ ...f, fragile: !f.fragile })} />
+                    </div>
+                  </div>
+                </CollapsibleModule>
+
+                {/* SECTION 5 — RETURN & REFUND */}
+                <CollapsibleModule
+                  eyebrow="Section 5"
+                  title="Return & refund"
+                  defaultOpen={false}
+                  badge={<RotateCcw className="size-4 text-accent" />}
+                >
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Toggle label="Return eligible" on={f.returnEligible} onClick={() => setF({ ...f, returnEligible: !f.returnEligible })} />
+                      <Toggle label="Replacement eligible" on={f.replacementEligible} onClick={() => setF({ ...f, replacementEligible: !f.replacementEligible })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Return window (days)">
+                        <Input
+                          type="number"
+                          value={f.returnWindowDays}
+                          onChange={(e) => setF({ ...f, returnWindowDays: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Warranty">
+                        <Input
+                          value={f.warranty}
+                          onChange={(e) => setF({ ...f, warranty: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </CollapsibleModule>
+
+                {/* SECTION 6 — VISIBILITY */}
+                <CollapsibleModule
+                  eyebrow="Section 6"
+                  title="Visibility"
+                  defaultOpen={false}
+                  badge={<Eye className="size-4 text-accent" />}
+                >
+                  <div className="grid grid-cols-2 gap-2">
+                    <Toggle label="Visible in India" on={f.indiaVisible} onClick={() => setF({ ...f, indiaVisible: !f.indiaVisible })} />
+                    <Toggle label="Visible internationally" on={f.internationalVisible} onClick={() => setF({ ...f, internationalVisible: !f.internationalVisible })} />
+                    <Toggle label="Featured product" on={f.featured} onClick={() => setF({ ...f, featured: !f.featured })} />
+                    <Toggle label="Hidden product" on={!f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
+                  </div>
+                </CollapsibleModule>
               </div>
 
               <div className="sticky bottom-0 mt-6 -mx-5 border-t border-white/10 bg-background/95 px-5 py-3">
@@ -600,5 +661,89 @@ function Toggle({ label, on, onClick }: { label: string; on: boolean; onClick: (
       {label}
       <span className={cn("size-2 rounded-full", on ? "bg-accent" : "bg-muted-foreground/40")} />
     </button>
+  );
+}
+
+function PriceBlock({
+  flag,
+  title,
+  symbol,
+  price,
+  compare,
+  cost,
+  onPrice,
+  onCompare,
+  onCost,
+}: {
+  flag: string;
+  title: string;
+  symbol: string;
+  price: string;
+  compare: string;
+  cost: string;
+  onPrice: (v: string) => void;
+  onCompare: (v: string) => void;
+  onCost: (v: string) => void;
+}) {
+  const p = Number(price) || 0;
+  const c = Number(cost) || 0;
+  const profit = p && c ? p - c : 0;
+  const margin = p && c ? (profit / p) * 100 : 0;
+  const positive = profit >= 0;
+  return (
+    <div className="rounded-2xl border border-accent/20 bg-white/[0.02] p-3.5">
+      <div className="mb-2.5 flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+        <span className="text-base">{flag}</span> {title}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <PriceInput label="Selling" symbol={symbol} value={price} onChange={onPrice} />
+        <PriceInput label="Compare at" symbol={symbol} value={compare} onChange={onCompare} />
+        <PriceInput label="Cost" symbol={symbol} value={cost} onChange={onCost} />
+      </div>
+      <div className="mt-2.5 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          <Tag className="size-3" /> Profit
+        </span>
+        <span className={cn("text-sm font-semibold", positive ? "text-emerald-400" : "text-red-400")}>
+          {symbol}
+          {profit.toFixed(2)}
+        </span>
+      </div>
+      <div className="mt-1.5 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          <Percent className="size-3" /> Margin
+        </span>
+        <span className={cn("text-sm font-semibold", positive ? "text-emerald-400" : "text-red-400")}>
+          {margin.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PriceInput({
+  label,
+  symbol,
+  value,
+  onChange,
+}: {
+  label: string;
+  symbol: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block text-[9px] font-mono uppercase tracking-widest text-muted-foreground/70">
+      {label}
+      <div className="mt-1 flex items-center rounded-lg border border-white/10 bg-black/20 px-2">
+        <span className="text-sm text-accent">{symbol}</span>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          inputMode="decimal"
+          className="w-full bg-transparent py-1.5 pl-1 text-sm text-foreground outline-none"
+        />
+      </div>
+    </label>
   );
 }
