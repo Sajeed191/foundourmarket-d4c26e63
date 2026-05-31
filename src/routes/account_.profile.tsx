@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -14,27 +14,71 @@ import {
   Camera,
   ShieldCheck,
   Check,
+  X,
+  Search,
+  ChevronDown,
   Calendar,
   Languages,
   Clock,
   Users,
 } from "lucide-react";
+import {
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useRegion } from "@/lib/region";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account_/profile")({
   head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
   component: EditProfilePage,
 });
 
+/* ── Country reference data (ISO → name, dial code, flag) ── */
+function flagEmoji(cc: string): string {
+  return cc
+    .toUpperCase()
+    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
+const REGION_NAMES =
+  typeof Intl !== "undefined" && "DisplayNames" in Intl
+    ? new Intl.DisplayNames(["en"], { type: "region" })
+    : null;
+
+type Country = { cc: CountryCode; name: string; dial: string };
+
+const COUNTRIES: Country[] = getCountries()
+  .map((cc) => ({
+    cc,
+    name: REGION_NAMES?.of(cc) ?? cc,
+    dial: getCountryCallingCode(cc),
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const BY_CC = new Map(COUNTRIES.map((c) => [c.cc, c]));
+const BY_NAME = new Map(COUNTRIES.map((c) => [c.name.toLowerCase(), c]));
+
+/** Resolve a stored country (name or ISO code) into a Country record. */
+function resolveCountry(value: string | null | undefined): Country | null {
+  if (!value) return null;
+  const v = value.trim();
+  if (BY_CC.has(v.toUpperCase() as CountryCode)) return BY_CC.get(v.toUpperCase() as CountryCode)!;
+  return BY_NAME.get(v.toLowerCase()) ?? null;
+}
+
 type Form = {
   fullName: string;
-  phone: string;
-  altPhone: string;
+  phone: string; // national digits only
+  altPhone: string; // national digits only
   gender: string;
   birthDate: string;
-  country: string;
+  countryCode: CountryCode | "";
   language: string;
   timezone: string;
   avatarUrl: string;
@@ -46,7 +90,7 @@ const EMPTY: Form = {
   altPhone: "",
   gender: "",
   birthDate: "",
-  country: "",
+  countryCode: "",
   language: "",
   timezone: "",
   avatarUrl: "",
@@ -54,15 +98,30 @@ const EMPTY: Form = {
 
 const GENDERS = ["", "Female", "Male", "Non-binary", "Prefer not to say"];
 
+const DIGITS_ONLY = /[^0-9]/g;
+const EMOJI_RE = /\p{Extended_Pictographic}/gu;
+
 function EditProfilePage() {
   const { user, loading } = useAuth();
+  const { market, countryCode: detectedCC } = useRegion();
   const nav = useNavigate();
   const [form, setForm] = useState<Form>(EMPTY);
+  const [initial, setInitial] = useState<Form>(EMPTY);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // India lock: account market, detected geo, or phone country code → India.
+  const isIndia =
+    market === "india" ||
+    detectedCC === "IN" ||
+    form.countryCode === "IN";
+
+  // Country validation (international only).
+  const [countryStatus, setCountryStatus] =
+    useState<"idle" | "checking" | "valid" | "invalid">("idle");
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -97,40 +156,130 @@ function EditProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name,phone,alt_phone,gender,birth_date,country,language,timezone,avatar_url")
+      .select("full_name,phone,alt_phone,gender,birth_date,country,country_code,language,timezone,avatar_url")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        setForm({
+        // Resolve stored country (name/ISO) and stored phones into national digits.
+        const storedCountry = resolveCountry(data?.country_code ?? data?.country);
+        const parsedPhone = data?.phone ? parsePhoneNumberFromString(data.phone) : undefined;
+        const parsedAlt = data?.alt_phone ? parsePhoneNumberFromString(data.alt_phone) : undefined;
+        const next: Form = {
           fullName: data?.full_name ?? (user.user_metadata?.full_name as string) ?? "",
-          phone: data?.phone ?? "",
-          altPhone: data?.alt_phone ?? "",
+          phone: parsedPhone?.nationalNumber ?? (data?.phone ?? "").replace(DIGITS_ONLY, ""),
+          altPhone: parsedAlt?.nationalNumber ?? (data?.alt_phone ?? "").replace(DIGITS_ONLY, ""),
           gender: data?.gender ?? "",
           birthDate: data?.birth_date ?? "",
-          country: data?.country ?? "",
+          countryCode:
+            (storedCountry?.cc as CountryCode) ??
+            (market === "india" || detectedCC === "IN" ? "IN" : (detectedCC as CountryCode) ?? ""),
           language: data?.language ?? "",
           timezone: data?.timezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? ""),
           avatarUrl: data?.avatar_url ?? (user.user_metadata?.avatar_url as string) ?? "",
-        });
+        };
+        setForm(next);
+        setInitial(next);
         setFetching(false);
       });
-  }, [user]);
+  }, [user, market, detectedCC]);
+
+  // Force India lock whenever Indian context is detected.
+  useEffect(() => {
+    if (isIndia && form.countryCode !== "IN") set("countryCode", "IN");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIndia]);
+
+  // Debounced country validation for international users.
+  useEffect(() => {
+    if (isIndia) { setCountryStatus("idle"); return; }
+    if (!form.countryCode) { setCountryStatus("idle"); return; }
+    setCountryStatus("checking");
+    const t = setTimeout(() => {
+      setCountryStatus(BY_CC.has(form.countryCode as CountryCode) ? "valid" : "invalid");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [form.countryCode, isIndia]);
+
+  /* ── Validation ── */
+  const activeCC: CountryCode = (isIndia ? "IN" : (form.countryCode || "")) as CountryCode;
+
+  const validatePhone = (digits: string): string | null => {
+    if (!digits) return null; // optional
+    if (DIGITS_ONLY.test(digits)) return "Only numbers are allowed";
+    if (activeCC) {
+      const parsed = parsePhoneNumberFromString(digits, activeCC);
+      if (!parsed || !parsed.isValid()) return "Enter a valid phone number";
+    } else if (digits.length < 6) {
+      return "Enter a valid phone number";
+    }
+    return null;
+  };
+
+  const nameError = (() => {
+    const v = form.fullName.trim();
+    if (!v) return null;
+    if (v.length < 2) return "Name must be at least 2 characters";
+    const emojis = (v.match(EMOJI_RE) || []).length;
+    if (emojis > 2) return "Too many emojis in name";
+    const specials = (v.replace(EMOJI_RE, "").match(/[^\p{L}\p{N}\s.'-]/gu) || []).length;
+    if (specials > 3) return "Too many special characters";
+    return null;
+  })();
+
+  const dobError = (() => {
+    if (!form.birthDate) return null;
+    const d = new Date(form.birthDate);
+    if (Number.isNaN(d.getTime())) return "Invalid date";
+    const now = new Date();
+    if (d > now) return "Date of birth cannot be in the future";
+    const age = (now.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+    if (age < 13) return "You must be at least 13 years old";
+    if (age > 120) return "Please enter a valid date of birth";
+    return null;
+  })();
+
+  const phoneError = validatePhone(form.phone);
+  const altPhoneError = validatePhone(form.altPhone);
+  const countryError = !isIndia && form.countryCode && countryStatus === "invalid"
+    ? "Invalid country selection"
+    : null;
+
+  const hasErrors = Boolean(
+    nameError || dobError || phoneError || altPhoneError || countryError,
+  );
+
+  const dirty = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(initial),
+    [form, initial],
+  );
+
+  const maxDob = new Date().toISOString().split("T")[0];
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || saving || saved) return;
+    if (hasErrors) {
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
     setSaving(true);
     try {
+      const cc = activeCC || null;
+      const country = cc ? BY_CC.get(cc)?.name ?? null : null;
+      const dial = cc ? getCountryCallingCode(cc) : "";
+      const e164 = (digits: string) =>
+        digits && dial ? `+${dial}${digits}` : digits || null;
       const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
           full_name: form.fullName.trim() || null,
-          phone: form.phone.trim() || null,
-          alt_phone: form.altPhone.trim() || null,
+          phone: e164(form.phone.trim()),
+          alt_phone: e164(form.altPhone.trim()),
           gender: form.gender.trim() || null,
           birth_date: form.birthDate || null,
-          country: form.country.trim() || null,
+          country,
+          country_code: cc,
           language: form.language.trim() || null,
           timezone: form.timezone.trim() || null,
           avatar_url: form.avatarUrl.trim() || null,
@@ -138,7 +287,8 @@ function EditProfilePage() {
       if (error) throw error;
       await supabase.auth.updateUser({ data: { full_name: form.fullName.trim(), avatar_url: form.avatarUrl.trim() } });
       setSaved(true);
-      toast.success("Profile updated");
+      setInitial(form);
+      toast.success("Profile updated successfully");
       setTimeout(() => nav({ to: "/account" }), 900);
     } catch (err: any) {
       toast.error(err?.message ?? "Could not save profile");
@@ -155,9 +305,6 @@ function EditProfilePage() {
   }
 
   const initials = (form.fullName || user.email || "?").trim().charAt(0).toUpperCase();
-  const memberSince = user.created_at
-    ? new Date(user.created_at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
-    : "—";
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -213,9 +360,6 @@ function EditProfilePage() {
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
                   <Mail className="size-3 shrink-0" /> {user.email}
                 </p>
-                <p className="text-[11px] text-muted-foreground/80 truncate flex items-center gap-1.5 mt-1">
-                  <Calendar className="size-3 shrink-0" /> Member since {memberSince}
-                </p>
               </div>
             </div>
 
@@ -224,7 +368,7 @@ function EditProfilePage() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest border border-accent/30 bg-accent/5 rounded-full px-3.5 py-2 hover:border-accent/60 hover:bg-accent/10 hover:text-accent transition-all active:scale-95 disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest border border-accent/30 bg-accent/5 rounded-full px-3.5 py-2 min-h-[44px] hover:border-accent/60 hover:bg-accent/10 hover:text-accent transition-all active:scale-95 disabled:opacity-60"
               >
                 <Upload className="size-3" /> {form.avatarUrl ? "Change photo" : "Upload photo"}
               </button>
@@ -232,7 +376,7 @@ function EditProfilePage() {
                 <button
                   type="button"
                   onClick={() => set("avatarUrl", "")}
-                  className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors active:scale-95"
+                  className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground min-h-[44px] px-2 hover:text-destructive transition-colors active:scale-95"
                 >
                   <Trash2 className="size-3" /> Remove photo
                 </button>
@@ -253,6 +397,7 @@ function EditProfilePage() {
               <FloatingField icon={UserIcon} label="Full name">
                 <input value={form.fullName} onChange={(e) => set("fullName", e.target.value)} maxLength={100} placeholder=" " className="peer input-glass" />
               </FloatingField>
+              <FieldError msg={nameError} />
               <FloatingField icon={Mail} label="Email" disabled>
                 <input value={user.email ?? ""} disabled placeholder=" " className="peer input-glass !text-muted-foreground" />
               </FloatingField>
@@ -265,26 +410,60 @@ function EditProfilePage() {
                 </div>
                 <div className="relative group">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
-                  <input type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass !pl-11" />
+                  <input type="date" max={maxDob} value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass !pl-11" />
                 </div>
               </div>
+              <FieldError msg={dobError} />
+            </Section>
+
+            {/* ── Region ── */}
+            <Section title="Region" delay={0.15}>
+              {isIndia ? (
+                <div className="relative">
+                  <div className="input-glass !pl-11 flex items-center gap-2 cursor-not-allowed opacity-95">
+                    <span className="text-base leading-none">🇮🇳</span>
+                    <span>India</span>
+                    <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-accent">INR ₹ · Locked</span>
+                  </div>
+                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  <CountrySelect
+                    value={form.countryCode || null}
+                    onChange={(cc) => set("countryCode", cc)}
+                  />
+                  <CountryStatus status={countryStatus} />
+                </>
+              )}
             </Section>
 
             {/* ── Contact Details ── */}
-            <Section title="Contact Details" delay={0.15}>
-              <FloatingField icon={Phone} label="Phone">
-                <input value={form.phone} onChange={(e) => set("phone", e.target.value)} maxLength={30} placeholder=" " className="peer input-glass" />
-              </FloatingField>
-              <FloatingField icon={PhoneCall} label="Alternate phone">
-                <input value={form.altPhone} onChange={(e) => set("altPhone", e.target.value)} maxLength={30} placeholder=" " className="peer input-glass" />
-              </FloatingField>
+            <Section title="Contact Details" delay={0.2}>
+              <PhoneField
+                icon={Phone}
+                label="Phone number"
+                dial={activeCC ? getCountryCallingCode(activeCC) : ""}
+                flag={activeCC ? flagEmoji(activeCC) : "🌐"}
+                value={form.phone}
+                onChange={(v) => set("phone", v)}
+                error={phoneError}
+                locked={isIndia}
+              />
+              <PhoneField
+                icon={PhoneCall}
+                label="Alternate phone"
+                dial={activeCC ? getCountryCallingCode(activeCC) : ""}
+                flag={activeCC ? flagEmoji(activeCC) : "🌐"}
+                value={form.altPhone}
+                onChange={(v) => set("altPhone", v)}
+                error={altPhoneError}
+                locked={isIndia}
+              />
             </Section>
 
             {/* ── Preferences ── */}
-            <Section title="Region & Preferences" delay={0.2}>
-              <FloatingField icon={Globe} label="Country">
-                <input value={form.country} onChange={(e) => set("country", e.target.value)} maxLength={60} placeholder=" " className="peer input-glass" />
-              </FloatingField>
+            <Section title="Preferences" delay={0.25}>
               <div className="grid sm:grid-cols-2 gap-4">
                 <FloatingField icon={Languages} label="Language">
                   <input value={form.language} onChange={(e) => set("language", e.target.value)} maxLength={40} placeholder=" " className="peer input-glass" />
@@ -305,8 +484,8 @@ function EditProfilePage() {
                 whileTap={{ scale: 0.97 }}
                 whileHover={{ y: -2 }}
                 type="submit"
-                disabled={saving || saved}
-                className={`relative flex-1 inline-flex items-center justify-center gap-2 font-bold py-3.5 px-8 rounded-2xl text-xs uppercase tracking-widest shadow-[var(--shadow-ember)] transition-all disabled:opacity-90 overflow-hidden ${
+                disabled={saving || saved || !dirty || hasErrors}
+                className={`relative flex-1 inline-flex items-center justify-center gap-2 font-bold py-3.5 px-8 rounded-2xl text-xs uppercase tracking-widest shadow-[var(--shadow-ember)] transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${
                   saved
                     ? "bg-emerald-500 text-white"
                     : "bg-gradient-to-r from-accent to-amber-400 text-accent-foreground hover:brightness-110 cta-sweep"
@@ -338,6 +517,186 @@ function EditProfilePage() {
           </form>
         </motion.div>
       </div>
+    </div>
+  );
+}
+
+/* ── Country status indicator ── */
+function CountryStatus({ status }: { status: "idle" | "checking" | "valid" | "invalid" }) {
+  if (status === "idle") return null;
+  if (status === "checking")
+    return (
+      <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Loader2 className="size-3 animate-spin" /> Validating country…
+      </p>
+    );
+  if (status === "valid")
+    return (
+      <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-emerald-400">
+        <Check className="size-3" /> Valid country
+      </p>
+    );
+  return (
+    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-destructive">
+      <X className="size-3" /> Invalid country selection
+    </p>
+  );
+}
+
+function FieldError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-destructive">
+      <X className="size-3 shrink-0" /> {msg}
+    </p>
+  );
+}
+
+/* ── Searchable country dropdown (international) ── */
+function CountrySelect({
+  value,
+  onChange,
+}: {
+  value: CountryCode | null;
+  onChange: (cc: CountryCode) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = value ? BY_CC.get(value) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return COUNTRIES;
+    return COUNTRIES.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.cc.toLowerCase().includes(q) || c.dial.includes(q),
+    );
+  }, [query]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="input-glass !pl-11 flex items-center gap-2 text-left min-h-[44px]"
+      >
+        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        {selected ? (
+          <>
+            <span className="text-base leading-none">{flagEmoji(selected.cc)}</span>
+            <span className="truncate">{selected.name}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">Select country</span>
+        )}
+        <ChevronDown className="ml-auto size-4 text-muted-foreground shrink-0" />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full max-h-64 overflow-hidden rounded-2xl border border-border bg-popover shadow-xl">
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+            <Search className="size-3.5 text-muted-foreground" />
+            <input
+              autoFocus
+              placeholder="Search country"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent text-sm outline-none"
+            />
+          </div>
+          <ul className="max-h-52 overflow-y-auto py-1">
+            {filtered.map((c) => (
+              <li key={c.cc}>
+                <button
+                  type="button"
+                  onClick={() => { onChange(c.cc); setOpen(false); setQuery(""); }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-accent/10"
+                >
+                  <span className="text-base leading-none">{flagEmoji(c.cc)}</span>
+                  <span className="flex-1 truncate">{c.name}</span>
+                  <span className="font-mono text-xs text-muted-foreground">+{c.dial}</span>
+                  {c.cc === value && <Check className="size-3.5 text-accent" />}
+                </button>
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="px-3 py-4 text-center text-xs text-muted-foreground">No matches</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Phone field with locked dial-code prefix + digit-only input ── */
+function PhoneField({
+  icon: Icon,
+  label,
+  dial,
+  flag,
+  value,
+  onChange,
+  error,
+  locked,
+}: {
+  icon: typeof Phone;
+  label: string;
+  dial: string;
+  flag: string;
+  value: string;
+  onChange: (digits: string) => void;
+  error: string | null;
+  locked?: boolean;
+}) {
+  const [typedSymbol, setTypedSymbol] = useState(false);
+
+  const handle = (raw: string) => {
+    const cleaned = raw.replace(DIGITS_ONLY, "");
+    setTypedSymbol(raw !== cleaned);
+    onChange(cleaned);
+  };
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "flex items-stretch rounded-2xl border bg-background/60 transition-all focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40",
+          error ? "border-destructive/60" : "border-border",
+        )}
+      >
+        <span
+          className="flex items-center gap-1.5 pl-3 pr-2.5 text-sm border-r border-border/70 shrink-0 select-none"
+          aria-label={locked ? "Country code locked" : "Country code"}
+        >
+          <Icon className="size-4 text-muted-foreground" />
+          <span className="text-base leading-none">{flag}</span>
+          <span className="font-mono text-xs text-muted-foreground">{dial ? `+${dial}` : ""}</span>
+        </span>
+        <input
+          inputMode="numeric"
+          autoComplete="tel"
+          placeholder={label}
+          value={value}
+          onChange={(e) => handle(e.target.value)}
+          onPaste={(e) => {
+            e.preventDefault();
+            handle((value + e.clipboardData.getData("text")));
+          }}
+          className="flex-1 min-w-0 bg-transparent px-3 py-3 text-sm outline-none"
+        />
+      </div>
+      <FieldError msg={error ?? (typedSymbol ? "Only numbers are allowed" : null)} />
     </div>
   );
 }
