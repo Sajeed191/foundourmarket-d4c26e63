@@ -54,10 +54,22 @@ export function computeOrderTotals(
   region: Region,
   subtotal: number,
   discount = 0,
+  /**
+   * Admin-defined per-product shipping total (sum of each product's shipping
+   * fee × qty). When provided (including 0), it overrides the flat region
+   * shipping rule so the charge a customer sees and pays reflects exactly what
+   * admin configured per product. Pass `undefined` to use the legacy flat rule.
+   */
+  shippingOverride?: number,
 ): OrderTotals {
   const sub = roundMoney(region, Math.max(0, subtotal));
   const disc = roundMoney(region, Math.max(0, Math.min(sub, discount)));
-  const shipping = sub > SHIPPING[region].freeAbove ? 0 : SHIPPING[region].flat;
+  const shipping =
+    shippingOverride != null
+      ? roundMoney(region, Math.max(0, shippingOverride))
+      : sub > SHIPPING[region].freeAbove
+        ? 0
+        : SHIPPING[region].flat;
   const tax = roundMoney(region, sub * TAX_RATE[region]);
   const total = Math.max(0, roundMoney(region, sub + shipping + tax - disc));
   return {
