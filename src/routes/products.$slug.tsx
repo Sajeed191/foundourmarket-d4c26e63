@@ -417,7 +417,7 @@ function ProductPage() {
               <div className="size-9 rounded-full grid place-items-center bg-accent/10 text-accent shrink-0">
                 <Truck className="size-4" />
               </div>
-              <div class="min-w-0">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">{unitShipping <= 0 ? "Free delivery" : `Shipping ${format(unitShipping)}`}</p>
                 <p className="text-xs text-muted-foreground">Arrives <span className="text-foreground">{deliveryWindow}</span></p>
               </div>
