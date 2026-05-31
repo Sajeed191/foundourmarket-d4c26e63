@@ -447,8 +447,19 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     }
 
     // Real backend events → branded order emails (idempotent).
-    await enqueueOrderEmail(order.id, "order-confirmed");
-    await enqueueOrderEmail(order.id, "payment-verified");
+    // Email dispatch must NEVER fail a verified payment; failures are logged
+    // inside enqueueOrderEmail and additionally guarded here.
+    try {
+      await enqueueOrderEmail(order.id, "order-confirmed");
+      await enqueueOrderEmail(order.id, "payment-verified");
+    } catch (emailErr: any) {
+      console.error("[razorpay.verify] order email dispatch failed", {
+        orderId: order.id,
+        error: String(emailErr?.message ?? emailErr),
+        stack: emailErr?.stack,
+      });
+    }
+
 
     return { ok: true, orderId: order.id, alreadyPaid: false };
   });
