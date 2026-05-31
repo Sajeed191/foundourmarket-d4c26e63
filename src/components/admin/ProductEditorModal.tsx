@@ -432,6 +432,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
+        {row?.slug && (
+          <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={false}>
+            <ProductFaqManager productSlug={row.slug} />
+          </CollapsibleModule>
+        )}
+
+
+
         {validation.length > 0 && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1.5">
             {validation.map((v) => (
