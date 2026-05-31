@@ -259,8 +259,8 @@ function ProductPage() {
                   {product.featured && (
                     <span className="backdrop-blur-md bg-white/10 border border-white/15 text-white text-[10px] font-semibold font-mono px-2.5 py-1 rounded-full tracking-wider">FEATURED</span>
                   )}
-                  {product.discount && (
-                    <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">−{product.discount}% SALE</span>
+                  {discountPct && (
+                    <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">−{discountPct}% SALE</span>
                   )}
                   {lowStock && (
                     <span className="bg-destructive/90 text-destructive-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest">Only {effectiveStock} left</span>
