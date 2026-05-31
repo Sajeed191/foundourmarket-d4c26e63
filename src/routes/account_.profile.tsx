@@ -592,8 +592,9 @@ function CountrySelect({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="input-glass !pl-11 flex items-center gap-2 text-left min-h-[44px]"
+        className="input-glass input-glass-static !pl-11 flex items-center gap-2 text-left"
       >
+
         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         {selected ? (
           <>
