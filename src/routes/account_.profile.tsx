@@ -698,7 +698,7 @@ function PhoneField({
             e.preventDefault();
             handle((value + e.clipboardData.getData("text")));
           }}
-          className="flex-1 min-w-0 bg-transparent px-3 py-3 text-sm outline-none"
+          className="flex-1 min-w-0 bg-transparent px-3 py-[0.925rem] text-sm outline-none"
         />
       </div>
       <FieldError msg={error ?? (typedSymbol ? "Only numbers are allowed" : null)} />
