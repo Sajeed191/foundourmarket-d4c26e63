@@ -314,8 +314,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     return Object.keys(e).length === 0;
   };
 
-  const submit = async (ev: React.FormEvent) => {
-    ev.preventDefault();
+  const submit = async (ev?: React.FormEvent | React.MouseEvent) => {
+    ev?.preventDefault();
     setError(null);
     if (!validateAll()) return;
     setBusy(true);
