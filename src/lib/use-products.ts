@@ -4,20 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 
 let realtimeBound = false;
 let lastFreshAt = 0;
-const FRESH_TTL = 20_000; // re-fetch at most every 20s on focus/visibility
+const FRESH_TTL = 2_000; // only de-dupe rapid duplicate events; never keep stale admin shipping
 
 /** Force a fresh products fetch, throttled, so stale prices/shipping refresh. */
-function refreshIfStale() {
+function refreshIfStale(force = false) {
   if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
   const now = Date.now();
-  if (now - lastFreshAt < FRESH_TTL) return;
+  if (!force && now - lastFreshAt < FRESH_TTL) return;
   lastFreshAt = now;
   invalidateProducts();
 }
 
 /** Public, throttled refresh trigger for entry points like cart/checkout. */
-export function refreshProducts() {
-  refreshIfStale();
+export function refreshProducts(force = true) {
+  refreshIfStale(force);
 }
 
 function bindRealtime() {
@@ -27,6 +27,9 @@ function bindRealtime() {
   supabase
     .channel("rt-products-public")
     .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => invalidateProducts())
+    .on("postgres_changes", { event: "*", schema: "public", table: "shipping_state" }, () => invalidateProducts())
+    .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, () => invalidateProducts())
+    .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => invalidateProducts())
     .subscribe();
   // Customers read the products_public VIEW and never receive base-table
   // realtime events (RLS blocks it), so refresh on focus/visibility instead.
