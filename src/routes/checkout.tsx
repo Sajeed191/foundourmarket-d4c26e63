@@ -669,6 +669,20 @@ function CheckoutPage() {
                 </div>
               </div>
             </div>
+
+            {/* Emergency floating fallback — only when checkout is ready but the
+                sticky bar isn't actually on screen. Guarantees a reachable CTA. */}
+            {checkoutReady && !stickyVisible && (
+              <button
+                type="submit"
+                className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[9999] inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-7 min-h-[56px] rounded-full text-xs uppercase tracking-widest shadow-[0_18px_44px_-12px_var(--color-accent)] active:scale-[0.98]"
+                style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
+              >
+                <Lock className="size-3.5" />
+                <span>{actionLabel} · {fmt(totalINR)}</span>
+                <ArrowRight className="size-3.5" />
+              </button>
+            )}
           </form>
         </>
       )}
