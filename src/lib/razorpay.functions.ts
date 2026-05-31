@@ -43,18 +43,68 @@ const verifySchema = z.object({
   razorpaySignature: z.string().min(1).max(256),
 });
 
+/** Read the edge geo country from trusted request headers (server-only). */
+function edgeCountry(): string | null {
+  const c = (
+    getRequestHeader("cf-ipcountry") ||
+    getRequestHeader("x-vercel-ip-country") ||
+    getRequestHeader("x-country") ||
+    ""
+  ).toUpperCase();
+  return c || null;
+}
+
+export type RegionResolution = {
+  region: Region;
+  detectedCountry: string | null;
+  /** Where the billing region came from: trusted ranking. */
+  pricingSource: "profile_locked" | "edge_geo" | "default";
+  /** 0–100 confidence in the resolved region. */
+  confidence: number;
+};
+
 /**
- * Resolve the authoritative market region for a user. Locked profile region
- * wins; otherwise we fall back to International. The client never supplies the
- * region used for billing — it is read from trusted server state.
+ * Resolve the authoritative market region for billing.
+ *
+ * Priority:
+ *   1. The user's locked profile region (highest trust).
+ *   2. Edge geo-IP country header — IN ⇒ India (prevents Indian users from
+ *      ever being charged in USD just because they never explicitly locked).
+ *   3. International as the final safe default.
+ *
+ * The client never supplies the region used for billing.
  */
-async function resolveRegion(supabase: any, userId: string): Promise<Region> {
+async function resolveRegion(
+  supabase: any,
+  userId: string,
+): Promise<RegionResolution> {
   const { data } = await supabase
     .from("profiles")
     .select("market_region")
     .eq("id", userId)
     .maybeSingle();
-  return data?.market_region === "india" ? "india" : "international";
+
+  const country = edgeCountry();
+
+  if (data?.market_region === "india" || data?.market_region === "international") {
+    return {
+      region: data.market_region,
+      detectedCountry: country,
+      pricingSource: "profile_locked",
+      confidence: 100,
+    };
+  }
+
+  // No locked region yet → trust the edge geo signal so Indian shoppers are
+  // billed in INR even when they were never prompted to lock a region.
+  if (country === "IN") {
+    return { region: "india", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
+  }
+  if (country) {
+    return { region: "international", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
+  }
+
+  return { region: "international", detectedCountry: null, pricingSource: "default", confidence: 40 };
 }
 
 /**
