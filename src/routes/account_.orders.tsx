@@ -392,6 +392,8 @@ function OrdersPage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { scrollbar-width: none; }
       `}</style>
+
+      <OrderDetailsDrawer orderId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }
