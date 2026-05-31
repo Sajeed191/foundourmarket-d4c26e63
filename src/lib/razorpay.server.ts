@@ -115,3 +115,92 @@ export function mapRzpToken(token: RzpToken, customerId: string, userId: string)
     upi_vpa: upiVpa,
   };
 }
+
+/* ---------------------------------------------------------------------------
+ * Account diagnostics — mode + enabled payment methods
+ * ------------------------------------------------------------------------- */
+
+export type RazorpayMode = "test" | "live" | "unknown";
+
+/** Derive the account mode from the public key prefix (rzp_test_ / rzp_live_). */
+export function getRazorpayMode(): RazorpayMode {
+  const id = process.env.RAZORPAY_KEY_ID ?? "";
+  if (id.startsWith("rzp_test")) return "test";
+  if (id.startsWith("rzp_live")) return "live";
+  return "unknown";
+}
+
+export type RazorpayMethodAvailability = {
+  upi: boolean;
+  card: boolean;
+  credit_card: boolean;
+  debit_card: boolean;
+  netbanking: boolean;
+  wallet: boolean;
+  wallets: string[];
+  emi: boolean;
+  paylater: boolean;
+  paylater_providers: string[];
+  cardless_emi: boolean;
+  cod: boolean;
+  gpay: boolean;
+};
+
+export type RazorpayDiagnostics = {
+  mode: RazorpayMode;
+  activated: boolean;
+  blocked: boolean;
+  accountCountry: string | null;
+  methods: RazorpayMethodAvailability;
+  fetchedAt: string;
+};
+
+function objHasEnabled(o: unknown): { on: boolean; keys: string[] } {
+  if (!o || typeof o !== "object") return { on: false, keys: [] };
+  const keys = Object.entries(o as Record<string, unknown>)
+    .filter(([, v]) => v === true || (v && typeof v === "object"))
+    .map(([k]) => k);
+  return { on: keys.length > 0, keys };
+}
+
+/**
+ * Read the public checkout "preferences" for the configured key. This is the
+ * same source Razorpay Checkout uses to decide which methods to render, so it
+ * is the authoritative list of what a customer will actually see.
+ */
+export async function fetchRazorpayDiagnostics(): Promise<RazorpayDiagnostics> {
+  const { keyId } = getRazorpayCreds();
+  const res = await fetch(
+    `https://api.razorpay.com/v1/preferences?key_id=${encodeURIComponent(keyId)}`,
+  );
+  const json: any = await res.json().catch(() => null);
+  const m = (json?.methods ?? {}) as Record<string, unknown>;
+
+  const wallet = objHasEnabled(m.wallet);
+  const paylater = objHasEnabled(m.paylater);
+  const netbanking = objHasEnabled(m.netbanking);
+  const cardlessEmi = objHasEnabled(m.cardless_emi);
+
+  return {
+    mode: getRazorpayMode(),
+    activated: !!json?.activated,
+    blocked: !!json?.blocked,
+    accountCountry: json?.client?.country_iso ?? json?.client?.country ?? null,
+    methods: {
+      upi: m.upi === true,
+      card: m.card === true,
+      credit_card: m.credit_card === true,
+      debit_card: m.debit_card === true,
+      netbanking: netbanking.on,
+      wallet: wallet.on,
+      wallets: wallet.keys,
+      emi: m.emi === true,
+      paylater: paylater.on,
+      paylater_providers: paylater.keys,
+      cardless_emi: cardlessEmi.on,
+      cod: m.cod === true,
+      gpay: m.gpay === true,
+    },
+    fetchedAt: new Date().toISOString(),
+  };
+}

@@ -187,10 +187,21 @@ function CheckoutPage() {
       });
 
       // Audit: the displayed price must equal the charged Razorpay amount.
-      console.log("[checkout] Razorpay order created", {
+      // Logs currency, amount, customer country, detected/profile region,
+      // pricing source and the payment-options policy before opening checkout.
+      console.log("[checkout] Razorpay order payload", {
         razorpayOrderId: created.razorpayOrderId,
+        currency: created.currency,
         amount_minor: created.amount,
-        ...created.debug,
+        customer_country: created.debug?.detectedCountry ?? null,
+        detected_region: created.debug?.market ?? null,
+        profile_region:
+          created.debug?.pricingSource === "profile_locked"
+            ? created.debug?.market
+            : null,
+        pricing_source: created.debug?.pricingSource ?? null,
+        confidence: created.debug?.confidence ?? null,
+        payment_options: "all-enabled (no client method filter)",
       });
 
 
@@ -225,6 +236,12 @@ function CheckoutPage() {
           ondismiss: () => {
             setStage("failed");
             setError("Payment was cancelled. Your cart is safe — you can try again.");
+            void import("@/lib/visitor").then((m) =>
+              m.trackEvent("payment_abandoned", {
+                value: totalINR,
+                metadata: { stage: "checkout_modal", currency: created.currency, order_id: created.orderId },
+              }),
+            );
             cancelOrder({ data: { orderId: created.orderId } }).catch(() => {});
           },
         },
@@ -241,6 +258,12 @@ function CheckoutPage() {
             });
             setPlacedOrderId(created.orderId);
             setStage("success");
+            void import("@/lib/visitor").then((m) =>
+              m.trackEvent("payment_success", {
+                value: totalINR,
+                metadata: { currency: created.currency, order_id: created.orderId, gateway: "razorpay" },
+              }),
+            );
             clear();
             if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
             syncMethods().catch(() => {});
@@ -254,9 +277,30 @@ function CheckoutPage() {
       rzp.on("payment.failed", (resp: any) => {
         setStage("failed");
         setError(resp?.error?.description ?? "Payment failed. Please try again.");
+        void import("@/lib/visitor").then((m) =>
+          m.trackEvent("payment_failed", {
+            value: totalINR,
+            metadata: {
+              stage: "payment",
+              currency: created.currency,
+              order_id: created.orderId,
+              method_selected: resp?.error?.method ?? null,
+              reason: resp?.error?.description ?? null,
+              code: resp?.error?.code ?? null,
+            },
+          }),
+        );
         cancelOrder({ data: { orderId: created.orderId } }).catch(() => {});
       });
 
+      // method_shown: the checkout modal is about to render every method the
+      // account supports for this currency (no client-side filtering applied).
+      void import("@/lib/visitor").then((m) =>
+        m.trackEvent("payment_methods_shown", {
+          value: totalINR,
+          metadata: { currency: created.currency, region: created.debug?.market ?? null, filter: "none" },
+        }),
+      );
       rzp.open();
     } catch (e: any) {
       setStage("failed");
