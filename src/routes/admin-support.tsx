@@ -225,9 +225,13 @@ function AdminSupportPage() {
             onStatus={(id, st) => update(id, { status: st })} onPriority={(id, p) => update(id, { priority: priorityToDb(p) })}
           />
         ) : section === "refunds" ? (
-          <RefundsView refunds={refunds} />
+          <RefundsView refunds={refunds} orders={orders} onChanged={load} />
+        ) : section === "returns" ? (
+          <ReturnsView returns={returns} onChanged={load} />
+        ) : section === "agents" ? (
+          <AgentPerformanceView enriched={enriched} profiles={profiles} />
         ) : (
-          <ReturnsView returns={returns} />
+          <WarRoomView enriched={enriched} refunds={refunds} returns={returns} fraudCount={fraudUsers.size} />
         )}
       </div>
 
