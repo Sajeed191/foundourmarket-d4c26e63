@@ -319,6 +319,7 @@ function CheckoutPage() {
 
       const rzp = openRazorpay(rzpOptions);
 
+      rzp.on("payment.failed", (resp: any) => {
         setStage("failed");
         setError(resp?.error?.description ?? "Payment failed. Please try again.");
         void import("@/lib/visitor").then((m) =>
