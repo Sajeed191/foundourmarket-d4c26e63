@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
+import { refreshProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useAddresses, addressCompleteness, type Address } from "@/lib/use-addresses";
 import { computeCheckoutState, type CheckoutState, type DeliveryStatus } from "@/lib/checkout-state";
