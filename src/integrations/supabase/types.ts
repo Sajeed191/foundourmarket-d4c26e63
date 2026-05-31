@@ -1058,6 +1058,48 @@ export type Database = {
         }
         Relationships: []
       }
+      courier_webhook_events: {
+        Row: {
+          courier: string
+          error: string | null
+          external_event_id: string | null
+          id: string
+          payload: Json | null
+          processed_at: string | null
+          received_at: string
+          shipment_id: string | null
+          signature_valid: boolean
+          status: string
+          tracking_number: string | null
+        }
+        Insert: {
+          courier: string
+          error?: string | null
+          external_event_id?: string | null
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          shipment_id?: string | null
+          signature_valid?: boolean
+          status?: string
+          tracking_number?: string | null
+        }
+        Update: {
+          courier?: string
+          error?: string | null
+          external_event_id?: string | null
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          shipment_id?: string | null
+          signature_valid?: boolean
+          status?: string
+          tracking_number?: string | null
+        }
+        Relationships: []
+      }
       customer_notes: {
         Row: {
           author_id: string | null
@@ -3544,33 +3586,45 @@ export type Database = {
       }
       shipment_events: {
         Row: {
+          courier: string | null
           created_at: string
           description: string | null
+          external_event_id: string | null
           id: string
           is_seeded: boolean
           location: string | null
           occurred_at: string
+          raw: Json | null
           shipment_id: string
+          source: string
           status: string
         }
         Insert: {
+          courier?: string | null
           created_at?: string
           description?: string | null
+          external_event_id?: string | null
           id?: string
           is_seeded?: boolean
           location?: string | null
           occurred_at?: string
+          raw?: Json | null
           shipment_id: string
+          source?: string
           status: string
         }
         Update: {
+          courier?: string | null
           created_at?: string
           description?: string | null
+          external_event_id?: string | null
           id?: string
           is_seeded?: boolean
           location?: string | null
           occurred_at?: string
+          raw?: Json | null
           shipment_id?: string
+          source?: string
           status?: string
         }
         Relationships: [
@@ -3585,13 +3639,16 @@ export type Database = {
       }
       shipments: {
         Row: {
+          actual_delivery: string | null
           cancelled_at: string | null
           carrier: string | null
           created_at: string
           delivered_at: string | null
           estimated_delivery: string | null
+          eta_source: string | null
           id: string
           is_seeded: boolean
+          last_courier_sync: string | null
           notes: string | null
           order_id: string
           packed_at: string | null
@@ -3604,13 +3661,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          actual_delivery?: string | null
           cancelled_at?: string | null
           carrier?: string | null
           created_at?: string
           delivered_at?: string | null
           estimated_delivery?: string | null
+          eta_source?: string | null
           id?: string
           is_seeded?: boolean
+          last_courier_sync?: string | null
           notes?: string | null
           order_id: string
           packed_at?: string | null
@@ -3623,13 +3683,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          actual_delivery?: string | null
           cancelled_at?: string | null
           carrier?: string | null
           created_at?: string
           delivered_at?: string | null
           estimated_delivery?: string | null
+          eta_source?: string | null
           id?: string
           is_seeded?: boolean
+          last_courier_sync?: string | null
           notes?: string | null
           order_id?: string
           packed_at?: string | null
