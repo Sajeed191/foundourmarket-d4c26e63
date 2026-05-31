@@ -283,7 +283,10 @@
 /* Glass input with floating-label spacing + neon focus glow */
 .input-glass {
   width: 100%;
-  padding: 1.35rem 1rem 0.5rem 2.75rem;
+  /* Symmetric vertical padding so the value text is vertically centered,
+     matching the .input-glass-static (selects/date/country/phone) fields.
+     The floated mini-label is absolutely positioned and clears this. */
+  padding: 0.925rem 1rem 0.925rem 2.75rem;
   font-size: 0.875rem;
   border-radius: 1rem;
   background: oklch(1 0 0 / 0.03);
