@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
+import { createShipmentNotification } from "@/lib/shipment-notify.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-shipments")({
