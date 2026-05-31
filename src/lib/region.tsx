@@ -15,6 +15,7 @@ import { blendDetection } from "./geo-detect";
 import type { DetectionTier } from "./geo-detect";
 import { track } from "./analytics";
 import type { Product } from "./products";
+import { computeShipping } from "./pricing";
 
 
 export type { MarketRegion };
@@ -420,8 +421,12 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
   const shippingFeeOf = useCallback(
     (p: Product) => {
-      const fee = market === "india" ? p.shippingFeeInr : p.shippingFeeUsd;
-      return Math.max(0, Number(fee ?? 0));
+      return computeShipping({
+        region: market,
+        subtotal: 0,
+        items: [{ slug: p.slug, category: p.category, qty: 1, shippingFeeInr: p.shippingFeeInr, shippingFeeUsd: p.shippingFeeUsd }],
+        settings: { shipping_mode: "product" },
+      });
     },
     [market],
   );
