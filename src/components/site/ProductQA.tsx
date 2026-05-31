@@ -98,13 +98,15 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     if (!user) return false;
     const text = draft.trim();
     if (!text) return false;
-    if (busy) return false; // guard against double submission
+    if (submittingRef.current || busy) return false; // guard against double submission
+    submittingRef.current = true;
     setBusy(true);
     const { error } = await supabase.from("product_questions").insert({
       product_slug: productSlug,
       user_id: user.id,
       question: text,
     });
+    submittingRef.current = false;
     setBusy(false);
     if (error) {
       console.error("[ProductQA] question insert failed", {
