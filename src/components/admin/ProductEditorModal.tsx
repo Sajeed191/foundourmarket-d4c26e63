@@ -192,7 +192,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       cod_enabled: form.cod_enabled, pickup_supported: form.pickup_supported,
       international_shipping: form.international_shipping, fragile: form.fragile,
       return_eligible: form.return_eligible, replacement_eligible: form.replacement_eligible,
-      return_window_days: Number(form.return_window_days) || 0, warranty: form.warranty.trim() || null,
+      return_window_days: Number(form.return_window_days) || 0, warranty: form.warranty.trim(),
       status: form.status, bestseller: form.bestseller, trending: form.trending,
       tags: parseList(form.tags), features: parseList(form.features), meta_keywords: parseList(form.meta_keywords),
       seo_title: form.seo_title.trim() || null, seo_description: form.seo_description.trim() || null,
