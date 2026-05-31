@@ -381,8 +381,10 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <Field label="Method" value={order.payment_method === "cod" ? "Cash on Delivery" : (payment?.method ?? order.payment_method ?? "Razorpay")} />
                       <Field label="Status" value={payment?.status ?? order.payment_status ?? "—"} />
-                      <Field label="Payment Date" value={fmtDate(payment?.created_at, true)} />
-                      <Field label="Transaction ID" value={payment?.razorpay_payment_id ?? payment?.transaction_id ?? order.razorpay_payment_id ?? "—"} mono />
+                      <Field label="Paid Date" value={fmtDate(payment?.created_at, true)} />
+                      <Field label="Amount" value={payment ? format(Number(payment.amount)) : format(Number(order.total))} />
+                      <CopyField label="Razorpay Payment ID" value={payment?.razorpay_payment_id ?? order.razorpay_payment_id ?? "—"} />
+                      <CopyField label="Transaction ID" value={payment?.transaction_id ?? "—"} />
                       <Field label="Invoice No." value={`INV-${order.id.slice(0, 8).toUpperCase()}`} mono />
                     </div>
                     <button onClick={handleInvoice} disabled={downloading}
@@ -390,6 +392,33 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
                       {downloading ? <Loader2 className="size-3 animate-spin" /> : <Download className="size-3" />} Download Invoice
                     </button>
                   </Section>
+
+                  {/* ADMIN-ONLY — internal intelligence */}
+                  {isAdmin && (
+                    <section className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] p-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Lock className="size-3.5 text-amber-400" />
+                        <h3 className="text-[11px] font-mono uppercase tracking-[0.25em] text-amber-300">Admin Only</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <Field label="Customer" value={order.shipping_address?.name ?? order.contact_email ?? "—"} />
+                        <Field label="Phone" value={order.shipping_address?.phone ?? "—"} />
+                        <CopyField label="Razorpay Payment ID" value={payment?.razorpay_payment_id ?? order.razorpay_payment_id ?? "—"} />
+                        <CopyField label="Transaction ID" value={payment?.transaction_id ?? "—"} />
+                        <Field label="Cost Price" value={data!.cost > 0 ? format(data!.cost) : "—"} />
+                        <Field label="Shipping Cost" value={format(Number(order.shipping))} />
+                        <Field label="Order Profit" value={data!.cost > 0 ? format(Number(order.subtotal) - data!.cost) : "—"} />
+                        <Field label="Order Revenue" value={format(Number(order.total))} />
+                      </div>
+                      <CopyButton label="Copy Address" value={[
+                        order.shipping_address?.name, order.shipping_address?.phone,
+                        order.shipping_address?.line1, order.shipping_address?.line2,
+                        order.shipping_address?.city, order.shipping_address?.region,
+                        order.shipping_address?.postal_code, order.shipping_address?.country,
+                      ].filter(Boolean).join(", ")} />
+                    </section>
+                  )}
+
 
                   {/* SECTION 6 — Returns & refunds */}
                   <Section title="Returns & Refunds" icon={RotateCcw}>
