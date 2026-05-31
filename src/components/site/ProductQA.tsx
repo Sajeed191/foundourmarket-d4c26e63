@@ -181,11 +181,15 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .from("product_questions")
       .update({ question: text })
       .eq("id", id);
-    if (!error) {
-      setEditingQuestionId(null);
-      setQuestionDraft("");
-      load();
+    if (error) {
+      console.error("[ProductQA] question edit failed", { id, code: error.code, message: error.message });
+      toast.error("Couldn't update the question.");
+      return;
     }
+    setEditingQuestionId(null);
+    setQuestionDraft("");
+    toast.success("Question updated.");
+    await load();
   }
 
 
