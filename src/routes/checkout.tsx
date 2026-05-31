@@ -315,6 +315,9 @@ function CheckoutPage() {
         "config.display": (rzpOptions as { config?: unknown }).config ?? "none (Razorpay adaptive UPI)",
       });
 
+      // Final checkout payload (must contain NO customer_id; prefill only).
+      console.log("RAZORPAY_PAYLOAD", rzpOptions);
+
       const rzp = openRazorpay(rzpOptions);
 
       rzp.on("payment.failed", (resp: any) => {
