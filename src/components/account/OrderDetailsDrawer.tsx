@@ -354,18 +354,26 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
                       <Field label="Country" value={order.shipping_address?.country ?? "—"} />
                       <Field label="PIN Code" value={order.shipping_address?.postal_code ?? "—"} />
                       <Field label="Courier" value={shipment?.carrier ?? order.carrier ?? "—"} />
-                      <Field label="Tracking No." value={shipment?.tracking_number ?? order.tracking_number ?? "—"} />
+                      <CopyField label="Tracking No." value={shipment?.tracking_number ?? order.tracking_number ?? "—"} />
                       <Field label="Est. Delivery" value={fmtDate(shipment?.estimated_delivery)} />
                     </div>
                     {order.shipping_address?.line1 && (
                       <p className="text-xs text-muted-foreground mt-2">{[order.shipping_address.line1, order.shipping_address.line2].filter(Boolean).join(", ")}</p>
                     )}
-                    {(shipment?.tracking_url) && (
-                      <a href={shipment.tracking_url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-accent mt-2 hover:underline">
-                        Tracking link <ExternalLink className="size-3" />
-                      </a>
-                    )}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <CopyButton label="Copy Address" value={[
+                        order.shipping_address?.name, order.shipping_address?.phone,
+                        order.shipping_address?.line1, order.shipping_address?.line2,
+                        order.shipping_address?.city, order.shipping_address?.region,
+                        order.shipping_address?.postal_code, order.shipping_address?.country,
+                      ].filter(Boolean).join(", ")} />
+                      {shipment?.tracking_url && (
+                        <a href={shipment.tracking_url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest px-3 py-2 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
+                          Tracking link <ExternalLink className="size-3" />
+                        </a>
+                      )}
+                    </div>
                   </Section>
 
                   {/* SECTION 5 — Payment details */}
