@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Copy, Check, Download, ExternalLink, MapPin, Loader2, ShieldAlert,
-  CreditCard, User, Truck, RotateCcw, LifeBuoy, Package, IndianRupee, RefreshCw, MessageSquarePlus,
+  CreditCard, User, Truck, RotateCcw, LifeBuoy, Package, RefreshCw, MessageSquarePlus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOrderDetail, type OrderDetail } from "@/lib/order-operations";
