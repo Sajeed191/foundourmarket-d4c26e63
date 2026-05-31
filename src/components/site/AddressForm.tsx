@@ -168,6 +168,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           );
           const j = await res.json();
           const a = j?.address ?? {};
+          if (a.country) countryTouched.current = true;
           setForm((p) => ({
             ...p,
             line1: p.line1 || [a.road, a.house_number].filter(Boolean).join(" "),
