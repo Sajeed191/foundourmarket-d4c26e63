@@ -289,9 +289,10 @@ function CheckoutPage() {
       setError(service?.message ?? "This address isn't serviceable yet.");
       return;
     }
-    import("@/lib/visitor").then((m) => m.trackEvent("checkout_start", {
-      value: totalINR, metadata: { pay_method: payMethod },
-    })).catch(() => {});
+    import("@/lib/visitor").then((m) => {
+      m.trackEvent("checkout_start", { value: totalINR, metadata: { pay_method: payMethod } });
+      m.trackEvent("order_attempted", { value: totalINR, metadata: { pay_method: payMethod } });
+    }).catch(() => {});
     if (payMethod === "cod") placeCod();
     else payWithRazorpay();
   };
