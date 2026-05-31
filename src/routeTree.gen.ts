@@ -76,6 +76,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AdminCustomersCustomerIdRouteImport } from './routes/admin-customers.$customerId'
 import { Route as AccountSupportRouteImport } from './routes/account_.support'
 import { Route as AccountSecurityRouteImport } from './routes/account_.security'
 import { Route as AccountReturnsRouteImport } from './routes/account_.returns'
@@ -436,6 +437,12 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AdminCustomersCustomerIdRoute =
+  AdminCustomersCustomerIdRouteImport.update({
+    id: '/$customerId',
+    path: '/$customerId',
+    getParentRoute: () => AdminCustomersRoute,
+  } as any)
 const AccountSupportRoute = AccountSupportRouteImport.update({
   id: '/account_/support',
   path: '/account/support',
@@ -553,7 +560,7 @@ export interface FileRoutesByFullPath {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
-  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
@@ -611,6 +618,7 @@ export interface FileRoutesByFullPath {
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/support': typeof AccountSupportRoute
+  '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -642,7 +650,7 @@ export interface FileRoutesByTo {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
-  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
@@ -700,6 +708,7 @@ export interface FileRoutesByTo {
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/support': typeof AccountSupportRoute
+  '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -732,7 +741,7 @@ export interface FileRoutesById {
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
-  '/admin-customers': typeof AdminCustomersRoute
+  '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
@@ -790,6 +799,7 @@ export interface FileRoutesById {
   '/account_/returns': typeof AccountReturnsRoute
   '/account_/security': typeof AccountSecurityRoute
   '/account_/support': typeof AccountSupportRoute
+  '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -881,6 +891,7 @@ export interface FileRouteTypes {
     | '/account/returns'
     | '/account/security'
     | '/account/support'
+    | '/admin-customers/$customerId'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/account/returns'
     | '/account/security'
     | '/account/support'
+    | '/admin-customers/$customerId'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -1059,6 +1071,7 @@ export interface FileRouteTypes {
     | '/account_/returns'
     | '/account_/security'
     | '/account_/support'
+    | '/admin-customers/$customerId'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -1091,7 +1104,7 @@ export interface RootRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomerIntelligenceRoute: typeof AdminCustomerIntelligenceRoute
-  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminEmailDeliveryRoute: typeof AdminEmailDeliveryRoute
   AdminEmailHealthRoute: typeof AdminEmailHealthRoute
   AdminEmailOpsRoute: typeof AdminEmailOpsRoute
@@ -1639,6 +1652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/admin-customers/$customerId': {
+      id: '/admin-customers/$customerId'
+      path: '/$customerId'
+      fullPath: '/admin-customers/$customerId'
+      preLoaderRoute: typeof AdminCustomersCustomerIdRouteImport
+      parentRoute: typeof AdminCustomersRoute
+    }
     '/account_/support': {
       id: '/account_/support'
       path: '/account/support'
@@ -1782,6 +1802,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminCustomersRouteChildren {
+  AdminCustomersCustomerIdRoute: typeof AdminCustomersCustomerIdRoute
+}
+
+const AdminCustomersRouteChildren: AdminCustomersRouteChildren = {
+  AdminCustomersCustomerIdRoute: AdminCustomersCustomerIdRoute,
+}
+
+const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
+  AdminCustomersRouteChildren,
+)
+
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -1822,7 +1854,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomerIntelligenceRoute: AdminCustomerIntelligenceRoute,
-  AdminCustomersRoute: AdminCustomersRoute,
+  AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminEmailDeliveryRoute: AdminEmailDeliveryRoute,
   AdminEmailHealthRoute: AdminEmailHealthRoute,
   AdminEmailOpsRoute: AdminEmailOpsRoute,
