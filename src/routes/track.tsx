@@ -562,7 +562,7 @@ function Timeline({ currentIdx }: { currentIdx: number }) {
           style={{ background: "linear-gradient(90deg, var(--color-accent), oklch(0.82 0.16 65))" }}
         />
       </div>
-      <ol className="relative grid grid-cols-6 gap-1">>
+      <ol className="relative grid grid-cols-6 gap-1">
         {STATUSES.map((s, i) => {
           const done = i <= currentIdx;
           const active = i === currentIdx;
