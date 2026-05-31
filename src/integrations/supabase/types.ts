@@ -4815,6 +4815,7 @@ export type Database = {
         }
         Returns: string
       }
+      admin_order_detail: { Args: { _order_id: string }; Returns: Json }
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
@@ -5173,6 +5174,10 @@ export type Database = {
       support_unread_count: { Args: never; Returns: number }
       svc_acquisition_metrics: {
         Args: { p_since: string; p_window_days: number }
+        Returns: Json
+      }
+      svc_admin_order_detail: {
+        Args: { _actor: string; _order_id: string }
         Returns: Json
       }
       svc_admin_order_operations: {
