@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, ShieldCheck, MapPin, Plus, Lock, Smartphone, CreditCard,
@@ -302,13 +302,64 @@ function CheckoutPage() {
   }, [stage]);
 
   const busy = stage === "processing" || stage === "verifying";
-  const ctaLabel = stage === "processing"
-    ? "Opening payment…"
-    : stage === "verifying"
-      ? "Verifying…"
-      : payMethod === "cod"
-        ? "Place order"
-        : `Pay ${fmt(totalINR)}`;
+
+  /* ---------- unified checkout state (single source of truth for the CTA) ---------- */
+  const addressSelected = !!selectedAddress;
+  const paymentMethodSelected = payMethod === "cod" ? !!settings.cod_enabled : true;
+  const serviceabilityStatus: "idle" | "checking" | "serviceable" | "service_down" | "not_serviceable" =
+    !selectedPostal ? "idle"
+      : serviceChecking ? "checking"
+        : serviceDown ? "service_down"
+          : allowProceed ? "serviceable"
+            : "not_serviceable";
+
+  // Why the order can't be placed yet (null = ready). Order matters: most blocking first.
+  const orderBlockedReason: string | null =
+    !addressSelected ? "Select or save a delivery address"
+      : !paymentMethodSelected ? "Choose a payment method"
+        : serviceabilityStatus === "checking" ? "Checking delivery availability…"
+          : serviceabilityStatus === "not_serviceable" ? (service?.message ?? "This address isn't serviceable yet")
+            : null;
+
+  const checkoutReady = orderBlockedReason === null && !busy;
+
+  const actionLabel = payMethod === "cod" ? "Place Order" : "Continue to Payment";
+  const ctaLabel = busy
+    ? (stage === "processing" ? "Opening payment…" : "Verifying…")
+    : !addressSelected ? "Select a delivery address"
+      : serviceabilityStatus === "checking" ? "Checking delivery…"
+        : serviceabilityStatus === "not_serviceable" ? "Not deliverable"
+          : actionLabel;
+
+  // Checkout state debugging — surfaces exactly why the CTA is/ isn't actionable.
+  useEffect(() => {
+    if (stage !== "review") return;
+    // eslint-disable-next-line no-console
+    console.debug("[checkout]", {
+      addressSelected,
+      paymentMethodSelected,
+      serviceabilityStatus,
+      checkoutReady,
+      orderBlockedReason,
+    });
+  }, [addressSelected, paymentMethodSelected, serviceabilityStatus, checkoutReady, orderBlockedReason, stage]);
+
+  // Emergency fallback: if the primary sticky CTA ever fails to render on screen
+  // (clipping, z-index, layout edge cases), show a floating button so a ready
+  // customer is NEVER left without a next step.
+  const stickyBarRef = useRef<HTMLDivElement | null>(null);
+  const [stickyVisible, setStickyVisible] = useState(true);
+  useEffect(() => {
+    if (stage !== "review") return;
+    const el = stickyBarRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setStickyVisible(entry.isIntersecting && entry.intersectionRatio > 0.4),
+      { threshold: [0, 0.4, 1] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [stage, isIndia]);
 
   if (loading || !user || !cartHydrated) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -320,7 +371,7 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(12rem+env(safe-area-inset-bottom))] lg:pb-16">
       <Atmosphere />
 
       <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2.5">Secure Checkout</p>
@@ -572,13 +623,19 @@ function CheckoutPage() {
                   <PackageCheck className="size-3.5 text-accent" /> Estimated delivery {eta}
                 </div>
 
-                {/* Desktop CTA */}
-                <button disabled={!selectedAddress || busy || (!allowProceed && !serviceChecking)}
-                  className="hidden lg:inline-flex w-full mt-5 group relative overflow-hidden bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 items-center justify-center gap-2">
+                {/* Desktop CTA — always rendered; disabled with a reason when not ready */}
+                <button type="submit" disabled={!checkoutReady}
+                  className="hidden lg:inline-flex w-full mt-5 min-h-[56px] group relative overflow-hidden bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed items-center justify-center gap-2">
                   {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                  <span>{selectedAddress && !allowProceed ? (serviceChecking ? "Checking delivery…" : "Not deliverable") : ctaLabel}</span>
-                  {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />}
+                  <span>{ctaLabel}</span>
+                  {!busy && checkoutReady && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />}
                 </button>
+
+                {orderBlockedReason && !busy && (
+                  <p className="hidden lg:flex text-[11px] text-amber-400/90 text-center mt-2.5 items-center justify-center gap-1.5 w-full">
+                    <XCircle className="size-3.5 shrink-0" /> {orderBlockedReason}
+                  </p>
+                )}
 
                 <p className="hidden lg:flex text-[10px] text-muted-foreground text-center mt-3 font-mono uppercase tracking-widest items-center justify-center gap-1.5 w-full">
                   <ShieldCheck className="size-3" /> Encrypted · PCI-DSS · 7-day returns
@@ -586,24 +643,46 @@ function CheckoutPage() {
               </div>
             </aside>
 
-            {/* Mobile sticky CTA */}
-            <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 pointer-events-none">
-              <div className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
-                style={{ background: "color-mix(in oklab, var(--color-background) 78%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
+            {/* Mobile sticky checkout bar — sits ABOVE the bottom navigation, always visible */}
+            <div
+              className="lg:hidden fixed inset-x-0 z-50 px-3 pointer-events-none"
+              style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
+            >
+              <div ref={stickyBarRef} className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
+                style={{ background: "color-mix(in oklab, var(--color-background) 82%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
+                {orderBlockedReason && !busy && (
+                  <p className="flex items-center gap-1.5 text-[11px] text-amber-400/90 px-1.5 pb-2 pt-0.5">
+                    <XCircle className="size-3.5 shrink-0" /> {orderBlockedReason}
+                  </p>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="pl-1.5 min-w-0">
                     <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
                     <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{fmt(totalINR)}</p>
                   </div>
-                  <button disabled={!selectedAddress || busy || (!allowProceed && !serviceChecking)}
-                    className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
+                  <button type="submit" disabled={!checkoutReady}
+                    className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 min-h-[56px] rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0">
                     {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                    <span>{selectedAddress && !allowProceed ? (serviceChecking ? "Checking…" : "Not deliverable") : stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
-                    {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
+                    <span>{ctaLabel}</span>
+                    {!busy && checkoutReady && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* Emergency floating fallback — only when checkout is ready but the
+                sticky bar isn't actually on screen. Guarantees a reachable CTA. */}
+            {checkoutReady && !stickyVisible && (
+              <button
+                type="submit"
+                className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[9999] inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-7 min-h-[56px] rounded-full text-xs uppercase tracking-widest shadow-[0_18px_44px_-12px_var(--color-accent)] active:scale-[0.98]"
+                style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
+              >
+                <Lock className="size-3.5" />
+                <span>{actionLabel} · {fmt(totalINR)}</span>
+                <ArrowRight className="size-3.5" />
+              </button>
+            )}
           </form>
         </>
       )}
