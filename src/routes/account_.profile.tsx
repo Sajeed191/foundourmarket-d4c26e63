@@ -404,16 +404,18 @@ function EditProfilePage() {
               </FloatingField>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="relative group">
-                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                  <select value={form.gender} onChange={(e) => set("gender", e.target.value)} className="input-glass !pl-11 appearance-none">
+                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                  <select value={form.gender} onChange={(e) => set("gender", e.target.value)} className="input-glass input-glass-static !pl-11 !pr-10 appearance-none">
                     {GENDERS.map((g) => <option key={g} value={g} className="bg-card">{g || "Gender"}</option>)}
                   </select>
                 </div>
                 <div className="relative group">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
-                  <input type="date" max={maxDob} value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass !pl-11" />
+                  <input type="date" max={maxDob} value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass input-glass-static !pl-11" />
                 </div>
               </div>
+
               <FieldError msg={dobError} />
             </Section>
 
