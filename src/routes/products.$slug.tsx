@@ -93,7 +93,7 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
-  const { format, priceOf, compareOf } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
   const { add } = useCart();
   const { record } = useRecentlyViewed();
