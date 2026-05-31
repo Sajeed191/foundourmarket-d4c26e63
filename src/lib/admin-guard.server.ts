@@ -95,7 +95,7 @@ export async function requireStaff(
 
 /** Loosely-typed admin RPC caller (svc_* wrappers aren't in generated types). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const adminRpc = supabaseAdmin.rpc as unknown as (
+export const adminRpc = supabaseAdmin.rpc.bind(supabaseAdmin) as unknown as (
   fn: string,
   args?: Record<string, unknown>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
