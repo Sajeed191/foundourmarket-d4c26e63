@@ -533,25 +533,48 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
 
       </div>
 
-      {/* City + State */}
+      {/* City + State (Phase 5 — area/locality autocomplete from the PIN) */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <input
-            placeholder="City *"
+            placeholder="City / Area *"
             value={form.city}
+            list="pin-areas"
+            autoComplete="address-level2"
             onChange={(e) => set("city", e.target.value)}
             onBlur={() => markTouched("city")}
             className={cls("city")}
           />
+          {resolvedPin && (resolvedPin.areas?.length ?? 0) > 0 && (
+            <datalist id="pin-areas">
+              {[resolvedPin.city, ...resolvedPin.areas]
+                .filter((v, i, arr): v is string => !!v && arr.indexOf(v) === i)
+                .map((area) => (
+                  <option key={area} value={area} />
+                ))}
+            </datalist>
+          )}
           <Err k="city" />
         </div>
         <input
           placeholder="State / Region"
           value={form.state ?? ""}
+          autoComplete="address-level1"
           onChange={(e) => set("state", e.target.value)}
           className={cls("state")}
         />
       </div>
+
+      {/* Phase 3 — PIN ↔ City ↔ State consistency warning */}
+      {consistency.status === "mismatch" && (
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/[0.08] px-3.5 py-2.5 space-y-1">
+          {consistency.issues.map((issue) => (
+            <p key={issue} className="text-[11px] text-amber-400 flex items-center gap-1.5">
+              <AlertCircle className="size-3 shrink-0" /> {issue}
+            </p>
+          ))}
+        </div>
+      )}
 
       <textarea
         placeholder="Delivery instructions (optional)"
@@ -561,30 +584,30 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         className={`${base} border-border resize-none`}
       />
 
-      {/* Address completeness score */}
+      {/* Address quality score (Phase 2 — weighted + region-aware) */}
       <div className="rounded-2xl border border-border bg-background/40 px-3.5 py-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Address quality
+            Address quality · {quality.grade}
           </span>
           <span
             className={`text-xs font-semibold tabular-nums ${
-              completeness.score >= 85 ? "text-emerald-400" : completeness.score >= 60 ? "text-accent" : "text-muted-foreground"
+              quality.score >= 90 ? "text-emerald-400" : quality.score >= 75 ? "text-accent" : "text-muted-foreground"
             }`}
           >
-            {completeness.score}%
+            {quality.score}%
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              completeness.score >= 85 ? "bg-emerald-400" : "bg-accent"
+              quality.score >= 90 ? "bg-emerald-400" : "bg-accent"
             }`}
-            style={{ width: `${completeness.score}%` }}
+            style={{ width: `${quality.score}%` }}
           />
         </div>
         <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
-          {completeness.checks.map((c) => (
+          {quality.checks.map((c) => (
             <span
               key={c.label}
               className={`inline-flex items-center gap-1 text-[10px] ${
@@ -596,7 +619,25 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             </span>
           ))}
         </div>
+        {/* Phase 6 — surface fraud/risk flags inline */}
+        {risk.level !== "low" && risk.flags.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/5 pt-2">
+            <span
+              className={`inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest ${
+                risk.level === "high" ? "text-destructive" : "text-amber-400"
+              }`}
+            >
+              <ShieldAlert className="size-3" /> {risk.level} risk
+            </span>
+            {risk.flags.map((f) => (
+              <span key={f} className="text-[10px] text-muted-foreground">
+                {f}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
+
 
       <div className="flex flex-wrap gap-x-6 gap-y-2 pt-0.5 text-xs text-muted-foreground">
         <label className="flex items-center gap-2 cursor-pointer">
