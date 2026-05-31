@@ -26,9 +26,22 @@ export const trackOrder = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (error) throw new Error(error.message);
-    if (!order || (order.contact_email ?? "").toLowerCase() !== data.email.toLowerCase()) {
+    if (!order) return { found: false as const };
+
+    // Match the supplied email against the order's stored contact email, and
+    // fall back to the registered email of the order owner (covers legacy
+    // orders created before contact_email was captured).
+    const supplied = data.email.toLowerCase();
+    let emailMatches = (order.contact_email ?? "").toLowerCase() === supplied;
+    if (!emailMatches && order.user_id) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(order.user_id);
+      const ownerEmail = authUser?.user?.email?.toLowerCase() ?? "";
+      emailMatches = ownerEmail === supplied;
+    }
+    if (!emailMatches) {
       return { found: false as const };
     }
+
 
     const { data: items } = await supabaseAdmin
       .from("order_items")
