@@ -100,6 +100,26 @@ export function resolveImage(raw: string | null | undefined): string {
   return ASSET_MAP[base] ?? raw;
 }
 
+/**
+ * The single source of truth for the displayed discount badge. Computed
+ * directly from the selling price and the compare ("original") price so the
+ * percentage shown ALWAYS matches the real price difference — there is no
+ * manual percentage entry and no hardcoded value. Returns null when there is
+ * no genuine discount (no/invalid compare price, or compare <= selling).
+ *
+ *   discount% = round((compare - price) / compare * 100)
+ */
+export function discountPercent(
+  price: number,
+  comparePrice: number | null | undefined,
+): number | null {
+  if (comparePrice == null) return null;
+  if (!(comparePrice > 0) || !(price >= 0)) return null;
+  if (comparePrice <= price) return null;
+  const pct = Math.round(((comparePrice - price) / comparePrice) * 100);
+  return pct > 0 ? pct : null;
+}
+
 type Row = {
   slug: string; name: string; tagline: string | null; category: string;
   price: number | string; rating: number | string; reviews: number;
