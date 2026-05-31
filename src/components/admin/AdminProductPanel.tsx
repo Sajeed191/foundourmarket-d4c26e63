@@ -419,6 +419,23 @@ export function AdminProductPanel({ product }: { product: Product }) {
                   </Field>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="₹ India shipping fee">
+                    <Input
+                      type="number"
+                      value={f.shippingFeeInr}
+                      onChange={(e) => setF({ ...f, shippingFeeInr: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="$ Intl shipping fee">
+                    <Input
+                      type="number"
+                      value={f.shippingFeeUsd}
+                      onChange={(e) => setF({ ...f, shippingFeeUsd: e.target.value })}
+                    />
+                  </Field>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <Toggle label="Visible in India" on={f.indiaVisible} onClick={() => setF({ ...f, indiaVisible: !f.indiaVisible })} />
                   <Toggle label="Visible globally" on={f.internationalVisible} onClick={() => setF({ ...f, internationalVisible: !f.internationalVisible })} />
