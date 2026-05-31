@@ -12,7 +12,7 @@ import type {
 import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const SITE_NAME = 'FoundOurMarket'
-const SENDER_DOMAIN = 'notify.foundourmarket.com'
+const SENDER_DOMAIN = 'notify.send.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
 // Single transactional inbox for staff alerts (avoids fan-out to a list).
 const SUPPORT_INBOX = `support@${SENDER_DOMAIN}`

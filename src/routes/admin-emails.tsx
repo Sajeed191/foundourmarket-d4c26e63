@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin-emails")({
   component: EmailsPage,
 });
 
-const SENDER_DOMAIN = "notify.foundourmarket.com";
+const SENDER_DOMAIN = "notify.send.foundourmarket.com";
 const ROOT_DOMAIN = "foundourmarket.com";
 
 const DNS_CHECKLIST = [

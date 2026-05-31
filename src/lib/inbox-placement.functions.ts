@@ -9,7 +9,7 @@ const GMAIL_GW = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const OUTLOOK_GW = "https://connector-gateway.lovable.dev/microsoft_outlook";
 
 const SITE_NAME = "FoundOurMarket";
-const SENDER_DOMAIN = "notify.foundourmarket.com";
+const SENDER_DOMAIN = "notify.send.foundourmarket.com";
 const FROM_DOMAIN = "foundourmarket.com";
 
 async function assertEmailStaff(userId: string) {

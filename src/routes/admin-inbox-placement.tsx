@@ -118,7 +118,7 @@ function InboxPlacementPage() {
           </div>
           <p className="text-xs text-muted-foreground mb-4 max-w-2xl">
             A tagged email is sent through your live sending domain ({" "}
-            <span className="font-mono text-foreground">notify.foundourmarket.com</span>) to each
+            <span className="font-mono text-foreground">notify.send.foundourmarket.com</span>) to each
             seed inbox below. Wait ~30s for delivery, then check placement.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">

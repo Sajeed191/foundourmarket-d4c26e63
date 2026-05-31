@@ -8,7 +8,7 @@ import { TestEmail } from "@/lib/email-templates/test-email";
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
 const SITE_NAME = "FoundOurMarket";
-const SENDER_DOMAIN = "notify.foundourmarket.com";
+const SENDER_DOMAIN = "notify.send.foundourmarket.com";
 const FROM_DOMAIN = "foundourmarket.com";
 
 async function assertEmailStaff(userId: string): Promise<string[]> {
