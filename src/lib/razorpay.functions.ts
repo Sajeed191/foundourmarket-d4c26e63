@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -42,18 +43,68 @@ const verifySchema = z.object({
   razorpaySignature: z.string().min(1).max(256),
 });
 
+/** Read the edge geo country from trusted request headers (server-only). */
+function edgeCountry(): string | null {
+  const c = (
+    getRequestHeader("cf-ipcountry") ||
+    getRequestHeader("x-vercel-ip-country") ||
+    getRequestHeader("x-country") ||
+    ""
+  ).toUpperCase();
+  return c || null;
+}
+
+export type RegionResolution = {
+  region: Region;
+  detectedCountry: string | null;
+  /** Where the billing region came from: trusted ranking. */
+  pricingSource: "profile_locked" | "edge_geo" | "default";
+  /** 0–100 confidence in the resolved region. */
+  confidence: number;
+};
+
 /**
- * Resolve the authoritative market region for a user. Locked profile region
- * wins; otherwise we fall back to International. The client never supplies the
- * region used for billing — it is read from trusted server state.
+ * Resolve the authoritative market region for billing.
+ *
+ * Priority:
+ *   1. The user's locked profile region (highest trust).
+ *   2. Edge geo-IP country header — IN ⇒ India (prevents Indian users from
+ *      ever being charged in USD just because they never explicitly locked).
+ *   3. International as the final safe default.
+ *
+ * The client never supplies the region used for billing.
  */
-async function resolveRegion(supabase: any, userId: string): Promise<Region> {
+async function resolveRegion(
+  supabase: any,
+  userId: string,
+): Promise<RegionResolution> {
   const { data } = await supabase
     .from("profiles")
     .select("market_region")
     .eq("id", userId)
     .maybeSingle();
-  return data?.market_region === "india" ? "india" : "international";
+
+  const country = edgeCountry();
+
+  if (data?.market_region === "india" || data?.market_region === "international") {
+    return {
+      region: data.market_region,
+      detectedCountry: country,
+      pricingSource: "profile_locked",
+      confidence: 100,
+    };
+  }
+
+  // No locked region yet → trust the edge geo signal so Indian shoppers are
+  // billed in INR even when they were never prompted to lock a region.
+  if (country === "IN") {
+    return { region: "india", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
+  }
+  if (country) {
+    return { region: "international", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
+  }
+
+  return { region: "international", detectedCountry: null, pricingSource: "default", confidence: 40 };
 }
 
 /**
@@ -133,8 +184,20 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     const { supabase, userId } = context as { supabase: any; userId: string };
     const { keyId } = getRazorpayCreds();
 
-    const region = await resolveRegion(supabase, userId);
+    const resolution = await resolveRegion(supabase, userId);
+    const region = resolution.region;
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
+
+    // Region/pricing audit trail (visible in server function logs).
+    console.log("[razorpay.createOrder] region resolved", {
+      user_id: userId,
+      detected_country: resolution.detectedCountry,
+      detected_market: region,
+      confidence_score: resolution.confidence,
+      currency_selected: priced.totals.currency,
+      pricing_source: resolution.pricingSource,
+      amount_minor: toMinorUnits(priced.totals.total),
+    });
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");
     }
@@ -246,6 +309,14 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       currency: rzpOrder.currency,
       keyId,
       totals: priced.totals,
+      debug: {
+        detectedCountry: resolution.detectedCountry,
+        market: region,
+        currency: priced.totals.currency,
+        pricingSource: resolution.pricingSource,
+        confidence: resolution.confidence,
+        amountMinor: rzpOrder.amount,
+      },
     };
   });
 
@@ -406,7 +477,15 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       claims?: { email?: string };
     };
 
-    const region = await resolveRegion(supabase, userId);
+    const codResolution = await resolveRegion(supabase, userId);
+    const region = codResolution.region;
+    console.log("[razorpay.placeCod] region resolved", {
+      user_id: userId,
+      detected_country: codResolution.detectedCountry,
+      detected_market: region,
+      confidence_score: codResolution.confidence,
+      pricing_source: codResolution.pricingSource,
+    });
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");

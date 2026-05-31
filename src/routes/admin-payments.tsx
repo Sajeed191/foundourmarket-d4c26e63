@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createRazorpayRefund } from "@/lib/razorpay.functions";
 import { VirtualTable } from "@/components/admin/VirtualTable";
 import { PaymentGatewayStatusCenter } from "@/components/admin/PaymentGatewayStatusCenter";
+import { CheckoutRegionDebug } from "@/components/admin/CheckoutRegionDebug";
 
 export const Route = createFileRoute("/admin-payments")({
   head: () => ({
@@ -207,6 +208,9 @@ function PaymentsInner() {
 
   return (
     <div className="space-y-6">
+      {/* Admin-only checkout region / currency debug */}
+      <CheckoutRegionDebug />
+
       {/* International payment gateway status */}
       <PaymentGatewayStatusCenter />
 

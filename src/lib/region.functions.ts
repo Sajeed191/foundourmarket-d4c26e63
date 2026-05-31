@@ -161,3 +161,62 @@ export const getMyRegion = createServerFn({ method: "GET" })
       lockedAt: (data?.region_locked_at ?? null) as string | null,
     };
   });
+
+/**
+ * Admin-only checkout region debug. Returns exactly the signals the billing
+ * path (createRazorpayOrder) uses to pick a currency, so staff can verify that
+ * Indian shoppers resolve to IN / INDIA / INR before any Razorpay order exists.
+ */
+export const getCheckoutRegionDebug = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context as { supabase: any; userId: string };
+
+    const country =
+      (getRequestHeader("cf-ipcountry") ||
+        getRequestHeader("x-vercel-ip-country") ||
+        getRequestHeader("x-country") ||
+        "").toUpperCase() || null;
+    const timezone =
+      getRequestHeader("x-vercel-ip-timezone") ||
+      getRequestHeader("cf-timezone") ||
+      null;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("market_region")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const locked = data?.market_region === "india" || data?.market_region === "international";
+    let region: MarketRegion;
+    let pricingSource: "profile_locked" | "edge_geo" | "default";
+    let confidence: number;
+    if (locked) {
+      region = data.market_region;
+      pricingSource = "profile_locked";
+      confidence = 100;
+    } else if (country === "IN") {
+      region = "india";
+      pricingSource = "edge_geo";
+      confidence = 85;
+    } else if (country) {
+      region = "international";
+      pricingSource = "edge_geo";
+      confidence = 85;
+    } else {
+      region = "international";
+      pricingSource = "default";
+      confidence = 40;
+    }
+
+    return {
+      detectedCountry: country,
+      timezone,
+      market: region,
+      currency: region === "india" ? "INR" : "USD",
+      pricingSource,
+      confidence,
+      profileLocked: locked,
+    };
+  });

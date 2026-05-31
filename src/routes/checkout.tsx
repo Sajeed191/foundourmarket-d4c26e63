@@ -186,6 +186,15 @@ function CheckoutPage() {
         },
       });
 
+      // Audit: the displayed price must equal the charged Razorpay amount.
+      console.log("[checkout] Razorpay order created", {
+        razorpayOrderId: created.razorpayOrderId,
+        amount_minor: created.amount,
+        ...created.debug,
+      });
+
+
+
       let customerId: string | undefined;
       try {
         const c = await ensureCustomer();
@@ -209,7 +218,9 @@ function CheckoutPage() {
         },
         notes: { order_id: created.orderId },
         theme: { color: "#ff7a1a", backdrop_color: "#0a0a0f" },
-        method: { emi: false, paylater: false },
+        // No `method` filter: let Razorpay surface every method enabled on the
+        // account for the order currency — UPI, Google Pay, PhonePe, Paytm,
+        // BHIM, Net Banking, Cards, Wallets, EMI and Pay Later for INR orders.
         modal: {
           ondismiss: () => {
             setStage("failed");
