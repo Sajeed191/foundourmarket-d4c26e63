@@ -79,7 +79,7 @@ function CheckoutPage() {
   const verifyPayment = useServerFn(verifyRazorpayPayment);
   const cancelOrder = useServerFn(cancelRazorpayOrder);
   const placeCodOrderFn = useServerFn(placeCodOrder);
-  const ensureCustomer = useServerFn(createRazorpayCustomer);
+  // createRazorpayCustomer intentionally not used at checkout — see customer_id note.
   const syncMethods = useServerFn(syncRazorpayPaymentMethods);
 
   const [stage, setStage] = useState<Stage>("review");
