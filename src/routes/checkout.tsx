@@ -17,6 +17,8 @@ import { useRegion } from "@/lib/region";
 import { useAddresses, type Address } from "@/lib/use-addresses";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
+import { SavedAddressRail } from "@/components/site/SavedAddressRail";
+import { SmartDeliveryCard } from "@/components/site/SmartDeliveryCard";
 import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder, placeCodOrder } from "@/lib/razorpay.functions";
 import { buildOrderAttribution } from "@/lib/marketing-tracking";
 import { createRazorpayCustomer, syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
