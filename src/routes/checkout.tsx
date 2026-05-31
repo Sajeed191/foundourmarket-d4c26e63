@@ -241,7 +241,7 @@ function CheckoutPage() {
         name: "FoundOurMarket™",
         description: "Secure Checkout",
         image: logoUrl,
-        ...(customerId ? { customer_id: customerId, save: 1 } : {}),
+        // No customer_id — see note above.
         prefill: {
           name: selectedAddress.full_name,
           email: user.email ?? undefined,
