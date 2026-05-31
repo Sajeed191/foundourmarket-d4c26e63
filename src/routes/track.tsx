@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackOrder } from "@/lib/track-order.functions";
+import { computeEta } from "@/lib/courier-sync.service";
 import { useRegion } from "@/lib/region";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
