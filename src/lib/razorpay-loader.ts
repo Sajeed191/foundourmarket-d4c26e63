@@ -21,7 +21,32 @@ export type RazorpayOptions = {
   customer_id?: string;
   save?: 0 | 1;
 
-  config?: unknown;
+  /**
+   * Checkout display configuration. Lets us reorder payment blocks and
+   * prioritize UPI (Intent + Collect/VPA + QR) above the default blocks.
+   * See https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/customize/checkout-display/
+   */
+  config?: {
+    display?: {
+      blocks?: Record<
+        string,
+        {
+          name: string;
+          instruments: Array<{
+            method: string;
+            flows?: string[];
+            apps?: string[];
+            issuers?: string[];
+            banks?: string[];
+            wallets?: string[];
+            types?: string[];
+          }>;
+        }
+      >;
+      sequence?: string[];
+      preferences?: { show_default_blocks?: boolean };
+    };
+  };
   handler: (response: RazorpayResponse) => void;
   modal?: { ondismiss?: () => void; escape?: boolean; backdropclose?: boolean };
 };
