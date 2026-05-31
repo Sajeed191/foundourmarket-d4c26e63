@@ -94,7 +94,7 @@ function AdminSupportPage() {
       supabase.from("returns").select("id,order_id,user_id,status,reason,refund_amount,refund_status,resolved_at,created_at").order("created_at", { ascending: false }).limit(500),
       supabase.from("profiles").select("id,full_name").limit(2000),
       supabase.from("shipments").select("order_id,status").eq("status", "failed_delivery").limit(1000),
-      supabase.from("fraud_alerts").select("user_id").limit(1000),
+      supabase.from("fraud_alerts").select("subject_id,subject_type").limit(1000),
     ]);
     if (t.error) { toast.error(t.error.message); setTickets([]); return; }
     setTickets((t.data as TicketRow[]) ?? []);
@@ -104,7 +104,7 @@ function AdminSupportPage() {
     setReturns((rt.data as ReturnRow[]) ?? []);
     setProfiles(new Map(((pf.data as { id: string; full_name: string | null }[]) ?? []).map((p) => [p.id, p.full_name ?? "Customer"])));
     setFailedOrders(new Set(((sh.data as { order_id: string }[]) ?? []).map((s) => s.order_id)));
-    setFraudUsers(new Set(((fr.data as { user_id: string | null }[]) ?? []).map((f) => f.user_id).filter(Boolean) as string[]));
+    setFraudUsers(new Set(((fr.data as { subject_id: string | null; subject_type: string | null }[]) ?? []).filter((f) => f.subject_type === "user").map((f) => f.subject_id).filter(Boolean) as string[]));
   }, []);
 
   useEffect(() => {
@@ -455,7 +455,7 @@ function Customer360Sheet({ userId, name, onClose }: { userId: string; name: str
         supabase.from("shipments").select("id,status").eq("user_id", userId),
         supabase.from("notifications").select("id,title,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6),
         supabase.from("support_tickets").select("id,subject,status,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6),
-        supabase.from("fraud_alerts").select("id").eq("user_id", userId),
+        supabase.from("fraud_alerts").select("id").eq("subject_id", userId).eq("subject_type", "user"),
       ]);
       if (!alive) return;
       const orders = (ord.data as { total: number; status: string }[]) ?? [];
