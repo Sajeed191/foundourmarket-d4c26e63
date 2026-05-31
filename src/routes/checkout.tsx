@@ -702,6 +702,25 @@ function CheckoutPage() {
               </div>
             </div>
 
+            {/* Mobile order summary drawer (opened by tapping the total) */}
+            <div className="lg:hidden">
+              <CheckoutSummaryDrawer
+                open={summaryOpen}
+                onOpenChange={setSummaryOpen}
+                trigger={<span className="sr-only" aria-hidden />}
+                lines={detailed.map((i) => ({ slug: i.slug, name: i.product.name, image: i.product.image, qty: i.qty, lineTotal: priceOf(i.product) * i.qty }))}
+                fmt={fmt}
+                subtotal={subtotalINR}
+                shipping={shippingINR}
+                tax={taxINR}
+                discount={totals.discount}
+                savings={savingsINR}
+                total={totalINR}
+                taxLabel={`${market === "india" ? "18% GST" : "8%"} est.`}
+                eta={eta}
+              />
+            </div>
+
             {/* Emergency floating fallback — only when checkout is ready but the
                 sticky bar isn't actually on screen. Guarantees a reachable CTA. */}
             {checkoutReady && !stickyVisible && (
