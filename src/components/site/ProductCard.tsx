@@ -10,12 +10,13 @@ import { computeBadges } from "@/lib/badges";
 
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
-  const { format, priceOf, compareOf } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
+  const shippingFee = shippingFeeOf(product);
 
   const badgeSettings = useBadgeSettings();
   const badges = computeBadges(product, badgeSettings);
@@ -137,6 +138,15 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             Add +
           </button>
         </div>
+        {shippingFee > 0 ? (
+          <p className={`font-mono text-muted-foreground/80 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[10px]"}`}>
+            Shipping {format(shippingFee)}
+          </p>
+        ) : (
+          <p className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
+            Free Shipping
+          </p>
+        )}
         {showOnlyLeft && (
           <p className={`font-mono uppercase tracking-wider text-accent/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
             Only {product.stockQuantity} left
