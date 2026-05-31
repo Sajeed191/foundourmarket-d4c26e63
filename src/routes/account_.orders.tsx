@@ -152,6 +152,7 @@ function OrdersPage() {
   const [recOpen, setRecOpen] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [showAllFailed, setShowAllFailed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
