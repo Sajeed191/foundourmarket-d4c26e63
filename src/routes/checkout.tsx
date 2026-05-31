@@ -662,7 +662,7 @@ function CheckoutPage() {
                   checking={serviceChecking}
                   eta={eta}
                   shippingLabel={shippingINR === 0 ? "FREE" : fmt(shippingINR)}
-                  codAvailable={!!settings.cod_enabled}
+                  codAvailable={codAllowed}
                   city={service?.city ?? selectedAddress.city}
                   postal={selectedAddress.postal}
                   region={isIndia ? "India" : "International"}
