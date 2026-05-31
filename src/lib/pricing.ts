@@ -45,6 +45,77 @@ export type OrderTotals = {
   total: number;
 };
 
+export type ShippingMode = "free" | "flat" | "region" | "product" | "category";
+
+export type ShippingSettings = {
+  shipping_mode?: ShippingMode | null;
+  free_shipping_enabled?: boolean | null;
+  flat_shipping_inr?: number | null;
+  flat_shipping_usd?: number | null;
+  free_shipping_threshold_inr?: number | null;
+  free_shipping_threshold_usd?: number | null;
+};
+
+export type ShippingCategory = {
+  slug: string;
+  shipping_fee_inr?: number | null;
+  shipping_fee_usd?: number | null;
+  free_shipping?: boolean | null;
+};
+
+export type ShippingLine = {
+  slug?: string;
+  category?: string | null;
+  qty: number;
+  shippingFeeInr?: number | null;
+  shippingFeeUsd?: number | null;
+};
+
+const n = (value: unknown) => Math.max(0, Number(value ?? 0) || 0);
+
+/**
+ * The single shipping calculator for display, checkout, payment creation,
+ * COD orders, invoices and history. All callers pass DB-backed settings and
+ * product/category shipping values; no caller should calculate shipping itself.
+ */
+export function computeShipping({
+  region,
+  subtotal,
+  items,
+  settings,
+  categories = [],
+}: {
+  region: Region;
+  subtotal: number;
+  items: ShippingLine[];
+  settings?: ShippingSettings | null;
+  categories?: ShippingCategory[];
+}): number {
+  const mode = settings?.free_shipping_enabled ? "free" : settings?.shipping_mode ?? "product";
+  const threshold = region === "india" ? settings?.free_shipping_threshold_inr : settings?.free_shipping_threshold_usd;
+  if (threshold != null && subtotal >= n(threshold)) return 0;
+  if (mode === "free") return 0;
+
+  if (mode === "flat" || mode === "region") {
+    return roundMoney(region, region === "india" ? n(settings?.flat_shipping_inr) : n(settings?.flat_shipping_usd));
+  }
+
+  const categoryBySlug = new Map(categories.map((category) => [category.slug, category]));
+  const total = items.reduce((sum, item) => {
+    const qty = Math.max(1, Number(item.qty) || 1);
+    const category = item.category ? categoryBySlug.get(item.category) : undefined;
+    if (mode === "category" && category) {
+      if (category.free_shipping) return sum;
+      const categoryFee = region === "india" ? category.shipping_fee_inr : category.shipping_fee_usd;
+      if (categoryFee != null) return sum + n(categoryFee) * qty;
+    }
+    const productFee = region === "india" ? item.shippingFeeInr : item.shippingFeeUsd;
+    return sum + n(productFee) * qty;
+  }, 0);
+
+  return roundMoney(region, total);
+}
+
 /**
  * Compute order totals from a region-native subtotal. The math mirrors the
  * legacy rules (shipping by subtotal threshold, tax on subtotal, discount last)
