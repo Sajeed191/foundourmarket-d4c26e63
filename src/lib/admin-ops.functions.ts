@@ -9,7 +9,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireStaff, adminRpc, type StaffRole } from "./admin-guard.server";
+import { requireStaff, adminRpc, logSecurity, type StaffRole } from "./admin-guard.server";
 
 const OPS_STAFF: StaffRole[] = [
   "admin", "super_admin", "manager", "support", "fulfillment", "warehouse_staff",
@@ -33,6 +33,34 @@ export const getOrderOpsFn = createServerFn({ method: "POST" })
       console.error("[admin_order_operations] rpc error", error.message);
       throw new Error(error.message);
     }
+    return data;
+  });
+
+/** Full single-order detail: payment intelligence, customer 360, shipping/billing, timelines, history. */
+export const getOrderDetailFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ orderId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, OPS_STAFF, "ops.order_detail", input.orderId);
+    const { data, error } = await adminRpc("svc_admin_order_detail", {
+      _actor: userId,
+      _order_id: input.orderId,
+    });
+    if (error) {
+      console.error("[admin_order_detail] rpc error", error.message);
+      throw new Error(error.message);
+    }
+    // Audit every order/payment lookup.
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "ops.order_detail.view",
+      target: input.orderId,
+      success: true,
+    });
     return data;
   });
 

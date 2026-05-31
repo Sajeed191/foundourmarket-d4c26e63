@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ShoppingBag, Loader2, AlertTriangle, Download, RefreshCw, Search, X,
   Package, Truck, RotateCcw, Wallet, Crown, Globe, ShieldAlert, Sparkles,
   Clock, Zap, Gauge, TrendingUp, Users, CreditCard, MapPin, Mail, ArrowDownRight,
+  Phone, Receipt, Bell, ShieldCheck, Copy, Check, LifeBuoy,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useOrderOperations } from "@/lib/use-order-operations";
-import type { EnrichedOrder, OrderOps, WarRoomTag } from "@/lib/order-operations";
+import { fetchOrderDetail } from "@/lib/order-operations";
+import type { EnrichedOrder, OrderOps, WarRoomTag, OrderDetail } from "@/lib/order-operations";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
 
 export const Route = createFileRoute("/admin-orders-ops")({
@@ -96,13 +98,32 @@ function Bar({ value, max, color = "bg-accent" }: { value: number; max: number; 
 
 function ExportMenu({ data }: { data: OrderOps }) {
   const [open, setOpen] = useState(false);
-  const rows = data.orders.map((o) => ({
-    id: o.id, created_at: o.created_at, customer: o.full_name ?? o.contact_email ?? "Guest",
-    email: o.contact_email, region: o.market_region ?? o.country, status: o.status,
-    payment: o.payment_status, fulfillment: o.fulfillment_status, method: o.payment_method,
-    units: o.units, total: o.total, profit: Math.round(o.profit), risk: o.riskScore,
-    tags: o.tags.join("|"),
-  }));
+  const rows = data.orders.map((o) => {
+    const a = o.shipping_address ?? {};
+    const addr = [a.line1, a.line2, a.landmark, a.city, a.state, a.postal ?? a.postal_code, a.country]
+      .filter(Boolean).join(", ");
+    return {
+      order_id: o.id,
+      customer: o.full_name ?? o.contact_email ?? "Guest",
+      phone: o.phone ?? (a.phone as string) ?? "",
+      email: o.contact_email ?? "",
+      address: addr,
+      payment_id: o.razorpay_payment_id ?? "",
+      razorpay_order_id: o.razorpay_order_id ?? "",
+      payment_method: o.payment_method ?? "",
+      amount: o.total,
+      currency: o.currency ?? "",
+      status: o.status,
+      payment_status: o.payment_status,
+      fulfillment: o.fulfillment_status,
+      courier: o.carrier ?? "",
+      tracking_number: o.tracking_number ?? "",
+      created_at: o.created_at,
+      region: o.market_region ?? o.country,
+      units: o.units, profit: Math.round(o.profit), risk: o.riskScore,
+      tags: o.tags.join("|"),
+    };
+  });
   const exp = (f: ExportFormat) => { exportRows(f, rows, "order-operations"); setOpen(false); };
   return (
     <div className="relative">
@@ -148,7 +169,59 @@ function OrderRow({ o, onClick }: { o: EnrichedOrder; onClick: () => void }) {
   );
 }
 
+function CopyBtn({ value }: { value: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard?.writeText(value); setDone(true); setTimeout(() => setDone(false), 1200); }}
+      className="p-0.5 rounded hover:bg-muted/50 text-muted-foreground"
+      aria-label="Copy"
+    >{done ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}</button>
+  );
+}
+
+function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border p-3">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">{icon}{title}</p>
+      <div className="space-y-1.5 text-xs">{children}</div>
+    </div>
+  );
+}
+
+function MonoRow({ k, v, copy }: { k: string; v: string | null | undefined; copy?: boolean }) {
+  if (!v) return <Row k={k} v="—" />;
+  return (
+    <div className="flex items-center justify-between gap-3 py-1 border-b border-border/40 last:border-0">
+      <span className="text-muted-foreground">{k}</span>
+      <span className="flex items-center gap-1.5 text-right font-mono text-[11px] break-all">{v}{copy && <CopyBtn value={v} />}</span>
+    </div>
+  );
+}
+
 function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) {
+  const [detail, setDetail] = useState<OrderDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true); setErr(null);
+    fetchOrderDetail(o.id)
+      .then((d) => { if (alive) setDetail(d); })
+      .catch((e) => { if (alive) setErr(e instanceof Error ? e.message : "Failed to load detail"); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [o.id]);
+
+  const a = (detail?.order.shipping_address ?? o.shipping_address ?? {}) as Record<string, string | undefined>;
+  const pay = detail?.payment;
+  const meta = (pay?.meta ?? {}) as Record<string, unknown>;
+  const metaStr = (k: string) => { const v = meta[k]; return typeof v === "string" || typeof v === "number" ? String(v) : null; };
+  const billing = detail?.addresses.find((x) => x.is_default_billing);
+  const cur = detail?.order.currency ?? o.currency ?? "INR";
+  const money = (n: number | null | undefined) => (cur === "INR" ? inr(n ?? 0) : `${cur} ${(n ?? 0).toFixed(2)}`);
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
@@ -168,27 +241,132 @@ function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) 
         <div className="flex flex-wrap gap-1.5">{o.tags.map((t) => <TagPill key={t} t={t} />)}</div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Total</div><div className="text-sm font-semibold">{inr(o.total)}</div></div>
+          <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Total</div><div className="text-sm font-semibold">{money(o.total)}</div></div>
           <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Profit</div><div className={`text-sm font-semibold ${o.profit < 0 ? "text-destructive" : "text-emerald-400"}`}>{inr(o.profit)}</div></div>
           <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Risk</div><div className="text-sm font-semibold"><RiskBadge score={o.riskScore} /></div></div>
         </div>
 
-        <div className="space-y-1.5 text-xs">
-          <Row k="Order ID" v={`#${o.id.slice(0, 8)}`} />
+        {/* Order Information */}
+        <Section title="Order Information" icon={<ShoppingBag className="size-3" />}>
+          <MonoRow k="Order ID" v={o.id} copy />
           <Row k="Placed" v={new Date(o.created_at).toLocaleString()} />
           <Row k="Status" v={<StatusPill s={o.status} />} />
-          <Row k="Payment" v={<StatusPill s={o.payment_status} />} />
           <Row k="Fulfilment" v={<StatusPill s={o.fulfillment_status || o.ship_status} />} />
-          <Row k="Method" v={o.payment_method ?? "—"} />
+        </Section>
+
+        {/* Payment Intelligence */}
+        <Section title="Payment Intelligence" icon={<CreditCard className="size-3" />}>
+          <Row k="Payment status" v={<StatusPill s={o.payment_status} />} />
+          <Row k="Amount paid" v={money(pay?.amount ?? o.total)} />
+          <Row k="Currency" v={cur} />
+          <Row k="Method" v={pay?.method ?? o.payment_method ?? "—"} />
+          <Row k="Gateway" v={detail?.order.payment_provider ?? o.payment_provider ?? "—"} />
+          <MonoRow k="Razorpay Order ID" v={pay?.razorpay_order_id ?? o.razorpay_order_id} copy />
+          <MonoRow k="Razorpay Payment ID" v={pay?.razorpay_payment_id ?? o.razorpay_payment_id} copy />
+          <MonoRow k="Transaction ID" v={pay?.transaction_id} copy />
+          <MonoRow k="Bank Ref" v={metaStr("bank_reference") ?? metaStr("rrn")} />
+          <MonoRow k="UPI Txn ID" v={metaStr("upi_transaction_id") ?? metaStr("vpa")} />
+          <MonoRow k="Signature" v={pay?.signature ? `${pay.signature.slice(0, 18)}…` : null} />
+          <Row k="Capture status" v={metaStr("captured") ?? (pay?.status ?? "—")} />
+          <Row k="Settlement" v={metaStr("settlement_status") ?? "—"} />
+          <Row k="Gateway fee" v={pay?.fee != null ? money(pay.fee) : "—"} />
+          {pay && <Row k="Recorded" v={new Date(pay.created_at).toLocaleString()} />}
+        </Section>
+
+        {/* Customer Information */}
+        <Section title="Customer Information" icon={<Users className="size-3" />}>
+          <Row k="Full name" v={detail?.profile?.full_name ?? o.full_name ?? "—"} />
+          <MonoRow k="Email" v={o.contact_email} copy />
+          <MonoRow k="Phone" v={detail?.profile?.phone ?? o.phone ?? a.phone} copy />
+          <MonoRow k="Customer ID" v={o.user_id} copy />
+          <Row k="Lifetime orders" v={String(detail?.lifetime.orders ?? o.lifetime_orders)} />
+          <Row k="Lifetime spend" v={money(detail?.lifetime.spend ?? o.lifetime_value)} />
+        </Section>
+
+        {/* Shipping Information */}
+        <Section title="Shipping Information" icon={<MapPin className="size-3" />}>
+          <Row k="Recipient" v={(a.name as string) ?? (a.full_name as string) ?? "—"} />
+          <MonoRow k="Phone" v={a.phone} copy />
+          <Row k="Address line 1" v={a.line1 ?? "—"} />
+          {a.line2 && <Row k="Address line 2" v={a.line2} />}
+          {a.landmark && <Row k="Landmark" v={a.landmark} />}
+          {a.area && <Row k="Area" v={a.area} />}
+          <Row k="City" v={a.city ?? "—"} />
+          {a.district && <Row k="District" v={a.district} />}
+          <Row k="State" v={a.state ?? a.region ?? "—"} />
+          <Row k="Country" v={a.country ?? "—"} />
+          <MonoRow k="PIN code" v={a.postal_code ?? a.postal} />
+          {a.address_type && <Row k="Type" v={a.address_type} />}
+        </Section>
+
+        {/* Billing Information */}
+        <Section title="Billing Information" icon={<Receipt className="size-3" />}>
+          {billing ? (
+            <>
+              <Row k="Billing name" v={billing.full_name ?? "—"} />
+              <MonoRow k="Billing phone" v={billing.phone} />
+              <Row k="Billing address" v={[billing.line1, billing.city, billing.state, billing.postal].filter(Boolean).join(", ") || "—"} />
+              <Row k="Same as shipping" v="No" />
+            </>
+          ) : (
+            <Row k="Same as shipping" v="Yes" />
+          )}
+        </Section>
+
+        {/* Shipment Timeline */}
+        <Section title="Shipment Timeline" icon={<Truck className="size-3" />}>
           <Row k="Carrier" v={o.carrier ?? "—"} />
-          <Row k="Tracking" v={o.tracking_number ?? "—"} />
-          <Row k="Shipped" v={o.shipped_at ? new Date(o.shipped_at).toLocaleDateString() : "—"} />
-          <Row k="Delivered" v={o.delivered_at ? new Date(o.delivered_at).toLocaleDateString() : "—"} />
-          {o.return_status && <Row k="Return" v={`${o.return_status} · ${o.return_reason ?? ""}`} />}
-          {o.refund_amount ? <Row k="Refund" v={inr(o.refund_amount)} /> : null}
-          {o.open_tickets > 0 && <Row k="Open tickets" v={String(o.open_tickets)} />}
-          <Row k="Lifetime" v={`${o.lifetime_orders} orders · ${inr(o.lifetime_value)}`} />
-        </div>
+          <MonoRow k="Tracking" v={o.tracking_number} copy />
+          {(detail?.shipments ?? []).length === 0 && <p className="text-[11px] text-muted-foreground">No shipment yet.</p>}
+          {(detail?.shipments ?? []).flatMap((s) => s.events).slice(0, 8).map((ev) => (
+            <div key={ev.id} className="flex items-start gap-2 py-1 border-b border-border/40 last:border-0">
+              <span className="mt-1 size-1.5 rounded-full bg-accent shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px]">{ev.description ?? ev.status}</p>
+                <p className="text-[10px] text-muted-foreground">{new Date(ev.occurred_at).toLocaleString()}{ev.location ? ` · ${ev.location}` : ""}{ev.source ? ` · ${ev.source}` : ""}</p>
+              </div>
+            </div>
+          ))}
+        </Section>
+
+        {/* Refund History */}
+        {(detail?.refunds ?? []).length > 0 && (
+          <Section title="Refund History" icon={<ArrowDownRight className="size-3" />}>
+            {detail!.refunds.map((r) => (
+              <div key={r.id} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
+                <span className="text-[11px]">{money(r.amount)} · {r.status}</span>
+                <span className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </Section>
+        )}
+
+        {/* Support History */}
+        {(detail?.tickets ?? []).length > 0 && (
+          <Section title="Support History" icon={<LifeBuoy className="size-3" />}>
+            {detail!.tickets.map((t) => (
+              <div key={t.id} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
+                <span className="text-[11px] truncate">{t.subject ?? t.category ?? "Ticket"}</span>
+                <StatusPill s={t.status} />
+              </div>
+            ))}
+          </Section>
+        )}
+
+        {/* Notification History */}
+        {(detail?.notifications ?? []).length > 0 && (
+          <Section title="Notification History" icon={<Bell className="size-3" />}>
+            {detail!.notifications.slice(0, 12).map((n) => (
+              <div key={n.id} className="flex items-start gap-2 py-1 border-b border-border/40 last:border-0">
+                <span className={`mt-1 size-1.5 rounded-full shrink-0 ${n.read_at ? "bg-muted-foreground/40" : "bg-accent"}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] truncate">{n.title ?? n.type}</p>
+                  <p className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </Section>
+        )}
 
         {o.riskReasons.length > 0 && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
@@ -209,6 +387,10 @@ function OrderDrawer({ o, onClose }: { o: EnrichedOrder; onClose: () => void }) 
             ))}
           </div>
         </div>
+
+        {loading && <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Loader2 className="size-3 animate-spin" /> Loading full payment & customer detail…</div>}
+        {err && <p className="text-[11px] text-destructive">{err}</p>}
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><ShieldCheck className="size-3" /> Staff-only · this view is audit-logged</div>
       </div>
     </div>
   );
@@ -233,6 +415,10 @@ function OrderOpsPage() {
       o.id.toLowerCase().includes(t) ||
       (o.full_name ?? "").toLowerCase().includes(t) ||
       (o.contact_email ?? "").toLowerCase().includes(t) ||
+      (o.phone ?? "").toLowerCase().includes(t) ||
+      (o.razorpay_payment_id ?? "").toLowerCase().includes(t) ||
+      (o.razorpay_order_id ?? "").toLowerCase().includes(t) ||
+      (o.tracking_number ?? "").toLowerCase().includes(t) ||
       o.items.some((it) => (it.name ?? "").toLowerCase().includes(t)));
     return rows;
   }, [data, q, filter]);

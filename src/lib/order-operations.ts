@@ -48,6 +48,10 @@ export type RawOrder = {
   full_name: string | null;
   avatar_url: string | null;
   country: string | null;
+  phone: string | null;
+  razorpay_order_id: string | null;
+  razorpay_payment_id: string | null;
+  shipping_address: Record<string, unknown> | null;
   items: OrderItem[];
   units: number;
   line_count: number;
@@ -65,6 +69,75 @@ export type RawOrder = {
   lifetime_orders: number;
   lifetime_value: number;
 };
+
+/* ---------- Full single-order detail (drawer) ---------- */
+
+export type OrderAddress = {
+  id: string; label: string | null; full_name: string | null; phone: string | null;
+  alternate_phone: string | null; line1: string | null; line2: string | null;
+  city: string | null; state: string | null; postal: string | null; country: string | null;
+  landmark: string | null; address_type: string | null; delivery_notes: string | null;
+  is_default_shipping: boolean | null; is_default_billing: boolean | null;
+};
+
+export type OrderPayment = {
+  id: string; method: string | null; status: string | null; amount: number | null;
+  currency: string | null; transaction_id: string | null; razorpay_order_id: string | null;
+  razorpay_payment_id: string | null; signature: string | null; fee: number | null;
+  gateway_tax: number | null; demo: boolean | null; created_at: string;
+  meta: Record<string, unknown> | null;
+};
+
+export type OrderShipmentEvent = {
+  id: string; status: string | null; description: string | null; location: string | null;
+  occurred_at: string; source: string | null; courier: string | null;
+};
+export type OrderShipment = {
+  id: string; carrier: string | null; tracking_number: string | null; tracking_url: string | null;
+  status: string | null; shipped_at: string | null; delivered_at: string | null;
+  estimated_delivery: string | null; created_at: string; events: OrderShipmentEvent[];
+};
+
+export type OrderRefund = {
+  id: string; amount: number | null; currency: string | null; status: string | null;
+  reason: string | null; razorpay_refund_id: string | null; created_at: string;
+};
+export type OrderTicket = {
+  id: string; subject: string | null; status: string | null; priority: string | null;
+  category: string | null; created_at: string;
+};
+export type OrderNotification = {
+  id: string; type: string | null; title: string | null; body: string | null;
+  created_at: string; read_at: string | null;
+};
+
+export type OrderDetail = {
+  order: Record<string, unknown> & {
+    id: string; created_at: string; status: string | null; fulfillment_status: string | null;
+    payment_status: string | null; payment_method: string | null; payment_provider: string | null;
+    currency: string | null; total: number; subtotal: number; shipping: number; tax: number;
+    discount: number | null; promo_code: string | null; contact_email: string | null;
+    razorpay_order_id: string | null; razorpay_payment_id: string | null;
+    shipping_address: Record<string, unknown> | null; user_id: string | null;
+  };
+  items: OrderItem[];
+  payment: OrderPayment | null;
+  payments: OrderPayment[];
+  profile: { id: string; full_name: string | null; phone: string | null; alt_phone: string | null; country: string | null; avatar_url: string | null } | null;
+  lifetime: { orders: number; spend: number };
+  addresses: OrderAddress[];
+  shipments: OrderShipment[];
+  refunds: OrderRefund[];
+  tickets: OrderTicket[];
+  notifications: OrderNotification[];
+};
+
+export async function fetchOrderDetail(orderId: string): Promise<OrderDetail> {
+  const { getOrderDetailFn } = await import("@/lib/admin-ops.functions");
+  const data = (await getOrderDetailFn({ data: { orderId } })) as OrderDetail | null;
+  if (!data) throw new Error("Order not found");
+  return data;
+}
 
 export type Kpis = {
   total_orders: number;
