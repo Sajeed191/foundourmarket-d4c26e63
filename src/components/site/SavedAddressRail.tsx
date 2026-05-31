@@ -86,9 +86,17 @@ export function SavedAddressRail({
               <span className="text-[10px] font-mono uppercase tracking-widest text-accent truncate max-w-[8rem]">
                 {labelFor(a)}
               </span>
-              {a.is_default_shipping && (
-                <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-400 inline-flex items-center gap-1">
-                  <Star className="size-2.5 fill-current" /> Default
+              {badge && (
+                <span
+                  className={`text-[9px] font-mono uppercase tracking-widest inline-flex items-center gap-1 ${
+                    badge.tone === "emerald"
+                      ? "text-emerald-400"
+                      : badge.tone === "accent"
+                        ? "text-accent"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  <Star className="size-2.5 fill-current" /> {badge.label}
                 </span>
               )}
               <AnimatePresence>
