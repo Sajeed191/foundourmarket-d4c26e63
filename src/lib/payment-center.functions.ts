@@ -211,3 +211,66 @@ export const getPaymentFraudFn = createServerFn({ method: "POST" })
       })),
     } satisfies FraudIntel;
   });
+
+/** Create a support ticket on behalf of an order's customer (staff action, audited). */
+export const createPaymentTicketFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        orderId: z.string().uuid(),
+        subject: z.string().min(3).max(200),
+        category: z.string().min(2).max(60).optional(),
+        priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(
+      userId,
+      PAY_STAFF,
+      "payments.center.ticket.create",
+      input.orderId,
+    );
+
+    const { data: order, error: oErr } = await supabaseAdmin
+      .from("orders")
+      .select("id,user_id,market_region")
+      .eq("id", input.orderId)
+      .maybeSingle();
+    if (oErr || !order) throw new Error("Order not found.");
+    if (!order.user_id) throw new Error("Order has no associated customer account.");
+
+    const nowIso = new Date().toISOString();
+    const { data: ticket, error } = await supabaseAdmin
+      .from("support_tickets")
+      .insert({
+        user_id: order.user_id,
+        order_id: order.id,
+        subject: input.subject,
+        category: input.category ?? "payment",
+        priority: input.priority ?? "normal",
+        status: "open",
+        market_region: order.market_region ?? null,
+        last_message_at: nowIso,
+        assigned_to: userId,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("[createPaymentTicketFn] insert error", error.message);
+      throw new Error(error.message);
+    }
+
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "payments.center.ticket.create",
+      target: input.orderId,
+      success: true,
+      detail: { ticketId: ticket.id },
+    });
+
+    return { id: ticket.id as string };
+  });
