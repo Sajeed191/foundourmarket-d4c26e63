@@ -407,6 +407,7 @@ function CheckoutPage() {
                       const created = await createAddress({ ...input, is_default_shipping: addresses.length === 0 ? true : input.is_default_shipping });
                       setSelectedAddressId(created.id);
                       setAddingAddress(false);
+                      toast.success("Address saved");
                     }}
                     onCancel={addresses.length > 0 ? () => setAddingAddress(false) : undefined}
                     submitLabel="Save & use this address"
