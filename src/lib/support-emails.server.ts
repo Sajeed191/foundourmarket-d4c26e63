@@ -49,11 +49,8 @@ async function enqueue(opts: {
     .maybeSingle()
   if (suppressed) return false
 
-  const element = React.createElement(entry.component, opts.props as any)
-  const html = await render(element)
-  const text = await render(element, { plainText: true })
-  const subject = typeof entry.subject === 'function' ? entry.subject(opts.props as any) : entry.subject
-
+  // Audit: log the attempt BEFORE rendering so we never lose visibility,
+  // even when the React-Email render path throws.
   await supabaseAdmin.from('email_send_log').insert({
     message_id: opts.messageId,
     template_name: opts.templateName,
@@ -61,41 +58,94 @@ async function enqueue(opts: {
     status: 'pending',
   })
 
-  const { error } = await supabaseAdmin.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: opts.messageId,
-      to: opts.recipient,
-      from: `${SITE_NAME} Support <${opts.fromUser}@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: 'transactional',
-      label: opts.templateName,
-      idempotency_key: opts.messageId,
-      queued_at: new Date().toISOString(),
-      ...(opts.unsub
-        ? {
-            headers: {
-              'List-Unsubscribe': `<${opts.unsub.oneClickUrl}>, <${opts.unsub.pageUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-          }
-        : {}),
-    },
-  })
-
-  if (error) {
+  // --- Render (resilient): a render failure must be logged, never thrown. ---
+  let html: string
+  let text: string
+  let subject: string
+  try {
+    const element = React.createElement(entry.component, opts.props as any)
+    html = await render(element)
+    text = await render(element, { plainText: true })
+    subject = typeof entry.subject === 'function' ? entry.subject(opts.props as any) : entry.subject
+  } catch (err: any) {
+    const msg = `render_failed: ${String(err?.message ?? err)}`.slice(0, 500)
+    console.error('[support-emails] render failed', {
+      template: opts.templateName,
+      recipient: opts.recipient,
+      error: msg,
+      stack: err?.stack,
+    })
     await supabaseAdmin.from('email_send_log').insert({
       message_id: opts.messageId,
       template_name: opts.templateName,
       recipient_email: opts.recipient,
       status: 'failed',
-      error_message: 'Failed to enqueue support email',
+      error_message: msg,
     })
     return false
   }
+
+  // --- Enqueue (resilient): an enqueue failure must be logged, never thrown. ---
+  try {
+    const { error } = await supabaseAdmin.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id: opts.messageId,
+        to: opts.recipient,
+        from: `${SITE_NAME} Support <${opts.fromUser}@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html,
+        text,
+        purpose: 'transactional',
+        label: opts.templateName,
+        idempotency_key: opts.messageId,
+        queued_at: new Date().toISOString(),
+        ...(opts.unsub
+          ? {
+              headers: {
+                'List-Unsubscribe': `<${opts.unsub.oneClickUrl}>, <${opts.unsub.pageUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+            }
+          : {}),
+      },
+    })
+
+    if (error) {
+      const msg = `enqueue_failed: ${String(error.message ?? error)}`.slice(0, 500)
+      console.error('[support-emails] enqueue failed', {
+        template: opts.templateName,
+        recipient: opts.recipient,
+        error: msg,
+      })
+      await supabaseAdmin.from('email_send_log').insert({
+        message_id: opts.messageId,
+        template_name: opts.templateName,
+        recipient_email: opts.recipient,
+        status: 'failed',
+        error_message: msg,
+      })
+      return false
+    }
+  } catch (err: any) {
+    const msg = `enqueue_threw: ${String(err?.message ?? err)}`.slice(0, 500)
+    console.error('[support-emails] enqueue threw', {
+      template: opts.templateName,
+      recipient: opts.recipient,
+      error: msg,
+      stack: err?.stack,
+    })
+    await supabaseAdmin.from('email_send_log').insert({
+      message_id: opts.messageId,
+      template_name: opts.templateName,
+      recipient_email: opts.recipient,
+      status: 'failed',
+      error_message: msg,
+    })
+    return false
+  }
+
   return true
 }
 
