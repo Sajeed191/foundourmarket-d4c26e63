@@ -1,12 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { resolveIndianPincode } from "./pincode-lookup.server";
 
 const inputSchema = z.object({
   postal: z.string().min(4).max(10).regex(/^\d{4,10}$/),
 });
 
+/**
+ * Distinct verification states so the UI never shows a false
+ * "delivery unavailable" message when verification merely failed:
+ *  - available        → PIN verified, we deliver there
+ *  - not_serviceable  → PIN does not exist / out of delivery network
+ *  - invalid          → malformed PIN (not 6 digits)
+ *  - service_down     → lookup service unreachable; allow checkout with warning
+ */
+export type ServiceabilityStatus = "available" | "not_serviceable" | "invalid" | "service_down";
+
 export type ServiceabilityResult = {
   serviceable: boolean;
+  /** When true, checkout may proceed even though we couldn't fully verify. */
+  allowProceed: boolean;
+  status: ServiceabilityStatus;
   postal: string;
   city: string | null;
   state: string | null;
@@ -14,69 +28,74 @@ export type ServiceabilityResult = {
 };
 
 /**
- * Validates an Indian pincode against the public India Post API and reports
- * whether the destination is serviceable for delivery.
+ * Validates an Indian PIN code and reports whether the destination is
+ * serviceable. All shipping/region decisions remain server-side.
  */
 export const validatePincode = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }): Promise<ServiceabilityResult> => {
     const postal = data.postal.trim();
 
-    // Indian pincodes are 6 digits — anything else is unsupported for now.
+    // Indian PIN codes are exactly 6 digits.
     if (!/^\d{6}$/.test(postal)) {
       return {
         serviceable: false,
+        allowProceed: false,
+        status: "invalid",
         postal,
         city: null,
         state: null,
-        message: "Enter a valid 6-digit Indian pincode to check delivery.",
+        message: "Enter a valid 6-digit Indian PIN code to check delivery.",
       };
     }
 
-    try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${postal}`, {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) {
-        return {
-          serviceable: false,
-          postal,
-          city: null,
-          state: null,
-          message: "Could not verify delivery for this pincode right now.",
-        };
-      }
-      const json = (await res.json()) as Array<{
-        Status: string;
-        PostOffice?: Array<{ District: string; State: string }> | null;
-      }>;
-      const entry = json?.[0];
-      const office = entry?.PostOffice?.[0];
+    const res = await resolveIndianPincode(postal);
 
-      if (entry?.Status === "Success" && office) {
-        return {
-          serviceable: true,
-          postal,
-          city: office.District ?? null,
-          state: office.State ?? null,
-          message: `Delivery available to ${office.District}, ${office.State}.`,
-        };
-      }
-
+    if (res.ok) {
       return {
-        serviceable: false,
+        serviceable: true,
+        allowProceed: true,
+        status: "available",
         postal,
-        city: null,
-        state: null,
-        message: "Sorry, we don't deliver to this pincode yet.",
-      };
-    } catch {
-      return {
-        serviceable: false,
-        postal,
-        city: null,
-        state: null,
-        message: "Could not verify delivery for this pincode right now.",
+        city: res.city,
+        state: res.state,
+        message: `Delivery available to ${res.city ?? "your area"}${res.state ? `, ${res.state}` : ""}.`,
       };
     }
+
+    if (res.reason === "invalid") {
+      return {
+        serviceable: false,
+        allowProceed: false,
+        status: "invalid",
+        postal,
+        city: null,
+        state: null,
+        message: "Enter a valid 6-digit Indian PIN code to check delivery.",
+      };
+    }
+
+    if (res.reason === "not_found") {
+      return {
+        serviceable: false,
+        allowProceed: false,
+        status: "not_serviceable",
+        postal,
+        city: null,
+        state: null,
+        message: "We couldn't find this PIN code. Please double-check it.",
+      };
+    }
+
+    // service_down — never block a valid customer on API downtime.
+    return {
+      serviceable: false,
+      allowProceed: true,
+      status: "service_down",
+      postal,
+      city: null,
+      state: null,
+      message:
+        "Delivery verification is temporarily unavailable. Our team will confirm availability before dispatch.",
+    };
   });

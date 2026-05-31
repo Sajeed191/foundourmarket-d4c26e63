@@ -140,6 +140,9 @@ function CheckoutPage() {
   }, [selectedPostal, checkPincode]);
 
   const serviceable = service?.serviceable === true;
+  // Allow checkout when verified OR when the lookup service is temporarily down.
+  const allowProceed = service?.allowProceed === true;
+  const serviceDown = service?.status === "service_down";
 
   // Force COD off if admin disabled it
   useEffect(() => {
@@ -276,7 +279,7 @@ function CheckoutPage() {
 
   const placeOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceable) {
+    if (!allowProceed) {
       setError(service?.message ?? "This address isn't serviceable yet.");
       return;
     }
@@ -346,7 +349,15 @@ function CheckoutPage() {
                 </p>
               </div>
             )}
-            {selectedAddress && !serviceChecking && service && !serviceable && (
+            {selectedAddress && !serviceChecking && serviceDown && (
+              <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1.5">
+                <Loader2 className="size-3 text-amber-400 shrink-0" />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-amber-400">
+                  Verification unavailable · we'll confirm before dispatch
+                </p>
+              </div>
+            )}
+            {selectedAddress && !serviceChecking && service && !serviceable && !serviceDown && (
               <div className="inline-flex items-center gap-2 bg-destructive/10 border border-destructive/30 rounded-full px-3 py-1.5">
                 <XCircle className="size-3 text-destructive shrink-0" />
                 <p className="text-[10px] font-mono uppercase tracking-widest text-destructive">
@@ -594,10 +605,10 @@ function CheckoutPage() {
                 </div>
 
                 {/* Desktop CTA */}
-                <button disabled={!selectedAddress || busy || !serviceable}
+                <button disabled={!selectedAddress || busy || (!allowProceed && !serviceChecking)}
                   className="hidden lg:inline-flex w-full mt-5 group relative overflow-hidden bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 items-center justify-center gap-2">
                   {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                  <span>{!serviceable && selectedAddress ? (serviceChecking ? "Checking delivery…" : "Not deliverable") : ctaLabel}</span>
+                  <span>{selectedAddress && !allowProceed ? (serviceChecking ? "Checking delivery…" : "Not deliverable") : ctaLabel}</span>
                   {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />}
                 </button>
 
@@ -616,10 +627,10 @@ function CheckoutPage() {
                     <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Total · {itemsCount} item{itemsCount !== 1 ? "s" : ""}</p>
                     <p className="font-mono text-lg font-semibold text-accent leading-tight truncate">{fmt(totalINR)}</p>
                   </div>
-                  <button disabled={!selectedAddress || busy || !serviceable}
+                  <button disabled={!selectedAddress || busy || (!allowProceed && !serviceChecking)}
                     className="ml-auto group inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 shrink-0">
                     {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-3.5" />}
-                    <span>{!serviceable && selectedAddress ? (serviceChecking ? "Checking…" : "Not deliverable") : stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
+                    <span>{selectedAddress && !allowProceed ? (serviceChecking ? "Checking…" : "Not deliverable") : stage === "processing" ? "Opening…" : stage === "verifying" ? "Verifying…" : payMethod === "cod" ? "Place order" : "Pay now"}</span>
                     {!busy && <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />}
                   </button>
                 </div>

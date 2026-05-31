@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveIndianPincode } from "./pincode-lookup.server";
 
 /**
  * Cart server functions.
@@ -136,35 +137,25 @@ export const estimateShipping = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    let city: string | null = null;
-    let state: string | null = null;
-    let serviceable = false;
-    try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${data.pincode}`, {
-        headers: { Accept: "application/json" },
-      });
-      if (res.ok) {
-        const json = (await res.json()) as Array<{
-          Status: string;
-          PostOffice?: Array<{ District: string; State: string }> | null;
-        }>;
-        const entry = json?.[0];
-        if (entry?.Status === "Success" && entry.PostOffice?.length) {
-          city = entry.PostOffice[0].District;
-          state = entry.PostOffice[0].State;
-          serviceable = true;
-        }
-      }
-    } catch {
-      serviceable = false;
-    }
+    const resolved = await resolveIndianPincode(data.pincode);
 
-    if (!serviceable) {
+    if (!resolved.ok) {
+      // Distinguish a transient outage from a genuinely bad PIN.
+      if (resolved.reason === "service_down") {
+        return {
+          ok: false as const,
+          reason:
+            "Delivery verification is temporarily unavailable. Our team will confirm availability before dispatch.",
+        };
+      }
       return {
         ok: false as const,
-        reason: "We could not verify this PIN code. Please check and try again.",
+        reason: "We couldn't find this PIN code. Please check and try again.",
       };
     }
+
+    const city: string | null = resolved.city;
+    const state: string | null = resolved.state;
 
     // Metro / remote heuristics for delivery speed and COD availability.
     const metroStates = ["Delhi", "Maharashtra", "Karnataka", "Tamil Nadu", "Telangana", "Gujarat"];
