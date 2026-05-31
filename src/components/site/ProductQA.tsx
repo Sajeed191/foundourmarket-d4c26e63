@@ -176,6 +176,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       toast.error("Couldn't delete the question.");
       return;
     }
+    toast.success("Question deleted.");
     await load();
   }
 
