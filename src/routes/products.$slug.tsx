@@ -131,6 +131,9 @@ function ProductPage() {
     return () => clearTimeout(t);
   }, [product?.slug]);
 
+  // Pull the latest admin pricing/shipping when the product page opens.
+  useEffect(() => { refreshProducts(); }, []);
+
   useEffect(() => {
     if (!slug) return;
     let active = true;
