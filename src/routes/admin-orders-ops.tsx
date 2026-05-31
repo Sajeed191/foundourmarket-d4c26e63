@@ -717,7 +717,7 @@ function OrderOpsPage() {
         </Tabs>
       </div>
 
-      {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} />}
+      {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} onRefresh={refresh} />}
     </AdminShell>
   );
 }
