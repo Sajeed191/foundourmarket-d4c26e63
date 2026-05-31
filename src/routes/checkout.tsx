@@ -445,6 +445,7 @@ function CheckoutPage() {
                   codAvailable={!!settings.cod_enabled}
                   city={service?.city ?? selectedAddress.city}
                   postal={selectedAddress.postal}
+                  region={isIndia ? "India" : "International"}
                 />
               )}
 
