@@ -44,9 +44,12 @@ export function useOrderOperations(limit = 400) {
     const ch = supabase
       .channel(`order-ops-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "shipments" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "shipment_events" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "returns" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "refunds" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_logs" }, trigger)
       .subscribe();
