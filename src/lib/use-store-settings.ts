@@ -70,7 +70,7 @@ export function useStoreSettings() {
   return { settings, loading };
 }
 
-function normalizeSettings(row: Partial<StoreSettings> & { shipping_mode?: string | null }): StoreSettings {
+function normalizeSettings(row: Record<string, unknown>): StoreSettings {
   const mode = row.shipping_mode;
   return {
     cod_enabled: !!row.cod_enabled,
