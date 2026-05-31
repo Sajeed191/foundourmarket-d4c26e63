@@ -290,7 +290,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm leading-relaxed mt-1">{q.question}</p>
+                      <p className="text-sm leading-relaxed mt-1 break-words whitespace-pre-wrap">{q.question}</p>
                     )}
                     <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                       {new Date(q.created_at).toLocaleDateString()}
