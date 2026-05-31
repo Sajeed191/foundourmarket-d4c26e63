@@ -209,7 +209,9 @@ function CheckoutPage() {
         },
         notes: { order_id: created.orderId },
         theme: { color: "#ff7a1a", backdrop_color: "#0a0a0f" },
-        method: { emi: false, paylater: false },
+        // No `method` filter: let Razorpay surface every method enabled on the
+        // account for the order currency — UPI, Google Pay, PhonePe, Paytm,
+        // BHIM, Net Banking, Cards, Wallets, EMI and Pay Later for INR orders.
         modal: {
           ondismiss: () => {
             setStage("failed");
