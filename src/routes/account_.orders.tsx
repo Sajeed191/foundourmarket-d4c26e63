@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
+import { OrderDetailsDrawer } from "@/components/account/OrderDetailsDrawer";
 import { fetchPersonalizedSlugs, fetchTrendingSlugs } from "@/lib/personalization";
 
 export const Route = createFileRoute("/account_/orders")({
@@ -112,6 +113,7 @@ function OrdersPage() {
   const [recSlugs, setRecSlugs] = useState<string[]>([]);
   const [trendSlugs, setTrendSlugs] = useState<string[]>([]);
   const [reordering, setReordering] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -363,7 +365,7 @@ function OrdersPage() {
               {filtered.slice(0, visible).map((o, i) =>
                 filter === "failed"
                   ? <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} listItem />
-                  : <OrderCard key={o.id} order={o} index={i} format={format} onReorder={() => reorder(o)} reordering={reordering === o.id} />
+                  : <OrderCard key={o.id} order={o} index={i} format={format} onReorder={() => reorder(o)} reordering={reordering === o.id} onOpenDetails={() => setDetailId(o.id)} />
               )}
             </ul>
             {visible < filtered.length && (
@@ -390,6 +392,8 @@ function OrdersPage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { scrollbar-width: none; }
       `}</style>
+
+      <OrderDetailsDrawer orderId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }
@@ -404,8 +408,8 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: typeof ShoppingBag
   );
 }
 
-function OrderCard({ order, index, format, onReorder, reordering }: {
-  order: Order; index: number; format: (n: number) => string; onReorder: () => void; reordering: boolean;
+function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails }: {
+  order: Order; index: number; format: (n: number) => string; onReorder: () => void; reordering: boolean; onOpenDetails: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const meta = displayStatus(order);
@@ -491,10 +495,10 @@ function OrderCard({ order, index, format, onReorder, reordering }: {
 
         {/* actions */}
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Link to="/orders/$id" params={{ id: order.id }}
+          <button onClick={onOpenDetails}
             className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
             View Details <ArrowRight className="size-3" />
-          </Link>
+          </button>
           <button onClick={onReorder} disabled={reordering}
             className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition disabled:opacity-50">
             {reordering ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />} Reorder
