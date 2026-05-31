@@ -507,12 +507,9 @@ function ProductPage() {
 
 
             <Accordion title="FAQ" icon={Sparkles}>
-              <div className="space-y-4 text-sm">
-                <Faq q="Is this item authentic?" a="Yes. Every product is sourced directly from the brand or a verified distributor." />
-                <Faq q="What's the warranty?" a="A 12-month limited warranty covers manufacturing defects." />
-                <Faq q="Can I cancel my order?" a="Yes — within 1 hour of placing your order, from your account." />
-              </div>
+              <ProductFaqList slug={product.slug} />
             </Accordion>
+
           </motion.div>
         </div>
       </div>
