@@ -252,6 +252,10 @@ function OrderOpsPage() {
       o.id.toLowerCase().includes(t) ||
       (o.full_name ?? "").toLowerCase().includes(t) ||
       (o.contact_email ?? "").toLowerCase().includes(t) ||
+      (o.phone ?? "").toLowerCase().includes(t) ||
+      (o.razorpay_payment_id ?? "").toLowerCase().includes(t) ||
+      (o.razorpay_order_id ?? "").toLowerCase().includes(t) ||
+      (o.tracking_number ?? "").toLowerCase().includes(t) ||
       o.items.some((it) => (it.name ?? "").toLowerCase().includes(t)));
     return rows;
   }, [data, q, filter]);
