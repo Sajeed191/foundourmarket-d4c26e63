@@ -427,7 +427,7 @@ function TrackPage() {
                   <MapPin className="size-4 text-accent" />
                   <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Delivery address</p>
                 </div>
-                <DeliveryAddress address={result.order.shipping_address} />
+                <DeliveryAddress address={result.order.shipping_address as ShipAddress} />
               </motion.div>
             )}
 
