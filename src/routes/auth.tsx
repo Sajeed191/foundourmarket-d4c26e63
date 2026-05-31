@@ -7,6 +7,9 @@ import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign In — FoundOurMarket™" },
@@ -39,10 +42,25 @@ function AuthPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const nav = useNavigate();
+  const { redirect } = Route.useSearch();
   const { user } = useAuth();
 
+  // Resolve the post-login destination (search param wins, else stored path, else account).
+  const resolveDest = (): string => {
+    if (redirect && redirect.startsWith("/")) return redirect;
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("post_auth_redirect");
+      if (stored && stored.startsWith("/")) {
+        localStorage.removeItem("post_auth_redirect");
+        return stored;
+      }
+    }
+    return "/account";
+  };
+
   useEffect(() => {
-    if (user) nav({ to: "/account" });
+    if (user) nav({ to: resolveDest() as any });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, nav]);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -60,11 +78,11 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        nav({ to: "/account" });
+        nav({ to: resolveDest() as any });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        nav({ to: "/account" });
+        nav({ to: resolveDest() as any });
       }
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong");

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { MessageCircleQuestion, Loader2, Send, Trash2, CheckCircle2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import brandLogo from "@/assets/logo.jpeg";
+
+const draftKey = (slug: string) => `pq_draft_${slug}`;
+const pendingKey = (slug: string) => `pq_pending_${slug}`;
 
 type Question = {
   id: string;
@@ -19,11 +23,15 @@ type ProfileMap = Record<string, { full_name: string | null; avatar_url: string 
 
 export function ProductQA({ productSlug }: { productSlug: string }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
   const [loading, setLoading] = useState(true);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(draftKey(productSlug)) ?? "";
+  });
   const [busy, setBusy] = useState(false);
   const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,11 +40,18 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("product_questions")
       .select("*")
       .eq("product_slug", productSlug)
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("[ProductQA] failed to load questions", {
+        productSlug,
+        code: error.code,
+        message: error.message,
+      });
+    }
     const list = (data ?? []) as Question[];
     setItems(list);
     const ids = Array.from(new Set(list.map((q) => q.user_id)));
@@ -60,20 +75,75 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .then(({ data }) => setIsAdmin((data?.length ?? 0) > 0));
   }, [user]);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!user || !draft.trim()) return;
+  // Persist the in-progress question so it survives navigation/login.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (draft.trim()) localStorage.setItem(draftKey(productSlug), draft);
+    else localStorage.removeItem(draftKey(productSlug));
+  }, [draft, productSlug]);
+
+  // After the user signs in (returning from /auth) auto-continue a pending submit.
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return;
+    if (localStorage.getItem(pendingKey(productSlug)) === "1") {
+      localStorage.removeItem(pendingKey(productSlug));
+      void insertQuestion();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, productSlug]);
+
+  async function insertQuestion() {
+    if (!user) return false;
+    const text = draft.trim();
+    if (!text) return false;
+    if (busy) return false; // guard against double submission
     setBusy(true);
     const { error } = await supabase.from("product_questions").insert({
       product_slug: productSlug,
       user_id: user.id,
-      question: draft.trim(),
+      question: text,
     });
     setBusy(false);
-    if (!error) {
-      setDraft("");
-      load();
+    if (error) {
+      console.error("[ProductQA] question insert failed", {
+        productSlug,
+        userId: user.id,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+      toast.error("Couldn't submit your question. Please try again.");
+      return false;
     }
+    setDraft("");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(draftKey(productSlug));
+      localStorage.removeItem(pendingKey(productSlug));
+    }
+    toast.success("Your question was submitted.");
+    await load();
+    return true;
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    if (!draft.trim()) {
+      toast.error("Please type a question first.");
+      return;
+    }
+    if (!user) {
+      // Preserve the question and continue after authentication.
+      if (typeof window !== "undefined") {
+        localStorage.setItem(draftKey(productSlug), draft);
+        localStorage.setItem(pendingKey(productSlug), "1");
+        localStorage.setItem("post_auth_redirect", window.location.pathname);
+      }
+      toast.message("Sign in to post your question — we'll keep your draft.");
+      navigate({ to: "/auth", search: { redirect: window.location.pathname } });
+      return;
+    }
+    await insertQuestion();
   }
 
   async function postAnswer(id: string) {
@@ -83,17 +153,26 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .from("product_questions")
       .update({ answer: text, answered_by: user.id, answered_at: new Date().toISOString() })
       .eq("id", id);
-    if (!error) {
-      setAnswerDrafts((d) => ({ ...d, [id]: "" }));
-      setEditingId(null);
-      load();
+    if (error) {
+      console.error("[ProductQA] answer update failed", { id, code: error.code, message: error.message });
+      toast.error("Couldn't post the answer.");
+      return;
     }
+    setAnswerDrafts((d) => ({ ...d, [id]: "" }));
+    setEditingId(null);
+    toast.success("Answer posted.");
+    await load();
   }
 
   async function remove(id: string) {
     if (!confirm("Delete this question?")) return;
-    await supabase.from("product_questions").delete().eq("id", id);
-    load();
+    const { error } = await supabase.from("product_questions").delete().eq("id", id);
+    if (error) {
+      console.error("[ProductQA] delete failed", { id, code: error.code, message: error.message });
+      toast.error("Couldn't delete the question.");
+      return;
+    }
+    await load();
   }
 
   async function saveQuestion(id: string) {
@@ -103,11 +182,15 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .from("product_questions")
       .update({ question: text })
       .eq("id", id);
-    if (!error) {
-      setEditingQuestionId(null);
-      setQuestionDraft("");
-      load();
+    if (error) {
+      console.error("[ProductQA] question edit failed", { id, code: error.code, message: error.message });
+      toast.error("Couldn't update the question.");
+      return;
     }
+    setEditingQuestionId(null);
+    setQuestionDraft("");
+    toast.success("Question updated.");
+    await load();
   }
 
 
@@ -123,36 +206,31 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
         <span className="text-xs font-mono text-muted-foreground">{items.length} {items.length === 1 ? "question" : "questions"}</span>
       </div>
 
-      {user ? (
-        <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-8">
-          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Ask a question</label>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            maxLength={500}
-            placeholder="What size does this come in? How does it fit?"
-            className="mt-2 w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent resize-none"
-          />
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-[10px] font-mono text-muted-foreground">{draft.length}/500</span>
-            <button
-              type="submit"
-              disabled={busy || !draft.trim()}
-              className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-              Submit
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="bg-card border border-border rounded-2xl p-6 mb-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            <Link to="/auth" className="text-accent underline">Sign in</Link> to ask a question.
-          </p>
+      <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-8">
+        <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Ask a question</label>
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={3}
+          maxLength={500}
+          placeholder="What size does this come in? How does it fit?"
+          className="mt-2 w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent resize-none"
+        />
+        <div className="flex items-center justify-between mt-3 gap-3">
+          <span className="text-[10px] font-mono text-muted-foreground">
+            {draft.length}/500{!user && draft.trim() ? " · sign in to post" : ""}
+          </span>
+          <button
+            type="submit"
+            disabled={busy || !draft.trim()}
+            className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+            {busy ? "Submitting…" : user ? "Submit" : "Sign in to submit"}
+          </button>
         </div>
-      )}
+      </form>
+
 
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>

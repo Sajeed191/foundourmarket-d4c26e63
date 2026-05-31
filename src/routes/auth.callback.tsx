@@ -13,6 +13,17 @@ function AuthCallback() {
   const nav = useNavigate();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
+  const dest = (): string => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("post_auth_redirect");
+      if (stored && stored.startsWith("/")) {
+        localStorage.removeItem("post_auth_redirect");
+        return stored;
+      }
+    }
+    return "/account";
+  };
+
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
@@ -26,7 +37,7 @@ function AuthCallback() {
       }
       if (data.session) {
         setStatus("success");
-        setTimeout(() => nav({ to: "/account" }), 700);
+        setTimeout(() => nav({ to: dest() as any }), 700);
       } else {
         // Wait briefly for OAuth token exchange listener to set session
         timer = setTimeout(check, 400);
@@ -36,7 +47,7 @@ function AuthCallback() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session) {
         setStatus("success");
-        setTimeout(() => nav({ to: "/account" }), 700);
+        setTimeout(() => nav({ to: dest() as any }), 700);
       }
     });
 

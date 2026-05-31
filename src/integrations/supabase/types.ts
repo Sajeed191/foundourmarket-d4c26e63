@@ -4955,30 +4955,18 @@ export type Database = {
         }
         Returns: number
       }
-      notify_roles:
-        | {
-            Args: {
-              _body: string
-              _data: Json
-              _link: string
-              _roles: Database["public"]["Enums"]["app_role"][]
-              _title: string
-              _type: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              _body: string
-              _data: Json
-              _link: string
-              _priority?: string
-              _roles: Database["public"]["Enums"]["app_role"][]
-              _title: string
-              _type: string
-            }
-            Returns: undefined
-          }
+      notify_roles: {
+        Args: {
+          _body: string
+          _data: Json
+          _link: string
+          _priority?: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _title: string
+          _type: string
+        }
+        Returns: undefined
+      }
       notify_staff: {
         Args: {
           p_body: string
