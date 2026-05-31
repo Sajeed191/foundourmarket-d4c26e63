@@ -885,6 +885,7 @@ export type Database = {
           created_at: string
           description: string | null
           featured: boolean
+          free_shipping: boolean
           homepage_visible: boolean
           icon: string | null
           id: string
@@ -894,6 +895,8 @@ export type Database = {
           region: string
           seo_description: string | null
           seo_title: string | null
+          shipping_fee_inr: number | null
+          shipping_fee_usd: number | null
           slug: string
           sort_order: number
           status: string
@@ -907,6 +910,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           featured?: boolean
+          free_shipping?: boolean
           homepage_visible?: boolean
           icon?: string | null
           id?: string
@@ -916,6 +920,8 @@ export type Database = {
           region?: string
           seo_description?: string | null
           seo_title?: string | null
+          shipping_fee_inr?: number | null
+          shipping_fee_usd?: number | null
           slug: string
           sort_order?: number
           status?: string
@@ -929,6 +935,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           featured?: boolean
+          free_shipping?: boolean
           homepage_visible?: boolean
           icon?: string | null
           id?: string
@@ -938,6 +945,8 @@ export type Database = {
           region?: string
           seo_description?: string | null
           seo_title?: string | null
+          shipping_fee_inr?: number | null
+          shipping_fee_usd?: number | null
           slug?: string
           sort_order?: number
           status?: string
@@ -3651,23 +3660,41 @@ export type Database = {
       store_settings: {
         Row: {
           cod_enabled: boolean
+          flat_shipping_inr: number
+          flat_shipping_usd: number
+          free_shipping_enabled: boolean
+          free_shipping_threshold_inr: number | null
+          free_shipping_threshold_usd: number | null
           id: boolean
           include_seed_in_analytics: boolean
           prepaid_discount_percent: number
+          shipping_mode: string
           updated_at: string
         }
         Insert: {
           cod_enabled?: boolean
+          flat_shipping_inr?: number
+          flat_shipping_usd?: number
+          free_shipping_enabled?: boolean
+          free_shipping_threshold_inr?: number | null
+          free_shipping_threshold_usd?: number | null
           id?: boolean
           include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
+          shipping_mode?: string
           updated_at?: string
         }
         Update: {
           cod_enabled?: boolean
+          flat_shipping_inr?: number
+          flat_shipping_usd?: number
+          free_shipping_enabled?: boolean
+          free_shipping_threshold_inr?: number | null
+          free_shipping_threshold_usd?: number | null
           id?: boolean
           include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
+          shipping_mode?: string
           updated_at?: string
         }
         Relationships: []
