@@ -3615,6 +3615,24 @@ export type Database = {
           },
         ]
       }
+      shipping_state: {
+        Row: {
+          id: boolean
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          id?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          id?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       shipping_zones: {
         Row: {
           active: boolean
