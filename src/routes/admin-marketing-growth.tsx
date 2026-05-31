@@ -126,8 +126,9 @@ function GrowthCenterPage() {
   useEffect(() => {
     const bump = () => {
       if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => void load(true), 1500);
+      tRef.current = setTimeout(() => { void load(true); void loadExecs(); void loadAttr(); }, 1500);
     };
+    const bumpExecs = () => { void loadExecs(); };
     const ch = supabase
       .channel("rt-growth-center")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, bump)
@@ -137,9 +138,11 @@ function GrowthCenterPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, bump)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, bump)
       .on("postgres_changes", { event: "*", schema: "public", table: "marketing_campaigns" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "promo_codes" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "automation_executions" }, bumpExecs)
       .subscribe();
     return () => { supabase.removeChannel(ch); if (tRef.current) clearTimeout(tRef.current); };
-  }, [load]);
+  }, [load, loadExecs, loadAttr]);
 
   const insights = useMemo(() => (d ? buildInsights(d) : []), [d]);
 
