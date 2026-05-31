@@ -681,9 +681,10 @@ function PhoneField({
         )}
       >
         <span
-          className="flex items-center gap-1.5 pl-3 pr-2.5 text-sm border-r border-border/70 shrink-0 select-none"
+          className="flex items-center gap-1.5 pl-4 pr-2.5 text-sm border-r border-border/70 shrink-0 select-none"
           aria-label={locked ? "Country code locked" : "Country code"}
         >
+
           <Icon className="size-4 text-muted-foreground" />
           <span className="text-base leading-none">{flag}</span>
           <span className="font-mono text-xs text-muted-foreground">{dial ? `+${dial}` : ""}</span>
