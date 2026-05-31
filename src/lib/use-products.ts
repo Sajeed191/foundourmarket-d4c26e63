@@ -15,6 +15,11 @@ function refreshIfStale() {
   invalidateProducts();
 }
 
+/** Force a fresh products fetch, throttled, so stale prices/shipping refresh. */
+export function refreshProducts() {
+  refreshIfStale();
+}
+
 function bindRealtime() {
   if (realtimeBound || typeof window === "undefined") return;
   realtimeBound = true;
