@@ -96,13 +96,32 @@ function Bar({ value, max, color = "bg-accent" }: { value: number; max: number; 
 
 function ExportMenu({ data }: { data: OrderOps }) {
   const [open, setOpen] = useState(false);
-  const rows = data.orders.map((o) => ({
-    id: o.id, created_at: o.created_at, customer: o.full_name ?? o.contact_email ?? "Guest",
-    email: o.contact_email, region: o.market_region ?? o.country, status: o.status,
-    payment: o.payment_status, fulfillment: o.fulfillment_status, method: o.payment_method,
-    units: o.units, total: o.total, profit: Math.round(o.profit), risk: o.riskScore,
-    tags: o.tags.join("|"),
-  }));
+  const rows = data.orders.map((o) => {
+    const a = o.shipping_address ?? {};
+    const addr = [a.line1, a.line2, a.landmark, a.city, a.state, a.postal ?? a.postal_code, a.country]
+      .filter(Boolean).join(", ");
+    return {
+      order_id: o.id,
+      customer: o.full_name ?? o.contact_email ?? "Guest",
+      phone: o.phone ?? (a.phone as string) ?? "",
+      email: o.contact_email ?? "",
+      address: addr,
+      payment_id: o.razorpay_payment_id ?? "",
+      razorpay_order_id: o.razorpay_order_id ?? "",
+      payment_method: o.payment_method ?? "",
+      amount: o.total,
+      currency: o.currency ?? "",
+      status: o.status,
+      payment_status: o.payment_status,
+      fulfillment: o.fulfillment_status,
+      courier: o.carrier ?? "",
+      tracking_number: o.tracking_number ?? "",
+      created_at: o.created_at,
+      region: o.market_region ?? o.country,
+      units: o.units, profit: Math.round(o.profit), risk: o.riskScore,
+      tags: o.tags.join("|"),
+    };
+  });
   const exp = (f: ExportFormat) => { exportRows(f, rows, "order-operations"); setOpen(false); };
   return (
     <div className="relative">
