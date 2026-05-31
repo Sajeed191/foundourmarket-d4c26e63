@@ -116,8 +116,20 @@ export function useAddresses() {
     };
   }, [user, refresh]);
 
+  /** Returns an existing address matching the same physical location, or null. */
+  const findDuplicate = useCallback(
+    (input: { line1?: string | null; line2?: string | null; postal?: string | null; city?: string | null }, ignoreId?: string) => {
+      const fp = addressFingerprint(input);
+      return addresses.find((a) => a.id !== ignoreId && addressFingerprint(a) === fp) ?? null;
+    },
+    [addresses],
+  );
+
   const create = async (input: AddressInput) => {
     if (!user) throw new Error("Not signed in");
+    if (findDuplicate(input)) {
+      throw new Error("You've already saved this address.");
+    }
     const { data, error } = await supabase
       .from("addresses")
       .insert({ ...input, user_id: user.id })
@@ -127,6 +139,7 @@ export function useAddresses() {
     await refresh();
     return data as Address;
   };
+
 
   const update = async (id: string, input: Partial<AddressInput>) => {
     const { error } = await supabase.from("addresses").update(input).eq("id", id);
