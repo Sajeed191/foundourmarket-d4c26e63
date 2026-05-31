@@ -310,12 +310,41 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         Use current location
       </button>
 
-      <input
-        placeholder="Nickname (e.g. Mom's house) — optional"
-        value={form.nickname ?? ""}
-        onChange={(e) => set("nickname", e.target.value)}
-        className={cls("nickname")}
-      />
+      {/* Smart, type-aware label (Phase 2) */}
+      {form.address_type === "work" ? (
+        <div>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <input
+              placeholder="Company / Office name"
+              value={form.nickname ?? ""}
+              onChange={(e) => set("nickname", e.target.value)}
+              className={`${cls("nickname")} pl-9`}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+            <Clock className="size-3" /> Weekday delivery recommended — weekend delivery may be limited at offices.
+          </p>
+        </div>
+      ) : form.address_type === "other" ? (
+        <div>
+          <input
+            placeholder="Custom label (e.g. Warehouse, Gift Address) *"
+            value={form.nickname ?? ""}
+            onChange={(e) => set("nickname", e.target.value)}
+            onBlur={() => markTouched("nickname")}
+            className={cls("nickname")}
+          />
+          <Err k="nickname" />
+        </div>
+      ) : (
+        <input
+          placeholder="Nickname (e.g. Mom's house) — optional"
+          value={form.nickname ?? ""}
+          onChange={(e) => set("nickname", e.target.value)}
+          className={cls("nickname")}
+        />
+      )}
 
       <div>
         <input
@@ -333,6 +362,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         <div>
           <PhoneInput
             value={form.phone ?? ""}
+            defaultCountry={regionCountry}
+            autoDetect={false}
             onChange={(e164, valid) => {
               set("phone", e164);
               setPhoneValid(valid);
@@ -345,10 +376,13 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         </div>
         <PhoneInput
           value={form.alternate_phone ?? ""}
+          defaultCountry={regionCountry}
+          autoDetect={false}
           onChange={(e164) => set("alternate_phone", e164)}
           placeholder="Alternate"
         />
       </div>
+
 
       <div>
         <input
