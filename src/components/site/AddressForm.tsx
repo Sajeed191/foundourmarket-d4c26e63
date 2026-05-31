@@ -1,9 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import type { CountryCode } from "libphonenumber-js";
 import type { Address, AddressInput, AddressType } from "@/lib/use-addresses";
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
+import { useRegion } from "@/lib/region";
+
+/** Friendly country name from an ISO code, with a safe fallback. */
+const REGION_NAMES =
+  typeof Intl !== "undefined" && "DisplayNames" in Intl
+    ? new Intl.DisplayNames(["en"], { type: "region" })
+    : null;
+
+/** Map detected region/country-code to the ISO country used by the phone input. */
+function regionToCountry(market: string, countryCode: string | null): CountryCode {
+  if (market === "india") return "IN";
+  const cc = (countryCode ?? "").toUpperCase();
+  if (/^[A-Z]{2}$/.test(cc)) return cc as CountryCode;
+  return "US";
+}
 
 type Props = {
   initial?: Partial<Address>;
@@ -60,6 +76,18 @@ function postalError(country: string, postal: string): string | null {
 
 export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save address" }: Props) {
   const validatePin = useServerFn(validateIndianPincode);
+  const { market, countryCode } = useRegion();
+
+  // Region-derived defaults so we never fall back to GB/+44 for Indian users.
+  const regionCountry = useMemo<CountryCode>(
+    () => regionToCountry(market, countryCode),
+    [market, countryCode],
+  );
+  const regionCountryName = useMemo(
+    () => (market === "india" ? "India" : REGION_NAMES?.of(regionCountry) ?? regionCountry),
+    [market, regionCountry],
+  );
+
   const [form, setForm] = useState<AddressInput>({
     ...empty,
     ...(initial ?? {}),
@@ -72,7 +100,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     state: initial?.state ?? "",
     delivery_notes: initial?.delivery_notes ?? "",
     address_type: (initial?.address_type as AddressType) ?? "home",
-    country: initial?.country ?? "India",
+    country: initial?.country ?? regionCountryName,
   } as AddressInput);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +110,18 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
   const lastPin = useRef<string>("");
+  const countryTouched = useRef<boolean>(!!initial?.country);
 
   const set = <K extends keyof AddressInput>(k: K, v: AddressInput[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
+
+  // Keep the country field aligned with the detected region until the user
+  // edits it manually (Phase 1 / Phase 8: never strand an Indian user on GB).
+  useEffect(() => {
+    if (countryTouched.current) return;
+    setForm((p) => (p.country === regionCountryName ? p : { ...p, country: regionCountryName }));
+  }, [regionCountryName]);
+
 
   // Auto city/state from Indian pincode
   useEffect(() => {
@@ -131,6 +168,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           );
           const j = await res.json();
           const a = j?.address ?? {};
+          if (a.country) countryTouched.current = true;
           setForm((p) => ({
             ...p,
             line1: p.line1 || [a.road, a.house_number].filter(Boolean).join(" "),
@@ -167,6 +205,11 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         return f.country.trim() ? undefined : "Country is required";
       case "postal":
         return postalError(f.country, f.postal) ?? undefined;
+      case "nickname":
+        // Required only as a custom label for "Other" address types.
+        return f.address_type === "other" && !(f.nickname ?? "").trim()
+          ? "Add a label for this address"
+          : undefined;
       default:
         return undefined;
     }
@@ -197,7 +240,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   };
 
   const validateAll = () => {
-    const keys = ["full_name", "phone", "line1", "city", "postal", "country"];
+    const keys = ["full_name", "phone", "line1", "city", "postal", "country", "nickname"];
     const e: Record<string, string> = {};
     for (const k of keys) {
       const msg = fieldError(k);
@@ -273,12 +316,41 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         Use current location
       </button>
 
-      <input
-        placeholder="Nickname (e.g. Mom's house) — optional"
-        value={form.nickname ?? ""}
-        onChange={(e) => set("nickname", e.target.value)}
-        className={cls("nickname")}
-      />
+      {/* Smart, type-aware label (Phase 2) */}
+      {form.address_type === "work" ? (
+        <div>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <input
+              placeholder="Company / Office name"
+              value={form.nickname ?? ""}
+              onChange={(e) => set("nickname", e.target.value)}
+              className={`${cls("nickname")} pl-9`}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+            <Clock className="size-3" /> Weekday delivery recommended — weekend delivery may be limited at offices.
+          </p>
+        </div>
+      ) : form.address_type === "other" ? (
+        <div>
+          <input
+            placeholder="Custom label (e.g. Warehouse, Gift Address) *"
+            value={form.nickname ?? ""}
+            onChange={(e) => set("nickname", e.target.value)}
+            onBlur={() => markTouched("nickname")}
+            className={cls("nickname")}
+          />
+          <Err k="nickname" />
+        </div>
+      ) : (
+        <input
+          placeholder="Nickname (e.g. Mom's house) — optional"
+          value={form.nickname ?? ""}
+          onChange={(e) => set("nickname", e.target.value)}
+          className={cls("nickname")}
+        />
+      )}
 
       <div>
         <input
@@ -296,6 +368,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         <div>
           <PhoneInput
             value={form.phone ?? ""}
+            defaultCountry={regionCountry}
+            autoDetect={false}
             onChange={(e164, valid) => {
               set("phone", e164);
               setPhoneValid(valid);
@@ -308,10 +382,13 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         </div>
         <PhoneInput
           value={form.alternate_phone ?? ""}
+          defaultCountry={regionCountry}
+          autoDetect={false}
           onChange={(e164) => set("alternate_phone", e164)}
           placeholder="Alternate"
         />
       </div>
+
 
       <div>
         <input
@@ -363,12 +440,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           <input
             placeholder="Country *"
             value={form.country}
-            onChange={(e) => set("country", e.target.value)}
+            onChange={(e) => {
+              countryTouched.current = true;
+              set("country", e.target.value);
+            }}
             onBlur={() => markTouched("country")}
             className={cls("country")}
           />
           <Err k="country" />
         </div>
+
       </div>
 
       {/* City + State */}
