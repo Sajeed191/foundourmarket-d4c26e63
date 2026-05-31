@@ -131,7 +131,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (submittingRef.current || busy) return;
     if (!draft.trim()) {
       toast.error("Please type a question first.");
       return;
