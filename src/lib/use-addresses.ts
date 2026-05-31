@@ -197,6 +197,8 @@ export function useAddresses() {
     update,
     remove,
     duplicate,
+    findDuplicate,
+
     markUsed,
     setDefaultShipping,
     setDefaultBilling,
