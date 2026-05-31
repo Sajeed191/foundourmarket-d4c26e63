@@ -248,6 +248,14 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
           <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Risk</div><div className="text-sm font-semibold"><RiskBadge score={o.riskScore} /></div></div>
         </div>
 
+        <OrderActionCenter
+          orderId={o.id}
+          hasCustomer={!!o.user_id}
+          onDone={() => { setBump((b) => b + 1); onRefresh(); }}
+        />
+
+
+
         {/* Order Information */}
         <Section title="Order Information" icon={<ShoppingBag className="size-3" />}>
           <MonoRow k="Order ID" v={o.id} copy />
