@@ -28,22 +28,23 @@ export const Route = createFileRoute("/track")({
 });
 
 const STATUSES = [
-  { key: "pending", label: "Ordered", icon: PackageOpen, hint: "We received your order" },
-  { key: "paid", label: "Packed", icon: PackageCheck, hint: "Carefully packed & sealed" },
-  { key: "shipped", label: "Shipped", icon: Send, hint: "On the way to you" },
+  { key: "pending", label: "Order Placed", icon: PackageOpen, hint: "We received your order" },
+  { key: "packed", label: "Packed", icon: PackageCheck, hint: "Carefully packed & sealed" },
+  { key: "shipped", label: "Shipped", icon: Send, hint: "Handed to courier" },
+  { key: "in_transit", label: "In Transit", icon: Navigation, hint: "On the way to you" },
   { key: "out_for_delivery", label: "Out for delivery", icon: Truck, hint: "Driver near your area" },
   { key: "delivered", label: "Delivered", icon: CheckCircle2, hint: "Enjoy your order" },
 ] as const;
 
-// Map a shipment status (or order status fallback) onto the 5-step tracker.
+// Map a shipment status (or order status fallback) onto the 6-step tracker.
 const SHIP_STEP: Record<string, number> = {
   pending: 0,
   paid: 1,
   packed: 1,
   shipped: 2,
-  in_transit: 2,
-  out_for_delivery: 3,
-  delivered: 4,
+  in_transit: 3,
+  out_for_delivery: 4,
+  delivered: 5,
 };
 
 // Human labels for every shipment lifecycle status.
