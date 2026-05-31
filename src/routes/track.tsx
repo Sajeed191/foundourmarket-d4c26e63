@@ -4,10 +4,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  Package, Search, Loader2, CheckCircle2, Truck, Clock, XCircle,
-  Sparkles, ShieldCheck, MapPin, Radio, MessageCircle, Mail, HelpCircle,
-  PackageCheck, PackageOpen, Send, Zap, ChevronRight, Navigation, Timer,
-  Activity, Wind,
+  Package, Search, Loader2, CheckCircle2, Truck, XCircle,
+  ShieldCheck, MapPin, Radio, MessageCircle, Mail, HelpCircle,
+  PackageCheck, PackageOpen, Send, ChevronRight, Navigation,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackOrder } from "@/lib/track-order.functions";
@@ -28,22 +27,23 @@ export const Route = createFileRoute("/track")({
 });
 
 const STATUSES = [
-  { key: "pending", label: "Ordered", icon: PackageOpen, hint: "We received your order" },
-  { key: "paid", label: "Packed", icon: PackageCheck, hint: "Carefully packed & sealed" },
-  { key: "shipped", label: "Shipped", icon: Send, hint: "On the way to you" },
+  { key: "pending", label: "Order Placed", icon: PackageOpen, hint: "We received your order" },
+  { key: "packed", label: "Packed", icon: PackageCheck, hint: "Carefully packed & sealed" },
+  { key: "shipped", label: "Shipped", icon: Send, hint: "Handed to courier" },
+  { key: "in_transit", label: "In Transit", icon: Navigation, hint: "On the way to you" },
   { key: "out_for_delivery", label: "Out for delivery", icon: Truck, hint: "Driver near your area" },
   { key: "delivered", label: "Delivered", icon: CheckCircle2, hint: "Enjoy your order" },
 ] as const;
 
-// Map a shipment status (or order status fallback) onto the 5-step tracker.
+// Map a shipment status (or order status fallback) onto the 6-step tracker.
 const SHIP_STEP: Record<string, number> = {
   pending: 0,
   paid: 1,
   packed: 1,
   shipped: 2,
-  in_transit: 2,
-  out_for_delivery: 3,
-  delivered: 4,
+  in_transit: 3,
+  out_for_delivery: 4,
+  delivered: 5,
 };
 
 // Human labels for every shipment lifecycle status.
@@ -66,11 +66,10 @@ const TRUST = [
   { icon: MessageCircle, label: "24/7 Support" },
 ];
 
-const AI_INSIGHTS = [
-  { icon: Zap, text: "Your package may arrive earlier than expected." },
-  { icon: MapPin, text: "Driver is currently near your delivery zone." },
-  { icon: Sparkles, text: "High delivery success rate in your region." },
-];
+type ShipAddress = {
+  full_name?: string; phone?: string; line1?: string; line2?: string;
+  city?: string; state?: string; postal?: string; country?: string;
+} | null;
 
 const RECENT_KEY = "fom_recent_tracked";
 
@@ -417,56 +416,20 @@ function TrackPage() {
               </motion.div>
             )}
 
-            {/* Carrier + ETA Countdown */}
-            {!cancelled && !returned && !failed && (
-              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
-                <CarrierEta orderId={result.order.id} progress={currentStatusIdx} />
-              </motion.div>
-            )}
-
-            {/* Live Delivery Map */}
-            {!cancelled && currentStatusIdx >= 2 && (
-              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
-                <LiveMap progress={currentStatusIdx} />
-              </motion.div>
-            )}
-
-            {/* Live activity feed */}
-            {!cancelled && (
-              <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}>
-                <LiveFeed />
-              </motion.div>
-            )}
-
-
-
-            {/* AI Insights */}
-            {!cancelled && (
+            {/* Delivery address (from the order) */}
+            {result.order.shipping_address && (
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}
-                className="relative glass-strong rounded-3xl p-5 ring-1 ring-white/10 overflow-hidden"
+                className="glass-strong rounded-3xl p-5 sm:p-6 ring-1 ring-white/10"
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="size-7 rounded-full grid place-items-center bg-accent/15 text-accent">
-                    <Sparkles className="size-3.5" />
-                  </div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">AI Delivery Insights</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin className="size-4 text-accent" />
+                  <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Delivery address</p>
                 </div>
-                <ul className="space-y-2.5">
-                  {AI_INSIGHTS.map(({ icon: Icon, text }, i) => (
-                    <motion.li
-                      key={text}
-                      initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + i * 0.1 }}
-                      className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/5"
-                    >
-                      <Icon className="size-4 text-accent mt-0.5 shrink-0" />
-                      <span className="text-xs sm:text-sm text-foreground/90">{text}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+                <DeliveryAddress address={result.order.shipping_address as ShipAddress} />
               </motion.div>
             )}
+
 
             {/* Items breakdown */}
             <motion.div
@@ -598,7 +561,7 @@ function Timeline({ currentIdx }: { currentIdx: number }) {
           style={{ background: "linear-gradient(90deg, var(--color-accent), oklch(0.82 0.16 65))" }}
         />
       </div>
-      <ol className="relative grid grid-cols-5 gap-1">
+      <ol className="relative grid grid-cols-6 gap-1">
         {STATUSES.map((s, i) => {
           const done = i <= currentIdx;
           const active = i === currentIdx;
@@ -633,82 +596,25 @@ function Timeline({ currentIdx }: { currentIdx: number }) {
   );
 }
 
-/* ─────────────────────────  CARRIER + ETA COUNTDOWN  ───────────────────────── */
-
-function CarrierEta({ orderId, progress }: { orderId: string; progress: number }) {
-  // Deterministic ETA derived from order id so it stays stable per order
-  const seed = useMemo(
-    () => Array.from(orderId).reduce((a, c) => a + c.charCodeAt(0), 0),
-    [orderId]
-  );
-  const totalMinutes = 60 + (seed % 240); // 1h-5h window
-  const eta = useMemo(() => new Date(Date.now() + totalMinutes * 60_000), [totalMinutes]);
-
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const msLeft = Math.max(0, eta.getTime() - now);
-  const h = Math.floor(msLeft / 3_600_000);
-  const m = Math.floor((msLeft % 3_600_000) / 60_000);
-  const s = Math.floor((msLeft % 60_000) / 1000);
-
-  const pct = Math.min(100, Math.max(8, ((progress + 1) / 5) * 100));
-  const ringDash = 2 * Math.PI * 28;
-  const ringOffset = ringDash * (1 - pct / 100);
-
-  const carriers = ["FOM Standard", "Skyline Priority", "Aero Logistics"];
-  const carrier = carriers[seed % carriers.length];
-
+function DeliveryAddress({ address }: { address: ShipAddress }) {
+  if (!address) return null;
+  const lines = [
+    address.full_name,
+    [address.line1, address.line2].filter(Boolean).join(", "),
+    [address.city, address.state, address.postal].filter(Boolean).join(", "),
+    address.country,
+    address.phone ? `Phone: ${address.phone}` : null,
+  ].filter(Boolean);
   return (
-    <div className="relative glass-strong rounded-3xl p-5 sm:p-6 ring-1 ring-white/10 overflow-hidden">
-      <div aria-hidden className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full blur-3xl opacity-30"
-        style={{ background: "radial-gradient(circle, var(--color-accent), transparent 70%)" }} />
-
-      <div className="flex items-center gap-4 relative">
-        {/* Countdown ring */}
-        <div className="relative size-[72px] shrink-0">
-          <svg viewBox="0 0 64 64" className="size-full -rotate-90">
-            <circle cx="32" cy="32" r="28" stroke="oklch(1 0 0 / 0.08)" strokeWidth="4" fill="none" />
-            <motion.circle
-              cx="32" cy="32" r="28" fill="none"
-              stroke="var(--color-accent)" strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={ringDash}
-              animate={{ strokeDashoffset: ringOffset }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              style={{ filter: "drop-shadow(0 0 8px var(--color-accent))" }}
-            />
-          </svg>
-          <div className="absolute inset-0 grid place-items-center">
-            <Timer className="size-5 text-accent" />
-          </div>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Arriving today</p>
-          <p className="font-display text-xl sm:text-2xl tabular-nums tracking-tight">
-            {h > 0 ? `${h}h ` : ""}{String(m).padStart(2, "0")}m <span className="text-base text-muted-foreground">{String(s).padStart(2, "0")}s</span>
-          </p>
-          <p className="text-[11px] text-muted-foreground">
-            Expected by{" "}
-            <span className="text-foreground font-medium">
-              {eta.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {/* Carrier strip */}
-      <div className="mt-5 grid grid-cols-3 gap-2 relative">
-        <Pill icon={Truck} label={carrier} hint="Carrier" />
-        <Pill icon={Zap} label="Standard" hint="Method" />
-        <Pill icon={ShieldCheck} label="Protected" hint="Coverage" />
-      </div>
+    <div className="space-y-0.5">
+      {lines.map((l, i) => (
+        <p key={i} className={`text-sm ${i === 0 ? "font-medium" : "text-muted-foreground"}`}>{l}</p>
+      ))}
     </div>
   );
 }
+
+
 
 function Pill({ icon: Icon, label, hint }: { icon: typeof Truck; label: string; hint: string }) {
   return (
@@ -809,190 +715,6 @@ function EventTimeline({ events }: { events: ShipEvent[] }) {
             </p>
           </li>
         ))}
-      </ol>
-    </div>
-  );
-}
-
-
-/* ───────────────────────────────  LIVE MAP  ─────────────────────────────── */
-
-function LiveMap({ progress }: { progress: number }) {
-  // SVG path from hub → destination; package marker animates along it
-  const pathRef = useRef<SVGPathElement | null>(null);
-  const [pathLen, setPathLen] = useState(0);
-  useEffect(() => {
-    if (pathRef.current) setPathLen(pathRef.current.getTotalLength());
-  }, []);
-  const t = Math.min(1, Math.max(0.1, (progress + 1) / 5));
-
-  return (
-    <div className="relative glass-strong rounded-3xl ring-1 ring-white/10 overflow-hidden">
-      <div className="flex items-center justify-between px-5 pt-5">
-        <div className="flex items-center gap-2">
-          <span className="relative flex size-1.5">
-            <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-75" />
-            <span className="relative rounded-full bg-accent size-1.5" />
-          </span>
-          <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Live route</p>
-        </div>
-        <p className="text-[10px] font-mono text-muted-foreground">{Math.round(t * 100)}% complete</p>
-      </div>
-
-      <div className="relative h-[200px] sm:h-[240px] mt-3">
-        {/* grid */}
-        <svg className="absolute inset-0 w-full h-full" aria-hidden>
-          <defs>
-            <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
-              <path d="M 28 0 L 0 0 0 28" fill="none" stroke="oklch(1 0 0 / 0.05)" strokeWidth="0.5" />
-            </pattern>
-            <radialGradient id="mapglow" cx="50%" cy="60%" r="60%">
-              <stop offset="0%" stopColor="oklch(0.74 0.19 49 / 0.18)" />
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-          <rect width="100%" height="100%" fill="url(#mapglow)" />
-        </svg>
-
-        {/* route path */}
-        <svg viewBox="0 0 400 220" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
-          <path
-            ref={pathRef}
-            d="M 30 175 C 110 140, 150 60, 230 90 S 360 180, 380 50"
-            fill="none"
-            stroke="oklch(1 0 0 / 0.12)"
-            strokeWidth="2"
-            strokeDasharray="4 6"
-          />
-          {pathLen > 0 && (
-            <motion.path
-              d="M 30 175 C 110 140, 150 60, 230 90 S 360 180, 380 50"
-              fill="none"
-              stroke="var(--color-accent)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              style={{ filter: "drop-shadow(0 0 6px var(--color-accent))" }}
-              initial={{ strokeDasharray: pathLen, strokeDashoffset: pathLen }}
-              animate={{ strokeDashoffset: pathLen * (1 - t) }}
-              transition={{ duration: 1.6, ease: "easeOut" }}
-            />
-          )}
-
-          {/* Hub */}
-          <g transform="translate(30,175)">
-            <circle r="6" fill="oklch(1 0 0 / 0.12)" />
-            <circle r="3" fill="white" />
-          </g>
-          {/* Destination */}
-          <g transform="translate(380,50)">
-            <circle r="10" fill="var(--color-accent)" opacity="0.2">
-              <animate attributeName="r" values="10;18;10" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.35;0;0.35" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle r="5" fill="var(--color-accent)" style={{ filter: "drop-shadow(0 0 8px var(--color-accent))" }} />
-          </g>
-
-          {/* Animated package marker */}
-          {pathLen > 0 && (
-            <motion.g
-              initial={{ offsetDistance: "0%" } as never}
-              animate={{ offsetDistance: `${t * 100}%` } as never}
-              transition={{ duration: 1.6, ease: "easeInOut" }}
-              style={{
-                offsetPath: `path("M 30 175 C 110 140, 150 60, 230 90 S 360 180, 380 50")`,
-              } as React.CSSProperties}
-            >
-              <circle r="12" fill="oklch(0.74 0.19 49 / 0.25)">
-                <animate attributeName="r" values="12;18;12" dur="1.8s" repeatCount="indefinite" />
-              </circle>
-              <circle r="7" fill="var(--color-accent)" />
-            </motion.g>
-          )}
-        </svg>
-
-        {/* Labels */}
-        <div className="absolute left-3 bottom-3 glass rounded-lg px-2 py-1 ring-1 ring-white/10">
-          <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Hub</p>
-        </div>
-        <div className="absolute right-3 top-3 glass rounded-lg px-2 py-1 ring-1 ring-white/10">
-          <p className="text-[9px] font-mono uppercase tracking-wider text-accent">You</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 divide-x divide-white/5 border-t border-white/5">
-        <MiniStat icon={Navigation} label="Driver" value="12 min" />
-        <MiniStat icon={Wind} label="Traffic" value="Low" />
-        <MiniStat icon={MapPin} label="Distance" value={`${(8.4 * (1 - t)).toFixed(1)} km`} />
-      </div>
-    </div>
-  );
-}
-
-function MiniStat({ icon: Icon, label, value }: { icon: typeof Navigation; label: string; value: string }) {
-  return (
-    <div className="px-3 py-3 text-center">
-      <div className="flex items-center justify-center gap-1.5 text-accent">
-        <Icon className="size-3" />
-        <span className="text-[9px] font-mono uppercase tracking-wider">{label}</span>
-      </div>
-      <p className="text-sm font-semibold tabular-nums mt-1">{value}</p>
-    </div>
-  );
-}
-
-/* ────────────────────────────  LIVE ACTIVITY FEED  ────────────────────────── */
-
-const FEED = [
-  { t: "just now", text: "Driver is 12 minutes away" },
-  { t: "4 min ago", text: "Courier is currently near your area" },
-  { t: "18 min ago", text: "Traffic conditions are favorable" },
-  { t: "42 min ago", text: "Package arrived at local distribution center" },
-  { t: "1h ago", text: "Shipment is moving faster than average" },
-];
-
-function LiveFeed() {
-  const [visible, setVisible] = useState(2);
-  useEffect(() => {
-    if (visible >= FEED.length) return;
-    const t = setTimeout(() => setVisible((v) => v + 1), 1800);
-    return () => clearTimeout(t);
-  }, [visible]);
-
-  return (
-    <div className="relative glass-strong rounded-3xl p-5 ring-1 ring-white/10 overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="size-7 rounded-full grid place-items-center bg-accent/15 text-accent">
-          <Activity className="size-3.5" />
-        </div>
-        <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Live activity</p>
-        <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Auto-updating</span>
-      </div>
-
-      <ol className="relative space-y-3">
-        <AnimatePresence initial={false}>
-          {FEED.slice(0, visible).map((f, i) => (
-            <motion.li
-              key={f.text}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/5"
-            >
-              <span className="relative flex size-2 mt-1.5 shrink-0">
-                {i === 0 && (
-                  <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-75" />
-                )}
-                <span className={`relative rounded-full size-2 ${i === 0 ? "bg-accent" : "bg-white/30"}`} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-foreground/90">{f.text}</p>
-                <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mt-0.5">{f.t}</p>
-              </div>
-            </motion.li>
-          ))}
-        </AnimatePresence>
       </ol>
     </div>
   );

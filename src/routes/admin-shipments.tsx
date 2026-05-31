@@ -85,6 +85,32 @@ const ORDER_FULFILLMENT: Record<string, string> = {
   failed_delivery: "shipped", returned: "returned", cancelled: "cancelled",
 };
 
+// Customer-facing in-app notification copy for each status change.
+const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
+  packed: { title: "📦 Order packed", body: "Your order has been packed and is ready to ship." },
+  shipped: { title: "🚚 Order shipped", body: "Your order is on its way." },
+  in_transit: { title: "🚚 In transit", body: "Your package is moving through the courier network." },
+  out_for_delivery: { title: "📍 Out for delivery", body: "Your package is out for delivery today." },
+  delivered: { title: "✅ Delivered", body: "Your package has been delivered. Enjoy!" },
+  failed_delivery: { title: "⚠️ Delivery attempt failed", body: "We couldn't deliver your package. We'll retry shortly." },
+  returned: { title: "↩️ Order returned", body: "Your order has been returned." },
+  cancelled: { title: "❌ Order cancelled", body: "Your order has been cancelled." },
+};
+
+async function notifyCustomer(userId: string | null, orderId: string, status: string) {
+  const copy = STATUS_NOTIFICATION[status];
+  if (!userId || !copy) return;
+  await supabase.from("notifications").insert({
+    user_id: userId,
+    type: "shipment",
+    title: copy.title,
+    body: copy.body,
+    link: "/track",
+    priority: status === "delivered" || status === "out_for_delivery" ? "high" : "normal",
+    data: { order_id: orderId, status },
+  });
+}
+
 const PAGE = 25;
 const fmtDate = (s: string | null) => (s ? new Date(s).toLocaleDateString() : "—");
 const money = (n: number, c: string | null) =>
@@ -194,6 +220,8 @@ function AdminShipmentsPage() {
       await supabase.from("orders").update(orderPatch).eq("id", s.order_id);
       setOrders((prev) => prev?.map((o) =>
         o.id === s.order_id ? { ...o, fulfillment_status: fulfillment } : o) ?? prev);
+      // Send a permanent in-app notification to the customer.
+      await notifyCustomer(s.user_id, s.order_id, status);
       logActivity("shipment_status", "shipment", s.id, { status });
       toast.success(`Marked ${STATUS_LABEL[status]}`);
     }
