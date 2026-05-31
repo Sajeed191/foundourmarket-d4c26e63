@@ -106,6 +106,8 @@ export function AdminProductPanel({ product }: { product: Product }) {
       comparePriceInr: p.comparePriceInr != null ? String(p.comparePriceInr) : "",
       priceUsd: p.priceUsd != null ? String(p.priceUsd) : "",
       comparePriceUsd: p.comparePriceUsd != null ? String(p.comparePriceUsd) : "",
+      shippingFeeInr: String(p.shippingFeeInr ?? 0),
+      shippingFeeUsd: String(p.shippingFeeUsd ?? 0),
       indiaVisible: p.indiaVisible,
       internationalVisible: p.internationalVisible,
       featured: p.featured,
