@@ -4,7 +4,7 @@ import {
   ShoppingBag, Loader2, AlertTriangle, Download, RefreshCw, Search, X,
   Package, Truck, RotateCcw, Wallet, Crown, Globe, ShieldAlert, Sparkles,
   Clock, Zap, Gauge, TrendingUp, Users, CreditCard, MapPin, Mail, ArrowDownRight,
-  Phone, Receipt, Bell, ShieldCheck, Hash, Copy, Check, LifeBuoy,
+  Phone, Receipt, Bell, ShieldCheck, Copy, Check, LifeBuoy,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
