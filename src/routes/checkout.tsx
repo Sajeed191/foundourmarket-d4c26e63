@@ -344,6 +344,23 @@ function CheckoutPage() {
     });
   }, [addressSelected, paymentMethodSelected, serviceabilityStatus, checkoutReady, orderBlockedReason, stage]);
 
+  // Emergency fallback: if the primary sticky CTA ever fails to render on screen
+  // (clipping, z-index, layout edge cases), show a floating button so a ready
+  // customer is NEVER left without a next step.
+  const stickyBarRef = useRef<HTMLDivElement | null>(null);
+  const [stickyVisible, setStickyVisible] = useState(true);
+  useEffect(() => {
+    if (stage !== "review") return;
+    const el = stickyBarRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setStickyVisible(entry.isIntersecting && entry.intersectionRatio > 0.4),
+      { threshold: [0, 0.4, 1] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [stage, isIndia]);
+
   if (loading || !user || !cartHydrated) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
