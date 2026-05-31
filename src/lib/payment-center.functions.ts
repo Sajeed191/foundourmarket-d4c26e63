@@ -165,9 +165,7 @@ export const getPaymentFraudFn = createServerFn({ method: "POST" })
         : Promise.resolve({ count: 0 }),
     ]);
 
-    const alertRows = (alerts ?? []) as FraudIntel["alerts"][number][] & {
-      score: number | null;
-    }[];
+    const alertRows = (alerts ?? []) as FraudIntel["alerts"];
     const openAlerts = alertRows.filter((a) => a.status !== "resolved").length;
     const maxScore = alertRows.reduce((m, a) => Math.max(m, Number(a.score) || 0), 0);
     const failedCount = (failed as { count: number | null }).count ?? 0;
