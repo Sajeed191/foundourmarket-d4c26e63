@@ -37,7 +37,7 @@ function AuthCallback() {
       }
       if (data.session) {
         setStatus("success");
-        setTimeout(() => nav({ to: "/account" }), 700);
+        setTimeout(() => nav({ to: dest() }), 700);
       } else {
         // Wait briefly for OAuth token exchange listener to set session
         timer = setTimeout(check, 400);
@@ -47,7 +47,7 @@ function AuthCallback() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session) {
         setStatus("success");
-        setTimeout(() => nav({ to: "/account" }), 700);
+        setTimeout(() => nav({ to: dest() }), 700);
       }
     });
 
