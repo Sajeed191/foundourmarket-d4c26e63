@@ -29,6 +29,25 @@ type DisplayBadge = {
   animation?: string;
 };
 
+// Admin-facing badge priority. Lower index = higher priority = shown first.
+const BADGE_PRIORITY = [
+  "hot deal",
+  "flash sale",
+  "fast selling",
+  "trending",
+  "best seller",
+  "new",
+  "premium",
+  "recommended",
+];
+function badgePriority(key?: string, label?: string): number {
+  const hay = `${key ?? ""} ${label ?? ""}`.toLowerCase();
+  const idx = BADGE_PRIORITY.findIndex((p) => hay.includes(p));
+  return idx === -1 ? BADGE_PRIORITY.length : idx;
+}
+
+
+
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
   const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
@@ -83,6 +102,10 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         emoji: b.emoji,
         className: b.className,
       }));
+  // Badge priority: higher-priority badges always surface first within the 2-badge cap.
+  const sortedBadges = [...badges].sort(
+    (a, b) => badgePriority(a.key, a.label) - badgePriority(b.key, b.label),
+  );
   const showOnlyLeft =
     product.stockQuantity > 0 &&
     product.stockQuantity <= (product.lowStockThreshold || 10);
@@ -119,7 +142,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             width={800}
             height={800}
             onLoad={() => setImgLoaded(true)}
-            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           />
 
 
@@ -135,7 +158,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className={`absolute flex flex-col items-start ${compact ? "top-2 left-2 gap-1" : "top-2.5 left-2.5 gap-1.5"}`}>
-            {badges.slice(0, 2).map((b) => {
+            {sortedBadges.slice(0, 2).map((b) => {
               const bg = b.backgroundColor || b.color;
               const styled = !b.className;
               const shadow = b.shadowStrength
@@ -229,16 +252,20 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           <p className={`text-muted-foreground/70 capitalize truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.category.replace(/-/g, " ")}</p>
         ) : null}
 
-        {/* Rating row */}
-        <div className={`flex items-center font-mono text-muted-foreground min-w-0 ${compact ? "mt-1 text-[9px] min-h-[14px]" : "mt-1.5 text-[10px] min-h-[16px]"}`}>
+        {/* Social proof — stars + value on one row, review count beneath for cleaner hierarchy */}
+        <div className={`flex flex-col justify-center min-w-0 ${compact ? "mt-1 min-h-[26px]" : "mt-1.5 min-h-[30px]"}`}>
           {product.reviews > 0 ? (
-            <StarRating
-              rating={product.rating}
-              count={product.reviews}
-              showValue
-              starClassName={compact ? "size-2.5" : "size-3"}
-              textClassName={compact ? "text-[9px]" : "text-[10px]"}
-            />
+            <>
+              <StarRating
+                rating={product.rating}
+                showValue
+                starClassName={compact ? "size-2.5" : "size-3"}
+                textClassName={compact ? "text-[9px]" : "text-[10px]"}
+              />
+              <span className={`font-mono text-muted-foreground/70 ${compact ? "text-[8px] mt-0.5" : "text-[9px] mt-0.5"}`}>
+                {product.reviews.toLocaleString()} Reviews
+              </span>
+            </>
           ) : (
             <span className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
               New Product
@@ -261,21 +288,23 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             Only {product.stockQuantity} left
           </p>
         )}
-        {!product.inStock && (
-          <p className={`font-mono uppercase tracking-wider text-muted-foreground ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
-            Out of stock
-          </p>
-        )}
 
-        {/* Price + ADD — pinned to the bottom so it aligns across all cards */}
-        <div className="flex items-end justify-between gap-2 mt-auto pt-2.5">
+        {/* Price + ADD — pinned to the bottom with a subtle divider so it aligns across all cards */}
+        <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className={`font-display font-semibold tabular-nums leading-none ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{format(price)}</p>
             {originalPrice && discount ? (
               <p className={`font-mono text-muted-foreground/60 line-through tabular-nums ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`}>{format(originalPrice)}</p>
             ) : null}
           </div>
-          {cartQty > 0 ? (
+          {!product.inStock ? (
+            <span
+              onClick={(e) => e.preventDefault()}
+              className={`shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider ${compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"}`}
+            >
+              Sold Out
+            </span>
+          ) : cartQty > 0 ? (
             <div
               onClick={(e) => e.preventDefault()}
               className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent/15 border border-accent/40 text-accent font-bold font-mono ${compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-[11px]"}`}
