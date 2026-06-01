@@ -649,16 +649,21 @@ export type Database = {
       }
       badge_types: {
         Row: {
+          animation: string
+          archived: boolean
           auto_rule: Json | null
           background_color: string
           badge_key: string
           border_color: string
+          category: string
           color: string
           created_at: string
           description: string
           emoji: string
           enabled: boolean
           end_at: string | null
+          font_size: number
+          font_weight: number
           glow_color: string
           icon_color: string
           id: string
@@ -668,20 +673,26 @@ export type Database = {
           radius: number
           shadow_strength: number
           start_at: string | null
+          subtitle: string | null
           text_color: string
           updated_at: string
         }
         Insert: {
+          animation?: string
+          archived?: boolean
           auto_rule?: Json | null
           background_color?: string
           badge_key: string
           border_color?: string
+          category?: string
           color?: string
           created_at?: string
           description?: string
           emoji?: string
           enabled?: boolean
           end_at?: string | null
+          font_size?: number
+          font_weight?: number
           glow_color?: string
           icon_color?: string
           id?: string
@@ -691,20 +702,26 @@ export type Database = {
           radius?: number
           shadow_strength?: number
           start_at?: string | null
+          subtitle?: string | null
           text_color?: string
           updated_at?: string
         }
         Update: {
+          animation?: string
+          archived?: boolean
           auto_rule?: Json | null
           background_color?: string
           badge_key?: string
           border_color?: string
+          category?: string
           color?: string
           created_at?: string
           description?: string
           emoji?: string
           enabled?: boolean
           end_at?: string | null
+          font_size?: number
+          font_weight?: number
           glow_color?: string
           icon_color?: string
           id?: string
@@ -714,6 +731,7 @@ export type Database = {
           radius?: number
           shadow_strength?: number
           start_at?: string | null
+          subtitle?: string | null
           text_color?: string
           updated_at?: string
         }
