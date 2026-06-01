@@ -204,6 +204,7 @@ function RootComponent() {
                       {!isAuthRoute && <AdminCommandCenter />}
                       <CompareTray />
                       <InstallPrompt />
+                      <LiveChat />
                       <Toaster position="bottom-center" richColors />
                     </div>
                   </LayoutMetricsProvider>
