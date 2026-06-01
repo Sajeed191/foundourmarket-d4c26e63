@@ -135,7 +135,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <div className={`absolute flex flex-col items-start ${compact ? "top-2 left-2 gap-1" : "top-2.5 left-2.5 gap-1.5"}`}>
-            {badges.slice(0, 3).map((b) => {
+            {badges.slice(0, 2).map((b) => {
               const bg = b.backgroundColor || b.color;
               const styled = !b.className;
               const shadow = b.shadowStrength
