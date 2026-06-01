@@ -89,6 +89,16 @@ function SearchPage() {
 
   const activeFilterCount = [search.cat, search.stock, search.min, search.max].filter(Boolean).length;
 
+  const activeChips: { label: string; clear: () => void }[] = [];
+  if (search.cat) {
+    const name = categories.find((c) => c.slug === search.cat)?.name ?? search.cat;
+    activeChips.push({ label: name, clear: () => update({ cat: undefined }) });
+  }
+  if (search.stock === "in") activeChips.push({ label: "In stock", clear: () => update({ stock: undefined }) });
+  if (search.min) activeChips.push({ label: `Min $${search.min}`, clear: () => update({ min: undefined }) });
+  if (search.max) activeChips.push({ label: `Max $${search.max}`, clear: () => update({ max: undefined }) });
+
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-20 sm:pb-28">
       <div className="mb-6 sm:mb-8">
