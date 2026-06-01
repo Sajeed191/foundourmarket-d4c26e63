@@ -354,9 +354,15 @@ function ProductPage() {
             <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
 
             <div className="flex items-baseline gap-3 sm:gap-4 mb-4 flex-wrap">
-              <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
-              {originalPrice && (
-                <span className="text-sm font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
+              {currencyReady ? (
+                <>
+                  <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
+                  {originalPrice && (
+                    <span className="text-sm font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
+                  )}
+                </>
+              ) : (
+                <span aria-hidden className="h-11 sm:h-12 w-40 rounded-xl bg-white/[0.06] animate-pulse" />
               )}
               {discountPct && (
                 <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent/15 text-accent px-2.5 py-1 rounded-full border border-accent/30">Save {discountPct}%</span>
