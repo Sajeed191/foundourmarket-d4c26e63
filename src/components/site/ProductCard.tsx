@@ -238,16 +238,16 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           )}
         </div>
 
-        {/* Shipping row — free shipping when fee is 0, otherwise the actual charge */}
-        {shippingFee > 0 ? (
-          <p className={`font-mono text-muted-foreground/80 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[10px]"}`}>
-            Shipping {format(shippingFee)}
-          </p>
-        ) : (
-          <p className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
-            Free Shipping
-          </p>
-        )}
+        {/* Shipping row — business rule: only ever advertise FREE shipping on
+            listing cards. Paid shipping fees are hidden here and surface only on
+            the product details page. Fixed height keeps every footer aligned. */}
+        <div className={`flex items-center ${compact ? "mt-0.5 min-h-[12px]" : "mt-1 min-h-[14px]"}`}>
+          {shippingFee <= 0 && (
+            <p className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
+              Free Shipping
+            </p>
+          )}
+        </div>
         {showOnlyLeft && (
           <p className={`font-mono uppercase tracking-wider text-accent/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
             Only {product.stockQuantity} left
