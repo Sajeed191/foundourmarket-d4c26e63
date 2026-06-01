@@ -1,6 +1,13 @@
-export function ProductSkeletonGrid({ count = 4 }: { count?: number }) {
+export function ProductSkeletonGrid({
+  count = 4,
+  className = "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6",
+}: {
+  count?: number;
+  className?: string;
+}) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+    <div className={className}>
+
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="card-premium p-2.5 sm:p-3 overflow-hidden">
           <div className="relative aspect-square mb-3 rounded-xl overflow-hidden bg-white/[0.04]">
