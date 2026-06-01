@@ -126,7 +126,7 @@ export function RecentlyViewed({
         {items.map((p) => (
           <div
             key={p.slug}
-            className="snap-start shrink-0 w-[38%] xs:w-[34%] sm:w-[24%] md:w-[18%] lg:w-[15%] last:mr-4 sm:last:mr-0"
+            className="snap-start shrink-0 w-[44%] xs:w-[40%] sm:w-[28%] md:w-[22%] lg:w-[18%] last:mr-4 sm:last:mr-0"
           >
             <MiniCard product={p} />
           </div>
