@@ -65,7 +65,7 @@ function CartPage() {
     detailed, savedDetailed, setQty, remove, saveForLater, moveToCart,
     moveToWishlist, undoRemove, lastRemoved, subtotalUSD, count,
   } = useCart();
-  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
 
   const [promo] = useState<AutoPromo>(null);
   const [ship, setShip] = useState<ShipState>(null);
