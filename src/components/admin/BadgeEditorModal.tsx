@@ -6,6 +6,10 @@ import {
   type BadgeType,
   type BadgeTypeInput,
   type AutoRule,
+  type BadgeAnimation,
+  BADGE_ANIMATIONS,
+  BADGE_CATEGORIES,
+  badgeAnimationClass,
   createBadgeType,
   updateBadgeTypeFull,
 } from "@/lib/use-product-badges";
@@ -57,6 +61,11 @@ const emptyInput = (): BadgeTypeInput => ({
   startAt: null,
   endAt: null,
   autoRule: null,
+  category: "Custom",
+  subtitle: "",
+  fontSize: 11,
+  fontWeight: 700,
+  animation: "none",
 });
 
 function badgeToInput(b: BadgeType): BadgeTypeInput {
@@ -79,6 +88,11 @@ function badgeToInput(b: BadgeType): BadgeTypeInput {
     startAt: b.startAt,
     endAt: b.endAt,
     autoRule: b.autoRule,
+    category: b.category,
+    subtitle: b.subtitle,
+    fontSize: b.fontSize,
+    fontWeight: b.fontWeight,
+    animation: b.animation,
   };
 }
 
