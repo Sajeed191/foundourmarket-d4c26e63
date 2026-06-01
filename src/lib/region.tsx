@@ -48,6 +48,12 @@ type Ctx = {
   /** Dismiss the lightweight confirmation and open the full picker instead. */
   rejectDetectedRegion: () => void;
   loading: boolean;
+  /**
+   * True once the active currency is trustworthy and safe to paint. Stays false
+   * during SSR / first client render and while a first-time visitor's region is
+   * still being detected, so pricing renders a skeleton instead of flashing USD.
+   */
+  currencyReady: boolean;
   countryCode: string | null;
 
   /** Staff accounts bypass the region lock and can view both markets. */
