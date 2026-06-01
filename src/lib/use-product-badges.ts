@@ -85,6 +85,12 @@ type BadgeTypeRow = {
   start_at?: string | null;
   end_at?: string | null;
   auto_rule?: AutoRule;
+  category?: string | null;
+  subtitle?: string | null;
+  font_size?: number | null;
+  font_weight?: number | null;
+  animation?: string | null;
+  archived?: boolean | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -116,6 +122,12 @@ function rowToType(r: BadgeTypeRow): BadgeType {
     startAt: r.start_at ?? null,
     endAt: r.end_at ?? null,
     autoRule: (r.auto_rule as AutoRule) ?? null,
+    category: r.category ?? "Custom",
+    subtitle: r.subtitle ?? "",
+    fontSize: r.font_size ?? 11,
+    fontWeight: r.font_weight ?? 700,
+    animation: (r.animation as BadgeAnimation) ?? "none",
+    archived: r.archived ?? false,
     createdAt: r.created_at ?? "",
     updatedAt: r.updated_at ?? "",
   };
