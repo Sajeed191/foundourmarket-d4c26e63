@@ -97,7 +97,10 @@ let lastProductLayoutSnapshot: Record<string, number> | null = null;
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { product, loading } = useProduct(slug);
+  const { product: loadedProduct } = Route.useLoaderData();
+  const { product: liveProduct, loading: liveLoading } = useProduct(slug);
+  const product = liveProduct ?? loadedProduct;
+  const loading = !product && liveLoading;
   const layoutMetrics = useLayoutMetrics();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
@@ -231,7 +234,7 @@ function ProductPage() {
   // product + variants + images loaded, main image decoded, and currency
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
-  const productPageReady = layoutReady && dataReady;
+  const productPageReady = dataReady;
   const showPurchaseDock = productPageReady && mobileDockVisible;
 
   if (!productPageReady) {
