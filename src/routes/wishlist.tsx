@@ -375,7 +375,15 @@ function WishlistPage() {
               No items match this filter.
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 pb-24">
+            <div
+              className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 transition-[padding] duration-200"
+              style={{
+                paddingBottom:
+                  selectMode && selected.size > 0
+                    ? "calc(200px + env(safe-area-inset-bottom, 0px))"
+                    : "6rem",
+              }}
+            >
               {filtered.map((p) => (
                 <WishlistCard
                   key={p.slug}
