@@ -290,59 +290,34 @@ export function WishlistCard({
           </span>
         ) : null}
 
-        {/* Price + ADD */}
-        <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
+        {/* Price + floating cart icon button */}
+        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
           <div className="min-w-0">
-            <Price value={price} className="font-display font-semibold tabular-nums leading-none text-base sm:text-lg block" />
+            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-base" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums text-[10px] mt-1 block" />
+              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[10px] mt-1" />
             ) : null}
           </div>
-          {!product.inStock ? (
-            <span
-              onClick={(e) => e.preventDefault()}
-              className="shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-3 py-1.5 text-[10px]"
-            >
-              Sold Out
-            </span>
-          ) : cartQty > 0 ? (
-            <div
-              onClick={(e) => e.preventDefault()}
-              className="shrink-0 inline-flex items-center gap-1 rounded-full bg-accent/15 border border-accent/40 text-accent font-bold font-mono px-2 py-1 text-[11px]"
-            >
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setQty(product.slug, cartQty - 1);
-                }}
-                aria-label="Decrease quantity"
-                className="grid place-items-center rounded-full hover:bg-accent/20 active:scale-90 transition-transform size-5"
-              >
-                <Minus className="size-3" />
-              </button>
-              <span className="tabular-nums min-w-[1.25rem] text-center">{cartQty}</span>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setQty(product.slug, cartQty + 1);
-                }}
-                aria-label="Increase quantity"
-                className="grid place-items-center rounded-full hover:bg-accent/20 active:scale-90 transition-transform size-5"
-              >
-                <Plus className="size-3" />
-              </button>
-            </div>
-          ) : (
+          {product.inStock ? (
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110 active:scale-95 shadow-[var(--shadow-ember)] px-3 py-1.5 text-[10px] ${
-                justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""
-              }`}
+              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
-              {justAdded ? <Check className="size-3" /> : <Plus className="size-3" />}
-              {justAdded ? "Added" : "Add"}
+              {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+              {cartQty > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
+                  {cartQty}
+                </span>
+              )}
             </button>
+          ) : (
+            <span
+              onClick={(e) => e.preventDefault()}
+              className="shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-2 py-1 text-[9px]"
+            >
+              Sold Out
+            </span>
           )}
         </div>
       </Link>
