@@ -2524,25 +2524,37 @@ export type Database = {
       }
       product_badges: {
         Row: {
+          archived: boolean
           badge_type_id: string
           created_at: string
+          end_at: string | null
           id: string
+          notes: string
           product_slug: string
           sort_order: number
+          start_at: string | null
         }
         Insert: {
+          archived?: boolean
           badge_type_id: string
           created_at?: string
+          end_at?: string | null
           id?: string
+          notes?: string
           product_slug: string
           sort_order?: number
+          start_at?: string | null
         }
         Update: {
+          archived?: boolean
           badge_type_id?: string
           created_at?: string
+          end_at?: string | null
           id?: string
+          notes?: string
           product_slug?: string
           sort_order?: number
+          start_at?: string | null
         }
         Relationships: [
           {
