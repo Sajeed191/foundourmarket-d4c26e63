@@ -338,9 +338,15 @@ function ProductPage() {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-3.5 text-balance leading-[1.12]">{product.name}</h1>
 
             <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <StarRating rating={product.rating} starClassName="size-3.5" glow />
+              <StarRating
+                rating={product.rating}
+                count={product.reviews}
+                showValue={product.reviews > 0}
+                starClassName="size-3.5"
+                textClassName="text-xs font-mono text-muted-foreground/70"
+                glow
+              />
 
-              <span className="text-xs font-mono text-muted-foreground/70">{product.rating} · {product.reviews} reviews</span>
               <a href="#reviews" className="text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">See reviews →</a>
             </div>
 
