@@ -13,11 +13,18 @@ import { StarRating } from "@/components/site/StarRating";
 
 type DisplayBadge = {
   key: string;
+  id?: string;
   label: string;
   emoji: string;
   className?: string;
   color?: string;
   textColor?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  glowColor?: string;
+  iconColor?: string;
+  shadowStrength?: number;
+  radius?: number;
 };
 
 
