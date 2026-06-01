@@ -33,7 +33,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const nav = useNavigate();
   const { products, loading } = useProducts();
   const { categories } = useCategories();
-  const { format } = useRegion();
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState("");
