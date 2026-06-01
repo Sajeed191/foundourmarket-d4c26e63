@@ -194,7 +194,7 @@ export function WishlistAlertsProvider({ children }: { children: ReactNode }) {
       }
 
       if (notifications.length) {
-        await supabase.from("notifications").insert(notifications);
+        await supabase.from("notifications").insert(notifications as never);
         await refresh();
       }
     })().catch(() => {
