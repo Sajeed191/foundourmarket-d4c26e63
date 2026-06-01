@@ -121,20 +121,19 @@ function SearchPage() {
 
 
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 pb-4 border-b border-border">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <button onClick={() => setFiltersOpen((o) => !o)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border text-[11px] font-mono uppercase tracking-widest hover:bg-white/5">
-            <SlidersHorizontal className="size-3.5" /> Filters
-            {activeFilterCount > 0 && <span className="size-5 rounded-full bg-accent text-accent-foreground grid place-items-center text-[10px]">{activeFilterCount}</span>}
+            <SlidersHorizontal className="size-3.5" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
           {activeFilterCount > 0 && (
             <button onClick={() => nav({ search: { q: search.q }, replace: true })}
-              className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent">Clear</button>
+              className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent">Clear all</button>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">{loading ? "…" : `${results.length} results`}</span>
+          <span className="text-[11px] font-mono tracking-wide text-muted-foreground">{loading ? "Searching…" : `${results.length} Product${results.length === 1 ? "" : "s"} Found`}</span>
           <select value={search.sort ?? "relevance"} onChange={(e) => update({ sort: e.target.value })}
             aria-label="Sort search results"
             className="bg-background border border-border rounded-full px-3 py-2 text-[11px] font-mono uppercase tracking-widest focus:outline-none focus:border-accent">
@@ -142,6 +141,23 @@ function SearchPage() {
           </select>
         </div>
       </div>
+
+      {/* Active filter chips — removable */}
+      {activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          {activeChips.map((chip) => (
+            <button
+              key={chip.label}
+              onClick={chip.clear}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-[11px] font-mono tracking-wide text-foreground hover:border-accent hover:text-accent transition-colors"
+            >
+              {chip.label}
+              <X className="size-3" />
+            </button>
+          ))}
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-6 lg:gap-8">
         <aside className={`${filtersOpen ? "block" : "hidden"} lg:block space-y-6 lg:space-y-8 bg-card lg:bg-transparent border lg:border-0 border-border rounded-2xl p-4 lg:p-0`}>
