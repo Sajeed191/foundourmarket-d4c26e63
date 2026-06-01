@@ -180,20 +180,34 @@ function BadgeManagerInner() {
     try { await deleteBadgeType(b.id); logActivity("badge_deleted", "badge_types", b.id); toast.success("Badge deleted"); }
     catch { toast.error("Delete failed"); }
   }
+  async function onArchive(b: BadgeType) {
+    try {
+      await setBadgeArchived(b.id, !b.archived);
+      logActivity(b.archived ? "badge_unarchived" : "badge_archived", "badge_types", b.id);
+      toast.success(b.archived ? "Badge restored" : "Badge archived");
+    } catch { toast.error("Archive failed"); }
+  }
 
   if (loading) {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
   }
 
-  const ordered = order.map((id) => types.find((t) => t.id === id)).filter(Boolean) as BadgeType[];
+  const ordered = order
+    .map((id) => types.find((t) => t.id === id))
+    .filter(Boolean)
+    .filter((b) => (showArchived ? (b as BadgeType).archived : !(b as BadgeType).archived))
+    .filter((b) => categoryFilter === "All" || (b as BadgeType).category === categoryFilter) as BadgeType[];
 
-  const statCards = [
-    { icon: Sparkles, label: "Active badges", value: String(stats.active) },
-    { icon: Package, label: "Products using badges", value: String(stats.productsUsing) },
+  const statCards: { icon: typeof Sparkles; label: string; value?: string; num?: number; suffix?: string; wide?: boolean }[] = [
+    { icon: Sparkles, label: "Active badges", num: stats.active },
+    { icon: Package, label: "Products using", num: stats.productsUsing },
+    { icon: CalendarClock, label: "Scheduled", num: stats.scheduled },
+    { icon: Ban, label: "Expired", num: stats.expired },
+    { icon: MousePointerClick, label: "Total clicks", num: stats.totalClicks },
+    { icon: Percent, label: "Avg CTR", num: stats.ctr, suffix: "%" },
     { icon: Crown, label: "Most used", value: stats.most, wide: true },
-    { icon: Clock, label: "Recently added", value: stats.recent, wide: true },
-    { icon: CalendarClock, label: "Scheduled", value: String(stats.scheduled) },
-    { icon: Ban, label: "Expired", value: String(stats.expired) },
+    { icon: BarChart3, label: "Most clicked", value: stats.topClicked, wide: true },
+    { icon: Archive, label: "Archived", num: stats.archived },
   ];
 
   return (
