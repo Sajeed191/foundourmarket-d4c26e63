@@ -206,6 +206,13 @@ function ProductPage() {
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
 
+  // The sticky purchase dock must never mount until the whole page is ready:
+  // product + variants + images loaded, main image decoded, and currency
+  // resolved. Combined with the scroll gate this prevents overlap, layout
+  // shift and currency flicker after a refresh.
+  const productPageReady = dataReady && currencyReady && mainImgLoaded;
+  const showPurchaseDock = productPageReady && scrolledPastHero;
+
   const handleAdd = () => {
     add(product.slug, qty);
     toast.success(`${product.name} added to cart`);
