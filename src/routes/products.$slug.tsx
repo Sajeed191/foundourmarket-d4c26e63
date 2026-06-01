@@ -117,8 +117,6 @@ function ProductPage() {
   const [dataReady, setDataReady] = useState(false);
   // True once the main product image has actually decoded/loaded.
   const [mainImgLoaded, setMainImgLoaded] = useState(false);
-  // True once the user has scrolled past the hero so the dock can appear.
-  const [scrolledPastHero, setScrolledPastHero] = useState(false);
 
   useEffect(() => {
     layoutMetrics.setExpectedCtaHeight(64);
@@ -188,14 +186,6 @@ function ProductPage() {
     return () => { active = false; window.clearTimeout(fallback); };
   }, [product?.slug, product?.image]);
 
-  // Reveal the sticky purchase dock only after the user scrolls past the hero.
-  useEffect(() => {
-    const onScroll = () => setScrolledPastHero(window.scrollY > 220);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const deliveryWindow = useMemo(() => {
     const start = new Date();
     start.setDate(start.getDate() + 3);
@@ -243,7 +233,7 @@ function ProductPage() {
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
   const productPageReady = layoutReady && dataReady && currencyReady && mainImgLoaded;
-  const showPurchaseDock = productPageReady && scrolledPastHero;
+  const showPurchaseDock = productPageReady;
 
   if (!productPageReady) {
     return <ProductPageSkeleton />;
