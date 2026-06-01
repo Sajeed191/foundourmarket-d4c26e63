@@ -179,7 +179,8 @@ function ProductPage() {
     img.onerror = done;
     img.src = product.image;
     if (img.complete) {
-      img.decode?.().catch(() => {}).finally(done);
+      if (img.decode) void img.decode().catch(() => {}).finally(done);
+      else done();
     }
     return () => { active = false; };
   }, [product?.slug, product?.image]);
@@ -201,8 +202,10 @@ function ProductPage() {
     return `${start.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
   }, []);
 
+  const layoutReady = !authLoading && layoutMetrics.ready && layoutMetrics.viewportHeight > 0;
+
   if (loading) {
-    return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
+    return <ProductPageSkeleton />;
   }
 
   if (!product) {
@@ -236,8 +239,12 @@ function ProductPage() {
   // product + variants + images loaded, main image decoded, and currency
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
-  const productPageReady = dataReady && currencyReady && mainImgLoaded;
+  const productPageReady = layoutReady && dataReady && currencyReady && mainImgLoaded;
   const showPurchaseDock = productPageReady && scrolledPastHero;
+
+  if (!productPageReady) {
+    return <ProductPageSkeleton />;
+  }
 
   const handleAdd = () => {
     add(product.slug, qty);
