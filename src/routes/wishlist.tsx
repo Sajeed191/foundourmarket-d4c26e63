@@ -429,10 +429,13 @@ function WishlistPage() {
                 <span className="hidden sm:inline">{allSelected ? "Clear" : "All"}</span>
               </button>
 
-              {/* Count + clear */}
-              <div className="min-w-0 flex flex-col leading-none">
+              {/* Count + value + clear */}
+              <div className="min-w-0 flex flex-col leading-none gap-0.5">
                 <span className="text-[13px] font-display font-semibold tabular-nums whitespace-nowrap">
                   {selected.size} item{selected.size > 1 ? "s" : ""}
+                </span>
+                <span className="text-[10px] font-mono text-accent tabular-nums whitespace-nowrap hidden sm:inline">
+                  {format(selectedTotal)}
                 </span>
                 <button
                   onClick={exitSelect}
@@ -441,6 +444,7 @@ function WishlistPage() {
                   Clear
                 </button>
               </div>
+
 
               <div className="flex-1 min-w-1" />
 
