@@ -515,6 +515,26 @@ function Home() {
               </div>
             </Reveal>
           ))}
+
+          {!isProductAdmin && (
+            <Reveal delay={6} className="h-full">
+              <Link
+                to="/categories"
+                className="group product-card-glass relative flex h-full min-h-[140px] aspect-square flex-col items-center justify-center gap-3 overflow-hidden text-center hover:-translate-y-1.5"
+              >
+                <div aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "var(--gradient-ember)" }} />
+                <div className="relative size-12 grid place-items-center rounded-2xl bg-accent/15 text-accent ring-1 ring-accent/30 group-hover:scale-110 group-hover:shadow-[0_0_28px_-6px_var(--color-accent)] transition-all">
+                  <LayoutGrid className="size-5" />
+                </div>
+                <div className="relative">
+                  <h3 className="text-base sm:text-lg font-medium">View All</h3>
+                  <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest mt-0.5 inline-flex items-center gap-1">
+                    Explore categories <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+                  </p>
+                </div>
+              </Link>
+            </Reveal>
+          )}
         </div>
       </section>
       {isProductAdmin && editCats && (
