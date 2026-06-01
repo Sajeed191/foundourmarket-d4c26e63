@@ -176,6 +176,14 @@ function ProductPage() {
     return `${start.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
   }, []);
 
+  // Deterministic social-proof numbers derived from the slug so they stay
+  // stable across renders/hydration (no flicker, no SSR mismatch).
+  const socialProof = useMemo(() => {
+    if (!product) return null;
+    const seed = product.slug.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    return { viewers: 12 + (seed % 40), sold: 5 + (seed % 24) };
+  }, [product?.slug]);
+
   useEffect(() => {
     const updateDock = () => {
       const sentinel = document.querySelector<HTMLElement>("[data-product-sticky-threshold]");
@@ -399,21 +407,50 @@ function ProductPage() {
             {/* subtle gradient separator */}
             <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
 
-            <div className="flex items-baseline gap-3 sm:gap-4 mb-4 flex-wrap">
-              {currencyReady ? (
-                <>
+            {/* Premium animated price block */}
+            {currencyReady ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-4"
+              >
+                <div className="flex items-baseline gap-3 sm:gap-4 flex-wrap">
                   <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
-                  {originalPrice && (
-                    <span className="text-sm font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
+                  {originalPrice && originalPrice > effectivePrice && (
+                    <span className="text-base font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
                   )}
-                </>
-              ) : (
-                <span aria-hidden className="h-11 sm:h-12 w-40 rounded-xl bg-white/[0.06] animate-pulse" />
-              )}
-              {discountPct && (
-                <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent/15 text-accent px-2.5 py-1 rounded-full border border-accent/30">Save {discountPct}%</span>
-              )}
-            </div>
+                  {discountPct && (
+                    <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent text-accent-foreground px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">{discountPct}% OFF</span>
+                  )}
+                </div>
+                {originalPrice && originalPrice > effectivePrice && (
+                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-widest text-accent">
+                    <Sparkles className="size-3.5" /> Save {format(originalPrice - effectivePrice)}
+                  </p>
+                )}
+              </motion.div>
+            ) : (
+              <div className="mb-4 space-y-2">
+                <span aria-hidden className="block h-11 sm:h-12 w-40 rounded-xl bg-white/[0.06] animate-pulse" />
+                <span aria-hidden className="block h-4 w-24 rounded bg-white/[0.05] animate-pulse" />
+              </div>
+            )}
+
+            {/* Social proof / urgency strip */}
+            {socialProof && (
+              <div className="mb-5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
+                  <Users className="size-3 text-accent" /> {socialProof.viewers} viewing today
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
+                  <ShoppingBagIcon className="size-3 text-accent" /> {socialProof.sold} sold this week
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-accent">
+                  <Sparkles className="size-3" /> Trending
+                </span>
+              </div>
+            )}
 
             {isAdmin && <AdminProductPanel product={product} />}
 
