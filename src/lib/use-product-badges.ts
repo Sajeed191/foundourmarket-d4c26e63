@@ -428,6 +428,107 @@ export async function reorderProductBadges(slug: string, orderedBadgeTypeIds: st
   await load(true);
 }
 
+/** Update per-assignment fields (notes / schedule / archived) for one product badge. */
+export async function updateAssignment(
+  slug: string,
+  badgeTypeId: string,
+  patch: { notes?: string; start_at?: string | null; end_at?: string | null; archived?: boolean },
+) {
+  const { error } = await supabase
+    .from("product_badges")
+    .update(patch as never)
+    .eq("product_slug", slug)
+    .eq("badge_type_id", badgeTypeId);
+  if (error) throw new Error(error.message);
+  await load(true);
+}
+
+type BulkProgress = (done: number, total: number) => void;
+const CHUNK = 200;
+
+/** Assign a badge to many products (skips products that already have it). Chunked + progress. */
+export async function bulkAssign(
+  slugs: string[],
+  badgeTypeId: string,
+  onProgress?: BulkProgress,
+) {
+  const snap = cache ?? (await load());
+  const targets = slugs.filter(
+    (s) => !(snap.map.get(s) ?? []).some((b) => b.id === badgeTypeId),
+  );
+  const rows = targets.map((s) => ({
+    product_slug: s,
+    badge_type_id: badgeTypeId,
+    sort_order: (snap.map.get(s) ?? []).length,
+  }));
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const { error } = await supabase.from("product_badges").insert(chunk as never);
+    if (error) throw new Error(error.message);
+    onProgress?.(Math.min(i + CHUNK, rows.length), rows.length);
+  }
+  await load(true);
+  return targets.length;
+}
+
+/** Remove a badge from many products. Chunked + progress. */
+export async function bulkUnassign(
+  slugs: string[],
+  badgeTypeId: string,
+  onProgress?: BulkProgress,
+) {
+  for (let i = 0; i < slugs.length; i += CHUNK) {
+    const chunk = slugs.slice(i, i + CHUNK);
+    const { error } = await supabase
+      .from("product_badges")
+      .delete()
+      .eq("badge_type_id", badgeTypeId)
+      .in("product_slug", chunk);
+    if (error) throw new Error(error.message);
+    onProgress?.(Math.min(i + CHUNK, slugs.length), slugs.length);
+  }
+  await load(true);
+}
+
+/** Replace one badge with another across many products. */
+export async function bulkReplace(
+  slugs: string[],
+  fromBadgeTypeId: string,
+  toBadgeTypeId: string,
+  onProgress?: BulkProgress,
+) {
+  for (let i = 0; i < slugs.length; i += CHUNK) {
+    const chunk = slugs.slice(i, i + CHUNK);
+    const { error } = await supabase
+      .from("product_badges")
+      .update({ badge_type_id: toBadgeTypeId } as never)
+      .eq("badge_type_id", fromBadgeTypeId)
+      .in("product_slug", chunk);
+    if (error) throw new Error(error.message);
+    onProgress?.(Math.min(i + CHUNK, slugs.length), slugs.length);
+  }
+  await load(true);
+}
+
+/** Bulk schedule / archive an existing badge assignment across many products. */
+export async function bulkUpdateAssignments(
+  slugs: string[],
+  badgeTypeId: string,
+  patch: { start_at?: string | null; end_at?: string | null; archived?: boolean },
+  onProgress?: BulkProgress,
+) {
+  for (let i = 0; i < slugs.length; i += CHUNK) {
+    const chunk = slugs.slice(i, i + CHUNK);
+    const { error } = await supabase
+      .from("product_badges")
+      .update(patch as never)
+      .eq("badge_type_id", badgeTypeId)
+      .in("product_slug", chunk);
+    if (error) throw new Error(error.message);
+    onProgress?.(Math.min(i + CHUNK, slugs.length), slugs.length);
+  }
+  await load(true);
+
 export async function updateBadgeType(id: string, patch: Partial<BadgeTypeRow>) {
   const { error } = await supabase.from("badge_types").update(patch as never).eq("id", id);
   if (error) throw new Error(error.message);
