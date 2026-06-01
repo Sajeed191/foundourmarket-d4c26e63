@@ -632,6 +632,9 @@ function ProductCard({
         </div>
       </div>
 
+      {/* Assigned badges */}
+      <ProductBadgeStrip slug={p.slug} onManage={onEdit} />
+
       {/* Metrics */}
       <div className="grid grid-cols-4 gap-1.5 mt-3">
         <Metric icon={TrendingUp} label="Sold" value={String(stat.units)} />
