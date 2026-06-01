@@ -105,6 +105,7 @@ function WishlistPage() {
   const [drops, setDrops] = useState<Record<string, number>>({});
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
