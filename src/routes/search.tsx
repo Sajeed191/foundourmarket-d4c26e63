@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, type Product } from "@/lib/products";
 import { useCategories } from "@/lib/use-categories";
 import { ProductCard } from "@/components/site/ProductCard";
+import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
 type SearchParams = { q?: string; cat?: string; sort?: string; min?: number; max?: number; stock?: string };
 
