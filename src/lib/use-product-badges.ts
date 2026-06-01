@@ -233,7 +233,13 @@ export function useProductBadges(slug: string): RenderBadge[] {
     };
   }, []);
   const list = snap?.map.get(slug) ?? [];
-  return list.filter((b) => isBadgeLive(b));
+  const now = Date.now();
+  return list.filter((b) => {
+    if (b.assignArchived) return false;
+    if (b.assignStartAt && new Date(b.assignStartAt).getTime() > now) return false;
+    if (b.assignEndAt && new Date(b.assignEndAt).getTime() < now) return false;
+    return isBadgeLive(b, now);
+  });
 }
 
 /** Full badge catalog + per-product assignment map (admin tooling). */
