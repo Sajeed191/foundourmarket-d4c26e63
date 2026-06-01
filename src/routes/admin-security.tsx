@@ -15,7 +15,7 @@ import {
 
 export const Route = createFileRoute("/admin-security")({
   head: () => ({ meta: [{ title: "Fraud & Security — Admin" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ view: typeof s.view === "string" ? s.view : undefined }),
+  validateSearch: (s: Record<string, unknown>): { view?: string } => ({ view: typeof s.view === "string" ? s.view : undefined }),
   component: SecurityPage,
 });
 

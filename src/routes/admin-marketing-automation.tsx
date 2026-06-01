@@ -26,7 +26,7 @@ import { MarketingExecutionsCenter } from "@/components/admin/MarketingExecution
 
 export const Route = createFileRoute("/admin-marketing-automation")({
   head: () => ({ meta: [{ title: "Marketing Automation — Admin" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { action?: string; template?: string; tab?: string; campaign?: string; view?: string } => ({
     action: typeof s.action === "string" ? s.action : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
     tab: typeof s.tab === "string" ? s.tab : undefined,

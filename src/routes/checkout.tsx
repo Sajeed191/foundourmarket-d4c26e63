@@ -37,7 +37,7 @@ export const Route = createFileRoute("/checkout")({
       { name: "description", content: "Whatever you need. All in one place. Complete your order with secure, encrypted Razorpay checkout." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { address?: string } => ({
     address: typeof search.address === "string" ? search.address : undefined,
   }),
   component: CheckoutPage,

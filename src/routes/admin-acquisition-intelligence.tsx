@@ -21,7 +21,7 @@ export const Route = createFileRoute("/admin-acquisition-intelligence")({
       { name: "description", content: "Real CAC, ROAS, CPA and multi-touch attribution across every campaign, channel, source and market." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({ view: typeof s.view === "string" ? s.view : undefined }),
+  validateSearch: (s: Record<string, unknown>): { view?: string } => ({ view: typeof s.view === "string" ? s.view : undefined }),
   component: AcquisitionPage,
 });
 
