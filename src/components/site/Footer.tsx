@@ -79,33 +79,55 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <FooterSection title="Shop">
+        <FooterSection title="Company">
+          <ul className="text-xs space-y-2 text-muted-foreground">
+            <li><Link to="/pages/$slug" params={{ slug: "about" }} className="hover:text-foreground transition-colors">About Us</Link></li>
+            <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
+            <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
+            <li><Link to="/deals" className="hover:text-foreground transition-colors">Today's Deals</Link></li>
+          </ul>
+        </FooterSection>
+        <FooterSection title="Categories">
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/category/$slug" params={{ slug: "electronics" }} className="hover:text-foreground transition-colors">Electronics</Link></li>
-            <li><Link to="/category/$slug" params={{ slug: "fashion" }} className="hover:text-foreground transition-colors">Fashion</Link></li>
+            <li><Link to="/category/$slug" params={{ slug: "beauty" }} className="hover:text-foreground transition-colors">Beauty</Link></li>
+            <li><Link to="/category/$slug" params={{ slug: "gaming" }} className="hover:text-foreground transition-colors">Gaming</Link></li>
             <li><Link to="/category/$slug" params={{ slug: "home" }} className="hover:text-foreground transition-colors">Home</Link></li>
-            <li><Link to="/category/$slug" params={{ slug: "fitness" }} className="hover:text-foreground transition-colors">Fitness</Link></li>
           </ul>
         </FooterSection>
         <FooterSection title="Support">
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/help" className="hover:text-foreground transition-colors">Contact Us</Link></li>
-            <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
             <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns &amp; Refunds</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
+            <li><Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
           </ul>
         </FooterSection>
 
-        <div className="space-y-2.5">
-          <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Region</h5>
-          <div className="w-full bg-transparent border border-border rounded-xl px-3 py-2 text-xs uppercase font-mono">
-            {market === "india" ? "India · INR (₹)" : "International · USD ($)"}
-          </div>
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            {market === "india" ? "Pricing in ₹. Razorpay/UPI at checkout." : "Pricing in USD. International cards & PayPal."}
-          </p>
-        </div>
+        <FooterSection title="Contact">
+          <ul className="text-xs space-y-2.5 text-muted-foreground">
+            <li>
+              <a href="mailto:foundourmarket@gmail.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Mail className="size-3.5 text-accent shrink-0" />
+                <span className="truncate">foundourmarket@gmail.com</span>
+              </a>
+            </li>
+            {["+91 97458 44213", "+91 62820 88380", "+91 8714459240"].map((num) => (
+              <li key={num}>
+                <a
+                  href={`https://wa.me/${num.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-foreground transition-colors"
+                >
+                  <MessageCircle className="size-3.5 text-accent shrink-0" />
+                  <span>{num}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </FooterSection>
       </div>
 
 
