@@ -96,7 +96,7 @@ function Shell({
           <Hr style={{ borderColor: BORDER, margin: '24px 0 16px' }} />
           <Section style={{ textAlign: 'center', padding: '0 0 8px' }}>
             <Text style={{ margin: 0, fontSize: '11px', color: MUTED }}>
-              Need help? Reach us at support@foundourmarket.com
+              Need help? Reach us at foundourmarket@gmail.com
             </Text>
             <Text style={{ margin: '6px 0 0', fontSize: '11px', color: '#5a6a7d' }}>
               © {new Date().getFullYear()} FoundOurMarket™. All rights reserved.

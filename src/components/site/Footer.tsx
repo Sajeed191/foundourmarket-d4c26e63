@@ -89,10 +89,11 @@ export function Footer() {
         </FooterSection>
         <FooterSection title="Support">
           <ul className="text-xs space-y-2 text-muted-foreground">
+            <li><Link to="/help" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+            <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
+            <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns &amp; Refunds</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
-            <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns</Link></li>
-            <li><Link to="/pages/$slug" params={{ slug: "about" }} className="hover:text-foreground transition-colors">About</Link></li>
           </ul>
         </FooterSection>
 
