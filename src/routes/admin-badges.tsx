@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, animate } from "framer-motion";
 import {
   Plus, Loader2, Tag, Layers, Crown, Clock, CalendarClock, Ban,
-  Pencil, Copy, Trash2, GripVertical, Power, MousePointerClick, Package, Sparkles,
+  Pencil, Copy, Trash2, GripVertical, MousePointerClick, Package, Sparkles,
   Archive, ArchiveRestore, BarChart3, Percent,
 } from "lucide-react";
 import { toast } from "sonner";
