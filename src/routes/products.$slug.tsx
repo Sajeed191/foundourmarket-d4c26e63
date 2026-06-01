@@ -3,7 +3,7 @@ import {
   Heart, Truck, Shield, RotateCcw, Minus, Plus, Loader2, Scale,
   ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck,
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
@@ -581,7 +581,8 @@ function ProductPage() {
       </div>
 
       {/* Recommendations */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ProductLayoutDiagnostics phase="final" />
+      <div data-product-recommendations className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-0 sm:min-h-[20rem]">
         {fbtSlugs.length > 0 && (
           <RecommendationStrip
             title="Frequently bought together"
@@ -599,13 +600,15 @@ function ProductPage() {
         )}
       </div>
 
-      <div id="reviews">
+      <div id="reviews" data-product-reviews className="min-h-[22rem]">
         <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
       </div>
-      <div id="questions">
+      <div id="questions" data-product-questions className="min-h-[12rem]">
         <ProductQA productSlug={product.slug} />
       </div>
-      <RelatedProducts product={product} />
+      <div data-product-related className="min-h-[24rem]">
+        <RelatedProducts product={product} />
+      </div>
       <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
       
 
