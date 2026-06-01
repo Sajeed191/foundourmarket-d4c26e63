@@ -116,11 +116,58 @@ export function openCrispChat(): void {
   document.documentElement.removeAttribute("data-crisp-hidden");
   window.$crisp.push(["do", "chat:show"]);
   window.$crisp.push(["do", "chat:open"]);
-  window.$crisp.push(["on", "chat:opened", () => perf.mark("open-done")]);
+  window.$crisp.push(["on", "chat:opened", () => { perf.mark("open-done"); showBackButton(); }]);
   // Auto-hide the widget entirely once the user closes the chat.
   window.$crisp.push(["on", "chat:closed", () => closeCrispChat()]);
   // Relabel Crisp's built-in "Minimize" menu item to "Close chat".
   customizeCrispMenu();
+  // Show a left-side Back button overlay for an easy single-tap exit.
+  showBackButton();
+}
+
+const BACK_BUTTON_ID = "crisp-back-button";
+
+// Renders a permanent top-left "← Back" button while the Crisp chat is open.
+// Tapping it closes the chat (conversation/session preserved) and returns the
+// user to the exact previous page state — no navigation, no refresh.
+function showBackButton(): void {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+
+  let btn = document.getElementById(BACK_BUTTON_ID) as HTMLButtonElement | null;
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = BACK_BUTTON_ID;
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Back");
+    btn.innerHTML = `<span style="font-size:18px;line-height:1">←</span><span>Back</span>`;
+    btn.style.cssText = [
+      "position:fixed",
+      "top:calc(env(safe-area-inset-top) + 12px)",
+      "left:calc(env(safe-area-inset-left) + 12px)",
+      "z-index:2147483647",
+      "display:flex",
+      "align-items:center",
+      "gap:6px",
+      "padding:8px 14px",
+      "border:none",
+      "border-radius:9999px",
+      "background:rgba(17,17,17,0.92)",
+      "color:#fff",
+      "font:600 14px/1 system-ui,-apple-system,sans-serif",
+      "box-shadow:0 4px 14px rgba(0,0,0,0.3)",
+      "cursor:pointer",
+      "-webkit-tap-highlight-color:transparent",
+    ].join(";");
+    btn.addEventListener("click", () => closeCrispChat());
+    document.body.appendChild(btn);
+  }
+  btn.style.display = "flex";
+}
+
+function hideBackButton(): void {
+  if (typeof document === "undefined") return;
+  const btn = document.getElementById(BACK_BUTTON_ID);
+  if (btn) btn.style.display = "none";
 }
 
 
