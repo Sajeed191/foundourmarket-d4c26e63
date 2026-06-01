@@ -94,6 +94,8 @@ export const Route = createFileRoute("/products/$slug")({
   component: ProductPage,
 });
 
+let lastProductLayoutSnapshot: Record<string, number> | null = null;
+
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
@@ -660,8 +662,6 @@ function ProductPage() {
 
 
 function ProductLayoutDiagnostics({ phase }: { phase: "loading" | "final" }) {
-  const previous = useRef<Record<string, number> | null>(null);
-
   useEffect(() => {
     if (!import.meta.env.DEV || typeof window === "undefined") return;
     const selectors = {
@@ -685,11 +685,11 @@ function ProductLayoutDiagnostics({ phase }: { phase: "loading" | "final" }) {
       ) as Record<string, number>;
     const frame = requestAnimationFrame(() => {
       const current = read();
-      const delta = previous.current
-        ? Object.fromEntries(Object.entries(current).map(([key, value]) => [key, value - (previous.current?.[key] ?? 0)]))
+      const delta = lastProductLayoutSnapshot
+        ? Object.fromEntries(Object.entries(current).map(([key, value]) => [key, value - (lastProductLayoutSnapshot?.[key] ?? 0)]))
         : null;
       console.debug(`[product-layout] ${phase}`, { ...current, delta });
-      previous.current = current;
+      lastProductLayoutSnapshot = current;
     });
     return () => cancelAnimationFrame(frame);
   }, [phase]);
