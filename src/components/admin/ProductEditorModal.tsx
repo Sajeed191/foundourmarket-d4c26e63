@@ -403,6 +403,15 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
+        {/* Product Badges */}
+        <CollapsibleModule eyebrow="Step 7" title="Product Badges" badge={<Tag className="size-3.5 text-accent" />}>
+          {row?.slug ? (
+            <ProductBadgeManager slug={row.slug} />
+          ) : (
+            <ProductBadgeManager selectedIds={pendingBadges} onChange={setPendingBadges} />
+          )}
+        </CollapsibleModule>
+
         {/* Media */}
         <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
