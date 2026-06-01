@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Heart, Plus, Minus, Check, Eye, TrendingDown, Bell, BellRing, X } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
+import { Price } from "@/components/site/Price";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useWishlistAlerts } from "@/lib/wishlist-alerts";
@@ -31,7 +32,7 @@ export function WishlistCard({
   onToggleSelect,
   onQuickView,
 }: WishlistCardProps) {
-  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
+  const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items, setQty } = useCart();
   const { toggle } = useWishlist();
   const { priceAlertsFor, addPriceAlert, removePriceAlert, hasRestock, toggleRestock } =
@@ -297,20 +298,16 @@ export function WishlistCard({
         {/* Price drop indicator */}
         {priceDrop && priceDrop > 0 ? (
           <span className="mt-1 inline-flex items-center gap-1 self-start rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold font-mono text-[9px] px-2 py-0.5">
-            <TrendingDown className="size-2.5" /> Price dropped {format(priceDrop)}
+            <TrendingDown className="size-2.5" /> Price dropped <Price value={priceDrop} skeletonClassName="h-[1em] w-8" />
           </span>
         ) : null}
 
         {/* Price + ADD */}
         <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="font-display font-semibold tabular-nums leading-none text-base sm:text-lg">
-              {format(price)}
-            </p>
+            <Price value={price} className="font-display font-semibold tabular-nums leading-none text-base sm:text-lg block" />
             {originalPrice && discount ? (
-              <p className="font-mono text-muted-foreground/60 line-through tabular-nums text-[10px] mt-1">
-                {format(originalPrice)}
-              </p>
+              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums text-[10px] mt-1 block" />
             ) : null}
           </div>
           {!product.inStock ? (

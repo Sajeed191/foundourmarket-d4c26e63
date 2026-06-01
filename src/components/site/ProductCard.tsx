@@ -10,6 +10,7 @@ import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { computeBadges } from "@/lib/badges";
 import { useProductBadges, trackBadgeClick, trackBadgeImpression, badgeAnimationClass } from "@/lib/use-product-badges";
 import { StarRating } from "@/components/site/StarRating";
+import { Price } from "@/components/site/Price";
 
 type DisplayBadge = {
   key: string;
@@ -50,7 +51,7 @@ function badgePriority(key?: string, label?: string): number {
 
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
-  const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
+  const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items, setQty } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
@@ -292,9 +293,9 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         {/* Price + ADD — pinned to the bottom with a subtle divider so it aligns across all cards */}
         <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className={`font-display font-semibold tabular-nums leading-none ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{format(price)}</p>
+            <Price value={price} className={`font-display font-semibold tabular-nums leading-none block ${compact ? "text-sm" : "text-base sm:text-lg"}`} />
             {originalPrice && discount ? (
-              <p className={`font-mono text-muted-foreground/60 line-through tabular-nums ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`}>{format(originalPrice)}</p>
+              <Price value={originalPrice} className={`font-mono text-muted-foreground/60 line-through tabular-nums block ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`} />
             ) : null}
           </div>
           {!product.inStock ? (

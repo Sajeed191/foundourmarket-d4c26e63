@@ -95,7 +95,7 @@ function WishlistPage() {
   const { slugs, toggle, loading: wlLoading } = useWishlist();
   const { products, loading: pLoading } = useProducts();
   const { add } = useCart();
-  const { format, priceOf, compareOf, shippingFeeOf, currency } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf, currency, currencyReady } = useRegion();
   const nav = useNavigate();
 
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -322,7 +322,7 @@ function WishlistPage() {
 
   const addAll = () => items.filter((p) => p.inStock).forEach((p) => add(p.slug, 1));
 
-  if (loading || !user || wlLoading || pLoading) {
+  if (loading || !user || wlLoading || pLoading || !currencyReady) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 mobile-page-clearance md:pb-12">
         <div className="h-8 w-48 rounded bg-white/[0.05] animate-pulse mb-8" />

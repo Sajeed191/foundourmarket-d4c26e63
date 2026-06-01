@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X, TrendingUp, Clock, Tag, ArrowRight, Loader2, CornerDownLeft, ArrowUp, ArrowDown } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useCategories } from "@/lib/use-categories";
-import { useRegion } from "@/lib/region";
+import { Price } from "@/components/site/Price";
 
 const TRENDING = ["Wireless headphones", "Leather jacket", "Ceramic mug", "Smart watch", "Linen shirt"];
 const RECENT_KEY = "fom-recent-searches";
@@ -32,7 +32,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const nav = useNavigate();
   const { products, loading } = useProducts();
   const { categories } = useCategories();
-  const { format } = useRegion();
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState("");
@@ -257,7 +257,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
                         </div>
-                        <span className="font-mono text-sm text-accent">{format(p.price)}</span>
+                        <Price value={p.price} className="font-mono text-sm text-accent" />
                       </Link>
                     );
                   })}

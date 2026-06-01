@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, Plus, Check } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
+import { Price } from "@/components/site/Price";
 import { useCart } from "@/lib/cart";
 import type { Product } from "@/lib/products";
 
@@ -22,7 +23,7 @@ type Props = {
 
 /** Minimal recently-viewed card — image, name, price and add button only. */
 function MiniCard({ product }: { product: Product }) {
-  const { format, priceOf } = useRegion();
+  const { priceOf } = useRegion();
   const { add, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const inCart = items.some((i) => i.slug === product.slug);
@@ -41,7 +42,7 @@ function MiniCard({ product }: { product: Product }) {
         <h4 className="text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
       </Link>
       <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="font-display font-semibold text-sm tabular-nums leading-none">{format(priceOf(product))}</p>
+        <Price value={priceOf(product)} className="font-display font-semibold text-sm tabular-nums leading-none" />
         <button
           onClick={(e) => {
             e.preventDefault();
