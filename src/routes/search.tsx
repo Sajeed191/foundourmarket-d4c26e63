@@ -260,7 +260,7 @@ function SearchPage() {
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <button
                 onClick={() => update({ cat: undefined })}
-                className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-widest transition-colors ${!search.cat ? "border-accent bg-accent/15 text-accent" : "border-border text-foreground hover:border-accent/60"}`}
+                className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-widest transition-all ${!search.cat ? "border-accent bg-accent/15 text-accent shadow-[0_0_18px_-4px_var(--accent)]" : "border-border text-foreground hover:border-accent/60"}`}
               >
                 All
               </button>
@@ -268,7 +268,7 @@ function SearchPage() {
                 <button
                   key={c.slug}
                   onClick={() => update({ cat: search.cat === c.slug ? undefined : c.slug })}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-widest transition-colors ${search.cat === c.slug ? "border-accent bg-accent/15 text-accent" : "border-border text-foreground hover:border-accent/60"}`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-widest transition-all ${search.cat === c.slug ? "border-accent bg-accent/15 text-accent shadow-[0_0_18px_-4px_var(--accent)]" : "border-border text-foreground hover:border-accent/60"}`}
                 >
                   {c.name}
                 </button>
