@@ -346,7 +346,6 @@
   border: 1px solid oklch(1 0 0 / 0.12);
   border-radius: var(--radius);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   transition: transform 0.45s var(--ease-out-expo), border-color 0.3s ease, background 0.3s ease;
 }
 .card-outline:hover {
