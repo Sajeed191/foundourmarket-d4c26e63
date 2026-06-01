@@ -369,22 +369,26 @@ function CartPage() {
       </div>
 
 
-      {/* Sticky mobile checkout dock — floats above the bottom nav + safe area */}
+      {/* Sticky mobile checkout dock — compact bar that floats ~12px above the
+          bottom nav, respecting the device safe area. */}
       {count > 0 && (
-        <div className="lg:hidden fixed inset-x-0 z-40 px-3 pointer-events-none" style={{ bottom: "var(--product-dock-bottom)" }}>
+        <div
+          className="lg:hidden fixed inset-x-0 z-40 px-3 pointer-events-none"
+          style={{ bottom: "calc(var(--app-bottom-nav-height) + 0.75rem)" }}
+        >
           <div
-            className="pointer-events-auto rounded-2xl p-1.5 pl-4 flex items-center gap-3 border border-white/10 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9),0_0_28px_-14px_hsl(var(--accent)/0.45)]"
+            className="pointer-events-auto rounded-2xl p-1 pl-4 flex items-center gap-3 border border-white/10 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9),0_0_28px_-14px_hsl(var(--accent)/0.45)]"
             style={{
               background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))",
               backdropFilter: "blur(32px) saturate(160%)",
               WebkitBackdropFilter: "blur(32px) saturate(160%)",
             }}
           >
-            <div className="flex-1 min-w-0 leading-tight">
+            <div className="flex-1 min-w-0 leading-none">
               <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/80">Total · {count} {count === 1 ? "item" : "items"}</p>
-              <motion.p key={total} initial={{ scale: 1.06 }} animate={{ scale: 1 }} className="font-mono text-base text-accent leading-tight truncate">{format(total)}</motion.p>
+              <motion.p key={total} initial={{ scale: 1.06 }} animate={{ scale: 1 }} className="font-mono text-[15px] text-accent leading-tight truncate mt-0.5">{format(total)}</motion.p>
             </div>
-            <Link to="/checkout" className="shrink-0 bg-accent text-accent-foreground font-bold px-6 py-3 rounded-xl text-[11px] uppercase tracking-widest inline-flex items-center gap-2 whitespace-nowrap transition-all active:scale-95 shadow-[0_0_20px_hsl(var(--accent)/0.5)]">
+            <Link to="/checkout" className="shrink-0 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-xl text-[11px] uppercase tracking-widest inline-flex items-center gap-2 whitespace-nowrap transition-all active:scale-95 shadow-[0_0_20px_hsl(var(--accent)/0.5)]">
               <Lock className="size-3.5" /> Checkout
             </Link>
           </div>
