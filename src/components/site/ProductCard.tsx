@@ -22,7 +22,9 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
 
   const badgeSettings = useBadgeSettings();
   const badges = computeBadges(product, badgeSettings);
-  const showOnlyLeft = product.stockQuantity > 0 && product.stockQuantity <= 10;
+  const showOnlyLeft =
+    product.stockQuantity > 0 &&
+    product.stockQuantity <= (product.lowStockThreshold || 10);
 
   return (
     <div className={`group card-premium overflow-hidden relative ${compact ? "p-1.5 sm:p-2" : "p-2.5 sm:p-3"}`}>
