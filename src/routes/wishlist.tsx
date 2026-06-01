@@ -95,7 +95,7 @@ function WishlistPage() {
   const { slugs, toggle, loading: wlLoading } = useWishlist();
   const { products, loading: pLoading } = useProducts();
   const { add } = useCart();
-  const { format, priceOf, compareOf, shippingFeeOf, currency } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf, currency, currencyReady } = useRegion();
   const nav = useNavigate();
 
   const [filter, setFilter] = useState<FilterKey>("all");
