@@ -53,18 +53,25 @@
   --mobile-nav-edge-gap: 1rem;
   --mobile-nav-top-gap: 0.5rem;
   --mobile-nav-surface-height: 5rem;
-  --mobile-nav-base-height: calc(var(--mobile-nav-top-gap) + var(--mobile-nav-surface-height) + var(--mobile-nav-edge-gap));
-  --mobile-nav-clearance: calc(var(--mobile-nav-base-height) + var(--mobile-safe-bottom));
+  --mobile-nav-breathing-room: 1.5rem;
+  --bottom-nav-height: calc(var(--mobile-nav-top-gap) + var(--mobile-nav-surface-height) + var(--mobile-nav-edge-gap));
+  --safe-bottom-space: calc(var(--mobile-safe-bottom) + var(--mobile-nav-breathing-room));
+  --mobile-nav-clearance: calc(var(--bottom-nav-height) + var(--mobile-safe-bottom));
   --app-viewport-height: 100dvh;
   --app-header-height: 0px;
   --app-bottom-nav-height: var(--mobile-nav-clearance);
   --app-cta-height: 0px;
   --app-content-height: calc(100dvh - var(--app-header-height) - var(--app-bottom-nav-height) - var(--app-cta-height));
-  --page-bottom-clearance: calc(var(--app-bottom-nav-height) + 1.5rem);
+  --page-bottom-clearance: calc(var(--app-bottom-nav-height) + var(--mobile-nav-breathing-room));
   --product-dock-height: clamp(3.5rem, 9dvh, 4rem);
   --product-dock-gap: 1rem;
   --product-dock-bottom: calc(var(--app-bottom-nav-height) + var(--product-dock-gap));
   --product-page-bottom-clearance: calc(var(--app-bottom-nav-height) + var(--app-cta-height) + var(--product-dock-gap) + 1.5rem);
+  --floating-bottom-offset: calc(var(--app-bottom-nav-height) + 1.5rem);
+  --z-page-content: 1;
+  --z-floating-controls: 55;
+  --z-top-header: 60;
+  --z-bottom-nav: 70;
 
   /* Deep charcoal noir */
   --background: oklch(0.115 0.008 260);
@@ -435,7 +442,23 @@
 
 @media (max-width: 767px) {
   body { min-height: 100dvh; }
-  [data-app-content] { min-height: max(0px, var(--app-content-height)); }
+  [data-app-shell] { isolation: isolate; }
+  [data-app-content] {
+    position: relative;
+    z-index: var(--z-page-content);
+    min-height: max(0px, var(--app-content-height));
+    padding-bottom: var(--page-bottom-clearance) !important;
+  }
+  [data-app-content] > *:last-child { margin-bottom: 0 !important; }
+  [data-app-content]::after {
+    content: "";
+    display: block;
+    height: var(--safe-bottom-space);
+    pointer-events: none;
+  }
+  [data-app-header] { z-index: var(--z-top-header) !important; }
+  [data-app-bottom-nav] { z-index: var(--z-bottom-nav) !important; }
+  [data-floating-control] { z-index: var(--z-floating-controls) !important; }
   .min-h-screen { min-height: 100dvh !important; }
   .h-screen { height: 100dvh !important; }
   .max-h-screen { max-height: 100dvh !important; }
