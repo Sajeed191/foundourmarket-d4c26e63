@@ -349,7 +349,7 @@ function Welcome({ onQuick, availability }: { onQuick: (t: string) => void; avai
             className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 p-3 text-left backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-95"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <Icon className="h-4.5 w-4.5" />
+              <Icon className="h-5 w-5" />
             </span>
             <span className="text-sm font-medium text-foreground">{label}</span>
           </button>
