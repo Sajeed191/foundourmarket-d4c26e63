@@ -173,35 +173,83 @@ function WishlistPage() {
     };
   }, [items]);
 
+  const lowStockOf = (p: Product) =>
+    p.inStock && p.stockQuantity > 0 && p.stockQuantity <= (p.lowStockThreshold || 10);
+  const discOf = (p: Product) => discountPercent(priceOf(p), compareOf(p));
+
   const filtered = useMemo(() => {
+    const byDate = (a: Product, b: Product) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     switch (filter) {
       case "in-stock":
         return items.filter((p) => p.inStock);
       case "out-of-stock":
         return items.filter((p) => !p.inStock);
+      case "low-stock":
+        return items.filter(lowStockOf);
       case "price-drops":
         return items.filter((p) => (drops[p.slug] ?? 0) > 0);
       case "free-shipping":
         return items.filter((p) => shippingFeeOf(p) <= 0);
+      case "recently-added":
+        return [...items].reverse();
+      case "new-arrivals":
+        return [...items].sort(byDate);
+      case "highest-discount":
+        return [...items].sort((a, b) => (discOf(b) ?? 0) - (discOf(a) ?? 0));
+      case "lowest-price":
+        return [...items].sort((a, b) => priceOf(a) - priceOf(b));
+      case "highest-price":
+        return [...items].sort((a, b) => priceOf(b) - priceOf(a));
+      case "best-rated":
+        return [...items].sort((a, b) => b.rating - a.rating);
+      case "most-viewed":
+        return [...items].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0));
       default:
         return items;
     }
-  }, [items, filter, drops, shippingFeeOf]);
+  }, [items, filter, drops, shippingFeeOf, priceOf, compareOf]);
 
   // Smart insights
   const insights = useMemo(() => {
     let dropCount = 0;
     let outOfStock = 0;
+    let lowStock = 0;
     let freeShip = 0;
     let total = 0;
+    let savings = 0;
+    let discSum = 0;
+    let discCount = 0;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    let recent = 0;
     for (const p of items) {
       if ((drops[p.slug] ?? 0) > 0) dropCount++;
       if (!p.inStock) outOfStock++;
+      if (lowStockOf(p)) lowStock++;
       if (shippingFeeOf(p) <= 0) freeShip++;
       total += priceOf(p);
+      const cmp = compareOf(p);
+      if (cmp && cmp > priceOf(p)) savings += cmp - priceOf(p);
+      const d = discOf(p);
+      if (d && d > 0) {
+        discSum += d;
+        discCount++;
+      }
+      if (new Date(p.createdAt).getTime() >= weekAgo) recent++;
     }
-    return { dropCount, outOfStock, freeShip, total, count: items.length };
-  }, [items, drops, priceOf, shippingFeeOf]);
+    return {
+      dropCount,
+      outOfStock,
+      lowStock,
+      freeShip,
+      total,
+      savings,
+      avgDiscount: discCount ? Math.round(discSum / discCount) : 0,
+      recent,
+      count: items.length,
+    };
+  }, [items, drops, priceOf, compareOf, shippingFeeOf]);
+
 
   const selectedTotal = useMemo(
     () => items.filter((p) => selected.has(p.slug)).reduce((s, p) => s + priceOf(p), 0),
