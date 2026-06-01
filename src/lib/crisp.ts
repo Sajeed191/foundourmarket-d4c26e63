@@ -174,6 +174,20 @@ export function setCrispUser(opts: { email?: string; nickname?: string }): void 
   if (opts.nickname) window.$crisp.push(["set", "user:nickname", [opts.nickname]]);
 }
 
+// Attach order/customer context to the Crisp conversation so human agents see
+// it without asking the customer to repeat themselves. Values must be strings.
+export function setCrispSessionData(data: Record<string, string | number | null | undefined>): void {
+  if (typeof window === "undefined") return;
+  void loadCrisp();
+  window.$crisp = window.$crisp || [];
+  const pairs = Object.entries(data)
+    .filter(([, v]) => v !== null && v !== undefined && `${v}`.length > 0)
+    .map(([k, v]) => [k, `${v}`]);
+  if (pairs.length === 0) return;
+  try { window.$crisp.push(["set", "session:data", [pairs]]); } catch { /* noop */ }
+}
+
+
 // ----- Programmatic messaging API used by the custom chat UI -----
 
 export function sendCrispMessage(text: string): void {
