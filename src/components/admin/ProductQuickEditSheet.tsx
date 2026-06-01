@@ -221,6 +221,10 @@ export function ProductQuickEditSheet({
                 <Toggle label="In stock" value={form.inStock} onChange={(v) => set("inStock", v)} />
                 <Toggle label="Featured" value={form.featured} onChange={(v) => set("featured", v)} />
               </div>
+
+              <Field label="Badges">
+                <BadgeAssigner slug={product.slug} />
+              </Field>
             </div>
 
             {/* Footer */}
