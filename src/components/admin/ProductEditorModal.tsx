@@ -228,8 +228,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     const { error: err } = row?.id
       ? await supabase.from("products").update(payload).eq("id", row.id)
       : await supabase.from("products").insert(payload);
+    if (err) { setSaving(false); setError(err.message); return; }
+    // Flush pending badge assignments for a newly created product (in priority order).
+    if (!row?.id && pendingBadges.length) {
+      try {
+        for (const id of pendingBadges) await assignBadge(payload.slug, id);
+      } catch { /* non-fatal: product is saved, badges can be retried in editor */ }
+    }
     setSaving(false);
-    if (err) { setError(err.message); return; }
     logActivity(row?.id ? "product_updated" : "product_created", "product", row?.id, { slug: payload.slug });
     toast.success(row?.id ? "Product updated" : "Product created");
     onSaved();
