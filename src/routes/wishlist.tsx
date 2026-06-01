@@ -400,51 +400,59 @@ function WishlistPage() {
 
 
       {items.length === 0 ? (
-        <div className="bg-card border border-border rounded-2xl p-12 text-center">
-          <div className="size-14 mx-auto mb-5 grid place-items-center rounded-full border border-border">
-            <Heart className="size-5 text-muted-foreground" />
+        <div className="card-premium rounded-2xl p-12 text-center animate-[fade-up_0.5s_ease-out]">
+          <div className="size-16 mx-auto mb-5 grid place-items-center rounded-full bg-accent/15 border border-accent/30 text-accent animate-[float-soft_3s_ease-in-out_infinite]">
+            <Heart className="size-6 fill-accent/40" />
           </div>
-          <p className="text-sm text-muted-foreground mb-6">
-            Nothing saved yet. Tap the heart on anything you love.
+          <h2 className="text-xl font-display font-semibold mb-1.5">Your Wishlist Is Empty 🧡</h2>
+          <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+            Discover products you'll love and tap the heart to save them here.
           </p>
-          <Link
-            to="/"
-            className="inline-block bg-accent text-accent-foreground rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold"
-          >
-            Browse
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 bg-accent text-accent-foreground rounded-full px-6 py-3 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition-all shadow-[var(--shadow-ember)]"
+            >
+              <ShoppingBag className="size-3.5" /> Browse Products
+            </Link>
+            <Link
+              to="/search"
+              search={{ sort: "trending" } as never}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
+            >
+              <Flame className="size-3.5" /> Trending
+            </Link>
+            <Link
+              to="/search"
+              search={{ sort: "newest" } as never}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
+            >
+              <Sparkles className="size-3.5" /> New Arrivals
+            </Link>
+          </div>
         </div>
       ) : (
         <>
-          {/* Smart insights */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
-            <InsightCard
-              icon={<Wallet className="size-4" />}
-              label="Total Value"
-              value={format(insights.total)}
-              accent
-            />
-            <InsightCard
-              icon={<Heart className="size-4" />}
-              label="Products"
-              value={String(insights.count)}
-            />
-            <InsightCard
-              icon={<Truck className="size-4" />}
-              label="Free Shipping"
-              value={String(insights.freeShip)}
-            />
-            <InsightCard
-              icon={<TrendingDown className="size-4" />}
-              label="Price Drops"
-              value={String(insights.dropCount)}
-            />
-            <InsightCard
-              icon={<PackageX className="size-4" />}
-              label="Out of Stock"
-              value={String(insights.outOfStock)}
-            />
+          {/* Smart alert center */}
+          <AlertCenter
+            insights={insights}
+            dismissed={dismissedAlerts}
+            onDismiss={(k) => setDismissedAlerts((prev) => new Set(prev).add(k))}
+            onView={(k) => setFilter(k)}
+          />
+
+          {/* Advanced statistics dashboard */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-8">
+            <InsightCard icon={<Wallet className="size-4" />} label="Total Value" value={format(insights.total)} accent />
+            <InsightCard icon={<Heart className="size-4" />} label="Saved" value={String(insights.count)} />
+            <InsightCard icon={<Truck className="size-4" />} label="Free Ship" value={String(insights.freeShip)} />
+            <InsightCard icon={<TrendingDown className="size-4" />} label="Price Drops" value={String(insights.dropCount)} />
+            <InsightCard icon={<PackageX className="size-4" />} label="Out of Stock" value={String(insights.outOfStock)} />
+            <InsightCard icon={<Tag className="size-4" />} label="Savings" value={format(insights.savings)} />
+            <InsightCard icon={<Percent className="size-4" />} label="Avg Discount" value={`${insights.avgDiscount}%`} />
+            <InsightCard icon={<Sparkles className="size-4" />} label="Recently Added" value={String(insights.recent)} />
           </div>
+
 
           {/* Filters */}
           <div className="-mx-4 sm:mx-0 mb-6 overflow-x-auto no-scrollbar">
