@@ -455,8 +455,11 @@ function WishlistPage() {
 
 
           {/* Filters */}
-          <div className="-mx-4 sm:mx-0 mb-6 overflow-x-auto no-scrollbar snap-x snap-mandatory">
-            <div className="flex items-center gap-2 px-4 sm:px-0">
+          <div
+            className="-mx-4 sm:mx-0 mb-6 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+            style={{ scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
+          >
+            <div className="flex items-center gap-2 px-4 sm:px-0 pr-4 sm:pr-0">
               {FILTERS.map((f) => {
                 const count =
                   f.key === "price-drops"
