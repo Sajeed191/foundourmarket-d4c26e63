@@ -29,6 +29,7 @@ import { useRegion } from "@/lib/region";
 import { supabase } from "@/integrations/supabase/client";
 import { type Product, discountPercent } from "@/lib/products";
 import { WishlistCard } from "@/components/site/WishlistCard";
+import { WishlistRecommendations } from "@/components/site/WishlistRecommendations";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { StarRating } from "@/components/site/StarRating";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
