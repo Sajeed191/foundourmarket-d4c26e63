@@ -29,7 +29,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
     product.stockQuantity <= (product.lowStockThreshold || 10);
 
   return (
-    <div className={`group card-premium overflow-hidden relative ${compact ? "p-1.5 sm:p-2" : "p-2.5 sm:p-3"}`}>
+    <div className={`group card-premium overflow-hidden relative flex flex-col h-full ${compact ? "p-1.5 sm:p-2" : "p-2.5 sm:p-3"}`}>
       <ProductCardAdminControls product={product} />
       {/* Ember halo on hover */}
       <div
