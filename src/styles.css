@@ -270,6 +270,42 @@
   box-shadow: var(--shadow-float), 0 0 60px -20px oklch(0.74 0.19 49 / 0.3);
 }
 
+/* Premium glass product card — luxury marketplace look */
+.product-card-glass {
+  position: relative;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(0.74 0.19 49 / 0.08), transparent 55%),
+    linear-gradient(180deg, oklch(0.2 0.012 260 / 0.72), oklch(0.145 0.009 260 / 0.82));
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.06),
+    0 8px 30px -12px oklch(0 0 0 / 0.6),
+    0 0 0 1px oklch(0.74 0.19 49 / 0.04);
+  transition: transform 0.45s var(--ease-out-expo), border-color 0.3s ease, box-shadow 0.4s ease;
+}
+.product-card-glass:hover {
+  transform: translateY(-4px);
+  border-color: oklch(0.74 0.19 49 / 0.4);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.08),
+    0 14px 44px -14px oklch(0 0 0 / 0.7),
+    0 0 50px -16px oklch(0.74 0.19 49 / 0.45);
+}
+.product-card-glass:active {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.08),
+    0 0 60px -10px oklch(0.74 0.19 49 / 0.55);
+}
+
+/* Cart icon button pulse */
+@keyframes cart-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.5), var(--shadow-ember); }
+  50% { box-shadow: 0 0 0 9px oklch(0.74 0.19 49 / 0), var(--shadow-ember); }
+}
+.animate-cart-pulse { animation: cart-pulse 0.7s ease-out; }
+
 /* Gradient orb backdrop */
 .orb {
   position: absolute;

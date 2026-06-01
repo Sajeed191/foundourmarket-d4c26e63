@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Heart, Plus, Minus, Check } from "lucide-react";
+import { Heart, ShoppingCart, Check, Star } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
@@ -9,7 +9,6 @@ import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminCon
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { computeBadges } from "@/lib/badges";
 import { useProductBadges, trackBadgeClick, trackBadgeImpression, badgeAnimationClass } from "@/lib/use-product-badges";
-import { StarRating } from "@/components/site/StarRating";
 import { Price } from "@/components/site/Price";
 
 type DisplayBadge = {
@@ -47,12 +46,9 @@ function badgePriority(key?: string, label?: string): number {
   return idx === -1 ? BADGE_PRIORITY.length : idx;
 }
 
-
-
-
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
-  const { add, items, setQty } = useCart();
+  const { add, items } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -63,7 +59,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
     e.preventDefault();
     add(product.slug);
     setJustAdded(true);
-    window.setTimeout(() => setJustAdded(false), 900);
+    window.setTimeout(() => setJustAdded(false), 700);
   };
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
@@ -103,7 +99,6 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         emoji: b.emoji,
         className: b.className,
       }));
-  // Badge priority: higher-priority badges always surface first within the 2-badge cap.
   const sortedBadges = [...badges].sort(
     (a, b) => badgePriority(a.key, a.label) - badgePriority(b.key, b.label),
   );
@@ -111,25 +106,15 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
     product.stockQuantity > 0 &&
     product.stockQuantity <= (product.lowStockThreshold || 10);
 
-  return (
-    <div className={`group card-premium overflow-hidden relative flex flex-col h-full ${compact ? "p-1.5 sm:p-2" : "p-2.5 sm:p-3"}`}>
-      <ProductCardAdminControls product={product} />
-      {/* Ember halo on hover */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-0"
-        style={{ background: "var(--gradient-ember-soft)", filter: "blur(20px)" }}
-      />
+  const subtitle = product.tagline || (product.category ? product.category.replace(/-/g, " ") : "");
 
+  return (
+    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full p-2">
+      <ProductCardAdminControls product={product} />
+
+      {/* IMAGE — ~60-65% of card */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className={`relative aspect-square rounded-xl overflow-hidden bg-black/40 ${compact ? "mb-1" : "mb-3 sm:mb-4"}`}>
-          {/* Glow on hover */}
-          <div
-            aria-hidden
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{ background: "var(--gradient-ember-soft)" }}
-          />
-          {/* Skeleton placeholder — prevents layout shift while the image loads */}
+        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40">
           {!imgLoaded && (
             <div
               aria-hidden
@@ -141,24 +126,20 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             alt={`${product.name} — ${product.tagline || product.category}`}
             loading="lazy"
             width={800}
-            height={800}
+            height={1000}
             onLoad={() => setImgLoaded(true)}
-            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           />
 
+          {/* Discount badge — top-left, orange pill, black text */}
+          {discount ? (
+            <span className="absolute top-2 left-2 inline-flex items-center rounded-full bg-accent text-black font-bold font-mono text-[10px] px-2 py-0.5 shadow-[var(--shadow-ember)]">
+              -{discount}%
+            </span>
+          ) : null}
 
-          {/* Shine sweep */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
-          >
-            <div className="absolute -inset-y-2 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-120%] group-hover:translate-x-[420%] transition-transform duration-[1100ms] ease-out" />
-          </div>
-
-          {/* Bottom gradient for badges */}
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-          <div className={`absolute flex flex-col items-start ${compact ? "top-2 left-2 gap-1" : "top-2.5 left-2.5 gap-1.5"}`}>
+          {/* Admin / auto badges — stacked below the discount pill */}
+          <div className={`absolute left-2 flex flex-col items-start gap-1 ${discount ? "top-9" : "top-2"}`}>
             {sortedBadges.slice(0, 2).map((b) => {
               const bg = b.backgroundColor || b.color;
               const styled = !b.className;
@@ -188,25 +169,12 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
                     </span>
                   )}
                   {b.label}
-                  {b.subtitle && <span className="opacity-75 font-medium">· {b.subtitle}</span>}
                 </span>
               );
             })}
-            {badges.length > 2 && (
-              <span className="inline-flex items-center text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider bg-black/60 text-white/90 backdrop-blur-md">
-                +{badges.length - 2}
-              </span>
-            )}
           </div>
 
-          {/* Discount badge — kept in its own corner so it never crowds the badge stack */}
-          {discount ? (
-            <span className={`absolute bg-accent/95 text-accent-foreground font-bold font-mono rounded-full whitespace-nowrap shadow-[var(--shadow-ember)] ${compact ? "bottom-2 left-2 text-[9px] px-2 py-0.5" : "bottom-2.5 left-2.5 text-[10px] px-2.5 py-0.5"}`}>
-              SAVE {discount}%
-            </span>
-          ) : null}
-
-
+          {/* Wishlist — top-right circular glass button */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -217,124 +185,82 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
               }
             }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute grid place-items-center rounded-full backdrop-blur-xl border shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 ${
-              compact
-                ? "top-2 right-2 size-7"
-                : "top-2.5 right-2.5 size-8"
-            } ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""} ${
+            className={`absolute top-2 right-2 grid place-items-center size-8 rounded-full backdrop-blur-xl border shadow-lg shadow-black/40 transition-all duration-300 active:scale-90 ${
+              justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""
+            } ${
               saved
                 ? "bg-accent/25 border-accent text-accent scale-110"
-                : "bg-black/40 border-white/20 text-white hover:bg-accent/25 hover:border-accent hover:text-accent hover:scale-110"
+                : "bg-white/10 border-white/25 text-white hover:bg-accent/25 hover:border-accent hover:text-accent hover:scale-110"
             }`}
           >
-            <Heart className={`transition-all duration-300 ${compact ? "size-2.5" : "size-3"} ${saved ? "fill-accent scale-110" : ""}`} />
-          </button>
-
-          {/* Quick add — slides up on hover (desktop) */}
-          <button
-            onClick={handleAdd}
-            className={`hidden sm:flex absolute items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground font-semibold uppercase tracking-wider opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:brightness-110 shadow-[var(--shadow-ember)] ${
-              compact
-                ? "inset-x-2 bottom-2 py-1.5 text-[10px]"
-                : "inset-x-2.5 bottom-2.5 py-2 text-[11px]"
-            }`}
-          >
-            <Plus className={`${compact ? "size-3" : "size-3.5"}`} /> Quick Add
+            <Heart className={`size-3.5 transition-all duration-300 ${saved ? "fill-accent scale-110" : ""}`} />
           </button>
         </div>
       </Link>
 
-      <Link to="/products/$slug" params={{ slug: product.slug }} className={`relative flex flex-1 flex-col ${compact ? "" : "px-1"}`}>
-        {/* Title — fixed 2-line block keeps every card's footer aligned */}
-        <h4 className={`font-medium line-clamp-2 group-hover:text-accent transition-colors ${compact ? "text-[11px] leading-tight min-h-[2.2em]" : "text-sm leading-snug min-h-[2.5em]"}`}>{product.name}</h4>
-        {product.tagline ? (
-          <p className={`text-muted-foreground truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.tagline}</p>
-        ) : product.category ? (
-          <p className={`text-muted-foreground/70 capitalize truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.category.replace(/-/g, " ")}</p>
+      {/* INFO */}
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative flex flex-1 flex-col px-0.5 pt-2">
+        {/* Name */}
+        <h4 className="text-[13px] font-bold text-white leading-tight line-clamp-2 min-h-[2.2em] group-hover:text-accent transition-colors">
+          {product.name}
+        </h4>
+
+        {/* Subtitle / category */}
+        {subtitle ? (
+          <p className="text-[10px] text-muted-foreground/80 capitalize truncate mt-0.5">{subtitle}</p>
         ) : null}
 
-        {/* Social proof — stars + value on one row, review count beneath for cleaner hierarchy */}
-        <div className={`flex flex-col justify-center min-w-0 ${compact ? "mt-1 min-h-[26px]" : "mt-1.5 min-h-[30px]"}`}>
+        {/* Rating row — ⭐ 4.8 (984) */}
+        <div className="flex items-center gap-1 mt-1 min-h-[16px]">
           {product.reviews > 0 ? (
             <>
-              <StarRating
-                rating={product.rating}
-                showValue
-                starClassName={compact ? "size-2.5" : "size-3"}
-                textClassName={compact ? "text-[9px]" : "text-[10px]"}
-              />
-              <span className={`font-mono text-muted-foreground/70 ${compact ? "text-[8px] mt-0.5" : "text-[9px] mt-0.5"}`}>
-                {product.reviews.toLocaleString()} Reviews
-              </span>
+              <Star className="size-3 fill-accent text-accent" />
+              <span className="text-[11px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
+              <span className="text-[10px] font-mono text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
             </>
           ) : (
-            <span className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
-              New Product
-            </span>
+            <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400/90">New Product</span>
           )}
         </div>
 
-        {/* Shipping row — business rule: only ever advertise FREE shipping on
-            listing cards. Paid shipping fees are hidden here and surface only on
-            the product details page. Fixed height keeps every footer aligned. */}
-        <div className={`flex items-center ${compact ? "mt-0.5 min-h-[12px]" : "mt-1 min-h-[14px]"}`}>
-          {shippingFee <= 0 && (
-            <p className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
-              Free Shipping
-            </p>
-          )}
-        </div>
         {showOnlyLeft && (
-          <p className={`font-mono uppercase tracking-wider text-accent/90 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]"}`}>
+          <p className="font-mono uppercase tracking-wider text-accent/90 text-[8px] mt-0.5">
             Only {product.stockQuantity} left
           </p>
         )}
+        {shippingFee <= 0 && (
+          <p className="font-mono uppercase tracking-wider text-emerald-400/90 text-[8px] mt-0.5">Free Shipping</p>
+        )}
 
-        {/* Price + ADD — pinned to the bottom with a subtle divider so it aligns across all cards */}
-        <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
+        {/* Price row + floating cart button */}
+        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
           <div className="min-w-0">
-            <Price value={price} className={`font-display font-semibold tabular-nums leading-none block ${compact ? "text-sm" : "text-base sm:text-lg"}`} />
+            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-base" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className={`font-mono text-muted-foreground/60 line-through tabular-nums block ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`} />
+              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[10px] mt-1" />
             ) : null}
           </div>
-          {!product.inStock ? (
-            <span
-              onClick={(e) => e.preventDefault()}
-              className={`shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider ${compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"}`}
-            >
-              Sold Out
-            </span>
-          ) : cartQty > 0 ? (
-            <div
-              onClick={(e) => e.preventDefault()}
-              className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent/15 border border-accent/40 text-accent font-bold font-mono ${compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-[11px]"}`}
-            >
-              <button
-                onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty - 1); }}
-                aria-label={`Decrease ${product.name} quantity`}
-                className="grid place-items-center rounded-full hover:bg-accent/20 active:scale-90 transition-transform size-5"
-              >
-                <Minus className={compact ? "size-2.5" : "size-3"} />
-              </button>
-              <span className="tabular-nums min-w-[1.25rem] text-center">{cartQty}</span>
-              <button
-                onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty + 1); }}
-                aria-label={`Increase ${product.name} quantity`}
-                className="grid place-items-center rounded-full hover:bg-accent/20 active:scale-90 transition-transform size-5"
-              >
-                <Plus className={compact ? "size-2.5" : "size-3"} />
-              </button>
-            </div>
-          ) : (
+
+          {product.inStock ? (
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110 active:scale-95 shadow-[var(--shadow-ember)] ${justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""} ${compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"}`}
+              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
-              {justAdded ? <Check className={compact ? "size-2.5" : "size-3"} /> : <Plus className={compact ? "size-2.5" : "size-3"} />}
-              {justAdded ? "Added" : "Add"}
+              {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+              {cartQty > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
+                  {cartQty}
+                </span>
+              )}
             </button>
+          ) : (
+            <span
+              onClick={(e) => e.preventDefault()}
+              className="shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-2 py-1 text-[9px]"
+            >
+              Sold Out
+            </span>
           )}
         </div>
       </Link>
