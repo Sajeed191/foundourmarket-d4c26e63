@@ -38,13 +38,34 @@ export const Route = createFileRoute("/wishlist")({
   component: WishlistPage,
 });
 
-type FilterKey = "all" | "in-stock" | "price-drops" | "free-shipping" | "out-of-stock";
+type FilterKey =
+  | "all"
+  | "in-stock"
+  | "price-drops"
+  | "free-shipping"
+  | "out-of-stock"
+  | "low-stock"
+  | "recently-added"
+  | "new-arrivals"
+  | "highest-discount"
+  | "lowest-price"
+  | "highest-price"
+  | "best-rated"
+  | "most-viewed";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "in-stock", label: "In Stock" },
   { key: "price-drops", label: "Price Drops" },
   { key: "free-shipping", label: "Free Shipping" },
+  { key: "recently-added", label: "Recently Added" },
+  { key: "highest-discount", label: "Highest Discount" },
+  { key: "lowest-price", label: "Lowest Price" },
+  { key: "highest-price", label: "Highest Price" },
+  { key: "new-arrivals", label: "New Arrivals" },
+  { key: "best-rated", label: "Best Rated" },
+  { key: "low-stock", label: "Low Stock" },
+  { key: "most-viewed", label: "Most Viewed" },
   { key: "out-of-stock", label: "Out of Stock" },
 ];
 
