@@ -330,6 +330,7 @@ function BadgeManagerInner() {
                 <button onClick={() => setEditing(b)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] font-bold border border-border hover:bg-white/5"><Pencil className="size-3" /> Edit</button>
                 <button onClick={() => onToggle(b)} title={b.enabled ? "Disable" : "Enable"} className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5"><Power className={`size-3.5 ${b.enabled ? "text-emerald-400" : "text-muted-foreground"}`} /></button>
                 <button onClick={() => onDuplicate(b)} title="Duplicate" className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5"><Copy className="size-3.5" /></button>
+                <button onClick={() => onArchive(b)} title={b.archived ? "Restore" : "Archive"} className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5">{b.archived ? <ArchiveRestore className="size-3.5 text-emerald-400" /> : <Archive className="size-3.5" />}</button>
                 <button onClick={() => onDelete(b)} title="Delete" className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5 text-destructive"><Trash2 className="size-3.5" /></button>
               </div>
             </div>
@@ -338,7 +339,7 @@ function BadgeManagerInner() {
         {ordered.length === 0 && (
           <div className="col-span-full text-center py-16">
             <Tag className="size-8 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-sm text-muted-foreground">No badges yet. Create your first badge.</p>
+            <p className="text-sm text-muted-foreground">{showArchived ? "No archived badges." : "No badges in this view. Create your first badge."}</p>
           </div>
         )}
       </div>
