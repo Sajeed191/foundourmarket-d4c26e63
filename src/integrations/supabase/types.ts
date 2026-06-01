@@ -4810,6 +4810,144 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          product_slug: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          product_slug?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          product_slug?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist_notification_preferences: {
+        Row: {
+          back_in_stock: boolean
+          collection_updates: boolean
+          created_at: string
+          email_enabled: boolean
+          flash_sale: boolean
+          low_stock: boolean
+          new_arrival: boolean
+          price_drop: boolean
+          push_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          back_in_stock?: boolean
+          collection_updates?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          flash_sale?: boolean
+          low_stock?: boolean
+          new_arrival?: boolean
+          price_drop?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          back_in_stock?: boolean
+          collection_updates?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          flash_sale?: boolean
+          low_stock?: boolean
+          new_arrival?: boolean
+          price_drop?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist_price_alerts: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          last_price: number | null
+          product_slug: string
+          status: string
+          target_price: number
+          triggered_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          last_price?: number | null
+          product_slug: string
+          status?: string
+          target_price: number
+          triggered_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          last_price?: number | null
+          product_slug?: string
+          status?: string
+          target_price?: number
+          triggered_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist_restock_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          notified_at: string | null
+          product_slug: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          product_slug: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          product_slug?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       frequently_bought_together: {
