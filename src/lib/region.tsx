@@ -417,6 +417,11 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
   const currency: Currency = market === "india" ? "INR" : "USD";
   const symbol = currency === "INR" ? "₹" : "$";
+  // Currency is safe to paint once mounted AND either we had a cached region
+  // from the first frame or async detection/lock has settled. Admins (who can
+  // freely switch markets) are always ready.
+  const currencyReady = mounted && (hadCachedChoice.current || isAdmin || !loading);
+
   const USD_TO_INR = 83; // fallback only, for legacy rows missing region prices
 
   const priceOf = useCallback(
