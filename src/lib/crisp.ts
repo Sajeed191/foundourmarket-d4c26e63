@@ -108,16 +108,21 @@ export function preloadCrisp(): void {
 
 export function openCrispChat(): void {
   if (typeof window === "undefined") return;
+  perf.mark("open-request");
+  // Ensure the SDK is loading (deduped) so direct callers open instantly too.
+  void loadCrisp();
   window.$crisp = window.$crisp || [];
   ensureHideStyle();
   document.documentElement.removeAttribute("data-crisp-hidden");
   window.$crisp.push(["do", "chat:show"]);
   window.$crisp.push(["do", "chat:open"]);
+  window.$crisp.push(["on", "chat:opened", () => perf.mark("open-done")]);
   // Auto-hide the widget entirely once the user closes the chat.
   window.$crisp.push(["on", "chat:closed", () => closeCrispChat()]);
   // Relabel Crisp's built-in "Minimize" menu item to "Close chat".
   customizeCrispMenu();
 }
+
 
 let menuObserver: MutationObserver | null = null;
 
