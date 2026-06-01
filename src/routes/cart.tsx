@@ -29,8 +29,6 @@ export const Route = createFileRoute("/cart")({
   component: CartPage,
 });
 
-const FREE_SHIP_THRESHOLD = 50; // USD
-
 // Auto-applied campaign discount (backend-ready, silent — no manual coupon UI).
 type AutoPromo = { label: string; discount: number } | null;
 type ShipState = {
