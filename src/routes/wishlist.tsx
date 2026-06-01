@@ -417,19 +417,18 @@ function WishlistPage() {
             </Link>
             <Link
               to="/search"
-              search={{ sort: "trending" } as never}
               className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
             >
               <Flame className="size-3.5" /> Trending
             </Link>
             <Link
               to="/search"
-              search={{ sort: "newest" } as never}
               className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
             >
               <Sparkles className="size-3.5" /> New Arrivals
             </Link>
           </div>
+
         </div>
       ) : (
         <>
