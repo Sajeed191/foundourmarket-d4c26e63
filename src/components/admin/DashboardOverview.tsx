@@ -380,9 +380,12 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
                     <p className="text-sm truncate">{p.name}</p>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{p.reviews} reviews</p>
                   </div>
-                  <p className="inline-flex items-center gap-1 font-mono text-sm text-accent">
-                    <Star className="size-3 fill-current" /> {Number(p.rating).toFixed(1)}
-                  </p>
+                  <StarRating
+                    rating={Number(p.rating)}
+                    showValue
+                    starClassName="size-3"
+                    textClassName="font-mono text-sm"
+                  />
                 </li>
               ))}
             </ul>
