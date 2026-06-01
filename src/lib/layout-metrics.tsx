@@ -63,7 +63,10 @@ export function LayoutMetricsProvider({ children }: { children: ReactNode }) {
   const measure = useCallback(() => {
     if (typeof window === "undefined") return;
 
-    const viewportHeight = Math.round(window.visualViewport?.height ?? document.documentElement.clientHeight);
+    // Use the LAYOUT viewport (clientHeight), not visualViewport.height.
+    // visualViewport.height changes with pinch-zoom / browser scaling, which made
+    // the product layout zoom-dependent and inconsistent across Android devices.
+    const viewportHeight = Math.round(document.documentElement.clientHeight || window.innerHeight);
     const safeBottom = readCssPx("--mobile-safe-bottom");
     const headerHeight = visibleHeight("[data-app-header]");
     const bottomNavHeight = visibleHeight("[data-app-bottom-nav]");
