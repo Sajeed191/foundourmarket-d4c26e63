@@ -352,8 +352,19 @@ export async function duplicateBadgeType(b: BadgeType) {
     startAt: b.startAt,
     endAt: b.endAt,
     autoRule: b.autoRule,
+    category: b.category,
+    subtitle: b.subtitle,
+    fontSize: b.fontSize,
+    fontWeight: b.fontWeight,
+    animation: b.animation,
   };
   await createBadgeType(input);
+}
+
+export async function setBadgeArchived(id: string, archived: boolean) {
+  const { error } = await supabase.from("badge_types").update({ archived } as never).eq("id", id);
+  if (error) throw new Error(error.message);
+  await load(true);
 }
 
 // ---- Admin assignment mutations ----
