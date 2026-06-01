@@ -196,15 +196,25 @@ function SearchPage() {
 
         <div>
           {loading ? (
-            <div className="py-24 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+            <ProductSkeletonGrid count={9} />
           ) : results.length === 0 ? (
             <div className="py-16 sm:py-24 px-6 text-center border border-dashed border-border rounded-2xl">
-              <div className="size-14 mx-auto mb-5 grid place-items-center rounded-full border border-border">
-                <X className="size-5 text-muted-foreground" />
+              <div className="size-16 mx-auto mb-5 grid place-items-center rounded-full border border-border bg-card/40">
+                <Search className="size-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">No products match your search.</p>
-              <Link to="/" className="inline-block mt-6 text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1">Browse all</Link>
+              <p className="text-base font-medium">No products match your filters</p>
+              <p className="text-sm text-muted-foreground mt-1.5">Try adjusting or clearing your filters to see more results.</p>
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+                {activeFilterCount > 0 && (
+                  <button onClick={() => nav({ search: { q: search.q }, replace: true })}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground font-mono uppercase tracking-widest text-[11px] px-4 py-2 hover:brightness-110 transition-all">
+                    Clear Filters
+                  </button>
+                )}
+                <Link to="/" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1">Browse all</Link>
+              </div>
             </div>
+
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
               {results.map((p) => <ProductCard key={p.slug} product={p} />)}
