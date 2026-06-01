@@ -126,16 +126,19 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         </div>
         <div className={`flex items-center justify-between gap-2 ${compact ? "mt-1" : "mt-2"}`}>
           <div className={`flex items-center gap-1 font-mono text-muted-foreground min-w-0 ${compact ? "text-[9px]" : "text-[10px]"}`}>
-            <StarRating
-              rating={product.rating}
-              count={product.reviews}
-              showValue={product.reviews > 0}
-              starClassName={compact ? "size-2.5" : "size-3"}
-              textClassName={compact ? "text-[9px]" : "text-[10px]"}
-            />
-            <span className="inline-flex items-center gap-0.5 ml-0.5 text-emerald-400/90 shrink-0" title="Verified seller">
-              <BadgeCheck className={`${compact ? "size-2.5" : "size-3"}`} />
-            </span>
+            {product.reviews > 0 ? (
+              <StarRating
+                rating={product.rating}
+                count={product.reviews}
+                showValue
+                starClassName={compact ? "size-2.5" : "size-3"}
+                textClassName={compact ? "text-[9px]" : "text-[10px]"}
+              />
+            ) : (
+              <span className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
+                New Product
+              </span>
+            )}
           </div>
           <button
             onClick={(e) => { e.preventDefault(); add(product.slug); }}
