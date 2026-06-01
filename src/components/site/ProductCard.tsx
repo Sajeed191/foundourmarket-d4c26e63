@@ -294,15 +294,22 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           </p>
         )}
 
-        {/* Price + ADD — pinned to the bottom so it aligns across all cards */}
-        <div className="flex items-end justify-between gap-2 mt-auto pt-2.5">
+        {/* Price + ADD — pinned to the bottom with a subtle divider so it aligns across all cards */}
+        <div className="mt-auto pt-2.5 border-t border-white/[0.07] flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className={`font-display font-semibold tabular-nums leading-none ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{format(price)}</p>
             {originalPrice && discount ? (
               <p className={`font-mono text-muted-foreground/60 line-through tabular-nums ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`}>{format(originalPrice)}</p>
             ) : null}
           </div>
-          {cartQty > 0 ? (
+          {!product.inStock ? (
+            <span
+              onClick={(e) => e.preventDefault()}
+              className={`shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider ${compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"}`}
+            >
+              Sold Out
+            </span>
+          ) : cartQty > 0 ? (
             <div
               onClick={(e) => e.preventDefault()}
               className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent/15 border border-accent/40 text-accent font-bold font-mono ${compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-[11px]"}`}
