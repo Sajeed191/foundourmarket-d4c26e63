@@ -10,7 +10,7 @@ import type { Product } from "@/lib/products";
 
 /** Minimal product card used inside the wishlist recommendation rails. */
 function MiniCard({ product }: { product: Product }) {
-  const { format, priceOf } = useRegion();
+  const { priceOf } = useRegion();
   const { add, items } = useCart();
   const inCart = items.some((i) => i.slug === product.slug);
 
