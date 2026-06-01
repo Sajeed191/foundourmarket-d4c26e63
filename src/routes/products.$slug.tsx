@@ -170,6 +170,9 @@ function ProductPage() {
   useEffect(() => {
     if (!product?.image) return;
     let active = true;
+    const fallback = window.setTimeout(() => {
+      if (active) setMainImgLoaded(true);
+    }, 1200);
     setMainImgLoaded(false);
     const img = new Image();
     const done = () => {
@@ -182,7 +185,7 @@ function ProductPage() {
       if (img.decode) void img.decode().catch(() => {}).finally(done);
       else done();
     }
-    return () => { active = false; };
+    return () => { active = false; window.clearTimeout(fallback); };
   }, [product?.slug, product?.image]);
 
   // Reveal the sticky purchase dock only after the user scrolls past the hero.
