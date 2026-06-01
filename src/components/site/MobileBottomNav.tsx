@@ -30,8 +30,9 @@ export function MobileBottomNav() {
 
   return (
     <nav
+      data-app-bottom-nav
       aria-label="Primary mobile navigation"
-      className="md:hidden fixed inset-x-0 bottom-0 z-40 h-[var(--mobile-nav-clearance)] px-4 pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
+      className="md:hidden fixed inset-x-0 bottom-0 z-40 h-[var(--mobile-nav-clearance)] px-[max(1rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
       <div
         aria-hidden

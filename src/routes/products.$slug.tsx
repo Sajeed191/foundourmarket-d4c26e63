@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
+import { useAuth } from "@/lib/auth";
+import { useLayoutMetrics } from "@/lib/layout-metrics";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
 
@@ -95,6 +97,8 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
+  const { loading: authLoading } = useAuth();
+  const layoutMetrics = useLayoutMetrics();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
   const { add } = useCart();
@@ -115,6 +119,11 @@ function ProductPage() {
   const [mainImgLoaded, setMainImgLoaded] = useState(false);
   // True once the user has scrolled past the hero so the dock can appear.
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
+
+  useEffect(() => {
+    layoutMetrics.setExpectedCtaHeight(64);
+    return () => layoutMetrics.setExpectedCtaHeight(0);
+  }, [layoutMetrics.setExpectedCtaHeight]);
 
   useEffect(() => {
     if (product) {
@@ -158,6 +167,27 @@ function ProductPage() {
     return () => { active = false; };
   }, [slug]);
 
+  useEffect(() => {
+    if (!product?.image) return;
+    let active = true;
+    const fallback = window.setTimeout(() => {
+      if (active) setMainImgLoaded(true);
+    }, 1200);
+    setMainImgLoaded(false);
+    const img = new Image();
+    const done = () => {
+      if (active) setMainImgLoaded(true);
+    };
+    img.onload = done;
+    img.onerror = done;
+    img.src = product.image;
+    if (img.complete) {
+      if (img.decode) void img.decode().catch(() => {}).finally(done);
+      else done();
+    }
+    return () => { active = false; window.clearTimeout(fallback); };
+  }, [product?.slug, product?.image]);
+
   // Reveal the sticky purchase dock only after the user scrolls past the hero.
   useEffect(() => {
     const onScroll = () => setScrolledPastHero(window.scrollY > 220);
@@ -175,8 +205,10 @@ function ProductPage() {
     return `${start.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
   }, []);
 
+  const layoutReady = !authLoading && layoutMetrics.ready && layoutMetrics.viewportHeight > 0;
+
   if (loading) {
-    return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
+    return <ProductPageSkeleton />;
   }
 
   if (!product) {
@@ -210,8 +242,12 @@ function ProductPage() {
   // product + variants + images loaded, main image decoded, and currency
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
-  const productPageReady = dataReady && currencyReady && mainImgLoaded;
+  const productPageReady = layoutReady && dataReady && currencyReady && mainImgLoaded;
   const showPurchaseDock = productPageReady && scrolledPastHero;
+
+  if (!productPageReady) {
+    return <ProductPageSkeleton />;
+  }
 
   const handleAdd = () => {
     add(product.slug, qty);
@@ -586,7 +622,7 @@ function ProductPage() {
       {/* Sticky mobile purchase dock — only mounts once the page is fully
           initialized and the user has scrolled past the hero. */}
       {showPurchaseDock && (
-      <div className="sm:hidden fixed inset-x-0 z-40 h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300" style={{ bottom: "var(--product-dock-bottom)" }}>
+      <div ref={layoutMetrics.setCtaElement} data-app-cta className="sm:hidden fixed inset-x-0 z-40 h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300" style={{ bottom: "var(--product-dock-bottom)" }}>
         <div className="flex h-full items-center gap-1.5 rounded-2xl border border-white/10 p-1.5 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9)]" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)" }}>
           <button
             onClick={() => toggleWishlist(product.slug)}
@@ -625,6 +661,42 @@ function ProductPage() {
 
 
     </>
+  );
+}
+
+
+function ProductPageSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 product-page-clearance sm:pb-24 lg:pb-16" aria-busy="true">
+      <div className="mb-6 h-3 w-44 rounded-full bg-white/[0.05] animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+        <div className="space-y-4">
+          <div className="aspect-square rounded-3xl border border-border bg-white/[0.04] animate-pulse" />
+          <div className="grid grid-cols-5 gap-2 sm:grid-cols-6 sm:gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-xl bg-white/[0.04] animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-5">
+          <div className="h-3 w-32 rounded-full bg-accent/20 animate-pulse" />
+          <div className="h-11 w-4/5 rounded-2xl bg-white/[0.06] animate-pulse" />
+          <div className="h-4 w-52 rounded-full bg-white/[0.05] animate-pulse" />
+          <div className="h-px w-full bg-border/70" />
+          <div className="h-12 w-44 rounded-2xl bg-white/[0.06] animate-pulse" />
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-8 rounded-xl bg-white/[0.04] animate-pulse" />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-full rounded bg-white/[0.04] animate-pulse" />
+            <div className="h-4 w-11/12 rounded bg-white/[0.04] animate-pulse" />
+            <div className="h-4 w-3/5 rounded bg-white/[0.04] animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

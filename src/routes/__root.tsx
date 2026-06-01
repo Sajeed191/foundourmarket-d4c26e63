@@ -32,6 +32,7 @@ import { InstallPrompt } from "@/components/site/InstallPrompt";
 import { registerServiceWorker } from "@/lib/pwa";
 import { trackPageView } from "@/lib/analytics";
 import { captureAttribution } from "@/lib/marketing-tracking";
+import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -183,22 +184,24 @@ function RootComponent() {
               <CartProvider>
                 <AdminModeProvider>
                  <CommandCenterProvider>
-                  <div className="min-h-dvh flex flex-col">
-                    {!isAuthRoute && <Nav />}
-                    <main className={isAuthRoute ? "flex-1" : "flex-1 mobile-page-clearance md:pb-0"}>
-                      <Outlet />
-                    </main>
-                    {!isAuthRoute && <Footer />}
-                    {!isAuthRoute && <MobileBottomNav />}
-                    {!isAuthRoute && <AdminMobileBar />}
-                    <RegionSelectModal />
-                    {!isAuthRoute && <AdminFloatingToolbar />}
-                    {!isAuthRoute && <AdminOverlayIndicator />}
-                    {!isAuthRoute && <AdminCommandCenter />}
-                    <CompareTray />
-                    <InstallPrompt />
-                    <Toaster position="bottom-center" richColors />
-                  </div>
+                  <LayoutMetricsProvider>
+                    <div data-app-shell className="min-h-dvh flex flex-col">
+                      {!isAuthRoute && <Nav />}
+                      <main data-app-content className={isAuthRoute ? "flex-1" : "flex-1 mobile-page-clearance md:pb-0"}>
+                        <Outlet />
+                      </main>
+                      {!isAuthRoute && <Footer />}
+                      {!isAuthRoute && <MobileBottomNav />}
+                      {!isAuthRoute && <AdminMobileBar />}
+                      <RegionSelectModal />
+                      {!isAuthRoute && <AdminFloatingToolbar />}
+                      {!isAuthRoute && <AdminOverlayIndicator />}
+                      {!isAuthRoute && <AdminCommandCenter />}
+                      <CompareTray />
+                      <InstallPrompt />
+                      <Toaster position="bottom-center" richColors />
+                    </div>
+                  </LayoutMetricsProvider>
                  </CommandCenterProvider>
                 </AdminModeProvider>
               </CartProvider>

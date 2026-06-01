@@ -106,9 +106,10 @@ export function Nav() {
   return (
     <>
       <motion.div
+        data-app-header
         animate={{ y: hidden ? -120 : 0, opacity: hidden ? 0 : 1, filter: hidden ? "blur(6px)" : "blur(0px)" }}
         transition={{ type: "spring", stiffness: 380, damping: 38, mass: 0.8 }}
-        className="sticky top-0 z-50 px-3 sm:px-4 pt-3 sm:pt-4"
+        className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
           <div className="flex items-center justify-between px-2.5 sm:px-5 py-2.5 sm:py-3 gap-1.5 sm:gap-2">
