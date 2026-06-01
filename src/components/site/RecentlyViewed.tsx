@@ -28,9 +28,9 @@ function MiniCard({ product }: { product: Product }) {
   const inCart = items.some((i) => i.slug === product.slug);
 
   return (
-    <div className="group card-premium overflow-hidden p-2 flex flex-col">
+    <div className="group card-premium overflow-hidden p-2.5 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
+        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
           <img
             src={product.image}
             alt={product.name}
@@ -38,10 +38,10 @@ function MiniCard({ product }: { product: Product }) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         </div>
-        <h4 className="text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
+        <h4 className="text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
       </Link>
-      <div className="mt-1.5 flex items-center justify-between gap-1.5">
-        <p className="font-display font-semibold text-xs tabular-nums leading-none">{format(priceOf(product))}</p>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <p className="font-display font-semibold text-sm tabular-nums leading-none">{format(priceOf(product))}</p>
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -50,9 +50,9 @@ function MiniCard({ product }: { product: Product }) {
             window.setTimeout(() => setJustAdded(false), 900);
           }}
           aria-label={`Add ${product.name} to cart`}
-          className={`shrink-0 grid place-items-center size-7 rounded-full bg-accent text-accent-foreground transition-all hover:brightness-110 active:scale-90 shadow-[var(--shadow-ember)] ${justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
+          className={`shrink-0 grid place-items-center size-8 rounded-full bg-accent text-accent-foreground transition-all hover:brightness-110 active:scale-90 shadow-[var(--shadow-ember)] ${justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
         >
-          {justAdded || inCart ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+          {justAdded || inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
         </button>
       </div>
     </div>
@@ -126,7 +126,7 @@ export function RecentlyViewed({
         {items.map((p) => (
           <div
             key={p.slug}
-            className="snap-start shrink-0 w-[38%] xs:w-[34%] sm:w-[24%] md:w-[18%] lg:w-[15%] last:mr-4 sm:last:mr-0"
+            className="snap-start shrink-0 w-[44%] xs:w-[40%] sm:w-[28%] md:w-[22%] lg:w-[18%] last:mr-4 sm:last:mr-0"
           >
             <MiniCard product={p} />
           </div>

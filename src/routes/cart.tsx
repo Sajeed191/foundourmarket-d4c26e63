@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, Share2,
+  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, Share2, Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
@@ -28,8 +28,6 @@ export const Route = createFileRoute("/cart")({
   }),
   component: CartPage,
 });
-
-const FREE_SHIP_THRESHOLD = 50; // USD
 
 // Auto-applied campaign discount (backend-ready, silent — no manual coupon UI).
 type AutoPromo = { label: string; discount: number } | null;
@@ -90,12 +88,8 @@ function CartPage() {
     () => detailed.reduce((s, i) => s + shippingFeeOf(i.product) * i.qty, 0),
     [detailed, shippingFeeOf],
   );
-  const tax = subtotalUSD * 0.08;
-  const total = Math.max(0, subtotalUSD + shipping + tax - discount);
+  const total = Math.max(0, subtotalUSD + shipping - discount);
   const totalSavings = savings + discount;
-
-  const remaining = Math.max(0, FREE_SHIP_THRESHOLD - subtotalUSD);
-  const progress = Math.min(100, (subtotalUSD / FREE_SHIP_THRESHOLD) * 100);
 
   // ---- Empty cart ----
   if (count === 0 && savedDetailed.length === 0) {
@@ -136,26 +130,8 @@ function CartPage() {
             </p>
           </div>
         </div>
-
-        {/* Free shipping progress */}
-        <div className="mt-4 rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-4">
-          <div className="flex items-center gap-2 text-sm mb-2">
-            <Truck className="size-4 text-accent shrink-0" />
-            {remaining > 0 ? (
-              <span>You're <span className="text-accent font-semibold">{format(remaining)}</span> away from free shipping</span>
-            ) : (
-              <span className="text-accent font-semibold inline-flex items-center gap-1"><CheckCircle2 className="size-4" /> You've unlocked free shipping!</span>
-            )}
-          </div>
-          <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-accent/70 to-accent shadow-[0_0_12px_hsl(var(--accent)/0.6)]"
-              initial={false} animate={{ width: `${progress}%` }}
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-            />
-          </div>
-        </div>
       </div>
+
 
       {/* Undo remove banner */}
       <AnimatePresence>
@@ -211,6 +187,15 @@ function CartPage() {
                             {item.product.name}
                           </Link>
                           <p className="text-xs text-muted-foreground line-clamp-1">{item.product.tagline}</p>
+                          {item.product.rating > 0 && (
+                            <div className="mt-1 flex items-center gap-1 text-[11px]">
+                              <Star className="size-3 fill-accent text-accent" />
+                              <span className="font-medium">{item.product.rating.toFixed(1)}</span>
+                              {item.product.reviews > 0 && (
+                                <span className="text-muted-foreground">({item.product.reviews})</span>
+                              )}
+                            </div>
+                          )}
                           <div className="mt-1 flex items-center gap-2 text-[11px]">
                             {out ? (
                               <span className="text-destructive inline-flex items-center gap-1"><AlertTriangle className="size-3" /> Out of stock</span>
@@ -247,6 +232,9 @@ function CartPage() {
                             <span className="block text-[11px] text-muted-foreground line-through font-mono">{format(pr.original * item.qty)}</span>
                           )}
                           <span className="font-mono text-sm text-accent">{format(pr.sale * item.qty)}</span>
+                          {pr.save > 0 && (
+                            <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
+                          )}
                         </div>
                       </div>
 
@@ -330,7 +318,6 @@ function CartPage() {
                   <Row label={promo?.label ?? "Discount applied"} value={`−${format(discount)}`} accent />
                 )}
                 <Row label="Shipping" value={shipping === 0 ? "Free" : format(shipping)} />
-                <Row label="Tax (est.)" value={format(tax)} />
                 {ship?.etaIso && (
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <dt className="inline-flex items-center gap-1"><Clock className="size-3" /> Est. delivery</dt>
@@ -372,10 +359,10 @@ function CartPage() {
         </aside>
       </div>
 
-      <div className="border-t border-border/50">
-        <RelatedProducts excludeSlugs={detailed.map((i) => i.slug)} title="Complete the look" eyebrow="You might also need" limit={8} />
+      <div className="mt-4">
+        <RelatedProducts excludeSlugs={detailed.map((i) => i.slug)} title="Recommended For You" eyebrow="Customers also bought" limit={8} />
       </div>
-      <div className="border-t border-border/50">
+      <div className="border-t border-border/50 mt-2">
         <RecentlyViewed excludeSlug={detailed[0]?.slug} limit={8} />
       </div>
 

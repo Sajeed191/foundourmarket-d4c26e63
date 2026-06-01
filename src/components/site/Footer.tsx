@@ -47,12 +47,12 @@ export function Footer() {
   }
 
   return (
-    <footer className="relative px-4 sm:px-6 pt-5 mobile-page-clearance sm:pt-6 md:py-6 border-t border-border bg-background overflow-hidden">
+    <footer className="relative px-4 sm:px-6 pt-4 mobile-page-clearance sm:pt-4 md:py-4 border-t border-border bg-background overflow-hidden">
       {/* Ambient divider glow */}
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[70%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.6 }} />
       <div aria-hidden className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70%] h-32 opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(70px)" }} />
 
-      <div className="relative max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-5 sm:gap-6">
+      <div className="relative max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-x-5 gap-y-4 sm:gap-5">
         <div className="col-span-2 space-y-3">
           <div className="text-lg sm:text-xl font-display tracking-tighter font-semibold">
             FoundOurMarket<span className="text-accent">™</span>
@@ -108,7 +108,7 @@ export function Footer() {
       </div>
 
 
-      <div className="relative max-w-7xl mx-auto mt-4 pt-3.5 border-t border-border flex flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left">
+      <div className="relative max-w-7xl mx-auto mt-3 pt-3 border-t border-border flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
         <div aria-hidden className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.35 }} />
         <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket. All rights reserved.</p>
         <div className="flex w-full max-w-sm flex-wrap justify-center gap-1.5 rounded-2xl border border-border/70 bg-card/35 p-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest backdrop-blur-xl md:w-auto md:max-w-none md:justify-end md:gap-5 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
