@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, animate } from "framer-motion";
 import {
   Plus, Loader2, Tag, Layers, Crown, Clock, CalendarClock, Ban,
-  Pencil, Copy, Trash2, GripVertical, Power, MousePointerClick, Package, Sparkles,
+  Pencil, Copy, Trash2, GripVertical, MousePointerClick, Package, Sparkles,
   Archive, ArchiveRestore, BarChart3, Percent,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -79,6 +79,28 @@ function BadgePreview({ b }: { b: BadgeType }) {
       {b.label}
       {b.subtitle && <span className="opacity-75 font-medium">· {b.subtitle}</span>}
     </span>
+  );
+}
+
+/** Premium clickable activation status pill (green=live, blue=scheduled, red=expired, gray=disabled). */
+function StatusPill({ state, onClick }: { state: "live" | "scheduled" | "expired" | "disabled"; onClick: () => void }) {
+  const meta: Record<string, { label: string; cls: string; dot: string }> = {
+    live: { label: "Active", cls: "text-emerald-300 border-emerald-400/40 bg-emerald-500/15 shadow-[0_0_12px_-2px_rgba(16,185,129,0.6)]", dot: "bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.9)]" },
+    scheduled: { label: "Scheduled", cls: "text-sky-300 border-sky-400/40 bg-sky-500/15 shadow-[0_0_12px_-2px_rgba(56,189,248,0.5)]", dot: "bg-sky-400" },
+    expired: { label: "Expired", cls: "text-red-300 border-red-400/40 bg-red-500/15", dot: "bg-red-400" },
+    disabled: { label: "Disabled", cls: "text-muted-foreground border-border bg-white/5", dot: "bg-muted-foreground/60" },
+  };
+  const m = meta[state];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={state === "disabled" ? "Click to enable" : "Click to disable"}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono uppercase tracking-widest font-bold transition-all hover:scale-105 active:scale-95 ${m.cls}`}
+    >
+      <span className={`size-1.5 rounded-full ${m.dot} ${state === "live" ? "animate-pulse" : ""}`} />
+      {m.label}
+    </button>
   );
 }
 
@@ -268,12 +290,9 @@ function BadgeManagerInner() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {ordered.map((b) => {
           const state = badgeScheduleState(b);
-          const stateMeta: Record<string, { label: string; cls: string }> = {
-            live: { label: "Live", cls: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
-            scheduled: { label: "Scheduled", cls: "text-sky-400 border-sky-500/30 bg-sky-500/10" },
-            expired: { label: "Expired", cls: "text-red-400 border-red-500/30 bg-red-500/10" },
-            disabled: { label: "Disabled", cls: "text-muted-foreground border-border bg-white/5" },
-          };
+          const used = usage[b.id] ?? 0;
+          const clk = clicks[b.id] ?? 0;
+          const cardCtr = used > 0 ? Math.round((clk / used) * 100) : 0;
           return (
             <div
               key={b.id}
@@ -281,38 +300,39 @@ function BadgeManagerInner() {
               onDragStart={() => setDragId(b.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => onDrop(b.id)}
-              className={`card-premium rounded-2xl p-4 border transition-all ${dragId === b.id ? "opacity-50" : "border-white/10"}`}
+              className={`card-premium rounded-2xl p-4 border flex flex-col transition-all ${dragId === b.id ? "opacity-50" : "border-white/10"}`}
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <GripVertical className="size-4 text-muted-foreground/50 cursor-grab shrink-0" />
                   <BadgePreview b={b} />
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <StatusPill state={state} onClick={() => onToggle(b)} />
                   <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground bg-white/5">
                     {b.category}
-                  </span>
-                  <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border ${stateMeta[state].cls}`}>
-                    {stateMeta[state].label}
                   </span>
                 </div>
               </div>
 
-
               {b.description && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{b.description}</p>}
 
-              <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+              <div className="grid grid-cols-4 gap-2 mb-3 text-center">
                 <div className="rounded-xl bg-white/5 py-2">
-                  <p className="text-sm font-display tabular-nums">{b.priority}</p>
-                  <p className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">Priority</p>
-                </div>
-                <div className="rounded-xl bg-white/5 py-2">
-                  <p className="text-sm font-display tabular-nums flex items-center justify-center gap-1"><Package className="size-3" />{usage[b.id] ?? 0}</p>
+                  <p className="text-sm font-display tabular-nums flex items-center justify-center gap-1"><Package className="size-3" />{used}</p>
                   <p className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">Products</p>
                 </div>
                 <div className="rounded-xl bg-white/5 py-2">
-                  <p className="text-sm font-display tabular-nums flex items-center justify-center gap-1"><MousePointerClick className="size-3" />{clicks[b.id] ?? 0}</p>
+                  <p className="text-sm font-display tabular-nums flex items-center justify-center gap-1"><MousePointerClick className="size-3" />{clk}</p>
                   <p className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">Clicks</p>
+                </div>
+                <div className="rounded-xl bg-white/5 py-2">
+                  <p className="text-sm font-display tabular-nums flex items-center justify-center gap-1"><Percent className="size-3" />{cardCtr}</p>
+                  <p className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">CTR</p>
+                </div>
+                <div className="rounded-xl bg-white/5 py-2">
+                  <p className="text-sm font-display tabular-nums">{b.priority}</p>
+                  <p className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">Priority</p>
                 </div>
               </div>
 
@@ -326,9 +346,9 @@ function BadgeManagerInner() {
                 <p className="text-[10px] text-accent/90 mb-3 font-mono">auto: {b.autoRule.metric} {b.autoRule.op} {b.autoRule.value}</p>
               )}
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 mt-auto pt-1">
                 <button onClick={() => setEditing(b)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] font-bold border border-border hover:bg-white/5"><Pencil className="size-3" /> Edit</button>
-                <button onClick={() => onToggle(b)} title={b.enabled ? "Disable" : "Enable"} className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5"><Power className={`size-3.5 ${b.enabled ? "text-emerald-400" : "text-muted-foreground"}`} /></button>
+                <button onClick={() => setEditing(b)} title="Schedule" className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5"><CalendarClock className="size-3.5" /></button>
                 <button onClick={() => onDuplicate(b)} title="Duplicate" className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5"><Copy className="size-3.5" /></button>
                 <button onClick={() => onArchive(b)} title={b.archived ? "Restore" : "Archive"} className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5">{b.archived ? <ArchiveRestore className="size-3.5 text-emerald-400" /> : <Archive className="size-3.5" />}</button>
                 <button onClick={() => onDelete(b)} title="Delete" className="size-9 grid place-items-center rounded-lg border border-border hover:bg-white/5 text-destructive"><Trash2 className="size-3.5" /></button>
