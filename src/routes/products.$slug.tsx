@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
-import { useAuth } from "@/lib/auth";
 import { useLayoutMetrics } from "@/lib/layout-metrics";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
@@ -99,7 +98,6 @@ let lastProductLayoutSnapshot: Record<string, number> | null = null;
 function ProductPage() {
   const { slug } = Route.useParams();
   const { product, loading } = useProduct(slug);
-  const { loading: authLoading } = useAuth();
   const layoutMetrics = useLayoutMetrics();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
@@ -117,8 +115,6 @@ function ProductPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   // True once images + variants have resolved from the server.
   const [dataReady, setDataReady] = useState(false);
-  // True once the main product image has actually decoded/loaded.
-  const [mainImgLoaded, setMainImgLoaded] = useState(false);
   const [mobileDockVisible, setMobileDockVisible] = useState(false);
 
   useEffect(() => {
@@ -155,8 +151,8 @@ function ProductPage() {
   useEffect(() => {
     if (!slug) return;
     let active = true;
+    const fallback = window.setTimeout(() => { if (active) setDataReady(true); }, 1200);
     setDataReady(false);
-    setMainImgLoaded(false);
     Promise.all([fetchProductImages(slug), fetchProductVariants(slug)]).then(([imgs, vars]) => {
       if (!active) return;
       setImages(imgs);
@@ -165,29 +161,8 @@ function ProductPage() {
       setVariantId(vars[0]?.id ?? null);
       setDataReady(true);
     }).catch(() => { if (active) setDataReady(true); });
-    return () => { active = false; };
-  }, [slug]);
-
-  useEffect(() => {
-    if (!product?.image) return;
-    let active = true;
-    const fallback = window.setTimeout(() => {
-      if (active) setMainImgLoaded(true);
-    }, 1200);
-    setMainImgLoaded(false);
-    const img = new Image();
-    const done = () => {
-      if (active) setMainImgLoaded(true);
-    };
-    img.onload = done;
-    img.onerror = done;
-    img.src = product.image;
-    if (img.complete) {
-      if (img.decode) void img.decode().catch(() => {}).finally(done);
-      else done();
-    }
     return () => { active = false; window.clearTimeout(fallback); };
-  }, [product?.slug, product?.image]);
+  }, [slug]);
 
   const deliveryWindow = useMemo(() => {
     const start = new Date();
@@ -219,7 +194,7 @@ function ProductPage() {
     };
   }, [layoutMetrics.headerHeight, product?.slug]);
 
-  const layoutReady = !authLoading && layoutMetrics.ready && layoutMetrics.viewportHeight > 0;
+  const layoutReady = layoutMetrics.ready && layoutMetrics.viewportHeight > 0;
 
   if (loading) {
     return <ProductPageSkeleton />;
@@ -256,7 +231,7 @@ function ProductPage() {
   // product + variants + images loaded, main image decoded, and currency
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
-  const productPageReady = layoutReady && dataReady && mainImgLoaded;
+  const productPageReady = layoutReady && dataReady;
   const showPurchaseDock = productPageReady && mobileDockVisible;
 
   if (!productPageReady) {
