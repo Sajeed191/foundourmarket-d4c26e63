@@ -111,6 +111,24 @@ function TrackPage() {
     },
   });
 
+  // Prefill + auto-track when arriving from the Help Center Track card.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("fom_track_prefill");
+      if (!raw) return;
+      sessionStorage.removeItem("fom_track_prefill");
+      const { orderId: oid, email: eml } = JSON.parse(raw) as { orderId?: string; email?: string };
+      if (oid) setOrderId(oid);
+      if (eml) setEmail(eml);
+      if (oid && eml) {
+        setActive(null);
+        prevStatusRef.current = null;
+        m.mutate({ orderId: oid.trim(), email: eml.trim() });
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Real-time polling — refetch every 6s while a tracking session is active
   const liveQuery = useQuery({
     queryKey: ["track-live", active?.orderId, active?.email],
