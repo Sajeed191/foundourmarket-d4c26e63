@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { loadCrisp, openCrispChat } from "@/lib/crisp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
@@ -35,7 +36,6 @@ type FAQ = { q: string; a: string; cat: Category };
 type Category = "Orders" | "Shipping" | "Returns" | "Refunds" | "Payments" | "Warranty" | "Seller";
 
 const SUPPORT_EMAIL = "foundourmarket@gmail.com";
-const WHATSAPP_NUMBERS = ["+91 97458 44213", "+91 62820 88380", "+91 87144 59240"];
 
 const CATEGORIES: { key: Category | "All"; icon: any }[] = [
   { key: "All", icon: Sparkles },
@@ -129,14 +129,10 @@ function Atmosphere() {
 
 // ------- Status Banner -------
 function StatusBanner() {
-  // Simulated live status — green during normal hours, amber on high volume.
-  const highVolume = useMemo(() => {
-    const h = new Date().getHours();
-    return h >= 18 && h <= 22; // evening peak
-  }, []);
-  const online = !highVolume;
+  const { settings } = useSupportSettings();
+  const { online, minutes } = resolveSupportStatus(settings);
   const color = online ? "#22c55e" : "#f59e0b";
-  const eta = online ? "8 minutes" : "up to 1 hour";
+  const eta = online ? `${minutes} minutes` : "up to 1 hour";
 
   return (
     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -166,6 +162,8 @@ function StatusBanner() {
 
 // ------- Support Contacts -------
 function SupportContacts() {
+  const { settings } = useSupportSettings();
+  const whatsappNumbers = settings.whatsappNumbers;
   const [waOpen, setWaOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -285,7 +283,7 @@ function SupportContacts() {
                 </button>
               </div>
               <div className="mt-4 space-y-2">
-                {WHATSAPP_NUMBERS.map((num) => (
+                {whatsappNumbers.map((num) => (
                   <div key={num} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-2 pl-4">
                     <span className="flex-1 text-sm font-mono tracking-wide">{num}</span>
                     <button onClick={() => copyNumber(num)} aria-label="Copy number"

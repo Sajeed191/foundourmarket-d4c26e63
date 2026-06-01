@@ -4018,6 +4018,9 @@ export type Database = {
           include_seed_in_analytics: boolean
           prepaid_discount_percent: number
           shipping_mode: string
+          support_response_minutes: number
+          support_status: string
+          support_whatsapp_numbers: string[]
           updated_at: string
         }
         Insert: {
@@ -4031,6 +4034,9 @@ export type Database = {
           include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
           shipping_mode?: string
+          support_response_minutes?: number
+          support_status?: string
+          support_whatsapp_numbers?: string[]
           updated_at?: string
         }
         Update: {
@@ -4044,6 +4050,9 @@ export type Database = {
           include_seed_in_analytics?: boolean
           prepaid_discount_percent?: number
           shipping_mode?: string
+          support_response_minutes?: number
+          support_status?: string
+          support_whatsapp_numbers?: string[]
           updated_at?: string
         }
         Relationships: []
