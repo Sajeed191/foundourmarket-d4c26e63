@@ -118,23 +118,39 @@ function BadgeManagerInner() {
 
   const stats = useMemo(() => {
     const now = Date.now();
-    const active = types.filter((b) => badgeScheduleState(b, now) === "live").length;
+    const live = types.filter((b) => !b.archived);
+    const active = live.filter((b) => badgeScheduleState(b, now) === "live").length;
     const productsUsing = map.size;
     let most: { label: string; n: number } | null = null;
     for (const b of types) {
       const n = usage[b.id] ?? 0;
       if (!most || n > most.n) most = { label: b.label, n };
     }
-    const recent = [...types].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0];
-    const expired = types.filter((b) => badgeScheduleState(b, now) === "expired").length;
-    const scheduled = types.filter((b) => badgeScheduleState(b, now) === "scheduled").length;
+    let topClicked: { label: string; n: number } | null = null;
+    for (const b of types) {
+      const n = clicks[b.id] ?? 0;
+      if (!topClicked || n > topClicked.n) topClicked = { label: b.label, n };
+    }
+    const totalClicks = Object.values(clicks).reduce((a, b) => a + b, 0);
+    const totalAssignments = Object.values(usage).reduce((a, b) => a + b, 0);
+    const ctr = totalAssignments > 0 ? Math.round((totalClicks / totalAssignments) * 100) : 0;
+    const expired = live.filter((b) => badgeScheduleState(b, now) === "expired").length;
+    const scheduled = live.filter((b) => badgeScheduleState(b, now) === "scheduled").length;
+    const archived = types.filter((b) => b.archived).length;
     return {
       active, productsUsing,
       most: most && most.n > 0 ? most.label : "—",
-      recent: recent?.label ?? "—",
-      expired, scheduled,
+      topClicked: topClicked && topClicked.n > 0 ? topClicked.label : "—",
+      totalClicks, ctr,
+      expired, scheduled, archived,
     };
-  }, [types, map, usage]);
+  }, [types, map, usage, clicks]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const b of types) set.add(b.category || "Custom");
+    return ["All", ...[...set].sort()];
+  }, [types]);
 
   async function onDrop(targetId: string) {
     if (!dragId || dragId === targetId) { setDragId(null); return; }
