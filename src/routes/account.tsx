@@ -386,7 +386,7 @@ function FloatingSupportButton() {
   };
 
   return (
-    <div className="fixed right-4 z-40 sm:bottom-6 sm:right-6" style={{ bottom: "calc(var(--mobile-nav-clearance) + 1rem)" }}>
+    <div className="fixed right-4 bottom-[calc(var(--mobile-nav-clearance)+1rem)] z-40 sm:bottom-6 sm:right-6">
       <motion.button
         onClick={handleOpenChat}
         initial={{ scale: 0, opacity: 0 }}
