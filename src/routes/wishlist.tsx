@@ -223,6 +223,15 @@ function WishlistPage() {
         <h1 className="text-3xl md:text-5xl font-display font-semibold">Your Wishlist</h1>
         {items.length > 0 && (
           <div className="flex items-center gap-2">
+            {selectMode && (
+              <button
+                onClick={selectAll}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
+              >
+                <CheckSquare className="size-3.5" />
+                {allSelected ? "Clear all" : "Select all"}
+              </button>
+            )}
             <button
               onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:border-accent/40 transition-colors"
