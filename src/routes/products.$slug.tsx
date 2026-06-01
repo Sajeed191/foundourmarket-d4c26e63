@@ -145,15 +145,26 @@ function ProductPage() {
   useEffect(() => {
     if (!slug) return;
     let active = true;
+    setDataReady(false);
+    setMainImgLoaded(false);
     Promise.all([fetchProductImages(slug), fetchProductVariants(slug)]).then(([imgs, vars]) => {
       if (!active) return;
       setImages(imgs);
       setVariants(vars);
       setActiveImg(0);
       setVariantId(vars[0]?.id ?? null);
-    });
+      setDataReady(true);
+    }).catch(() => { if (active) setDataReady(true); });
     return () => { active = false; };
   }, [slug]);
+
+  // Reveal the sticky purchase dock only after the user scrolls past the hero.
+  useEffect(() => {
+    const onScroll = () => setScrolledPastHero(window.scrollY > 220);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const deliveryWindow = useMemo(() => {
     const start = new Date();
