@@ -552,6 +552,8 @@ function ProductPage() {
               Buy Now
             </Link>
 
+            <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
+
             {/* Trust grid */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-6 sm:pt-8 border-t border-border">
               {[
