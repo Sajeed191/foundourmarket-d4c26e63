@@ -57,7 +57,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
   useEffect(() => {
     if (imprDone.current || assigned.length === 0) return;
     imprDone.current = true;
-    assigned.slice(0, 3).forEach((b) => b.id && trackBadgeImpression(b.id, product.slug));
+    assigned.slice(0, 2).forEach((b) => b.id && trackBadgeImpression(b.id, product.slug));
   }, [assigned, product.slug]);
   // Admin-assigned badges win; otherwise fall back to auto-computed badges.
   const badges: DisplayBadge[] = assigned.length
