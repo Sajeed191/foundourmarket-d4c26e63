@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/components/admin/AdminShell";
 import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
+import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
+import { assignBadge } from "@/lib/use-product-badges";
 import { useStoreSettings } from "@/lib/use-store-settings";
 
 /** Permissive snake_case row accepted from both /admin and /admin-products. */
@@ -95,6 +97,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Pending badge assignments for a not-yet-saved product (flushed after insert).
+  const [pendingBadges, setPendingBadges] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     slug: row?.slug ?? "", name: row?.name ?? "", tagline: row?.tagline ?? "",
@@ -224,8 +228,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     const { error: err } = row?.id
       ? await supabase.from("products").update(payload).eq("id", row.id)
       : await supabase.from("products").insert(payload);
+    if (err) { setSaving(false); setError(err.message); return; }
+    // Flush pending badge assignments for a newly created product (in priority order).
+    if (!row?.id && pendingBadges.length) {
+      try {
+        for (const id of pendingBadges) await assignBadge(payload.slug, id);
+      } catch { /* non-fatal: product is saved, badges can be retried in editor */ }
+    }
     setSaving(false);
-    if (err) { setError(err.message); return; }
     logActivity(row?.id ? "product_updated" : "product_created", "product", row?.id, { slug: payload.slug });
     toast.success(row?.id ? "Product updated" : "Product created");
     onSaved();
@@ -391,6 +401,15 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               <Toggle checked={form.new_arrival} onChange={(v) => set({ new_arrival: v })} label="New Arrival" />
             </div>
           </div>
+        </CollapsibleModule>
+
+        {/* Product Badges */}
+        <CollapsibleModule eyebrow="Step 7" title="Product Badges" badge={<Tag className="size-3.5 text-accent" />}>
+          {row?.slug ? (
+            <ProductBadgeManager slug={row.slug} />
+          ) : (
+            <ProductBadgeManager selectedIds={pendingBadges} onChange={setPendingBadges} />
+          )}
         </CollapsibleModule>
 
         {/* Media */}

@@ -9,7 +9,7 @@ import type { Product, ProductStatus } from "@/lib/products";
 import { resolveImage } from "@/lib/products";
 import { adminUpdateProduct } from "@/lib/admin-products.functions";
 import { invalidateProducts } from "@/lib/use-products";
-import { useBadgeCatalog, assignBadge, unassignBadge } from "@/lib/use-product-badges";
+import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
 import { cn } from "@/lib/utils";
 
 const STATUSES: ProductStatus[] = [
@@ -224,7 +224,7 @@ export function ProductQuickEditSheet({
               </div>
 
               <Field label="Badges">
-                <BadgeAssigner slug={product.slug} />
+                <ProductBadgeManager slug={product.slug} />
               </Field>
             </div>
 
@@ -312,123 +312,5 @@ function Toggle({
         />
       </span>
     </button>
-  );
-}
-
-/** Multi-select badge assignment for a product (staff only, RLS-enforced). */
-function BadgeAssigner({ slug }: { slug: string }) {
-  const { types, map } = useBadgeCatalog();
-  const navigate = useNavigate();
-  const assigned = map.get(slug) ?? [];
-  const assignedIds = new Set(assigned.map((b) => b.id));
-  const [busy, setBusy] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-
-  async function toggleBadge(id: string, active: boolean) {
-    setBusy(id);
-    try {
-      if (active) await unassignBadge(slug, id);
-      else await assignBadge(slug, id);
-    } catch (e) {
-      toast.error("Badge update failed", {
-        description: e instanceof Error ? e.message : "Try again.",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  const enabled = types.filter((t) => t.enabled && !t.isDiscount);
-  const filtered = enabled.filter((t) =>
-    t.label.toLowerCase().includes(query.trim().toLowerCase()),
-  );
-
-  if (enabled.length === 0) {
-    return (
-      <div className="space-y-2">
-        <p className="text-[11px] text-muted-foreground">No badge types available.</p>
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/admin-badges" })}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline"
-        >
-          + Create a badge
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2.5">
-      {assigned.length > 0 && (
-        <div className="rounded-xl border border-border bg-background/60 p-2.5">
-          <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Live preview</p>
-          <div className="flex flex-wrap gap-1.5">
-            {assigned.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                title="Click to remove"
-                disabled={busy === b.id}
-                onClick={() => toggleBadge(b.id, true)}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold tracking-wide transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                style={{ backgroundColor: b.backgroundColor || b.color, color: b.textColor, border: b.borderColor ? `1px solid ${b.borderColor}` : undefined }}
-              >
-                {busy === b.id ? <Loader2 className="size-3 animate-spin" /> : b.emoji && <span aria-hidden>{b.emoji}</span>}
-                {b.label}
-                <X className="size-3 opacity-70" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search badges…"
-          className="flex-1 h-8 rounded-lg border border-border bg-transparent px-2.5 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/admin-badges" })}
-          className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-border px-2.5 h-8 text-[11px] font-medium hover:bg-white/5"
-        >
-          + New
-        </button>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {filtered.map((t) => {
-          const active = assignedIds.has(t.id);
-          return (
-            <button
-              key={t.id}
-              type="button"
-              disabled={busy === t.id}
-              onClick={() => toggleBadge(t.id, active)}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all disabled:opacity-50",
-                active
-                  ? "border-transparent shadow-sm"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground",
-              )}
-              style={active ? { backgroundColor: t.color, color: t.textColor } : undefined}
-            >
-              {busy === t.id ? (
-                <Loader2 className="size-3 animate-spin" />
-              ) : (
-                t.emoji && <span aria-hidden>{t.emoji}</span>
-              )}
-              {t.label}
-            </button>
-          );
-        })}
-        {filtered.length === 0 && (
-          <p className="text-[11px] text-muted-foreground">No badges match “{query}”.</p>
-        )}
-      </div>
-    </div>
   );
 }
