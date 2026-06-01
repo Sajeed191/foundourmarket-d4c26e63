@@ -8,6 +8,31 @@ export type AutoRule = {
   enabled: boolean;
 } | null;
 
+export type BadgeAnimation =
+  | "none" | "pulse" | "bounce" | "shine" | "glow" | "float" | "slide" | "flash";
+
+export const BADGE_ANIMATIONS: BadgeAnimation[] = [
+  "none", "pulse", "bounce", "shine", "glow", "float", "slide", "flash",
+];
+
+export const BADGE_CATEGORIES = [
+  "Sales", "Trending", "Inventory", "Premium", "Seasonal", "Trust", "Marketing", "Custom",
+] as const;
+
+/** Maps a badge animation to its CSS utility class (defined in styles.css). */
+export function badgeAnimationClass(a: BadgeAnimation | string | undefined): string {
+  switch (a) {
+    case "pulse": return "badge-anim-pulse";
+    case "bounce": return "badge-anim-bounce";
+    case "shine": return "badge-anim-shine";
+    case "glow": return "badge-anim-glow";
+    case "float": return "badge-anim-float";
+    case "slide": return "badge-anim-slide";
+    case "flash": return "badge-anim-flash";
+    default: return "";
+  }
+}
+
 export type BadgeType = {
   id: string;
   badgeKey: string;
@@ -28,6 +53,12 @@ export type BadgeType = {
   startAt: string | null;
   endAt: string | null;
   autoRule: AutoRule;
+  category: string;
+  subtitle: string;
+  fontSize: number;
+  fontWeight: number;
+  animation: BadgeAnimation;
+  archived: boolean;
   createdAt: string;
   updatedAt: string;
 };
