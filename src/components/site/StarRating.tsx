@@ -114,9 +114,9 @@ export function StarRating({
       ) : (
         (showValue || hasCount) && (
           <span className={cn("text-foreground/80 tabular-nums", textClassName)}>
-            {showValue && <span className="font-medium">{value.toFixed(1)}</span>}
+            {showValue && <span className="font-semibold">{value.toFixed(1)}</span>}
             {hasCount && (
-              <span className={cn("text-muted-foreground", showValue && "ml-1")}>
+              <span className={cn("text-muted-foreground text-[0.9em]", showValue && "ml-1")}>
                 ({count})
               </span>
             )}
