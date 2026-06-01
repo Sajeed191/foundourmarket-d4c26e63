@@ -29,14 +29,14 @@ export const Route = createFileRoute("/wishlist")({
   component: WishlistPage,
 });
 
-type FilterKey = "all" | "in-stock" | "price-drops" | "out-of-stock" | "recent";
+type FilterKey = "all" | "in-stock" | "price-drops" | "free-shipping" | "out-of-stock";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "in-stock", label: "In Stock" },
   { key: "price-drops", label: "Price Drops" },
+  { key: "free-shipping", label: "Free Shipping" },
   { key: "out-of-stock", label: "Out of Stock" },
-  { key: "recent", label: "Recently Added" },
 ];
 
 // ---- Client-side price snapshot so we can detect drops after a save ----
