@@ -324,7 +324,7 @@ function WishlistPage() {
 
   if (loading || !user || wlLoading || pLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 mobile-page-clearance md:pb-12">
         <div className="h-8 w-48 rounded bg-white/[0.05] animate-pulse mb-8" />
         <ProductSkeletonGrid count={8} />
       </div>
@@ -332,7 +332,7 @@ function WishlistPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16 mobile-page-clearance md:pb-16">
       <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">
         Wishlist · {items.length} {items.length === 1 ? "Item" : "Items"}
       </p>
@@ -539,7 +539,7 @@ function WishlistPage() {
           className="fixed inset-x-0 z-40 flex justify-center px-3 pointer-events-none"
           style={{
             bottom:
-              "calc(env(safe-area-inset-bottom, 0px) + 16px + var(--wishlist-nav-offset, 86px))",
+              "calc(var(--mobile-nav-clearance) + 1rem)",
           }}
         >
           <div
