@@ -615,6 +615,48 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_types: {
+        Row: {
+          badge_key: string
+          color: string
+          created_at: string
+          emoji: string
+          enabled: boolean
+          id: string
+          is_discount: boolean
+          label: string
+          priority: number
+          text_color: string
+          updated_at: string
+        }
+        Insert: {
+          badge_key: string
+          color?: string
+          created_at?: string
+          emoji?: string
+          enabled?: boolean
+          id?: string
+          is_discount?: boolean
+          label: string
+          priority?: number
+          text_color?: string
+          updated_at?: string
+        }
+        Update: {
+          badge_key?: string
+          color?: string
+          created_at?: string
+          emoji?: string
+          enabled?: boolean
+          id?: string
+          is_discount?: boolean
+          label?: string
+          priority?: number
+          text_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -2399,6 +2441,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      product_badges: {
+        Row: {
+          badge_type_id: string
+          created_at: string
+          id: string
+          product_slug: string
+          sort_order: number
+        }
+        Insert: {
+          badge_type_id: string
+          created_at?: string
+          id?: string
+          product_slug: string
+          sort_order?: number
+        }
+        Update: {
+          badge_type_id?: string
+          created_at?: string
+          id?: string
+          product_slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_badges_badge_type_id_fkey"
+            columns: ["badge_type_id"]
+            isOneToOne: false
+            referencedRelation: "badge_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_faqs: {
         Row: {
