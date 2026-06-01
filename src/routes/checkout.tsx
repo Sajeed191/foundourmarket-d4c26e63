@@ -813,7 +813,8 @@ function CheckoutPage() {
 
             {/* Mobile sticky checkout bar — sits ABOVE the bottom navigation, always visible */}
             <div
-              className="lg:hidden fixed inset-x-0 z-50 px-3 pointer-events-none"
+              data-floating-control
+              className="lg:hidden fixed inset-x-0 z-[var(--z-floating-controls)] px-3 pointer-events-none"
               style={{ bottom: "var(--product-dock-bottom)" }}
             >
               <div ref={stickyBarRef} className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
@@ -864,7 +865,8 @@ function CheckoutPage() {
             {checkoutReady && !stickyVisible && (
               <button
                 type="submit"
-                className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[9999] inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-7 min-h-[56px] rounded-full text-xs uppercase tracking-widest shadow-[0_18px_44px_-12px_var(--color-accent)] active:scale-[0.98]"
+                data-floating-control
+                className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[var(--z-floating-controls)] inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-7 min-h-[56px] rounded-full text-xs uppercase tracking-widest shadow-[0_18px_44px_-12px_var(--color-accent)] active:scale-[0.98]"
                 style={{ bottom: "var(--product-dock-bottom)" }}
               >
                 <Lock className="size-3.5" />

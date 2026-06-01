@@ -536,10 +536,11 @@ function WishlistPage() {
       {/* Floating selection toolbar — floats above the bottom nav, never overlaps it */}
       {selectMode && selected.size > 0 && (
         <div
-          className="fixed inset-x-0 z-40 flex justify-center px-3 pointer-events-none"
+          data-floating-control
+          className="fixed inset-x-0 z-[var(--z-floating-controls)] flex justify-center px-3 pointer-events-none"
           style={{
             bottom:
-              "calc(var(--mobile-nav-clearance) + 1rem)",
+              "var(--floating-bottom-offset)",
           }}
         >
           <div

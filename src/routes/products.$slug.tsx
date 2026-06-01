@@ -648,7 +648,7 @@ function ProductPage() {
       {/* Sticky mobile purchase dock — only mounts once the page is fully
           initialized and the user has scrolled past the hero. */}
       {showPurchaseDock && (
-      <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta className="sm:hidden fixed inset-x-0 z-40 h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300" style={{ bottom: "var(--product-dock-bottom)" }}>
+      <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300" style={{ bottom: "var(--product-dock-bottom)" }}>
         <div className="flex h-full items-center gap-1.5 rounded-2xl border border-white/10 p-1.5 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9)]" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)" }}>
           <button
             onClick={() => toggleWishlist(product.slug)}
@@ -779,7 +779,7 @@ function ProductPageSkeleton() {
     <div data-product-questions className="min-h-[38rem]" />
     <div data-product-related className="min-h-[30rem]" />
     <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
-    <div data-product-cta className="sm:hidden fixed inset-x-0 z-40 h-[var(--product-dock-height)] px-3" style={{ bottom: "var(--product-dock-bottom)" }}>
+    <div data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3" style={{ bottom: "var(--product-dock-bottom)" }}>
       <div className="flex h-full items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 backdrop-blur-2xl">
         <div className="size-10 shrink-0 rounded-xl bg-white/[0.05] animate-pulse" />
         <div className="h-8 w-16 shrink-0 rounded-lg bg-white/[0.05] animate-pulse" />
