@@ -119,6 +119,7 @@ function ProductPage() {
   const [dataReady, setDataReady] = useState(false);
   // True once the main product image has actually decoded/loaded.
   const [mainImgLoaded, setMainImgLoaded] = useState(false);
+  const [mobileDockVisible, setMobileDockVisible] = useState(false);
 
   useEffect(() => {
     layoutMetrics.setExpectedCtaHeight(64);
@@ -197,6 +198,27 @@ function ProductPage() {
     return `${start.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
   }, []);
 
+  useEffect(() => {
+    const updateDock = () => {
+      const sentinel = document.querySelector<HTMLElement>("[data-product-sticky-threshold]");
+      if (!sentinel) {
+        setMobileDockVisible(false);
+        return;
+      }
+      const headerOffset = layoutMetrics.headerHeight || 96;
+      setMobileDockVisible(sentinel.getBoundingClientRect().top <= headerOffset + 8);
+    };
+    updateDock();
+    window.addEventListener("scroll", updateDock, { passive: true });
+    window.addEventListener("resize", updateDock, { passive: true });
+    window.visualViewport?.addEventListener("resize", updateDock, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateDock);
+      window.removeEventListener("resize", updateDock);
+      window.visualViewport?.removeEventListener("resize", updateDock);
+    };
+  }, [layoutMetrics.headerHeight, product?.slug]);
+
   const layoutReady = !authLoading && layoutMetrics.ready && layoutMetrics.viewportHeight > 0;
 
   if (loading) {
@@ -235,7 +257,7 @@ function ProductPage() {
   // resolved. Combined with the scroll gate this prevents overlap, layout
   // shift and currency flicker after a refresh.
   const productPageReady = layoutReady && dataReady && currencyReady && mainImgLoaded;
-  const showPurchaseDock = productPageReady;
+  const showPurchaseDock = productPageReady && mobileDockVisible;
 
   if (!productPageReady) {
     return <ProductPageSkeleton />;
