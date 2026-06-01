@@ -421,22 +421,24 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* 3 · Trust & Benefits — compact premium glass cards */}
-      <section className="px-4 sm:px-6 py-8 sm:py-12 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 3 · Trust Bar — horizontal scroll premium glass cards */}
+      <section className="py-8 sm:py-12 max-w-7xl mx-auto">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar px-4 sm:px-6 snap-x snap-mandatory sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible">
           {[
-            { icon: Truck, title: "Worldwide Shipping", desc: "Tracked delivery to 180+ countries." },
-            { icon: Shield, title: "Secure Payments", desc: "Bank-grade encryption on checkout." },
-            { icon: Star, title: "Curated Quality", desc: "Hand-verified, premium-only catalog." },
-            { icon: Headset, title: "24/7 Support", desc: "Real humans, ready anytime." },
+            { icon: Lock, title: "Secure Checkout", desc: "Bank-grade encryption." },
+            { icon: Globe2, title: "Global Shipping", desc: "Delivery to 180+ countries." },
+            { icon: Zap, title: "Fast Delivery", desc: "Express tracked dispatch." },
+            { icon: RotateCcw, title: "Easy Returns", desc: "Hassle-free refunds." },
+            { icon: Headset, title: "24/7 Support", desc: "Real humans, anytime." },
+            { icon: BadgeCheck, title: "Verified Products", desc: "Hand-checked quality." },
           ].map((b, i) => (
-            <Reveal key={b.title} delay={i}>
+            <Reveal key={b.title} delay={i} className="snap-start shrink-0 w-[44%] xs:w-[40%] sm:w-auto">
               <div className="group relative h-full glass glass-reflect rounded-2xl p-4 sm:p-5 overflow-hidden hover:border-accent/40 transition-colors">
                 <div aria-hidden className="absolute -top-10 -right-10 size-28 rounded-full opacity-0 group-hover:opacity-60 blur-2xl transition-opacity" style={{ background: "var(--gradient-ember-soft)" }} />
                 <div className="relative size-9 sm:size-10 grid place-items-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20 mb-3 group-hover:scale-105 group-hover:shadow-[0_0_22px_-6px_var(--color-accent)] transition-all">
                   <b.icon className="size-4" />
                 </div>
-                <h4 className="relative text-xs sm:text-sm font-medium mb-1">{b.title}</h4>
+                <h4 className="relative text-xs sm:text-sm font-medium mb-1 whitespace-nowrap">{b.title}</h4>
                 <p className="relative text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
               </div>
             </Reveal>
