@@ -169,7 +169,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         )}
 
         {/* Price + ADD — pinned to the bottom so it aligns across all cards */}
-        <div className={`flex items-end justify-between gap-2 ${compact ? "mt-1.5" : "mt-2"} mt-auto pt-2`}>
+        <div className="flex items-end justify-between gap-2 mt-auto pt-2.5">
           <div className="min-w-0">
             <p className={`font-display font-semibold tabular-nums leading-none ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{format(price)}</p>
             {originalPrice && discount ? (
