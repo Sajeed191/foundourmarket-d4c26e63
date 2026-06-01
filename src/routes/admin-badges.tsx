@@ -82,6 +82,28 @@ function BadgePreview({ b }: { b: BadgeType }) {
   );
 }
 
+/** Premium clickable activation status pill (green=live, blue=scheduled, red=expired, gray=disabled). */
+function StatusPill({ state, onClick }: { state: "live" | "scheduled" | "expired" | "disabled"; onClick: () => void }) {
+  const meta: Record<string, { label: string; cls: string; dot: string }> = {
+    live: { label: "Active", cls: "text-emerald-300 border-emerald-400/40 bg-emerald-500/15 shadow-[0_0_12px_-2px_rgba(16,185,129,0.6)]", dot: "bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.9)]" },
+    scheduled: { label: "Scheduled", cls: "text-sky-300 border-sky-400/40 bg-sky-500/15 shadow-[0_0_12px_-2px_rgba(56,189,248,0.5)]", dot: "bg-sky-400" },
+    expired: { label: "Expired", cls: "text-red-300 border-red-400/40 bg-red-500/15", dot: "bg-red-400" },
+    disabled: { label: "Disabled", cls: "text-muted-foreground border-border bg-white/5", dot: "bg-muted-foreground/60" },
+  };
+  const m = meta[state];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={state === "disabled" ? "Click to enable" : "Click to disable"}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono uppercase tracking-widest font-bold transition-all hover:scale-105 active:scale-95 ${m.cls}`}
+    >
+      <span className={`size-1.5 rounded-full ${m.dot} ${state === "live" ? "animate-pulse" : ""}`} />
+      {m.label}
+    </button>
+  );
+}
+
 function BadgeManagerInner() {
   const { types, map, loading } = useBadgeCatalog();
   const [editing, setEditing] = useState<BadgeType | "new" | null>(null);
