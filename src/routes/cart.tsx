@@ -232,6 +232,9 @@ function CartPage() {
                             <span className="block text-[11px] text-muted-foreground line-through font-mono">{format(pr.original * item.qty)}</span>
                           )}
                           <span className="font-mono text-sm text-accent">{format(pr.sale * item.qty)}</span>
+                          {pr.save > 0 && (
+                            <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
+                          )}
                         </div>
                       </div>
 
