@@ -378,11 +378,11 @@ function Home() {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
             className="mt-7 sm:mt-9 flex flex-wrap justify-center gap-3"
           >
-            <Link to="/category/$slug" params={{ slug: "electronics" }} className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full bg-foreground text-background text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:brightness-110 hover:-translate-y-0.5 transition-all">
-              Explore Products <ArrowRight className="size-3.5" />
+            <Link to="/category/$slug" params={{ slug: "electronics" }} className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-full bg-accent text-accent-foreground text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:brightness-110 hover:-translate-y-0.5 transition-all shadow-[var(--shadow-ember)]">
+              Shop Now <ArrowRight className="size-3.5" />
             </Link>
-            <a href="#categories" className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full glass text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:bg-white/10 transition-all">
-              Shop Categories
+            <a href="#categories" className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-full glass text-[11px] sm:text-xs uppercase tracking-widest font-semibold hover:bg-white/10 transition-all">
+              Browse Categories
             </a>
           </motion.div>
 
