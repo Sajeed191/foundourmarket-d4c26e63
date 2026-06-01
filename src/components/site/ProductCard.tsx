@@ -16,6 +16,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
