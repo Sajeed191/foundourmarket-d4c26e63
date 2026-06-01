@@ -83,8 +83,8 @@ export function StarRating({
   glow?: boolean;
 }) {
   const raw = Math.max(0, Math.min(5, Number(rating) || 0));
-  // Round only to the nearest 0.5 so stars always show full / half / empty.
-  const value = Math.round(raw * 2) / 2;
+  // Use the exact value so a 4.8 rating shows 4 full stars + one 80%-filled star.
+  const value = raw;
   const hasCount = typeof count === "number";
   const noReviews = hasCount && count === 0;
 
@@ -95,14 +95,14 @@ export function StarRating({
       aria-label={
         noReviews
           ? "No reviews yet"
-          : `Rating: ${value} out of 5${hasCount ? `, ${count} reviews` : ""}`
+          : `Rating: ${value.toFixed(1)} out of 5${hasCount ? `, ${count} reviews` : ""}`
       }
     >
       <span className="inline-flex items-center gap-0.5 shrink-0 leading-none">
         {Array.from({ length: 5 }).map((_, i) => {
-          // 1 = full, 0.5 = half, 0 = empty for this slot.
+          // Exact fractional fill for this slot (0–1), converted to a percentage.
           const fill = noReviews ? 0 : Math.max(0, Math.min(1, value - i));
-          const pct = fill >= 1 ? 100 : fill >= 0.5 ? 50 : 0;
+          const pct = Math.round(fill * 100);
           return <StarIcon key={i} pct={pct} className={starClassName} glow={glow} />;
         })}
       </span>
