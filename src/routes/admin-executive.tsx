@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin-executive")({
       { name: "description", content: "CEO-level control center — business health, profit drivers, risks, opportunities and AI executive insights in real time." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({ view: typeof s.view === "string" ? s.view : undefined }),
+  validateSearch: (s: Record<string, unknown>): { view?: string } => ({ view: typeof s.view === "string" ? s.view : undefined }),
   component: ExecutivePage,
 });
 

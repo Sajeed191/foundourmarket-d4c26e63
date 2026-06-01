@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin-ai-operations")({
       { name: "description", content: "AI Commerce Operations Assistant — prioritized, profit-aware recommendations, executive briefings, execution safety and outcome tracking in real time." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({ view: typeof s.view === "string" ? s.view : undefined }),
+  validateSearch: (s: Record<string, unknown>): { view?: string } => ({ view: typeof s.view === "string" ? s.view : undefined }),
   component: AIOperationsPage,
 });
 
