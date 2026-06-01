@@ -288,8 +288,6 @@ function ProductPage() {
                     src={activeImage?.url || product.image}
                     alt={activeImage?.alt || product.name}
                     onClick={() => setLightboxOpen(true)}
-                    onLoad={() => setMainImgLoaded(true)}
-                    onError={() => setMainImgLoaded(true)}
                     initial={{ opacity: 0, scale: 1.04 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
