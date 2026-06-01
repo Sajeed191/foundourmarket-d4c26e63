@@ -52,7 +52,7 @@ export function useSupportSettings() {
     void load();
 
     const channel = supabase
-      .channel("support-settings-live")
+      .channel(`support-settings-live-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, (payload) => {
         const row = payload.new as Record<string, unknown> | null;
         if (row) setSettings(normalize(row));
