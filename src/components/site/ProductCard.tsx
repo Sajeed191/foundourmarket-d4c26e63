@@ -58,6 +58,8 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         iconColor: b.iconColor,
         shadowStrength: b.shadowStrength,
         radius: b.radius,
+        subtitle: b.subtitle,
+        animation: b.animation,
       }))
     : computeBadges(product, badgeSettings).map((b) => ({
         key: b.key,
