@@ -33,7 +33,7 @@ export function WishlistCard({
   onQuickView,
 }: WishlistCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
-  const { add, items, setQty } = useCart();
+  const { add, items } = useCart();
   const { toggle } = useWishlist();
   const { priceAlertsFor, addPriceAlert, removePriceAlert, hasRestock, toggleRestock } =
     useWishlistAlerts();
