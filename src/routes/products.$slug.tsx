@@ -662,6 +662,42 @@ function ProductPage() {
 }
 
 
+function ProductPageSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 product-page-clearance sm:pb-24 lg:pb-16" aria-busy="true">
+      <div className="mb-6 h-3 w-44 rounded-full bg-white/[0.05] animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+        <div className="space-y-4">
+          <div className="aspect-square rounded-3xl border border-border bg-white/[0.04] animate-pulse" />
+          <div className="grid grid-cols-5 gap-2 sm:grid-cols-6 sm:gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-xl bg-white/[0.04] animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-5">
+          <div className="h-3 w-32 rounded-full bg-accent/20 animate-pulse" />
+          <div className="h-11 w-4/5 rounded-2xl bg-white/[0.06] animate-pulse" />
+          <div className="h-4 w-52 rounded-full bg-white/[0.05] animate-pulse" />
+          <div className="h-px w-full bg-border/70" />
+          <div className="h-12 w-44 rounded-2xl bg-white/[0.06] animate-pulse" />
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-8 rounded-xl bg-white/[0.04] animate-pulse" />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-full rounded bg-white/[0.04] animate-pulse" />
+            <div className="h-4 w-11/12 rounded bg-white/[0.04] animate-pulse" />
+            <div className="h-4 w-3/5 rounded bg-white/[0.04] animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function SpecRow({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2.5">
