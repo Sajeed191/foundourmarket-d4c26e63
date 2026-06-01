@@ -74,9 +74,10 @@ function badgePreviewStyle(b: BadgeType) {
 
 function BadgePreview({ b }: { b: BadgeType }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-bold font-mono px-2 min-h-[24px] leading-none tracking-wider" style={badgePreviewStyle(b)}>
+    <span className={`inline-flex items-center gap-1 px-2 min-h-[24px] leading-none tracking-wider font-mono ${badgeAnimationClass(b.animation)}`} style={{ ...badgePreviewStyle(b), fontSize: `${b.fontSize}px`, fontWeight: b.fontWeight }}>
       {b.emoji && <span style={b.iconColor ? { color: b.iconColor } : undefined}>{b.emoji}</span>}
       {b.label}
+      {b.subtitle && <span className="opacity-75 font-medium">· {b.subtitle}</span>}
     </span>
   );
 }
