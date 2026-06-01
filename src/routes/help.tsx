@@ -316,7 +316,10 @@ function TrackMyOrder() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId.trim()) { toast.error("Enter your Order ID"); return; }
-    nav({ to: "/track", search: { q: orderId.trim() } as any });
+    try {
+      sessionStorage.setItem("fom_track_prefill", JSON.stringify({ orderId: orderId.trim(), email: email.trim() }));
+    } catch { /* ignore */ }
+    nav({ to: "/track" });
   };
 
   return (
