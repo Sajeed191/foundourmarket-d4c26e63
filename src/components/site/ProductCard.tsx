@@ -123,45 +123,31 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         </div>
       </Link>
 
-      <Link to="/products/$slug" params={{ slug: product.slug }} className={`block relative ${compact ? "" : "px-1"}`}>
-        <div className="flex justify-between items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <h4 className={`font-medium line-clamp-2 group-hover:text-accent transition-colors ${compact ? "text-[11px] leading-tight" : "text-sm leading-snug"}`}>{product.name}</h4>
-            {product.tagline && (
-              <p className={`text-muted-foreground truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.tagline}</p>
-            )}
+      <Link to="/products/$slug" params={{ slug: product.slug }} className={`relative flex flex-1 flex-col ${compact ? "" : "px-1"}`}>
+        {/* Title — fixed 2-line block keeps every card's footer aligned */}
+        <h4 className={`font-medium line-clamp-2 group-hover:text-accent transition-colors ${compact ? "text-[11px] leading-tight min-h-[2.2em]" : "text-sm leading-snug min-h-[2.5em]"}`}>{product.name}</h4>
+        {product.tagline && (
+          <p className={`text-muted-foreground truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.tagline}</p>
+        )}
 
-          </div>
-          <div className="text-right shrink-0">
-            <p className={`font-display font-semibold tabular-nums ${compact ? "text-[11px]" : "text-sm"}`}>{format(price)}</p>
-            {originalPrice && discount ? (
-              <p className={`font-mono text-muted-foreground/70 line-through tabular-nums ${compact ? "text-[9px]" : "text-[10px]"}`}>{format(originalPrice)}</p>
-            ) : null}
-          </div>
+        {/* Rating row */}
+        <div className={`flex items-center font-mono text-muted-foreground min-w-0 ${compact ? "mt-1 text-[9px]" : "mt-1.5 text-[10px]"}`}>
+          {product.reviews > 0 ? (
+            <StarRating
+              rating={product.rating}
+              count={product.reviews}
+              showValue
+              starClassName={compact ? "size-2.5" : "size-3"}
+              textClassName={compact ? "text-[9px]" : "text-[10px]"}
+            />
+          ) : (
+            <span className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
+              New Product
+            </span>
+          )}
         </div>
-        <div className={`flex items-center justify-between gap-2 ${compact ? "mt-1" : "mt-2"}`}>
-          <div className={`flex items-center gap-1 font-mono text-muted-foreground min-w-0 ${compact ? "text-[9px]" : "text-[10px]"}`}>
-            {product.reviews > 0 ? (
-              <StarRating
-                rating={product.rating}
-                count={product.reviews}
-                showValue
-                starClassName={compact ? "size-2.5" : "size-3"}
-                textClassName={compact ? "text-[9px]" : "text-[10px]"}
-              />
-            ) : (
-              <span className={`font-mono uppercase tracking-wider text-emerald-400/90 ${compact ? "text-[8px]" : "text-[9px]"}`}>
-                New Product
-              </span>
-            )}
-          </div>
-          <button
-            onClick={(e) => { e.preventDefault(); add(product.slug); }}
-            className={`sm:hidden font-mono uppercase tracking-widest text-accent ${compact ? "text-[9px]" : "text-[10px]"}`}
-          >
-            Add +
-          </button>
-        </div>
+
+        {/* Shipping row — free shipping when fee is 0, otherwise the actual charge */}
         {shippingFee > 0 ? (
           <p className={`font-mono text-muted-foreground/80 ${compact ? "mt-0.5 text-[8px]" : "mt-1 text-[10px]"}`}>
             Shipping {format(shippingFee)}
@@ -181,6 +167,23 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             Out of stock
           </p>
         )}
+
+        {/* Price + ADD — pinned to the bottom so it aligns across all cards */}
+        <div className={`flex items-end justify-between gap-2 ${compact ? "mt-1.5" : "mt-2"} mt-auto pt-2`}>
+          <div className="min-w-0">
+            <p className={`font-display font-semibold tabular-nums leading-none ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{format(price)}</p>
+            {originalPrice && discount ? (
+              <p className={`font-mono text-muted-foreground/60 line-through tabular-nums ${compact ? "text-[9px] mt-0.5" : "text-[10px] mt-1"}`}>{format(originalPrice)}</p>
+            ) : null}
+          </div>
+          <button
+            onClick={(e) => { e.preventDefault(); add(product.slug); }}
+            aria-label={`Add ${product.name} to cart`}
+            className={`shrink-0 inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110 active:scale-95 shadow-[var(--shadow-ember)] ${compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"}`}
+          >
+            <Plus className={compact ? "size-2.5" : "size-3"} /> Add
+          </button>
+        </div>
       </Link>
     </div>
   );
