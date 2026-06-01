@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useRegion } from "@/lib/region";
+
 import { Instagram, Twitter, Facebook, Youtube, ChevronDown, Mail, MessageCircle } from "lucide-react";
 
 /** Footer column that collapses into an accordion on mobile, always open on desktop. */
