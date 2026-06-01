@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { ProductEditorModal } from "@/components/admin/ProductEditorModal";
+import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
 
 export const Route = createFileRoute("/admin-products")({
   head: () => ({
