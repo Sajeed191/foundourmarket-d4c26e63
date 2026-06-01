@@ -558,6 +558,38 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_events: {
+        Row: {
+          badge_type_id: string
+          created_at: string
+          event_type: string
+          id: string
+          product_slug: string
+        }
+        Insert: {
+          badge_type_id: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          product_slug: string
+        }
+        Update: {
+          badge_type_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          product_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_events_badge_type_id_fkey"
+            columns: ["badge_type_id"]
+            isOneToOne: false
+            referencedRelation: "badge_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badge_settings: {
         Row: {
           bestseller_enabled: boolean
@@ -617,41 +649,71 @@ export type Database = {
       }
       badge_types: {
         Row: {
+          auto_rule: Json | null
+          background_color: string
           badge_key: string
+          border_color: string
           color: string
           created_at: string
+          description: string
           emoji: string
           enabled: boolean
+          end_at: string | null
+          glow_color: string
+          icon_color: string
           id: string
           is_discount: boolean
           label: string
           priority: number
+          radius: number
+          shadow_strength: number
+          start_at: string | null
           text_color: string
           updated_at: string
         }
         Insert: {
+          auto_rule?: Json | null
+          background_color?: string
           badge_key: string
+          border_color?: string
           color?: string
           created_at?: string
+          description?: string
           emoji?: string
           enabled?: boolean
+          end_at?: string | null
+          glow_color?: string
+          icon_color?: string
           id?: string
           is_discount?: boolean
           label: string
           priority?: number
+          radius?: number
+          shadow_strength?: number
+          start_at?: string | null
           text_color?: string
           updated_at?: string
         }
         Update: {
+          auto_rule?: Json | null
+          background_color?: string
           badge_key?: string
+          border_color?: string
           color?: string
           created_at?: string
+          description?: string
           emoji?: string
           enabled?: boolean
+          end_at?: string | null
+          glow_color?: string
+          icon_color?: string
           id?: string
           is_discount?: boolean
           label?: string
           priority?: number
+          radius?: number
+          shadow_strength?: number
+          start_at?: string | null
           text_color?: string
           updated_at?: string
         }
