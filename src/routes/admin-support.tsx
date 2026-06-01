@@ -231,6 +231,8 @@ function AdminSupportPage() {
           <ReturnsView returns={returns} onChanged={load} />
         ) : section === "agents" ? (
           <AgentPerformanceView enriched={enriched} profiles={profiles} />
+        ) : section === "settings" ? (
+          <SupportSettingsView />
         ) : (
           <WarRoomView enriched={enriched} refunds={refunds} returns={returns} fraudCount={fraudUsers.size} />
         )}
