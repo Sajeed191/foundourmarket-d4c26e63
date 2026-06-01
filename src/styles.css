@@ -168,6 +168,32 @@
 }
 .animate-float-soft { animation: float-soft 7s ease-in-out infinite; }
 
+/* Live chat: breathing support orb */
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.45), var(--shadow-ember); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 12px oklch(0.74 0.19 49 / 0), var(--shadow-ember); }
+}
+.animate-orb-breathe { animation: orb-breathe 3.2s ease-in-out infinite; }
+
+/* Live chat: typing dots */
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.chat-typing-dot { animation: typing-bounce 1.2s ease-in-out infinite; }
+
+/* Live chat: panel slide-up + message entrance */
+@keyframes chat-slide-up {
+  from { opacity: 0; transform: translateY(2%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-chat-slide-up { animation: chat-slide-up 0.32s var(--ease-out-expo) both; }
+@keyframes chat-bubble-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-chat-bubble-in { animation: chat-bubble-in 0.28s var(--ease-out-expo) both; }
+
 /* Ambient ember pulse for featured stat glow */
 @keyframes ambient-pulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
