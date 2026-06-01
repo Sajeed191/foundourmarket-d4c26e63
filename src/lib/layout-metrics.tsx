@@ -87,6 +87,16 @@ export function LayoutMetricsProvider({ children }: { children: ReactNode }) {
       ) {
         return prev;
       }
+      if (import.meta.env.DEV && window.matchMedia("(max-width: 767px)").matches) {
+        console.debug("[layout-metrics] mobile viewport", {
+          viewportHeight,
+          safeAreaHeight: safeBottom,
+          headerHeight,
+          ctaHeight,
+          bottomNavHeight,
+          contentHeight,
+        });
+      }
       return { viewportHeight, safeBottom, headerHeight, bottomNavHeight, ctaHeight, contentHeight };
     });
     setReady(true);
