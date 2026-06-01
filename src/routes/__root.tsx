@@ -179,6 +179,7 @@ function RootComponent() {
         <NotificationsProvider>
           <WishlistProvider>
             <RegionProvider>
+              <WishlistAlertsProvider>
               <CartProvider>
                 <AdminModeProvider>
                  <CommandCenterProvider>
