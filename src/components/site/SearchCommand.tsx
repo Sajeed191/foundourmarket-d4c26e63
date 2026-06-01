@@ -257,7 +257,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
                         </div>
-                        <span className="font-mono text-sm text-accent">{format(p.price)}</span>
+                        <Price value={p.price} className="font-mono text-sm text-accent" />
                       </Link>
                     );
                   })}
