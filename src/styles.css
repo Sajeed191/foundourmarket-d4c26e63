@@ -467,6 +467,14 @@
   .product-page-clearance { padding-bottom: var(--product-page-bottom-clearance) !important; }
 }
 
+/* Compact bars on very small phones (<400px): trim ~10% off nav chrome */
+@media (max-width: 399px) {
+  :root {
+    --mobile-nav-surface-height: 4.25rem;
+    --mobile-nav-edge-gap: 0.625rem;
+  }
+}
+
 /* Container with responsive gutters */
 @utility container-page {
   width: 100%;
