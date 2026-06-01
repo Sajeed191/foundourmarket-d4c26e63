@@ -61,7 +61,7 @@
   --app-cta-height: 0px;
   --app-content-height: calc(100dvh - var(--app-header-height) - var(--app-bottom-nav-height) - var(--app-cta-height));
   --page-bottom-clearance: calc(var(--app-bottom-nav-height) + 1.5rem);
-  --product-dock-height: 4rem;
+  --product-dock-height: clamp(3.5rem, 9dvh, 4rem);
   --product-dock-gap: 1rem;
   --product-dock-bottom: calc(var(--app-bottom-nav-height) + var(--product-dock-gap));
   --product-page-bottom-clearance: calc(var(--app-bottom-nav-height) + var(--app-cta-height) + var(--product-dock-gap) + 1.5rem);
@@ -436,6 +436,9 @@
 @media (max-width: 767px) {
   body { min-height: 100dvh; }
   [data-app-content] { min-height: max(0px, var(--app-content-height)); }
+  .min-h-screen { min-height: 100dvh !important; }
+  .h-screen { height: 100dvh !important; }
+  .max-h-screen { max-height: 100dvh !important; }
   .mobile-page-clearance { padding-bottom: var(--page-bottom-clearance) !important; }
   .product-page-clearance { padding-bottom: var(--product-page-bottom-clearance) !important; }
 }
