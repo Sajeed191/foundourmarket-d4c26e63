@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, Plus } from "lucide-react";
+import { Heart, Plus, Minus, Check } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
@@ -32,10 +32,18 @@ type DisplayBadge = {
 
 export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
   const { format, priceOf, compareOf, shippingFeeOf } = useRegion();
-  const { add } = useCart();
+  const { add, items, setQty } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    add(product.slug);
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 900);
+  };
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
