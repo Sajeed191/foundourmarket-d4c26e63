@@ -147,8 +147,6 @@ export function LayoutMetricsProvider({ children }: { children: ReactNode }) {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("orientationchange", schedule);
-      window.visualViewport?.removeEventListener("resize", schedule);
-      window.visualViewport?.removeEventListener("scroll", schedule);
       resizeObserver?.disconnect();
       mutationObserver.disconnect();
     };
