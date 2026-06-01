@@ -116,23 +116,23 @@ export function Nav() {
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden shrink-0 size-10 rounded-xl grid place-items-center hover:bg-white/5 active:bg-white/10 transition-colors"
+              className="md:hidden shrink-0 size-9 rounded-xl grid place-items-center hover:bg-white/5 active:bg-white/10 transition-colors"
             >
               <AnimatedHamburger open={open} />
             </button>
 
             <Link
               to="/"
-              className="min-w-0 flex-1 md:flex-none flex items-center gap-2 sm:gap-2.5 font-display tracking-tight font-semibold"
+              className="min-w-0 flex-1 md:flex-none flex items-center gap-2 font-display tracking-tight font-semibold"
             >
-              <span className="shrink-0 relative inline-grid place-items-center size-11 sm:size-12 rounded-2xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_22px_-4px_var(--color-accent)]">
+              <span className="shrink-0 relative inline-grid place-items-center size-10 sm:size-12 rounded-2xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_22px_-4px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
               <span className="min-w-0 flex flex-col leading-none">
-                <span className="truncate text-[15px] sm:text-lg">
+                <span className="truncate text-[13px] sm:text-lg">
                   FoundOurMarket<span className="text-accent">™</span>
                 </span>
-                <span className="mt-0.5 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
+                <span className="mt-0.5 text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
                   Global Marketplace
                 </span>
               </span>
