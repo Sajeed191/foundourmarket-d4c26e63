@@ -297,7 +297,7 @@ function OrdersPage() {
       : <OrderCard key={o.id} order={o} index={i} format={format} onReorder={() => reorder(o)} reordering={reordering === o.id} onOpenDetails={() => setDetailId(o.id)} />;
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-dvh bg-background relative">
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[420px] -z-10 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(255,122,0,0.10),transparent_70%)]" />
 
       {/* Header */}
@@ -347,7 +347,7 @@ function OrdersPage() {
         </AnimatePresence>
       </header>
 
-      <div className="container-page max-w-3xl pb-16 pt-4">
+      <div className="container-page max-w-3xl mobile-page-clearance pt-4 md:pb-16">
         {/* Overview cards — successful paid only — compact */}
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
           <StatCard icon={ShoppingBag} label="Total" value={String(stats.total)} tone="text-accent" />

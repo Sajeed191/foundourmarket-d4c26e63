@@ -100,7 +100,7 @@ function CartPage() {
   // ---- Empty cart ----
   if (count === 0 && savedDetailed.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28 mobile-page-clearance md:pb-28 text-center">
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           className="relative size-24 mx-auto mb-8 grid place-items-center rounded-3xl bg-card border border-border overflow-hidden"
@@ -124,7 +124,7 @@ function CartPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 pb-[calc(11rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 product-page-clearance lg:pb-16">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -382,7 +382,7 @@ function CartPage() {
 
       {/* Sticky mobile checkout dock — floats above the bottom nav + safe area */}
       {count > 0 && (
-        <div className="lg:hidden fixed bottom-[calc(6.25rem+env(safe-area-inset-bottom))] inset-x-0 z-40 px-3 pointer-events-none">
+        <div className="lg:hidden fixed inset-x-0 z-40 px-3 pointer-events-none" style={{ bottom: "var(--product-dock-bottom)" }}>
           <div
             className="pointer-events-auto rounded-2xl p-1.5 pl-4 flex items-center gap-3 border border-white/10 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9),0_0_28px_-14px_hsl(var(--accent)/0.45)]"
             style={{

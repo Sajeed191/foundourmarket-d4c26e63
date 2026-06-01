@@ -161,15 +161,15 @@ export function AdminMobileBar() {
       {/* Bottom admin nav */}
       <nav
         aria-label="Admin mobile navigation"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-50 px-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.6rem))] pt-2 pointer-events-none print:hidden"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-50 h-[var(--mobile-nav-clearance)] px-4 pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none print:hidden"
       >
         <div
           aria-hidden
-          className="absolute inset-x-10 bottom-4 h-16 -z-10 blur-3xl opacity-50"
+          className="absolute inset-x-10 bottom-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] h-16 -z-10 blur-3xl opacity-50"
           style={{ background: "var(--gradient-ember-soft)" }}
         />
         <div
-          className="pointer-events-auto relative flex items-center justify-between gap-1 rounded-[26px] px-3 py-2.5 ring-1 ring-white/[0.09] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.75),0_0_26px_-14px_oklch(0.74_0.19_49/0.45),inset_0_1px_0_oklch(1_0_0/0.08)] backdrop-blur-2xl backdrop-saturate-150"
+          className="pointer-events-auto relative flex h-[var(--mobile-nav-surface-height)] items-center justify-between gap-1 rounded-[26px] px-3 py-2.5 ring-1 ring-white/[0.09] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.75),0_0_26px_-14px_oklch(0.74_0.19_49/0.45),inset_0_1px_0_oklch(1_0_0/0.08)] backdrop-blur-2xl backdrop-saturate-150"
           style={{ background: "linear-gradient(180deg, rgba(22,13,9,0.66), rgba(10,6,4,0.82))" }}
         >
           {items.slice(0, 2).map((it) => (

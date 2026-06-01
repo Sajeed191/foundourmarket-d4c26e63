@@ -183,9 +183,9 @@ function RootComponent() {
               <CartProvider>
                 <AdminModeProvider>
                  <CommandCenterProvider>
-                  <div className="min-h-screen flex flex-col">
+                  <div className="min-h-dvh flex flex-col">
                     {!isAuthRoute && <Nav />}
-                    <main className={isAuthRoute ? "flex-1" : "flex-1"}>
+                    <main className={isAuthRoute ? "flex-1" : "flex-1 mobile-page-clearance md:pb-0"}>
                       <Outlet />
                     </main>
                     {!isAuthRoute && <Footer />}

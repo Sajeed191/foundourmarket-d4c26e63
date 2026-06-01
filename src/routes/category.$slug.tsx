@@ -38,7 +38,7 @@ function CategoryPage() {
 
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-16">
+    <div className="max-w-7xl mx-auto px-6 py-16 mobile-page-clearance md:pb-16">
       <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6">
         <Link to="/" className="hover:text-foreground">Shop</Link>
         <span className="mx-2">/</span>

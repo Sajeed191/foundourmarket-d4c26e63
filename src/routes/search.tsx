@@ -270,7 +270,7 @@ function SearchPage() {
   const resultCount = useMemo(() => results.length, [results]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-12 sm:pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance sm:pb-16">
       {/* Sticky mini search — appears on scroll for quick searching without scrolling back up */}
       <div
         className={`fixed inset-x-0 top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl transition-all duration-300 ${

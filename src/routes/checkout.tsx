@@ -535,7 +535,7 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 pb-[calc(12rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-16 product-page-clearance lg:pb-16">
       <Atmosphere />
 
       <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2.5">Secure Checkout</p>
@@ -814,7 +814,7 @@ function CheckoutPage() {
             {/* Mobile sticky checkout bar — sits ABOVE the bottom navigation, always visible */}
             <div
               className="lg:hidden fixed inset-x-0 z-50 px-3 pointer-events-none"
-              style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
+              style={{ bottom: "var(--product-dock-bottom)" }}
             >
               <div ref={stickyBarRef} className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
                 style={{ background: "color-mix(in oklab, var(--color-background) 82%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
@@ -865,7 +865,7 @@ function CheckoutPage() {
               <button
                 type="submit"
                 className="lg:hidden fixed left-1/2 -translate-x-1/2 z-[9999] inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold px-7 min-h-[56px] rounded-full text-xs uppercase tracking-widest shadow-[0_18px_44px_-12px_var(--color-accent)] active:scale-[0.98]"
-                style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
+                style={{ bottom: "var(--product-dock-bottom)" }}
               >
                 <Lock className="size-3.5" />
                 <span>{actionLabel} · {fmt(totalINR)}</span>

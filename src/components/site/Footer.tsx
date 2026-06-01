@@ -31,7 +31,7 @@ export function Footer() {
   // Minimal, low-distraction footer during checkout to reduce abandonment.
   if (compact) {
     return (
-      <footer className="relative px-4 sm:px-6 py-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-4 border-t border-border bg-background">
+      <footer className="relative px-4 sm:px-6 py-4 mobile-page-clearance lg:pb-4 border-t border-border bg-background">
         <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[50%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.4 }} />
         <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
           <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket™</p>
@@ -47,7 +47,7 @@ export function Footer() {
   }
 
   return (
-    <footer className="relative px-4 sm:px-6 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(8rem+env(safe-area-inset-bottom))] md:py-6 border-t border-border bg-background overflow-hidden">
+    <footer className="relative px-4 sm:px-6 pt-5 mobile-page-clearance sm:pt-6 md:py-6 border-t border-border bg-background overflow-hidden">
       {/* Ambient divider glow */}
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[70%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.6 }} />
       <div aria-hidden className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70%] h-32 opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(70px)" }} />

@@ -43,13 +43,20 @@
 :root {
   --radius: 1rem;
 
-  /* Mobile bottom-navigation clearance. The dock measures roughly 5.75rem of
-     chrome; we add the device safe-area inset so the sticky product action bar
-     always clears Android gesture/3-button bars, iPhone notch home indicators,
-     Safari/Chrome UI, WebView and PWA shells. */
-  --mobile-nav-clearance: calc(5.75rem + env(safe-area-inset-bottom, 0px));
-  /* Sticky product action bar sits one 16px gap above the bottom navigation. */
-  --product-dock-bottom: calc(var(--mobile-nav-clearance) + 1rem);
+  /* Mobile safe-area system: fixed bottom nav height = base chrome + device inset.
+     Keeps Android gesture/3-button bars, iOS Safari, PWA shells, and browser UI
+     from clipping navigation or letting content scroll underneath it. */
+  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-nav-edge-gap: 1rem;
+  --mobile-nav-top-gap: 0.5rem;
+  --mobile-nav-surface-height: 4.5rem;
+  --mobile-nav-base-height: calc(var(--mobile-nav-top-gap) + var(--mobile-nav-surface-height) + var(--mobile-nav-edge-gap));
+  --mobile-nav-clearance: calc(var(--mobile-nav-base-height) + var(--mobile-safe-bottom));
+  --page-bottom-clearance: calc(var(--mobile-nav-clearance) + 1.5rem);
+  --product-dock-height: 4rem;
+  --product-dock-gap: 1rem;
+  --product-dock-bottom: calc(var(--mobile-nav-clearance) + var(--product-dock-gap));
+  --product-page-bottom-clearance: calc(var(--product-dock-bottom) + var(--product-dock-height) + 1.5rem);
 
   /* Deep charcoal noir */
   --background: oklch(0.115 0.008 260);
@@ -367,8 +374,10 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    min-height: 100%;
   }
   body {
+    min-height: 100dvh;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -414,6 +423,11 @@
 @utility safe-top    { padding-top: env(safe-area-inset-top); }
 @utility safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 @utility safe-x      { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+@media (max-width: 767px) {
+  .mobile-page-clearance { padding-bottom: var(--page-bottom-clearance) !important; }
+  .product-page-clearance { padding-bottom: var(--product-page-bottom-clearance) !important; }
+}
 
 /* Container with responsive gutters */
 @utility container-page {
