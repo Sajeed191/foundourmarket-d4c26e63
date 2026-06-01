@@ -58,7 +58,7 @@ const PRIORITY_CLS: Record<Priority, string> = {
   urgent: "text-destructive border-destructive/30 bg-destructive/10",
 };
 
-type Section = "dashboard" | "tickets" | "refunds" | "returns" | "agents" | "warroom";
+type Section = "dashboard" | "tickets" | "refunds" | "returns" | "agents" | "warroom" | "settings";
 
 type Enriched = {
   ticket: TicketRow;
