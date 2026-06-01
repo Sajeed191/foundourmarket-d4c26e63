@@ -258,17 +258,17 @@ function WishlistPage() {
       ) : (
         <>
           {/* Smart insights */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
             <InsightCard
-              icon={<TrendingDown className="size-4" />}
-              label="Price Drops"
-              value={String(insights.dropCount)}
+              icon={<Wallet className="size-4" />}
+              label="Total Value"
+              value={format(insights.total)}
               accent
             />
             <InsightCard
-              icon={<PackageX className="size-4" />}
-              label="Low Stock"
-              value={String(insights.lowStock)}
+              icon={<Heart className="size-4" />}
+              label="Products"
+              value={String(insights.count)}
             />
             <InsightCard
               icon={<Truck className="size-4" />}
@@ -276,9 +276,14 @@ function WishlistPage() {
               value={String(insights.freeShip)}
             />
             <InsightCard
-              icon={<Wallet className="size-4" />}
-              label="Total Value"
-              value={format(insights.total)}
+              icon={<TrendingDown className="size-4" />}
+              label="Price Drops"
+              value={String(insights.dropCount)}
+            />
+            <InsightCard
+              icon={<PackageX className="size-4" />}
+              label="Out of Stock"
+              value={String(insights.outOfStock)}
             />
           </div>
 
@@ -289,11 +294,13 @@ function WishlistPage() {
                 const count =
                   f.key === "price-drops"
                     ? insights.dropCount
-                    : f.key === "out-of-stock"
-                      ? items.filter((p) => !p.inStock).length
-                      : f.key === "in-stock"
-                        ? items.filter((p) => p.inStock).length
-                        : items.length;
+                    : f.key === "free-shipping"
+                      ? insights.freeShip
+                      : f.key === "out-of-stock"
+                        ? insights.outOfStock
+                        : f.key === "in-stock"
+                          ? items.filter((p) => p.inStock).length
+                          : items.length;
                 const activeF = filter === f.key;
                 return (
                   <button
@@ -312,6 +319,7 @@ function WishlistPage() {
               })}
             </div>
           </div>
+
 
           {filtered.length === 0 ? (
             <div className="bg-card border border-border rounded-2xl p-10 text-center text-sm text-muted-foreground">
