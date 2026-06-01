@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useInView, animate } from "framer-motion";
 import {
   Plus, Loader2, Tag, Layers, Crown, Clock, CalendarClock, Ban,
   Pencil, Copy, Trash2, GripVertical, Power, MousePointerClick, Package, Sparkles,
+  Archive, ArchiveRestore, BarChart3, Percent,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -14,11 +15,30 @@ import {
   type BadgeType,
   useBadgeCatalog,
   badgeScheduleState,
+  badgeAnimationClass,
   setBadgeEnabled,
+  setBadgeArchived,
   deleteBadgeType,
   duplicateBadgeType,
   reorderBadgeTypes,
 } from "@/lib/use-product-badges";
+
+/** Animated number that counts up when scrolled into view. */
+function Counter({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(0, value, {
+      duration: 0.9,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setDisplay(v),
+    });
+    return () => controls.stop();
+  }, [inView, value]);
+  return <span ref={ref}>{Math.round(display).toLocaleString()}{suffix}</span>;
+}
 
 export const Route = createFileRoute("/admin-badges")({
   head: () => ({
