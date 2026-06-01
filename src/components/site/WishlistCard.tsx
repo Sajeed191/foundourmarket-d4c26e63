@@ -297,7 +297,7 @@ export function WishlistCard({
         {/* Price drop indicator */}
         {priceDrop && priceDrop > 0 ? (
           <span className="mt-1 inline-flex items-center gap-1 self-start rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold font-mono text-[9px] px-2 py-0.5">
-            <TrendingDown className="size-2.5" /> Price dropped {format(priceDrop)}
+            <TrendingDown className="size-2.5" /> Price dropped <Price value={priceDrop} skeletonClassName="h-[1em] w-8" />
           </span>
         ) : null}
 
