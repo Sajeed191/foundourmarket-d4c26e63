@@ -374,8 +374,10 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    min-height: 100%;
   }
   body {
+    min-height: 100dvh;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -421,6 +423,8 @@
 @utility safe-top    { padding-top: env(safe-area-inset-top); }
 @utility safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 @utility safe-x      { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+@utility mobile-page-clearance { padding-bottom: var(--page-bottom-clearance); }
+@utility product-page-clearance { padding-bottom: var(--product-page-bottom-clearance); }
 
 /* Container with responsive gutters */
 @utility container-page {
