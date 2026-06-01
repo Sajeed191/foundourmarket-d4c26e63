@@ -63,8 +63,9 @@ export function InstallPrompt() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 120, opacity: 0 }}
           transition={{ type: "spring", damping: 24, stiffness: 220 }}
-          className="fixed left-1/2 z-40 -translate-x-1/2 px-4 w-full max-w-md"
-          style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+          data-floating-control
+          className="fixed left-1/2 z-[var(--z-floating-controls)] -translate-x-1/2 px-4 w-full max-w-md"
+          style={{ bottom: "var(--floating-bottom-offset)" }}
           role="dialog"
           aria-label="Install FoundOurMarket app"
         >
