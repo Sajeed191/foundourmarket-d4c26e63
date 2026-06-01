@@ -52,11 +52,31 @@ export const Route = createFileRoute("/search")({
 
 const SORTS = [
   { value: "relevance", label: "Relevance" },
+  { value: "trending", label: "Trending" },
+  { value: "best_selling", label: "Best Selling" },
+  { value: "rating", label: "Highest Rated" },
+  { value: "newest", label: "Newest" },
   { value: "price_asc", label: "Price: Low → High" },
   { value: "price_desc", label: "Price: High → Low" },
-  { value: "rating", label: "Top Rated" },
-  { value: "newest", label: "Newest" },
+  { value: "discount", label: "Biggest Discount" },
 ];
+
+// Sorts handled natively by the search_products RPC. Others are applied
+// client-side after fetching with a "relevance" base ordering.
+const RPC_SORTS = new Set(["relevance", "price_asc", "price_desc", "rating", "newest"]);
+
+function applyClientSort(rows: Product[], sort: string | undefined, discountOf: (p: Product) => number): Product[] {
+  switch (sort) {
+    case "trending":
+      return [...rows].sort((a, b) => b.viewsCount - a.viewsCount);
+    case "best_selling":
+      return [...rows].sort((a, b) => b.soldCount - a.soldCount);
+    case "discount":
+      return [...rows].sort((a, b) => discountOf(b) - discountOf(a));
+    default:
+      return rows;
+  }
+}
 
 const RATINGS = [4, 3, 2];
 
