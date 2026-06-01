@@ -478,6 +478,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         rejectDetectedRegion,
 
         loading,
+        currencyReady,
         countryCode,
         isAdmin,
         setPreviewMarket,
