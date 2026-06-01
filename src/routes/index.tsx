@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Search, Shield, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Users, Zap, Flame, BadgeCheck, Pencil, RotateCcw, Lock } from "lucide-react";
+import { Search, Shield, Headset, ArrowRight, Star, Sparkles, Award, Package, Globe2, Users, Zap, Flame, BadgeCheck, Pencil, RotateCcw, Lock, LayoutGrid } from "lucide-react";
 import { useCategories, useAdminCategories, toggleCategoryVisible } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { useProductAdminEditing } from "@/lib/admin-overlay";
