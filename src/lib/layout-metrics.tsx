@@ -69,20 +69,18 @@ export function LayoutMetricsProvider({ children }: { children: ReactNode }) {
     const viewportHeight = Math.round(document.documentElement.clientHeight || window.innerHeight);
     const safeBottom = readCssPx("--mobile-safe-bottom");
     const headerHeight = visibleHeight("[data-app-header]");
-    const measuredNav = visibleHeight("[data-app-bottom-nav]");
-    // Fall back to the nav clearance (base chrome 6rem + safe-area inset) when the
-    // nav isn't rendered/measurable yet, so content clearance never collapses to 0
-    // and lets the bottom nav overlap product content. Computed from the rem base
-    // because a calc() custom property can't be read back numerically.
+    // The bottom nav clearance is a FIXED CSS constant (base chrome 6rem + safe-area
+    // inset). We intentionally do NOT measure the rendered nav or override
+    // --app-bottom-nav-height — measuring caused the navbar to change height / shift
+    // after product data loaded and differed per device. Keeping it constant means
+    // the navbar is identical before and after hydration, on every page and refresh.
     const rootFontPx = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const cssNavClearance = rootFontPx * 6 + safeBottom;
-    const bottomNavHeight = measuredNav > 0 ? measuredNav : cssNavClearance;
+    const bottomNavHeight = rootFontPx * 6 + safeBottom;
     const ctaHeight = ctaRef.current?.getBoundingClientRect().height || expectedCtaHeightRef.current;
     const contentHeight = Math.max(0, viewportHeight - headerHeight - bottomNavHeight - ctaHeight);
 
     document.documentElement.style.setProperty("--app-viewport-height", `${viewportHeight}px`);
     document.documentElement.style.setProperty("--app-header-height", `${headerHeight}px`);
-    document.documentElement.style.setProperty("--app-bottom-nav-height", `${bottomNavHeight}px`);
     document.documentElement.style.setProperty("--app-cta-height", `${ctaHeight}px`);
     document.documentElement.style.setProperty("--app-content-height", `${contentHeight}px`);
 
