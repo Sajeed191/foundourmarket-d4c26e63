@@ -528,6 +528,9 @@ export async function bulkUpdateAssignments(
     onProgress?.(Math.min(i + CHUNK, slugs.length), slugs.length);
   }
   await load(true);
+}
+
+
 
 export async function updateBadgeType(id: string, patch: Partial<BadgeTypeRow>) {
   const { error } = await supabase.from("badge_types").update(patch as never).eq("id", id);
