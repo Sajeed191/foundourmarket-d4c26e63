@@ -96,14 +96,14 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           <button
             onClick={(e) => { e.preventDefault(); toggle(product.slug); }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute grid place-items-center rounded-full backdrop-blur-md border transition-all duration-300 ${
+            className={`absolute grid place-items-center rounded-full backdrop-blur-md border shadow-lg shadow-black/30 transition-all duration-300 ${
               compact
                 ? "top-2 right-2 size-7"
                 : "top-2.5 right-2.5 size-8"
             } ${
               saved
-                ? "bg-accent/20 border-accent/50 text-accent scale-110"
-                : "bg-black/40 border-white/10 text-white/80 hover:bg-accent/20 hover:border-accent/50 hover:text-accent hover:scale-110"
+                ? "bg-accent/25 border-accent text-accent scale-110"
+                : "bg-black/55 border-white/20 text-white hover:bg-accent/25 hover:border-accent hover:text-accent hover:scale-110"
             }`}
           >
             <Heart className={`transition-all ${compact ? "size-3" : "size-3.5"} ${saved ? "fill-accent" : ""}`} />
