@@ -63,7 +63,15 @@ export type BadgeType = {
   updatedAt: string;
 };
 
-export type RenderBadge = BadgeType & { sortOrder: number };
+export type RenderBadge = BadgeType & {
+  sortOrder: number;
+  /** Per-assignment fields (override badge-type defaults on a single product). */
+  assignmentId?: string;
+  assignNotes?: string;
+  assignStartAt?: string | null;
+  assignEndAt?: string | null;
+  assignArchived?: boolean;
+};
 
 type BadgeTypeRow = {
   id: string;
