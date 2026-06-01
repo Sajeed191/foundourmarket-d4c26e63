@@ -481,7 +481,7 @@ function WishlistPage() {
                 className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-3 sm:px-4 h-9 text-[10px] uppercase tracking-widest font-bold hover:brightness-110 transition-all shadow-[var(--shadow-ember)] active:scale-95"
               >
                 <ShoppingBag className="size-3.5" />
-                <span className="hidden xs:inline sm:inline">Add</span>
+                <span className="hidden sm:inline">Add</span>
               </button>
             </div>
           </div>
