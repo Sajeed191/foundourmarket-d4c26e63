@@ -168,9 +168,9 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
                 </span>
               );
             })}
-            {badges.length > 3 && (
+            {badges.length > 2 && (
               <span className="inline-flex items-center text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md tracking-wider bg-black/60 text-white/90 backdrop-blur-md">
-                +{badges.length - 3}
+                +{badges.length - 2}
               </span>
             )}
           </div>
