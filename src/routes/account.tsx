@@ -361,13 +361,10 @@ function AccountPage() {
           </div>
         </motion.footer>
       </div>
-
-      {/* FLOATING SUPPORT BUTTON */}
-      <FloatingSupportButton />
-
     </div>
   );
 }
+
 
 function FloatingSupportButton() {
   const [open, setOpen] = useState(false);
