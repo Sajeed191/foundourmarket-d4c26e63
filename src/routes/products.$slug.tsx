@@ -210,7 +210,7 @@ function ProductPage() {
         <div className="absolute -top-32 -left-24 size-[36rem] rounded-full opacity-50 animate-orb" style={{ background: "var(--gradient-ember-soft)", filter: "blur(110px)" }} />
         <div className="absolute top-1/3 -right-32 size-[34rem] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 sm:pb-24 lg:pb-16" style={{ paddingBottom: "calc(var(--product-dock-bottom) + 5rem)" }}>>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 sm:pb-24 lg:pb-16" style={{ paddingBottom: "calc(var(--product-dock-bottom) + 5rem)" }}>
         {/* Breadcrumb */}
         <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6 sm:mb-8 truncate">
           <Link to="/" className="hover:text-foreground">Shop</Link>
