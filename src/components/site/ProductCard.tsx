@@ -133,9 +133,11 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
       <Link to="/products/$slug" params={{ slug: product.slug }} className={`relative flex flex-1 flex-col ${compact ? "" : "px-1"}`}>
         {/* Title — fixed 2-line block keeps every card's footer aligned */}
         <h4 className={`font-medium line-clamp-2 group-hover:text-accent transition-colors ${compact ? "text-[11px] leading-tight min-h-[2.2em]" : "text-sm leading-snug min-h-[2.5em]"}`}>{product.name}</h4>
-        {product.tagline && (
+        {product.tagline ? (
           <p className={`text-muted-foreground truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.tagline}</p>
-        )}
+        ) : product.category ? (
+          <p className={`text-muted-foreground/70 capitalize truncate ${compact ? "text-[8px] mt-0.5" : "text-[11px] mt-0.5"}`}>{product.category.replace(/-/g, " ")}</p>
+        ) : null}
 
         {/* Rating row */}
         <div className={`flex items-center font-mono text-muted-foreground min-w-0 ${compact ? "mt-1 text-[9px]" : "mt-1.5 text-[10px]"}`}>
