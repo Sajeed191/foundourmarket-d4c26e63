@@ -24,7 +24,6 @@ function FooterSection({ title, children }: { title: string; children: React.Rea
 
 
 export function Footer() {
-  const { market } = useRegion();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const compact = pathname.startsWith("/checkout");
 
