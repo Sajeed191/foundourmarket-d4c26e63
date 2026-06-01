@@ -60,7 +60,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             width={800}
             height={800}
             onLoad={() => setImgLoaded(true)}
-            className={`relative w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 motion-safe:transition-opacity ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           />
 
 
