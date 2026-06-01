@@ -11,10 +11,29 @@ declare global {
 }
 
 let loadPromise: Promise<void> | null = null;
+let loadStart = 0;
+
+// Lightweight, dev-only performance monitoring for chat readiness.
+const perf = {
+  mark(name: string) {
+    if (typeof performance === "undefined") return;
+    try { performance.mark(`crisp:${name}`); } catch { /* noop */ }
+  },
+  log(msg: string) {
+    if (typeof import.meta !== "undefined" && import.meta.env?.DEV) {
+      // eslint-disable-next-line no-console
+      console.info(`[crisp] ${msg}`);
+    }
+  },
+};
 
 export function loadCrisp(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
+  // Single-initialization guarantee: reuse the in-flight / resolved promise.
   if (loadPromise) return loadPromise;
+
+  loadStart = typeof performance !== "undefined" ? performance.now() : 0;
+  perf.mark("load-start");
 
   loadPromise = new Promise<void>((resolve, reject) => {
     try {
@@ -26,10 +45,17 @@ export function loadCrisp(): Promise<void> {
       window.$crisp.push(["do", "chat:hide"]);
       window.$crisp.push(["on", "chat:initiated", () => {}]);
 
+      const finish = () => {
+        const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
+        perf.mark("load-end");
+        perf.log(`SDK ready in ${ms}ms`);
+        resolve();
+      };
+
       const existing = document.getElementById("crisp-widget-script") as HTMLScriptElement | null;
       if (existing) {
-        // Already injected — resolve next tick.
-        setTimeout(resolve, 0);
+        // Already injected — resolve next tick (prevents duplicate SDK loading).
+        setTimeout(finish, 0);
         return;
       }
 
@@ -37,9 +63,10 @@ export function loadCrisp(): Promise<void> {
       s.id = "crisp-widget-script";
       s.src = "https://client.crisp.chat/l.js";
       s.async = true;
-      s.onload = () => resolve();
+      s.onload = finish;
       s.onerror = () => {
         loadPromise = null;
+        perf.log("SDK failed to load");
         reject(new Error("Failed to load Crisp"));
       };
       document.head.appendChild(s);
@@ -51,6 +78,33 @@ export function loadCrisp(): Promise<void> {
 
   return loadPromise;
 }
+
+// Preload the Crisp SDK in the background once the page is idle/interactive,
+// so the widget is already in memory by the time the user clicks a chat entry
+// point. Safe to call multiple times — loadCrisp() de-dupes internally.
+let preloaded = false;
+export function preloadCrisp(): void {
+  if (typeof window === "undefined" || preloaded) return;
+  preloaded = true;
+
+  const start = () => {
+    perf.mark("preload-start");
+    void loadCrisp().catch(() => { preloaded = false; });
+  };
+
+  const schedule = () => {
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    if (ric) ric(start, { timeout: 4000 });
+    else setTimeout(start, 2000);
+  };
+
+  // Wait until the page is interactive so chat loading never blocks first paint.
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+}
+
 
 export function openCrispChat(): void {
   if (typeof window === "undefined") return;
