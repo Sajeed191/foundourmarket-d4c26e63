@@ -424,7 +424,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 3 · Trust Bar — horizontal scroll premium glass cards */}
-      <section className="py-8 sm:py-12 max-w-7xl mx-auto">
+      <section className="py-6 sm:py-10 max-w-7xl mx-auto">
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar px-4 sm:px-6 snap-x snap-mandatory sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible">
           {[
             { icon: Lock, title: "Secure Checkout", desc: "Bank-grade encryption." },
@@ -449,7 +449,7 @@ function Home() {
       </section>
 
       {/* Categories — premium interactive discovery */}
-      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto scroll-mt-24">
         <div className="relative">
           <SectionHeader eyebrow="Browse" title="Featured Categories" href="/search" />
           {isProductAdmin && (
@@ -546,11 +546,11 @@ function Home() {
 
       {/* 4 · Trending Products [product section 1/3] */}
       {productsLoading ? (
-        <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
+        <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
       ) : trending.length > 0 && (sections.trending.active || isProductAdmin) && (
-        <SectionTracker sectionKey="trending" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24 block">
+        <SectionTracker sectionKey="trending" className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto scroll-mt-24 block">
           <SectionHeader eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} href="/search" hrefLabel="See All" sectionKey="trending" editable={isProductAdmin} active={sections.trending.active} />
           <ProductRail products={trending} />
           <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
@@ -564,7 +564,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 5 · Why Shop With Us */}
-      <section className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto">
         <Reveal className="text-center mb-8 sm:mb-12">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
           <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
@@ -594,7 +594,7 @@ function Home() {
 
       {/* 6 · Recommended Products [product section 2/3] — personalized when signals exist */}
       {recommended.length > 0 && (sections.recommended.active || isProductAdmin) && (
-        <SectionTracker sectionKey="recommended" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24 block">
+        <SectionTracker sectionKey="recommended" className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto scroll-mt-24 block">
           <SectionHeader eyebrow={sections.recommended.eyebrow} title={sections.recommended.title} icon={Award} href="/search" hrefLabel="See All" sectionKey="recommended" editable={isProductAdmin} active={sections.recommended.active} />
           {personalizedSlugs.length > 0 ? (
             <RecommendationStrip title="Picked for you" slugs={personalizedSlugs} icon={<Award className="size-3" />} />
@@ -626,7 +626,7 @@ function Home() {
 
       {/* 7 · New Arrivals [product section 3/3] */}
       {newArrivals.length > 0 && (sections.new_arrivals.active || isProductAdmin) && (
-        <SectionTracker sectionKey="new_arrivals" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24 block">
+        <SectionTracker sectionKey="new_arrivals" className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto scroll-mt-24 block">
           <SectionHeader eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} href="/search" sectionKey="new_arrivals" editable={isProductAdmin} active={sections.new_arrivals.active} />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 md:gap-6">
             {newArrivals.slice(0, 4).map((p, i) => (
@@ -640,7 +640,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 8 · Social Proof — live engine + verified reviews */}
-      <section className="px-4 sm:px-6 py-8 sm:py-14 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto">
         <Reveal className="text-center mb-6 sm:mb-12">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
@@ -718,7 +718,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 9 · Join The Inner Circle */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16">
+      <section className="px-4 sm:px-6 py-8 sm:py-12">
         <Reveal className="max-w-3xl mx-auto glass-strong glass-reflect p-7 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
           <div aria-hidden className="absolute -top-24 -left-24 size-64 rounded-full opacity-50 blur-3xl" style={{ background: "var(--gradient-violet)" }} />
           <div aria-hidden className="absolute -bottom-24 -right-24 size-64 rounded-full opacity-60 blur-3xl" style={{ background: "var(--gradient-ember)" }} />
