@@ -545,9 +545,9 @@ function Home() {
                   </span>
                 </div>
                 <div className="mt-auto w-full pb-0.5">
-                  <h3 className="text-[13px] sm:text-[15px] font-semibold tracking-tight leading-snug text-accent group-hover:text-accent transition-colors">Explore All Categories</h3>
-                  <span className="block text-[9px] sm:text-[11px] text-accent/70 font-mono uppercase tracking-widest mt-1">
-                    Browse Entire Marketplace
+                  <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
+                  <span className="block text-[10px] sm:text-[11px] text-accent/70 font-medium tracking-wide mt-1">
+                    Explore the full marketplace
                   </span>
                 </div>
               </Link>
