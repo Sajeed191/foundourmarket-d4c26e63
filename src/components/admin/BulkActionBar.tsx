@@ -27,7 +27,7 @@ type Props = {
 };
 
 type FormKind =
-  | null | "move_category" | "set_collection" | "set_homepage_section"
+  | null | "move_category" | "set_collection" | "set_homepage_section" | "priority"
   | "stock" | "pricing" | "tags" | "badges" | "region" | "shipping" | "schedule" | "export";
 
 export function BulkActionBar({ ids, rows, categories, mode = "normal", onDone, onClear }: Props) {
@@ -133,6 +133,7 @@ export function BulkActionBar({ ids, rows, categories, mode = "normal", onDone, 
                     <Row icon={IndianRupee} label="Pricing" chevron onClick={() => setForm("pricing")} />
                     <Row icon={Tag} label="Tags" chevron onClick={() => setForm("tags")} />
                     <Row icon={Star} label="Badges" chevron onClick={() => setForm("badges")} />
+                    <Row icon={TrendingUp} label="Priority score" chevron onClick={() => setForm("priority")} />
 
                     <SectionLabel>Distribution</SectionLabel>
                     <Row icon={Globe} label="Region eligibility" chevron onClick={() => setForm("region")} />
@@ -213,6 +214,21 @@ function FormPane({ kind, categories, onRun, onExport }: {
             <Row key={c.slug} icon={FolderTree} label={c.name} onClick={() => onRun("move_category", { category: c.slug })} />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (kind === "priority") {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Set priority score</p>
+        <Input type="number" min={1} max={100} value={val} onChange={(e) => setVal(e.target.value)} placeholder="1 – 100" />
+        <p className="text-xs text-muted-foreground">
+          Higher priority products appear before lower priority products within the same section.
+        </p>
+        <Button size="sm" className="w-full" onClick={() => onRun("set_priority", { value: Number(val) || 0 })}>
+          Apply to selected
+        </Button>
       </div>
     );
   }
