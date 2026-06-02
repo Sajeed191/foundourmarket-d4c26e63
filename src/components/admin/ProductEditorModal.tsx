@@ -329,7 +329,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         {/* Live Storefront Preview */}
         <CollapsibleModule eyebrow="Live" title="Storefront Preview" badge={<Eye className="size-3.5 text-accent" />}>
           {(() => {
-            const sell = priceInr ?? Number(form.price) || 0;
+            const sell = priceInr ?? (Number(form.price) || 0);
             const compare = cmpInr;
             const pctOff = compare != null && compare > sell && sell > 0
               ? Math.round(((compare - sell) / compare) * 100)
