@@ -5041,20 +5041,6 @@ export type Database = {
         }
         Relationships: []
       }
-      product_questions_public: {
-        Row: {
-          answer: string | null
-          answered_at: string | null
-          author_avatar: string | null
-          author_name: string | null
-          created_at: string | null
-          id: string | null
-          is_mine: boolean | null
-          product_slug: string | null
-          question: string | null
-        }
-        Relationships: []
-      }
       products_public: {
         Row: {
           attributes: Json | null
@@ -5366,6 +5352,20 @@ export type Database = {
         Returns: {
           co_count: number
           product_slug: string
+        }[]
+      }
+      get_product_questions: {
+        Args: { _slug: string }
+        Returns: {
+          answer: string
+          answered_at: string
+          author_avatar: string
+          author_name: string
+          created_at: string
+          id: string
+          is_mine: boolean
+          product_slug: string
+          question: string
         }[]
       }
       get_public_profiles: {
