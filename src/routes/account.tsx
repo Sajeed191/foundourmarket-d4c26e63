@@ -69,7 +69,6 @@ function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const { slugs: wishSlugs } = useWishlist();
   const { unread } = useNotifications();
-  const { count: supportUnread } = useSupportUnread();
   const { isAdmin } = useIsAdmin();
   const { products } = useProducts();
   const cart = useCart();
