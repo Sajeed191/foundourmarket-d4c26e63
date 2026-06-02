@@ -307,20 +307,20 @@ function AccountPage() {
 
 
         {/* DESKTOP GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-            {/* ORDER TRACKING TIMELINE */}
-            {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          {(stats.latestActive || recentlyViewed.length > 0) && (
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
+              {/* ORDER TRACKING TIMELINE */}
+              {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
 
-            {/* RECENTLY VIEWED */}
-            {recentlyViewed.length > 0 && (
-              <SectionBlock title="Recently viewed" icon={Eye}>
-                <ProductScroller items={recentlyViewed} />
-              </SectionBlock>
-            )}
-
-
-          </div>
+              {/* RECENTLY VIEWED */}
+              {recentlyViewed.length > 0 && (
+                <SectionBlock title="Recently viewed" icon={Eye}>
+                  <ProductScroller items={recentlyViewed} />
+                </SectionBlock>
+              )}
+            </div>
+          )}
 
 
           {/* SIDEBAR */}
