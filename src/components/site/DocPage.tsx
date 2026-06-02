@@ -208,6 +208,9 @@ export function DocPage({
               ))}
             </div>
 
+            {/* Cross-links to related policy pages */}
+            {related && <div className="mt-14 sm:mt-16">{related}</div>}
+
             {/* CTA */}
             {ctas && ctas.length > 0 && (
               <Reveal>
