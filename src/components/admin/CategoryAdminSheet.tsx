@@ -22,8 +22,11 @@ import {
   RotateCcw,
   Globe2,
   History,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { generateCategoryImage } from "@/lib/category-image.functions";
 import { logActivity } from "@/components/admin/AdminShell";
 import {
   invalidateCategories,
@@ -65,6 +68,7 @@ const blank = (): Partial<Row> => ({
   banner_image: null,
   mobile_image: null,
   icon: null,
+  parent_id: null,
   seo_title: null,
   seo_description: null,
   sort_order: 0,
@@ -141,8 +145,34 @@ export function CategoryAdminSheet({
   const [progress, setProgress] = useState(0);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | CategoryStatus>("all");
+  const [aiBusy, setAiBusy] = useState(false);
+  const genImage = useServerFn(generateCategoryImage);
   const fileSlot = useRef<ImageSlot>("image");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function regenerateAi() {
+    if (!editing?.name?.trim()) {
+      toast.error("Enter a category name first");
+      return;
+    }
+    setAiBusy(true);
+    try {
+      const slug = editing.slug?.trim() || slugify(editing.name);
+      const { url } = await genImage({
+        data: {
+          name: editing.name.trim(),
+          slug,
+          description: editing.description?.trim() || undefined,
+        },
+      });
+      setEditing((prev) => (prev ? { ...prev, image: url } : prev));
+      toast.success("AI image generated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "AI generation failed");
+    } finally {
+      setAiBusy(false);
+    }
+  }
 
   const dirty = useMemo(
     () => (editing ? JSON.stringify(editing) !== original : false),
@@ -276,6 +306,7 @@ export function CategoryAdminSheet({
       banner_image: editing.banner_image || null,
       mobile_image: editing.mobile_image || null,
       icon: editing.icon?.trim() || null,
+      parent_id: editing.parent_id || null,
       seo_title: editing.seo_title?.trim() || null,
       seo_description: editing.seo_description?.trim() || null,
       sort_order: Number(editing.sort_order) || 0,
@@ -357,6 +388,7 @@ export function CategoryAdminSheet({
       banner_image: row.banner_image,
       mobile_image: row.mobile_image,
       icon: row.icon,
+      parent_id: row.parent_id,
       seo_title: row.seo_title,
       seo_description: row.seo_description,
       sort_order: row.sort_order + 1,
@@ -601,6 +633,16 @@ export function CategoryAdminSheet({
                 onPick={() => pickImage("image")}
                 onClear={() => setEditing({ ...editing, image: null })}
               />
+              <button
+                type="button"
+                onClick={regenerateAi}
+                disabled={aiBusy}
+                className="-mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/[0.06] px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-accent disabled:opacity-50"
+              >
+                {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                {editing.image ? "Regenerate AI image" : "Generate AI image"}
+              </button>
+
               <div className="grid grid-cols-2 gap-3">
                 <ImageField
                   label="Banner"
@@ -664,6 +706,25 @@ export function CategoryAdminSheet({
                   placeholder="Smartphone"
                 />
               </Field>
+
+              <Field label="Parent category (leave empty for a main category)">
+                <select
+                  value={editing.parent_id ?? ""}
+                  onChange={(e) => setEditing({ ...editing, parent_id: e.target.value || null })}
+                  className={input}
+                >
+                  <option value="">— Main category —</option>
+                  {rows
+                    .filter((r) => !r.parent_id && r.id !== editing.id)
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+
+
 
               <div className="rounded-xl border border-white/10 p-3 space-y-3">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
