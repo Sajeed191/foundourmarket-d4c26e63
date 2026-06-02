@@ -656,21 +656,22 @@ function ProductPage() {
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
 
-            {/* Trust grid */}
+            {/* Trust grid — each links to its policy page */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-6 sm:pt-8 border-t border-border">
               {[
-                { icon: Truck, label: unitShipping <= 0 ? "Free shipping" : `Shipping ${format(unitShipping)}` },
-                { icon: RotateCcw, label: product.returnEligible ? `${product.returnWindowDays} Days Return` : "No Returns" },
-                { icon: Shield, label: "Secure checkout" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="glass rounded-2xl p-3 sm:p-4 text-center">
+                { icon: Truck, label: unitShipping <= 0 ? "Free shipping" : `Shipping ${format(unitShipping)}`, to: "/pages/shipping" },
+                { icon: RotateCcw, label: product.returnEligible ? `${product.returnWindowDays} Days Return` : "No Returns", to: "/returns" },
+                { icon: Shield, label: "Buyer Protection", to: "/buyer-protection" },
+              ].map(({ icon: Icon, label, to }) => (
+                <Link key={label} to={to as never} className="glass rounded-2xl p-3 sm:p-4 text-center hover:border-accent/40 transition-colors">
                   <div className="size-8 mx-auto mb-2 rounded-lg bg-accent/10 text-accent grid place-items-center">
                     <Icon className="size-3.5" />
                   </div>
                   <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground leading-tight">{label}</p>
-                </div>
+                </Link>
               ))}
             </div>
+
 
 
             {/* Specs */}
