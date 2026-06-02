@@ -87,6 +87,91 @@ export const getCustomerCenterFn = createServerFn({ method: "POST" })
     return data as CustomerCenterResult;
   });
 
+export type AdminCustomer = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  country: string | null;
+  total_orders: number;
+  lifetime_spend: number;
+  open_tickets: number;
+  status: "active" | "paying" | "registered";
+  last_active: string | null;
+  created_at: string | null;
+};
+
+/**
+ * Full customer roster for the admin dashboard tab — every registered customer
+ * (not only those with orders), enriched with profile photo + a derived status.
+ */
+export const getAdminCustomersFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ search: z.string().max(120).optional() }).parse(input),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, CUST_STAFF, "customers.center.list");
+
+    const { data, error } = await adminRpc("svc_customer_center", {
+      _actor: userId,
+      _search: input.search?.trim() || null,
+      _limit: 500,
+      _offset: 0,
+    });
+    if (error) {
+      console.error("[getAdminCustomersFn] rpc error", error.message);
+      throw new Error(error.message);
+    }
+
+    const result = data as CustomerCenterResult;
+    const rows = result.rows ?? [];
+
+    // Enrich with profile photos in a single query.
+    const ids = rows.map((r) => r.id);
+    const avatarMap = new Map<string, string | null>();
+    if (ids.length) {
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id,avatar_url")
+        .in("id", ids);
+      for (const p of profiles ?? []) avatarMap.set(p.id as string, (p.avatar_url as string | null) ?? null);
+    }
+
+    const recentCutoff = Date.now() - 1000 * 60 * 60 * 24 * 30;
+    const customers: AdminCustomer[] = rows.map((r) => {
+      const recentlyActive = r.last_active ? new Date(r.last_active).getTime() >= recentCutoff : false;
+      const status: AdminCustomer["status"] =
+        r.total_orders > 0 ? (recentlyActive ? "active" : "paying") : "registered";
+      return {
+        id: r.id,
+        full_name: r.full_name,
+        email: r.email,
+        phone: r.phone,
+        avatar_url: avatarMap.get(r.id) ?? null,
+        country: r.country,
+        total_orders: r.total_orders,
+        lifetime_spend: r.lifetime_spend,
+        open_tickets: r.open_tickets,
+        status,
+        last_active: r.last_active,
+        created_at: r.created_at,
+      };
+    });
+
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "customers.center.list",
+      success: true,
+      detail: { search: input.search ?? null, scope: "admin-tab" },
+    });
+
+    return { customers, total: result.total ?? customers.length };
+  });
+
 export type CustomerProfile = {
   profile: {
     id: string;
