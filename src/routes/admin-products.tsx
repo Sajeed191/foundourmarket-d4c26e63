@@ -109,6 +109,38 @@ function ProductsPage() {
 type SortKey = "newest" | "oldest" | "revenue" | "stock" | "views" | "conversion" | "price";
 type StockFilter = "all" | "ok" | "low" | "critical" | "oos";
 type StateFilter = "all" | "active" | "inactive" | "featured";
+type TagFilter =
+  | "all" | "active" | "hidden" | "oos" | "low" | "trending" | "bestseller"
+  | "new_arrival" | "featured" | "missing_images" | "missing_seo" | "missing_desc";
+const TAG_CHIPS: { key: TagFilter; label: string; icon: typeof Eye }[] = [
+  { key: "all", label: "All", icon: Package },
+  { key: "active", label: "Active", icon: CheckCircle2 },
+  { key: "hidden", label: "Hidden", icon: EyeOff },
+  { key: "oos", label: "Out of stock", icon: X },
+  { key: "low", label: "Low stock", icon: AlertTriangle },
+  { key: "trending", label: "Trending", icon: TrendingUp },
+  { key: "bestseller", label: "Best sellers", icon: Crown },
+  { key: "new_arrival", label: "New arrivals", icon: Sparkles },
+  { key: "featured", label: "Featured", icon: Star },
+  { key: "missing_images", label: "Missing images", icon: ImageIcon },
+  { key: "missing_seo", label: "Missing SEO", icon: FileText },
+];
+function matchesTag(p: Product, tag: TagFilter): boolean {
+  switch (tag) {
+    case "active": return p.in_stock;
+    case "hidden": return !p.in_stock;
+    case "oos": return p.stock_quantity <= 0;
+    case "low": return p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold;
+    case "trending": return !!p.trending;
+    case "bestseller": return !!p.bestseller;
+    case "new_arrival": return !!(p as { new_arrival?: boolean }).new_arrival;
+    case "featured": return !!p.featured;
+    case "missing_images": return !(p.image && p.image.trim());
+    case "missing_seo": return !p.seo_title || !p.seo_description;
+    case "missing_desc": return !p.description || p.description.trim().length < 20;
+    default: return true;
+  }
+}
 
 function ProductsInner() {
   const [products, setProducts] = useState<Product[] | null>(null);
