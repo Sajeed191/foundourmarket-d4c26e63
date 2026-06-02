@@ -249,10 +249,7 @@ export function Nav() {
                   <LayoutDashboard className="size-4" />
                 </Link>
               )}
-              {user && <NotificationBell />}
-              <Link to={user ? "/account" : "/auth"} aria-label="Account" className="size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors">
-                <User className="size-4" />
-              </Link>
+              <NotificationBell />
               <Link to="/cart" aria-label="Cart" className="shrink-0 relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-accent text-accent-foreground hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
                 <ShoppingBag className="size-4" />
                 <span className="text-xs font-mono font-semibold">{count}</span>
