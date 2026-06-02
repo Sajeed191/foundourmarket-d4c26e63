@@ -190,9 +190,9 @@ function ProductCardImpl({ product, compact }: { product: Product; compact?: boo
       </Link>
 
       {/* INFO */}
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative flex flex-1 flex-col px-1 pt-1.5">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative flex flex-1 flex-col px-1 pt-1">
         {/* Name */}
-        <h4 className="text-[12px] font-bold text-white leading-tight line-clamp-2 min-h-[2.1em] group-hover:text-accent transition-colors">
+        <h4 className="text-[12px] font-bold text-white leading-tight line-clamp-1 group-hover:text-accent transition-colors">
           {product.name}
         </h4>
 
