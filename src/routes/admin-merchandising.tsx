@@ -281,7 +281,7 @@ function LivePreview({ items, device, setDevice, sectionLabel }: {
   items: MerchRow[]; device: "mobile" | "desktop"; setDevice: (d: "mobile" | "desktop") => void; sectionLabel: string;
 }) {
   const products = useMemo(
-    () => items.slice(0, 8).map((r) => rowToProduct(r as Parameters<typeof rowToProduct>[0])),
+    () => items.slice(0, 8).map((r) => rowToProduct(r as unknown as Parameters<typeof rowToProduct>[0])),
     [items],
   );
   return (
