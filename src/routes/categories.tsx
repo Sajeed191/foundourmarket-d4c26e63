@@ -169,15 +169,16 @@ function CategoriesPage() {
     <section className="px-4 sm:px-6 pt-8 sm:pt-14 pb-5 max-w-7xl mx-auto">
       <div className="mb-8 sm:mb-12">
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">Browse</p>
-        <h1 className="text-fluid-2xl font-display tracking-tight">Explore All Categories</h1>
+        <h1 className="text-fluid-2xl font-display tracking-tight">Shop Every Department</h1>
         <p className="mt-2 text-sm font-medium text-white/80">
           {departmentCount} {departmentCount === 1 ? "Department" : "Departments"}
           <span className="mx-1.5 text-white/20">•</span>
           {subcategoryCount} {subcategoryCount === 1 ? "Subcategory" : "Subcategories"}
         </p>
         <p className="text-sm text-muted-foreground mt-2 max-w-lg">
-          Every department in FoundOurMarket. Pick a category to discover its products and subcategories.
+          Curated collections across the FoundOurMarket world — discover trusted products, delivered globally.
         </p>
+
       </div>
 
       {/* Department grid — main categories only */}

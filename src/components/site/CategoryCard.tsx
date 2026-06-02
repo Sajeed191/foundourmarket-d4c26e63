@@ -101,13 +101,15 @@ export function CategoryCard({
       </div>
 
       {/* Title + product count below */}
-      <div className="flex flex-1 flex-col items-center justify-center px-2 py-2.5 text-center sm:py-3">
-        <h3 className="line-clamp-1 text-[11px] font-semibold leading-tight tracking-tight text-white transition-colors group-hover:text-accent sm:text-sm">
+      <div className="flex flex-1 flex-col items-center justify-center gap-0.5 px-2.5 py-3 text-center sm:py-3.5">
+        <h3 className="line-clamp-1 text-[13px] font-semibold leading-snug tracking-tight text-white transition-colors group-hover:text-accent sm:text-[15px]">
           {category.name}
         </h3>
-        <span className="mt-0.5 block text-[8px] font-mono uppercase tracking-widest text-muted-foreground sm:text-[10px]">
-          {count} items
-        </span>
+        {count > 0 && (
+          <span className="block text-[10px] font-medium tracking-wide text-muted-foreground sm:text-[11px]">
+            {count} {count === 1 ? "Product" : "Products"}
+          </span>
+        )}
       </div>
     </Link>
   );
