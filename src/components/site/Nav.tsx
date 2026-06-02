@@ -344,10 +344,9 @@ export function Nav() {
                   </nav>
                 </div>
               </div>
-            </motion.aside>
+            </aside>
           </div>
-        )}
-      </AnimatePresence>
+      )}
 
       <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
