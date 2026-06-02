@@ -249,7 +249,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
               <li key={q.id} className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-start gap-3">
                   <div className="size-8 shrink-0 rounded-full bg-muted overflow-hidden grid place-items-center font-mono text-xs font-bold ring-1 ring-white/10">
-                    {prof?.avatar_url ? <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
+                    {q.author_avatar ? <img src={q.author_avatar} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-display truncate">{name}</p>
