@@ -573,32 +573,62 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
-        {/* Store Placement */}
-        <CollapsibleModule eyebrow="Step 6b" title="Store Placement" badge={<Eye className="size-3.5 text-accent" />} defaultOpen={false}>
+        {/* Storefront Placement */}
+        <CollapsibleModule eyebrow="Step 6b" title="Storefront Placement" badge={<Sparkles className="size-3.5 text-accent" />}>
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <p className="text-[10px] text-muted-foreground">
+              Manual toggles act as a <span className="text-accent font-medium">Force On</span> override — when enabled the product
+              appears in that section regardless of analytics. Automatic calculation stays active for products left off.
+            </p>
+            <div className="grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 sm:grid-cols-3">
+              <Toggle checked={form.featured} onChange={(v) => set({ featured: v })} label="Featured" />
+              <Toggle checked={form.trending} onChange={(v) => set({ trending: v })} label="Trending" />
+              <Toggle checked={form.bestseller} onChange={(v) => set({ bestseller: v })} label="Best Seller" />
+              <Toggle checked={form.new_arrival} onChange={(v) => set({ new_arrival: v })} label="New Arrival" />
+              <Toggle checked={form.premium} onChange={(v) => set({ premium: v })} label="Premium" />
+              <Toggle checked={form.fast_selling} onChange={(v) => set({ fast_selling: v })} label="Fast Selling" />
+              <Toggle checked={form.editors_choice} onChange={(v) => set({ editors_choice: v })} label="Editor's Choice" />
+              <Toggle checked={form.flash_deal} onChange={(v) => set({ flash_deal: v })} label="Flash Deal" />
+              <Toggle checked={form.staff_pick} onChange={(v) => set({ staff_pick: v })} label="Staff Pick" />
+              <Toggle checked={form.recommended} onChange={(v) => set({ recommended: v })} label="Recommended" />
               <Toggle checked={form.homepage_hero} onChange={(v) => set({ homepage_hero: v })} label="Homepage Hero" />
-              <Toggle checked={form.featured} onChange={(v) => set({ featured: v })} label="Homepage Featured" />
-              <Toggle checked={form.is_category_banner} onChange={(v) => set({ is_category_banner: v })} label="Category Banner" />
-              <Toggle checked={form.hide_from_search} onChange={(v) => set({ hide_from_search: v })} label="Hide From Search" />
-              <Toggle checked={form.hide_from_recommendations} onChange={(v) => set({ hide_from_recommendations: v })} label="Hide From Recommendations" />
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+            {/* Homepage section + priority */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Homepage Section</label>
                 <select value={form.homepage_section} onChange={(e) => set({ homepage_section: e.target.value })} className="filter-select w-full">
                   <option value="none">None</option>
-                  <option value="featured">Featured</option>
-                  <option value="trending">Trending</option>
-                  <option value="bestseller">Best Seller</option>
-                  <option value="new_arrival">New Arrival</option>
-                  <option value="flash_deal">Flash Deal</option>
+                  <option value="featured">Featured Products</option>
+                  <option value="trending">Trending Products</option>
+                  <option value="bestseller">Best Sellers</option>
+                  <option value="new_arrival">New Arrivals</option>
+                  <option value="staff_pick">Staff Picks</option>
+                  <option value="flash_deal">Flash Deals</option>
                   <option value="recommended">Recommended</option>
+                  <option value="home_hero">Home Hero</option>
+                  <option value="category_banner">Category Banner</option>
                 </select>
               </div>
+              <div>
+                <EField label="Priority Score (1-100)" type="number" value={form.priority_score} onChange={(v) => set({ priority_score: v })} />
+                <p className="mt-1 text-[10px] text-muted-foreground">Higher priority products appear before lower priority products within the same section.</p>
+              </div>
+            </div>
+
+            {/* Collections searchable multi-select */}
+            <CollectionsField value={form.collections} onChange={(v) => set({ collections: v })} />
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <EField label="Homepage Position" type="number" value={form.homepage_position} onChange={(v) => set({ homepage_position: v })} />
               <EField label="Category Position" type="number" value={form.category_position} onChange={(v) => set({ category_position: v })} />
               <EField label="Featured Until" type="datetime-local" value={form.featured_until} onChange={(v) => set({ featured_until: v })} />
+            </div>
+            <div className="flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <Toggle checked={form.is_category_banner} onChange={(v) => set({ is_category_banner: v })} label="Category Banner" />
+              <Toggle checked={form.hide_from_search} onChange={(v) => set({ hide_from_search: v })} label="Hide From Search" />
+              <Toggle checked={form.hide_from_recommendations} onChange={(v) => set({ hide_from_recommendations: v })} label="Hide From Recommendations" />
             </div>
           </div>
         </CollapsibleModule>
