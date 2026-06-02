@@ -527,6 +527,39 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
+        {/* Product Labels */}
+        <CollapsibleModule eyebrow="Step 6e" title="Product Labels" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <Toggle checked={form.gift_idea} onChange={(v) => set({ gift_idea: v })} label="Gift Idea" />
+            </div>
+            {(() => {
+              const rating = Number((row as any)?.rating ?? 0);
+              const reviews = Number((row as any)?.reviews ?? 0);
+              const priceRef = Number((row as any)?.price_inr ?? (row as any)?.price ?? 0);
+              const premiumAuto = (rating >= 4.7 && reviews >= 25) || priceRef >= 9999;
+              const sold = Number((row as any)?.sold_count ?? 0);
+              const created = (row as any)?.created_at ? new Date((row as any).created_at).getTime() : Date.now();
+              const ageDays = Math.max(1, (Date.now() - created) / 86_400_000);
+              const fastAuto = sold / ageDays >= 3;
+              const pill = (label: string, on: boolean) => (
+                <span key={label} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-mono uppercase tracking-widest ${on ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 text-muted-foreground"}`}>
+                  <span className={`size-1.5 rounded-full ${on ? "bg-accent" : "bg-muted-foreground/40"}`} />{label} {on ? "Active" : "Off"}
+                </span>
+              );
+              return (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {pill("Premium", premiumAuto)}
+                    {pill("Fast Selling", fastAuto)}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Premium and Fast Selling are computed automatically from rating, pricing and sales velocity — they cannot be toggled manually.</p>
+                </div>
+              );
+            })()}
+          </div>
+        </CollapsibleModule>
+
         {/* Analytics (read-only) */}
         <CollapsibleModule eyebrow="Insights" title="Product Analytics" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
