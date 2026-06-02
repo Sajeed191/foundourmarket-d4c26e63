@@ -123,10 +123,15 @@ export function Nav() {
 
   return (
     <>
-      <motion.div
+      <div
         data-app-header
-        animate={{ y: hidden ? -120 : 0, opacity: hidden ? 0 : 1, filter: hidden ? "blur(6px)" : "blur(0px)" }}
-        transition={{ type: "spring", stiffness: 380, damping: 38, mass: 0.8 }}
+        style={{
+          transform: hidden ? "translateY(-120px)" : "translateY(0)",
+          opacity: hidden ? 0 : 1,
+          filter: hidden ? "blur(6px)" : "blur(0px)",
+          transition: "transform 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease, filter 0.35s ease",
+          willChange: "transform, opacity",
+        }}
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
