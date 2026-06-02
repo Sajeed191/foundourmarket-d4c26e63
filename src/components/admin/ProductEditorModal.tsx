@@ -147,6 +147,28 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     bestseller: row?.bestseller ?? false,
     trending: row?.trending ?? false,
     new_arrival: row?.new_arrival ?? false,
+    flash_deal: (row as any)?.flash_deal ?? false,
+    staff_pick: (row as any)?.staff_pick ?? false,
+    recommended: (row as any)?.recommended ?? false,
+    homepage_hero: (row as any)?.homepage_hero ?? false,
+    gift_idea: (row as any)?.gift_idea ?? false,
+    homepage_section: (row as any)?.homepage_section ?? "none",
+    is_category_banner: (row as any)?.is_category_banner ?? false,
+    hide_from_search: (row as any)?.hide_from_search ?? false,
+    hide_from_recommendations: (row as any)?.hide_from_recommendations ?? false,
+    homepage_position: (row as any)?.homepage_position != null ? String((row as any).homepage_position) : "",
+    category_position: (row as any)?.category_position != null ? String((row as any).category_position) : "",
+    featured_until: (row as any)?.featured_until
+      ? new Date(new Date((row as any).featured_until).getTime() - new Date().getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16)
+      : "",
+    scheduled_expiry_at: (row as any)?.scheduled_expiry_at
+      ? new Date(new Date((row as any).scheduled_expiry_at).getTime() - new Date().getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16)
+      : "",
+    related_products: ((row as any)?.related_products ?? []).join(", "),
+    cross_sell_products: ((row as any)?.cross_sell_products ?? []).join(", "),
+    upsell_products: ((row as any)?.upsell_products ?? []).join(", "),
     brand: row?.brand ?? "",
     product_type: row?.product_type ?? "",
     weight: row?.weight != null ? String(row.weight) : "",
@@ -231,6 +253,18 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       return_window_days: Number(form.return_window_days) || 0, warranty: form.warranty.trim(),
       status: form.status, bestseller: form.bestseller, trending: form.trending,
       new_arrival: form.new_arrival,
+      flash_deal: form.flash_deal, staff_pick: form.staff_pick, recommended: form.recommended,
+      homepage_hero: form.homepage_hero, gift_idea: form.gift_idea,
+      homepage_section: form.homepage_section === "none" ? null : form.homepage_section,
+      is_category_banner: form.is_category_banner,
+      hide_from_search: form.hide_from_search, hide_from_recommendations: form.hide_from_recommendations,
+      homepage_position: numOrNull(form.homepage_position),
+      category_position: numOrNull(form.category_position),
+      featured_until: form.featured_until ? new Date(form.featured_until).toISOString() : null,
+      scheduled_expiry_at: form.scheduled_expiry_at ? new Date(form.scheduled_expiry_at).toISOString() : null,
+      related_products: parseList(form.related_products),
+      cross_sell_products: parseList(form.cross_sell_products),
+      upsell_products: parseList(form.upsell_products),
       brand: form.brand.trim() || null, product_type: form.product_type.trim() || null,
       weight: numOrNull(form.weight), length: numOrNull(form.length),
       width: numOrNull(form.width), height: numOrNull(form.height),
@@ -427,7 +461,93 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               <Toggle checked={form.bestseller} onChange={(v) => set({ bestseller: v })} label="Bestseller" />
               <Toggle checked={form.trending} onChange={(v) => set({ trending: v })} label="Trending" />
               <Toggle checked={form.new_arrival} onChange={(v) => set({ new_arrival: v })} label="New Arrival" />
+              <Toggle checked={form.flash_deal} onChange={(v) => set({ flash_deal: v })} label="Flash Deal" />
+              <Toggle checked={form.staff_pick} onChange={(v) => set({ staff_pick: v })} label="Staff Pick" />
+              <Toggle checked={form.recommended} onChange={(v) => set({ recommended: v })} label="Recommended" />
+              <Toggle checked={form.gift_idea} onChange={(v) => set({ gift_idea: v })} label="Gift Idea" />
             </div>
+            <p className="text-[10px] text-muted-foreground">Premium and Fast Selling labels are generated automatically from analytics and pricing.</p>
+          </div>
+        </CollapsibleModule>
+
+        {/* Store Placement */}
+        <CollapsibleModule eyebrow="Step 6b" title="Store Placement" badge={<Eye className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <Toggle checked={form.homepage_hero} onChange={(v) => set({ homepage_hero: v })} label="Homepage Hero" />
+              <Toggle checked={form.featured} onChange={(v) => set({ featured: v })} label="Homepage Featured" />
+              <Toggle checked={form.is_category_banner} onChange={(v) => set({ is_category_banner: v })} label="Category Banner" />
+              <Toggle checked={form.hide_from_search} onChange={(v) => set({ hide_from_search: v })} label="Hide From Search" />
+              <Toggle checked={form.hide_from_recommendations} onChange={(v) => set({ hide_from_recommendations: v })} label="Hide From Recommendations" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div>
+                <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Homepage Section</label>
+                <select value={form.homepage_section} onChange={(e) => set({ homepage_section: e.target.value })} className="filter-select w-full">
+                  <option value="none">None</option>
+                  <option value="featured">Featured</option>
+                  <option value="trending">Trending</option>
+                  <option value="bestseller">Best Seller</option>
+                  <option value="new_arrival">New Arrival</option>
+                  <option value="flash_deal">Flash Deal</option>
+                  <option value="recommended">Recommended</option>
+                </select>
+              </div>
+              <EField label="Homepage Position" type="number" value={form.homepage_position} onChange={(v) => set({ homepage_position: v })} />
+              <EField label="Category Position" type="number" value={form.category_position} onChange={(v) => set({ category_position: v })} />
+              <EField label="Featured Until" type="datetime-local" value={form.featured_until} onChange={(v) => set({ featured_until: v })} />
+            </div>
+          </div>
+        </CollapsibleModule>
+
+        {/* Publishing */}
+        <CollapsibleModule eyebrow="Step 6c" title="Publishing" badge={<Eye className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Status</label>
+              <select value={form.status} onChange={(e) => set({ status: e.target.value })} className="filter-select w-full">
+                <option value="draft">Draft</option>
+                <option value="published">Active</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="out_of_stock">Out Of Stock</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <EField label="Publish Date" type="datetime-local" value={form.scheduled_publish_at} onChange={(v) => set({ scheduled_publish_at: v })} />
+            <EField label="Expiry Date" type="datetime-local" value={form.scheduled_expiry_at} onChange={(v) => set({ scheduled_expiry_at: v })} />
+          </div>
+        </CollapsibleModule>
+
+        {/* Related products */}
+        <CollapsibleModule eyebrow="Step 6d" title="Related Product Management" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="space-y-3">
+            <EField label="Related Products (comma-separated slugs)" value={form.related_products} onChange={(v) => set({ related_products: v })} />
+            <EField label="Cross Sell Products (comma-separated slugs)" value={form.cross_sell_products} onChange={(v) => set({ cross_sell_products: v })} />
+            <EField label="Upsell Products (comma-separated slugs)" value={form.upsell_products} onChange={(v) => set({ upsell_products: v })} />
+          </div>
+        </CollapsibleModule>
+
+        {/* Analytics (read-only) */}
+        <CollapsibleModule eyebrow="Insights" title="Product Analytics" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {(() => {
+              const views = (row as any)?.views_count ?? 0;
+              const orders = (row as any)?.orders_count ?? (row as any)?.sold_count ?? 0;
+              const conv = views > 0 ? ((orders / views) * 100).toFixed(1) + "%" : "—";
+              const stats: [string, string | number][] = [
+                ["Total Views", views],
+                ["Wishlist", (row as any)?.wishlist_count ?? 0],
+                ["Orders", orders],
+                ["Revenue", inr(Number((row as any)?.revenue ?? 0))],
+                ["Conversion", conv],
+              ];
+              return stats.map(([label, val]) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+                  <div className="mt-1 text-sm font-semibold tabular-nums">{val}</div>
+                </div>
+              ));
+            })()}
           </div>
         </CollapsibleModule>
 

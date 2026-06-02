@@ -2,21 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import { Heart, Plus, Check, Star } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
+import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
-
-// New products created within this window get a "New" badge when no discount.
-const NEW_WINDOW_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
-
-function isNewProduct(product: Product): boolean {
-  if (!product.createdAt) return product.reviews === 0;
-  const t = Date.parse(product.createdAt);
-  return Number.isFinite(t) && Date.now() - t < NEW_WINDOW_MS;
-}
 
 function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
@@ -40,7 +32,7 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const discount = discountPercent(price, originalPrice);
   const shippingFee = shippingFeeOf(product);
   const freeShipping = shippingFee <= 0;
-  const showNew = !discount && isNewProduct(product);
+  const labels = computeBadges(product, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES);
 
   return (
     <div className="group product-card-glass overflow-hidden relative flex flex-col h-full">
@@ -55,16 +47,23 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
             className="relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.05]"
           />
 
-          {/* Essential badge — Discount OR New, top-left only. Clean & compact. */}
-          {discount ? (
-            <span className="absolute top-2 left-2 inline-flex items-center rounded-md bg-accent text-black font-bold font-mono text-[10px] leading-none px-1.5 py-1 ring-1 ring-black/10">
-              -{discount}%
-            </span>
-          ) : showNew ? (
-            <span className="absolute top-2 left-2 inline-flex items-center rounded-md bg-white/90 text-black font-bold font-mono uppercase tracking-wide text-[9px] leading-none px-1.5 py-1 ring-1 ring-black/5">
-              New
-            </span>
-          ) : null}
+          {/* Top-left stack — discount first, then automatic merchandising labels (max 3 total). */}
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+            {discount ? (
+              <span className="inline-flex items-center rounded-md bg-accent text-black font-bold font-mono text-[10px] leading-none px-1.5 py-1 ring-1 ring-black/10">
+                -{discount}%
+              </span>
+            ) : null}
+            {labels.slice(0, discount ? MAX_CARD_BADGES - 1 : MAX_CARD_BADGES).map((b) => (
+              <span
+                key={b.key}
+                className={`inline-flex items-center gap-0.5 rounded-md font-bold font-mono uppercase tracking-wide text-[9px] leading-none px-1.5 py-1 ring-1 ring-black/10 ${b.className}`}
+              >
+                <span aria-hidden>{b.emoji}</span>
+                {b.label}
+              </span>
+            ))}
+          </div>
 
           {/* Free Shipping — the one other allowed badge, bottom-left */}
           {freeShipping && (

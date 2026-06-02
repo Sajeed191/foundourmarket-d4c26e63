@@ -60,6 +60,31 @@ export type Product = {
   reservedQuantity: number;
   scheduledPublishAt: string | null;
   scheduledExpiryAt: string | null;
+  // Merchandising flags
+  trending: boolean;
+  bestseller: boolean;
+  newArrival: boolean;
+  hotDeal: boolean;
+  flashDeal: boolean;
+  staffPick: boolean;
+  recommended: boolean;
+  homepageHero: boolean;
+  giftIdea: boolean;
+  // Store placement
+  homepageSection: string | null;
+  isCategoryBanner: boolean;
+  hideFromSearch: boolean;
+  hideFromRecommendations: boolean;
+  homepagePosition: number | null;
+  categoryPosition: number | null;
+  featuredUntil: string | null;
+  // Related merchandising
+  relatedProducts: string[];
+  crossSellProducts: string[];
+  upsellProducts: string[];
+  // Analytics
+  ordersCount: number;
+  revenue: number;
 };
 
 export type ProductStatus =
@@ -143,6 +168,16 @@ type Row = {
   warehouse_location?: string | null; restock_eta?: string | null;
   preorder?: boolean | null; reserved_quantity?: number | null;
   scheduled_publish_at?: string | null; scheduled_expiry_at?: string | null;
+  trending?: boolean | null; bestseller?: boolean | null; new_arrival?: boolean | null;
+  hot_deal?: boolean | null; flash_deal?: boolean | null; staff_pick?: boolean | null;
+  recommended?: boolean | null; homepage_hero?: boolean | null; gift_idea?: boolean | null;
+  homepage_section?: string | null; is_category_banner?: boolean | null;
+  hide_from_search?: boolean | null; hide_from_recommendations?: boolean | null;
+  homepage_position?: number | null; category_position?: number | null;
+  featured_until?: string | null;
+  related_products?: string[] | null; cross_sell_products?: string[] | null;
+  upsell_products?: string[] | null;
+  orders_count?: number | null; revenue?: number | string | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
@@ -199,12 +234,33 @@ export function rowToProduct(r: Row): Product {
     reservedQuantity: r.reserved_quantity ?? 0,
     scheduledPublishAt: r.scheduled_publish_at ?? null,
     scheduledExpiryAt: r.scheduled_expiry_at ?? null,
+    trending: r.trending ?? false,
+    bestseller: r.bestseller ?? false,
+    newArrival: r.new_arrival ?? false,
+    hotDeal: r.hot_deal ?? false,
+    flashDeal: r.flash_deal ?? false,
+    staffPick: r.staff_pick ?? false,
+    recommended: r.recommended ?? false,
+    homepageHero: r.homepage_hero ?? false,
+    giftIdea: r.gift_idea ?? false,
+    homepageSection: r.homepage_section ?? null,
+    isCategoryBanner: r.is_category_banner ?? false,
+    hideFromSearch: r.hide_from_search ?? false,
+    hideFromRecommendations: r.hide_from_recommendations ?? false,
+    homepagePosition: r.homepage_position ?? null,
+    categoryPosition: r.category_position ?? null,
+    featuredUntil: r.featured_until ?? null,
+    relatedProducts: r.related_products ?? [],
+    crossSellProducts: r.cross_sell_products ?? [],
+    upsellProducts: r.upsell_products ?? [],
+    ordersCount: r.orders_count ?? 0,
+    revenue: Number(r.revenue ?? 0),
   };
 }
 
 // Public catalog columns only — sensitive fields (cost, cost prices, barcode,
 // warehouse_location, admin_notes) are NOT exposed via the products_public view.
-const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at";
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,related_products,cross_sell_products,upsell_products,orders_count";
 
 
 export async function fetchProducts(): Promise<Product[]> {

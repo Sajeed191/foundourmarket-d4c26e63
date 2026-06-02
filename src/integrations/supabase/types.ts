@@ -2855,6 +2855,7 @@ export type Database = {
           bestseller: boolean
           brand: string | null
           category: string
+          category_position: number | null
           cod_enabled: boolean
           collection: string | null
           compare_price_inr: number | null
@@ -2863,6 +2864,7 @@ export type Database = {
           cost_price_inr: number | null
           cost_price_usd: number | null
           created_at: string
+          cross_sell_products: string[]
           customs_info: string | null
           deleted_at: string | null
           deleted_by: string | null
@@ -2871,9 +2873,16 @@ export type Database = {
           description: string | null
           discount: number | null
           featured: boolean
+          featured_until: string | null
           features: string[]
+          flash_deal: boolean
           fragile: boolean
+          gift_idea: boolean
           height: number | null
+          hide_from_recommendations: boolean
+          hide_from_search: boolean
+          homepage_hero: boolean
+          homepage_position: number | null
           homepage_section: string | null
           hot_deal: boolean
           id: string
@@ -2883,11 +2892,13 @@ export type Database = {
           international_shipping: boolean
           international_visible: boolean
           inventory_tracking: boolean
+          is_category_banner: boolean
           length: number | null
           low_stock_threshold: number
           meta_keywords: string[]
           name: string
           new_arrival: boolean
+          orders_count: number
           paypal_enabled: boolean
           pickup_supported: boolean
           preorder: boolean
@@ -2897,11 +2908,14 @@ export type Database = {
           product_type: string | null
           rating: number
           razorpay_enabled: boolean
+          recommended: boolean
+          related_products: string[]
           replacement_eligible: boolean
           reserved_quantity: number
           restock_eta: string | null
           return_eligible: boolean
           return_window_days: number
+          revenue: number
           reviews: number
           scheduled_expiry_at: string | null
           scheduled_publish_at: string | null
@@ -2916,6 +2930,7 @@ export type Database = {
           sold_count: number
           sort_order: number
           specifications: Json
+          staff_pick: boolean
           status: string
           stock_quantity: number
           stripe_enabled: boolean
@@ -2923,6 +2938,7 @@ export type Database = {
           tags: string[]
           trending: boolean
           updated_at: string
+          upsell_products: string[]
           video_url: string | null
           views_count: number
           warehouse_location: string | null
@@ -2938,6 +2954,7 @@ export type Database = {
           bestseller?: boolean
           brand?: string | null
           category: string
+          category_position?: number | null
           cod_enabled?: boolean
           collection?: string | null
           compare_price_inr?: number | null
@@ -2946,6 +2963,7 @@ export type Database = {
           cost_price_inr?: number | null
           cost_price_usd?: number | null
           created_at?: string
+          cross_sell_products?: string[]
           customs_info?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -2954,9 +2972,16 @@ export type Database = {
           description?: string | null
           discount?: number | null
           featured?: boolean
+          featured_until?: string | null
           features?: string[]
+          flash_deal?: boolean
           fragile?: boolean
+          gift_idea?: boolean
           height?: number | null
+          hide_from_recommendations?: boolean
+          hide_from_search?: boolean
+          homepage_hero?: boolean
+          homepage_position?: number | null
           homepage_section?: string | null
           hot_deal?: boolean
           id?: string
@@ -2966,11 +2991,13 @@ export type Database = {
           international_shipping?: boolean
           international_visible?: boolean
           inventory_tracking?: boolean
+          is_category_banner?: boolean
           length?: number | null
           low_stock_threshold?: number
           meta_keywords?: string[]
           name: string
           new_arrival?: boolean
+          orders_count?: number
           paypal_enabled?: boolean
           pickup_supported?: boolean
           preorder?: boolean
@@ -2980,11 +3007,14 @@ export type Database = {
           product_type?: string | null
           rating?: number
           razorpay_enabled?: boolean
+          recommended?: boolean
+          related_products?: string[]
           replacement_eligible?: boolean
           reserved_quantity?: number
           restock_eta?: string | null
           return_eligible?: boolean
           return_window_days?: number
+          revenue?: number
           reviews?: number
           scheduled_expiry_at?: string | null
           scheduled_publish_at?: string | null
@@ -2999,6 +3029,7 @@ export type Database = {
           sold_count?: number
           sort_order?: number
           specifications?: Json
+          staff_pick?: boolean
           status?: string
           stock_quantity?: number
           stripe_enabled?: boolean
@@ -3006,6 +3037,7 @@ export type Database = {
           tags?: string[]
           trending?: boolean
           updated_at?: string
+          upsell_products?: string[]
           video_url?: string | null
           views_count?: number
           warehouse_location?: string | null
@@ -3021,6 +3053,7 @@ export type Database = {
           bestseller?: boolean
           brand?: string | null
           category?: string
+          category_position?: number | null
           cod_enabled?: boolean
           collection?: string | null
           compare_price_inr?: number | null
@@ -3029,6 +3062,7 @@ export type Database = {
           cost_price_inr?: number | null
           cost_price_usd?: number | null
           created_at?: string
+          cross_sell_products?: string[]
           customs_info?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -3037,9 +3071,16 @@ export type Database = {
           description?: string | null
           discount?: number | null
           featured?: boolean
+          featured_until?: string | null
           features?: string[]
+          flash_deal?: boolean
           fragile?: boolean
+          gift_idea?: boolean
           height?: number | null
+          hide_from_recommendations?: boolean
+          hide_from_search?: boolean
+          homepage_hero?: boolean
+          homepage_position?: number | null
           homepage_section?: string | null
           hot_deal?: boolean
           id?: string
@@ -3049,11 +3090,13 @@ export type Database = {
           international_shipping?: boolean
           international_visible?: boolean
           inventory_tracking?: boolean
+          is_category_banner?: boolean
           length?: number | null
           low_stock_threshold?: number
           meta_keywords?: string[]
           name?: string
           new_arrival?: boolean
+          orders_count?: number
           paypal_enabled?: boolean
           pickup_supported?: boolean
           preorder?: boolean
@@ -3063,11 +3106,14 @@ export type Database = {
           product_type?: string | null
           rating?: number
           razorpay_enabled?: boolean
+          recommended?: boolean
+          related_products?: string[]
           replacement_eligible?: boolean
           reserved_quantity?: number
           restock_eta?: string | null
           return_eligible?: boolean
           return_window_days?: number
+          revenue?: number
           reviews?: number
           scheduled_expiry_at?: string | null
           scheduled_publish_at?: string | null
@@ -3082,6 +3128,7 @@ export type Database = {
           sold_count?: number
           sort_order?: number
           specifications?: Json
+          staff_pick?: boolean
           status?: string
           stock_quantity?: number
           stripe_enabled?: boolean
@@ -3089,6 +3136,7 @@ export type Database = {
           tags?: string[]
           trending?: boolean
           updated_at?: string
+          upsell_products?: string[]
           video_url?: string | null
           views_count?: number
           warehouse_location?: string | null
@@ -4983,18 +5031,27 @@ export type Database = {
           attributes: Json | null
           bestseller: boolean | null
           category: string | null
+          category_position: number | null
           cod_enabled: boolean | null
           collection: string | null
           compare_price_inr: number | null
           compare_price_usd: number | null
           created_at: string | null
+          cross_sell_products: string[] | null
           customs_info: string | null
           delivery_estimate: string | null
           description: string | null
           discount: number | null
           featured: boolean | null
+          featured_until: string | null
           features: string[] | null
+          flash_deal: boolean | null
           fragile: boolean | null
+          gift_idea: boolean | null
+          hide_from_recommendations: boolean | null
+          hide_from_search: boolean | null
+          homepage_hero: boolean | null
+          homepage_position: number | null
           homepage_section: string | null
           hot_deal: boolean | null
           id: string | null
@@ -5004,10 +5061,12 @@ export type Database = {
           international_shipping: boolean | null
           international_visible: boolean | null
           inventory_tracking: boolean | null
+          is_category_banner: boolean | null
           low_stock_threshold: number | null
           meta_keywords: string[] | null
           name: string | null
           new_arrival: boolean | null
+          orders_count: number | null
           paypal_enabled: boolean | null
           pickup_supported: boolean | null
           preorder: boolean | null
@@ -5016,6 +5075,8 @@ export type Database = {
           price_usd: number | null
           rating: number | null
           razorpay_enabled: boolean | null
+          recommended: boolean | null
+          related_products: string[] | null
           replacement_eligible: boolean | null
           reserved_quantity: number | null
           restock_eta: string | null
@@ -5034,6 +5095,7 @@ export type Database = {
           sold_count: number | null
           sort_order: number | null
           specifications: Json | null
+          staff_pick: boolean | null
           status: string | null
           stock_quantity: number | null
           stripe_enabled: boolean | null
@@ -5041,6 +5103,7 @@ export type Database = {
           tags: string[] | null
           trending: boolean | null
           updated_at: string | null
+          upsell_products: string[] | null
           views_count: number | null
           warranty: string | null
           wishlist_count: number | null
@@ -5049,18 +5112,27 @@ export type Database = {
           attributes?: Json | null
           bestseller?: boolean | null
           category?: string | null
+          category_position?: number | null
           cod_enabled?: boolean | null
           collection?: string | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           created_at?: string | null
+          cross_sell_products?: string[] | null
           customs_info?: string | null
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
           featured?: boolean | null
+          featured_until?: string | null
           features?: string[] | null
+          flash_deal?: boolean | null
           fragile?: boolean | null
+          gift_idea?: boolean | null
+          hide_from_recommendations?: boolean | null
+          hide_from_search?: boolean | null
+          homepage_hero?: boolean | null
+          homepage_position?: number | null
           homepage_section?: string | null
           hot_deal?: boolean | null
           id?: string | null
@@ -5070,10 +5142,12 @@ export type Database = {
           international_shipping?: boolean | null
           international_visible?: boolean | null
           inventory_tracking?: boolean | null
+          is_category_banner?: boolean | null
           low_stock_threshold?: number | null
           meta_keywords?: string[] | null
           name?: string | null
           new_arrival?: boolean | null
+          orders_count?: number | null
           paypal_enabled?: boolean | null
           pickup_supported?: boolean | null
           preorder?: boolean | null
@@ -5082,6 +5156,8 @@ export type Database = {
           price_usd?: number | null
           rating?: number | null
           razorpay_enabled?: boolean | null
+          recommended?: boolean | null
+          related_products?: string[] | null
           replacement_eligible?: boolean | null
           reserved_quantity?: number | null
           restock_eta?: string | null
@@ -5100,6 +5176,7 @@ export type Database = {
           sold_count?: number | null
           sort_order?: number | null
           specifications?: Json | null
+          staff_pick?: boolean | null
           status?: string | null
           stock_quantity?: number | null
           stripe_enabled?: boolean | null
@@ -5107,6 +5184,7 @@ export type Database = {
           tags?: string[] | null
           trending?: boolean | null
           updated_at?: string | null
+          upsell_products?: string[] | null
           views_count?: number | null
           warranty?: string | null
           wishlist_count?: number | null
@@ -5115,18 +5193,27 @@ export type Database = {
           attributes?: Json | null
           bestseller?: boolean | null
           category?: string | null
+          category_position?: number | null
           cod_enabled?: boolean | null
           collection?: string | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           created_at?: string | null
+          cross_sell_products?: string[] | null
           customs_info?: string | null
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
           featured?: boolean | null
+          featured_until?: string | null
           features?: string[] | null
+          flash_deal?: boolean | null
           fragile?: boolean | null
+          gift_idea?: boolean | null
+          hide_from_recommendations?: boolean | null
+          hide_from_search?: boolean | null
+          homepage_hero?: boolean | null
+          homepage_position?: number | null
           homepage_section?: string | null
           hot_deal?: boolean | null
           id?: string | null
@@ -5136,10 +5223,12 @@ export type Database = {
           international_shipping?: boolean | null
           international_visible?: boolean | null
           inventory_tracking?: boolean | null
+          is_category_banner?: boolean | null
           low_stock_threshold?: number | null
           meta_keywords?: string[] | null
           name?: string | null
           new_arrival?: boolean | null
+          orders_count?: number | null
           paypal_enabled?: boolean | null
           pickup_supported?: boolean | null
           preorder?: boolean | null
@@ -5148,6 +5237,8 @@ export type Database = {
           price_usd?: number | null
           rating?: number | null
           razorpay_enabled?: boolean | null
+          recommended?: boolean | null
+          related_products?: string[] | null
           replacement_eligible?: boolean | null
           reserved_quantity?: number | null
           restock_eta?: string | null
@@ -5166,6 +5257,7 @@ export type Database = {
           sold_count?: number | null
           sort_order?: number | null
           specifications?: Json | null
+          staff_pick?: boolean | null
           status?: string | null
           stock_quantity?: number | null
           stripe_enabled?: boolean | null
@@ -5173,6 +5265,7 @@ export type Database = {
           tags?: string[] | null
           trending?: boolean | null
           updated_at?: string | null
+          upsell_products?: string[] | null
           views_count?: number | null
           warranty?: string | null
           wishlist_count?: number | null
@@ -5431,6 +5524,7 @@ export type Database = {
           bestseller: boolean
           brand: string | null
           category: string
+          category_position: number | null
           cod_enabled: boolean
           collection: string | null
           compare_price_inr: number | null
@@ -5439,6 +5533,7 @@ export type Database = {
           cost_price_inr: number | null
           cost_price_usd: number | null
           created_at: string
+          cross_sell_products: string[]
           customs_info: string | null
           deleted_at: string | null
           deleted_by: string | null
@@ -5447,9 +5542,16 @@ export type Database = {
           description: string | null
           discount: number | null
           featured: boolean
+          featured_until: string | null
           features: string[]
+          flash_deal: boolean
           fragile: boolean
+          gift_idea: boolean
           height: number | null
+          hide_from_recommendations: boolean
+          hide_from_search: boolean
+          homepage_hero: boolean
+          homepage_position: number | null
           homepage_section: string | null
           hot_deal: boolean
           id: string
@@ -5459,11 +5561,13 @@ export type Database = {
           international_shipping: boolean
           international_visible: boolean
           inventory_tracking: boolean
+          is_category_banner: boolean
           length: number | null
           low_stock_threshold: number
           meta_keywords: string[]
           name: string
           new_arrival: boolean
+          orders_count: number
           paypal_enabled: boolean
           pickup_supported: boolean
           preorder: boolean
@@ -5473,11 +5577,14 @@ export type Database = {
           product_type: string | null
           rating: number
           razorpay_enabled: boolean
+          recommended: boolean
+          related_products: string[]
           replacement_eligible: boolean
           reserved_quantity: number
           restock_eta: string | null
           return_eligible: boolean
           return_window_days: number
+          revenue: number
           reviews: number
           scheduled_expiry_at: string | null
           scheduled_publish_at: string | null
@@ -5492,6 +5599,7 @@ export type Database = {
           sold_count: number
           sort_order: number
           specifications: Json
+          staff_pick: boolean
           status: string
           stock_quantity: number
           stripe_enabled: boolean
@@ -5499,6 +5607,7 @@ export type Database = {
           tags: string[]
           trending: boolean
           updated_at: string
+          upsell_products: string[]
           video_url: string | null
           views_count: number
           warehouse_location: string | null
