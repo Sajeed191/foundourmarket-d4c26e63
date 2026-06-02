@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   FileText, IndianRupee, Boxes, Truck, RotateCcw, Search, Sparkles, BarChart3, Eye, ChevronRight,
+  TrendingUp, ShoppingCart,
 } from "lucide-react";
-import { ReadOnlySection, PRODUCT_SECTIONS } from "@/components/admin/product-editor/kit";
+import { ReadOnlySection, PRODUCT_SECTIONS, inr } from "@/components/admin/product-editor/kit";
+
+const STAT_COLS = ["views_count", "orders_count", "revenue"];
 
 export const Route = createFileRoute("/admin-product/$slug/")({
   component: OverviewPage,
