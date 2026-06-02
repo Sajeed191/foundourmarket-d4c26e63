@@ -366,7 +366,35 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, searchTerm, sort, stats, view]);
+  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view]);
+
+  // ---- Catalog Health Center ----
+  const catalogHealth = useMemo(() => {
+    const list = (products ?? []).filter((p) => !p.deleted_at);
+    const count = (fn: (p: Product) => boolean) => list.filter(fn).length;
+    const slugSeen = new Map<string, number>();
+    for (const p of list) {
+      const k = (p.name ?? "").trim().toLowerCase();
+      if (k) slugSeen.set(k, (slugSeen.get(k) ?? 0) + 1);
+    }
+    const duplicates = [...slugSeen.values()].filter((n) => n > 1).reduce((s, n) => s + n, 0);
+    const avgScore = list.length
+      ? Math.round(list.reduce((s, p) => s + productHealth(p).score, 0) / list.length)
+      : 100;
+    return {
+      avgScore,
+      issues: [
+        { key: "missing_images" as TagFilter, label: "Missing images", icon: ImageIcon, count: count((p) => !(p.image && p.image.trim())) },
+        { key: "missing_desc" as TagFilter, label: "Missing descriptions", icon: FileText, count: count((p) => !p.description || p.description.trim().length < 20) },
+        { key: "missing_seo" as TagFilter, label: "Missing SEO", icon: Search, count: count((p) => !p.seo_title || !p.seo_description) },
+        { key: "oos" as TagFilter, label: "Out of stock", icon: X, count: count((p) => p.stock_quantity <= 0) },
+        { key: "low" as TagFilter, label: "Low stock", icon: AlertTriangle, count: count((p) => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold) },
+        { key: "hidden" as TagFilter, label: "Hidden products", icon: EyeOff, count: count((p) => !p.in_stock) },
+      ],
+      duplicates,
+    };
+  }, [products]);
+
 
   const topSellers = useMemo(() => {
     return [...(products ?? [])]
