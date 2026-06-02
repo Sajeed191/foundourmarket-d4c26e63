@@ -306,11 +306,11 @@ export function Nav() {
                   <Link
                     to={user ? "/account" : "/auth"}
                     onClick={() => setOpen(false)}
-                    className="group relative flex items-center gap-3 rounded-2xl glass-strong glass-reflect px-3.5 py-3 active:scale-[0.98] transition-transform"
+                    className="group relative flex items-center gap-3.5 rounded-2xl glass-strong glass-reflect px-4 py-3.5 active:scale-[0.98] transition-transform"
                   >
                     <span className="relative shrink-0">
-                      <span aria-hidden className="absolute inset-0 -m-1 rounded-full bg-accent/40 blur-md animate-glow" />
-                      <span className="relative grid place-items-center size-11 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-base ring-1 ring-white/20 overflow-hidden">
+                      <span aria-hidden className="absolute inset-0 -m-1.5 rounded-full bg-accent/45 blur-lg animate-glow" />
+                      <span className="relative grid place-items-center size-12 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-lg ring-2 ring-white/20 overflow-hidden shadow-[0_0_22px_-4px_var(--color-accent)]">
                         {user?.user_metadata?.avatar_url
                           ? <img src={user.user_metadata.avatar_url as string} alt="" className="size-full object-cover" />
                           : (initial)}
@@ -318,13 +318,25 @@ export function Nav() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[11px] text-muted-foreground">{user ? "Welcome back" : "Welcome to"}</span>
-                      <span className="block truncate text-sm font-semibold">{displayName}</span>
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <span className="block truncate text-[15px] font-semibold">{displayName}</span>
+                        {membership && (
+                          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-accent/15 text-accent ring-1 ring-accent/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide">
+                            <Crown className="size-2.5" /> {membership}
+                          </span>
+                        )}
+                      </span>
+                      {user && ordersCount != null && (
+                        <span className="block text-[11px] text-muted-foreground mt-0.5">
+                          {ordersCount} {ordersCount === 1 ? "order" : "orders"}
+                        </span>
+                      )}
                     </span>
                     <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition" />
                   </Link>
                 </div>
 
-                {/* Quick actions */}
+                {/* Quick actions (incl. Track Order — the ONLY occurrence) */}
                 <div className="px-4 py-2">
                   <div className="grid grid-cols-2 gap-2">
                     {quickActions.map((q) => (
@@ -332,7 +344,7 @@ export function Nav() {
                         key={q.label}
                         to={q.to}
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2 rounded-xl glass px-3 py-2.5 hover:bg-white/10 active:scale-[0.97] transition"
+                        className="flex items-center gap-2 rounded-xl glass px-3 py-3 hover:bg-white/10 active:scale-[0.97] transition"
                       >
                         <q.icon className="size-4 text-accent shrink-0" />
                         <span className="text-xs font-medium truncate">{q.label}</span>
@@ -344,10 +356,42 @@ export function Nav() {
                   </div>
                 </div>
 
+                {/* Sticky search */}
+                <div className="px-4 pt-1 pb-2">
+                  <button
+                    onClick={() => { setOpen(false); setSearchOpen(true); }}
+                    className="group relative w-full flex items-center gap-2.5 rounded-2xl glass border border-white/10 px-4 py-3 text-left hover:border-accent/40 active:scale-[0.99] transition shadow-[0_0_24px_-14px_var(--color-accent)]"
+                  >
+                    <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition shadow-[0_0_28px_-10px_var(--color-accent)]" />
+                    <Search className="size-4 text-accent shrink-0" />
+                    <span className="text-xs text-muted-foreground truncate">Search products, brands, categories…</span>
+                  </button>
+                </div>
+
+                {/* Featured promo banner */}
+                <div className="px-4 pb-2">
+                  <Link
+                    to="/deals"
+                    onClick={() => { setOpen(false); trackMenu("Flash Deals", "promo"); }}
+                    className="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3.5 ring-1 ring-accent/30 active:scale-[0.98] transition"
+                    style={{ background: "var(--gradient-ember)" }}
+                  >
+                    <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent" />
+                    <span className="relative grid place-items-center size-10 rounded-xl bg-accent text-accent-foreground shadow-[0_0_20px_-4px_var(--color-accent)]">
+                      <Flame className="size-5" />
+                    </span>
+                    <span className="relative min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">Today's Flash Deals</span>
+                      <span className="block text-[11px] text-muted-foreground">Limited-time savings on top picks</span>
+                    </span>
+                    <ChevronRight className="relative size-4 text-accent group-hover:translate-x-0.5 transition" />
+                  </Link>
+                </div>
+
                 {/* Scrollable nav */}
                 <div className="flex-1 overflow-y-auto px-4 py-3 divide-y divide-white/[0.07]">
-                  {/* Shop Collections */}
-                  <Section label="Shop Collections">
+                  {/* Shopping shortcuts */}
+                  <Section label="Shop">
                     <div className="space-y-2">
                       {collections.map((c, i) => (
                         <div
@@ -360,7 +404,7 @@ export function Nav() {
                         >
                           <Link
                             to={c.to}
-                            onClick={() => setOpen(false)}
+                            onClick={() => { setOpen(false); trackMenu(c.label, "collection"); }}
                             className="group flex items-center gap-3 rounded-2xl glass border border-white/[0.06] px-3.5 py-3 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.98] transition"
                           >
                             <span className="grid place-items-center size-11 rounded-xl bg-accent/15 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_-4px_var(--color-accent)] transition">
@@ -370,6 +414,9 @@ export function Nav() {
                               <span className="block text-sm font-semibold truncate">{c.label}</span>
                               <span className="block text-[11px] text-muted-foreground truncate">{c.desc}</span>
                             </span>
+                            {c.count > 0 && (
+                              <span className="shrink-0 min-w-7 px-2 h-6 rounded-full bg-accent/15 text-accent ring-1 ring-accent/25 text-[11px] font-bold grid place-items-center">{c.count}</span>
+                            )}
                             <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
                           </Link>
                         </div>
@@ -377,38 +424,49 @@ export function Nav() {
                     </div>
                   </Section>
 
-                  {/* Categories */}
+                  {/* Main categories (top 6, with image + count) */}
                   <Section label="Categories">
                     <div className="space-y-1.5">
-                      {categories.map((c, i) => (
-                        <div
-                          key={c.label}
-                          style={{
-                            opacity: drawerVisible ? 1 : 0,
-                            transform: drawerVisible ? "translateX(0)" : "translateX(-12px)",
-                            transition: `opacity 0.35s ease ${0.08 + i * 0.05}s, transform 0.35s cubic-bezier(0.22,1,0.36,1) ${0.08 + i * 0.05}s`,
-                          }}
-                        >
-                          <Link
-                            to={c.to}
-                            params={"params" in c ? c.params : undefined as never}
-                            onClick={() => setOpen(false)}
-                            className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.98] transition"
+                      {cats.slice(0, 6).map((cat, i) => {
+                        const img = cat.mobile_image || cat.image;
+                        const Fallback = catFallbackIcon(cat.slug, cat.name);
+                        return (
+                          <div
+                            key={cat.id}
+                            style={{
+                              opacity: drawerVisible ? 1 : 0,
+                              transform: drawerVisible ? "translateX(0)" : "translateX(-12px)",
+                              transition: `opacity 0.35s ease ${0.08 + i * 0.04}s, transform 0.35s cubic-bezier(0.22,1,0.36,1) ${0.08 + i * 0.04}s`,
+                            }}
                           >
-                            <span className="grid place-items-center size-9 rounded-lg bg-accent/15 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_-4px_var(--color-accent)] transition">
-                              <c.icon className="size-4.5" />
-                            </span>
-                            <span className="flex-1 text-sm font-medium">{c.label}</span>
-                            <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
-                          </Link>
-                        </div>
-                      ))}
+                            <Link
+                              to="/category/$slug"
+                              params={{ slug: cat.slug }}
+                              onClick={() => {
+                                setOpen(false);
+                                trackMenu(cat.name, "category");
+                                void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" });
+                              }}
+                              className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.98] transition"
+                            >
+                              <span className="grid place-items-center size-10 rounded-lg overflow-hidden bg-accent/15 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_-4px_var(--color-accent)] transition shrink-0">
+                                {img
+                                  ? <img src={img} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+                                  : <Fallback className="size-4.5" />}
+                              </span>
+                              <span className="flex-1 min-w-0 text-sm font-medium truncate">{cat.name}</span>
+                              <span className="shrink-0 text-[11px] text-muted-foreground">{catCounts[cat.slug] ?? 0}</span>
+                              <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
+                            </Link>
+                          </div>
+                        );
+                      })}
                       <Link
                         to="/categories"
-                        onClick={() => setOpen(false)}
+                        onClick={() => { setOpen(false); trackMenu("View All Categories", "category"); }}
                         className="group flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 hover:bg-accent/15 active:scale-[0.98] transition"
                       >
-                        <span className="grid place-items-center size-9 rounded-lg bg-accent text-accent-foreground ring-1 ring-accent/30">
+                        <span className="grid place-items-center size-10 rounded-lg bg-accent text-accent-foreground ring-1 ring-accent/30">
                           <Grid3x3 className="size-4.5" />
                         </span>
                         <span className="flex-1 text-sm font-semibold text-accent">View All Categories</span>
@@ -416,33 +474,26 @@ export function Nav() {
                       </Link>
                     </div>
                   </Section>
-
-                  {/* Account */}
-                  <Section label="Account">
-                    <NavItem icon={user ? User : LogIn} label={user ? "My Account" : "Sign In"} to={user ? "/account" : "/auth"} onNavigate={() => setOpen(false)} />
-                    {isAdmin && <NavItem icon={LayoutDashboard} label="Admin Panel" to="/admin" accent onNavigate={() => setOpen(false)} />}
-                  </Section>
-
-                  {/* Support */}
-                  <Section label="Support">
-                    <NavItem icon={LifeBuoy} label="Help Center" to="/help" onNavigate={() => setOpen(false)} />
-                    <NavItem icon={Mail} label="Contact Us" to="/help" onNavigate={() => setOpen(false)} />
-                  </Section>
                 </div>
 
-                {/* Footer */}
+                {/* Compact account & support footer */}
                 <div className="relative border-t border-white/10 px-4 pt-3 pb-4 space-y-3">
+                  <div className="grid grid-cols-4 gap-2">
+                    <FooterAction icon={User} label={user ? "Account" : "Sign In"} to={user ? "/account" : "/auth"} onNavigate={() => setOpen(false)} />
+                    <FooterAction icon={Heart} label="Wishlist" to="/wishlist" badge={wishSlugs.size} onNavigate={() => setOpen(false)} />
+                    <FooterAction icon={ShoppingBag} label="Cart" to="/cart" badge={count} onNavigate={() => setOpen(false)} />
+                    <FooterAction icon={LifeBuoy} label="Help" to="/help" onNavigate={() => { setOpen(false); trackMenu("Help Center", "support"); }} />
+                  </div>
+                  {isAdmin && (
+                    <Link to="/admin" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent hover:bg-accent/15 active:scale-[0.98] transition">
+                      <LayoutDashboard className="size-4" /> Admin Panel
+                    </Link>
+                  )}
                   <div className="flex justify-center">
                     <div className="glass rounded-full px-1 py-1 ring-1 ring-white/10 shadow-[0_0_24px_-12px_var(--color-accent)]">
                       <CurrencySwitcher />
                     </div>
                   </div>
-                  <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
-                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Privacy</Link>
-                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Terms</Link>
-                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Support</Link>
-                    <Link to="/" onClick={() => setOpen(false)} className="hover:text-foreground transition">Contact</Link>
-                  </nav>
                 </div>
               </div>
             </aside>
