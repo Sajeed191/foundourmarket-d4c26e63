@@ -140,6 +140,7 @@ function PrivacyPage() {
         { icon: Globe, label: "Privacy Focused" },
       ]}
       sections={sections}
+      related={<PolicyCrossLinks keys={["terms", "refund", "shipping", "contact", "about"]} />}
       ctas={[{ to: "/", label: "Back to Shopping", primary: true }]}
     />
   );
