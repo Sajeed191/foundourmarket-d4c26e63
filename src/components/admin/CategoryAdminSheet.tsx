@@ -23,6 +23,12 @@ import {
   Globe2,
   History,
   Sparkles,
+  ChevronDown,
+  ChevronRight,
+  CheckSquare,
+  Square,
+  Pencil,
+  FolderUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
