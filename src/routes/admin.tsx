@@ -23,7 +23,7 @@ import { LayoutDashboard } from "lucide-react";
 const VALID_TABS = ["overview", "orders", "customers", "products", "categories", "promos", "subscribers"] as const;
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — FoundOurMarket™" }] }),
+  head: () => ({ meta: [{ title: "Admin — FoundOurMarket™" }, { name: "robots", content: "noindex, nofollow" }] }),
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
     const t = search.tab;
     return typeof t === "string" && (VALID_TABS as readonly string[]).includes(t)
