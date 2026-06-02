@@ -24,6 +24,8 @@ import {
   History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { generateCategoryImage } from "@/lib/category-image.functions";
 import { logActivity } from "@/components/admin/AdminShell";
 import {
   invalidateCategories,
