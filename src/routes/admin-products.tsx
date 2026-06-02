@@ -443,36 +443,33 @@ function ProductsInner() {
       </div>
 
       {/* Filter drawer */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden">
-            <div className="glass border border-white/10 rounded-2xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-              <FilterGroup label="Category">
-                <select value={cat} onChange={(e) => setCat(e.target.value)} className="filter-select">
-                  <option value="all" className="bg-background">All categories</option>
-                  {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
-                </select>
-              </FilterGroup>
-              <FilterGroup label="Stock health">
-                <select value={stock} onChange={(e) => setStock(e.target.value as StockFilter)} className="filter-select">
-                  {(["all", "ok", "low", "critical", "oos"] as StockFilter[]).map((s) => (
-                    <option key={s} value={s} className="bg-background">{s === "all" ? "Any" : s === "oos" ? "Out of stock" : healthMeta[s as StockHealth].label}</option>
-                  ))}
-                </select>
-              </FilterGroup>
-              <FilterGroup label="State">
-                <select value={state} onChange={(e) => setState(e.target.value as StateFilter)} className="filter-select">
-                  <option value="all" className="bg-background">All</option>
-                  <option value="active" className="bg-background">Active</option>
-                  <option value="inactive" className="bg-background">Inactive</option>
-                  <option value="featured" className="bg-background">Featured</option>
-                </select>
-              </FilterGroup>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showFilters && (
+        <div className="overflow-hidden">
+          <div className="glass border border-white/10 rounded-2xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+            <FilterGroup label="Category">
+              <select value={cat} onChange={(e) => setCat(e.target.value)} className="filter-select">
+                <option value="all" className="bg-background">All categories</option>
+                {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
+              </select>
+            </FilterGroup>
+            <FilterGroup label="Stock health">
+              <select value={stock} onChange={(e) => setStock(e.target.value as StockFilter)} className="filter-select">
+                {(["all", "ok", "low", "critical", "oos"] as StockFilter[]).map((s) => (
+                  <option key={s} value={s} className="bg-background">{s === "all" ? "Any" : s === "oos" ? "Out of stock" : healthMeta[s as StockHealth].label}</option>
+                ))}
+              </select>
+            </FilterGroup>
+            <FilterGroup label="State">
+              <select value={state} onChange={(e) => setState(e.target.value as StateFilter)} className="filter-select">
+                <option value="all" className="bg-background">All</option>
+                <option value="active" className="bg-background">Active</option>
+                <option value="inactive" className="bg-background">Inactive</option>
+                <option value="featured" className="bg-background">Featured</option>
+              </select>
+            </FilterGroup>
+          </div>
+        </div>
+      )}
 
       {/* Catalog list (virtualized) */}
       <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground px-1">
