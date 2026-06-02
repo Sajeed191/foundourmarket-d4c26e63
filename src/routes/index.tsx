@@ -332,7 +332,7 @@ function useCategoryLimit() {
     const w = window.innerWidth;
     if (w >= 1024) return 9;
     if (w >= 768) return 7;
-    return 6;
+    return 5;
   };
   const [limit, setLimit] = useState(get);
   useEffect(() => {
