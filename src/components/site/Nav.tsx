@@ -198,18 +198,20 @@ export function Nav() {
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
-          <div className="flex items-center justify-between px-2.5 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2">
+          <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 gap-2">
+            {/* Zone 1 — Hamburger (mobile only) */}
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden shrink-0 size-9 rounded-xl grid place-items-center hover:bg-white/5 active:bg-white/10 transition-colors"
+              className="md:hidden shrink-0 size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
             >
               <AnimatedHamburger open={open} />
             </button>
 
+            {/* Zone 2 — Logo + Brand */}
             <Link
               to="/"
-              className="min-w-0 flex-1 md:flex-none flex items-center gap-2 font-display tracking-tight font-semibold"
+              className="min-w-0 flex-1 md:flex-none flex items-center gap-2.5 font-display tracking-tight font-semibold"
             >
               <span className="shrink-0 relative inline-grid place-items-center size-9 sm:size-11 rounded-2xl bg-black/40 ring-1 ring-accent/30 overflow-hidden shadow-[0_0_26px_-3px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
@@ -224,7 +226,7 @@ export function Nav() {
               </span>
             </Link>
 
-
+            {/* Desktop nav links */}
             <div className="hidden md:flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
               {navLinks.map((l) => (
                 <Link
@@ -238,25 +240,52 @@ export function Nav() {
               ))}
             </div>
 
-            <div className="shrink-0 flex items-center gap-0.5 sm:gap-1.5">
-              <button onClick={() => setSearchOpen(true)} aria-label="Search" className="size-9 rounded-xl grid place-items-center hover:bg-white/5 transition-colors">
-                <Search className="size-4" />
+            {/* Zone 3 — Search • Notifications • Cart */}
+            <div className="shrink-0 flex items-center gap-1 sm:gap-2">
+              <button
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search"
+                className="size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+              >
+                <Search className="size-[18px]" />
               </button>
-              <div className="hidden lg:block"><CurrencySwitcher /></div>
-              <Link to="/wishlist" aria-label="Wishlist" className="relative hidden sm:grid size-9 rounded-xl place-items-center hover:bg-white/5 transition-colors">
-                <Heart className="size-4" />
+
+              <div className="hidden lg:block">
+                <CurrencySwitcher />
+              </div>
+
+              <Link
+                to="/wishlist"
+                aria-label="Wishlist"
+                className="relative hidden sm:grid size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+              >
+                <Heart className="size-[18px]" />
                 {wishSlugs.size > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center">{wishSlugs.size}</span>
+                  <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center">
+                    {wishSlugs.size}
+                  </span>
                 )}
               </Link>
+
               {isAdmin && (
-                <Link to="/admin" aria-label="Admin" className="hidden sm:grid size-9 rounded-xl place-items-center hover:bg-white/5 transition-colors text-accent" title="Admin">
-                  <LayoutDashboard className="size-4" />
+                <Link
+                  to="/admin"
+                  aria-label="Admin"
+                  className="hidden sm:grid size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                  title="Admin"
+                >
+                  <LayoutDashboard className="size-[18px]" />
                 </Link>
               )}
+
               <NotificationBell />
-              <Link to="/cart" aria-label="Cart" className="shrink-0 relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-accent text-accent-foreground hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
-                <ShoppingBag className="size-4" />
+
+              <Link
+                to="/cart"
+                aria-label="Cart"
+                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-11 min-w-11 px-3 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
+              >
+                <ShoppingBag className="size-[18px]" />
                 <span className="text-xs font-mono font-semibold">{count}</span>
               </Link>
             </div>

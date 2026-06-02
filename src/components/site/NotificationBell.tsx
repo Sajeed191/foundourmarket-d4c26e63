@@ -67,11 +67,11 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Notifications"
-        className={`relative size-9 rounded-full grid place-items-center transition-colors hover:bg-white/5 ${
-          open ? "bg-white/5" : ""
+        className={`relative size-11 rounded-xl grid place-items-center text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent ${
+          open ? "bg-white/5 text-foreground" : ""
         }`}
       >
-        <Bell className={`size-4 ${pulse ? "animate-glow text-accent" : ""}`} />
+        <Bell className={`size-[18px] ${pulse ? "animate-glow text-accent" : ""}`} />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center shadow-[0_0_10px_2px_oklch(0.74_0.19_49_/_0.6)]">
             {unread > 9 ? "9+" : unread}
