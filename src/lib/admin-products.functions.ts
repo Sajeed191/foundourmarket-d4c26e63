@@ -104,6 +104,12 @@ const updateSchema = z.object({
   seoTitle: z.string().max(300).nullable().optional(),
   seoDescription: z.string().max(1000).nullable().optional(),
   metaKeywords: z.array(z.string().min(1).max(120)).max(50).optional(),
+  // Manual merchandising labels + sorting + collections
+  premium: z.boolean().optional(),
+  fastSelling: z.boolean().optional(),
+  editorsChoice: z.boolean().optional(),
+  priorityScore: z.number().int().min(0).max(100).nullable().optional(),
+  collections: z.array(z.string().min(1).max(120)).max(50).optional(),
 });
 
 /**
