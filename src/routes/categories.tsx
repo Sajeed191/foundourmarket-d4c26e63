@@ -1,9 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
-import { supabase } from "@/integrations/supabase/client";
+import { CategoryCard } from "@/components/site/CategoryCard";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
@@ -40,43 +39,37 @@ function CategoriesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      <div className="space-y-8 sm:space-y-12">
         {mains.map((cat) => {
           const subs = subsByParent(cat.id);
           const subCount = subs.reduce((n, s) => n + (counts[s.slug] ?? 0), 0);
           const total = (counts[cat.slug] ?? 0) + subCount;
           return (
-            <div key={cat.slug} className="product-card-glass p-4 sm:p-5">
-              <Link
-                to="/category/$slug"
-                params={{ slug: cat.slug }}
-                onClick={() => void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" })}
-                className="group flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold tracking-tight truncate group-hover:text-accent transition-colors">{cat.name}</h3>
-                  <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest mt-0.5">{total} items</p>
-                </div>
-                <span className="shrink-0 grid size-9 place-items-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/25 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                  <ArrowRight className="size-4" />
+            <div key={cat.slug} className="space-y-3 sm:space-y-4">
+              <h2 className="text-sm sm:text-base font-display font-semibold tracking-tight text-white/90">
+                {cat.name}
+                <span className="ml-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {total} items
                 </span>
-              </Link>
-
-              {subs.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {subs.map((s) => (
-                    <Link
-                      key={s.slug}
-                      to="/category/$main/$sub"
-                      params={{ main: cat.slug, sub: s.slug }}
-                      className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] ring-1 ring-white/10 px-3 py-1.5 text-[11px] font-medium text-foreground/90 hover:bg-accent/15 hover:text-accent hover:ring-accent/30 transition-colors"
-                    >
-                      {s.name}
-                      <span className="text-[9px] font-mono text-muted-foreground">{counts[s.slug] ?? 0}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              </h2>
+              {/* Image-first card grid — 3-col mobile, equal height */}
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
+                <CategoryCard
+                  category={cat}
+                  count={total}
+                  to="/category/$slug"
+                  params={{ slug: cat.slug }}
+                />
+                {subs.map((s) => (
+                  <CategoryCard
+                    key={s.slug}
+                    category={s}
+                    count={counts[s.slug] ?? 0}
+                    to="/category/$main/$sub"
+                    params={{ main: cat.slug, sub: s.slug }}
+                  />
+                ))}
+              </div>
             </div>
           );
         })}
