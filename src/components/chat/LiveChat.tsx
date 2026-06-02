@@ -121,6 +121,25 @@ export function LiveChat() {
   const [availability, setAvailability] = useState<Availability>("away");
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<ChatOrder | null>(null);
+  // Hide the floating orb when scrolling down, reveal when scrolling up.
+  const [orbHidden, setOrbHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y > lastY + 8 && y > 120) setOrbHidden(true);
+        else if (y < lastY - 8) setOrbHidden(false);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
