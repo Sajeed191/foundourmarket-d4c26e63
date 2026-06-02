@@ -370,7 +370,7 @@ export function AdminShell({
                     {items.map((it) => {
                       const active = isActive(it);
                       return (
-                        <li key={it.to}>
+                        <li key={`${it.to}:${it.search?.tab ?? ""}`}>
                           <Link
                             to={it.to as string}
                             search={(it.search ?? undefined) as never}
