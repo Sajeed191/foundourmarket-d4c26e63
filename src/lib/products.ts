@@ -168,6 +168,16 @@ type Row = {
   warehouse_location?: string | null; restock_eta?: string | null;
   preorder?: boolean | null; reserved_quantity?: number | null;
   scheduled_publish_at?: string | null; scheduled_expiry_at?: string | null;
+  trending?: boolean | null; bestseller?: boolean | null; new_arrival?: boolean | null;
+  hot_deal?: boolean | null; flash_deal?: boolean | null; staff_pick?: boolean | null;
+  recommended?: boolean | null; homepage_hero?: boolean | null; gift_idea?: boolean | null;
+  homepage_section?: string | null; is_category_banner?: boolean | null;
+  hide_from_search?: boolean | null; hide_from_recommendations?: boolean | null;
+  homepage_position?: number | null; category_position?: number | null;
+  featured_until?: string | null;
+  related_products?: string[] | null; cross_sell_products?: string[] | null;
+  upsell_products?: string[] | null;
+  orders_count?: number | null; revenue?: number | string | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
