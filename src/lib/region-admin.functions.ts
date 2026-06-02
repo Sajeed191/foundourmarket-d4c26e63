@@ -101,7 +101,80 @@ export const adminListCustomerRegions = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await q;
     if (error) throw new Error("Could not load customers.");
-    return { customers: rows ?? [] };
+
+    const ids = (rows ?? []).map((r) => r.id);
+
+    // How each customer's region was locked (self / admin / support approval).
+    const methodByUser = new Map<string, string>();
+    // The latest detection telemetry per customer (confidence, tier, signals).
+    const detectionByUser = new Map<
+      string,
+      {
+        confidence: number | null;
+        tier: string | null;
+        source: string | null;
+        reasons: string[];
+        country: string | null;
+        detectedAt: string | null;
+      }
+    >();
+
+    if (ids.length) {
+      const [{ data: history }, { data: events }] = await Promise.all([
+        supabaseAdmin
+          .from("region_assignment_history")
+          .select("user_id,method,created_at")
+          .in("user_id", ids)
+          .order("created_at", { ascending: false }),
+        supabaseAdmin
+          .from("analytics_events")
+          .select("user_id,metadata,value,created_at")
+          .eq("event", "region_detected")
+          .in("user_id", ids)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      // Rows are newest-first → first seen per user wins.
+      (history ?? []).forEach((h) => {
+        if (h.user_id && !methodByUser.has(h.user_id)) {
+          methodByUser.set(h.user_id, h.method ?? "—");
+        }
+      });
+      (events ?? []).forEach((e) => {
+        if (!e.user_id || detectionByUser.has(e.user_id)) return;
+        const m = (e.metadata ?? {}) as Record<string, unknown>;
+        detectionByUser.set(e.user_id, {
+          confidence:
+            typeof m.confidence === "number"
+              ? (m.confidence as number)
+              : typeof e.value === "number"
+                ? (e.value as number)
+                : null,
+          tier: (m.tier as string) ?? null,
+          source: (m.source as string) ?? null,
+          reasons: Array.isArray(m.reasons) ? (m.reasons as string[]) : [],
+          country: (m.countryCode as string) ?? null,
+          detectedAt: e.created_at ?? null,
+        });
+      });
+    }
+
+    const customers = (rows ?? []).map((r) => {
+      const det = detectionByUser.get(r.id) ?? null;
+      return {
+        ...r,
+        currency: r.market_region === "india" ? "INR" : r.market_region ? "USD" : null,
+        assignmentMethod: methodByUser.get(r.id) ?? null,
+        confidence: det?.confidence ?? null,
+        detectionTier: det?.tier ?? null,
+        detectionSource: det?.source ?? null,
+        detectionReasons: det?.reasons ?? [],
+        detectedCountry: det?.country ?? null,
+        detectedAt: det?.detectedAt ?? null,
+      };
+    });
+
+    return { customers };
   });
 
 /** Pending + recent region-change requests for staff review. */
