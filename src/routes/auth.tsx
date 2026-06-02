@@ -47,10 +47,11 @@ function AuthPage() {
 
   // Resolve the post-login destination (search param wins, else stored path, else account).
   const resolveDest = (): string => {
-    if (redirect && redirect.startsWith("/")) return redirect;
+    const fromParam = safeInternalPath(redirect);
+    if (fromParam) return fromParam;
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("post_auth_redirect");
-      if (stored && stored.startsWith("/")) {
+      const stored = safeInternalPath(localStorage.getItem("post_auth_redirect"));
+      if (stored) {
         localStorage.removeItem("post_auth_redirect");
         return stored;
       }
