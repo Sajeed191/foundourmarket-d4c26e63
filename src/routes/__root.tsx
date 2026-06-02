@@ -19,7 +19,6 @@ import { WishlistAlertsProvider } from "@/lib/wishlist-alerts";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
-import { RegionSelectModal } from "@/components/site/RegionSelectModal";
 import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
