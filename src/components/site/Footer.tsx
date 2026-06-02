@@ -51,7 +51,7 @@ export function Footer() {
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[70%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.6 }} />
       <div aria-hidden className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[70%] h-32 opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(70px)" }} />
 
-      <div className="relative max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-x-5 gap-y-4 sm:gap-5">
+      <div className="relative max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-6 gap-x-5 gap-y-4 sm:gap-5">
         <div className="col-span-2 space-y-3">
           <div className="text-lg sm:text-xl font-display tracking-tighter font-semibold">
             FoundOurMarket<span className="text-accent">™</span>
@@ -59,6 +59,21 @@ export function Footer() {
           <p className="text-xs text-muted-foreground leading-relaxed max-w-[38ch]">
             Whatever you need. All in one place. A premium independent marketplace sourcing top-quality products worldwide.
           </p>
+          {/* Contact */}
+          <ul className="text-xs space-y-2 text-muted-foreground pt-0.5">
+            <li>
+              <a href="mailto:foundourmarket@gmail.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Mail className="size-3.5 text-accent shrink-0" />
+                <span className="truncate">foundourmarket@gmail.com</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://wa.me/919745844213" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <MessageCircle className="size-3.5 text-accent shrink-0" />
+                <span>+91 97458 44213</span>
+              </a>
+            </li>
+          </ul>
           {/* Social icons */}
           <div className="flex items-center gap-2 pt-0.5">
             {[
@@ -82,52 +97,34 @@ export function Footer() {
           <ul className="text-xs space-y-2 text-muted-foreground">
             <li><Link to="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
             <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
-            <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
-            <li><Link to="/deals" className="hover:text-foreground transition-colors">Today's Deals</Link></li>
-          </ul>
-        </FooterSection>
-        <FooterSection title="Categories">
-          <ul className="text-xs space-y-2 text-muted-foreground">
-            <li><Link to="/category/$slug" params={{ slug: "electronics" }} className="hover:text-foreground transition-colors">Electronics</Link></li>
-            <li><Link to="/category/$slug" params={{ slug: "beauty" }} className="hover:text-foreground transition-colors">Beauty</Link></li>
-            <li><Link to="/category/$slug" params={{ slug: "gaming" }} className="hover:text-foreground transition-colors">Gaming</Link></li>
-            <li><Link to="/category/$slug" params={{ slug: "home" }} className="hover:text-foreground transition-colors">Home</Link></li>
+            <li><span className="inline-flex items-center gap-1.5 cursor-default">Careers <span className="rounded-full border border-border px-1.5 py-px text-[8px] font-mono uppercase tracking-wider text-accent">Soon</span></span></li>
           </ul>
         </FooterSection>
         <FooterSection title="Support">
           <ul className="text-xs space-y-2 text-muted-foreground">
-            <li><Link to="/help" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+            <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+            <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
             <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns &amp; Refunds</Link></li>
-            <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
-            <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
           </ul>
         </FooterSection>
-
-        <FooterSection title="Contact">
-          <ul className="text-xs space-y-2.5 text-muted-foreground">
-            <li>
-              <a href="mailto:foundourmarket@gmail.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Mail className="size-3.5 text-accent shrink-0" />
-                <span className="truncate">foundourmarket@gmail.com</span>
-              </a>
-            </li>
-            {["+91 97458 44213", "+91 62820 88380", "+91 8714459240"].map((num) => (
-              <li key={num}>
-                <a
-                  href={`https://wa.me/${num.replace(/[^0-9]/g, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-foreground transition-colors"
-                >
-                  <MessageCircle className="size-3.5 text-accent shrink-0" />
-                  <span>{num}</span>
-                </a>
-              </li>
-            ))}
+        <FooterSection title="Legal">
+          <ul className="text-xs space-y-2 text-muted-foreground">
+            <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms &amp; Conditions</Link></li>
+            <li><Link to="/pages/shipping" className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
+            <li><Link to="/returns" className="hover:text-foreground transition-colors">Refund Policy</Link></li>
+          </ul>
+        </FooterSection>
+        <FooterSection title="Customer Care">
+          <ul className="text-xs space-y-2 text-muted-foreground">
+            <li><Link to="/buyer-protection" className="hover:text-foreground transition-colors">Buyer Protection</Link></li>
+            <li><Link to="/help" className="hover:text-foreground transition-colors">FAQ</Link></li>
+            <li><Link to="/help" className="hover:text-foreground transition-colors">Support Center</Link></li>
           </ul>
         </FooterSection>
       </div>
+
 
 
       <div className="relative max-w-7xl mx-auto mt-3 pt-3 border-t border-border flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">

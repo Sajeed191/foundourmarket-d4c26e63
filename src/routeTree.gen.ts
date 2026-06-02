@@ -27,6 +27,7 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as BuyerProtectionRouteImport } from './routes/buyer-protection'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -219,6 +220,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyerProtectionRoute = BuyerProtectionRouteImport.update({
+  id: '/buyer-protection',
+  path: '/buyer-protection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuilderRoute = BuilderRouteImport.update({
@@ -808,6 +814,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
+  '/buyer-protection': typeof BuyerProtectionRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -931,6 +938,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
+  '/buyer-protection': typeof BuyerProtectionRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -1054,6 +1062,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
+  '/buyer-protection': typeof BuyerProtectionRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
@@ -1179,6 +1188,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/builder'
+    | '/buyer-protection'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -1302,6 +1312,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/builder'
+    | '/buyer-protection'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -1424,6 +1435,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/builder'
+    | '/buyer-protection'
     | '/cart'
     | '/categories'
     | '/checkout'
@@ -1548,6 +1560,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   BlogRoute: typeof BlogRouteWithChildren
   BuilderRoute: typeof BuilderRoute
+  BuyerProtectionRoute: typeof BuyerProtectionRoute
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -1728,6 +1741,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buyer-protection': {
+      id: '/buyer-protection'
+      path: '/buyer-protection'
+      fullPath: '/buyer-protection'
+      preLoaderRoute: typeof BuyerProtectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/builder': {
@@ -2581,6 +2601,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   BlogRoute: BlogRouteWithChildren,
   BuilderRoute: BuilderRoute,
+  BuyerProtectionRoute: BuyerProtectionRoute,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
