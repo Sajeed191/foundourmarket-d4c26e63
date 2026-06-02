@@ -186,6 +186,8 @@ type Row = {
   related_products?: string[] | null; cross_sell_products?: string[] | null;
   upsell_products?: string[] | null;
   orders_count?: number | null; revenue?: number | string | null;
+  premium?: boolean | null; fast_selling?: boolean | null; editors_choice?: boolean | null;
+  priority_score?: number | null; collections?: string[] | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
