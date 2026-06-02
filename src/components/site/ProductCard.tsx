@@ -2,21 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import { Heart, Plus, Check, Star } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
+import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
-
-// New products created within this window get a "New" badge when no discount.
-const NEW_WINDOW_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
-
-function isNewProduct(product: Product): boolean {
-  if (!product.createdAt) return product.reviews === 0;
-  const t = Date.parse(product.createdAt);
-  return Number.isFinite(t) && Date.now() - t < NEW_WINDOW_MS;
-}
 
 function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
