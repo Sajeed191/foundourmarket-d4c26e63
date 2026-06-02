@@ -653,7 +653,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 10 · Social Proof — live engine + verified reviews */}
-      <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
+      <section className="cv-auto px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
         <Reveal className="text-center mb-5 sm:mb-8">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Live Marketplace
