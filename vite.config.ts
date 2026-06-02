@@ -32,5 +32,18 @@ export default defineConfig({
         entities: path.resolve(__dirname, "node_modules/entities"),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          // Keep framer-motion out of the shared entry chunk. It is imported by
+          // many route/lazy chunks, so Rollup would otherwise hoist it into the
+          // always-loaded entry. Isolating it means only motion-using routes
+          // fetch it (in parallel, and cached across navigations).
+          manualChunks: {
+            "framer-motion": ["framer-motion"],
+          },
+        },
+      },
+    },
   },
 });

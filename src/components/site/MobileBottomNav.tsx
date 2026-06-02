@@ -1,6 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Heart, ShoppingBag, User } from "lucide-react";
-import { motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
@@ -52,17 +51,13 @@ export function MobileBottomNav() {
                   active ? "text-accent-foreground" : "text-white/70 hover:text-white"
                 }`}
               >
-                {active && (
-                  <motion.span
-                    layoutId="mbnav-pill"
-                    transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.7 }}
-                    className="absolute inset-0 rounded-2xl bg-accent shadow-[0_6px_16px_-8px_var(--color-accent),0_0_0_1px_oklch(1_0_0/0.12)_inset]"
-                  />
-                )}
-                <motion.span
-                  animate={{ scale: active ? 1.08 : 1, y: active ? -1 : 0 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 22 }}
-                  className="relative"
+                <span
+                  aria-hidden
+                  className={`absolute inset-0 rounded-2xl bg-accent shadow-[0_6px_16px_-8px_var(--color-accent),0_0_0_1px_oklch(1_0_0/0.12)_inset] transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0"}`}
+                />
+                <span
+                  className="relative transition-transform duration-300 ease-out"
+                  style={{ transform: active ? "translateY(-1px) scale(1.08)" : "none" }}
                 >
                   <Icon className="size-[20px]" strokeWidth={active ? 2.6 : 2} />
                   {typeof badge === "number" && badge > 0 && (
@@ -72,7 +67,7 @@ export function MobileBottomNav() {
                       {badge > 99 ? "99+" : badge}
                     </span>
                   )}
-                </motion.span>
+                </span>
                 <span className={`relative truncate max-w-full text-[10px] font-semibold tracking-wide ${active ? "opacity-100" : "opacity-80"}`}>{label}</span>
               </Link>
             </li>

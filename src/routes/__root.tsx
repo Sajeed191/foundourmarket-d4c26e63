@@ -19,7 +19,6 @@ import { WishlistAlertsProvider } from "@/lib/wishlist-alerts";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
-import { RegionSelectModal } from "@/components/site/RegionSelectModal";
 import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
@@ -54,6 +53,9 @@ const InstallPrompt = lazy(() =>
 );
 const LiveChat = lazy(() =>
   import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
+);
+const RegionSelectModal = lazy(() =>
+  import("@/components/site/RegionSelectModal").then((m) => ({ default: m.RegionSelectModal })),
 );
 
 function NotFoundComponent() {
@@ -198,6 +200,7 @@ function DeferredShell({ isAuthRoute }: { isAuthRoute: boolean }) {
 
   return (
     <Suspense fallback={null}>
+      <RegionSelectModal />
       {!isAuthRoute && <AdminMobileBar />}
       {!isAuthRoute && <AdminFloatingToolbar />}
       {!isAuthRoute && <AdminOverlayIndicator />}
@@ -254,7 +257,6 @@ function RootComponent() {
                       </main>
                       {!isAuthRoute && <Footer />}
                       {!isAuthRoute && <MobileBottomNav />}
-                      <RegionSelectModal />
                       <DeferredShell isAuthRoute={isAuthRoute} />
                       <Toaster position="bottom-center" richColors />
                     </div>

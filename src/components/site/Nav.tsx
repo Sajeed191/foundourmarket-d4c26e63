@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import {
   ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
   Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
@@ -42,6 +41,9 @@ export function Nav() {
   const { user } = useAuth();
   const { slugs: wishSlugs } = useWishlist();
   const [open, setOpen] = useState(false);
+  // Keep the drawer mounted during its exit transition.
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -93,22 +95,43 @@ export function Nav() {
     : "FoundOurMarket™";
   const initial = (displayName?.[0] ?? "F").toUpperCase();
 
-  const { scrollY } = useScroll();
   const lastY = useRef(0);
   const [hidden, setHidden] = useState(false);
-  useMotionValueEvent(scrollY, "change", (y) => {
-    const prev = lastY.current;
-    if (y > prev && y > 80) setHidden(true);
-    else if (y < prev - 4) setHidden(false);
-    lastY.current = y;
-  });
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const prev = lastY.current;
+      if (y > prev && y > 80) setHidden(true);
+      else if (y < prev - 4) setHidden(false);
+      lastY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Drive the drawer enter/exit transition without framer-motion.
+  useEffect(() => {
+    if (open) {
+      setDrawerMounted(true);
+      const raf = requestAnimationFrame(() => setDrawerVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setDrawerVisible(false);
+    const t = setTimeout(() => setDrawerMounted(false), 320);
+    return () => clearTimeout(t);
+  }, [open]);
 
   return (
     <>
-      <motion.div
+      <div
         data-app-header
-        animate={{ y: hidden ? -120 : 0, opacity: hidden ? 0 : 1, filter: hidden ? "blur(6px)" : "blur(0px)" }}
-        transition={{ type: "spring", stiffness: 380, damping: 38, mass: 0.8 }}
+        style={{
+          transform: hidden ? "translateY(-120px)" : "translateY(0)",
+          opacity: hidden ? 0 : 1,
+          filter: hidden ? "blur(6px)" : "blur(0px)",
+          transition: "transform 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease, filter 0.35s ease",
+          willChange: "transform, opacity",
+        }}
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
@@ -179,27 +202,26 @@ export function Nav() {
             </div>
           </div>
         </nav>
-      </motion.div>
+      </div>
 
 
       {/* Mobile drawer */}
-      <AnimatePresence>
-        {open && (
+      {drawerMounted && (
           <div className="fixed inset-0 z-[60] md:hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
+            <div
+              style={{
+                opacity: drawerVisible ? 1 : 0,
+                transition: "opacity 0.25s ease",
+              }}
               className="absolute inset-0 bg-black/75"
               onClick={() => setOpen(false)}
             />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 360, damping: 38, mass: 0.7 }}
-              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] [transform:translateZ(0)] will-change-transform"
+            <aside
+              style={{
+                transform: drawerVisible ? "translateX(0)" : "translateX(-100%)",
+                transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
+              }}
+              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] will-change-transform"
             >
               {/* Background atmosphere */}
               <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -269,11 +291,13 @@ export function Nav() {
                   <Section label="Categories">
                     <div className="space-y-1.5">
                       {categories.map((c, i) => (
-                        <motion.div
+                        <div
                           key={c.label}
-                          initial={{ opacity: 0, x: -12 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.08 + i * 0.05, type: "spring", stiffness: 300, damping: 30 }}
+                          style={{
+                            opacity: drawerVisible ? 1 : 0,
+                            transform: drawerVisible ? "translateX(0)" : "translateX(-12px)",
+                            transition: `opacity 0.35s ease ${0.08 + i * 0.05}s, transform 0.35s cubic-bezier(0.22,1,0.36,1) ${0.08 + i * 0.05}s`,
+                          }}
                         >
                           <Link
                             to={c.to}
@@ -287,7 +311,7 @@ export function Nav() {
                             <span className="flex-1 text-sm font-medium">{c.label}</span>
                             <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
                           </Link>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </Section>
@@ -320,10 +344,9 @@ export function Nav() {
                   </nav>
                 </div>
               </div>
-            </motion.aside>
+            </aside>
           </div>
-        )}
-      </AnimatePresence>
+      )}
 
       <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
