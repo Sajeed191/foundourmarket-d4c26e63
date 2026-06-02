@@ -47,7 +47,7 @@ export const Route = createFileRoute("/category/$slug")({
 
 function CategoryPage() {
   const { slug } = Route.useParams();
-  const { categories, subsByParent } = useAllCategories();
+  const { categories, subsByParent, loading: catsLoading } = useAllCategories();
   const cat = categories.find((c) => c.slug === slug);
   const { products, loading } = useProducts();
 
@@ -65,6 +65,12 @@ function CategoryPage() {
   }, [cat?.id]);
 
   const parent = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
+
+  // Old flat URL for a subcategory → redirect to the nested /category/main/sub.
+  if (!catsLoading && cat && parent) {
+    return <Navigate to="/category/$main/$sub" params={{ main: parent.slug, sub: cat.slug }} replace />;
+  }
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">
