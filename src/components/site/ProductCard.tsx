@@ -226,13 +226,19 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
           )}
         </div>
 
-        {/* Price row + floating cart button */}
+        {/* Price hierarchy + compact add-to-cart */}
         <div className="mt-auto pt-2 flex items-end justify-between gap-2">
-
-          <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
-            <Price value={price} className="font-display font-extrabold text-white tabular-nums leading-none block text-[17px]" />
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <Price value={price} className="font-display font-extrabold text-white tabular-nums leading-none block text-[18px]" />
+              {originalPrice && discount ? (
+                <Price value={originalPrice} className="font-mono text-muted-foreground/55 line-through tabular-nums block text-[10px]" />
+              ) : null}
+            </div>
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/55 line-through tabular-nums block text-[10px]" />
+              <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9px] font-bold font-mono uppercase tracking-wide text-emerald-400">
+                Save <Price value={originalPrice - price} className="tabular-nums" />
+              </span>
             ) : null}
           </div>
 
