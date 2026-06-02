@@ -105,6 +105,19 @@ function CinematicDivider() {
   );
 }
 
+/* Mobile-only full-width "View All" pill shown under product carousels */
+function MobileViewAll({ to, label = "View All" }: { to: string; label?: string }) {
+  return (
+    <Link
+      to={to}
+      className="sm:hidden mt-3 flex items-center justify-center gap-2 rounded-full glass border border-accent/25 py-3 text-[11px] font-mono uppercase tracking-widest text-accent active:scale-[0.98] transition-transform"
+    >
+      {label} <ArrowRight className="size-3.5" />
+    </Link>
+  );
+}
+
+
 function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [draftEyebrow, setDraftEyebrow] = useState(eyebrow);
