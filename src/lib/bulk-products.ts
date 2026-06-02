@@ -98,6 +98,7 @@ export function actionLabel(a: BulkAction): string {
     set_shipping_class: "Shipping class updated", set_delivery_estimate: "Delivery estimate updated",
     schedule_publish: "Publishing scheduled", schedule_unpublish: "Unpublishing scheduled",
     set_collection: "Collection updated", set_homepage_section: "Homepage section updated",
+    set_collections: "Collections updated", set_priority: "Priority updated",
   };
   return map[a] ?? a;
 }
