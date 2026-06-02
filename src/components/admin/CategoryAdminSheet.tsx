@@ -58,6 +58,7 @@ import {
 
 type Row = Category;
 type ImageSlot = "image" | "banner_image" | "mobile_image";
+type CatFilter = "all" | "main" | "sub" | "visible" | "hidden" | "empty";
 
 const slugify = (s: string) =>
   s
