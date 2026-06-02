@@ -54,6 +54,9 @@ const InstallPrompt = lazy(() =>
 const LiveChat = lazy(() =>
   import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
 );
+const RegionSelectModal = lazy(() =>
+  import("@/components/site/RegionSelectModal").then((m) => ({ default: m.RegionSelectModal })),
+);
 
 function NotFoundComponent() {
   return (
