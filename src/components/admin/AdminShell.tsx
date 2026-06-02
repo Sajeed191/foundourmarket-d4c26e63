@@ -363,11 +363,12 @@ export function AdminShell({
                   </div>
                   <ul className="space-y-0.5">
                     {items.map((it) => {
-                      const active = isActive(it.to);
+                      const active = isActive(it);
                       return (
                         <li key={it.to}>
                           <Link
                             to={it.to as string}
+                            search={(it.search ?? undefined) as never}
                             className={`group relative flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-300 hover:translate-x-0.5 ${
                               active
                                 ? "text-accent"
