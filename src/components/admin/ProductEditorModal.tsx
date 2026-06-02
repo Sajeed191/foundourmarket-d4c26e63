@@ -292,6 +292,41 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     return errs;
   }, [form.india_visible, form.international_visible, priceInr, cmpInr, priceUsd, cmpUsd]);
 
+  // ---- Product Health (Phase 3) ----
+  const health = useMemo(() => {
+    const checks: { label: string; ok: boolean }[] = [
+      { label: "Images", ok: !!form.image.trim() },
+      { label: "Description", ok: form.description.trim().length >= 20 },
+      { label: "SEO", ok: !!form.seo_title.trim() && !!form.seo_description.trim() },
+      { label: "Pricing", ok: (priceInr ?? 0) > 0 || (priceUsd ?? 0) > 0 || Number(form.price) > 0 },
+      { label: "Inventory", ok: Number(form.stock_quantity) > 0 || form.status === "preorder" },
+      { label: "Category", ok: !!effectiveCategory },
+      {
+        label: "Storefront Placement",
+        ok:
+          form.featured || form.trending || form.bestseller || form.new_arrival ||
+          form.flash_deal || form.staff_pick || form.recommended || form.homepage_hero ||
+          form.premium || form.fast_selling || form.editors_choice ||
+          (form.homepage_section !== "none" && !!form.homepage_section),
+      },
+    ];
+    const score = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+    const status =
+      score >= 90 ? "Excellent" : score >= 70 ? "Good" : score >= 50 ? "Needs Attention" : "Critical";
+    const tone =
+      score >= 90 ? "text-emerald-400 border-emerald-400/40 bg-emerald-400/10"
+        : score >= 70 ? "text-accent border-accent/40 bg-accent/10"
+        : score >= 50 ? "text-amber-400 border-amber-400/40 bg-amber-400/10"
+        : "text-destructive border-destructive/40 bg-destructive/10";
+    return { checks, score, status, tone };
+  }, [
+    form.image, form.description, form.seo_title, form.seo_description, form.price,
+    form.stock_quantity, form.status, effectiveCategory, priceInr, priceUsd,
+    form.featured, form.trending, form.bestseller, form.new_arrival, form.flash_deal,
+    form.staff_pick, form.recommended, form.homepage_hero, form.premium, form.fast_selling,
+    form.editors_choice, form.homepage_section,
+  ]);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (validation.length) { setError(validation[0]); return; }
