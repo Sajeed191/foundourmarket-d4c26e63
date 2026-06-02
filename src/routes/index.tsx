@@ -579,7 +579,7 @@ function Home() {
 
       {/* 5 · Why Shop With Us */}
       <section className="px-4 sm:px-6 py-6 sm:py-10 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-8 sm:mb-12">
+        <Reveal className="text-center mb-5 sm:mb-8">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3">Why FoundOurMarket</p>
           <h2 className="text-fluid-2xl font-display tracking-tight">Built for the modern buyer</h2>
         </Reveal>
