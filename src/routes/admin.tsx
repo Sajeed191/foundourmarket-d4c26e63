@@ -396,11 +396,21 @@ function AdminPage() {
                       <td className="px-5 py-3 text-xs truncate max-w-[180px]">{o.contact_email ?? "—"}</td>
                       <td className="px-5 py-3 text-xs text-muted-foreground">{units} unit{units === 1 ? "" : "s"} · {o.order_items.length} item{o.order_items.length === 1 ? "" : "s"}</td>
                       <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2">
-                          <select value={o.status} onChange={(e) => updateStatus(o.id, e.target.value)} disabled={updating === o.id}
-                            className="bg-background border border-border rounded-md px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-accent focus:outline-none focus:border-accent">
-                            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {QUICK_STATUSES.map((s) => {
+                            const active = o.status === s.value;
+                            return (
+                              <button
+                                key={s.value}
+                                type="button"
+                                disabled={updating === o.id || active}
+                                onClick={() => updateStatus(o.id, s.value)}
+                                className={`rounded-md px-2 py-1 text-[10px] font-mono uppercase tracking-widest transition-colors disabled:opacity-60 ${active ? "bg-accent text-accent-foreground border border-accent" : "border border-border text-muted-foreground hover:border-accent hover:text-accent"}`}
+                              >
+                                {s.label}
+                              </button>
+                            );
+                          })}
                           {updating === o.id ? <Loader2 className="size-3 animate-spin text-muted-foreground" /> : null}
                         </div>
                       </td>
