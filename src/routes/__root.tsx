@@ -216,14 +216,8 @@ function RootComponent() {
                       </main>
                       {!isAuthRoute && <Footer />}
                       {!isAuthRoute && <MobileBottomNav />}
-                      {!isAuthRoute && <AdminMobileBar />}
                       <RegionSelectModal />
-                      {!isAuthRoute && <AdminFloatingToolbar />}
-                      {!isAuthRoute && <AdminOverlayIndicator />}
-                      {!isAuthRoute && <AdminCommandCenter />}
-                      <CompareTray />
-                      <InstallPrompt />
-                      <LiveChat />
+                      <DeferredShell isAuthRoute={isAuthRoute} />
                       <Toaster position="bottom-center" richColors />
                     </div>
                   </LayoutMetricsProvider>
