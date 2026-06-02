@@ -23,10 +23,11 @@ export type Category = {
   region: CategoryRegion;
   views: number;
   clicks: number;
+  parent_id: string | null;
 };
 
 export const CATEGORY_COLUMNS =
-  "id,slug,name,description,image,sort_order,status,featured,trending,homepage_visible,icon,banner_image,mobile_image,seo_title,seo_description,region,views,clicks";
+  "id,slug,name,description,image,sort_order,status,featured,trending,homepage_visible,icon,banner_image,mobile_image,seo_title,seo_description,region,views,clicks,parent_id";
 
 let cache: Category[] | null = null;
 let inflight: Promise<Category[]> | null = null;
