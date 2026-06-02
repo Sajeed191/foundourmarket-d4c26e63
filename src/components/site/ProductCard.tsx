@@ -114,7 +114,7 @@ function ProductCardImpl({ product, compact }: { product: Product; compact?: boo
 
       {/* IMAGE — compact marketplace ratio */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-black/40">
+        <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
