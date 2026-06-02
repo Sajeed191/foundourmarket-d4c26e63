@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, Package, Plus, Pencil, Trash2, X, Upload, Tag, Ticket, Mail, Download, Truck, RotateCcw, BarChart3, Activity, Wallet, Globe, Search, Boxes, Megaphone, Users, FileText, Gem, Cpu } from "lucide-react";
+import { Loader2, ShieldAlert, Package, Plus, Pencil, Trash2, X, Upload, Tag, Ticket, Mail, Download, Truck, RotateCcw, BarChart3, Activity, Wallet, Globe, Search, Boxes, Megaphone, Users, FileText, Gem, Cpu, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateProducts } from "@/lib/use-products";
