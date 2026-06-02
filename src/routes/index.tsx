@@ -22,6 +22,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
+import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 
