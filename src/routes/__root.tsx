@@ -266,7 +266,6 @@ function RootComponent() {
                       </main>
                       {!hideSiteChrome && <Footer />}
                       {!hideSiteChrome && <MobileBottomNav />}
-                      {!hideSiteChrome && <DesktopAccountDock />}
                       <DeferredShell isAuthRoute={isAuthRoute} isAdminRoute={isAdminRoute} />
                       <Toaster position="bottom-center" richColors />
                     </div>
