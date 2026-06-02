@@ -4,13 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle, Loader2, RefreshCw, MailWarning, ShieldAlert, CheckCircle2,
+  Send, Inbox, XCircle, Layers,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { getEmailDeliverability } from "@/lib/email-admin.functions";
+import { getEmailDeliverability, getEmailQueueStatus } from "@/lib/email-admin.functions";
 
 export const Route = createFileRoute("/admin-email-health")({
   head: () => ({ meta: [{ title: "Email health — Admin" }] }),
@@ -60,8 +61,18 @@ function EmailHealthPage() {
     queryFn: () => fetchHealth({ data: { range } }),
   }) as any;
 
+  const fetchQueue = useServerFn(getEmailQueueStatus);
+  const { data: queue } = useQuery({
+    queryKey: ["email-queue-status"],
+    queryFn: () => fetchQueue({} as any),
+    refetchInterval: 15000,
+  }) as any;
+
   const totals = data?.totals;
   const series = data?.series ?? [];
+  const queueSize = queue?.totals
+    ? Number(queue.totals.queued ?? 0) + Number(queue.totals.in_flight ?? 0)
+    : null;
 
   return (
     <AdminShell
@@ -94,6 +105,31 @@ function EmailHealthPage() {
       }
     >
       <div className="space-y-5">
+        {/* Source-of-truth summary: Sent · Delivered · Failed · Queue size */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard
+            label="Sent" value={totals ? totals.sent : "—"}
+            color="text-emerald-400" icon={Send}
+            hint="Accepted by provider"
+          />
+          <StatCard
+            label="Delivered" value={totals ? totals.sent : "—"}
+            color="text-sky-400" icon={Inbox}
+            hint={totals ? `${totals.deliveryRate}% delivery rate` : "—"}
+          />
+          <StatCard
+            label="Failed" value={totals ? totals.failed + totals.bounced + totals.complained : "—"}
+            color="text-rose-400" icon={XCircle}
+            hint="Failed · bounced · complained"
+          />
+          <StatCard
+            label="Queue size" value={queueSize ?? "—"}
+            color="text-amber-400" icon={Layers}
+            hint="Queued + in-flight"
+          />
+        </div>
+
+
 
 
         {isLoading ? (
