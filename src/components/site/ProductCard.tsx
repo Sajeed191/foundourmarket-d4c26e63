@@ -206,12 +206,12 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         </h4>
 
         {/* Rating row — ⭐ 4.8 (984) */}
-        <div className="flex items-center gap-1 mt-0.5 min-h-[14px]">
+        <div className="flex items-center gap-1 mt-1 min-h-[15px]">
           {product.reviews > 0 ? (
             <>
-              <Star className="size-2.5 fill-accent text-accent" />
-              <span className="text-[10px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
-              <span className="text-[9px] font-mono text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
+              <Star className="size-3 fill-accent text-accent" />
+              <span className="text-[11px] font-bold text-white tabular-nums">{product.rating.toFixed(1)}</span>
+              <span className="text-[10px] font-mono text-muted-foreground/75">({product.reviews.toLocaleString()})</span>
             </>
           ) : (
             <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400/90">New Product</span>
@@ -227,12 +227,12 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         </div>
 
         {/* Price row + floating cart button */}
-        <div className="mt-auto pt-1.5 flex items-end justify-between gap-2">
+        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
 
           <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
-            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-[15px]" />
+            <Price value={price} className="font-display font-extrabold text-white tabular-nums leading-none block text-[17px]" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[9px]" />
+              <Price value={originalPrice} className="font-mono text-muted-foreground/55 line-through tabular-nums block text-[10px]" />
             ) : null}
           </div>
 
@@ -240,9 +240,9 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 grid place-items-center size-9 rounded-lg bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
+              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.66_0.19_38)] text-black border border-white/25 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
-              {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+              {justAdded ? <Check className="size-[18px]" /> : <ShoppingCart className="size-[18px]" />}
               {cartQty > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
                   {cartQty}
