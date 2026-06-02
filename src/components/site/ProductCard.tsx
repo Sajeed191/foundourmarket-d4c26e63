@@ -131,9 +131,9 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           />
 
-          {/* Discount badge — top-left, orange pill, black text */}
+          {/* Discount badge — top-left, bold orange pill for strong visibility */}
           {discount ? (
-            <span className="absolute top-2 left-2 inline-flex items-center rounded-full bg-accent text-black font-bold font-mono text-[10px] px-2 py-0.5 shadow-[var(--shadow-ember)]">
+            <span className="absolute top-2 left-2 inline-flex items-center rounded-full bg-gradient-to-br from-accent to-[oklch(0.66_0.19_38)] text-black font-extrabold font-mono text-[11px] px-2.5 py-1 shadow-[var(--shadow-ember)] ring-1 ring-black/10">
               -{discount}%
             </span>
           ) : null}
