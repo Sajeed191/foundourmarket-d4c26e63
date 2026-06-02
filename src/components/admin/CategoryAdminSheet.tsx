@@ -151,8 +151,11 @@ export function CategoryAdminSheet({
   const [uploadingSlot, setUploadingSlot] = useState<ImageSlot | null>(null);
   const [progress, setProgress] = useState(0);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | CategoryStatus>("all");
+  const [filter, setFilter] = useState<CatFilter>("all");
   const [aiBusy, setAiBusy] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [cardAiId, setCardAiId] = useState<string | null>(null);
   const genImage = useServerFn(generateCategoryImage);
   const fileSlot = useRef<ImageSlot>("image");
   const fileRef = useRef<HTMLInputElement>(null);
