@@ -519,6 +519,15 @@
   [data-app-header] { z-index: var(--z-top-header) !important; }
   [data-app-bottom-nav] { z-index: var(--z-bottom-nav) !important; }
   [data-floating-control] { z-index: var(--z-floating-controls) !important; }
+  /* When the mobile hamburger sidebar is open, clear every floating mobile UI
+     element out of the way so the menu reads as a full-screen navigation. */
+  body[data-menu-open] [data-app-bottom-nav],
+  body[data-menu-open] [data-floating-control] {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
   [data-sonner-toaster][data-y-position="bottom"] { bottom: var(--floating-bottom-offset) !important; }
   .min-h-screen { min-height: 100dvh !important; }
   .h-screen { height: 100dvh !important; }
