@@ -294,6 +294,12 @@ function FormPane({ kind, categories, onRun, onExport }: {
       { key: "trending", label: "Trending", icon: TrendingUp },
       { key: "bestseller", label: "Bestseller", icon: Sparkles },
       { key: "new_arrival", label: "New Arrival", icon: Sparkles },
+      { key: "premium", label: "Premium", icon: Sparkles },
+      { key: "flash_deal", label: "Flash Deal", icon: Flame },
+      { key: "staff_pick", label: "Staff Pick", icon: Star },
+      { key: "editors_choice", label: "Editor's Choice", icon: Sparkles },
+      { key: "recommended", label: "Recommended", icon: Sparkles },
+      { key: "fast_selling", label: "Fast Selling", icon: Flame },
       { key: "hot_deal", label: "Hot Deal", icon: Flame },
     ];
     return (
