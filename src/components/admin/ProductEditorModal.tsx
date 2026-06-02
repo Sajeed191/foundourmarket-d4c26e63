@@ -438,6 +438,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
+        {tab === "basic" && (<>
         {/* Image */}
         <div className="flex gap-3 items-start">
           <div className="size-20 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
@@ -453,7 +454,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
           </div>
         </div>
+        </>)}
 
+        {tab === "preview" && (<>
         {/* Live Storefront Preview */}
         <CollapsibleModule eyebrow="Live" title="Storefront Preview" badge={<Eye className="size-3.5 text-accent" />}>
           {(() => {
@@ -540,9 +543,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             );
           })()}
         </CollapsibleModule>
+        </>)}
 
 
 
+        {tab === "basic" && (<>
         {/* Product Basics */}
         <CollapsibleModule eyebrow="Step 1" title="Product Basics" badge={<Tag className="size-3.5 text-accent" />}>
           <div className="grid grid-cols-2 gap-3">
@@ -672,7 +677,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Visibility & Merchandising */}
         <CollapsibleModule eyebrow="Step 6" title="Visibility & Merchandising" badge={<Eye className="size-3.5 text-accent" />}>
           <div className="space-y-3">
@@ -771,6 +778,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
+        </>)}
+
+        {tab === "related" && (<>
         {/* Related products */}
         <CollapsibleModule eyebrow="Step 6d" title="Related Product Management" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="space-y-3">
@@ -779,7 +789,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <EField label="Upsell Products (comma-separated slugs)" value={form.upsell_products} onChange={(v) => set({ upsell_products: v })} />
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Product Labels */}
         <CollapsibleModule eyebrow="Step 6e" title="Product Labels" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="space-y-3">
@@ -812,7 +824,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             })()}
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "analytics" && (<>
         {/* Analytics (read-only) */}
         <CollapsibleModule eyebrow="Insights" title="Product Analytics" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -836,7 +850,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             })()}
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Product Badges */}
         <CollapsibleModule eyebrow="Step 7" title="Product Badges" badge={<Tag className="size-3.5 text-accent" />}>
           {row?.slug ? (
@@ -845,7 +861,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <ProductBadgeManager selectedIds={pendingBadges} onChange={setPendingBadges} />
           )}
         </CollapsibleModule>
+        </>)}
 
+        {tab === "basic" && (<>
         {/* Media */}
         <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
@@ -853,8 +871,10 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <EField label="Product Demo URL" value={form.demo_url} onChange={(v) => set({ demo_url: v })} />
           </div>
         </CollapsibleModule>
+        </>)}
 
 
+        {tab === "seo" && (<>
         {/* Advanced */}
         <CollapsibleModule eyebrow="Optional" title="Advanced (SEO & specs)" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
@@ -884,8 +904,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
           </div>
         </CollapsibleModule>
+        </>)}
 
-        {row?.slug && (
+        {row?.slug && tab === "seo" && (
           <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={false}>
             <ProductFaqManager productSlug={row.slug} />
           </CollapsibleModule>
