@@ -486,6 +486,16 @@ export function CategoryAdminSheet({
     onChanged();
   }
 
+  function addSubcategory(main: Row) {
+    // Lightweight: open the editor pre-bound to this parent and keep it expanded.
+    setCollapsed((p) => {
+      const n = new Set(p);
+      n.delete(main.id);
+      return n;
+    });
+    open({ ...blank(), parent_id: main.id, status: "published" });
+  }
+
   async function generateCardImage(row: Row) {
     setCardAiId(row.id);
     try {
