@@ -2858,6 +2858,7 @@ export type Database = {
           category_position: number | null
           cod_enabled: boolean
           collection: string | null
+          collections: string[]
           compare_price_inr: number | null
           compare_price_usd: number | null
           cost: number
@@ -2872,6 +2873,8 @@ export type Database = {
           demo_url: string | null
           description: string | null
           discount: number | null
+          editors_choice: boolean
+          fast_selling: boolean
           featured: boolean
           featured_until: string | null
           features: string[]
@@ -2901,10 +2904,12 @@ export type Database = {
           orders_count: number
           paypal_enabled: boolean
           pickup_supported: boolean
+          premium: boolean
           preorder: boolean
           price: number
           price_inr: number | null
           price_usd: number | null
+          priority_score: number | null
           product_type: string | null
           rating: number
           razorpay_enabled: boolean
@@ -2957,6 +2962,7 @@ export type Database = {
           category_position?: number | null
           cod_enabled?: boolean
           collection?: string | null
+          collections?: string[]
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           cost?: number
@@ -2971,6 +2977,8 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           discount?: number | null
+          editors_choice?: boolean
+          fast_selling?: boolean
           featured?: boolean
           featured_until?: string | null
           features?: string[]
@@ -3000,10 +3008,12 @@ export type Database = {
           orders_count?: number
           paypal_enabled?: boolean
           pickup_supported?: boolean
+          premium?: boolean
           preorder?: boolean
           price?: number
           price_inr?: number | null
           price_usd?: number | null
+          priority_score?: number | null
           product_type?: string | null
           rating?: number
           razorpay_enabled?: boolean
@@ -3056,6 +3066,7 @@ export type Database = {
           category_position?: number | null
           cod_enabled?: boolean
           collection?: string | null
+          collections?: string[]
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           cost?: number
@@ -3070,6 +3081,8 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           discount?: number | null
+          editors_choice?: boolean
+          fast_selling?: boolean
           featured?: boolean
           featured_until?: string | null
           features?: string[]
@@ -3099,10 +3112,12 @@ export type Database = {
           orders_count?: number
           paypal_enabled?: boolean
           pickup_supported?: boolean
+          premium?: boolean
           preorder?: boolean
           price?: number
           price_inr?: number | null
           price_usd?: number | null
+          priority_score?: number | null
           product_type?: string | null
           rating?: number
           razorpay_enabled?: boolean
@@ -5034,6 +5049,7 @@ export type Database = {
           category_position: number | null
           cod_enabled: boolean | null
           collection: string | null
+          collections: string[] | null
           compare_price_inr: number | null
           compare_price_usd: number | null
           created_at: string | null
@@ -5042,6 +5058,8 @@ export type Database = {
           delivery_estimate: string | null
           description: string | null
           discount: number | null
+          editors_choice: boolean | null
+          fast_selling: boolean | null
           featured: boolean | null
           featured_until: string | null
           features: string[] | null
@@ -5069,10 +5087,12 @@ export type Database = {
           orders_count: number | null
           paypal_enabled: boolean | null
           pickup_supported: boolean | null
+          premium: boolean | null
           preorder: boolean | null
           price: number | null
           price_inr: number | null
           price_usd: number | null
+          priority_score: number | null
           rating: number | null
           razorpay_enabled: boolean | null
           recommended: boolean | null
@@ -5115,6 +5135,7 @@ export type Database = {
           category_position?: number | null
           cod_enabled?: boolean | null
           collection?: string | null
+          collections?: string[] | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           created_at?: string | null
@@ -5123,6 +5144,8 @@ export type Database = {
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
+          editors_choice?: boolean | null
+          fast_selling?: boolean | null
           featured?: boolean | null
           featured_until?: string | null
           features?: string[] | null
@@ -5150,10 +5173,12 @@ export type Database = {
           orders_count?: number | null
           paypal_enabled?: boolean | null
           pickup_supported?: boolean | null
+          premium?: boolean | null
           preorder?: boolean | null
           price?: number | null
           price_inr?: number | null
           price_usd?: number | null
+          priority_score?: number | null
           rating?: number | null
           razorpay_enabled?: boolean | null
           recommended?: boolean | null
@@ -5196,6 +5221,7 @@ export type Database = {
           category_position?: number | null
           cod_enabled?: boolean | null
           collection?: string | null
+          collections?: string[] | null
           compare_price_inr?: number | null
           compare_price_usd?: number | null
           created_at?: string | null
@@ -5204,6 +5230,8 @@ export type Database = {
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
+          editors_choice?: boolean | null
+          fast_selling?: boolean | null
           featured?: boolean | null
           featured_until?: string | null
           features?: string[] | null
@@ -5231,10 +5259,12 @@ export type Database = {
           orders_count?: number | null
           paypal_enabled?: boolean | null
           pickup_supported?: boolean | null
+          premium?: boolean | null
           preorder?: boolean | null
           price?: number | null
           price_inr?: number | null
           price_usd?: number | null
+          priority_score?: number | null
           rating?: number | null
           razorpay_enabled?: boolean | null
           recommended?: boolean | null
@@ -5527,6 +5557,7 @@ export type Database = {
           category_position: number | null
           cod_enabled: boolean
           collection: string | null
+          collections: string[]
           compare_price_inr: number | null
           compare_price_usd: number | null
           cost: number
@@ -5541,6 +5572,8 @@ export type Database = {
           demo_url: string | null
           description: string | null
           discount: number | null
+          editors_choice: boolean
+          fast_selling: boolean
           featured: boolean
           featured_until: string | null
           features: string[]
@@ -5570,10 +5603,12 @@ export type Database = {
           orders_count: number
           paypal_enabled: boolean
           pickup_supported: boolean
+          premium: boolean
           preorder: boolean
           price: number
           price_inr: number | null
           price_usd: number | null
+          priority_score: number | null
           product_type: string | null
           rating: number
           razorpay_enabled: boolean

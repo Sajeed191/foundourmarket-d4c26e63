@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type BulkAction =
   | "publish" | "unpublish" | "archive" | "restore"
   | "soft_delete" | "restore_deleted" | "permanent_delete" | "duplicate"
-  | "move_category" | "set_collection" | "set_homepage_section"
+  | "move_category" | "set_collection" | "set_collections" | "set_homepage_section" | "set_priority"
   | "set_stock" | "inc_stock" | "dec_stock" | "set_low_threshold" | "set_inventory_tracking"
   | "set_price_inr" | "set_price_usd" | "inc_price_pct" | "dec_price_pct"
   | "set_sale" | "remove_sale" | "round_price"
@@ -98,6 +98,7 @@ export function actionLabel(a: BulkAction): string {
     set_shipping_class: "Shipping class updated", set_delivery_estimate: "Delivery estimate updated",
     schedule_publish: "Publishing scheduled", schedule_unpublish: "Unpublishing scheduled",
     set_collection: "Collection updated", set_homepage_section: "Homepage section updated",
+    set_collections: "Collections updated", set_priority: "Priority updated",
   };
   return map[a] ?? a;
 }

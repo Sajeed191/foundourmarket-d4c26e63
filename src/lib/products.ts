@@ -82,6 +82,14 @@ export type Product = {
   relatedProducts: string[];
   crossSellProducts: string[];
   upsellProducts: string[];
+  // Manual merchandising labels
+  premium: boolean;
+  fastSelling: boolean;
+  editorsChoice: boolean;
+  // Sorting priority within a storefront section (1–100)
+  priorityScore: number | null;
+  // Named collections a product belongs to
+  collections: string[];
   // Analytics
   ordersCount: number;
   revenue: number;
@@ -178,6 +186,8 @@ type Row = {
   related_products?: string[] | null; cross_sell_products?: string[] | null;
   upsell_products?: string[] | null;
   orders_count?: number | null; revenue?: number | string | null;
+  premium?: boolean | null; fast_selling?: boolean | null; editors_choice?: boolean | null;
+  priority_score?: number | null; collections?: string[] | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
@@ -255,12 +265,17 @@ export function rowToProduct(r: Row): Product {
     upsellProducts: r.upsell_products ?? [],
     ordersCount: r.orders_count ?? 0,
     revenue: Number(r.revenue ?? 0),
+    premium: r.premium ?? false,
+    fastSelling: r.fast_selling ?? false,
+    editorsChoice: r.editors_choice ?? false,
+    priorityScore: r.priority_score ?? null,
+    collections: r.collections ?? [],
   };
 }
 
 // Public catalog columns only — sensitive fields (cost, cost prices, barcode,
 // warehouse_location, admin_notes) are NOT exposed via the products_public view.
-const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,related_products,cross_sell_products,upsell_products,orders_count";
+const SELECT_COLS = "slug,name,tagline,category,price,rating,reviews,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,reserved_quantity,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,related_products,cross_sell_products,upsell_products,orders_count,premium,fast_selling,editors_choice,priority_score,collections";
 
 
 export async function fetchProducts(): Promise<Product[]> {
