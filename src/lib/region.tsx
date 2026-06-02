@@ -192,6 +192,27 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     if (authLoading) return;
     let cancelled = false;
 
+    // Login/logout edge handling: when a signed-in user logs out, purge the
+    // previous account's locked region so the guest (or next account) never
+    // inherits the wrong currency. Runs synchronously before re-resolution.
+    const prevUserId = prevUserIdRef.current;
+    if (prevUserId && !userId && typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(LS_KEY);
+        localStorage.removeItem(GUEST_CHOICE_KEY);
+        document.cookie = `${REGION_COOKIE}=; path=/; max-age=0; samesite=lax`;
+      } catch {
+        /* ignore */
+      }
+      hadCachedChoice.current = false;
+      setLocked(false);
+      setAutoDetected(false);
+      setSoftConfirm(false);
+      setNeedsSelection(false);
+    }
+    prevUserIdRef.current = userId;
+
+
     /** Multi-signal engine: edge geo-IP blended with browser + stored signals. */
     async function runDetection() {
       const edge = await detect();
