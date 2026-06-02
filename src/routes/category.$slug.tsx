@@ -81,10 +81,25 @@ function CategoryPage() {
                 key={s.slug}
                 to="/category/$slug"
                 params={{ slug: s.slug }}
-                className="group product-card-glass flex items-center justify-between gap-2 px-3.5 py-3 hover:-translate-y-0.5 transition-transform"
+                className="group product-card-glass relative flex aspect-square flex-col overflow-hidden p-0 hover:-translate-y-0.5 transition-transform"
               >
-                <span className="text-sm font-semibold tracking-tight truncate group-hover:text-accent transition-colors">{s.name}</span>
-                <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
+                <div className="absolute inset-0">
+                  {s.image || s.mobile_image ? (
+                    <img
+                      src={s.mobile_image || s.image || ""}
+                      alt={s.name}
+                      loading="lazy"
+                      className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="size-full bg-accent/10" />
+                  )}
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                </div>
+                <div className="relative z-10 mt-auto flex items-center justify-between gap-2 p-2.5">
+                  <span className="text-sm font-semibold tracking-tight truncate text-white group-hover:text-accent transition-colors">{s.name}</span>
+                  <ArrowRight className="size-4 shrink-0 text-white/80 group-hover:text-accent group-hover:translate-x-0.5 transition" />
+                </div>
               </Link>
             ))}
           </div>
