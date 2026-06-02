@@ -2,12 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ExecutiveSummaryPanel } from "@/components/admin/ExecutiveSummaryPanel";
 import { FinancialInsightsPanel } from "@/components/admin/FinancialInsightsPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Search, Plus, Minus, Loader2, Download, Radio, Star, StarOff,
   Eye, EyeOff, Copy, ExternalLink, Link2, Trash2, Pencil, Boxes,
   TrendingUp, AlertTriangle, CheckCircle2, X, SlidersHorizontal, BarChart3,
-  Layers, IndianRupee, Flame, Upload, ShoppingCart, Tag,
+  Layers, IndianRupee, Flame, Upload, ShoppingCart, Tag, Image as ImageIcon,
+  FileText, Sparkles, Wrench, ShieldCheck, Crown, BadgeCheck, HeartPulse,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
