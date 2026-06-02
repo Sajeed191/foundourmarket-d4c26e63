@@ -112,7 +112,7 @@ export function Nav() {
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
-          <div className="flex items-center justify-between px-2.5 sm:px-5 py-2.5 sm:py-3 gap-1.5 sm:gap-2">
+          <div className="flex items-center justify-between px-2.5 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2">
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close menu" : "Open menu"}
@@ -125,7 +125,7 @@ export function Nav() {
               to="/"
               className="min-w-0 flex-1 md:flex-none flex items-center gap-2 font-display tracking-tight font-semibold"
             >
-              <span className="shrink-0 relative inline-grid place-items-center size-10 sm:size-12 rounded-2xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_22px_-4px_var(--color-accent)]">
+              <span className="shrink-0 relative inline-grid place-items-center size-9 sm:size-11 rounded-2xl bg-black/40 ring-1 ring-white/10 overflow-hidden shadow-[0_0_22px_-4px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
               <span className="min-w-0 flex flex-col leading-none">

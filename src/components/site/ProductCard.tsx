@@ -106,15 +106,15 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
     product.stockQuantity > 0 &&
     product.stockQuantity <= (product.lowStockThreshold || 10);
 
-  const subtitle = product.tagline || (product.category ? product.category.replace(/-/g, " ") : "");
+
 
   return (
-    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full p-2">
+    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full p-1.5">
       <ProductCardAdminControls product={product} />
 
-      {/* IMAGE — ~60-65% of card */}
+      {/* IMAGE — compact marketplace ratio */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40">
+        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40">
           {!imgLoaded && (
             <div
               aria-hidden
@@ -199,45 +199,40 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
       </Link>
 
       {/* INFO */}
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative flex flex-1 flex-col px-0.5 pt-2">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative flex flex-1 flex-col px-1 pt-1.5">
         {/* Name */}
-        <h4 className="text-[13px] font-bold text-white leading-tight line-clamp-2 min-h-[2.2em] group-hover:text-accent transition-colors">
+        <h4 className="text-[12px] font-bold text-white leading-tight line-clamp-2 min-h-[2.1em] group-hover:text-accent transition-colors">
           {product.name}
         </h4>
 
-        {/* Subtitle / category */}
-        {subtitle ? (
-          <p className="text-[10px] text-muted-foreground/80 capitalize truncate mt-0.5">{subtitle}</p>
-        ) : null}
-
         {/* Rating row — ⭐ 4.8 (984) */}
-        <div className="flex items-center gap-1 mt-1 min-h-[16px]">
+        <div className="flex items-center gap-1 mt-0.5 min-h-[14px]">
           {product.reviews > 0 ? (
             <>
-              <Star className="size-3 fill-accent text-accent" />
-              <span className="text-[11px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
-              <span className="text-[10px] font-mono text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
+              <Star className="size-2.5 fill-accent text-accent" />
+              <span className="text-[10px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
+              <span className="text-[9px] font-mono text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
             </>
           ) : (
             <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400/90">New Product</span>
           )}
+          {showOnlyLeft && (
+            <span className="font-mono uppercase tracking-wider text-accent/90 text-[8px] ml-auto">
+              {product.stockQuantity} left
+            </span>
+          )}
+          {shippingFee <= 0 && !showOnlyLeft && (
+            <span className="font-mono uppercase tracking-wider text-emerald-400/90 text-[8px] ml-auto">Free Ship</span>
+          )}
         </div>
 
-        {showOnlyLeft && (
-          <p className="font-mono uppercase tracking-wider text-accent/90 text-[8px] mt-0.5">
-            Only {product.stockQuantity} left
-          </p>
-        )}
-        {shippingFee <= 0 && (
-          <p className="font-mono uppercase tracking-wider text-emerald-400/90 text-[8px] mt-0.5">Free Shipping</p>
-        )}
-
         {/* Price row + floating cart button */}
-        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
-          <div className="min-w-0">
-            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-base" />
+        <div className="mt-auto pt-1.5 flex items-end justify-between gap-2">
+
+          <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
+            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-[15px]" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[10px] mt-1" />
+              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[9px]" />
             ) : null}
           </div>
 
@@ -245,7 +240,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
+              className={`relative shrink-0 grid place-items-center size-9 rounded-lg bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
               {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
               {cartQty > 0 && (
