@@ -683,29 +683,23 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* 5 · Trending Products */}
+      {/* 5 · Trending / New Arrivals / Best Sellers / Featured — tabbed hub */}
       {productsLoading ? (
         <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
       ) : (
-        <ProductSection sectionKey="trending" eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} products={trending} active={sections.trending.active} isAdmin={isProductAdmin} />
+        <TabbedProductHub
+          isAdmin={isProductAdmin}
+          tabs={[
+            { key: "trending", eyebrow: sections.trending.eyebrow, title: sections.trending.title, icon: Flame, products: trending, active: sections.trending.active },
+            { key: "new_arrivals", eyebrow: sections.new_arrivals.eyebrow, title: sections.new_arrivals.title, icon: Sparkles, products: newArrivals, active: sections.new_arrivals.active },
+            { key: "best_sellers", eyebrow: sections.best_sellers.eyebrow, title: sections.best_sellers.title, icon: Award, products: bestSellers, active: sections.best_sellers.active },
+            { key: "featured", eyebrow: sections.featured.eyebrow, title: sections.featured.title, icon: Star, products: featured, active: sections.featured.active },
+          ]}
+        />
       )}
 
-      {/* 6 · New Arrivals */}
-      {!productsLoading && (
-        <ProductSection sectionKey="new_arrivals" eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} products={newArrivals} active={sections.new_arrivals.active} isAdmin={isProductAdmin} />
-      )}
-
-      {/* 7 · Best Sellers */}
-      {!productsLoading && (
-        <ProductSection sectionKey="best_sellers" eyebrow={sections.best_sellers.eyebrow} title={sections.best_sellers.title} icon={Award} products={bestSellers} active={sections.best_sellers.active} isAdmin={isProductAdmin} />
-      )}
-
-      {/* 8 · Featured Products */}
-      {!productsLoading && (
-        <ProductSection sectionKey="featured" eyebrow={sections.featured.eyebrow} title={sections.featured.title} icon={Star} products={featured} active={sections.featured.active} isAdmin={isProductAdmin} />
-      )}
 
 
 
