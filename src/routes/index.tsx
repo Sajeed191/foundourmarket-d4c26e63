@@ -750,8 +750,8 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* 9 · Join The Inner Circle */}
-      <section className="px-4 sm:px-6 py-8 sm:py-12">
+      {/* 11 · Join The Inner Circle */}
+      <section className="px-4 sm:px-6 py-6 sm:py-9">
         <Reveal className="max-w-3xl mx-auto glass-strong glass-reflect p-7 sm:p-10 md:p-12 rounded-3xl text-center relative overflow-hidden">
           <div aria-hidden className="absolute -top-24 -left-24 size-64 rounded-full opacity-50 blur-3xl" style={{ background: "var(--gradient-violet)" }} />
           <div aria-hidden className="absolute -bottom-24 -right-24 size-64 rounded-full opacity-60 blur-3xl" style={{ background: "var(--gradient-ember)" }} />
