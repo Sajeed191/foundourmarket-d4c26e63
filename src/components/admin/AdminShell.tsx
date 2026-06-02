@@ -18,6 +18,7 @@ type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "w
 
 type NavItem = {
   to: string;
+  search?: Record<string, string>;
   label: string;
   icon: typeof LayoutDashboard;
   roles?: Role[];
@@ -73,7 +74,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-badges-analytics", label: "Badge Analytics", icon: BarChart3, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-media", label: "Media library", icon: Images, roles: ["admin", "super_admin", "manager", "editor"] },
 
-      { to: "/admin?tab=categories", label: "Categories", icon: Boxes },
+      { to: "/admin", search: { tab: "categories" }, label: "Categories", icon: Boxes },
     ],
   },
   {
@@ -84,7 +85,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-acquisition-intelligence", label: "Acquisition Intelligence", icon: Target, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-seo-intelligence", label: "SEO Intelligence", icon: Search, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-search", label: "Search trends", icon: Search, roles: ["admin", "super_admin", "manager"] },
-      { to: "/admin?tab=subscribers", label: "Subscribers", icon: ShoppingBag },
+      { to: "/admin", search: { tab: "subscribers" }, label: "Subscribers", icon: ShoppingBag },
     ],
   },
   {
@@ -138,7 +139,9 @@ export function AdminShell({
 }) {
   const { user, loading, roles } = useAdminRoles();
   const nav = useNavigate();
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const path = location.pathname;
+  const activeTab = typeof location.search.tab === "string" ? location.search.tab : null;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [live, setLive] = useState<{ revenue: number; orders: number }>({ revenue: 0, orders: 0 });
@@ -147,7 +150,7 @@ export function AdminShell({
   const cmd = useCommandCenter();
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
-  useEffect(() => { setOpen(false); }, [path]);
+  useEffect(() => { setOpen(false); }, [path, activeTab]);
 
   useEffect(() => {
     if (!user) return;
@@ -174,11 +177,10 @@ export function AdminShell({
 
   const groupTitle = useMemo(() => {
     for (const g of NAV) for (const it of g.items) {
-      const [base] = it.to.split("?");
-      if (base === path) return g.group;
+      if (isActive(it)) return g.group;
     }
     return "Admin";
-  }, [path]);
+  }, [path, activeTab]);
 
   if (loading || roles === null) {
     return (
@@ -219,9 +221,11 @@ export function AdminShell({
     );
   }
 
-  function isActive(to: string) {
-    const [base] = to.split("?");
-    return path === base;
+  function isActive(it: NavItem) {
+    if (path !== it.to) return false;
+    if (it.search?.tab) return activeTab === it.search.tab;
+    if (it.to === "/admin") return !activeTab;
+    return true;
   }
 
   function visibleItem(it: NavItem) {
@@ -364,11 +368,12 @@ export function AdminShell({
                   </div>
                   <ul className="space-y-0.5">
                     {items.map((it) => {
-                      const active = isActive(it.to);
+                      const active = isActive(it);
                       return (
-                        <li key={it.to}>
+                        <li key={`${it.to}:${it.search?.tab ?? ""}`}>
                           <Link
                             to={it.to as string}
+                            search={(it.search ?? undefined) as never}
                             className={`group relative flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-300 hover:translate-x-0.5 ${
                               active
                                 ? "text-accent"

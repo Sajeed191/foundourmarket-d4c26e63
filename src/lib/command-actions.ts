@@ -23,6 +23,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
   // Products
   { id: "qa-create-product", group: "Products", icon: "PackagePlus", label: "Create product", to: "/admin-products?new=1", roles: PRODUCT_ADMIN, action: "cmd_create_product", keywords: "add new product" },
   { id: "qa-manage-products", group: "Products", icon: "Package", label: "Manage products", to: "/admin-products", roles: PRODUCT_ADMIN, action: "cmd_open_products" },
+  { id: "qa-manage-categories", group: "Products", icon: "Boxes", label: "Manage categories", to: "/admin?tab=categories", roles: PRODUCT_ADMIN, action: "cmd_open_categories", keywords: "category categories subcategory subcategories catalog taxonomy" },
   { id: "qa-adjust-pricing", group: "Products", icon: "Tag", label: "Update pricing", to: "/admin-products?view=pricing", roles: MANAGER, action: "cmd_pricing", keywords: "price" },
   // Orders
   { id: "qa-orders", group: "Orders", icon: "ShoppingBag", label: "Open orders", to: "/admin-shipments", roles: SUPPORT, action: "cmd_open_orders" },
@@ -166,6 +167,7 @@ export function interpretNaturalLanguage(q: string): string | null {
   if ((s.includes("create") || s.includes("new")) && s.includes("announcement")) return "qa-create-announcement";
   if ((s.includes("create") || s.includes("new") || s.includes("launch")) && (s.includes("flash") || s.includes("sale"))) return "qa-flash-sale";
   if ((s.includes("create") || s.includes("new") || s.includes("add")) && s.includes("product")) return "qa-create-product";
+  if (s.includes("categor") || s.includes("subcategory") || s.includes("taxonomy")) return "qa-manage-categories";
   if (s.includes("forecast") || s.includes("predict")) return "qa-inv-intel";
   // Customer ↔ Marketing natural language (before generic customer + campaign blocks)
   if (s.includes("winback") || s.includes("win back") || s.includes("win-back")) return "qa-cust-winback-campaign";

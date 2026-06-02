@@ -138,10 +138,12 @@ export function CategoryAdminSheet({
   onClose,
   onChanged,
   productCounts = {},
+  variant = "sheet",
 }: {
   onClose: () => void;
   onChanged: () => void;
   productCounts?: Record<string, number>;
+  variant?: "sheet" | "embedded";
 }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,6 +161,7 @@ export function CategoryAdminSheet({
   const genImage = useServerFn(generateCategoryImage);
   const fileSlot = useRef<ImageSlot>("image");
   const fileRef = useRef<HTMLInputElement>(null);
+  const embedded = variant === "embedded";
 
   async function regenerateAi() {
     if (!editing?.name?.trim()) {
@@ -709,11 +712,12 @@ export function CategoryAdminSheet({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"
+        initial={embedded ? { opacity: 0, y: 8 } : { opacity: 0 }}
+        animate={embedded ? { opacity: 1, y: 0 } : { opacity: 1 }}
+        exit={embedded ? { opacity: 0, y: 8 } : { opacity: 0 }}
+        className={embedded ? "" : "fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"}
         onClick={() => {
+          if (embedded) return;
           if (uploadingSlot || saving) return;
           onClose();
         }}
@@ -727,12 +731,12 @@ export function CategoryAdminSheet({
           onClick={(e) => e.stopPropagation()}
         />
         <motion.div
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 32, stiffness: 300 }}
+          initial={embedded ? false : { y: "100%" }}
+          animate={embedded ? undefined : { y: 0 }}
+          exit={embedded ? undefined : { y: "100%" }}
+          transition={embedded ? undefined : { type: "spring", damping: 32, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="absolute inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-3xl border-t border-accent/20 bg-background/95 p-5 backdrop-blur-2xl sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-md sm:max-h-none sm:rounded-none sm:rounded-l-3xl sm:border-l sm:border-t-0"
+          className={embedded ? "relative overflow-hidden rounded-2xl border border-accent/20 bg-background/70 p-5 backdrop-blur-xl" : "absolute inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-3xl border-t border-accent/20 bg-background/95 p-5 backdrop-blur-2xl sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-md sm:max-h-none sm:rounded-none sm:rounded-l-3xl sm:border-l sm:border-t-0"}
         >
           <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
           <div className="mb-4 flex items-center justify-between">
@@ -742,18 +746,20 @@ export function CategoryAdminSheet({
                 Realtime · admin-only · {rows.length} total
               </p>
             </div>
-            <button
-              onClick={() => {
-                if (uploadingSlot || saving) {
-                  toast.error("Please wait for the upload to finish");
-                  return;
-                }
-                onClose();
-              }}
-              className="grid size-8 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
+            {!embedded && (
+              <button
+                onClick={() => {
+                  if (uploadingSlot || saving) {
+                    toast.error("Please wait for the upload to finish");
+                    return;
+                  }
+                  onClose();
+                }}
+                className="grid size-8 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </div>
 
           {!editing && (
