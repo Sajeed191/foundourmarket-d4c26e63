@@ -150,7 +150,7 @@ export function AdminShell({
   const cmd = useCommandCenter();
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
-  useEffect(() => { setOpen(false); }, [path]);
+  useEffect(() => { setOpen(false); }, [path, activeTab]);
 
   useEffect(() => {
     if (!user) return;
@@ -177,7 +177,7 @@ export function AdminShell({
 
   const groupTitle = useMemo(() => {
     for (const g of NAV) for (const it of g.items) {
-      if (it.to === path) return g.group;
+      if (isActive(it)) return g.group;
     }
     return "Admin";
   }, [path, activeTab]);
