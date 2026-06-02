@@ -155,6 +155,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   // Pending badge assignments for a not-yet-saved product (flushed after insert).
   const [pendingBadges, setPendingBadges] = useState<string[]>([]);
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
+  const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "analytics" | "preview">("basic");
 
 
 
@@ -291,6 +292,41 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     return errs;
   }, [form.india_visible, form.international_visible, priceInr, cmpInr, priceUsd, cmpUsd]);
 
+  // ---- Product Health (Phase 3) ----
+  const health = useMemo(() => {
+    const checks: { label: string; ok: boolean }[] = [
+      { label: "Images", ok: !!form.image.trim() },
+      { label: "Description", ok: form.description.trim().length >= 20 },
+      { label: "SEO", ok: !!form.seo_title.trim() && !!form.seo_description.trim() },
+      { label: "Pricing", ok: (priceInr ?? 0) > 0 || (priceUsd ?? 0) > 0 || Number(form.price) > 0 },
+      { label: "Inventory", ok: Number(form.stock_quantity) > 0 || form.status === "preorder" },
+      { label: "Category", ok: !!effectiveCategory },
+      {
+        label: "Storefront Placement",
+        ok:
+          form.featured || form.trending || form.bestseller || form.new_arrival ||
+          form.flash_deal || form.staff_pick || form.recommended || form.homepage_hero ||
+          form.premium || form.fast_selling || form.editors_choice ||
+          (form.homepage_section !== "none" && !!form.homepage_section),
+      },
+    ];
+    const score = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+    const status =
+      score >= 90 ? "Excellent" : score >= 70 ? "Good" : score >= 50 ? "Needs Attention" : "Critical";
+    const tone =
+      score >= 90 ? "text-emerald-400 border-emerald-400/40 bg-emerald-400/10"
+        : score >= 70 ? "text-accent border-accent/40 bg-accent/10"
+        : score >= 50 ? "text-amber-400 border-amber-400/40 bg-amber-400/10"
+        : "text-destructive border-destructive/40 bg-destructive/10";
+    return { checks, score, status, tone };
+  }, [
+    form.image, form.description, form.seo_title, form.seo_description, form.price,
+    form.stock_quantity, form.status, effectiveCategory, priceInr, priceUsd,
+    form.featured, form.trending, form.bestseller, form.new_arrival, form.flash_deal,
+    form.staff_pick, form.recommended, form.homepage_hero, form.premium, form.fast_selling,
+    form.editors_choice, form.homepage_section,
+  ]);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (validation.length) { setError(validation[0]); return; }
@@ -365,11 +401,44 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         onSubmit={save} onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl glass-strong border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 max-h-[94vh] overflow-y-auto space-y-3"
       >
-        <div className="flex justify-between items-center sticky top-0 z-10 -mx-4 sm:-mx-5 px-4 sm:px-5 py-2 bg-background/80 backdrop-blur">
-          <h2 className="text-lg font-display">{row?.id ? "Edit product" : "New product"}</h2>
-          <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-5 px-4 sm:px-5 pt-2 pb-2 bg-background/90 backdrop-blur space-y-2">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-display">{row?.id ? "Edit product" : "New product"}</h2>
+            <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
+          </div>
+          <div className="flex gap-1 overflow-x-auto -mx-1 px-1">
+            {([
+              ["basic", "Basic Information"],
+              ["merch", "Merchandising"],
+              ["seo", "SEO"],
+              ["related", "Related"],
+              ["analytics", "Analytics"],
+              ["preview", "Preview"],
+            ] as const).map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setTab(id)}
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${tab === id ? "bg-accent/15 text-accent border border-accent/40" : "text-muted-foreground border border-transparent hover:bg-white/5"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* Product Health (Phase 3) */}
+        <div className={`rounded-2xl border p-3 flex items-center gap-4 ${health.tone}`}>
+          <div className="flex flex-col items-center justify-center shrink-0 pr-3 border-r border-white/10">
+            <span className="text-2xl font-display font-semibold tabular-nums leading-none">{health.score}%</span>
+            <span className="mt-1 text-[9px] font-mono uppercase tracking-[0.2em]">{health.status}</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {health.checks.map((c) => (
+              <span key={c.label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${c.ok ? "border-emerald-400/40 text-emerald-300" : "border-white/10 text-muted-foreground"}`}>
+                <span className={`size-1.5 rounded-full ${c.ok ? "bg-emerald-400" : "bg-muted-foreground/40"}`} />{c.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {tab === "basic" && (<>
         {/* Image */}
         <div className="flex gap-3 items-start">
           <div className="size-20 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
@@ -385,7 +454,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
           </div>
         </div>
+        </>)}
 
+        {tab === "preview" && (<>
         {/* Live Storefront Preview */}
         <CollapsibleModule eyebrow="Live" title="Storefront Preview" badge={<Eye className="size-3.5 text-accent" />}>
           {(() => {
@@ -472,9 +543,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             );
           })()}
         </CollapsibleModule>
+        </>)}
 
 
 
+        {tab === "basic" && (<>
         {/* Product Basics */}
         <CollapsibleModule eyebrow="Step 1" title="Product Basics" badge={<Tag className="size-3.5 text-accent" />}>
           <div className="grid grid-cols-2 gap-3">
@@ -604,7 +677,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Visibility & Merchandising */}
         <CollapsibleModule eyebrow="Step 6" title="Visibility & Merchandising" badge={<Eye className="size-3.5 text-accent" />}>
           <div className="space-y-3">
@@ -703,6 +778,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
 
+        </>)}
+
+        {tab === "related" && (<>
         {/* Related products */}
         <CollapsibleModule eyebrow="Step 6d" title="Related Product Management" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="space-y-3">
@@ -711,7 +789,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <EField label="Upsell Products (comma-separated slugs)" value={form.upsell_products} onChange={(v) => set({ upsell_products: v })} />
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Product Labels */}
         <CollapsibleModule eyebrow="Step 6e" title="Product Labels" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="space-y-3">
@@ -744,7 +824,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             })()}
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "analytics" && (<>
         {/* Analytics (read-only) */}
         <CollapsibleModule eyebrow="Insights" title="Product Analytics" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -768,7 +850,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             })()}
           </div>
         </CollapsibleModule>
+        </>)}
 
+        {tab === "merch" && (<>
         {/* Product Badges */}
         <CollapsibleModule eyebrow="Step 7" title="Product Badges" badge={<Tag className="size-3.5 text-accent" />}>
           {row?.slug ? (
@@ -777,7 +861,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <ProductBadgeManager selectedIds={pendingBadges} onChange={setPendingBadges} />
           )}
         </CollapsibleModule>
+        </>)}
 
+        {tab === "basic" && (<>
         {/* Media */}
         <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
@@ -785,8 +871,10 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <EField label="Product Demo URL" value={form.demo_url} onChange={(v) => set({ demo_url: v })} />
           </div>
         </CollapsibleModule>
+        </>)}
 
 
+        {tab === "seo" && (<>
         {/* Advanced */}
         <CollapsibleModule eyebrow="Optional" title="Advanced (SEO & specs)" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
@@ -816,8 +904,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
           </div>
         </CollapsibleModule>
+        </>)}
 
-        {row?.slug && (
+        {row?.slug && tab === "seo" && (
           <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={false}>
             <ProductFaqManager productSlug={row.slug} />
           </CollapsibleModule>

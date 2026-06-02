@@ -13,6 +13,8 @@ import {
   Loader2,
   ShieldCheck,
   SlidersHorizontal,
+  Star,
+
 } from "lucide-react";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
@@ -82,6 +84,17 @@ export function ProductCardAdminControls({ product }: { product: Product }) {
       onClick: (e: React.MouseEvent) => {
         stop(e);
         navigate({ to: "/products/$slug", params: { slug: product.slug } });
+      },
+    },
+    {
+      label: product.featured ? "Unfeature" : "Feature",
+      icon: Star,
+      onClick: (e: React.MouseEvent) => {
+        stop(e);
+        run(
+          () => update({ data: { slug: product.slug, featured: !product.featured } }),
+          product.featured ? "Removed from featured" : "Marked as featured",
+        );
       },
     },
     {
