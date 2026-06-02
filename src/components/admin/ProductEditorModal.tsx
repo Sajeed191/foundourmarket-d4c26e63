@@ -39,7 +39,7 @@ export type ProductEditorRow = {
   new_arrival?: boolean;
 };
 
-type Category = { slug: string; name: string };
+type Category = { slug: string; name: string; id?: string; parent_id?: string | null };
 
 const inr = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
