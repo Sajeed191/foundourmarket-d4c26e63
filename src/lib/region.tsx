@@ -214,9 +214,17 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
 
     /** Multi-signal engine: edge geo-IP blended with browser + stored signals. */
-    async function runDetection() {
+    async function runDetection(profileCountry?: string | null) {
       const edge = await detect();
-      const result = blendDetection(edge, getPreviousChoice());
+      // For a signed-in user, the country saved on their profile is the most
+      // authoritative signal (e.g. Indian account → INR), so it overrides a
+      // transient edge geo-IP that may resolve elsewhere (VPN, travel, preview).
+      const cc = (profileCountry || "").toUpperCase();
+      const effectiveEdge =
+        cc === "IN"
+          ? { ...edge, suggested: "india" as const, countryCode: "IN", edgeConfidence: 95 }
+          : edge;
+      const result = blendDetection(effectiveEdge, getPreviousChoice());
       if (!cancelled) {
         setCountryCode(result.countryCode);
         setConfidence(result.confidence);
@@ -301,7 +309,11 @@ export function RegionProvider({ children }: { children: ReactNode }) {
             }
           }
 
-          const result = await runDetection().catch(() => null);
+          // The user's saved profile country is the authoritative signal for a
+          // registered account; feed it into detection so an Indian profile
+          // resolves to INR even when the edge IP says otherwise.
+          const profileCountry = mine.countryCode ?? null;
+          const result = await runDetection(profileCountry).catch(() => null);
           if (cancelled) return;
 
           if (result && result.tier === "auto") {
