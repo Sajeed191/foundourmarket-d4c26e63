@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   X, Upload, Loader2, Package, IndianRupee, DollarSign, AlertTriangle,
   Truck, Percent, RotateCcw, Eye, Sparkles, Boxes, Tag, HelpCircle,
+  Smartphone, Monitor, ShoppingCart, Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,8 @@ import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
 import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
 import { assignBadge } from "@/lib/use-product-badges";
 import { useStoreSettings } from "@/lib/use-store-settings";
+import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
+import type { Product } from "@/lib/products";
 
 /** Permissive snake_case row accepted from both /admin and /admin-products. */
 export type ProductEditorRow = {
@@ -99,6 +102,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const fileRef = useRef<HTMLInputElement>(null);
   // Pending badge assignments for a not-yet-saved product (flushed after insert).
   const [pendingBadges, setPendingBadges] = useState<string[]>([]);
+  const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
+
+
 
   // ---- Main category / subcategory hierarchy ----
   const initialCat = categories.find((c) => c.slug === (row?.category ?? ""));
@@ -319,6 +325,95 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
           </div>
         </div>
+
+        {/* Live Storefront Preview */}
+        <CollapsibleModule eyebrow="Live" title="Storefront Preview" badge={<Eye className="size-3.5 text-accent" />}>
+          {(() => {
+            const sell = priceInr ?? (Number(form.price) || 0);
+            const compare = cmpInr;
+            const pctOff = compare != null && compare > sell && sell > 0
+              ? Math.round(((compare - sell) / compare) * 100)
+              : (form.discount ? Number(form.discount) : 0);
+            const fmt = (v: number) => inr(v);
+            const previewProduct = {
+              slug: form.slug, name: form.name, image: form.image,
+              price: sell, priceInr: sell, comparePriceInr: compare,
+              discount: pctOff || undefined,
+              rating: Number((row as any)?.rating ?? 4.8),
+              reviews: Number((row as any)?.reviews ?? 0),
+              stockQuantity: Number(form.stock_quantity) || 0,
+              createdAt: (row as any)?.created_at ?? new Date().toISOString(),
+              soldCount: Number((row as any)?.sold_count ?? 0),
+              viewsCount: Number((row as any)?.views_count ?? 0),
+              wishlistCount: Number((row as any)?.wishlist_count ?? 0),
+              trending: form.trending, bestseller: form.bestseller, newArrival: form.new_arrival,
+              hotDeal: false, flashDeal: form.flash_deal, staffPick: form.staff_pick,
+              giftIdea: form.gift_idea, recommended: form.recommended, homepageHero: form.homepage_hero,
+              premium: false, fastSelling: false, editorsChoice: false,
+            } as unknown as Product;
+            const badges = computeBadges(previewProduct, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES);
+            const cardWidth = previewDevice === "mobile" ? "w-44" : "w-64";
+
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setPreviewDevice("mobile")}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-mono uppercase tracking-widest ${previewDevice === "mobile" ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 text-muted-foreground hover:bg-white/5"}`}>
+                    <Smartphone className="size-3" /> Mobile
+                  </button>
+                  <button type="button" onClick={() => setPreviewDevice("desktop")}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-mono uppercase tracking-widest ${previewDevice === "desktop" ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 text-muted-foreground hover:bg-white/5"}`}>
+                    <Monitor className="size-3" /> Desktop
+                  </button>
+                  <span className="ml-auto text-[10px] text-muted-foreground">Exactly as buyers see it</span>
+                </div>
+
+                <div className="grid place-items-center rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-5">
+                  <div className={`${cardWidth} max-w-full rounded-2xl overflow-hidden border border-white/10 bg-card shadow-[var(--shadow-ember)]`}>
+                    <div className="relative aspect-square bg-white/5 grid place-items-center overflow-hidden">
+                      {form.image
+                        ? <img src={form.image} alt={form.name} className="w-full h-full object-cover" />
+                        : <Package className="size-8 text-muted-foreground" />}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                        {badges.map((b) => (
+                          <span key={b.key} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${b.className}`}>
+                            <span>{b.emoji}</span>{b.label}
+                          </span>
+                        ))}
+                      </div>
+                      {pctOff > 0 && (
+                        <span className="absolute top-2 right-2 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
+                          -{pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-3 space-y-1.5">
+                      <h4 className="text-sm font-medium leading-tight line-clamp-2">{form.name || "Product name"}</h4>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Star className="size-3 fill-amber-400 text-amber-400" />
+                        {Number((row as any)?.rating ?? 4.8).toFixed(1)}
+                        <span>·</span>
+                        <span>{Number((row as any)?.reviews ?? 0)} reviews</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-base font-semibold text-foreground">{fmt(sell)}</span>
+                        {compare != null && compare > sell && (
+                          <span className="text-xs text-muted-foreground line-through">{fmt(compare)}</span>
+                        )}
+                      </div>
+                      <button type="button" disabled
+                        className="w-full mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-accent to-primary text-accent-foreground text-xs font-medium py-2">
+                        <ShoppingCart className="size-3.5" /> Add to Cart
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </CollapsibleModule>
+
+
 
         {/* Product Basics */}
         <CollapsibleModule eyebrow="Step 1" title="Product Basics" badge={<Tag className="size-3.5 text-accent" />}>
