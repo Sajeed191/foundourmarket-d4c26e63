@@ -452,27 +452,7 @@ function AdminPage() {
         </>
       )}
 
-      {tab === "customers" && (
-        orders === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
-        customers.length === 0 ? <p className="text-sm text-muted-foreground">No customers yet.</p> :
-        <div className="overflow-x-auto card-premium rounded-2xl">
-          <table className="w-full text-sm min-w-[640px]">
-            <thead className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-b border-border">
-              <tr><th className="text-left px-5 py-3">Customer</th><th className="text-right px-5 py-3">Orders</th><th className="text-right px-5 py-3">Spent</th><th className="text-right px-5 py-3">Last Order</th></tr>
-            </thead>
-            <tbody>
-              {customers.map(([uid, c]) => (
-                <tr key={uid} className="border-b border-border/40 last:border-0 hover:bg-accent/5">
-                  <td className="px-5 py-3 text-xs">{c.email ?? <span className="font-mono text-muted-foreground">{uid.slice(0, 8)}</span>}</td>
-                  <td className="px-5 py-3 text-right font-mono text-xs">{c.orders}</td>
-                  <td className="px-5 py-3 text-right font-mono text-accent">${c.spent.toFixed(2)}</td>
-                  <td className="px-5 py-3 text-right text-[11px] font-mono text-muted-foreground">{new Date(c.last).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {tab === "customers" && <AdminCustomersTab />}
 
       {tab === "categories" && (
         <CategoryAdminSheet
