@@ -162,7 +162,20 @@ const SECTIONS = [
 
 export const PRODUCT_SECTIONS = SECTIONS;
 
+function useCompletion(slug: string, active?: string) {
+  const [data, setData] = useState<{ sections: SectionCompletion; percent: number } | null>(null);
+  useEffect(() => {
+    let on = true;
+    supabase.from("products").select(COMPLETION_COLS.join(",")).eq("slug", slug).maybeSingle()
+      .then(({ data: row }) => { if (on) setData(computeCompletion(row as Record<string, any>)); });
+    return () => { on = false; };
+    // refetch when switching sections so progress reflects recent saves
+  }, [slug, active]);
+  return data;
+}
+
 function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: string }) {
+  const completion = useCompletion(h.slug, active);
   return (
     <div className="card-premium rounded-2xl p-3 sm:p-4">
       <div className="flex items-center gap-3">
@@ -178,17 +191,37 @@ function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: stri
             <span>{h.category || "Uncategorized"}</span>
           </div>
         </div>
+        {completion && (
+          <div className="shrink-0 text-right">
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Complete</p>
+            <p className={`text-lg font-semibold leading-none mt-0.5 ${completion.percent === 100 ? "text-emerald-400" : "text-accent"}`}>{completion.percent}%</p>
+          </div>
+        )}
       </div>
+      {completion && (
+        <div className="mt-3 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-500 ${completion.percent === 100 ? "bg-emerald-500" : "bg-accent"}`} style={{ width: `${completion.percent}%` }} />
+        </div>
+      )}
       {active && (
         <div className="flex gap-1 overflow-x-auto mt-3 -mx-1 px-1">
-          {SECTIONS.map((s) => (
-            <Link key={s.key} to={s.to} params={{ slug: h.slug }}
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                active === s.key ? "bg-accent/15 text-accent border border-accent/40" : "text-muted-foreground border border-transparent hover:bg-white/5"
-              }`}>
-              {s.label}
-            </Link>
-          ))}
+          {SECTIONS.map((s) => {
+            const done = completion?.sections[s.key as SectionKey];
+            const isData = (COMPLETION_SECTIONS as readonly string[]).includes(s.key);
+            return (
+              <Link key={s.key} to={s.to} params={{ slug: h.slug }}
+                className={`shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active === s.key ? "bg-accent/15 text-accent border border-accent/40" : "text-muted-foreground border border-transparent hover:bg-white/5"
+                }`}>
+                {isData && completion && (
+                  done
+                    ? <Check className="size-3 text-emerald-400" />
+                    : <span className="size-1.5 rounded-full bg-amber-500" />
+                )}
+                {s.label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
