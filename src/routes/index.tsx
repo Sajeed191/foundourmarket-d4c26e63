@@ -574,9 +574,9 @@ function Home() {
                     )}
                   </div>
                 )}
-                <div className="absolute inset-0 p-3 sm:p-5 flex flex-col justify-end z-10">
-                  <h3 className="text-base sm:text-lg font-semibold tracking-tight group-hover:text-accent transition-colors">{cat.name}</h3>
-                  <span className="mt-1.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-muted-foreground font-mono uppercase tracking-widest backdrop-blur-md ring-1 ring-white/10">
+                <div className="absolute inset-0 p-2 sm:p-3 flex flex-col justify-end z-10">
+                  <h3 className="text-[12px] sm:text-sm font-semibold tracking-tight leading-tight line-clamp-1 group-hover:text-accent transition-colors">{cat.name}</h3>
+                  <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] sm:text-[10px] text-muted-foreground font-mono uppercase tracking-widest ring-1 ring-white/10">
                     {categoryCounts[cat.slug] ?? 0} items
                   </span>
                 </div>
