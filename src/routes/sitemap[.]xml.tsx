@@ -10,7 +10,7 @@ export const Route = createFileRoute("/sitemap.xml")({
 
         const [products, categories, pages, posts] = await Promise.all([
           sb.from("products_public").select("slug,updated_at"),
-          sb.from("categories").select("slug"),
+          sb.from("categories").select("slug,parent_id,id"),
           sb.from("cms_pages").select("slug,updated_at").eq("published", true),
           sb.from("cms_posts").select("slug,updated_at,published_at")
             .not("published_at", "is", null).lte("published_at", new Date().toISOString()),
