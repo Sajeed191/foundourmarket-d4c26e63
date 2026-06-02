@@ -456,6 +456,9 @@ function AdminPage() {
                               <div className="flex justify-between gap-3"><span className="text-muted-foreground">User ID</span><span className="font-mono truncate max-w-[150px]">{o.user_id}</span></div>
                               <div className="flex justify-between gap-3"><span className="text-muted-foreground">Status</span><span className="uppercase">{o.status}</span></div>
                               <div className="flex justify-between gap-3"><span className="text-muted-foreground">Placed</span><span>{new Date(o.created_at).toLocaleString()}</span></div>
+                              {o.paid_at && <div className="flex justify-between gap-3"><span className="text-muted-foreground">Paid</span><span>{new Date(o.paid_at).toLocaleString()}</span></div>}
+                              {o.fulfilled_at && <div className="flex justify-between gap-3"><span className="text-muted-foreground">Fulfilled</span><span>{new Date(o.fulfilled_at).toLocaleString()}</span></div>}
+                              {o.cancelled_at && <div className="flex justify-between gap-3"><span className="text-muted-foreground">Cancelled</span><span>{new Date(o.cancelled_at).toLocaleString()}</span></div>}
                               <div className="flex justify-between gap-3 border-t border-white/10 pt-1.5 mt-1.5"><span className="text-muted-foreground">Total</span><span className="font-mono text-accent">{fmt(Number(o.total))}</span></div>
                             </div>
                           </div>
