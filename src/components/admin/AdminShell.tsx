@@ -139,7 +139,9 @@ export function AdminShell({
 }) {
   const { user, loading, roles } = useAdminRoles();
   const nav = useNavigate();
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const path = location.pathname;
+  const activeTab = typeof location.search.tab === "string" ? location.search.tab : null;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [live, setLive] = useState<{ revenue: number; orders: number }>({ revenue: 0, orders: 0 });
@@ -178,7 +180,7 @@ export function AdminShell({
       if (it.to === path) return g.group;
     }
     return "Admin";
-  }, [path]);
+  }, [path, activeTab]);
 
   if (loading || roles === null) {
     return (
@@ -220,7 +222,10 @@ export function AdminShell({
   }
 
   function isActive(it: NavItem) {
-    return path === it.to;
+    if (path !== it.to) return false;
+    if (it.search?.tab) return activeTab === it.search.tab;
+    if (it.to === "/admin") return !activeTab;
+    return true;
   }
 
   function visibleItem(it: NavItem) {
