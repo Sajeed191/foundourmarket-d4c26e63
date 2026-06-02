@@ -291,11 +291,13 @@ export function Nav() {
                   <Section label="Categories">
                     <div className="space-y-1.5">
                       {categories.map((c, i) => (
-                        <motion.div
+                        <div
                           key={c.label}
-                          initial={{ opacity: 0, x: -12 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.08 + i * 0.05, type: "spring", stiffness: 300, damping: 30 }}
+                          style={{
+                            opacity: drawerVisible ? 1 : 0,
+                            transform: drawerVisible ? "translateX(0)" : "translateX(-12px)",
+                            transition: `opacity 0.35s ease ${0.08 + i * 0.05}s, transform 0.35s cubic-bezier(0.22,1,0.36,1) ${0.08 + i * 0.05}s`,
+                          }}
                         >
                           <Link
                             to={c.to}
@@ -309,7 +311,7 @@ export function Nav() {
                             <span className="flex-1 text-sm font-medium">{c.label}</span>
                             <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
                           </Link>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </Section>
