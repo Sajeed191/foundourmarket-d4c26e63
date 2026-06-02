@@ -141,36 +141,69 @@ function LazyMount({ children, minHeight = 280, className }: { children: React.R
   );
 }
 
-/* Reusable conversion-focused product section: header + mobile carousel + compact desktop grid.
-   Lazy-mounts so products only render when the section enters the viewport. */
-function ProductSection({
-  sectionKey,
-  eyebrow,
-  title,
-  icon,
-  products,
-  active,
-  isAdmin,
-  gridCount = 4,
-}: {
-  sectionKey: string;
+
+
+
+
+/* Conversion-focused tabbed product hub: collapses Trending / New Arrivals /
+   Best Sellers / Featured into one compact section — only the active rail
+   renders, cutting homepage height ~30-40% while keeping fast tab switching. */
+type ProductTab = {
+  key: string;
   eyebrow: string;
   title: string;
   icon?: React.ComponentType<{ className?: string }>;
   products: import("@/lib/products").Product[];
   active: boolean;
-  isAdmin: boolean;
-  gridCount?: number;
-}) {
-  if (products.length === 0 || !(active || isAdmin)) return null;
+};
+
+function TabbedProductHub({ tabs, isAdmin }: { tabs: ProductTab[]; isAdmin: boolean }) {
+  const visible = tabs.filter((t) => t.products.length > 0 && (t.active || isAdmin));
+  const [activeKey, setActiveKey] = useState(visible[0]?.key);
+  if (visible.length === 0) return null;
+  const current = visible.find((t) => t.key === activeKey) ?? visible[0];
+
   return (
-    <SectionTracker sectionKey={sectionKey} className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto scroll-mt-24 block">
-      <SectionHeader eyebrow={eyebrow} title={title} icon={icon} href="/search" hrefLabel="See All" sectionKey={sectionKey} editable={isAdmin} active={active} />
+    <SectionTracker sectionKey={current.key} className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto scroll-mt-24 block">
+      {/* Tab bar — horizontally scrollable pill switcher */}
+      <Reveal className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
+        <div className="-mx-1 flex gap-2 overflow-x-auto scrollbar-none px-1 py-1">
+          {visible.map((t) => {
+            const Icon = t.icon;
+            const isActive = t.key === current.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveKey(t.key)}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11px] font-mono uppercase tracking-widest transition-all active:scale-95 ${
+                  isActive
+                    ? "border-accent/60 bg-accent/15 text-accent shadow-[var(--shadow-ember)]"
+                    : "border-white/10 bg-white/[0.03] text-muted-foreground hover:text-foreground hover:border-white/20"
+                }`}
+              >
+                {Icon && <Icon className="size-3.5" />}
+                {t.title}
+                {!t.active && isAdmin && <span className="text-[8px] text-amber-400">(hidden)</span>}
+              </button>
+            );
+          })}
+        </div>
+        <Link to="/search" className="hidden sm:inline-block shrink-0 text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-foreground hover:border-foreground transition-colors">
+          See All
+        </Link>
+      </Reveal>
+
+      {isAdmin && (
+        <div className="mb-3">
+          <SectionHeader eyebrow={current.eyebrow} title={current.title} icon={current.icon} sectionKey={current.key} editable active={current.active} />
+        </div>
+      )}
+
       <LazyMount minHeight={260}>
-        <ProductRail products={products} />
+        <ProductRail key={current.key} products={current.products} />
         <MobileViewAll to="/search" />
         <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-          {products.slice(0, gridCount).map((p, i) => (
+          {current.products.slice(0, 4).map((p, i) => (
             <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
           ))}
         </div>
@@ -178,8 +211,6 @@ function ProductSection({
     </SectionTracker>
   );
 }
-
-
 
 function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean }) {
   const [editing, setEditing] = useState(false);
@@ -616,29 +647,23 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* 5 · Trending Products */}
+      {/* 5 · Trending / New Arrivals / Best Sellers / Featured — tabbed hub */}
       {productsLoading ? (
         <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
       ) : (
-        <ProductSection sectionKey="trending" eyebrow={sections.trending.eyebrow} title={sections.trending.title} icon={Flame} products={trending} active={sections.trending.active} isAdmin={isProductAdmin} />
+        <TabbedProductHub
+          isAdmin={isProductAdmin}
+          tabs={[
+            { key: "trending", eyebrow: sections.trending.eyebrow, title: sections.trending.title, icon: Flame, products: trending, active: sections.trending.active },
+            { key: "new_arrivals", eyebrow: sections.new_arrivals.eyebrow, title: sections.new_arrivals.title, icon: Sparkles, products: newArrivals, active: sections.new_arrivals.active },
+            { key: "best_sellers", eyebrow: sections.best_sellers.eyebrow, title: sections.best_sellers.title, icon: Award, products: bestSellers, active: sections.best_sellers.active },
+            { key: "featured", eyebrow: sections.featured.eyebrow, title: sections.featured.title, icon: Star, products: featured, active: sections.featured.active },
+          ]}
+        />
       )}
 
-      {/* 6 · New Arrivals */}
-      {!productsLoading && (
-        <ProductSection sectionKey="new_arrivals" eyebrow={sections.new_arrivals.eyebrow} title={sections.new_arrivals.title} icon={Sparkles} products={newArrivals} active={sections.new_arrivals.active} isAdmin={isProductAdmin} />
-      )}
-
-      {/* 7 · Best Sellers */}
-      {!productsLoading && (
-        <ProductSection sectionKey="best_sellers" eyebrow={sections.best_sellers.eyebrow} title={sections.best_sellers.title} icon={Award} products={bestSellers} active={sections.best_sellers.active} isAdmin={isProductAdmin} />
-      )}
-
-      {/* 8 · Featured Products */}
-      {!productsLoading && (
-        <ProductSection sectionKey="featured" eyebrow={sections.featured.eyebrow} title={sections.featured.title} icon={Star} products={featured} active={sections.featured.active} isAdmin={isProductAdmin} />
-      )}
 
 
 
