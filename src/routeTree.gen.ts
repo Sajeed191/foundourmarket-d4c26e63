@@ -89,6 +89,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AdminProductSlugRouteImport } from './routes/admin-product.$slug'
 import { Route as AdminCustomersCustomerIdRouteImport } from './routes/admin-customers.$customerId'
 import { Route as AccountSupportRouteImport } from './routes/account_.support'
 import { Route as AccountSecurityRouteImport } from './routes/account_.security'
@@ -100,6 +101,7 @@ import { Route as AccountOrdersRouteImport } from './routes/account_.orders'
 import { Route as AccountNotificationsRouteImport } from './routes/account_.notifications'
 import { Route as AccountHistoryRouteImport } from './routes/account_.history'
 import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
+import { Route as AdminProductSlugIndexRouteImport } from './routes/admin-product.$slug.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as CategoryMainSubRouteImport } from './routes/category.$main.$sub'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
@@ -518,6 +520,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AdminProductSlugRoute = AdminProductSlugRouteImport.update({
+  id: '/admin-product/$slug',
+  path: '/admin-product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCustomersCustomerIdRoute =
   AdminCustomersCustomerIdRouteImport.update({
     id: '/$customerId',
@@ -573,6 +580,11 @@ const AccountAddressesRoute = AccountAddressesRouteImport.update({
   id: '/account_/addresses',
   path: '/account/addresses',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductSlugIndexRoute = AdminProductSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminProductSlugRoute,
 } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
@@ -725,6 +737,7 @@ export interface FileRoutesByFullPath {
   '/account/security': typeof AccountSecurityRoute
   '/account/support': typeof AccountSupportRoute
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
+  '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -743,6 +756,7 @@ export interface FileRoutesByFullPath {
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/api/public/webhooks/$courier': typeof ApiPublicWebhooksCourierRoute
@@ -849,6 +863,7 @@ export interface FileRoutesByTo {
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/admin-product/$slug': typeof AdminProductSlugIndexRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/api/public/webhooks/$courier': typeof ApiPublicWebhooksCourierRoute
@@ -938,6 +953,7 @@ export interface FileRoutesById {
   '/account_/security': typeof AccountSecurityRoute
   '/account_/support': typeof AccountSupportRoute
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
+  '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -956,6 +972,7 @@ export interface FileRoutesById {
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
   '/api/public/webhooks/$courier': typeof ApiPublicWebhooksCourierRoute
@@ -1046,6 +1063,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/account/support'
     | '/admin-customers/$customerId'
+    | '/admin-product/$slug'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -1064,6 +1082,7 @@ export interface FileRouteTypes {
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
+    | '/admin-product/$slug/'
     | '/api/public/track/click'
     | '/api/public/track/open'
     | '/api/public/webhooks/$courier'
@@ -1170,6 +1189,7 @@ export interface FileRouteTypes {
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
+    | '/admin-product/$slug'
     | '/api/public/track/click'
     | '/api/public/track/open'
     | '/api/public/webhooks/$courier'
@@ -1258,6 +1278,7 @@ export interface FileRouteTypes {
     | '/account_/security'
     | '/account_/support'
     | '/admin-customers/$customerId'
+    | '/admin-product/$slug'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -1276,6 +1297,7 @@ export interface FileRouteTypes {
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
+    | '/admin-product/$slug/'
     | '/api/public/track/click'
     | '/api/public/track/open'
     | '/api/public/webhooks/$courier'
@@ -1364,6 +1386,7 @@ export interface RootRouteChildren {
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
   AccountSupportRoute: typeof AccountSupportRoute
+  AdminProductSlugRoute: typeof AdminProductSlugRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OrdersIdRoute: typeof OrdersIdRoute
@@ -1951,6 +1974,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/admin-product/$slug': {
+      id: '/admin-product/$slug'
+      path: '/admin-product/$slug'
+      fullPath: '/admin-product/$slug'
+      preLoaderRoute: typeof AdminProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-customers/$customerId': {
       id: '/admin-customers/$customerId'
       path: '/$customerId'
@@ -2027,6 +2057,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/addresses'
       preLoaderRoute: typeof AccountAddressesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin-product/$slug/': {
+      id: '/admin-product/$slug/'
+      path: '/'
+      fullPath: '/admin-product/$slug/'
+      preLoaderRoute: typeof AdminProductSlugIndexRouteImport
+      parentRoute: typeof AdminProductSlugRoute
     }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
@@ -2164,6 +2201,17 @@ const HelpRouteChildren: HelpRouteChildren = {
 
 const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
 
+interface AdminProductSlugRouteChildren {
+  AdminProductSlugIndexRoute: typeof AdminProductSlugIndexRoute
+}
+
+const AdminProductSlugRouteChildren: AdminProductSlugRouteChildren = {
+  AdminProductSlugIndexRoute: AdminProductSlugIndexRoute,
+}
+
+const AdminProductSlugRouteWithChildren =
+  AdminProductSlugRoute._addFileChildren(AdminProductSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -2242,6 +2290,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
   AccountSupportRoute: AccountSupportRoute,
+  AdminProductSlugRoute: AdminProductSlugRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OrdersIdRoute: OrdersIdRoute,
