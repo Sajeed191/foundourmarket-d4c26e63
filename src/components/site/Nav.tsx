@@ -267,7 +267,7 @@ export function Nav() {
 
       {/* Mobile drawer */}
       {drawerMounted && (
-          <div className="fixed inset-0 z-[60] md:hidden">
+          <div className="fixed inset-0 z-[100] md:hidden">
             <div
               style={{
                 opacity: drawerVisible ? 1 : 0,
