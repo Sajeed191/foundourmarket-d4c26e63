@@ -296,11 +296,22 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
             <EField label="Tagline" value={form.tagline} onChange={(v) => set({ tagline: v })} className="col-span-2" />
             <div>
-              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Category</label>
-              <select value={form.category} onChange={(e) => set({ category: e.target.value })} className="filter-select">
-                {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Main Category</label>
+              <select value={mainCat} onChange={(e) => { setMainCat(e.target.value); setSubCat(""); }} className="filter-select">
+                {mains.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
               </select>
             </div>
+            {subs.length > 0 && (
+              <div>
+                <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+                  Subcategory <span className="text-accent">*</span>
+                </label>
+                <select value={subCat} onChange={(e) => setSubCat(e.target.value)} className="filter-select">
+                  <option value="" className="bg-background">Select subcategory…</option>
+                  {subs.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
+                </select>
+              </div>
+            )}
             <EField label="SKU" value={form.sku} onChange={(v) => set({ sku: v })} />
             <EField label="Brand" value={form.brand} onChange={(v) => set({ brand: v })} />
             <EField label="Product Type" value={form.product_type} onChange={(v) => set({ product_type: v })} />
