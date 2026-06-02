@@ -700,3 +700,49 @@
   .badge-anim-float, .badge-anim-slide, .badge-anim-flash { animation: none; }
   .badge-anim-shine::after { animation: none; }
 }
+
+/* ===== Performance utilities ===== */
+/* Below-the-fold sections: skip rendering work until scrolled near viewport */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+/* Floating support orb hide/show on scroll direction */
+.orb-hidden { transform: translateY(160%); opacity: 0; pointer-events: none; }
+
+/* ===== Mobile performance overrides =====
+   Drop expensive backdrop-filters and heavy multi-layer shadows on phones —
+   keep only the sticky header glass for its premium look. Animations stay on
+   transform/opacity only. */
+@media (max-width: 767px) {
+  .glass,
+  .glass-strong,
+  .product-card-glass,
+  .card-outline {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  /* Re-enable blur ONLY for the sticky header nav */
+  [data-app-header] .glass-strong {
+    backdrop-filter: blur(20px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  }
+  /* Replace heavy multi-layer shadows/glows with one optimized token */
+  .product-card-glass,
+  .card-premium,
+  .card-elevated,
+  .card-ambient,
+  .glass-strong {
+    box-shadow: var(--shadow-soft) !important;
+  }
+  .product-card-glass:hover,
+  .product-card-glass:active,
+  .card-premium:hover,
+  .card-elevated:hover,
+  .card-ambient:hover {
+    box-shadow: var(--shadow-soft) !important;
+  }
+  /* Calm ambient orbs (cheaper paint) */
+  .orb { opacity: 0.32; filter: blur(60px); }
+}
