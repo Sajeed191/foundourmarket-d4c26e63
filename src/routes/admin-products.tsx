@@ -604,7 +604,7 @@ function ProductsInner() {
             selected={selected.has(p.id)}
             busy={busy === p.id}
             onSelect={() => toggleSelect(p.id)}
-            onEdit={() => setEditing(p)}
+            onEdit={() => navigate({ to: "/admin-product/$slug", params: { slug: p.slug } })}
             onDuplicate={() => duplicate(p)}
             onDelete={() => remove(p)}
             onToggleActive={() => toggleActive(p)}
