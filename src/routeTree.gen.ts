@@ -72,6 +72,9 @@ import { Route as AdminAcquisitionIntelligenceRouteImport } from './routes/admin
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsTrendingRouteImport } from './routes/products.trending'
+import { Route as ProductsNewArrivalsRouteImport } from './routes/products.new-arrivals'
+import { Route as ProductsBestSellersRouteImport } from './routes/products.best-sellers'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as PagesShippingRouteImport } from './routes/pages.shipping'
 import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
@@ -425,6 +428,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsTrendingRoute = ProductsTrendingRouteImport.update({
+  id: '/products/trending',
+  path: '/products/trending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsNewArrivalsRoute = ProductsNewArrivalsRouteImport.update({
+  id: '/products/new-arrivals',
+  path: '/products/new-arrivals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsBestSellersRoute = ProductsBestSellersRouteImport.update({
+  id: '/products/best-sellers',
+  path: '/products/best-sellers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsSlugRoute = ProductsSlugRouteImport.update({
   id: '/products/$slug',
   path: '/products/$slug',
@@ -683,6 +701,9 @@ export interface FileRoutesByFullPath {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/products/best-sellers': typeof ProductsBestSellersRoute
+  '/products/new-arrivals': typeof ProductsNewArrivalsRoute
+  '/products/trending': typeof ProductsTrendingRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -781,6 +802,9 @@ export interface FileRoutesByTo {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/products/best-sellers': typeof ProductsBestSellersRoute
+  '/products/new-arrivals': typeof ProductsNewArrivalsRoute
+  '/products/trending': typeof ProductsTrendingRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -880,6 +904,9 @@ export interface FileRoutesById {
   '/pages/returns': typeof PagesReturnsRoute
   '/pages/shipping': typeof PagesShippingRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/products/best-sellers': typeof ProductsBestSellersRoute
+  '/products/new-arrivals': typeof ProductsNewArrivalsRoute
+  '/products/trending': typeof ProductsTrendingRoute
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -980,6 +1007,9 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/products/best-sellers'
+    | '/products/new-arrivals'
+    | '/products/trending'
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
@@ -1078,6 +1108,9 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/products/best-sellers'
+    | '/products/new-arrivals'
+    | '/products/trending'
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
@@ -1176,6 +1209,9 @@ export interface FileRouteTypes {
     | '/pages/returns'
     | '/pages/shipping'
     | '/products/$slug'
+    | '/products/best-sellers'
+    | '/products/new-arrivals'
+    | '/products/trending'
     | '/account_/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
@@ -1271,6 +1307,9 @@ export interface RootRouteChildren {
   PagesReturnsRoute: typeof PagesReturnsRoute
   PagesShippingRoute: typeof PagesShippingRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
+  ProductsBestSellersRoute: typeof ProductsBestSellersRoute
+  ProductsNewArrivalsRoute: typeof ProductsNewArrivalsRoute
+  ProductsTrendingRoute: typeof ProductsTrendingRoute
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
@@ -1728,6 +1767,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/trending': {
+      id: '/products/trending'
+      path: '/products/trending'
+      fullPath: '/products/trending'
+      preLoaderRoute: typeof ProductsTrendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/new-arrivals': {
+      id: '/products/new-arrivals'
+      path: '/products/new-arrivals'
+      fullPath: '/products/new-arrivals'
+      preLoaderRoute: typeof ProductsNewArrivalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/best-sellers': {
+      id: '/products/best-sellers'
+      path: '/products/best-sellers'
+      fullPath: '/products/best-sellers'
+      preLoaderRoute: typeof ProductsBestSellersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/$slug': {
       id: '/products/$slug'
       path: '/products/$slug'
@@ -2085,6 +2145,9 @@ const rootRouteChildren: RootRouteChildren = {
   PagesReturnsRoute: PagesReturnsRoute,
   PagesShippingRoute: PagesShippingRoute,
   ProductsSlugRoute: ProductsSlugRoute,
+  ProductsBestSellersRoute: ProductsBestSellersRoute,
+  ProductsNewArrivalsRoute: ProductsNewArrivalsRoute,
+  ProductsTrendingRoute: ProductsTrendingRoute,
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,

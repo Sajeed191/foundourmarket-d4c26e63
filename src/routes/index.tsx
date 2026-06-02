@@ -24,7 +24,7 @@ import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { ProductRail } from "@/components/site/ProductRail";
+
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";
@@ -106,12 +106,12 @@ function CinematicDivider() {
   );
 }
 
-/* Mobile-only full-width "View All" pill shown under product carousels */
-function MobileViewAll({ to, label = "View All" }: { to: string; label?: string }) {
+/* Full-width premium "View All" button shown directly below each product section */
+function ViewAllButton({ to, label = "View All" }: { to: string; label?: string }) {
   return (
     <Link
       to={to}
-      className="sm:hidden mt-3 flex items-center justify-center gap-2 rounded-full glass border border-accent/25 py-3 text-[11px] font-mono uppercase tracking-widest text-accent active:scale-[0.98] transition-transform"
+      className="mt-4 flex items-center justify-center gap-2 w-full rounded-2xl glass-strong border border-accent/30 py-3.5 text-[11px] font-mono font-semibold uppercase tracking-[0.25em] text-accent hover:bg-accent/10 active:scale-[0.99] transition-all"
     >
       {label} <ArrowRight className="size-3.5" />
     </Link>
@@ -145,10 +145,10 @@ function iconForCategory(slug: string, name: string): LucideIcon {
   return Package;
 }
 
-/* Single product rail section (lazy-mounted). `prominent` gives Trending extra
-   visual weight; other rails use the compact card layout. */
+/* Single product section (lazy-mounted). Shows exactly 4 products in a 2×2
+   mobile grid (no carousel) with a full-width premium "View All" button. */
 function ProductSection({
-  sectionKey, eyebrow, title, icon, products, isAdmin, active, prominent = false, minHeight = 260,
+  sectionKey, eyebrow, title, icon, products, isAdmin, active, viewAllTo, prominent = false, minHeight = 260,
 }: {
   sectionKey: string;
   eyebrow: string;
@@ -157,10 +157,12 @@ function ProductSection({
   products: import("@/lib/products").Product[];
   isAdmin: boolean;
   active: boolean;
+  viewAllTo: string;
   prominent?: boolean;
   minHeight?: number;
 }) {
   if (products.length === 0 || (!active && !isAdmin)) return null;
+  const preview = products.slice(0, 4);
   return (
     <SectionTracker
       sectionKey={sectionKey}
@@ -170,24 +172,24 @@ function ProductSection({
         eyebrow={eyebrow}
         title={title}
         icon={icon}
-        href="/search"
+        href={viewAllTo}
         sectionKey={sectionKey}
         editable={isAdmin}
         active={active}
         prominent={prominent}
       />
       <LazyMount minHeight={minHeight}>
-        <ProductRail products={products} compact={!prominent} />
-        <MobileViewAll to="/search" />
-        <div className={`hidden sm:grid grid-cols-2 ${prominent ? "lg:grid-cols-4 gap-4 sm:gap-6" : "lg:grid-cols-5 gap-3 sm:gap-4"}`}>
-          {products.slice(0, prominent ? 4 : 5).map((p, i) => (
-            <Reveal key={p.slug} delay={i}><ProductCard product={p} compact={!prominent} /></Reveal>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {preview.map((p, i) => (
+            <Reveal key={p.slug} delay={i}><ProductCard product={p} compact /></Reveal>
           ))}
         </div>
+        <ViewAllButton to={viewAllTo} />
       </LazyMount>
     </SectionTracker>
   );
 }
+
 
 function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true, prominent = false }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean; prominent?: boolean }) {
   const [editing, setEditing] = useState(false);
@@ -481,16 +483,32 @@ function Home() {
                     to="/category/$slug"
                     params={{ slug: cat.slug }}
                     onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                    className={`group product-card-glass relative flex aspect-square flex-col items-center justify-center gap-2 p-2 text-center hover:-translate-y-1 ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
+                    className={`group product-card-glass relative flex aspect-square flex-col overflow-hidden p-0 text-center hover:-translate-y-1 ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
                   >
-                    <div className="size-9 sm:size-12 grid place-items-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20 transition-colors group-hover:bg-accent/15">
-                      <Icon className="size-4 sm:size-5" />
+                    {/* Dominant 1:1 category image with icon fallback */}
+                    <div className="absolute inset-0">
+                      {cat.image || cat.mobile_image ? (
+                        <img
+                          src={cat.mobile_image || cat.image || ""}
+                          alt={cat.name}
+                          loading="lazy"
+                          className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="size-full grid place-items-center bg-accent/10">
+                          <Icon className="size-7 sm:size-9 text-accent" />
+                        </div>
+                      )}
+                      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
                     </div>
-                    <h3 className="text-[11px] sm:text-sm font-semibold tracking-tight leading-tight line-clamp-1 group-hover:text-accent transition-colors">{cat.name}</h3>
-                    <span className="text-[8px] sm:text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-                      {categoryCounts[cat.slug] ?? 0} items
-                    </span>
+                    <div className="relative z-10 mt-auto p-2 text-left">
+                      <h3 className="text-[11px] sm:text-sm font-semibold tracking-tight leading-tight line-clamp-1 text-white group-hover:text-accent transition-colors">{cat.name}</h3>
+                      <span className="text-[8px] sm:text-[10px] text-white/70 font-mono uppercase tracking-widest">
+                        {categoryCounts[cat.slug] ?? 0} items
+                      </span>
+                    </div>
                   </Link>
+
                   {isProductAdmin && (
                     <div className="absolute left-2 top-2 z-20">
                       <InlineActiveToggle
@@ -545,6 +563,7 @@ function Home() {
             products={trending}
             isAdmin={isProductAdmin}
             active={sections.trending.active}
+            viewAllTo="/products/trending"
             prominent
             minHeight={320}
           />
@@ -556,6 +575,7 @@ function Home() {
             products={newArrivals}
             isAdmin={isProductAdmin}
             active={sections.new_arrivals.active}
+            viewAllTo="/products/new-arrivals"
           />
           <ProductSection
             sectionKey="best_sellers"
@@ -565,6 +585,7 @@ function Home() {
             products={bestSellers}
             isAdmin={isProductAdmin}
             active={sections.best_sellers.active}
+            viewAllTo="/products/best-sellers"
           />
         </>
       )}
