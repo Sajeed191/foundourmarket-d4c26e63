@@ -67,8 +67,8 @@ function CategoriesPage() {
                   {subs.map((s) => (
                     <Link
                       key={s.slug}
-                      to="/category/$slug"
-                      params={{ slug: s.slug }}
+                      to="/category/$main/$sub"
+                      params={{ main: cat.slug, sub: s.slug }}
                       className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] ring-1 ring-white/10 px-3 py-1.5 text-[11px] font-medium text-foreground/90 hover:bg-accent/15 hover:text-accent hover:ring-accent/30 transition-colors"
                     >
                       {s.name}

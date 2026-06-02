@@ -97,6 +97,7 @@ import { Route as AccountNotificationsRouteImport } from './routes/account_.noti
 import { Route as AccountHistoryRouteImport } from './routes/account_.history'
 import { Route as AccountAddressesRouteImport } from './routes/account_.addresses'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as CategoryMainSubRouteImport } from './routes/category.$main.$sub'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicExpireOrdersRouteImport } from './routes/api/public/expire-orders'
 import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.payment-methods.add'
@@ -554,6 +555,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoryMainSubRoute = CategoryMainSubRouteImport.update({
+  id: '/category/$main/$sub',
+  path: '/category/$main/$sub',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRazorpayWebhookRoute =
   ApiPublicRazorpayWebhookRouteImport.update({
     id: '/api/public/razorpay-webhook',
@@ -707,6 +713,7 @@ export interface FileRoutesByFullPath {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -808,6 +815,7 @@ export interface FileRoutesByTo {
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -910,6 +918,7 @@ export interface FileRoutesById {
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/api/public/expire-orders': typeof ApiPublicExpireOrdersRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1013,6 +1022,7 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1114,6 +1124,7 @@ export interface FileRouteTypes {
     | '/account/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1215,6 +1226,7 @@ export interface FileRouteTypes {
     | '/account_/payment-methods/add'
     | '/api/public/expire-orders'
     | '/api/public/razorpay-webhook'
+    | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1313,6 +1325,7 @@ export interface RootRouteChildren {
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   ApiPublicExpireOrdersRoute: typeof ApiPublicExpireOrdersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
+  CategoryMainSubRoute: typeof CategoryMainSubRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicTrackClickRoute: typeof ApiPublicTrackClickRoute
   ApiPublicTrackOpenRoute: typeof ApiPublicTrackOpenRoute
@@ -1942,6 +1955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/category/$main/$sub': {
+      id: '/category/$main/$sub'
+      path: '/category/$main/$sub'
+      fullPath: '/category/$main/$sub'
+      preLoaderRoute: typeof CategoryMainSubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/razorpay-webhook': {
       id: '/api/public/razorpay-webhook'
       path: '/api/public/razorpay-webhook'
@@ -2151,6 +2171,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   ApiPublicExpireOrdersRoute: ApiPublicExpireOrdersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
+  CategoryMainSubRoute: CategoryMainSubRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicTrackClickRoute: ApiPublicTrackClickRoute,
   ApiPublicTrackOpenRoute: ApiPublicTrackOpenRoute,
@@ -2164,13 +2185,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

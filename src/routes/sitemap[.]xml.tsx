@@ -10,7 +10,7 @@ export const Route = createFileRoute("/sitemap.xml")({
 
         const [products, categories, pages, posts] = await Promise.all([
           sb.from("products_public").select("slug,updated_at"),
-          sb.from("categories").select("slug"),
+          sb.from("categories").select("slug,parent_id,id"),
           sb.from("cms_pages").select("slug,updated_at").eq("published", true),
           sb.from("cms_posts").select("slug,updated_at,published_at")
             .not("published_at", "is", null).lte("published_at", new Date().toISOString()),
@@ -29,7 +29,17 @@ export const Route = createFileRoute("/sitemap.xml")({
           { loc: `${origin}/pages/returns` },
         ];
         (products.data ?? []).forEach((p: any) => urls.push({ loc: `${origin}/products/${p.slug}`, lastmod: p.updated_at }));
-        (categories.data ?? []).forEach((c: any) => urls.push({ loc: `${origin}/category/${c.slug}` }));
+        {
+          const cats = (categories.data ?? []) as any[];
+          const bySlug = new Map(cats.map((c) => [c.id, c.slug]));
+          cats.forEach((c) => {
+            if (c.parent_id && bySlug.get(c.parent_id)) {
+              urls.push({ loc: `${origin}/category/${bySlug.get(c.parent_id)}/${c.slug}` });
+            } else {
+              urls.push({ loc: `${origin}/category/${c.slug}` });
+            }
+          });
+        }
         (pages.data ?? []).forEach((p: any) => urls.push({ loc: `${origin}/pages/${p.slug}`, lastmod: p.updated_at }));
         (posts.data ?? []).forEach((p: any) => urls.push({ loc: `${origin}/blog/${p.slug}`, lastmod: p.updated_at }));
 

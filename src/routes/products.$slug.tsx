@@ -5,7 +5,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
+import { useAllCategories } from "@/lib/use-categories";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useLayoutMetrics } from "@/lib/layout-metrics";
@@ -31,8 +33,36 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
     const product = await fetchProduct(params.slug);
-    return { product };
+    let crumbs: { name: string; href: string }[] = [];
+    if (product?.category) {
+      const { data: cat } = await supabase
+        .from("categories")
+        .select("id,slug,name,parent_id")
+        .eq("slug", product.category)
+        .maybeSingle();
+      if (cat) {
+        let parent: { slug: string; name: string } | null = null;
+        if (cat.parent_id) {
+          const { data: p } = await supabase
+            .from("categories")
+            .select("slug,name")
+            .eq("id", cat.parent_id)
+            .maybeSingle();
+          parent = p ?? null;
+        }
+        if (parent) {
+          crumbs = [
+            { name: parent.name, href: `https://foundourmarket.com/category/${parent.slug}` },
+            { name: cat.name, href: `https://foundourmarket.com/category/${parent.slug}/${cat.slug}` },
+          ];
+        } else {
+          crumbs = [{ name: cat.name, href: `https://foundourmarket.com/category/${cat.slug}` }];
+        }
+      }
+    }
+    return { product, crumbs };
   },
+
   head: ({ params, loaderData }) => {
     const p = loaderData?.product;
     const url = `https://foundourmarket.com/products/${params.slug}`;
@@ -82,8 +112,13 @@ export const Route = createFileRoute("/products/$slug")({
               "@type": "BreadcrumbList",
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Shop", item: "https://foundourmarket.com/" },
-                { "@type": "ListItem", position: 2, name: p.category, item: `https://foundourmarket.com/category/${p.category}` },
-                { "@type": "ListItem", position: 3, name: p.name, item: url },
+                ...(loaderData?.crumbs ?? []).map((c, i) => ({
+                  "@type": "ListItem",
+                  position: i + 2,
+                  name: c.name,
+                  item: c.href,
+                })),
+                { "@type": "ListItem", position: (loaderData?.crumbs?.length ?? 0) + 2, name: p.name, item: url },
               ],
             }),
           },
@@ -102,6 +137,9 @@ function ProductPage() {
   const { product: liveProduct, loading: liveLoading } = useProduct(slug);
   const product = liveProduct ?? loadedProduct;
   const loading = !product && liveLoading;
+  const { categories: allCats } = useAllCategories();
+  const breadcrumbCat = product ? allCats.find((c) => c.slug === product.category) ?? null : null;
+  const breadcrumbParent = breadcrumbCat?.parent_id ? allCats.find((c) => c.id === breadcrumbCat.parent_id) ?? null : null;
   const layoutMetrics = useLayoutMetrics();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
@@ -279,14 +317,33 @@ function ProductPage() {
         <div className="absolute top-1/3 -right-32 size-[34rem] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
       </div>
       <div data-product-page data-product-phase="final" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 product-page-clearance sm:pb-24 lg:pb-16">
-        {/* Breadcrumb */}
-        <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6 sm:mb-8 truncate">
+        {/* Breadcrumb: Home → Main → Sub → Product */}
+        <nav aria-label="Breadcrumb" className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6 sm:mb-8 truncate">
           <Link to="/" className="hover:text-foreground">Shop</Link>
-          <span className="mx-2">/</span>
-          <Link to="/category/$slug" params={{ slug: product.category }} className="hover:text-foreground">{product.category}</Link>
+          {breadcrumbCat && breadcrumbParent && (
+            <>
+              <span className="mx-2">/</span>
+              <Link to="/category/$slug" params={{ slug: breadcrumbParent.slug }} className="hover:text-foreground">{breadcrumbParent.name}</Link>
+              <span className="mx-2">/</span>
+              <Link to="/category/$main/$sub" params={{ main: breadcrumbParent.slug, sub: breadcrumbCat.slug }} className="hover:text-foreground">{breadcrumbCat.name}</Link>
+            </>
+          )}
+          {breadcrumbCat && !breadcrumbParent && (
+            <>
+              <span className="mx-2">/</span>
+              <Link to="/category/$slug" params={{ slug: breadcrumbCat.slug }} className="hover:text-foreground">{breadcrumbCat.name}</Link>
+            </>
+          )}
+          {!breadcrumbCat && (
+            <>
+              <span className="mx-2">/</span>
+              <Link to="/category/$slug" params={{ slug: product.category }} className="hover:text-foreground capitalize">{product.category}</Link>
+            </>
+          )}
           <span className="mx-2">/</span>
           <span className="text-foreground">{product.name}</span>
         </nav>
+
 
         <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
           {/* Gallery */}

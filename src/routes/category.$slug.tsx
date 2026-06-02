@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
@@ -13,19 +13,41 @@ function titleize(slug: string) {
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
     const name = titleize(params.slug);
+    const title = `${name} — FoundOurMarket™`;
+    const description = `Shop ${name} curated from the global marketplace on FoundOurMarket™.`;
+    const url = `https://foundourmarket.com/category/${params.slug}`;
     return {
       meta: [
-        { title: `${name} — FoundOurMarket™` },
-        { name: "description", content: `Shop ${name} curated from the global marketplace.` },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Shop", item: "https://foundourmarket.com/" },
+              { "@type": "ListItem", position: 2, name, item: url },
+            ],
+          }),
+        },
       ],
     };
   },
   component: CategoryPage,
 });
 
+
 function CategoryPage() {
   const { slug } = Route.useParams();
-  const { categories, subsByParent } = useAllCategories();
+  const { categories, subsByParent, loading: catsLoading } = useAllCategories();
   const cat = categories.find((c) => c.slug === slug);
   const { products, loading } = useProducts();
 
@@ -43,6 +65,12 @@ function CategoryPage() {
   }, [cat?.id]);
 
   const parent = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
+
+  // Old flat URL for a subcategory → redirect to the nested /category/main/sub.
+  if (!catsLoading && cat && parent) {
+    return <Navigate to="/category/$main/$sub" params={{ main: parent.slug, sub: cat.slug }} replace />;
+  }
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">
@@ -79,8 +107,8 @@ function CategoryPage() {
             {subs.map((s) => (
               <Link
                 key={s.slug}
-                to="/category/$slug"
-                params={{ slug: s.slug }}
+                to="/category/$main/$sub"
+                params={{ main: slug, sub: s.slug }}
                 className="group product-card-glass relative flex aspect-square flex-col overflow-hidden p-0 hover:-translate-y-0.5 transition-transform"
               >
                 <div className="absolute inset-0">
