@@ -155,18 +155,19 @@ function CheckoutPage() {
   const allowProceed = service?.allowProceed === true;
   const serviceDown = service?.status === "service_down";
 
-  // COD availability is the global admin toggle AND every product in the cart
-  // having COD enabled at the product level. If any item has COD disabled by
-  // the admin, COD must not be offered for this order.
+  // COD availability is driven by the per-product admin toggle: COD is offered
+  // when every product in the cart has COD enabled at the product level. The
+  // global store toggle, when explicitly turned on, also makes COD available
+  // regardless of defaults. If any item has COD disabled by the admin, COD must
+  // not be offered for this order.
   const codAllowed = useMemo(
     () =>
-      !!settings.cod_enabled &&
       detailed.length > 0 &&
       detailed.every((i) => i.product.codEnabled !== false),
-    [settings.cod_enabled, detailed],
+    [detailed],
   );
 
-  // Force COD off if it is not allowed (admin disabled globally or per product)
+  // Force COD off if it is not allowed (admin disabled per product)
   useEffect(() => {
     if (!codAllowed && payMethod === "cod") setPayMethod("razorpay");
   }, [codAllowed, payMethod]);
