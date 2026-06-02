@@ -109,12 +109,12 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
   const subtitle = product.tagline || (product.category ? product.category.replace(/-/g, " ") : "");
 
   return (
-    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full p-2">
+    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full p-1.5">
       <ProductCardAdminControls product={product} />
 
-      {/* IMAGE — ~60-65% of card */}
+      {/* IMAGE — compact marketplace ratio */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40">
+        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40">
           {!imgLoaded && (
             <div
               aria-hidden
