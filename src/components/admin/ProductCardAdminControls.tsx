@@ -13,6 +13,8 @@ import {
   Loader2,
   ShieldCheck,
   SlidersHorizontal,
+  Star,
+
 } from "lucide-react";
 import { useIsProductAdmin } from "@/lib/use-admin";
 import { useAdminMode } from "@/lib/admin-mode";
