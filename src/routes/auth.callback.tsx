@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/safe-redirect";
 
 export const Route = createFileRoute("/auth/callback")({
-  head: () => ({ meta: [{ title: "Signing you in… — FoundOurMarket™" }] }),
+  head: () => ({ meta: [{ title: "Signing you in… — FoundOurMarket™" }, { name: "robots", content: "noindex, nofollow" }] }),
   component: AuthCallback,
 });
 
