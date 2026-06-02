@@ -687,8 +687,8 @@ function Home() {
           ))}
         </div>
 
-        {testimonials.length > 0 && (() => {
-          return (
+        {testimonials.length > 0 && (
+          <LazyMount minHeight={260}>
             <>
               {/* Mobile: compact swipeable carousel with dots + autorotate */}
               <TestimonialsCarousel items={testimonials} />
