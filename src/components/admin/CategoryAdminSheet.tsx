@@ -746,18 +746,20 @@ export function CategoryAdminSheet({
                 Realtime · admin-only · {rows.length} total
               </p>
             </div>
-            <button
-              onClick={() => {
-                if (uploadingSlot || saving) {
-                  toast.error("Please wait for the upload to finish");
-                  return;
-                }
-                onClose();
-              }}
-              className="grid size-8 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
+            {!embedded && (
+              <button
+                onClick={() => {
+                  if (uploadingSlot || saving) {
+                    toast.error("Please wait for the upload to finish");
+                    return;
+                  }
+                  onClose();
+                }}
+                className="grid size-8 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </div>
 
           {!editing && (
