@@ -35,8 +35,8 @@ export function Footer() {
         <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
           <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket™</p>
           <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-            <Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link to="/pages/$slug" params={{ slug: "terms" }} className="hover:text-foreground transition-colors">Terms &amp; Conditions</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms &amp; Conditions</Link>
             <Link to="/returns" className="hover:text-foreground transition-colors">Refund Policy</Link>
             <Link to="/help" className="hover:text-foreground transition-colors">Contact Us</Link>
           </nav>
@@ -80,7 +80,7 @@ export function Footer() {
         </div>
         <FooterSection title="Company">
           <ul className="text-xs space-y-2 text-muted-foreground">
-            <li><Link to="/pages/$slug" params={{ slug: "about" }} className="hover:text-foreground transition-colors">About Us</Link></li>
+            <li><Link to="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
             <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
             <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
             <li><Link to="/deals" className="hover:text-foreground transition-colors">Today's Deals</Link></li>
@@ -100,7 +100,7 @@ export function Footer() {
             <li><Link to="/track" className="hover:text-foreground transition-colors">Track Order</Link></li>
             <li><Link to="/returns" className="hover:text-foreground transition-colors">Returns &amp; Refunds</Link></li>
             <li><Link to="/pages/$slug" params={{ slug: "shipping" }} className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
-            <li><Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
           </ul>
         </FooterSection>
 
@@ -134,8 +134,8 @@ export function Footer() {
         <div aria-hidden className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.35 }} />
         <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">© 2026 FoundOurMarket. All rights reserved.</p>
         <div className="flex w-full max-w-sm flex-wrap justify-center gap-1.5 rounded-2xl border border-border/70 bg-card/35 p-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest backdrop-blur-xl md:w-auto md:max-w-none md:justify-end md:gap-5 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-          <Link to="/pages/$slug" params={{ slug: "privacy" }} className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Privacy</Link>
-          <Link to="/pages/$slug" params={{ slug: "terms" }} className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Terms</Link>
+          <Link to="/privacy" className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Privacy</Link>
+          <Link to="/terms" className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Terms</Link>
           <Link to="/returns" className="min-h-10 rounded-xl px-3 py-2 grid place-items-center hover:bg-accent/10 hover:text-foreground transition-colors">Refunds</Link>
         </div>
       </div>
