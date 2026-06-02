@@ -138,7 +138,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
   }
 
   return (
-    <Reveal className="flex justify-between items-end mb-5 sm:mb-8 gap-4">
+    <Reveal className="flex justify-between items-end mb-4 sm:mb-6 gap-4">
       <div className="min-w-0">
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
           {Icon && <Icon className="size-3" />} {eyebrow}
