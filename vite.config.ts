@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import path from "node:path";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { imagetools } from "vite-imagetools";
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
@@ -19,6 +20,11 @@ export default defineConfig({
   // @react-email's `render()` throw at runtime in the Cloudflare Worker — silently
   // breaking ALL transactional email rendering. See email troubleshooting guide.
   vite: {
+    plugins: [
+      // Build-time responsive image generation (WebP + multiple widths).
+      // Enabled for imports that opt in via the `?responsive` query flag.
+      imagetools(),
+    ],
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
