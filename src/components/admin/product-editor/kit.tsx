@@ -136,16 +136,18 @@ function useProductRow(slug: string, cols: string[]) {
 /* ----------------------------- section shell ----------------------------- */
 
 const SECTIONS = [
-  { key: "details", label: "Product Details" },
-  { key: "pricing", label: "Pricing" },
-  { key: "inventory", label: "Inventory" },
-  { key: "shipping", label: "Shipping" },
-  { key: "returns", label: "Returns" },
-  { key: "seo", label: "SEO" },
-  { key: "merchandising", label: "Merchandising" },
-  { key: "analytics", label: "Analytics" },
-  { key: "preview", label: "Preview" },
+  { key: "details", to: "/admin-product/$slug/details", label: "Product Details" },
+  { key: "pricing", to: "/admin-product/$slug/pricing", label: "Pricing" },
+  { key: "inventory", to: "/admin-product/$slug/inventory", label: "Inventory" },
+  { key: "shipping", to: "/admin-product/$slug/shipping", label: "Shipping" },
+  { key: "returns", to: "/admin-product/$slug/returns", label: "Returns" },
+  { key: "seo", to: "/admin-product/$slug/seo", label: "SEO" },
+  { key: "merchandising", to: "/admin-product/$slug/merchandising", label: "Merchandising" },
+  { key: "analytics", to: "/admin-product/$slug/analytics", label: "Analytics" },
+  { key: "preview", to: "/admin-product/$slug/preview", label: "Preview" },
 ] as const;
+
+export const PRODUCT_SECTIONS = SECTIONS;
 
 function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: string }) {
   return (
