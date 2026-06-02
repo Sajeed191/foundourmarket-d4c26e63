@@ -60,10 +60,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const load = useCallback(async () => {
     const { data } = await supabase
       .from("product_reviews")
-      .select(isAdmin ? REVIEW_COLS : REVIEW_COLS_PUBLIC)
+      .select((isAdmin ? REVIEW_COLS : REVIEW_COLS_PUBLIC) as string)
       .eq("product_slug", productSlug)
       .order("created_at", { ascending: false });
-    const list = ((data ?? []) as Review[]).map((r) => ({ ...r, media: (r.media ?? []) as ReviewMedia[] }));
+    const list = ((data ?? []) as unknown as Review[]).map((r) => ({ ...r, media: (r.media ?? []) as ReviewMedia[] }));
     // customers only see published; staff see everything
     const visible = list.filter((r) => r.status === "published");
     setReviews(isAdmin ? list : visible);
