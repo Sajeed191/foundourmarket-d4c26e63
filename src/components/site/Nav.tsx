@@ -78,17 +78,24 @@ export function Nav() {
   ] as const;
 
   const categories = [
-    { to: "/", label: "Shop", icon: Store },
     { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics", icon: Smartphone },
     { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion", icon: Shirt },
     { to: "/category/$slug", params: { slug: "home" }, label: "Home", icon: HomeIcon },
+    { to: "/category/$slug", params: { slug: "fitness" }, label: "Fitness", icon: Dumbbell },
+    { to: "/category/$slug", params: { slug: "beauty" }, label: "Beauty", icon: Gem },
   ] as const;
+
+  const collections = [
+    { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles },
+    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: TrendingUp },
+    { to: "/deals" as const, label: "Flash Deals", desc: "Limited time", icon: Zap },
+  ];
 
   const quickActions = [
     { to: "/account" as const, label: "Orders", icon: Package, badge: null as number | null },
     { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishSlugs.size },
     { to: "/cart" as const, label: "Cart", icon: ShoppingBag, badge: count },
-    { to: "/" as const, label: "Track Order", icon: Truck, badge: null as number | null },
+    { to: "/track" as const, label: "Track Order", icon: Truck, badge: null as number | null },
   ];
 
   const displayName = user
