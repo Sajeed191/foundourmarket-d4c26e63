@@ -70,6 +70,7 @@ export function AdminMobileBar() {
 
   const quickActions: QuickAction[] = [
     { label: "Add product", hint: "New catalog item", icon: PackagePlus, to: "/admin-products" },
+    { label: "Categories", hint: "Manage catalog groups", icon: Boxes, to: "/admin", search: { tab: "categories" } },
     { label: "Inventory", hint: "Adjust stock", icon: Boxes, to: "/admin-inventory" },
     { label: "Orders", hint: "Fulfil & ship", icon: ShoppingBag, to: "/admin-shipments" },
     { label: "Promotion", hint: "Launch campaign", icon: Megaphone, to: "/admin-marketing-automation", search: { action: "create" } },
