@@ -121,11 +121,14 @@ function MerchandisingPage() {
 
   const totals = useMemo(() => {
     const all = rows ?? [];
+    const counts: Record<string, number> = {};
+    for (const s of MERCH_SECTIONS) counts[s.key] = all.filter((r) => !!r[s.flag]).length;
     return {
       products: all.length,
       merchandised: all.filter(hasAnyMerchFlag).length,
       hero: all.filter((r) => r.homepage_hero).length,
       sectionCount: items.length,
+      counts,
     };
   }, [rows, items]);
 
@@ -135,12 +138,15 @@ function MerchandisingPage() {
       subtitle="Place, rank & preview products across the storefront"
       allow={["admin", "super_admin", "manager", "editor"]}
     >
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         <KpiCard label="Products" value={totals.products} icon={<Package className="size-4" />} />
-        <KpiCard label="Merchandised" value={totals.merchandised} icon={<Sparkles className="size-4" />} />
-        <KpiCard label={`In ${section.label}`} value={totals.sectionCount} icon={<TrendingUp className="size-4" />} />
-        <KpiCard label="Hero set" value={totals.hero} icon={<Crown className="size-4" />} />
+        <KpiCard label="Featured" value={totals.counts.featured} icon={<Sparkles className="size-4" />} />
+        <KpiCard label="Trending" value={totals.counts.trending} icon={<TrendingUp className="size-4" />} />
+        <KpiCard label="Flash Deals" value={totals.counts.flash_deal} icon={<Sparkles className="size-4" />} />
+        <KpiCard label="Recommended" value={totals.counts.recommended} icon={<TrendingUp className="size-4" />} />
+        <KpiCard label="Hero" value={totals.hero} icon={<Crown className="size-4" />} />
       </div>
+
 
       {/* Section tabs */}
       <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 mb-4">
