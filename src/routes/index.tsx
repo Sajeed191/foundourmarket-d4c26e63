@@ -439,6 +439,25 @@ function Home() {
             </div>
           </motion.form>
 
+          {/* Primary hero CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
+            className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-3"
+          >
+            <Link
+              to="/categories"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-accent text-accent-foreground text-xs font-semibold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all shadow-[var(--shadow-ember)]"
+            >
+              Shop Now
+            </Link>
+            <Link
+              to="/categories"
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full glass-strong ring-1 ring-white/15 text-xs font-semibold uppercase tracking-widest hover:ring-accent/40 hover:text-foreground active:scale-[0.98] transition-all"
+            >
+              Browse Categories
+            </Link>
+          </motion.div>
+
           {/* Floating live stats */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45, duration: 0.8 }}
