@@ -651,13 +651,13 @@ function ProductPage() {
         </div>
       </LazyMount>
 
-      <LazyMount minHeight={352}>
-        <div id="reviews" data-product-reviews>
+      <LazyMount minHeight={352} className="scroll-mt-24" id="reviews">
+        <div data-product-reviews>
           <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={192}>
-        <div id="questions" data-product-questions>
+      <LazyMount minHeight={192} className="scroll-mt-24" id="questions">
+        <div data-product-questions>
           <ProductQA productSlug={product.slug} />
         </div>
       </LazyMount>
