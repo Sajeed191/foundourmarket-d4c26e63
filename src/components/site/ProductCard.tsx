@@ -10,8 +10,8 @@ import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminCon
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
 
-/** Premium cards show at most 2 badges for a clean, luxury feel. */
-const MAX_BADGES = 2;
+/** Premium single-badge logic — at most one badge per card for a luxury feel. */
+const MAX_BADGES = 1;
 
 function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
@@ -48,34 +48,28 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
     >
       <ProductCardAdminControls product={product} />
 
-      {/* IMAGE — ~68% of card height */}
+      {/* IMAGE — the hero (~70% of card attention) */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
-        <div className="relative aspect-[4/5] overflow-hidden bg-black/40">
+        <div className="relative aspect-square overflow-hidden bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
             className="relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06]"
           />
 
-          {/* Top-left — max 2 badges (discount counts toward the cap) */}
-          <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1">
-            {discount ? (
-              <span className="inline-flex items-center rounded-lg bg-accent text-black font-bold font-mono text-[10px] leading-none px-1.5 py-1 ring-1 ring-black/10">
-                -{discount}%
-              </span>
-            ) : null}
-            {labels.slice(0, discount ? MAX_BADGES - 1 : MAX_BADGES).map((b) => (
+          {/* Top-left — single premium badge */}
+          {labels[0] ? (
+            <div className="absolute top-2.5 left-2.5">
               <span
-                key={b.key}
-                className={`inline-flex items-center gap-0.5 rounded-lg font-bold font-mono uppercase tracking-wide text-[9px] leading-none px-1.5 py-1 ring-1 ring-black/10 ${b.className}`}
+                className={`inline-flex items-center gap-1 rounded-full font-semibold uppercase tracking-wide text-[9px] leading-none px-2 py-1 shadow-sm shadow-black/30 backdrop-blur-sm ${labels[0].className}`}
               >
-                <span aria-hidden>{b.emoji}</span>
-                {b.label}
+                <span aria-hidden>{labels[0].emoji}</span>
+                {labels[0].label}
               </span>
-            ))}
-          </div>
+            </div>
+          ) : null}
 
-          {/* Wishlist — top-right glass button */}
+          {/* Wishlist — top-right frosted glass button */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -99,20 +93,21 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
         </div>
       </Link>
 
+
       {/* INFO */}
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="relative flex flex-1 flex-col px-3 pt-2.5 pb-3"
+        className="relative flex flex-1 flex-col px-3 pt-2 pb-3"
       >
-        {/* Title — exactly 2 lines, reserved height */}
+        {/* Title — max 2 lines, clean truncation, reserved height */}
         <h4 className="text-[14px] font-medium text-white/95 leading-[1.3] line-clamp-2 h-[2.6em] tracking-[-0.01em] group-hover:text-accent transition-colors">
           {product.name}
         </h4>
 
         {/* Rating — directly below title, height reserved */}
-        <div className="flex items-center gap-1 mt-1.5 h-[15px]">
-          {product.reviews > 0 ? (
+        <div className="flex items-center gap-1 mt-1 h-[15px]">
+          {product.reviews > 0 && (
             <>
               <Star className="size-3.5 fill-accent text-accent" />
               <span className="text-[12px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
@@ -120,28 +115,11 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
                 ({product.reviews.toLocaleString()})
               </span>
             </>
-          ) : (
-            <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400/90">New Product</span>
-          )}
-        </div>
-
-        {/* Trust label — below rating, height reserved to avoid layout shift */}
-        <div className="h-[16px] mt-1">
-          {freeShipping ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
-              <Check className="size-3" strokeWidth={2.5} /> Free Shipping
-            </span>
-          ) : (
-            product.returnEligible && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
-                <Check className="size-3" strokeWidth={2.5} /> Free Returns
-              </span>
-            )
           )}
         </div>
 
         {/* Price block — reserved height; old price + discount line always present */}
-        <div className="mt-2 flex flex-col justify-center min-h-[36px]">
+        <div className="mt-1.5 flex flex-col justify-center min-h-[34px]">
           <Price
             value={price}
             className="font-display font-bold text-white tabular-nums leading-none block text-[20px] tracking-[-0.02em]"
@@ -158,6 +136,22 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
             <span aria-hidden className="mt-1 block text-[10px] leading-none invisible">.</span>
           )}
         </div>
+
+        {/* Trust label — single, small, elegant; height reserved to avoid shift */}
+        <div className="h-[16px] mt-1.5">
+          {freeShipping ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+              <Check className="size-3" strokeWidth={2.5} /> Free Shipping
+            </span>
+          ) : (
+            product.returnEligible && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+                <Check className="size-3" strokeWidth={2.5} /> Free Returns
+              </span>
+            )
+          )}
+        </div>
+
 
         {/* Add to cart — full-width premium pill */}
         <div className="mt-2.5">

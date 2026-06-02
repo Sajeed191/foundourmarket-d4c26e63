@@ -71,15 +71,18 @@ const BADGE_STYLES: Record<BadgeKey, Omit<Badge, "key">> = {
 
 // Priority order: highest-signal merchandising badges first. Admin-driven
 // promotional labels (flash deal, staff pick, gift idea) outrank computed ones.
+// Priority order (premium marketplace single-badge logic):
+// Flash Deal → Best Seller → New Arrival → Premium → Trending, then the
+// remaining promotional/computed labels as lower-priority fallbacks.
 const PRIORITY: BadgeKey[] = [
   "flash_deal",
-  "staff_pick",
-  "editors_choice",
-  "gift_idea",
-  "trending",
   "bestseller",
   "new",
   "premium",
+  "trending",
+  "staff_pick",
+  "editors_choice",
+  "gift_idea",
   "fast_selling",
   "hot_deal",
   "limited_stock",
