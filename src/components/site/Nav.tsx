@@ -233,14 +233,15 @@ export function Nav() {
               </span>
             </Link>
 
-            {/* Desktop nav links */}
-            <div className="hidden md:flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+            {/* Desktop nav links — centered */}
+            <div className="hidden md:flex flex-1 justify-center items-center gap-1 text-[13px] font-medium text-muted-foreground">
               {navLinks.map((l) => (
                 <Link
                   key={l.label}
                   to={l.to}
                   params={"params" in l ? l.params : undefined as never}
-                  className="px-3.5 py-1.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all"
+                  activeProps={{ className: "text-foreground bg-white/5" }}
+                  className="px-3.5 py-1.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all whitespace-nowrap"
                 >
                   {l.label}
                 </Link>
