@@ -13,6 +13,13 @@ export function NotificationBell() {
   const [pulse, setPulse] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const prevUnread = useRef(unread);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Auto-close the panel whenever the route changes so it never lingers as a
+  // floating layer over admin (or any) content while navigating.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
