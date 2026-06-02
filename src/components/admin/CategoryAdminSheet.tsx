@@ -67,6 +67,7 @@ const blank = (): Partial<Row> => ({
   banner_image: null,
   mobile_image: null,
   icon: null,
+  parent_id: null,
   seo_title: null,
   seo_description: null,
   sort_order: 0,
