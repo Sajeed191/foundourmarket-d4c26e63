@@ -2,12 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ExecutiveSummaryPanel } from "@/components/admin/ExecutiveSummaryPanel";
 import { FinancialInsightsPanel } from "@/components/admin/FinancialInsightsPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Search, Plus, Minus, Loader2, Download, Radio, Star, StarOff,
   Eye, EyeOff, Copy, ExternalLink, Link2, Trash2, Pencil, Boxes,
   TrendingUp, AlertTriangle, CheckCircle2, X, SlidersHorizontal, BarChart3,
-  Layers, IndianRupee, Flame, Upload, ShoppingCart, Tag,
+  Layers, IndianRupee, Flame, Upload, ShoppingCart, Tag, Image as ImageIcon,
+  FileText, Sparkles, Wrench, ShieldCheck, Crown, HeartPulse,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -70,6 +70,29 @@ const healthMeta: Record<StockHealth, { label: string; cls: string }> = {
   ok: { label: "Healthy", cls: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
 };
 
+// ---- Product Health System ----
+type HealthIssue = { key: string; label: string; weight: number };
+function productHealth(p: Product): { score: number; issues: HealthIssue[] } {
+  const issues: HealthIssue[] = [];
+  const hasImage = !!(p.image && p.image.trim());
+  if (!hasImage) issues.push({ key: "missing_images", label: "Needs images", weight: 25 });
+  if (!p.description || p.description.trim().length < 20) issues.push({ key: "missing_desc", label: "Needs description", weight: 20 });
+  if (!p.category || p.category === "uncategorized") issues.push({ key: "missing_category", label: "Needs category", weight: 15 });
+  if (!p.seo_title || !p.seo_description) issues.push({ key: "missing_seo", label: "Needs SEO", weight: 15 });
+  if (p.stock_quantity <= 0) issues.push({ key: "oos", label: "Out of stock", weight: 15 });
+  else if (p.stock_quantity <= p.low_stock_threshold) issues.push({ key: "low_stock", label: "Low stock", weight: 8 });
+  if (!p.in_stock) issues.push({ key: "hidden", label: "Hidden", weight: 7 });
+  const penalty = issues.reduce((s, i) => s + i.weight, 0);
+  return { score: Math.max(0, Math.min(100, 100 - penalty)), issues };
+}
+function scoreColor(score: number): string {
+  if (score >= 90) return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+  if (score >= 70) return "text-amber-400 border-amber-500/30 bg-amber-500/10";
+  return "text-red-400 border-red-500/30 bg-red-500/10";
+}
+
+
+
 function ProductsPage() {
   return (
     <AdminShell title="Products" subtitle="Realtime catalog, inventory & performance" allow={["admin", "super_admin", "manager", "warehouse_staff", "editor"]}>
@@ -86,6 +109,38 @@ function ProductsPage() {
 type SortKey = "newest" | "oldest" | "revenue" | "stock" | "views" | "conversion" | "price";
 type StockFilter = "all" | "ok" | "low" | "critical" | "oos";
 type StateFilter = "all" | "active" | "inactive" | "featured";
+type TagFilter =
+  | "all" | "active" | "hidden" | "oos" | "low" | "trending" | "bestseller"
+  | "new_arrival" | "featured" | "missing_images" | "missing_seo" | "missing_desc";
+const TAG_CHIPS: { key: TagFilter; label: string; icon: typeof Eye }[] = [
+  { key: "all", label: "All", icon: Package },
+  { key: "active", label: "Active", icon: CheckCircle2 },
+  { key: "hidden", label: "Hidden", icon: EyeOff },
+  { key: "oos", label: "Out of stock", icon: X },
+  { key: "low", label: "Low stock", icon: AlertTriangle },
+  { key: "trending", label: "Trending", icon: TrendingUp },
+  { key: "bestseller", label: "Best sellers", icon: Crown },
+  { key: "new_arrival", label: "New arrivals", icon: Sparkles },
+  { key: "featured", label: "Featured", icon: Star },
+  { key: "missing_images", label: "Missing images", icon: ImageIcon },
+  { key: "missing_seo", label: "Missing SEO", icon: FileText },
+];
+function matchesTag(p: Product, tag: TagFilter): boolean {
+  switch (tag) {
+    case "active": return p.in_stock;
+    case "hidden": return !p.in_stock;
+    case "oos": return p.stock_quantity <= 0;
+    case "low": return p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold;
+    case "trending": return !!p.trending;
+    case "bestseller": return !!p.bestseller;
+    case "new_arrival": return !!(p as { new_arrival?: boolean }).new_arrival;
+    case "featured": return !!p.featured;
+    case "missing_images": return !(p.image && p.image.trim());
+    case "missing_seo": return !p.seo_title || !p.seo_description;
+    case "missing_desc": return !p.description || p.description.trim().length < 20;
+    default: return true;
+  }
+}
 
 function ProductsInner() {
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -103,6 +158,7 @@ function ProductsInner() {
   const [showFilters, setShowFilters] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"active" | "recycle">("active");
+  const [tag, setTag] = useState<TagFilter>("all");
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -292,6 +348,7 @@ function ProductsInner() {
     else if (state === "inactive") list = list.filter((p) => !p.in_stock);
     else if (state === "featured") list = list.filter((p) => p.featured);
     if (stock !== "all") list = list.filter((p) => health(p) === stock);
+    if (tag !== "all") list = list.filter((p) => matchesTag(p, tag));
     if (searchTerm) {
       list = list.filter((p) =>
         [p.name, p.sku, p.category, p.slug, p.tagline].some((v) => (v ?? "").toLowerCase().includes(searchTerm)));
@@ -309,7 +366,35 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, searchTerm, sort, stats, view]);
+  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view]);
+
+  // ---- Catalog Health Center ----
+  const catalogHealth = useMemo(() => {
+    const list = (products ?? []).filter((p) => !p.deleted_at);
+    const count = (fn: (p: Product) => boolean) => list.filter(fn).length;
+    const slugSeen = new Map<string, number>();
+    for (const p of list) {
+      const k = (p.name ?? "").trim().toLowerCase();
+      if (k) slugSeen.set(k, (slugSeen.get(k) ?? 0) + 1);
+    }
+    const duplicates = [...slugSeen.values()].filter((n) => n > 1).reduce((s, n) => s + n, 0);
+    const avgScore = list.length
+      ? Math.round(list.reduce((s, p) => s + productHealth(p).score, 0) / list.length)
+      : 100;
+    return {
+      avgScore,
+      issues: [
+        { key: "missing_images" as TagFilter, label: "Missing images", icon: ImageIcon, count: count((p) => !(p.image && p.image.trim())) },
+        { key: "missing_desc" as TagFilter, label: "Missing descriptions", icon: FileText, count: count((p) => !p.description || p.description.trim().length < 20) },
+        { key: "missing_seo" as TagFilter, label: "Missing SEO", icon: Search, count: count((p) => !p.seo_title || !p.seo_description) },
+        { key: "oos" as TagFilter, label: "Out of stock", icon: X, count: count((p) => p.stock_quantity <= 0) },
+        { key: "low" as TagFilter, label: "Low stock", icon: AlertTriangle, count: count((p) => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold) },
+        { key: "hidden" as TagFilter, label: "Hidden products", icon: EyeOff, count: count((p) => !p.in_stock) },
+      ],
+      duplicates,
+    };
+  }, [products]);
+
 
   const topSellers = useMemo(() => {
     return [...(products ?? [])]
@@ -359,18 +444,16 @@ function ProductsInner() {
       {/* Live KPI strip — horizontally scrollable */}
       <div className="-mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-1 min-w-max">
-          {kpiCards.map((k, i) => (
-            <motion.div
+          {kpiCards.map((k) => (
+            <div
               key={k.label}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
               className={`relative overflow-hidden glass border border-white/10 rounded-2xl p-3.5 ${k.wide ? "min-w-[180px]" : "min-w-[120px]"}`}
             >
               <div className="pointer-events-none absolute -top-6 -right-5 size-16 rounded-full opacity-30" style={{ background: "var(--gradient-ember-soft)", filter: "blur(16px)" }} />
               <k.icon className="size-4 text-accent mb-2" />
               <p className="text-lg font-display tabular-nums leading-none truncate">{k.value}</p>
               <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-1.5">{k.label}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -421,37 +504,87 @@ function ProductsInner() {
         </button>
       </div>
 
-      {/* Filter drawer */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden">
-            <div className="glass border border-white/10 rounded-2xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-              <FilterGroup label="Category">
-                <select value={cat} onChange={(e) => setCat(e.target.value)} className="filter-select">
-                  <option value="all" className="bg-background">All categories</option>
-                  {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
-                </select>
-              </FilterGroup>
-              <FilterGroup label="Stock health">
-                <select value={stock} onChange={(e) => setStock(e.target.value as StockFilter)} className="filter-select">
-                  {(["all", "ok", "low", "critical", "oos"] as StockFilter[]).map((s) => (
-                    <option key={s} value={s} className="bg-background">{s === "all" ? "Any" : s === "oos" ? "Out of stock" : healthMeta[s as StockHealth].label}</option>
-                  ))}
-                </select>
-              </FilterGroup>
-              <FilterGroup label="State">
-                <select value={state} onChange={(e) => setState(e.target.value as StateFilter)} className="filter-select">
-                  <option value="all" className="bg-background">All</option>
-                  <option value="active" className="bg-background">Active</option>
-                  <option value="inactive" className="bg-background">Inactive</option>
-                  <option value="featured" className="bg-background">Featured</option>
-                </select>
-              </FilterGroup>
-            </div>
-          </motion.div>
+      {/* Quick filter chips */}
+      <div className="-mx-1 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 px-1 min-w-max">
+          {TAG_CHIPS.map((c) => {
+            const on = tag === c.key;
+            return (
+              <button key={c.key} onClick={() => setTag(c.key)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest transition-colors ${on ? "border-accent/50 text-accent bg-accent/10" : "border-white/10 text-muted-foreground hover:bg-white/5"}`}>
+                <c.icon className="size-3" /> {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Catalog Health Center */}
+      <div className="glass border border-white/10 rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <HeartPulse className="size-4 text-accent" />
+            <h3 className="text-sm font-display">Catalog Health Center</h3>
+          </div>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-mono ${scoreColor(catalogHealth.avgScore)}`}>
+            <ShieldCheck className="size-3" /> {catalogHealth.avgScore}/100
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+          {catalogHealth.issues.map((iss) => (
+            <button key={iss.key} onClick={() => setTag(iss.key)}
+              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors ${iss.count > 0 ? "border-white/10 hover:border-accent/40 hover:bg-white/5" : "border-white/5 opacity-60"}`}>
+              <span className={`grid place-items-center size-8 rounded-lg shrink-0 ${iss.count > 0 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                <iss.icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-display tabular-nums leading-none">{iss.count}</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground mt-1 truncate">{iss.label}</p>
+              </div>
+              {iss.count > 0 && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent shrink-0">
+                  <Wrench className="size-3" /> Fix
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        {catalogHealth.duplicates > 0 && (
+          <p className="mt-3 text-[10px] font-mono text-amber-400 flex items-center gap-1.5">
+            <AlertTriangle className="size-3" /> {catalogHealth.duplicates} possible duplicate products (same name)
+          </p>
         )}
-      </AnimatePresence>
+      </div>
+
+
+      {/* Filter drawer */}
+      {showFilters && (
+        <div className="overflow-hidden">
+          <div className="glass border border-white/10 rounded-2xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+            <FilterGroup label="Category">
+              <select value={cat} onChange={(e) => setCat(e.target.value)} className="filter-select">
+                <option value="all" className="bg-background">All categories</option>
+                {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.name}</option>)}
+              </select>
+            </FilterGroup>
+            <FilterGroup label="Stock health">
+              <select value={stock} onChange={(e) => setStock(e.target.value as StockFilter)} className="filter-select">
+                {(["all", "ok", "low", "critical", "oos"] as StockFilter[]).map((s) => (
+                  <option key={s} value={s} className="bg-background">{s === "all" ? "Any" : s === "oos" ? "Out of stock" : healthMeta[s as StockHealth].label}</option>
+                ))}
+              </select>
+            </FilterGroup>
+            <FilterGroup label="State">
+              <select value={state} onChange={(e) => setState(e.target.value as StateFilter)} className="filter-select">
+                <option value="all" className="bg-background">All</option>
+                <option value="active" className="bg-background">Active</option>
+                <option value="inactive" className="bg-background">Inactive</option>
+                <option value="featured" className="bg-background">Featured</option>
+              </select>
+            </FilterGroup>
+          </div>
+        </div>
+      )}
 
       {/* Catalog list (virtualized) */}
       <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground px-1">
@@ -595,6 +728,7 @@ function ProductCard({
 }) {
   const h = health(p);
   const hm = healthMeta[h];
+  const hs = productHealth(p);
   const conv = p.views_count > 0 ? ((stat.units / p.views_count) * 100) : 0;
   const [stockInput, setStockInput] = useState(String(p.stock_quantity));
   useEffect(() => { setStockInput(String(p.stock_quantity)); }, [p.stock_quantity]);
@@ -621,19 +755,35 @@ function ProductCard({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono ${scoreColor(hs.score)}`} title={hs.issues.map((i) => i.label).join(", ") || "Healthy"}>
+              <ShieldCheck className="size-2.5" /> {hs.score}/100
+            </span>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${hm.cls}`}>
               {hm.label} · {p.stock_quantity}
             </span>
+            {p.trending && <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><TrendingUp className="size-2.5" /> Trending</span>}
+            {p.bestseller && <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Crown className="size-2.5" /> Best seller</span>}
+            {(p as { new_arrival?: boolean }).new_arrival && <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Sparkles className="size-2.5" /> New</span>}
             {p.featured && <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 text-accent px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Star className="size-2.5" /> Featured</span>}
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${p.in_stock ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-muted-foreground border-white/10 bg-white/5"}`}>
               {p.in_stock ? "Active" : "Inactive"}
             </span>
           </div>
+          {hs.issues.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
+              {hs.issues.map((iss) => (
+                <span key={iss.key} className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/[0.06] text-amber-400/90 px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-wider">
+                  <AlertTriangle className="size-2" /> {iss.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Assigned badges */}
       <ProductBadgeStrip slug={p.slug} onManage={onEdit} />
+
 
       {/* Metrics */}
       <div className="grid grid-cols-4 gap-1.5 mt-3">
