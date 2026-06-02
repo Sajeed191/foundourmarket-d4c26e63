@@ -2,13 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import { Heart, Plus, Check, Star } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
-import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
+import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
+
+/** Premium cards show at most 2 badges for a clean, luxury feel. */
+const MAX_BADGES = 2;
 
 function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
@@ -32,45 +35,45 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
   const discount = discountPercent(price, originalPrice);
   const shippingFee = shippingFeeOf(product);
   const freeShipping = shippingFee <= 0;
-  const labels = computeBadges(product, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES);
+  const labels = computeBadges(product, DEFAULT_BADGE_SETTINGS, MAX_BADGES);
+  const isPremium = labels.some((b) => b.key === "premium");
 
   return (
-    <div className="group product-card-glass overflow-hidden relative flex flex-col h-full">
+    <div
+      className={`group relative flex flex-col h-full overflow-hidden rounded-[22px] border bg-card/40 backdrop-blur-xl transition-[transform,box-shadow,border-color] duration-300 ${
+        isPremium
+          ? "border-accent/40 shadow-[0_8px_30px_-12px_oklch(0.72_0.18_55/0.45)] sm:group-hover:shadow-[0_14px_40px_-12px_oklch(0.72_0.18_55/0.55)]"
+          : "border-white/10 shadow-[0_4px_24px_-14px_oklch(0_0_0/0.7)] sm:group-hover:shadow-[0_12px_36px_-14px_oklch(0_0_0/0.75)]"
+      } sm:group-hover:-translate-y-0.5`}
+    >
       <ProductCardAdminControls product={product} />
 
-      {/* IMAGE — ~65-70% of card height via portrait ratio */}
+      {/* IMAGE — ~68% of card height */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
         <div className="relative aspect-[4/5] overflow-hidden bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
-            className="relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.05]"
+            className="relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06]"
           />
 
-          {/* Top-left stack — discount first, then automatic merchandising labels (max 3 total). */}
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+          {/* Top-left — max 2 badges (discount counts toward the cap) */}
+          <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1">
             {discount ? (
-              <span className="inline-flex items-center rounded-md bg-accent text-black font-bold font-mono text-[10px] leading-none px-1.5 py-1 ring-1 ring-black/10">
+              <span className="inline-flex items-center rounded-lg bg-accent text-black font-bold font-mono text-[10px] leading-none px-1.5 py-1 ring-1 ring-black/10">
                 -{discount}%
               </span>
             ) : null}
-            {labels.slice(0, discount ? MAX_CARD_BADGES - 1 : MAX_CARD_BADGES).map((b) => (
+            {labels.slice(0, discount ? MAX_BADGES - 1 : MAX_BADGES).map((b) => (
               <span
                 key={b.key}
-                className={`inline-flex items-center gap-0.5 rounded-md font-bold font-mono uppercase tracking-wide text-[9px] leading-none px-1.5 py-1 ring-1 ring-black/10 ${b.className}`}
+                className={`inline-flex items-center gap-0.5 rounded-lg font-bold font-mono uppercase tracking-wide text-[9px] leading-none px-1.5 py-1 ring-1 ring-black/10 ${b.className}`}
               >
                 <span aria-hidden>{b.emoji}</span>
                 {b.label}
               </span>
             ))}
           </div>
-
-          {/* Free Shipping — the one other allowed badge, bottom-left */}
-          {freeShipping && (
-            <span className="absolute bottom-2.5 left-2.5 inline-flex items-center rounded-full bg-black/55 backdrop-blur-md text-emerald-300 font-semibold font-mono uppercase tracking-wider text-[9px] px-2 py-1 ring-1 ring-white/10">
-              Free Shipping
-            </span>
-          )}
 
           {/* Wishlist — top-right glass button */}
           <button
@@ -96,23 +99,23 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
         </div>
       </Link>
 
-      {/* INFO — refined hierarchy, balanced spacing */}
+      {/* INFO */}
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="relative flex flex-1 flex-col gap-1.5 px-3 pt-2.5 pb-3"
+        className="relative flex flex-1 flex-col px-3 pt-2.5 pb-3"
       >
-        {/* Name — clamped to exactly 2 lines, height always reserved */}
-        <h4 className="text-[13px] font-medium text-white/95 leading-[1.3] line-clamp-2 h-[2.6em] tracking-[-0.01em] group-hover:text-accent transition-colors">
+        {/* Title — exactly 2 lines, reserved height */}
+        <h4 className="text-[14px] font-medium text-white/95 leading-[1.3] line-clamp-2 h-[2.6em] tracking-[-0.01em] group-hover:text-accent transition-colors">
           {product.name}
         </h4>
 
-        {/* Rating — height always reserved to prevent layout shift */}
-        <div className="flex items-center gap-1 h-[14px]">
+        {/* Rating — directly below title, height reserved */}
+        <div className="flex items-center gap-1 mt-1.5 h-[15px]">
           {product.reviews > 0 ? (
             <>
-              <Star className="size-3 fill-accent text-accent" />
-              <span className="text-[11px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
+              <Star className="size-3.5 fill-accent text-accent" />
+              <span className="text-[12px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
               <span className="text-[10px] font-mono text-muted-foreground/70">
                 ({product.reviews.toLocaleString()})
               </span>
@@ -122,29 +125,47 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
           )}
         </div>
 
-        {/* Bottom action row — pushed to bottom, price + Add aligned on one baseline */}
-        <div className="mt-auto pt-1.5 flex items-center justify-between gap-2">
-          {/* Price block — fixed reserved height; old price line always present */}
-          <div className="min-w-0 flex flex-col justify-center h-[34px]">
-            <Price
-              value={price}
-              className="font-display font-bold text-white tabular-nums leading-none block text-[19px] tracking-[-0.02em]"
-            />
-            {originalPrice && discount ? (
+        {/* Trust label — below rating, height reserved to avoid layout shift */}
+        <div className="h-[16px] mt-1">
+          {freeShipping ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+              <Check className="size-3" strokeWidth={2.5} /> Free Shipping
+            </span>
+          ) : (
+            product.returnEligible && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+                <Check className="size-3" strokeWidth={2.5} /> Free Returns
+              </span>
+            )
+          )}
+        </div>
+
+        {/* Price block — reserved height; old price + discount line always present */}
+        <div className="mt-2 flex flex-col justify-center min-h-[36px]">
+          <Price
+            value={price}
+            className="font-display font-bold text-white tabular-nums leading-none block text-[20px] tracking-[-0.02em]"
+          />
+          {originalPrice && discount ? (
+            <span className="mt-1 flex items-center gap-1.5 leading-none">
               <Price
                 value={originalPrice}
-                className="mt-1 font-mono text-muted-foreground/55 line-through tabular-nums block text-[10px] leading-none"
+                className="font-mono text-muted-foreground/55 line-through tabular-nums block text-[10px]"
               />
-            ) : (
-              <span aria-hidden className="mt-1 block text-[10px] leading-none invisible">.</span>
-            )}
-          </div>
+              <span className="font-mono font-semibold text-accent text-[10px]">{discount}% OFF</span>
+            </span>
+          ) : (
+            <span aria-hidden className="mt-1 block text-[10px] leading-none invisible">.</span>
+          )}
+        </div>
 
+        {/* Add to cart — full-width premium pill */}
+        <div className="mt-2.5">
           {product.inStock ? (
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 inline-flex items-center justify-center gap-1 rounded-full w-[82px] h-9 text-[12px] font-semibold tracking-[-0.01em] transition-colors duration-200 active:scale-95 ${
+              className={`relative w-full inline-flex items-center justify-center gap-1.5 rounded-full h-[42px] text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200 active:scale-[0.97] ${
                 justAdded
                   ? "bg-emerald-500 text-black"
                   : "bg-accent text-black hover:bg-[oklch(0.78_0.18_55)]"
@@ -160,7 +181,7 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
                 </>
               )}
               {cartQty > 0 && !justAdded && (
-                <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
+                <span className="absolute top-1.5 right-2.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
                   {cartQty}
                 </span>
               )}
@@ -168,14 +189,13 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
           ) : (
             <span
               onClick={(e) => e.preventDefault()}
-              className="shrink-0 inline-flex items-center justify-center rounded-full w-[82px] h-9 bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider text-[9px]"
+              className="w-full inline-flex items-center justify-center rounded-full h-[42px] bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider text-[10px]"
             >
               Sold Out
             </span>
           )}
         </div>
       </Link>
-
     </div>
   );
 }
