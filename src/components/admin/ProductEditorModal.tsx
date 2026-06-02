@@ -209,10 +209,12 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (validation.length) { setError(validation[0]); return; }
+    if (!mainCat) { setError("Select a main category."); return; }
+    if (subs.length > 0 && !subCat) { setError("This category has subcategories — selecting a subcategory is required."); return; }
     setSaving(true); setError(null);
     const payload = {
       slug: form.slug.trim() || slugify(form.name), name: form.name.trim(),
-      tagline: form.tagline.trim() || null, category: form.category,
+      tagline: form.tagline.trim() || null, category: effectiveCategory,
       price: Number(form.price) || 0, cost: Number(form.cost) || 0,
       discount: form.discount ? Number(form.discount) : null,
       image: form.image.trim() || null, description: form.description.trim() || null,
