@@ -70,6 +70,29 @@ const healthMeta: Record<StockHealth, { label: string; cls: string }> = {
   ok: { label: "Healthy", cls: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
 };
 
+// ---- Product Health System ----
+type HealthIssue = { key: string; label: string; weight: number };
+function productHealth(p: Product): { score: number; issues: HealthIssue[] } {
+  const issues: HealthIssue[] = [];
+  const hasImage = !!(p.image && p.image.trim());
+  if (!hasImage) issues.push({ key: "missing_images", label: "Needs images", weight: 25 });
+  if (!p.description || p.description.trim().length < 20) issues.push({ key: "missing_desc", label: "Needs description", weight: 20 });
+  if (!p.category || p.category === "uncategorized") issues.push({ key: "missing_category", label: "Needs category", weight: 15 });
+  if (!p.seo_title || !p.seo_description) issues.push({ key: "missing_seo", label: "Needs SEO", weight: 15 });
+  if (p.stock_quantity <= 0) issues.push({ key: "oos", label: "Out of stock", weight: 15 });
+  else if (p.stock_quantity <= p.low_stock_threshold) issues.push({ key: "low_stock", label: "Low stock", weight: 8 });
+  if (!p.in_stock) issues.push({ key: "hidden", label: "Hidden", weight: 7 });
+  const penalty = issues.reduce((s, i) => s + i.weight, 0);
+  return { score: Math.max(0, Math.min(100, 100 - penalty)), issues };
+}
+function scoreColor(score: number): string {
+  if (score >= 90) return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+  if (score >= 70) return "text-amber-400 border-amber-500/30 bg-amber-500/10";
+  return "text-red-400 border-red-500/30 bg-red-500/10";
+}
+
+
+
 function ProductsPage() {
   return (
     <AdminShell title="Products" subtitle="Realtime catalog, inventory & performance" allow={["admin", "super_admin", "manager", "warehouse_staff", "editor"]}>
