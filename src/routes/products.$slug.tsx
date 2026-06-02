@@ -111,8 +111,13 @@ export const Route = createFileRoute("/products/$slug")({
               "@type": "BreadcrumbList",
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Shop", item: "https://foundourmarket.com/" },
-                { "@type": "ListItem", position: 2, name: p.category, item: `https://foundourmarket.com/category/${p.category}` },
-                { "@type": "ListItem", position: 3, name: p.name, item: url },
+                ...(loaderData?.crumbs ?? []).map((c, i) => ({
+                  "@type": "ListItem",
+                  position: i + 2,
+                  name: c.name,
+                  item: c.href,
+                })),
+                { "@type": "ListItem", position: (loaderData?.crumbs?.length ?? 0) + 2, name: p.name, item: url },
               ],
             }),
           },
