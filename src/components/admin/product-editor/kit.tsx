@@ -1,13 +1,27 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Save, Package, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
+import { SaveStateBadge } from "@/components/admin/SaveStateBadge";
+import { writeLocalDraft, readLocalDraft, clearLocalDraft, type SaveState } from "@/lib/drafts";
+
+const DRAFT_ENTITY = "product_section";
+const draftId = (slug: string, sectionKey: string) => `${slug}:${sectionKey}`;
+
+function relativeAge(iso: string): string {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "moments";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"}`;
+  const h = Math.floor(m / 60);
+  return `${h} hour${h === 1 ? "" : "s"}`;
+}
 
 type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
 
