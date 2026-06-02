@@ -200,6 +200,7 @@ function DeferredShell({ isAuthRoute }: { isAuthRoute: boolean }) {
 
   return (
     <Suspense fallback={null}>
+      <RegionSelectModal />
       {!isAuthRoute && <AdminMobileBar />}
       {!isAuthRoute && <AdminFloatingToolbar />}
       {!isAuthRoute && <AdminOverlayIndicator />}
