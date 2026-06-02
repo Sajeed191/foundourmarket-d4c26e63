@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Heart, ShoppingCart, Check, Star } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
@@ -10,6 +10,7 @@ import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { computeBadges } from "@/lib/badges";
 import { useProductBadges, trackBadgeClick, trackBadgeImpression, badgeAnimationClass } from "@/lib/use-product-badges";
 import { Price } from "@/components/site/Price";
+import { ProductImage } from "@/components/site/ProductImage";
 
 type DisplayBadge = {
   key: string;
@@ -46,12 +47,11 @@ function badgePriority(key?: string, label?: string): number {
   return idx === -1 ? BADGE_PRIORITY.length : idx;
 }
 
-export function ProductCard({ product, compact }: { product: Product; compact?: boolean }) {
+function ProductCardImpl({ product, compact }: { product: Product; compact?: boolean }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items } = useCart();
   const { has, toggle } = useWishlist();
   const saved = has(product.slug);
-  const [imgLoaded, setImgLoaded] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
@@ -115,21 +115,12 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
       {/* IMAGE — compact marketplace ratio */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block relative">
         <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-black/40">
-          {!imgLoaded && (
-            <div
-              aria-hidden
-              className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent"
-            />
-          )}
-          <img
+          <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
-            loading="lazy"
-            width={800}
-            height={600}
-            onLoad={() => setImgLoaded(true)}
-            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            className="relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06]"
           />
+
 
           {/* Discount badge — top-left, bold orange pill for strong visibility */}
           {discount ? (
@@ -268,3 +259,11 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
     </div>
   );
 }
+
+/**
+ * Memoized so a product card only re-renders when its own product reference,
+ * cart quantity, or wishlist state changes — preventing whole-rail re-renders
+ * when an unrelated card is added to the cart.
+ */
+export const ProductCard = memo(ProductCardImpl);
+
