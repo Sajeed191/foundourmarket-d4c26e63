@@ -644,7 +644,7 @@ function Home() {
 
 
       {/* 9 · Featured Collections */}
-      <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
+      <section className="cv-auto px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
         <LazyMount minHeight={220}>
           <PromoBannerCarousel types={["hero"]} maxItems={3} eyebrow="Featured Collections" />
         </LazyMount>
