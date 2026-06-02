@@ -20,22 +20,41 @@ import { NotificationsProvider } from "@/lib/notifications";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { RegionSelectModal } from "@/components/site/RegionSelectModal";
-import { AdminFloatingToolbar } from "@/components/admin/AdminFloatingToolbar";
-import { AdminOverlayIndicator } from "@/components/admin/AdminOverlayIndicator";
 import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
-import { AdminCommandCenter } from "@/components/admin/AdminCommandCenter";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
-import { AdminMobileBar } from "@/components/admin/AdminMobileBar";
-import { CompareTray } from "@/components/site/CompareTray";
-import { InstallPrompt } from "@/components/site/InstallPrompt";
-import { LiveChat } from "@/components/chat/LiveChat";
 import { registerServiceWorker } from "@/lib/pwa";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
 import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { Toaster } from "@/components/ui/sonner";
+
+// Non-critical client-only shell: deferred out of the entry bundle so the
+// homepage/product/search first paint never pays for admin tooling, the live
+// chat widget, the compare tray, or the install prompt. These mount after
+// hydration via the <DeferredShell> gate below.
+const AdminFloatingToolbar = lazy(() =>
+  import("@/components/admin/AdminFloatingToolbar").then((m) => ({ default: m.AdminFloatingToolbar })),
+);
+const AdminOverlayIndicator = lazy(() =>
+  import("@/components/admin/AdminOverlayIndicator").then((m) => ({ default: m.AdminOverlayIndicator })),
+);
+const AdminCommandCenter = lazy(() =>
+  import("@/components/admin/AdminCommandCenter").then((m) => ({ default: m.AdminCommandCenter })),
+);
+const AdminMobileBar = lazy(() =>
+  import("@/components/admin/AdminMobileBar").then((m) => ({ default: m.AdminMobileBar })),
+);
+const CompareTray = lazy(() =>
+  import("@/components/site/CompareTray").then((m) => ({ default: m.CompareTray })),
+);
+const InstallPrompt = lazy(() =>
+  import("@/components/site/InstallPrompt").then((m) => ({ default: m.InstallPrompt })),
+);
+const LiveChat = lazy(() =>
+  import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
+);
 
 function NotFoundComponent() {
   return (
