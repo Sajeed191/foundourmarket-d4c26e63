@@ -22,6 +22,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as DealsRouteImport } from './routes/deals'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -193,6 +194,11 @@ const HelpRoute = HelpRouteImport.update({
 const DealsRoute = DealsRouteImport.update({
   id: '/deals',
   path: '/deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -806,6 +812,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/deals': typeof DealsRoute
   '/help': typeof HelpRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -928,6 +935,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/deals': typeof DealsRoute
   '/help': typeof HelpRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -1050,6 +1058,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/deals': typeof DealsRoute
   '/help': typeof HelpRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -1174,6 +1183,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/compare'
+    | '/contact'
     | '/deals'
     | '/help'
     | '/privacy'
@@ -1296,6 +1306,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/compare'
+    | '/contact'
     | '/deals'
     | '/help'
     | '/privacy'
@@ -1417,6 +1428,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/compare'
+    | '/contact'
     | '/deals'
     | '/help'
     | '/privacy'
@@ -1540,6 +1552,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   CompareRoute: typeof CompareRoute
+  ContactRoute: typeof ContactRoute
   DealsRoute: typeof DealsRoute
   HelpRoute: typeof HelpRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
@@ -1680,6 +1693,13 @@ declare module '@tanstack/react-router' {
       path: '/deals'
       fullPath: '/deals'
       preLoaderRoute: typeof DealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -2565,6 +2585,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   CompareRoute: CompareRoute,
+  ContactRoute: ContactRoute,
   DealsRoute: DealsRoute,
   HelpRoute: HelpRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
