@@ -514,6 +514,34 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+function FooterAction({
+  icon: Icon, label, to, badge, onNavigate,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  to: string;
+  badge?: number;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className="group relative flex flex-col items-center justify-center gap-1 rounded-xl glass border border-white/[0.06] py-2.5 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.96] transition"
+    >
+      <span className="relative">
+        <Icon className="size-4.5 text-muted-foreground group-hover:text-accent transition" />
+        {badge != null && badge > 0 && (
+          <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold grid place-items-center">{badge > 99 ? "99+" : badge}</span>
+        )}
+      </span>
+      <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition">{label}</span>
+    </Link>
+  );
+}
+
+
+
 
 function NavItem({
   icon: Icon, label, to, badge, accent, onNavigate,
