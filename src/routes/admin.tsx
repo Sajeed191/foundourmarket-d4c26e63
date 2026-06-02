@@ -18,8 +18,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LayoutDashboard } from "lucide-react";
 
 
+const VALID_TABS = ["overview", "orders", "customers", "products", "categories", "promos", "subscribers"] as const;
+
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — FoundOurMarket™" }] }),
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const t = search.tab;
+    return typeof t === "string" && (VALID_TABS as readonly string[]).includes(t)
+      ? { tab: t as Tab }
+      : {};
+  },
   component: AdminPage,
 });
 
@@ -57,7 +65,9 @@ function AdminPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [products, setProducts] = useState<ProductRow[] | null>(null);
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const [tab, setTab] = useState<Tab>("overview");
+  const { tab: tabParam } = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(tabParam ?? "overview");
+  useEffect(() => { if (tabParam) setTab(tabParam); }, [tabParam]);
   const [updating, setUpdating] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProductRow | "new" | null>(null);
   const [editingCat, setEditingCat] = useState<Category | "new" | null>(null);
