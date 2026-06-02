@@ -640,12 +640,7 @@ function Home() {
         <ProductSection sectionKey="featured" eyebrow={sections.featured.eyebrow} title={sections.featured.title} icon={Star} products={featured} active={sections.featured.active} isAdmin={isProductAdmin} />
       )}
 
-      {/* Recently viewed — personal browsing history (only when history exists) */}
-      {recentlyViewedSlugs.length > 0 && (
-        <section className="px-4 sm:px-6 py-2 max-w-7xl mx-auto">
-          <RecommendationStrip title="Recently viewed" slugs={recentlyViewedSlugs} icon={<Package className="size-3" />} />
-        </section>
-      )}
+
 
       {/* 9 · Featured Collections */}
       <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
