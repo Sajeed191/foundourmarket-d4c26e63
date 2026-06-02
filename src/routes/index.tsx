@@ -351,6 +351,17 @@ function Home() {
     [products]
   );
 
+  const bestSellers = useMemo(
+    () => [...products].sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0)).slice(0, 8),
+    [products]
+  );
+
+  const featured = useMemo(() => {
+    const flagged = products.filter((p) => p.featured);
+    return (flagged.length > 0 ? flagged : [...products].sort((a, b) => b.rating - a.rating)).slice(0, 8);
+  }, [products]);
+
+
   // Personalized "For You" engine — region-aware via signals stored per user/session.
   const { slugs: recentSlugs } = useRecentlyViewed();
   const [personalizedSlugs, setPersonalizedSlugs] = useState<string[]>([]);
