@@ -257,7 +257,6 @@ function RootComponent() {
                       </main>
                       {!isAuthRoute && <Footer />}
                       {!isAuthRoute && <MobileBottomNav />}
-                      <RegionSelectModal />
                       <DeferredShell isAuthRoute={isAuthRoute} />
                       <Toaster position="bottom-center" richColors />
                     </div>
