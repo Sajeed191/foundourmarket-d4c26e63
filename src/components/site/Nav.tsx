@@ -101,6 +101,9 @@ export function Nav() {
     { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics" },
     { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion" },
     { to: "/category/$slug", params: { slug: "home" }, label: "Home" },
+    { to: "/category/$slug", params: { slug: "beauty" }, label: "Beauty" },
+    { to: "/category/$slug", params: { slug: "pet-supplies" }, label: "Pet Supplies" },
+    { to: "/deals", label: "Deals" },
   ] as const;
 
   // Lazily-loaded merchandising data — only fetched the first time the drawer
