@@ -229,10 +229,10 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
         {/* Price row + floating cart button */}
         <div className="mt-auto pt-1.5 flex items-end justify-between gap-2">
 
-          <div className="min-w-0">
-            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-base" />
+          <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
+            <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-[15px]" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[10px] mt-1" />
+              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[9px]" />
             ) : null}
           </div>
 
@@ -240,7 +240,7 @@ export function ProductCard({ product, compact }: { product: Product; compact?: 
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
+              className={`relative shrink-0 grid place-items-center size-9 rounded-lg bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
               {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
               {cartQty > 0 && (
