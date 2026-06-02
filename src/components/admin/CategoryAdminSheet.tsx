@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Globe2,
   History,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
