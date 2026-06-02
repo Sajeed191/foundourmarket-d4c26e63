@@ -4,7 +4,7 @@ import {
   ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
   Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
   ChevronRight, LifeBuoy, Settings, ShieldCheck, FileText, Mail, LogIn,
-  Sparkles, TrendingUp, Zap, Dumbbell, Gem, Grid3x3,
+  Sparkles, TrendingUp, Zap, Dumbbell, Gem, Grid3x3, Crown, Flame,
 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
@@ -13,9 +13,30 @@ import { SearchCommand } from "@/components/site/SearchCommand";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
 import { supabase } from "@/integrations/supabase/client";
+import { loadCategories, type Category } from "@/lib/use-categories";
+import { loadProducts } from "@/lib/use-products";
 const logoSrc = "/logo.webp";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
+
+/** Fire-and-forget, schema-agnostic merchandising signal. A listener can be
+ *  attached later (e.g. to persist menu engagement) without touching this UI. */
+function trackMenu(label: string, kind: string) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("fom:menu_click", { detail: { label, kind, ts: Date.now() } }));
+  }
+}
+
+/** Fallback glyph when a category has no image. */
+function catFallbackIcon(slug: string, name: string) {
+  const hay = `${slug} ${name}`.toLowerCase();
+  if (/(electronic|tech|gadget|phone)/.test(hay)) return Smartphone;
+  if (/(fashion|cloth|apparel|wear)/.test(hay)) return Shirt;
+  if (/(home|decor|furnitur|kitchen)/.test(hay)) return HomeIcon;
+  if (/(fitness|sport|gym)/.test(hay)) return Dumbbell;
+  if (/(beauty|cosmetic|skin)/.test(hay)) return Gem;
+  return Package;
+}
 
 function AnimatedHamburger({ open }: { open: boolean }) {
   const line =
