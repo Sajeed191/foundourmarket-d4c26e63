@@ -23,6 +23,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
+import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 
