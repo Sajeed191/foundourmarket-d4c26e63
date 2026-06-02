@@ -15,6 +15,10 @@ import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { loadCategories, type Category } from "@/lib/use-categories";
 import { loadProducts } from "@/lib/use-products";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const logoSrc = "/logo.webp";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
@@ -101,6 +105,9 @@ export function Nav() {
     { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics" },
     { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion" },
     { to: "/category/$slug", params: { slug: "home" }, label: "Home" },
+    { to: "/category/$slug", params: { slug: "beauty" }, label: "Beauty" },
+    { to: "/category/$slug", params: { slug: "pet-supplies" }, label: "Pet Supplies" },
+    { to: "/deals", label: "Deals" },
   ] as const;
 
   // Lazily-loaded merchandising data — only fetched the first time the drawer
@@ -226,14 +233,15 @@ export function Nav() {
               </span>
             </Link>
 
-            {/* Desktop nav links */}
-            <div className="hidden md:flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+            {/* Desktop nav links — centered */}
+            <div className="hidden md:flex flex-1 justify-center items-center gap-1 text-[13px] font-medium text-muted-foreground">
               {navLinks.map((l) => (
                 <Link
                   key={l.label}
                   to={l.to}
                   params={"params" in l ? l.params : undefined as never}
-                  className="px-3.5 py-1.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all"
+                  activeProps={{ className: "text-foreground bg-white/5" }}
+                  className="px-3.5 py-1.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all whitespace-nowrap"
                 >
                   {l.label}
                 </Link>
@@ -279,6 +287,48 @@ export function Nav() {
               )}
 
               <NotificationBell />
+
+              {/* Account — desktop dropdown (replaces floating launcher) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account"
+                    className="hidden md:flex items-center gap-2 h-11 pl-1.5 pr-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                  >
+                    <span className="grid place-items-center size-8 rounded-lg bg-accent/15 ring-1 ring-accent/30 overflow-hidden text-accent">
+                      {user?.user_metadata?.avatar_url
+                        ? <img src={user.user_metadata.avatar_url as string} alt="" className="size-full object-cover" />
+                        : <User className="size-[17px]" />}
+                    </span>
+                    <span className="text-[13px] font-medium max-w-[7rem] truncate">{user ? "Account" : "Sign in"}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 glass-strong border-white/10">
+                  <DropdownMenuLabel className="truncate">{user ? displayName : "Welcome to FoundOurMarket™"}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {user ? (
+                    <>
+                      <DropdownMenuItem asChild><Link to="/account">My Account</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/account">Orders</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/wishlist">Wishlist</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/track">Track Order</Link></DropdownMenuItem>
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild><Link to="/admin">Admin Panel</Link></DropdownMenuItem>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild><Link to="/auth">Sign in</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/track">Track Order</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/help">Help Center</Link></DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
 
               <Link
                 to="/cart"

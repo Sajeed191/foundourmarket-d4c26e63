@@ -22,7 +22,6 @@ import { Footer } from "@/components/site/Footer";
 import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
-import { DesktopAccountDock } from "@/components/site/DesktopAccountDock";
 import { registerServiceWorker } from "@/lib/pwa";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
@@ -267,7 +266,6 @@ function RootComponent() {
                       </main>
                       {!hideSiteChrome && <Footer />}
                       {!hideSiteChrome && <MobileBottomNav />}
-                      {!hideSiteChrome && <DesktopAccountDock />}
                       <DeferredShell isAuthRoute={isAuthRoute} isAdminRoute={isAdminRoute} />
                       <Toaster position="bottom-center" richColors />
                     </div>
