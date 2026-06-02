@@ -36,6 +36,7 @@ export const Route = createFileRoute("/admin")({
 type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
   contact_email: string | null; created_at: string;
+  paid_at: string | null; fulfilled_at: string | null; cancelled_at: string | null;
   order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number }[];
 };
 
