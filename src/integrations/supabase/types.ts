@@ -5041,6 +5041,20 @@ export type Database = {
         }
         Relationships: []
       }
+      product_questions_public: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          author_avatar: string | null
+          author_name: string | null
+          created_at: string | null
+          id: string | null
+          is_mine: boolean | null
+          product_slug: string | null
+          question: string | null
+        }
+        Relationships: []
+      }
       products_public: {
         Row: {
           attributes: Json | null
