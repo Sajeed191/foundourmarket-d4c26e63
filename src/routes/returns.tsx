@@ -359,6 +359,9 @@ function ReturnsPage() {
           ))}
         </div>
 
+        {/* World-class return center sections */}
+        <ReturnCenterSections />
+
         {/* Recommendations */}
         {recentSlugs.length > 0 && (
           <div className="mt-10">
