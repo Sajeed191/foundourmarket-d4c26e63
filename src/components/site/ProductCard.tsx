@@ -218,7 +218,7 @@ function ProductCardImpl({ product, compact }: { product: Product; compact?: boo
         </div>
 
         {/* Price hierarchy + compact add-to-cart */}
-        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
+        <div className="mt-auto pt-1 flex items-end justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <Price value={price} className="font-display font-extrabold text-white tabular-nums leading-none block text-[18px]" />
