@@ -205,7 +205,7 @@ function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: stri
  * - Detects unsaved changes and warns before leaving.
  */
 export function SectionEditor<T extends Record<string, any>>({
-  slug, sectionKey, title, icon, cols, toForm, toPatch, validate, allow, children,
+  slug, sectionKey, title, icon, cols, toForm, toPatch, validate, allow, autosave = true, children,
 }: {
   slug: string;
   sectionKey: string;
@@ -216,49 +216,119 @@ export function SectionEditor<T extends Record<string, any>>({
   toPatch: (form: T) => Record<string, unknown>;
   validate?: (form: T) => string | null;
   allow?: Role[];
+  /** Debounced 2s autosave of changed fields. Defaults to on. */
+  autosave?: boolean;
   children: (form: T, set: (patch: Partial<T>) => void, row: Record<string, any>) => ReactNode;
 }) {
   const { row, loading, notFound } = useProductRow(slug, cols);
   const [form, setForm] = useState<T | null>(null);
-  const [saving, setSaving] = useState(false);
   const baseline = useRef<string>("");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [recovery, setRecovery] = useState<{ data: T; savedAt: string } | null>(null);
+  const recoveryChecked = useRef(false);
+  const inFlight = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formRef = useRef<T | null>(null);
+  formRef.current = form;
 
+  // Seed isolated state once from the loaded row, and surface any newer local draft.
   useEffect(() => {
-    if (row) {
-      const f = toForm(row);
-      setForm(f);
-      baseline.current = JSON.stringify(f);
+    if (!row) return;
+    const f = toForm(row);
+    setForm(f);
+    baseline.current = JSON.stringify(f);
+    if (!recoveryChecked.current) {
+      recoveryChecked.current = true;
+      const local = readLocalDraft(DRAFT_ENTITY, draftId(slug, sectionKey));
+      if (local && JSON.stringify(local.data) !== baseline.current) {
+        setRecovery({ data: local.data as T, savedAt: local.savedAt });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row]);
 
-  const dirty = form != null && JSON.stringify(form) !== baseline.current;
+  const changedKeys = useMemo<string[]>(() => {
+    if (!form || !baseline.current) return [];
+    let base: Record<string, any> = {};
+    try { base = JSON.parse(baseline.current); } catch { /* noop */ }
+    return Object.keys(form).filter((k) => JSON.stringify(form[k]) !== JSON.stringify(base[k]));
+  }, [form]);
+
+  const dirty = changedKeys.length > 0;
+  const validationError = form ? validate?.(form) ?? null : null;
   useUnsavedGuard(dirty);
 
   const set = (patch: Partial<T>) => setForm((f) => (f ? { ...f, ...patch } : f));
 
-  async function save() {
-    if (!form) return;
-    const err = validate?.(form);
-    if (err) { toast.error(err); return; }
-    setSaving(true);
-    const patch = { ...toPatch(form), updated_at: new Date().toISOString() };
-    const { error } = await supabase.from("products").update(patch).eq("slug", slug);
-    setSaving(false);
-    if (error) { toast.error("Save failed", { description: error.message }); return; }
-    baseline.current = JSON.stringify(form);
-    setForm({ ...form }); // refresh dirty comparison
-    logActivity("product_updated", "product", row?.id, { slug, section: sectionKey });
-    invalidateProducts();
-    toast.success(`${title} saved`);
-  }
+  const doSave = useCallback(
+    async (silent: boolean) => {
+      const current = formRef.current;
+      if (!current || inFlight.current) return;
+      const err = validate?.(current);
+      if (err) {
+        if (!silent) toast.error(err);
+        return; // never persist invalid data; manual button is also disabled
+      }
+      inFlight.current = true;
+      setSaveState("saving");
+      const patch = { ...toPatch(current), updated_at: new Date().toISOString() };
+      const { error } = await supabase.from("products").update(patch).eq("slug", slug);
+      inFlight.current = false;
+      if (error) {
+        setSaveState("error");
+        if (!silent) toast.error("Save failed", { description: error.message });
+        return;
+      }
+      baseline.current = JSON.stringify(current);
+      clearLocalDraft(DRAFT_ENTITY, draftId(slug, sectionKey));
+      setForm({ ...current }); // refresh dirty comparison
+      setSaveState("saved");
+      setLastSavedAt(new Date());
+      logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
+      invalidateProducts();
+      if (!silent) toast.success(`${title} saved`);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [slug, sectionKey, title, row?.id],
+  );
+
+  // Local draft cache + debounced 2s autosave while dirty and valid.
+  useEffect(() => {
+    if (!form || !dirty) return;
+    writeLocalDraft(DRAFT_ENTITY, draftId(slug, sectionKey), form);
+    setSaveState("dirty");
+    if (!autosave || validationError) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => void doSave(true), 2000);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(form), dirty, autosave, validationError]);
+
+  const restoreDraft = () => {
+    if (!recovery) return;
+    setForm(recovery.data);
+    setRecovery(null);
+  };
+  const discardDraft = () => {
+    clearLocalDraft(DRAFT_ENTITY, draftId(slug, sectionKey));
+    setRecovery(null);
+  };
 
   const header: ProductHeaderInfo | null = row
     ? { id: row.id, slug: row.slug, name: row.name, image: row.image, sku: row.sku, status: row.status, category: row.category }
     : null;
 
+  const sectionStatus: "saved" | "editing" | "error" =
+    saveState === "error" ? "error" : dirty || saveState === "saving" ? "editing" : "saved";
+  const statusMeta = {
+    saved: { dot: "bg-emerald-500", label: "Saved", tone: "text-emerald-400" },
+    editing: { dot: "bg-amber-500", label: "Editing", tone: "text-amber-400" },
+    error: { dot: "bg-destructive", label: "Error", tone: "text-destructive" },
+  }[sectionStatus];
+
   return (
-    <AdminShell title={title} subtitle="Edit this section in isolation — changes save only when you click Save Changes." allow={allow ?? ["admin", "super_admin", "manager"]}>
+    <AdminShell title={title} subtitle="Edit this section in isolation — changes never touch other sections." allow={allow ?? ["admin", "super_admin", "manager"]}>
       {loading || !form || !header ? (
         notFound ? (
           <div className="card-premium rounded-2xl p-10 text-center">
@@ -269,25 +339,48 @@ export function SectionEditor<T extends Record<string, any>>({
           <div className="grid place-items-center py-24"><Loader2 className="size-5 animate-spin text-accent" /></div>
         )
       ) : (
-        <div className="space-y-5 pb-24">
+        <div className="space-y-5 pb-28">
           <ProductHeaderStrip h={header} active={sectionKey} />
+
+          {recovery && (
+            <div className="card-premium rounded-2xl p-4 border border-amber-500/30">
+              <div className="flex items-start gap-3">
+                <RotateCcw className="size-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">We found an unsaved draft from {relativeAge(recovery.savedAt)} ago.</p>
+                  <div className="flex gap-2 mt-2.5">
+                    <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110">Restore Draft</button>
+                    <button onClick={discardDraft} className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">Discard Draft</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="card-premium rounded-2xl p-4 sm:p-5">
-            <h2 className="text-sm font-medium flex items-center gap-2 mb-4"><span className="text-accent">{icon}</span> {title}</h2>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-sm font-medium flex items-center gap-2"><span className="text-accent">{icon}</span> {title}</h2>
+              <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}>
+                <span className={`size-2 rounded-full ${statusMeta.dot}`} /> {statusMeta.label}
+              </span>
+            </div>
+            {validationError && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                <AlertTriangle className="size-3.5 shrink-0" /> {validationError}
+              </div>
+            )}
             {children(form, set, row!)}
           </motion.div>
 
           {/* Sticky save bar */}
-          <div className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-30 border-t border-border bg-background/90 backdrop-blur-xl px-4 py-3">
+          <div className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-30 border-t border-border bg-background/90 backdrop-blur-xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-              <span className={`text-xs ${dirty ? "text-amber-400" : "text-muted-foreground"}`}>
-                {dirty ? "You have unsaved changes." : "All changes saved."}
-              </span>
-              <button onClick={save} disabled={!dirty || saving}
+              <SaveStateBadge state={saveState} lastSavedAt={lastSavedAt} />
+              <button onClick={() => void doSave(false)} disabled={!dirty || saveState === "saving" || !!validationError}
                 className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed">
-                {saving ? <Loader2 className="size-3.5 animate-spin" /> : dirty ? <Save className="size-3.5" /> : <Check className="size-3.5" />}
-                {saving ? "Saving…" : "Save Changes"}
+                {saveState === "saving" ? <Loader2 className="size-3.5 animate-spin" /> : dirty ? <Save className="size-3.5" /> : <Check className="size-3.5" />}
+                {saveState === "saving" ? "Saving…" : dirty ? `Save Changes (${changedKeys.length})` : "Save Changes"}
               </button>
             </div>
           </div>
