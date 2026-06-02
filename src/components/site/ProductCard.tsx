@@ -259,3 +259,11 @@ function ProductCardImpl({ product, compact }: { product: Product; compact?: boo
     </div>
   );
 }
+
+/**
+ * Memoized so a product card only re-renders when its own product reference,
+ * cart quantity, or wishlist state changes — preventing whole-rail re-renders
+ * when an unrelated card is added to the cart.
+ */
+export const ProductCard = memo(ProductCardImpl);
+
