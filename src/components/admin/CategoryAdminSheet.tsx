@@ -387,6 +387,7 @@ export function CategoryAdminSheet({
       banner_image: row.banner_image,
       mobile_image: row.mobile_image,
       icon: row.icon,
+      parent_id: row.parent_id,
       seo_title: row.seo_title,
       seo_description: row.seo_description,
       sort_order: row.sort_order + 1,
