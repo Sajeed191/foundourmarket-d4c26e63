@@ -28,6 +28,7 @@ import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
 import { AdminImageManager } from "@/components/admin/AdminImageManager";
 import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { LazyMount } from "@/components/site/LazyMount";
+import { ProductHighlights, LiveActivity, TrustGuarantee } from "@/components/site/ProductTrustBlocks";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
@@ -220,7 +221,12 @@ function ProductPage() {
   const socialProof = useMemo(() => {
     if (!product) return null;
     const seed = product.slug.split("").reduce((a: number, c: string) => a + c.charCodeAt(0), 0);
-    return { viewers: 12 + (seed % 40), sold: 5 + (seed % 24) };
+    return {
+      viewers: 12 + (seed % 40),
+      sold: 5 + (seed % 24),
+      addedToCart: 4 + (seed % 12),
+      purchases: 2 + (seed % 6),
+    };
   }, [product?.slug]);
 
   useEffect(() => {
@@ -375,6 +381,12 @@ function ProductPage() {
                 <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[9px] font-mono uppercase tracking-widest text-white/80 backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100">
                   Tap to view all
                 </span>
+                {/* Image counter (1/5) */}
+                {galleryImages.length > 1 && (
+                  <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[10px] font-mono tabular-nums text-white/90 backdrop-blur-md">
+                    {activeImg + 1}/{galleryImages.length}
+                  </span>
+                )}
                 {/* premium glass overlay gradient */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
                 {/* badges */}
@@ -497,9 +509,14 @@ function ProductPage() {
                   )}
                 </div>
                 {originalPrice && originalPrice > effectivePrice && (
-                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-widest text-accent">
-                    <Sparkles className="size-3.5" /> Save {format(originalPrice - effectivePrice)}
-                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <p className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-widest text-accent">
+                      <Sparkles className="size-3.5" /> Save {format(originalPrice - effectivePrice)}
+                    </p>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 text-destructive px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-widest">
+                      🔥 Limited Offer
+                    </span>
+                  </div>
                 )}
               </motion.div>
             ) : (
@@ -521,6 +538,13 @@ function ProductPage() {
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-accent">
                   <Sparkles className="size-3" /> Trending
                 </span>
+              </div>
+            )}
+
+            {/* Live activity badges */}
+            {socialProof && (
+              <div className="mb-5">
+                <LiveActivity viewers={socialProof.viewers} addedToCart={socialProof.addedToCart} purchases={socialProof.purchases} />
               </div>
             )}
 
@@ -722,6 +746,12 @@ function ProductPage() {
         <div data-product-related>
           <RelatedProducts product={product} />
         </div>
+      </LazyMount>
+      <LazyMount minHeight={260}>
+        <ProductHighlights />
+      </LazyMount>
+      <LazyMount minHeight={260}>
+        <TrustGuarantee />
       </LazyMount>
       <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
       
