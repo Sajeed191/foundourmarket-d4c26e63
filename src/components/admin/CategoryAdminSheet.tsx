@@ -704,6 +704,11 @@ export function CategoryAdminSheet({
           >
             <ArrowUp className="size-3.5" />
           </QuickBtn>
+          {!isSub && (
+            <QuickBtn onClick={() => addSubcategory(r)} title="Add subcategory">
+              <Plus className="size-3.5" />
+            </QuickBtn>
+          )}
           <QuickBtn
             onClick={() => reorder(r, "down")}
             title="Move down"
