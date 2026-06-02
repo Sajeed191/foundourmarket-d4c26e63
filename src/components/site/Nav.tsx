@@ -4,6 +4,7 @@ import {
   ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
   Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
   ChevronRight, LifeBuoy, Settings, ShieldCheck, FileText, Mail, LogIn,
+  Sparkles, TrendingUp, Zap, Dumbbell, Gem, Grid3x3,
 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
@@ -77,17 +78,24 @@ export function Nav() {
   ] as const;
 
   const categories = [
-    { to: "/", label: "Shop", icon: Store },
     { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics", icon: Smartphone },
     { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion", icon: Shirt },
     { to: "/category/$slug", params: { slug: "home" }, label: "Home", icon: HomeIcon },
+    { to: "/category/$slug", params: { slug: "fitness" }, label: "Fitness", icon: Dumbbell },
+    { to: "/category/$slug", params: { slug: "beauty" }, label: "Beauty", icon: Gem },
   ] as const;
+
+  const collections = [
+    { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles },
+    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: TrendingUp },
+    { to: "/deals" as const, label: "Flash Deals", desc: "Limited time", icon: Zap },
+  ];
 
   const quickActions = [
     { to: "/account" as const, label: "Orders", icon: Package, badge: null as number | null },
     { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishSlugs.size },
     { to: "/cart" as const, label: "Cart", icon: ShoppingBag, badge: count },
-    { to: "/" as const, label: "Track Order", icon: Truck, badge: null as number | null },
+    { to: "/track" as const, label: "Track Order", icon: Truck, badge: null as number | null },
   ];
 
   const displayName = user
@@ -287,7 +295,39 @@ export function Nav() {
                 </div>
 
                 {/* Scrollable nav */}
-                <div className="flex-1 overflow-y-auto px-4 py-2 space-y-5">
+                <div className="flex-1 overflow-y-auto px-4 py-3 divide-y divide-white/[0.07]">
+                  {/* Shop Collections */}
+                  <Section label="Shop Collections">
+                    <div className="space-y-2">
+                      {collections.map((c, i) => (
+                        <div
+                          key={c.label}
+                          style={{
+                            opacity: drawerVisible ? 1 : 0,
+                            transform: drawerVisible ? "translateX(0)" : "translateX(-12px)",
+                            transition: `opacity 0.35s ease ${0.06 + i * 0.05}s, transform 0.35s cubic-bezier(0.22,1,0.36,1) ${0.06 + i * 0.05}s`,
+                          }}
+                        >
+                          <Link
+                            to={c.to}
+                            onClick={() => setOpen(false)}
+                            className="group flex items-center gap-3 rounded-2xl glass border border-white/[0.06] px-3.5 py-3 hover:border-accent/40 hover:bg-white/[0.05] active:scale-[0.98] transition"
+                          >
+                            <span className="grid place-items-center size-11 rounded-xl bg-accent/15 text-accent ring-1 ring-accent/20 group-hover:shadow-[0_0_18px_-4px_var(--color-accent)] transition">
+                              <c.icon className="size-5" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold truncate">{c.label}</span>
+                              <span className="block text-[11px] text-muted-foreground truncate">{c.desc}</span>
+                            </span>
+                            <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+
+                  {/* Categories */}
                   <Section label="Categories">
                     <div className="space-y-1.5">
                       {categories.map((c, i) => (
@@ -313,19 +353,30 @@ export function Nav() {
                           </Link>
                         </div>
                       ))}
+                      <Link
+                        to="/categories"
+                        onClick={() => setOpen(false)}
+                        className="group flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 hover:bg-accent/15 active:scale-[0.98] transition"
+                      >
+                        <span className="grid place-items-center size-9 rounded-lg bg-accent text-accent-foreground ring-1 ring-accent/30">
+                          <Grid3x3 className="size-4.5" />
+                        </span>
+                        <span className="flex-1 text-sm font-semibold text-accent">View All Categories</span>
+                        <ChevronRight className="size-4 text-accent group-hover:translate-x-0.5 transition" />
+                      </Link>
                     </div>
                   </Section>
 
+                  {/* Account */}
                   <Section label="Account">
                     <NavItem icon={user ? User : LogIn} label={user ? "My Account" : "Sign In"} to={user ? "/account" : "/auth"} onNavigate={() => setOpen(false)} />
-                    <NavItem icon={Heart} label="Wishlist" to="/wishlist" badge={wishSlugs.size} onNavigate={() => setOpen(false)} />
-                    <NavItem icon={ShoppingBag} label="Cart" to="/cart" badge={count} onNavigate={() => setOpen(false)} />
                     {isAdmin && <NavItem icon={LayoutDashboard} label="Admin Panel" to="/admin" accent onNavigate={() => setOpen(false)} />}
                   </Section>
 
+                  {/* Support */}
                   <Section label="Support">
-                    <NavItem icon={LifeBuoy} label="Help Center" to="/" onNavigate={() => setOpen(false)} />
-                    <NavItem icon={Truck} label="Track Order" to="/" onNavigate={() => setOpen(false)} />
+                    <NavItem icon={LifeBuoy} label="Help Center" to="/help" onNavigate={() => setOpen(false)} />
+                    <NavItem icon={Mail} label="Contact Us" to="/help" onNavigate={() => setOpen(false)} />
                   </Section>
                 </div>
 
@@ -355,8 +406,8 @@ export function Nav() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <p className="px-1 mb-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground/70">{label}</p>
+    <div className="py-4 first:pt-1">
+      <p className="px-1 mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/90">{label}</p>
       <div className="space-y-1">{children}</div>
     </div>
   );
