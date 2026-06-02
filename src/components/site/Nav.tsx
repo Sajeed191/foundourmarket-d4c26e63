@@ -221,7 +221,7 @@ export function Nav() {
                 transform: drawerVisible ? "translateX(0)" : "translateX(-100%)",
                 transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
               }}
-              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] [transform:translateZ(0)] will-change-transform"
+              className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col overflow-hidden noise-layer border-r border-white/10 bg-[oklch(0.16_0.012_260)] will-change-transform"
             >
               {/* Background atmosphere */}
               <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
