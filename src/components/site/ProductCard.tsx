@@ -98,16 +98,16 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="relative flex flex-1 flex-col px-3 pt-2.5 pb-3"
+        className="relative flex flex-1 flex-col px-3 pt-2 pb-3"
       >
-        {/* Title — exactly 2 lines, reserved height */}
+        {/* Title — max 2 lines, clean truncation, reserved height */}
         <h4 className="text-[14px] font-medium text-white/95 leading-[1.3] line-clamp-2 h-[2.6em] tracking-[-0.01em] group-hover:text-accent transition-colors">
           {product.name}
         </h4>
 
         {/* Rating — directly below title, height reserved */}
-        <div className="flex items-center gap-1 mt-1.5 h-[15px]">
-          {product.reviews > 0 ? (
+        <div className="flex items-center gap-1 mt-1 h-[15px]">
+          {product.reviews > 0 && (
             <>
               <Star className="size-3.5 fill-accent text-accent" />
               <span className="text-[12px] font-semibold text-white tabular-nums">{product.rating.toFixed(1)}</span>
@@ -115,28 +115,11 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
                 ({product.reviews.toLocaleString()})
               </span>
             </>
-          ) : (
-            <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400/90">New Product</span>
-          )}
-        </div>
-
-        {/* Trust label — below rating, height reserved to avoid layout shift */}
-        <div className="h-[16px] mt-1">
-          {freeShipping ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
-              <Check className="size-3" strokeWidth={2.5} /> Free Shipping
-            </span>
-          ) : (
-            product.returnEligible && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
-                <Check className="size-3" strokeWidth={2.5} /> Free Returns
-              </span>
-            )
           )}
         </div>
 
         {/* Price block — reserved height; old price + discount line always present */}
-        <div className="mt-2 flex flex-col justify-center min-h-[36px]">
+        <div className="mt-1.5 flex flex-col justify-center min-h-[34px]">
           <Price
             value={price}
             className="font-display font-bold text-white tabular-nums leading-none block text-[20px] tracking-[-0.02em]"
@@ -153,6 +136,22 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
             <span aria-hidden className="mt-1 block text-[10px] leading-none invisible">.</span>
           )}
         </div>
+
+        {/* Trust label — single, small, elegant; height reserved to avoid shift */}
+        <div className="h-[16px] mt-1.5">
+          {freeShipping ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+              <Check className="size-3" strokeWidth={2.5} /> Free Shipping
+            </span>
+          ) : (
+            product.returnEligible && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+                <Check className="size-3" strokeWidth={2.5} /> Free Returns
+              </span>
+            )
+          )}
+        </div>
+
 
         {/* Add to cart — full-width premium pill */}
         <div className="mt-2.5">
