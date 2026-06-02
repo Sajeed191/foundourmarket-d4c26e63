@@ -255,7 +255,9 @@ const FOOTER_LINKS = [
   { label: "Terms & Conditions", to: "/terms" },
   { label: "Shipping Policy", to: "/pages/shipping" },
   { label: "Refund Policy", to: "/returns" },
-  { label: "Contact Us", to: "/help" },
+  { label: "Return Policy", to: "/returns" },
+  { label: "Buyer Protection", to: "/buyer-protection" },
+  { label: "Contact Us", to: "/contact" },
   { label: "About Us", to: "/about" },
   { label: "Track Order", to: "/track" },
 ];
