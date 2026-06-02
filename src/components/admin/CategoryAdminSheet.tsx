@@ -305,6 +305,7 @@ export function CategoryAdminSheet({
       banner_image: editing.banner_image || null,
       mobile_image: editing.mobile_image || null,
       icon: editing.icon?.trim() || null,
+      parent_id: editing.parent_id || null,
       seo_title: editing.seo_title?.trim() || null,
       seo_description: editing.seo_description?.trim() || null,
       sort_order: Number(editing.sort_order) || 0,
