@@ -510,9 +510,10 @@ function Home() {
                   </div>
                 )}
                 <div className="absolute inset-0 p-3 sm:p-5 flex flex-col justify-end z-10">
-                  <p className="font-mono text-[10px] text-accent mb-1">{String(i + 1).padStart(2, "0")}</p>
-                  <h3 className="text-base sm:text-lg font-medium">{cat.name}</h3>
-                  <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">{categoryCounts[cat.slug] ?? 0} items</p>
+                  <h3 className="text-base sm:text-lg font-semibold tracking-tight group-hover:text-accent transition-colors">{cat.name}</h3>
+                  <span className="mt-1.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-muted-foreground font-mono uppercase tracking-widest backdrop-blur-md ring-1 ring-white/10">
+                    {categoryCounts[cat.slug] ?? 0} items
+                  </span>
                 </div>
               </Link>
               {isProductAdmin && (
