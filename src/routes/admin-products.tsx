@@ -754,19 +754,35 @@ function ProductCard({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono ${scoreColor(hs.score)}`} title={hs.issues.map((i) => i.label).join(", ") || "Healthy"}>
+              <ShieldCheck className="size-2.5" /> {hs.score}/100
+            </span>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${hm.cls}`}>
               {hm.label} · {p.stock_quantity}
             </span>
+            {p.trending && <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><TrendingUp className="size-2.5" /> Trending</span>}
+            {p.bestseller && <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Crown className="size-2.5" /> Best seller</span>}
+            {(p as { new_arrival?: boolean }).new_arrival && <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Sparkles className="size-2.5" /> New</span>}
             {p.featured && <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 text-accent px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest"><Star className="size-2.5" /> Featured</span>}
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${p.in_stock ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-muted-foreground border-white/10 bg-white/5"}`}>
               {p.in_stock ? "Active" : "Inactive"}
             </span>
           </div>
+          {hs.issues.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
+              {hs.issues.map((iss) => (
+                <span key={iss.key} className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/[0.06] text-amber-400/90 px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-wider">
+                  <AlertTriangle className="size-2" /> {iss.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Assigned badges */}
       <ProductBadgeStrip slug={p.slug} onManage={onEdit} />
+
 
       {/* Metrics */}
       <div className="grid grid-cols-4 gap-1.5 mt-3">
