@@ -13,9 +13,8 @@ import { ProductImage } from "@/components/site/ProductImage";
 const NEW_WINDOW_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 function isNewProduct(product: Product): boolean {
-  const created = (product as { createdAt?: string | null }).createdAt;
-  if (!created) return product.reviews === 0;
-  const t = Date.parse(created);
+  if (!product.createdAt) return product.reviews === 0;
+  const t = Date.parse(product.createdAt);
   return Number.isFinite(t) && Date.now() - t < NEW_WINDOW_MS;
 }
 
