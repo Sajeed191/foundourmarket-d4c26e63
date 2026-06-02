@@ -70,6 +70,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Catalog",
     items: [
       { to: "/admin-products", label: "Products", icon: Package },
+      { to: "/admin-categories", label: "Category Intelligence", icon: BarChart3, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-performance", label: "Performance", icon: Trophy, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-quality", label: "Quality Scanner", icon: ShieldCheck, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-badges", label: "Badge Manager", icon: Gem, roles: ["admin", "super_admin", "manager"] },
