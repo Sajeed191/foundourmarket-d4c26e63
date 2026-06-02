@@ -12,21 +12,20 @@ const pendingKey = (slug: string) => `pq_pending_${slug}`;
 type Question = {
   id: string;
   product_slug: string;
-  user_id: string;
   question: string;
   answer: string | null;
   answered_at: string | null;
   created_at: string;
+  is_mine: boolean;
+  author_name: string | null;
+  author_avatar: string | null;
 };
-
-type ProfileMap = Record<string, { full_name: string | null; avatar_url: string | null }>;
 
 export function ProductQA({ productSlug }: { productSlug: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);
-  const [profiles, setProfiles] = useState<ProfileMap>({});
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(() => {
     if (typeof window === "undefined") return "";
