@@ -8,6 +8,7 @@ import { ProductEditorModal } from "@/components/admin/ProductEditorModal";
 import { invalidateCategories, type Category } from "@/lib/use-categories";
 import { resolveImage } from "@/lib/products";
 import { DashboardOverview } from "@/components/admin/DashboardOverview";
+import { CategoryAdminSheet } from "@/components/admin/CategoryAdminSheet";
 import { MarketingAutomationCard } from "@/components/admin/MarketingAutomationCard";
 import { CustomerMarketingCard } from "@/components/admin/CustomerMarketingCard";
 import { FinancialMarketingCard } from "@/components/admin/FinancialMarketingCard";
@@ -251,10 +252,10 @@ function AdminPage() {
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
               transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              onClick={() => { setTab("categories"); setEditingCat("new"); }}
+              onClick={() => setTab("categories")}
               className="inline-flex items-center gap-2 text-xs uppercase tracking-widest glass rounded-full px-5 py-2.5 text-accent ring-1 ring-inset ring-accent/30 shadow-[0_8px_30px_-12px_oklch(0.74_0.19_49/0.5)]"
             >
-              <Plus className="size-3.5" /> New Category
+              <Plus className="size-3.5" /> Manage Categories
             </motion.button>
           </div>
         </div>
