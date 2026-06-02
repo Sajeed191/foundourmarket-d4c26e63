@@ -316,6 +316,14 @@ function ShippingReturnsPage() {
             </Link>
           </div>
         </motion.div>
+
+        <div className="mt-12">
+          <PolicyCrossLinks
+            title="Related policies"
+            keys={["refund", "return", "contact"]}
+            variant="dark"
+          />
+        </div>
       </div>
     </div>
   );
