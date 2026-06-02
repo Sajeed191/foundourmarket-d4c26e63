@@ -117,6 +117,72 @@ function MobileViewAll({ to, label = "View All" }: { to: string; label?: string 
   );
 }
 
+/* Defers mounting heavy children until the section nears the viewport.
+   Keeps a min-height placeholder to avoid layout shift / fast-scroll jank. */
+function LazyMount({ children, minHeight = 280, className }: { children: React.ReactNode; minHeight?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || show) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShow(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "400px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [show]);
+  return (
+    <div ref={ref} className={className} style={show ? undefined : { minHeight }}>
+      {show ? children : null}
+    </div>
+  );
+}
+
+/* Reusable conversion-focused product section: header + mobile carousel + compact desktop grid.
+   Lazy-mounts so products only render when the section enters the viewport. */
+function ProductSection({
+  sectionKey,
+  eyebrow,
+  title,
+  icon,
+  products,
+  active,
+  isAdmin,
+  gridCount = 4,
+}: {
+  sectionKey: string;
+  eyebrow: string;
+  title: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  products: import("@/lib/products").Product[];
+  active: boolean;
+  isAdmin: boolean;
+  gridCount?: number;
+}) {
+  if (products.length === 0 || !(active || isAdmin)) return null;
+  return (
+    <SectionTracker sectionKey={sectionKey} className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto scroll-mt-24 block">
+      <SectionHeader eyebrow={eyebrow} title={title} icon={icon} href="/search" hrefLabel="See All" sectionKey={sectionKey} editable={isAdmin} active={active} />
+      <LazyMount minHeight={260}>
+        <ProductRail products={products} />
+        <MobileViewAll to="/search" />
+        <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+          {products.slice(0, gridCount).map((p, i) => (
+            <Reveal key={p.slug} delay={i}><ProductCard product={p} /></Reveal>
+          ))}
+        </div>
+      </LazyMount>
+    </SectionTracker>
+  );
+}
+
+
 
 function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean }) {
   const [editing, setEditing] = useState(false);
