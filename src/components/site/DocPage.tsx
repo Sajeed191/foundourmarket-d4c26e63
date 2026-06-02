@@ -87,6 +87,7 @@ export function DocPage({
   badges,
   sections,
   ctas,
+  related,
 }: {
   eyebrow?: string;
   title: ReactNode;
@@ -95,6 +96,7 @@ export function DocPage({
   badges?: { icon: ComponentType<LucideProps>; label: string }[];
   sections: DocSection[];
   ctas?: DocCta[];
+  related?: ReactNode;
 }) {
   const progress = useScrollProgress();
   const active = useActiveSection(sections.map((s) => s.id));
