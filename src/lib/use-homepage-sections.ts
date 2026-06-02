@@ -12,8 +12,10 @@ export type SectionMap = Record<string, HomepageSection>;
 
 const DEFAULTS: SectionMap = {
   trending: { key: "trending", eyebrow: "Hot Right Now", title: "Trending Products", active: true },
-  recommended: { key: "recommended", eyebrow: "Curated For You", title: "Recommended Products", active: true },
   new_arrivals: { key: "new_arrivals", eyebrow: "Just Landed", title: "New Arrivals", active: true },
+  best_sellers: { key: "best_sellers", eyebrow: "Most Loved", title: "Best Sellers", active: true },
+  featured: { key: "featured", eyebrow: "Hand-Picked", title: "Featured Products", active: true },
+  recommended: { key: "recommended", eyebrow: "Curated For You", title: "Recommended Products", active: true },
 };
 
 let cache: SectionMap | null = null;
