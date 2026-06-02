@@ -175,8 +175,7 @@ export function AdminShell({
 
   const groupTitle = useMemo(() => {
     for (const g of NAV) for (const it of g.items) {
-      const [base] = it.to.split("?");
-      if (base === path) return g.group;
+      if (it.to === path) return g.group;
     }
     return "Admin";
   }, [path]);
@@ -220,9 +219,8 @@ export function AdminShell({
     );
   }
 
-  function isActive(to: string) {
-    const [base] = to.split("?");
-    return path === base;
+  function isActive(it: NavItem) {
+    return path === it.to;
   }
 
   function visibleItem(it: NavItem) {
