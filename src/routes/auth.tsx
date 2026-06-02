@@ -250,6 +250,12 @@ function AuthPage() {
               <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password"
                 className="w-full bg-white/[0.04] border border-white/10 text-white placeholder:text-white/40 rounded-full pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00]" />
             </div>
+            {!isSignup && (
+              <button type="button" onClick={onForgot} disabled={busy}
+                className="block w-full text-right text-xs text-white/55 hover:text-white/80 transition-colors -mt-1">
+                Forgot password?
+              </button>
+            )}
             <motion.button
               whileTap={{ scale: 0.975 }}
               disabled={busy}
