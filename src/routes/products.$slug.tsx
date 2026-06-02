@@ -628,35 +628,44 @@ function ProductPage() {
         </div>
       </div>
 
-      {/* Recommendations */}
+      {/* Recommendations — deferred until they near the viewport so the core
+          product info paints first and below-the-fold work is progressive. */}
       <ProductLayoutDiagnostics phase="final" />
-      <div data-product-recommendations className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-0 sm:min-h-[20rem]">
-        {fbtSlugs.length > 0 && (
-          <RecommendationStrip
-            title="Frequently bought together"
-            subtitle="Customers commonly purchase these in the same order"
-            icon={<ShoppingBagIcon className="size-3" />}
-            slugs={fbtSlugs}
-          />
-        )}
-        {alsoViewed.length > 0 && (
-          <RecommendationStrip
-            title="Customers also viewed"
-            icon={<Users className="size-3" />}
-            slugs={alsoViewed}
-          />
-        )}
-      </div>
+      <LazyMount minHeight={320} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div data-product-recommendations>
+          {fbtSlugs.length > 0 && (
+            <RecommendationStrip
+              title="Frequently bought together"
+              subtitle="Customers commonly purchase these in the same order"
+              icon={<ShoppingBagIcon className="size-3" />}
+              slugs={fbtSlugs}
+            />
+          )}
+          {alsoViewed.length > 0 && (
+            <RecommendationStrip
+              title="Customers also viewed"
+              icon={<Users className="size-3" />}
+              slugs={alsoViewed}
+            />
+          )}
+        </div>
+      </LazyMount>
 
-      <div id="reviews" data-product-reviews className="min-h-[22rem]">
-        <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
-      </div>
-      <div id="questions" data-product-questions className="min-h-[12rem]">
-        <ProductQA productSlug={product.slug} />
-      </div>
-      <div data-product-related className="min-h-[24rem]">
-        <RelatedProducts product={product} />
-      </div>
+      <LazyMount minHeight={352}>
+        <div id="reviews" data-product-reviews>
+          <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
+        </div>
+      </LazyMount>
+      <LazyMount minHeight={192}>
+        <div id="questions" data-product-questions>
+          <ProductQA productSlug={product.slug} />
+        </div>
+      </LazyMount>
+      <LazyMount minHeight={384}>
+        <div data-product-related>
+          <RelatedProducts product={product} />
+        </div>
+      </LazyMount>
       <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
       
 
