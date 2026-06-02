@@ -507,7 +507,6 @@
   [data-app-content] {
     position: relative;
     z-index: var(--z-page-content);
-    min-height: max(0px, var(--app-content-height));
     padding-bottom: var(--page-bottom-clearance) !important;
   }
   [data-app-content] > *:last-child { margin-bottom: 0 !important; }
