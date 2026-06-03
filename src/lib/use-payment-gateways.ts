@@ -53,15 +53,16 @@ export function gatewayWarnings(g: PaymentGateway): string[] {
  * Live payment-gateway registry. Public read via RLS, streamed in realtime so
  * checkout unlocks the instant a gateway is connected — no code changes needed.
  */
-export function usePaymentGateways() {
+export function usePaymentGateways(adminFull = false) {
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
+      const table = (adminFull ? "payment_gateways" : "payment_gateways_public") as "payment_gateways";
       const { data } = await supabase
-        .from("payment_gateways")
+        .from(table)
         .select("*")
         .order("provider", { ascending: true });
       if (active) {
