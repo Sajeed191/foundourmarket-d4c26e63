@@ -26,13 +26,26 @@ const SUPPORT_STAFF: StaffRole[] = ["admin", "super_admin", "manager", "support"
 async function getOrder(orderId: string) {
   const { data, error } = await supabaseAdmin
     .from("orders")
-    .select("id, user_id, carrier, tracking_number, total, currency, contact_email")
+    .select("id, user_id, carrier, tracking_number, total, currency, contact_email, payment_status, payment_method")
     .eq("id", orderId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Order not found");
   return data;
 }
+
+/**
+ * Mirror of the DB `payment_allows_fulfillment` guard. Used to return a clean,
+ * descriptive message to staff BEFORE the protective trigger raises. COD orders
+ * are always allowed; otherwise payment must be paid/authorized/succeeded/cod.
+ */
+function paymentAllowsFulfillment(paymentStatus?: string | null, paymentMethod?: string | null): boolean {
+  if ((paymentMethod ?? "").toLowerCase() === "cod") return true;
+  return ["paid", "authorized", "succeeded", "cod"].includes((paymentStatus ?? "").toLowerCase());
+}
+
+const PAYMENT_BLOCK_MSG =
+  "This order cannot be fulfilled because payment has not been completed.";
 
 async function latestShipment(orderId: string) {
   const { data } = await supabaseAdmin
@@ -66,6 +79,17 @@ export const markOrderStageFn = createServerFn({ method: "POST" })
     const { primaryRole } = await requireStaff(userId, FULFILL_STAFF, "ops.order.mark_stage", input.orderId);
     const order = await getOrder(input.orderId);
     const nowIso = new Date().toISOString();
+
+    // Block fulfillment stages unless payment is valid (COD always allowed).
+    if (input.stage !== "cancelled" && !paymentAllowsFulfillment(order.payment_status, order.payment_method)) {
+      await logSecurity({
+        actorId: userId, actorRole: primaryRole, action: "ops.order.mark_stage",
+        target: input.orderId, success: false,
+        detail: { stage: input.stage, reason: "payment_incomplete", paymentStatus: order.payment_status },
+      });
+      throw new Error(PAYMENT_BLOCK_MSG);
+    }
+
 
     const orderPatch: Record<string, unknown> = { fulfillment_status: input.stage };
     if (input.stage === "shipped" || input.stage === "delivered" || input.stage === "cancelled") {
@@ -110,6 +134,16 @@ export const createShipmentFn = createServerFn({ method: "POST" })
     const { primaryRole } = await requireStaff(userId, FULFILL_STAFF, "ops.shipment.create", input.orderId);
     const order = await getOrder(input.orderId);
 
+    if (!paymentAllowsFulfillment(order.payment_status, order.payment_method)) {
+      await logSecurity({
+        actorId: userId, actorRole: primaryRole, action: "ops.shipment.create",
+        target: input.orderId, success: false,
+        detail: { reason: "payment_incomplete", paymentStatus: order.payment_status },
+      });
+      throw new Error(PAYMENT_BLOCK_MSG);
+    }
+
+
     const { data: ship, error } = await supabaseAdmin.from("shipments").insert({
       order_id: input.orderId,
       user_id: order.user_id,
@@ -150,6 +184,16 @@ export const updateTrackingFn = createServerFn({ method: "POST" })
     const { primaryRole } = await requireStaff(userId, FULFILL_STAFF, "ops.shipment.update_tracking", input.orderId);
     const order = await getOrder(input.orderId);
     let ship = await latestShipment(input.orderId);
+
+    if (!paymentAllowsFulfillment(order.payment_status, order.payment_method)) {
+      await logSecurity({
+        actorId: userId, actorRole: primaryRole, action: "ops.shipment.update_tracking",
+        target: input.orderId, success: false,
+        detail: { reason: "payment_incomplete", paymentStatus: order.payment_status },
+      });
+      throw new Error(PAYMENT_BLOCK_MSG);
+    }
+
 
     if (!ship) {
       const { data: created, error } = await supabaseAdmin.from("shipments").insert({

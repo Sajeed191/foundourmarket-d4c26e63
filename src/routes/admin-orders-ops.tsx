@@ -14,6 +14,7 @@ import { fetchOrderDetail } from "@/lib/order-operations";
 import type { EnrichedOrder, OrderOps, WarRoomTag, OrderDetail } from "@/lib/order-operations";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
 import { OrderActionCenter } from "@/components/admin/OrderActionCenter";
+import { OrderIntegrityMonitor } from "@/components/admin/OrderIntegrityMonitor";
 
 export const Route = createFileRoute("/admin-orders-ops")({
   head: () => ({ meta: [{ title: "Order Operations Center — Admin" }] }),
@@ -483,6 +484,9 @@ function OrderOpsPage() {
           <KpiCard label="Returns" value={num(k.returned)} icon={<RotateCcw className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{data.returnRate}% rate</span>} />
           <KpiCard label="Refunded" value={inr(k.refund_total)} icon={<ArrowDownRight className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{data.refundRate}% rate</span>} />
         </div>
+
+        {/* Order integrity monitor */}
+        <OrderIntegrityMonitor />
 
         <Tabs defaultValue="warroom">
           <TabsList className="flex-wrap h-auto">
