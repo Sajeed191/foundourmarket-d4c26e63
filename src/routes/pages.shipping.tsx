@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   ChevronRight,
   Globe,
-  MapPin,
 } from "lucide-react";
 
 export const Route = createFileRoute("/pages/shipping")({
