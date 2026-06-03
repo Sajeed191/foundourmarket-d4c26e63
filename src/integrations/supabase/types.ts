@@ -2282,6 +2282,7 @@ export type Database = {
         Row: {
           attribution_session_id: string | null
           attribution_utm: Json | null
+          cancel_window_expires_at: string | null
           cancelled_at: string | null
           carrier: string | null
           contact_email: string | null
@@ -2315,6 +2316,7 @@ export type Database = {
         Insert: {
           attribution_session_id?: string | null
           attribution_utm?: Json | null
+          cancel_window_expires_at?: string | null
           cancelled_at?: string | null
           carrier?: string | null
           contact_email?: string | null
@@ -2348,6 +2350,7 @@ export type Database = {
         Update: {
           attribution_session_id?: string | null
           attribution_utm?: Json | null
+          cancel_window_expires_at?: string | null
           cancelled_at?: string | null
           carrier?: string | null
           contact_email?: string | null
@@ -5341,8 +5344,13 @@ export type Database = {
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
+      backfill_order_lifecycle: { Args: never; Returns: Json }
       check_order_integrity: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
+      customer_cancel_order: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -5500,6 +5508,7 @@ export type Database = {
         }
         Returns: number
       }
+      order_lifecycle_step: { Args: { _status: string }; Returns: number }
       payment_allows_fulfillment: {
         Args: { _payment_method: string; _payment_status: string }
         Returns: boolean
