@@ -100,6 +100,9 @@ async function handleEvent(event: string, payload: any) {
             razorpay_payment_id: paymentEntity?.id ?? null,
           })
           .eq("id", order.id);
+
+        // Record flash-deal purchase events for conversion analytics.
+        await recordFlashDealPurchases(order.id);
       }
       // Upsert payment record idempotently
       const { data: existing } = await supabaseAdmin
