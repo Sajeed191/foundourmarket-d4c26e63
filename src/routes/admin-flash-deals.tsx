@@ -68,11 +68,23 @@ function emptyForm(): FormState {
   };
 }
 
+type Analytics = { impressions: number; clicks: number; purchases: number };
+type AuditRow = {
+  id: string;
+  ran_at: string;
+  expired_deactivated: number;
+  invalid_product_deactivated: number;
+  out_of_stock_deactivated: number;
+  duplicates_found: number;
+};
+
 function FlashDealsAdmin() {
   const [deals, setDeals] = useState<Deal[] | null>(null);
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [editing, setEditing] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [analytics, setAnalytics] = useState<Analytics>({ impressions: 0, clicks: 0, purchases: 0 });
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const now = Date.now();
 
   function fetchDeals() {
@@ -84,8 +96,29 @@ function FlashDealsAdmin() {
       .then(({ data }) => setDeals((data as Deal[]) ?? []));
   }
 
+  function fetchAnalytics() {
+    supabase
+      .from("flash_deal_events")
+      .select("event_type")
+      .then(({ data }) => {
+        const rows = (data as { event_type: string }[]) ?? [];
+        setAnalytics({
+          impressions: rows.filter((r) => r.event_type === "impression").length,
+          clicks: rows.filter((r) => r.event_type === "click").length,
+          purchases: rows.filter((r) => r.event_type === "purchase").length,
+        });
+      });
+    supabase
+      .from("flash_deal_audit_log")
+      .select("id,ran_at,expired_deactivated,invalid_product_deactivated,out_of_stock_deactivated,duplicates_found")
+      .order("ran_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setAudit((data as AuditRow[]) ?? []));
+  }
+
   useEffect(() => {
     fetchDeals();
+    fetchAnalytics();
     supabase
       .from("products")
       .select("id,slug,name,price,image")
@@ -100,6 +133,10 @@ function FlashDealsAdmin() {
       supabase.removeChannel(ch);
     };
   }, []);
+
+  const conversion = analytics.impressions > 0
+    ? ((analytics.purchases / analytics.impressions) * 100).toFixed(1)
+    : "0.0";
 
   const productMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
