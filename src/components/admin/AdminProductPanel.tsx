@@ -547,10 +547,38 @@ export function AdminProductPanel({
                 className="sticky bottom-0 z-[var(--z-bottom-nav)] mt-6 -mx-5 border-t border-white/10 bg-background/95 px-5 pt-3 backdrop-blur-2xl"
                 style={{ paddingBottom: "calc(var(--app-bottom-nav-height, 0px) + 0.625rem)" }}
               >
-                <Button className="mx-auto flex w-full max-w-sm items-center justify-center" disabled={saving} onClick={saveAll}>
-                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                  Save all changes
-                </Button>
+                <p className="mb-2 text-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Product Editor Actions
+                </p>
+                <div className="mx-auto flex w-full max-w-sm flex-col gap-2">
+                  <Button className="flex w-full items-center justify-center" disabled={saving} onClick={saveAll}>
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    Save Changes
+                  </Button>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-1.5 px-2 text-xs"
+                      onClick={() => window.open(`/admin-product/${product.slug}/preview`, "_blank", "noopener")}
+                    >
+                      <Eye className="size-3.5" /> Preview
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-1.5 px-2 text-xs"
+                      onClick={() => window.open(`/products/${product.slug}`, "_blank", "noopener")}
+                    >
+                      <ExternalLink className="size-3.5" /> View Live
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center justify-center gap-1.5 px-2 text-xs"
+                      onClick={() => setOpen(false)}
+                    >
+                      <X className="size-3.5" /> Exit
+                    </Button>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </motion.div>
