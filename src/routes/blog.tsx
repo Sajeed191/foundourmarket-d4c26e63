@@ -25,7 +25,7 @@ function BlogIndex() {
 
   useEffect(() => {
     function fetchPosts() {
-      supabase.from("cms_posts").select("slug,title,excerpt,cover_image,author,published_at")
+      supabase.from("cms_posts_public" as "cms_pages_public").select("slug,title,excerpt,cover_image,author,published_at")
         .not("published_at", "is", null).lte("published_at", new Date().toISOString())
         .order("published_at", { ascending: false })
         .then(({ data }) => { setPosts((data as Post[]) ?? []); setLoading(false); });

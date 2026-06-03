@@ -8,7 +8,7 @@ type Post = { slug: string; title: string; excerpt: string | null; body: string;
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
-    const { data } = await supabase.from("cms_posts").select("slug,title,excerpt,cover_image,author,published_at,meta_title,meta_description")
+    const { data } = await supabase.from("cms_posts_public" as "cms_pages_public").select("slug,title,excerpt,cover_image,author,published_at,meta_title,meta_description")
       .eq("slug", params.slug)
       .not("published_at", "is", null).lte("published_at", new Date().toISOString())
       .maybeSingle();
@@ -62,7 +62,7 @@ function BlogPost() {
   useEffect(() => {
     let active = true;
     function fetchPost() {
-      supabase.from("cms_posts").select("slug,title,excerpt,body,cover_image,author,published_at,meta_title,meta_description").eq("slug", slug)
+      supabase.from("cms_posts_public" as "cms_pages_public").select("slug,title,excerpt,body,cover_image,author,published_at,meta_title,meta_description").eq("slug", slug)
         .not("published_at", "is", null).lte("published_at", new Date().toISOString())
         .maybeSingle().then(({ data }) => {
           if (!active) return;

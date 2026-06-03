@@ -12,7 +12,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           sb.from("products_public").select("slug,updated_at"),
           sb.from("categories").select("slug,parent_id,id"),
           sb.from("cms_pages_public").select("slug,updated_at"),
-          sb.from("cms_posts").select("slug,updated_at,published_at")
+          sb.from("cms_posts_public" as "cms_pages_public").select("slug,updated_at,published_at")
             .not("published_at", "is", null).lte("published_at", new Date().toISOString()),
         ]);
 
