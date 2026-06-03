@@ -31,7 +31,7 @@ function normalize(row: Record<string, unknown> | null): SupportSettings {
   };
 }
 
-const COLS = "support_status,support_response_minutes,support_whatsapp_numbers";
+
 
 /**
  * Live support-channel settings (status banner, response time, WhatsApp
