@@ -362,11 +362,11 @@ function AuthPage() {
 
         {/* Minimal footer */}
         <div className="flex items-center justify-center gap-3 mt-5 text-[10.5px] text-white/35">
-          <Link to="/pages/$slug" params={{ slug: "privacy" }} className="hover:text-white/70 transition-colors">Privacy</Link>
+          <Link to="/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
           <span className="size-0.5 rounded-full bg-white/20" />
-          <Link to="/pages/$slug" params={{ slug: "terms" }} className="hover:text-white/70 transition-colors">Terms</Link>
+          <Link to="/terms" className="hover:text-white/70 transition-colors">Terms</Link>
           <span className="size-0.5 rounded-full bg-white/20" />
-          <Link to="/pages/$slug" params={{ slug: "returns" }} className="hover:text-white/70 transition-colors">Refunds</Link>
+          <Link to="/returns" className="hover:text-white/70 transition-colors">Refunds</Link>
         </div>
         <p className="text-center mt-3">
           <Link to="/" className="text-[11px] text-white/35 hover:text-white/65 transition-colors">← Back to shop</Link>
