@@ -494,6 +494,9 @@ function ProductPage() {
 
               <a href="#reviews" className="text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">See reviews →</a>
             </div>
+            {product.reviews > 0 && product.ratingSource && product.ratingSource !== "customer_reviews" && (
+              <p className="-mt-2 mb-4 text-[11px] text-muted-foreground/70">Based on customer and imported reviews</p>
+            )}
 
             {/* subtle gradient separator */}
             <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />

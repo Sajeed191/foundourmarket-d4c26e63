@@ -2819,6 +2819,48 @@ export type Database = {
         }
         Relationships: []
       }
+      product_rating_audit: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          final_rating: number | null
+          id: string
+          initial_rating: number | null
+          initial_review_count: number | null
+          metadata: Json
+          product_slug: string
+          rating_source: string | null
+          total_reviews: number | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          final_rating?: number | null
+          id?: string
+          initial_rating?: number | null
+          initial_review_count?: number | null
+          metadata?: Json
+          product_slug: string
+          rating_source?: string | null
+          total_reviews?: number | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          final_rating?: number | null
+          id?: string
+          initial_rating?: number | null
+          initial_review_count?: number | null
+          metadata?: Json
+          product_slug?: string
+          rating_source?: string | null
+          total_reviews?: number | null
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           admin_reply: string | null
@@ -3017,6 +3059,8 @@ export type Database = {
           image: string | null
           in_stock: boolean
           india_visible: boolean
+          initial_rating: number
+          initial_review_count: number
           international_shipping: boolean
           international_visible: boolean
           inventory_tracking: boolean
@@ -3037,6 +3081,7 @@ export type Database = {
           priority_score: number | null
           product_type: string | null
           rating: number
+          rating_source: string
           razorpay_enabled: boolean
           recommended: boolean
           related_products: string[]
@@ -3121,6 +3166,8 @@ export type Database = {
           image?: string | null
           in_stock?: boolean
           india_visible?: boolean
+          initial_rating?: number
+          initial_review_count?: number
           international_shipping?: boolean
           international_visible?: boolean
           inventory_tracking?: boolean
@@ -3141,6 +3188,7 @@ export type Database = {
           priority_score?: number | null
           product_type?: string | null
           rating?: number
+          rating_source?: string
           razorpay_enabled?: boolean
           recommended?: boolean
           related_products?: string[]
@@ -3225,6 +3273,8 @@ export type Database = {
           image?: string | null
           in_stock?: boolean
           india_visible?: boolean
+          initial_rating?: number
+          initial_review_count?: number
           international_shipping?: boolean
           international_visible?: boolean
           inventory_tracking?: boolean
@@ -3245,6 +3295,7 @@ export type Database = {
           priority_score?: number | null
           product_type?: string | null
           rating?: number
+          rating_source?: string
           razorpay_enabled?: boolean
           recommended?: boolean
           related_products?: string[]
@@ -5485,6 +5536,7 @@ export type Database = {
           price_usd: number | null
           priority_score: number | null
           rating: number | null
+          rating_source: string | null
           razorpay_enabled: boolean | null
           recommended: boolean | null
           related_products: string[] | null
@@ -5571,6 +5623,7 @@ export type Database = {
           price_usd?: number | null
           priority_score?: number | null
           rating?: number | null
+          rating_source?: string | null
           razorpay_enabled?: boolean | null
           recommended?: boolean | null
           related_products?: string[] | null
@@ -5657,6 +5710,7 @@ export type Database = {
           price_usd?: number | null
           priority_score?: number | null
           rating?: number | null
+          rating_source?: string | null
           razorpay_enabled?: boolean | null
           recommended?: boolean | null
           related_products?: string[] | null
@@ -5972,6 +6026,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recalculate_product_rating: {
+        Args: { _slug: string }
+        Returns: undefined
+      }
       refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
       refresh_review_vote_counts: {
         Args: { _review_id: string }
@@ -6078,6 +6136,8 @@ export type Database = {
           image: string | null
           in_stock: boolean
           india_visible: boolean
+          initial_rating: number
+          initial_review_count: number
           international_shipping: boolean
           international_visible: boolean
           inventory_tracking: boolean
@@ -6098,6 +6158,7 @@ export type Database = {
           priority_score: number | null
           product_type: string | null
           rating: number
+          rating_source: string
           razorpay_enabled: boolean
           recommended: boolean
           related_products: string[]

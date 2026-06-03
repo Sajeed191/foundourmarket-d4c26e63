@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Package,
   Tag,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import { EditorSaveBar } from "@/components/admin/EditorSaveBar";
 import { logActivity } from "@/components/admin/AdminShell";
 import { ProductMarketingPanel } from "@/components/admin/ProductMarketingPanel";
 import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
+import { ProductRatingManager } from "@/components/admin/ProductRatingManager";
 
 type Patch = {
   name?: string;
@@ -139,8 +141,6 @@ export function AdminProductPanel({
       internationalVisible: p.internationalVisible,
       featured: p.featured,
       inStock: p.inStock,
-      rating: String(p.rating),
-      reviews: String(p.reviews),
       warranty: p.warranty ?? "12 months",
       returnEligible: p.returnEligible,
       replacementEligible: p.replacementEligible,
@@ -190,8 +190,6 @@ export function AdminProductPanel({
       internationalVisible: f.internationalVisible,
       featured: f.featured,
       inStock: f.inStock,
-      rating: Math.min(5, Math.max(0, Number(f.rating) || 0)),
-      reviews: Math.max(0, Math.round(Number(f.reviews) || 0)),
       warranty: f.warranty.trim() || "12 months",
       returnEligible: f.returnEligible,
       replacementEligible: f.replacementEligible,
@@ -467,24 +465,17 @@ export function AdminProductPanel({
                       <Toggle label="In stock / live" on={f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
                       <Toggle label="Out of stock" on={!f.inStock} onClick={() => setF({ ...f, inStock: !f.inStock })} />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Rating (0–5)">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={f.rating}
-                          onChange={(e) => setF({ ...f, rating: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Reviews">
-                        <Input
-                          type="number"
-                          value={f.reviews}
-                          onChange={(e) => setF({ ...f, reviews: e.target.value })}
-                        />
-                      </Field>
-                    </div>
                   </div>
+                </CollapsibleModule>
+
+                {/* SECTION 3b — PRODUCT RATING MANAGEMENT */}
+                <CollapsibleModule
+                  eyebrow="Section 3"
+                  title="Product Rating Management"
+                  defaultOpen={false}
+                  badge={<Star className="size-4 text-accent" />}
+                >
+                  <ProductRatingManager slug={product.slug} />
                 </CollapsibleModule>
 
                 {/* SECTION 4 — SHIPPING */}
