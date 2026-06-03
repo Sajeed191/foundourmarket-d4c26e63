@@ -231,6 +231,32 @@ function FlashDealsAdmin() {
         <KpiCard label="Expired" value={counts.expired} icon={<Pause className="size-4" />} />
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KpiCard label="Impressions" value={analytics.impressions} icon={<Eye className="size-4" />} />
+        <KpiCard label="Clicks" value={analytics.clicks} icon={<MousePointerClick className="size-4" />} />
+        <KpiCard label="Purchases" value={analytics.purchases} icon={<ShoppingBag className="size-4" />} />
+        <KpiCard label="Conversion" value={`${conversion}%`} icon={<TrendingUp className="size-4" />} />
+      </div>
+
+      {audit.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-4 mb-5">
+          <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
+            Daily Audit Log
+          </p>
+          <div className="space-y-1.5">
+            {audit.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                <span className="font-mono text-foreground/80">{new Date(a.ran_at).toLocaleString()}</span>
+                <span>expired: <b className="text-foreground">{a.expired_deactivated}</b></span>
+                <span>invalid: <b className="text-foreground">{a.invalid_product_deactivated}</b></span>
+                <span>out-of-stock: <b className="text-foreground">{a.out_of_stock_deactivated}</b></span>
+                <span>duplicates: <b className="text-foreground">{a.duplicates_found}</b></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setEditing(emptyForm())}
