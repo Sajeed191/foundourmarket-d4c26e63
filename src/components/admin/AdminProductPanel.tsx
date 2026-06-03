@@ -374,11 +374,35 @@ export function AdminProductPanel({
                     </Field>
                     <Field label="Full description">
                       <Textarea
-                        rows={5}
+                        rows={8}
                         value={f.description}
                         onChange={(e) => setF({ ...f, description: e.target.value })}
+                        placeholder={DESCRIPTION_TEMPLATE}
                       />
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Use headings:</span>
+                        {["Overview:", "Key Features:", "Specifications:", "Package Includes:"].map((h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            onClick={() =>
+                              setF((prev) => ({
+                                ...prev,
+                                description: `${prev.description?.trimEnd() ?? ""}${prev.description?.trim() ? "\n\n" : ""}${h}\n`,
+                              }))
+                            }
+                            className="rounded-full border border-border px-2.5 py-1 text-[10px] hover:border-accent/50 hover:text-accent transition-colors"
+                          >
+                            + {h.replace(":", "")}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3 rounded-xl border border-border bg-card/40 p-4">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">Live preview — how customers see it</p>
+                        <ProductDescription description={f.description} collapsible={false} />
+                      </div>
                     </Field>
+
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="Category">
                         <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} />
