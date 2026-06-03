@@ -183,9 +183,9 @@ function ShippingReturnsPage() {
               <p className="mt-1.5 text-sm text-white/60 leading-relaxed">
                 FoundOurMarket does <strong className="text-white/90">not</strong> offer express,
                 overnight, or same-day delivery at this time. Every order ships via our vetted
-                Standard network, ensuring reliable, trackable service at no unnecessary premium.
-                Free Standard shipping is automatically applied to orders over $50 (or local
-                equivalent).
+                Standard network. Free delivery is available only on eligible products and
+                promotional offers. Shipping availability and charges are displayed on each
+                product page before checkout.
               </p>
             </div>
           </div>
