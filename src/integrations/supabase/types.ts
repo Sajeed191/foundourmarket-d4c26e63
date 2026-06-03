@@ -1545,6 +1545,57 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_deals: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_at: string
+          flash_price: number
+          id: string
+          priority: number
+          product_id: string
+          start_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_at: string
+          flash_price: number
+          id?: string
+          priority?: number
+          product_id: string
+          start_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_at?: string
+          flash_price?: number
+          id?: string
+          priority?: number
+          product_id?: string
+          start_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_deals_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flash_deals_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flash_sales: {
         Row: {
           active: boolean
@@ -5364,6 +5415,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_flash_deals: { Args: never; Returns: number }
       expire_stale_orders: { Args: never; Returns: number }
       get_fbt: {
         Args: { _limit?: number; _slug: string }
