@@ -28,6 +28,7 @@ import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
 import { AdminImageManager } from "@/components/admin/AdminImageManager";
 import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { LazyMount } from "@/components/site/LazyMount";
+import { ProductDescription } from "@/components/site/ProductDescription";
 import { ProductHighlights, LiveActivity, TrustGuarantee } from "@/components/site/ProductTrustBlocks";
 import { toast } from "sonner";
 
