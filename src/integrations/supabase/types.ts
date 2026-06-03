@@ -3679,6 +3679,13 @@ export type Database = {
             referencedRelation: "product_reviews"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       review_votes: {
@@ -3709,6 +3716,13 @@ export type Database = {
             columns: ["review_id"]
             isOneToOne: false
             referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews_public"
             referencedColumns: ["id"]
           },
         ]
@@ -5096,11 +5110,185 @@ export type Database = {
       }
     }
     Views: {
+      banners_public: {
+        Row: {
+          active: boolean | null
+          countdown_to: string | null
+          created_at: string | null
+          cta_text: string | null
+          ends_at: string | null
+          height_px: number | null
+          id: string | null
+          image: string | null
+          link: string | null
+          mobile_image: string | null
+          overlay_opacity: number | null
+          pages: string[] | null
+          region: string | null
+          sort_order: number | null
+          starts_at: string | null
+          subtitle: string | null
+          text_align: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          video_url: string | null
+          width_px: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          countdown_to?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          ends_at?: string | null
+          height_px?: number | null
+          id?: string | null
+          image?: string | null
+          link?: string | null
+          mobile_image?: string | null
+          overlay_opacity?: number | null
+          pages?: string[] | null
+          region?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          text_align?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          width_px?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          countdown_to?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          ends_at?: string | null
+          height_px?: number | null
+          id?: string | null
+          image?: string | null
+          link?: string | null
+          mobile_image?: string | null
+          overlay_opacity?: number | null
+          pages?: string[] | null
+          region?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          text_align?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          width_px?: number | null
+        }
+        Relationships: []
+      }
+      cms_pages_public: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string | null
+          last_published_at: string | null
+          meta_description: string | null
+          meta_title: string | null
+          slug: string | null
+          sort_order: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string | null
+          last_published_at?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string | null
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string | null
+          last_published_at?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string | null
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       frequently_bought_together: {
         Row: {
           co_count: number | null
           slug_a: string | null
           slug_b: string | null
+        }
+        Relationships: []
+      }
+      product_reviews_public: {
+        Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
+          body: string | null
+          created_at: string | null
+          featured: boolean | null
+          helpful_count: number | null
+          id: string | null
+          media: Json | null
+          not_helpful_count: number | null
+          pinned: boolean | null
+          product_slug: string | null
+          rating: number | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          body?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          helpful_count?: number | null
+          id?: string | null
+          media?: Json | null
+          not_helpful_count?: number | null
+          pinned?: boolean | null
+          product_slug?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          body?: string | null
+          created_at?: string | null
+          featured?: boolean | null
+          helpful_count?: number | null
+          id?: string | null
+          media?: Json | null
+          not_helpful_count?: number | null
+          pinned?: boolean | null
+          product_slug?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified_purchase?: boolean | null
         }
         Relationships: []
       }
