@@ -64,6 +64,7 @@ import { Route as AdminLiveRouteImport } from './routes/admin-live'
 import { Route as AdminInventoryIntelligenceRouteImport } from './routes/admin-inventory-intelligence'
 import { Route as AdminInventoryRouteImport } from './routes/admin-inventory'
 import { Route as AdminInboxPlacementRouteImport } from './routes/admin-inbox-placement'
+import { Route as AdminFlashDealsRouteImport } from './routes/admin-flash-deals'
 import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
 import { Route as AdminExecutiveRouteImport } from './routes/admin-executive'
 import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
@@ -410,6 +411,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
 const AdminInboxPlacementRoute = AdminInboxPlacementRouteImport.update({
   id: '/admin-inbox-placement',
   path: '/admin-inbox-placement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFlashDealsRoute = AdminFlashDealsRouteImport.update({
+  id: '/admin-flash-deals',
+  path: '/admin-flash-deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminFinancialRoute = AdminFinancialRouteImport.update({
@@ -799,6 +805,7 @@ export interface FileRoutesByFullPath {
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
   '/admin-financial': typeof AdminFinancialRoute
+  '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-inbox-placement': typeof AdminInboxPlacementRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-inventory-intelligence': typeof AdminInventoryIntelligenceRoute
@@ -926,6 +933,7 @@ export interface FileRoutesByTo {
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
   '/admin-financial': typeof AdminFinancialRoute
+  '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-inbox-placement': typeof AdminInboxPlacementRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-inventory-intelligence': typeof AdminInventoryIntelligenceRoute
@@ -1053,6 +1061,7 @@ export interface FileRoutesById {
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
   '/admin-financial': typeof AdminFinancialRoute
+  '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-inbox-placement': typeof AdminInboxPlacementRoute
   '/admin-inventory': typeof AdminInventoryRoute
   '/admin-inventory-intelligence': typeof AdminInventoryIntelligenceRoute
@@ -1182,6 +1191,7 @@ export interface FileRouteTypes {
     | '/admin-emails'
     | '/admin-executive'
     | '/admin-financial'
+    | '/admin-flash-deals'
     | '/admin-inbox-placement'
     | '/admin-inventory'
     | '/admin-inventory-intelligence'
@@ -1309,6 +1319,7 @@ export interface FileRouteTypes {
     | '/admin-emails'
     | '/admin-executive'
     | '/admin-financial'
+    | '/admin-flash-deals'
     | '/admin-inbox-placement'
     | '/admin-inventory'
     | '/admin-inventory-intelligence'
@@ -1435,6 +1446,7 @@ export interface FileRouteTypes {
     | '/admin-emails'
     | '/admin-executive'
     | '/admin-financial'
+    | '/admin-flash-deals'
     | '/admin-inbox-placement'
     | '/admin-inventory'
     | '/admin-inventory-intelligence'
@@ -1563,6 +1575,7 @@ export interface RootRouteChildren {
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminExecutiveRoute: typeof AdminExecutiveRoute
   AdminFinancialRoute: typeof AdminFinancialRoute
+  AdminFlashDealsRoute: typeof AdminFlashDealsRoute
   AdminInboxPlacementRoute: typeof AdminInboxPlacementRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminInventoryIntelligenceRoute: typeof AdminInventoryIntelligenceRoute
@@ -2039,6 +2052,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-inbox-placement'
       fullPath: '/admin-inbox-placement'
       preLoaderRoute: typeof AdminInboxPlacementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-flash-deals': {
+      id: '/admin-flash-deals'
+      path: '/admin-flash-deals'
+      fullPath: '/admin-flash-deals'
+      preLoaderRoute: typeof AdminFlashDealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-financial': {
@@ -2628,6 +2648,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminEmailsRoute: AdminEmailsRoute,
   AdminExecutiveRoute: AdminExecutiveRoute,
   AdminFinancialRoute: AdminFinancialRoute,
+  AdminFlashDealsRoute: AdminFlashDealsRoute,
   AdminInboxPlacementRoute: AdminInboxPlacementRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminInventoryIntelligenceRoute: AdminInventoryIntelligenceRoute,

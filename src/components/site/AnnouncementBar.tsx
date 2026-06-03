@@ -30,7 +30,6 @@ export type Announcement = {
 };
 
 const FALLBACK: Announcement[] = [
-  { id: "f1", message: "Free worldwide shipping on orders over $50", icon: "truck", type: "shipping", link: null, cta_text: null, active: true, starts_at: null, ends_at: null, countdown_to: null, region: "all", pages: [], sort_order: 10 },
   { id: "f2", message: "New arrivals just landed — fresh drops daily", icon: "sparkles", type: "info", link: null, cta_text: null, active: true, starts_at: null, ends_at: null, countdown_to: null, region: "all", pages: [], sort_order: 30 },
 ];
 

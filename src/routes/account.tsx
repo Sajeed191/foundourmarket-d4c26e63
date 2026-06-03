@@ -783,7 +783,7 @@ function FlashSaleStrip() {
 
 function AnnouncementStrip() {
   const messages = [
-    { icon: Globe, text: "Free Worldwide Shipping" },
+    { icon: Globe, text: "Worldwide Shipping" },
     { icon: Lock, text: "Secure Payments" },
     { icon: Sparkles, text: "New Arrivals Just In" },
     { icon: Flame, text: "Flash Sale Live Now" },

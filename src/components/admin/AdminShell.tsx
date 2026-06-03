@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone, Zap, Target,
+  LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone, Zap, Target, Flame,
   FileText, Truck, RotateCcw, Pencil, Activity, Wallet, Globe, Search,
   Boxes, Loader2, ShieldAlert, Menu, X, Sparkles, TrendingUp, ShoppingCart,
   Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell, Gem, Crown, Store, UserCog, AlertTriangle, Trophy, ShieldCheck,
@@ -86,6 +86,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Marketing",
     items: [
       { to: "/admin-marketing", label: "Promotions", icon: Megaphone, roles: ["admin", "super_admin", "manager", "editor"] },
+      { to: "/admin-flash-deals", label: "Flash Deals", icon: Flame, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-marketing-automation", label: "Marketing Automation", icon: Zap, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-acquisition-intelligence", label: "Acquisition Intelligence", icon: Target, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-seo-intelligence", label: "SEO Intelligence", icon: Search, roles: ["admin", "super_admin", "manager", "editor"] },
