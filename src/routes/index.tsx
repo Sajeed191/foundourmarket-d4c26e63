@@ -724,15 +724,6 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* Recently viewed — personalised rail */}
-      <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
-        <LazyMount minHeight={200}>
-          <RecentlyViewed eyebrow="For You" title="Recently Viewed" />
-        </LazyMount>
-      </section>
-
-      <CinematicDivider />
-
       {/* 8 · Join The Inner Circle — compact */}
       <section className="px-4 sm:px-6 py-4 sm:py-6">
         <Reveal className="max-w-3xl mx-auto glass-strong p-5 sm:p-7 rounded-3xl text-center relative overflow-hidden">
