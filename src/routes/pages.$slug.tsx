@@ -25,8 +25,8 @@ function CmsPage() {
     let active = true;
     setLoading(true); setMissing(false);
     function fetchPage() {
-      supabase.from("cms_pages").select("slug,title,body,meta_title,meta_description")
-        .eq("slug", slug).eq("published", true).maybeSingle()
+      supabase.from("cms_pages_public").select("slug,title,body,meta_title,meta_description")
+        .eq("slug", slug).maybeSingle()
         .then(({ data }) => {
           if (!active) return;
           if (!data) setMissing(true);
