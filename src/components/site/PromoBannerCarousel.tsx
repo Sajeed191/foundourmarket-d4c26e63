@@ -53,9 +53,9 @@ export function PromoBannerCarousel({
     const cols = "id,title,subtitle,image,mobile_image,link,cta_text,sort_order,active,starts_at,ends_at,type";
     // Admins read the base table (to see/toggle hidden banners); customers read
     // the public view which already excludes draft data and inactive banners.
-    let q = canEdit
+    const q = (canEdit
       ? supabase.from("banners").select(cols).in("type", types).order("sort_order")
-      : supabase.from("banners_public").select(cols).in("type", types).order("sort_order");
+      : supabase.from("banners_public").select(cols).in("type", types).order("sort_order")) as unknown as PromiseLike<{ data: any[] | null }>;
     q.then(({ data }) => {
       const now = Date.now();
       const valid = ((data as any[]) ?? []).filter(
