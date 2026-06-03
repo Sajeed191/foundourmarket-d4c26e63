@@ -45,8 +45,18 @@ export function useSupportSettings() {
   useEffect(() => {
     let active = true;
     const load = async () => {
-      const { data } = await supabase.from("store_settings").select(COLS).limit(1).maybeSingle();
-      if (active && data) setSettings(normalize(data));
+      // Status & response time are public; WhatsApp numbers are only readable
+      // by signed-in users (base table requires authentication).
+      const { data: pub } = await supabase.from("store_settings_public")
+        .select("support_status,support_response_minutes").limit(1).maybeSingle();
+      const { data: { user } } = await supabase.auth.getUser();
+      let nums: unknown = undefined;
+      if (user) {
+        const { data: priv } = await supabase.from("store_settings")
+          .select("support_whatsapp_numbers").limit(1).maybeSingle();
+        nums = priv?.support_whatsapp_numbers;
+      }
+      if (active && (pub || nums)) setSettings(normalize({ ...(pub ?? {}), support_whatsapp_numbers: nums }));
       if (active) setLoading(false);
     };
     void load();
