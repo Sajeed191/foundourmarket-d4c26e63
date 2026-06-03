@@ -14,7 +14,9 @@ export const Route = createFileRoute("/terms")({
       { property: "og:title", content: "Terms & Conditions — FoundOurMarket™" },
       { property: "og:description", content: "Clear, fair guidelines for using the FoundOurMarket™ global marketplace." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://foundourmarket.com/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/terms" }],
   }),
   component: TermsPage,
 });
