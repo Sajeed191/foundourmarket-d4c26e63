@@ -58,8 +58,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [analyzing, setAnalyzing] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    const table = (isAdmin ? "product_reviews" : "product_reviews_public") as "product_reviews_public";
     const { data } = await supabase
-      .from(isAdmin ? "product_reviews" : "product_reviews_public")
+      .from(table)
       .select((isAdmin ? REVIEW_COLS : REVIEW_COLS_PUBLIC) as string)
       .eq("product_slug", productSlug)
       .order("created_at", { ascending: false });
