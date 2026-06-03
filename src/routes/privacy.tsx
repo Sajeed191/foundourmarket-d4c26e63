@@ -14,7 +14,9 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:title", content: "Privacy Policy — FoundOurMarket™" },
       { property: "og:description", content: "Your privacy is important to us. Transparent data practices, strong security and clear user rights." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://foundourmarket.com/privacy" },
     ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/privacy" }],
   }),
   component: PrivacyPage,
 });
