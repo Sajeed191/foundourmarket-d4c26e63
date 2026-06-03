@@ -23,7 +23,9 @@ export const Route = createFileRoute("/returns")({
       { name: "description", content: "Check return eligibility, request exchanges, and access AI-powered post-purchase support. 4-day return window on selected products." },
       { property: "og:title", content: "Return Eligibility Center — FoundOurMarket™" },
       { property: "og:description", content: "Premium intelligent return management — transparent, trustworthy, AI-assisted." },
+      { property: "og:url", content: "https://foundourmarket.com/returns" },
     ],
+    links: [{ rel: "canonical", href: "https://foundourmarket.com/returns" }],
   }),
   component: ReturnsPage,
 });
