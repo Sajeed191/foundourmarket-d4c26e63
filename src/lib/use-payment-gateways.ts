@@ -72,6 +72,14 @@ export function usePaymentGateways(adminFull = false) {
     };
     load();
 
+    // The payment-gateways-live realtime channel is staff-only. Customers read
+    // initial status from the public view and don't subscribe to live updates.
+    if (!adminFull) {
+      return () => {
+        active = false;
+      };
+    }
+
     const channel = supabase
       .channel("payment-gateways-live")
       .on(
@@ -85,7 +93,7 @@ export function usePaymentGateways(adminFull = false) {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [adminFull]);
 
   const internationalLive = gateways.some(
     (g) =>

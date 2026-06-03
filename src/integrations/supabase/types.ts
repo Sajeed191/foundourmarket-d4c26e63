@@ -5707,6 +5707,7 @@ export type Database = {
           shipping_mode: string | null
           support_response_minutes: number | null
           support_status: string | null
+          support_whatsapp_numbers: string[] | null
           updated_at: string | null
         }
         Insert: {
@@ -5722,6 +5723,7 @@ export type Database = {
           shipping_mode?: string | null
           support_response_minutes?: number | null
           support_status?: string | null
+          support_whatsapp_numbers?: string[] | null
           updated_at?: string | null
         }
         Update: {
@@ -5737,6 +5739,7 @@ export type Database = {
           shipping_mode?: string | null
           support_response_minutes?: number | null
           support_status?: string | null
+          support_whatsapp_numbers?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
