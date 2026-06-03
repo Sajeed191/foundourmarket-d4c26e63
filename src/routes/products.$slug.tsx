@@ -554,7 +554,7 @@ function ProductPage() {
               </div>
             )}
 
-            {isAdmin && <AdminProductPanel product={product} />}
+            {isAdmin && <AdminProductPanel product={product} onOpenChange={setEditorOpen} />}
 
             {/* Trust indicators */}
             <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">
