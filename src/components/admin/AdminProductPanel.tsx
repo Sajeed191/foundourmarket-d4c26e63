@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   X,
+  ExternalLink,
   Save,
   Settings2,
   Loader2,
