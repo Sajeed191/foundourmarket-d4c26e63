@@ -12,7 +12,7 @@ export type SupportSettings = {
 export const DEFAULT_SUPPORT_SETTINGS: SupportSettings = {
   supportStatus: "auto",
   responseMinutes: 8,
-  whatsappNumbers: ["+91 97458 44213", "+91 62820 88380", "+91 87144 59240"],
+  whatsappNumbers: [],
 };
 
 function normalize(row: Record<string, unknown> | null): SupportSettings {
