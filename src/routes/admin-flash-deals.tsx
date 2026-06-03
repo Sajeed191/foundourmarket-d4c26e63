@@ -188,6 +188,7 @@ function FlashDealsAdmin() {
     toast.success(editing.id ? "Flash deal updated" : "Flash deal added");
     setEditing(null);
     fetchDeals();
+    fetchAnalytics();
   }
 
   async function togglePause(d: Deal) {
