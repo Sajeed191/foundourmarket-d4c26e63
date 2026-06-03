@@ -141,8 +141,6 @@ export function AdminProductPanel({
       internationalVisible: p.internationalVisible,
       featured: p.featured,
       inStock: p.inStock,
-      rating: String(p.rating),
-      reviews: String(p.reviews),
       warranty: p.warranty ?? "12 months",
       returnEligible: p.returnEligible,
       replacementEligible: p.replacementEligible,
