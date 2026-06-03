@@ -5341,6 +5341,7 @@ export type Database = {
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
+      check_order_integrity: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -5498,6 +5499,10 @@ export type Database = {
           p_type: string
         }
         Returns: number
+      }
+      payment_allows_fulfillment: {
+        Args: { _payment_method: string; _payment_status: string }
+        Returns: boolean
       }
       product_trust_score: { Args: { _slug: string }; Returns: number }
       read_email_batch: {
@@ -5769,6 +5774,7 @@ export type Database = {
       }
       svc_executive_analytics: { Args: { _actor: string }; Returns: Json }
       svc_marketing_intelligence: { Args: { _actor?: string }; Returns: Json }
+      svc_order_integrity: { Args: { _actor: string }; Returns: Json }
       svc_payment_center: {
         Args: {
           _actor: string
