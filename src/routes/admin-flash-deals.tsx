@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Flame, Plus, Pencil, Pause, Play, Trash2, Loader2, X } from "lucide-react";
+import { Flame, Plus, Pencil, Pause, Play, Trash2, Loader2, X, Eye, MousePointerClick, ShoppingBag, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
@@ -68,11 +68,23 @@ function emptyForm(): FormState {
   };
 }
 
+type Analytics = { impressions: number; clicks: number; purchases: number };
+type AuditRow = {
+  id: string;
+  ran_at: string;
+  expired_deactivated: number;
+  invalid_product_deactivated: number;
+  out_of_stock_deactivated: number;
+  duplicates_found: number;
+};
+
 function FlashDealsAdmin() {
   const [deals, setDeals] = useState<Deal[] | null>(null);
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [editing, setEditing] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [analytics, setAnalytics] = useState<Analytics>({ impressions: 0, clicks: 0, purchases: 0 });
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const now = Date.now();
 
   function fetchDeals() {
@@ -84,8 +96,29 @@ function FlashDealsAdmin() {
       .then(({ data }) => setDeals((data as Deal[]) ?? []));
   }
 
+  function fetchAnalytics() {
+    supabase
+      .from("flash_deal_events")
+      .select("event_type")
+      .then(({ data }) => {
+        const rows = (data as { event_type: string }[]) ?? [];
+        setAnalytics({
+          impressions: rows.filter((r) => r.event_type === "impression").length,
+          clicks: rows.filter((r) => r.event_type === "click").length,
+          purchases: rows.filter((r) => r.event_type === "purchase").length,
+        });
+      });
+    supabase
+      .from("flash_deal_audit_log")
+      .select("id,ran_at,expired_deactivated,invalid_product_deactivated,out_of_stock_deactivated,duplicates_found")
+      .order("ran_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setAudit((data as AuditRow[]) ?? []));
+  }
+
   useEffect(() => {
     fetchDeals();
+    fetchAnalytics();
     supabase
       .from("products")
       .select("id,slug,name,price,image")
@@ -100,6 +133,10 @@ function FlashDealsAdmin() {
       supabase.removeChannel(ch);
     };
   }, []);
+
+  const conversion = analytics.impressions > 0
+    ? ((analytics.purchases / analytics.impressions) * 100).toFixed(1)
+    : "0.0";
 
   const productMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -120,6 +157,15 @@ function FlashDealsAdmin() {
     if (!(flash >= 0)) return toast.error("Enter a valid flash price");
     if (new Date(editing.end_at).getTime() <= new Date(editing.start_at).getTime())
       return toast.error("End date must be after start date");
+
+    // Client-side duplicate guard (DB unique index is the hard backstop).
+    if (editing.active) {
+      const dupe = (deals ?? []).some(
+        (d) => d.product_id === editing.product_id && d.active && d.id !== editing.id,
+      );
+      if (dupe) return toast.error("This product already has an active flash deal");
+    }
+
 
     setSaving(true);
     const payload = {
@@ -142,6 +188,7 @@ function FlashDealsAdmin() {
     toast.success(editing.id ? "Flash deal updated" : "Flash deal added");
     setEditing(null);
     fetchDeals();
+    fetchAnalytics();
   }
 
   async function togglePause(d: Deal) {
@@ -183,6 +230,32 @@ function FlashDealsAdmin() {
         <KpiCard label="Scheduled" value={counts.scheduled} icon={<Plus className="size-4" />} />
         <KpiCard label="Expired" value={counts.expired} icon={<Pause className="size-4" />} />
       </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KpiCard label="Impressions" value={analytics.impressions} icon={<Eye className="size-4" />} />
+        <KpiCard label="Clicks" value={analytics.clicks} icon={<MousePointerClick className="size-4" />} />
+        <KpiCard label="Purchases" value={analytics.purchases} icon={<ShoppingBag className="size-4" />} />
+        <KpiCard label="Conversion" value={`${conversion}%`} icon={<TrendingUp className="size-4" />} />
+      </div>
+
+      {audit.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-4 mb-5">
+          <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
+            Daily Audit Log
+          </p>
+          <div className="space-y-1.5">
+            {audit.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                <span className="font-mono text-foreground/80">{new Date(a.ran_at).toLocaleString()}</span>
+                <span>expired: <b className="text-foreground">{a.expired_deactivated}</b></span>
+                <span>invalid: <b className="text-foreground">{a.invalid_product_deactivated}</b></span>
+                <span>out-of-stock: <b className="text-foreground">{a.out_of_stock_deactivated}</b></span>
+                <span>duplicates: <b className="text-foreground">{a.duplicates_found}</b></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end mb-4">
         <button

@@ -1545,6 +1545,68 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_deal_audit_log: {
+        Row: {
+          details: Json
+          duplicates_found: number
+          expired_deactivated: number
+          id: string
+          invalid_product_deactivated: number
+          out_of_stock_deactivated: number
+          ran_at: string
+        }
+        Insert: {
+          details?: Json
+          duplicates_found?: number
+          expired_deactivated?: number
+          id?: string
+          invalid_product_deactivated?: number
+          out_of_stock_deactivated?: number
+          ran_at?: string
+        }
+        Update: {
+          details?: Json
+          duplicates_found?: number
+          expired_deactivated?: number
+          id?: string
+          invalid_product_deactivated?: number
+          out_of_stock_deactivated?: number
+          ran_at?: string
+        }
+        Relationships: []
+      }
+      flash_deal_events: {
+        Row: {
+          created_at: string
+          deal_id: string | null
+          event_type: string
+          id: string
+          product_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id?: string | null
+          event_type: string
+          id?: string
+          product_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string | null
+          event_type?: string
+          id?: string
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_deal_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "flash_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flash_deals: {
         Row: {
           active: boolean
@@ -5664,6 +5726,24 @@ export type Database = {
       admin_order_operations: { Args: { _limit?: number }; Returns: Json }
       admin_staff_performance: { Args: never; Returns: Json }
       admin_user_directory: { Args: never; Returns: Json }
+      audit_flash_deals: {
+        Args: never
+        Returns: {
+          details: Json
+          duplicates_found: number
+          expired_deactivated: number
+          id: string
+          invalid_product_deactivated: number
+          out_of_stock_deactivated: number
+          ran_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "flash_deal_audit_log"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       backfill_order_lifecycle: { Args: never; Returns: Json }
       check_order_integrity: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }

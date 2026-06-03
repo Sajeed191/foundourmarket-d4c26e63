@@ -80,6 +80,36 @@ async function findOrderByRzpOrderId(rzpOrderId?: string) {
   return data;
 }
 
+// For each purchased product that has an active flash deal, log a 'purchase'
+// event so the admin can compute deal conversion rates.
+async function recordFlashDealPurchases(orderId: string) {
+  try {
+    const { data: items } = await supabaseAdmin
+      .from("order_items")
+      .select("product_slug")
+      .eq("order_id", orderId);
+    const slugs = [...new Set((items ?? []).map((i: any) => i.product_slug).filter(Boolean))];
+    if (slugs.length === 0) return;
+    const { data: products } = await supabaseAdmin
+      .from("products")
+      .select("id,slug")
+      .in("slug", slugs);
+    const ids = (products ?? []).map((p: any) => p.id);
+    if (ids.length === 0) return;
+    const { data: deals } = await supabaseAdmin
+      .from("flash_deals")
+      .select("id,product_id")
+      .eq("active", true)
+      .in("product_id", ids);
+    if (!deals || deals.length === 0) return;
+    await supabaseAdmin.from("flash_deal_events").insert(
+      deals.map((d: any) => ({ event_type: "purchase", deal_id: d.id, product_id: d.product_id })),
+    );
+  } catch {
+    // Analytics must never break the payment webhook.
+  }
+}
+
 async function handleEvent(event: string, payload: any) {
   const paymentEntity = payload?.payload?.payment?.entity;
   const refundEntity = payload?.payload?.refund?.entity;
@@ -100,6 +130,9 @@ async function handleEvent(event: string, payload: any) {
             razorpay_payment_id: paymentEntity?.id ?? null,
           })
           .eq("id", order.id);
+
+        // Record flash-deal purchase events for conversion analytics.
+        await recordFlashDealPurchases(order.id);
       }
       // Upsert payment record idempotently
       const { data: existing } = await supabaseAdmin
