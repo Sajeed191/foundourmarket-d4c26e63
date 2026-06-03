@@ -134,6 +134,16 @@ export const createShipmentFn = createServerFn({ method: "POST" })
     const { primaryRole } = await requireStaff(userId, FULFILL_STAFF, "ops.shipment.create", input.orderId);
     const order = await getOrder(input.orderId);
 
+    if (!paymentAllowsFulfillment(order.payment_status, order.payment_method)) {
+      await logSecurity({
+        actorId: userId, actorRole: primaryRole, action: "ops.shipment.create",
+        target: input.orderId, success: false,
+        detail: { reason: "payment_incomplete", paymentStatus: order.payment_status },
+      });
+      throw new Error(PAYMENT_BLOCK_MSG);
+    }
+
+
     const { data: ship, error } = await supabaseAdmin.from("shipments").insert({
       order_id: input.orderId,
       user_id: order.user_id,
