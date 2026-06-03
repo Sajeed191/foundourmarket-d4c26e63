@@ -195,10 +195,6 @@ function ShippingReturnsPage() {
               Global Coverage
             </span>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-white/70">
-              <MapPin className="size-3 text-orange-300" />
-              Door-to-Door Tracking
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-white/70">
               <Clock className="size-3 text-orange-300" />
               Business Days Only
             </span>
