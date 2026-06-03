@@ -5793,6 +5793,7 @@ export type Database = {
         }
       }
       backfill_order_lifecycle: { Args: never; Returns: Json }
+      can_access_support_thread: { Args: { _topic: string }; Returns: boolean }
       check_order_integrity: { Args: never; Returns: Json }
       commit_order_stock: { Args: { _order_id: string }; Returns: undefined }
       customer_cancel_order: {
