@@ -604,6 +604,10 @@ function Home() {
 
       <CinematicDivider />
 
+      <FlashDeals />
+
+
+
       {/* 4-6 · Trending / New Arrivals / Best Sellers — separate lazy rails */}
       {productsLoading ? (
         <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
