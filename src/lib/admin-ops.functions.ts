@@ -85,3 +85,29 @@ export const getUserDirectoryFn = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return data;
   });
+
+/** Order integrity monitor: last scan summary + live invalid-order count. */
+export const getOrderIntegrityFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context as { userId: string };
+    await requireStaff(userId, OPS_STAFF, "ops.order_integrity");
+    const { data, error } = await adminRpc("svc_order_integrity", { _actor: userId });
+    if (error) throw new Error(error.message);
+    return data;
+  });
+
+/** Trigger an on-demand integrity scan (logged to admin_activity_logs). */
+export const runOrderIntegrityScanFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, OPS_STAFF, "ops.order_integrity.scan");
+    const { data, error } = await adminRpc("check_order_integrity", {});
+    if (error) throw new Error(error.message);
+    await logSecurity({
+      actorId: userId, actorRole: primaryRole, action: "ops.order_integrity.scan",
+      success: true, detail: { invalid_total: (data as { invalid_total?: number })?.invalid_total ?? null },
+    });
+    return data;
+  });
