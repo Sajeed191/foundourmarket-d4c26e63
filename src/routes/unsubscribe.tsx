@@ -130,8 +130,8 @@ function UnsubscribePage() {
 
         <p className="mt-8 text-xs text-muted-foreground">
           Need help? Email{' '}
-          <a href="mailto:foundourmarket@gmail.com" className="text-primary underline">
-            foundourmarket@gmail.com
+          <a href="mailto:support@foundourmarket.com" className="text-primary underline">
+            support@foundourmarket.com
           </a>
         </p>
       </div>

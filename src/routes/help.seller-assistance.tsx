@@ -30,7 +30,7 @@ const WHATSAPP_NUMBERS = [
   { number: "918714459240", display: "+91 87144 59240", department: "Orders, Shipping & Disputes" },
 ];
 const WHATSAPP_MESSAGE = "Hello FoundOurMarket Support, I need assistance regarding my marketplace account.";
-const SUPPORT_EMAIL = "foundourmarket@gmail.com";
+const SUPPORT_EMAIL = "support@foundourmarket.com";
 const CALENDLY_HANDLE = "foundourmarket/seller-support";
 const CALENDLY_URL = `https://calendly.com/${CALENDLY_HANDLE}`;
 const CALENDLY_EMBED_URL = `${CALENDLY_URL}?hide_gdpr_banner=1&background_color=0a0f1f&text_color=ffffff&primary_color=ff7a00`;
@@ -303,7 +303,7 @@ function SellerAssistancePage() {
         .catch((err) => {
           toast.error("Live chat unavailable", {
             id: "chat-connect",
-            description: "Please try again or email foundourmarket@gmail.com.",
+            description: "Please try again or email support@foundourmarket.com.",
           });
           track("support_channel_outcome", {
             metadata: {

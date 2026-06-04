@@ -32,8 +32,8 @@ function ContactPage() {
         <div className="space-y-4">
           <div className="card-premium rounded-2xl p-5">
             <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Email Support</p>
-            <a href="mailto:foundourmarket@gmail.com" className="mt-1 inline-flex items-center gap-2 text-base font-display font-semibold text-accent hover:underline">
-              <Mail className="size-4" /> foundourmarket@gmail.com
+            <a href="mailto:support@foundourmarket.com" className="mt-1 inline-flex items-center gap-2 text-base font-display font-semibold text-accent hover:underline">
+              <Mail className="size-4" /> support@foundourmarket.com
             </a>
             <p className="mt-1 text-[13px] text-muted-foreground">Typical response within 6 hours.</p>
           </div>

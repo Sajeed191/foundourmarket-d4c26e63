@@ -39,7 +39,7 @@ function HelpRouteShell() {
 type FAQ = { q: string; a: string; cat: Category };
 type Category = "Orders" | "Shipping" | "Returns" | "Refunds" | "Payments" | "Warranty" | "Seller";
 
-const SUPPORT_EMAIL = "foundourmarket@gmail.com";
+const SUPPORT_EMAIL = "support@foundourmarket.com";
 
 const CATEGORIES: { key: Category | "All"; icon: any }[] = [
   { key: "All", icon: Sparkles },

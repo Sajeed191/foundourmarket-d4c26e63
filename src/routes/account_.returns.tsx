@@ -34,8 +34,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const SUPPORT_EMAIL = "foundourmarket@gmail.com";
-const SUPPORT_CC = "returns@foundourmarket.com";
+const SUPPORT_EMAIL = "support@foundourmarket.com";
+const SUPPORT_CC = "support@foundourmarket.com";
 const SUPPORT_SUBJECT = "Refund Support Request - FoundOurMarket";
 const SUPPORT_BODY = `Hello FoundOurMarket Support,
 

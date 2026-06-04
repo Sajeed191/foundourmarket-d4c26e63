@@ -121,8 +121,8 @@ function PrivacyPage() {
           </p>
           <div className="card-premium rounded-2xl p-5">
             <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Privacy & Data Requests</p>
-            <a href="mailto:privacy@foundourmarket.com" className="mt-1 inline-block text-base font-display font-semibold text-accent hover:underline">
-              privacy@foundourmarket.com
+            <a href="mailto:support@foundourmarket.com" className="mt-1 inline-block text-base font-display font-semibold text-accent hover:underline">
+              support@foundourmarket.com
             </a>
           </div>
         </div>
