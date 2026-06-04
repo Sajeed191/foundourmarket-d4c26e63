@@ -25,7 +25,7 @@ const TEXT = '#e7ecf6'
 const MUTED = '#8a96ad'
 const ACCENT = '#ff8a3d'
 const ACCENT_SOFT = 'rgba(255,138,61,0.14)'
-const SUPPORT = 'foundourmarket@gmail.com'
+const SUPPORT = 'support@foundourmarket.com'
 
 export interface AccountEmailProps {
   /** Recipient first name, optional. */
