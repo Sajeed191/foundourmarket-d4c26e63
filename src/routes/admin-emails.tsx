@@ -27,9 +27,7 @@ const DNS_CHECKLIST = [
 ];
 
 const SENDER_IDENTITIES = [
-  { address: `orders@${ROOT_DOMAIN}`, label: "Order & shipping updates", purpose: "Transactional" },
-  { address: `support@${ROOT_DOMAIN}`, label: "Customer support", purpose: "Reply-to" },
-  { address: `no-reply@${ROOT_DOMAIN}`, label: "Account & auth emails", purpose: "System" },
+  { address: `support@${ROOT_DOMAIN}`, label: "Account, orders, shipping & support", purpose: "Primary sender (FoundOurMarket)" },
 ];
 
 const RANGES = [
