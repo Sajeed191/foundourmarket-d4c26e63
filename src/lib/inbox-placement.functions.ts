@@ -150,6 +150,7 @@ export const createPlacementTest = createServerFn({ method: "POST" })
           message_id: messageId,
           to: recipient,
           from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+          reply_to: `support@${FROM_DOMAIN}`,
           sender_domain: SENDER_DOMAIN,
           subject,
           html,
