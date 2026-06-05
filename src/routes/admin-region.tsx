@@ -358,3 +358,95 @@ function AdminRegionPage() {
     </AdminShell>
   );
 }
+
+function DebugRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-border/60 py-2.5 last:border-0">
+      <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">
+        {label}
+      </span>
+      <span className="text-right text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function RegionDebugPanel({
+  debug,
+  loading,
+  onRefresh,
+}: {
+  debug: RegionDebug | null;
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  if (loading && !debug) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+      </div>
+    );
+  }
+  if (!debug) {
+    return (
+      <p className="py-10 text-center text-sm text-muted-foreground">
+        No debug data available.
+      </p>
+    );
+  }
+
+  const profile = regionProfile(debug.market);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Server-resolved detection for the current session (same logic used by checkout billing).
+        </p>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="rounded-xl border border-border px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest hover:border-accent/40 disabled:opacity-50"
+        >
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-background/60 p-4">
+        <DebugRow label="Detected country" value={debug.detectedCountry ?? "Unknown"} />
+        <DebugRow label="Timezone" value={debug.timezone ?? "—"} />
+        <DebugRow
+          label="Detection method"
+          value={PRICING_SOURCE_LABELS[debug.pricingSource] ?? debug.pricingSource}
+        />
+        <DebugRow
+          label="Detection confidence"
+          value={<ConfidenceBadge value={debug.confidence} />}
+        />
+        <DebugRow
+          label="Saved region"
+          value={debug.profileLocked ? <Pill region={debug.market} /> : "Not locked"}
+        />
+        <DebugRow label="Active region" value={<Pill region={debug.market} />} />
+        <DebugRow label="Active currency" value={debug.currency} />
+        <DebugRow label="Phone code" value={profile.phoneCode} />
+        <DebugRow
+          label="Payment gateway"
+          value={
+            <span className="text-right">
+              {profile.gateway}
+              <span className="block text-[10px] font-normal text-muted-foreground/70">
+                {profile.gatewayNote}
+              </span>
+            </span>
+          }
+        />
+        <DebugRow label="Shipping profile" value={profile.shipping} />
+      </div>
+
+      <p className="text-[11px] text-muted-foreground/70">
+        Region and currency are resolved on the server from the locked profile or trusted
+        geo-IP headers — the client cannot force a different pricing region.
+      </p>
+    </div>
+  );
+}
