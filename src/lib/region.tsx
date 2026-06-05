@@ -370,30 +370,27 @@ export function RegionProvider({ children }: { children: ReactNode }) {
           const result = await runDetection().catch(() => null);
           if (cancelled) return;
 
-          if (result && result.tier === "auto") {
-            // >=90 confidence → render correct pricing instantly, no popup.
-            setMarket(result.region);
+          // Country successfully detected + trustworthy network → apply the
+          // detected region instantly and persist it. NO popup.
+          const detectedOk =
+            !!result && !!result.countryCode && !result.vpnSuspected;
+
+          if (detectedOk) {
+            setMarket(result!.region);
             setAutoDetected(true);
             setNeedsSelection(false);
             setSoftConfirm(false);
-            persistRegion(result.region);
+            persistRegion(result!.region);
           } else {
+            // Detection failed / country unknown / VPN → full picker, once.
             if (result) setMarket(result.region);
             setAutoDetected(false);
+            setSoftConfirm(false);
             if (promptAlreadySeen()) {
               setNeedsSelection(false);
-              setSoftConfirm(false);
             } else {
               markPromptSeen();
-              if (result && result.tier === "confirm") {
-                // 70–89 → lightweight one-tap confirmation.
-                setSoftConfirm(true);
-                setNeedsSelection(false);
-              } else {
-                // <70 / VPN → full picker before pricing is trusted.
-                setSoftConfirm(false);
-                setNeedsSelection(true);
-              }
+              setNeedsSelection(true);
             }
           }
           setLocked(false);
