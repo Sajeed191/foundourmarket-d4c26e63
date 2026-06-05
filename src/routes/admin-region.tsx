@@ -359,7 +359,7 @@ function AdminRegionPage() {
   );
 }
 
-function DebugRow({ label, value }: { label: string; value: React.ReactNode }) {
+function DebugRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border/60 py-2.5 last:border-0">
       <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">
