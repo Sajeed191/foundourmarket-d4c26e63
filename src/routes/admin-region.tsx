@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Globe, Loader2, Check, X, ArrowRightLeft } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   adminSetUserRegion,
   adminReviewRegionRequest,
 } from "@/lib/region-admin.functions";
+import { getCheckoutRegionDebug } from "@/lib/region.functions";
 
 export const Route = createFileRoute("/admin-region")({
   head: () => ({ meta: [{ title: "Region Management — FoundOurMarket™" }] }),
@@ -73,15 +74,51 @@ function ConfidenceBadge({ value }: { value: number | null }) {
   );
 }
 
+type RegionDebug = {
+  detectedCountry: string | null;
+  timezone: string | null;
+  market: Region;
+  currency: string;
+  pricingSource: "profile_locked" | "edge_geo" | "default";
+  confidence: number;
+  profileLocked: boolean;
+};
+
+const PRICING_SOURCE_LABELS: Record<string, string> = {
+  profile_locked: "Saved region (profile)",
+  edge_geo: "Geo-IP country header",
+  default: "Default fallback (unknown)",
+};
+
+/** Derived region profile shown in the live debug panel. */
+function regionProfile(market: Region) {
+  return market === "india"
+    ? {
+        phoneCode: "+91",
+        gateway: "Razorpay (UPI · Cards)",
+        gatewayNote: "International gateways hidden",
+        shipping: "India domestic shipping",
+      }
+    : {
+        phoneCode: "Manual country code",
+        gateway: "International gateways (Stripe / PayPal)",
+        gatewayNote: "Razorpay / INR pricing hidden",
+        shipping: "International / worldwide shipping",
+      };
+}
+
 function AdminRegionPage() {
   const listCustomers = useServerFn(adminListCustomerRegions);
   const listRequests = useServerFn(adminListRegionRequests);
   const setRegion = useServerFn(adminSetUserRegion);
   const review = useServerFn(adminReviewRegionRequest);
+  const fetchDebug = useServerFn(getCheckoutRegionDebug);
 
-  const [tab, setTab] = useState<"customers" | "requests">("requests");
+  const [tab, setTab] = useState<"customers" | "requests" | "debug">("requests");
   const [customers, setCustomers] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
+  const [debug, setDebug] = useState<RegionDebug | null>(null);
+  const [debugLoading, setDebugLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -102,9 +139,25 @@ function AdminRegionPage() {
     }
   }, [listCustomers, listRequests, search]);
 
+  const loadDebug = useCallback(async () => {
+    setDebugLoading(true);
+    try {
+      const d = await fetchDebug();
+      setDebug(d as RegionDebug);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not resolve region debug.");
+    } finally {
+      setDebugLoading(false);
+    }
+  }, [fetchDebug]);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (tab === "debug" && !debug) loadDebug();
+  }, [tab, debug, loadDebug]);
 
   async function override(userId: string, region: Region) {
     const reason = window.prompt(`Reason for setting region to ${region}?`)?.trim();
@@ -154,7 +207,7 @@ function AdminRegionPage() {
         </div>
 
         <div className="mb-4 flex gap-2">
-          {(["requests", "customers"] as const).map((t) => (
+          {(["requests", "customers", "debug"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -164,12 +217,22 @@ function AdminRegionPage() {
                   : "border-border text-muted-foreground hover:border-accent/40"
               }`}
             >
-              {t === "requests" ? `Requests${pending.length ? ` · ${pending.length}` : ""}` : "Customers"}
+              {t === "requests"
+                ? `Requests${pending.length ? ` · ${pending.length}` : ""}`
+                : t === "customers"
+                  ? "Customers"
+                  : "Live Debug"}
             </button>
           ))}
         </div>
 
-        {loading ? (
+        {tab === "debug" ? (
+          <RegionDebugPanel
+            debug={debug}
+            loading={debugLoading}
+            onRefresh={loadDebug}
+          />
+        ) : loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
           </div>
@@ -293,5 +356,97 @@ function AdminRegionPage() {
         )}
       </div>
     </AdminShell>
+  );
+}
+
+function DebugRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-border/60 py-2.5 last:border-0">
+      <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">
+        {label}
+      </span>
+      <span className="text-right text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function RegionDebugPanel({
+  debug,
+  loading,
+  onRefresh,
+}: {
+  debug: RegionDebug | null;
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  if (loading && !debug) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+      </div>
+    );
+  }
+  if (!debug) {
+    return (
+      <p className="py-10 text-center text-sm text-muted-foreground">
+        No debug data available.
+      </p>
+    );
+  }
+
+  const profile = regionProfile(debug.market);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Server-resolved detection for the current session (same logic used by checkout billing).
+        </p>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="rounded-xl border border-border px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest hover:border-accent/40 disabled:opacity-50"
+        >
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-background/60 p-4">
+        <DebugRow label="Detected country" value={debug.detectedCountry ?? "Unknown"} />
+        <DebugRow label="Timezone" value={debug.timezone ?? "—"} />
+        <DebugRow
+          label="Detection method"
+          value={PRICING_SOURCE_LABELS[debug.pricingSource] ?? debug.pricingSource}
+        />
+        <DebugRow
+          label="Detection confidence"
+          value={<ConfidenceBadge value={debug.confidence} />}
+        />
+        <DebugRow
+          label="Saved region"
+          value={debug.profileLocked ? <Pill region={debug.market} /> : "Not locked"}
+        />
+        <DebugRow label="Active region" value={<Pill region={debug.market} />} />
+        <DebugRow label="Active currency" value={debug.currency} />
+        <DebugRow label="Phone code" value={profile.phoneCode} />
+        <DebugRow
+          label="Payment gateway"
+          value={
+            <span className="text-right">
+              {profile.gateway}
+              <span className="block text-[10px] font-normal text-muted-foreground/70">
+                {profile.gatewayNote}
+              </span>
+            </span>
+          }
+        />
+        <DebugRow label="Shipping profile" value={profile.shipping} />
+      </div>
+
+      <p className="text-[11px] text-muted-foreground/70">
+        Region and currency are resolved on the server from the locked profile or trusted
+        geo-IP headers — the client cannot force a different pricing region.
+      </p>
+    </div>
   );
 }
