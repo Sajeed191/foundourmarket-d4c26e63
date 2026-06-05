@@ -207,7 +207,7 @@ function AdminRegionPage() {
         </div>
 
         <div className="mb-4 flex gap-2">
-          {(["requests", "customers"] as const).map((t) => (
+          {(["requests", "customers", "debug"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -217,12 +217,22 @@ function AdminRegionPage() {
                   : "border-border text-muted-foreground hover:border-accent/40"
               }`}
             >
-              {t === "requests" ? `Requests${pending.length ? ` · ${pending.length}` : ""}` : "Customers"}
+              {t === "requests"
+                ? `Requests${pending.length ? ` · ${pending.length}` : ""}`
+                : t === "customers"
+                  ? "Customers"
+                  : "Live Debug"}
             </button>
           ))}
         </div>
 
-        {loading ? (
+        {tab === "debug" ? (
+          <RegionDebugPanel
+            debug={debug}
+            loading={debugLoading}
+            onRefresh={loadDebug}
+          />
+        ) : loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
           </div>
