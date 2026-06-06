@@ -583,7 +583,11 @@ export function Nav() {
           </div>
       )}
 
-      <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <SearchCommand open={searchOpen} onClose={() => setSearchOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }
