@@ -133,10 +133,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      // Preload + non-render-blocking load of the font CSS. font-display:swap keeps
-      // text visible immediately; the print->all swap drops it off the critical path.
+      // Preload the font CSS so it starts early, then apply it as a normal
+      // stylesheet. font-display:swap keeps text visible during font load.
+      // (A string `onLoad` media-swap handler is not valid in React-rendered
+      // <head> links and throws React error #231, so we load it directly.)
       { rel: "preload", as: "style", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" },
-      ({ rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap", media: "print", onLoad: "this.media='all'" } as any),
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" },
       { rel: "preconnect", href: "https://client.crisp.chat", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://client.crisp.chat" },
       { rel: "manifest", href: "/manifest.webmanifest" },
