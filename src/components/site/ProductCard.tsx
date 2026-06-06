@@ -6,7 +6,7 @@ import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
-import { ProductCardAdminControls } from "@/components/admin/ProductCardAdminControls";
+import { ProductCardAdminControlsGate } from "@/components/admin/ProductCardAdminControlsGate";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
@@ -50,7 +50,7 @@ function ProductCardImpl({ product }: { product: Product; compact?: boolean }) {
           : "border-accent/15 shadow-[0_4px_24px_-14px_oklch(0_0_0/0.7)] sm:group-hover:border-accent/35 sm:group-hover:shadow-[0_14px_40px_-14px_oklch(0.72_0.18_55/0.4)]"
       }`}
     >
-      <ProductCardAdminControls product={product} />
+      <ProductCardAdminControlsGate product={product} />
 
       {/* IMAGE — ~55% of card height */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
