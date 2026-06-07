@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminEditing } from "@/lib/admin-overlay";
 import { AnnouncementIcon } from "@/lib/announcement-icons";
-import { AnnouncementAdminSheet } from "@/components/admin/AnnouncementAdminSheet";
+// Heavy admin editor — lazy so shoppers never download it on the homepage.
+const AnnouncementAdminSheet = lazy(() =>
+  import("@/components/admin/AnnouncementAdminSheet").then((m) => ({ default: m.AnnouncementAdminSheet })),
+);
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 
 async function setAnnouncementActive(id: string, next: boolean) {
@@ -190,7 +193,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
         )}
       </div>
 
-      {canEdit && editing && <AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} />}
+      {canEdit && editing && <Suspense fallback={null}><AnnouncementAdminSheet onClose={() => setEditing(false)} onChanged={fetchItems} /></Suspense>}
     </>
   );
 }

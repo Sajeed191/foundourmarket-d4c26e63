@@ -3,7 +3,7 @@ import {
   Heart, Truck, Shield, RotateCcw, Minus, Plus, Scale,
   ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck,
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
@@ -24,8 +24,14 @@ import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useIsProductAdmin } from "@/lib/use-admin";
-import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
-import { AdminImageManager } from "@/components/admin/AdminImageManager";
+// Admin-only editors: lazy so customers never download the heavy admin graph
+// (framer-motion menus, server-fn clients) on a product page. Gated by isAdmin.
+const AdminProductPanel = lazy(() =>
+  import("@/components/admin/AdminProductPanel").then((m) => ({ default: m.AdminProductPanel })),
+);
+const AdminImageManager = lazy(() =>
+  import("@/components/admin/AdminImageManager").then((m) => ({ default: m.AdminImageManager })),
+);
 import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
@@ -436,11 +442,13 @@ function ProductPage() {
                   </button>
                 </div>
                 {isAdmin && (
-                  <AdminImageManager
-                    product={product}
-                    images={galleryImages.filter((g) => g.id !== "main")}
-                    onChanged={setImages}
-                  />
+                  <Suspense fallback={null}>
+                    <AdminImageManager
+                      product={product}
+                      images={galleryImages.filter((g) => g.id !== "main")}
+                      onChanged={setImages}
+                    />
+                  </Suspense>
                 )}
               </div>
             </div>
@@ -558,7 +566,11 @@ function ProductPage() {
               </div>
             )}
 
-            {isAdmin && <AdminProductPanel product={product} onOpenChange={setEditorOpen} />}
+            {isAdmin && (
+              <Suspense fallback={null}>
+                <AdminProductPanel product={product} onOpenChange={setEditorOpen} />
+              </Suspense>
+            )}
 
             {/* Trust indicators */}
             <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mb-5">

@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowRight, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminEditing } from "@/lib/admin-overlay";
-import { BannerAdminSheet } from "@/components/admin/BannerAdminSheet";
+// Heavy admin editor — lazy so shoppers never download it on the homepage.
+const BannerAdminSheet = lazy(() =>
+  import("@/components/admin/BannerAdminSheet").then((m) => ({ default: m.BannerAdminSheet })),
+);
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 
 async function setBannerActive(id: string, next: boolean) {
@@ -114,7 +117,7 @@ export function PromoBannerCarousel({
             <Pencil className="size-3.5" /> Add a banner
           </button>
         </div>
-        {editing && <BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} />}
+        {editing && <Suspense fallback={null}><BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} /></Suspense>}
       </section>
     );
   }
@@ -231,7 +234,7 @@ export function PromoBannerCarousel({
           </div>
         )}
       </div>
-      {canEdit && editing && <BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} />}
+      {canEdit && editing && <Suspense fallback={null}><BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} /></Suspense>}
     </section>
   );
 }
