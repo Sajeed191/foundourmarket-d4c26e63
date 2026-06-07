@@ -234,7 +234,7 @@ export function PromoBannerCarousel({
           </div>
         )}
       </div>
-      {canEdit && editing && <BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} />}
+      {canEdit && editing && <Suspense fallback={null}><BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} /></Suspense>}
     </section>
   );
 }
