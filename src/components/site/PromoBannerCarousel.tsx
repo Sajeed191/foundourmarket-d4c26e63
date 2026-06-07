@@ -117,7 +117,7 @@ export function PromoBannerCarousel({
             <Pencil className="size-3.5" /> Add a banner
           </button>
         </div>
-        {editing && <BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} />}
+        {editing && <Suspense fallback={null}><BannerAdminSheet defaultType={types[0]} onClose={() => setEditing(false)} onChanged={fetchBanners} /></Suspense>}
       </section>
     );
   }
