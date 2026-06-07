@@ -24,8 +24,14 @@ import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useIsProductAdmin } from "@/lib/use-admin";
-import { AdminProductPanel } from "@/components/admin/AdminProductPanel";
-import { AdminImageManager } from "@/components/admin/AdminImageManager";
+// Admin-only editors: lazy so customers never download the heavy admin graph
+// (framer-motion menus, server-fn clients) on a product page. Gated by isAdmin.
+const AdminProductPanel = lazy(() =>
+  import("@/components/admin/AdminProductPanel").then((m) => ({ default: m.AdminProductPanel })),
+);
+const AdminImageManager = lazy(() =>
+  import("@/components/admin/AdminImageManager").then((m) => ({ default: m.AdminImageManager })),
+);
 import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
