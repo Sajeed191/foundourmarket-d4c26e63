@@ -414,37 +414,32 @@ function Home() {
         </div>
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
+          <div
+            className="hero-rise inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
           >
             <span className="size-1.5 rounded-full bg-accent animate-glow" />
             Live · 180+ countries · 2.4k products
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
+          <h1
+            className="hero-rise-h1 text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
           >
             <span className="sr-only">FoundOurMarket — Premium Global Marketplace. </span>
             <span aria-hidden="true">Whatever you need.</span>
             <br />
             <span className="text-gradient-ember">All in one place.</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.7 }}
-            className="text-fluid-base text-muted-foreground max-w-xl mx-auto text-balance mb-7 sm:mb-9 px-2"
+          <p
+            className="hero-rise hero-rise-1 text-fluid-base text-muted-foreground max-w-xl mx-auto text-balance mb-7 sm:mb-9 px-2"
           >
             A premium independent marketplace, sourcing top-quality products from across the world — delivered with cinematic precision.
-          </motion.p>
+          </p>
 
           {/* Search — primary action, premium glass, 52px+ height */}
-          <motion.form
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.7 }}
+          <form
+            className="hero-rise hero-rise-2 max-w-2xl mx-auto relative group"
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
-            className="max-w-2xl mx-auto relative group"
           >
             <div className={`relative glass-strong rounded-full ring-1 transition-colors ${searchFocused ? "ring-accent/50" : "ring-white/10"}`}>
               <Search className={`absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
@@ -462,12 +457,11 @@ function Home() {
                 Search
               </button>
             </div>
-          </motion.form>
+          </form>
 
           {/* Primary hero CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
-            className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-3"
+          <div
+            className="hero-rise hero-rise-3 mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-3"
           >
             <Link
               to="/categories"
@@ -481,12 +475,11 @@ function Home() {
             >
               Browse Categories
             </Link>
-          </motion.div>
+          </div>
 
           {/* Floating live stats */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45, duration: 0.8 }}
-            className="mt-6 sm:mt-9 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
+          <div
+            className="hero-rise hero-rise-4 mt-6 sm:mt-9 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
           >
             {[
               { value: "180+", label: "Countries", hint: "Worldwide reach" },
@@ -502,7 +495,7 @@ function Home() {
                 <div className="hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5">{s.hint}</div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
