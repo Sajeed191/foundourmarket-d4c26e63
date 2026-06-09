@@ -2,6 +2,42 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Self-hosted fonts (latin) — removes the render-blocking Google Fonts CSS +
+   cross-origin font waterfall that delayed the hero LCP text paint. The hero
+   h1 weight (Space Grotesk 600) is preloaded in __root.tsx for fast LCP. */
+@font-face {
+  font-family: "Space Grotesk"; font-style: normal; font-weight: 400;
+  font-display: swap; src: url("/fonts/space-grotesk-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk"; font-style: normal; font-weight: 600;
+  font-display: swap; src: url("/fonts/space-grotesk-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk"; font-style: normal; font-weight: 700;
+  font-display: swap; src: url("/fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 400;
+  font-display: swap; src: url("/fonts/dm-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 500;
+  font-display: swap; src: url("/fonts/dm-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 600;
+  font-display: swap; src: url("/fonts/dm-sans-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 700;
+  font-display: swap; src: url("/fonts/dm-sans-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono"; font-style: normal; font-weight: 400;
+  font-display: swap; src: url("/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* Cinematic Noir — premium dark commerce */
