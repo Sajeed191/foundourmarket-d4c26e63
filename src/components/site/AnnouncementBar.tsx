@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminEditing } from "@/lib/admin-overlay";
-import { AnnouncementIcon } from "@/lib/announcement-icons";
+import { StaticAnnouncement } from "@/components/site/AnnouncementMessage";
+// framer-motion crossfade — lazy so the homepage initial bundle stays motion-free.
+const MotionAnnouncement = lazy(() => import("@/components/site/AnnouncementMessage.motion"));
 // Heavy admin editor — lazy so shoppers never download it on the homepage.
 const AnnouncementAdminSheet = lazy(() =>
   import("@/components/admin/AnnouncementAdminSheet").then((m) => ({ default: m.AnnouncementAdminSheet })),
@@ -132,41 +133,9 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
       >
         <div aria-hidden className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: gradient }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            {current ? (
-              <motion.div
-                key={current.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-2 text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] text-foreground/90"
-              >
-                <AnnouncementIcon icon={current.icon} className="size-3.5 text-accent shrink-0" />
-                {current.link ? (
-                  <a href={current.link} className="truncate hover:text-accent transition-colors">
-                    {current.message}
-                  </a>
-                ) : (
-                  <span className="truncate">{current.message}</span>
-                )}
-                {countdown && (
-                  <span className="ml-1 rounded-full bg-accent/15 px-2 py-0.5 text-accent tabular-nums normal-case tracking-normal">
-                    {countdown}
-                  </span>
-                )}
-                {current.cta_text && current.link && (
-                  <a href={current.link} className="ml-1 hidden sm:inline text-accent underline-offset-2 hover:underline">
-                    {current.cta_text}
-                  </a>
-                )}
-              </motion.div>
-            ) : (
-              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                No active announcements
-              </span>
-            )}
-          </AnimatePresence>
+          <Suspense fallback={<StaticAnnouncement current={current} countdown={countdown} />}>
+            <MotionAnnouncement current={current} countdown={countdown} />
+          </Suspense>
         </div>
 
         {canEdit && (

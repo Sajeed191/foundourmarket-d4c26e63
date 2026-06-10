@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+
 import {
   Search, ArrowRight, Star, Sparkles, Award, Package, Globe2, Users, Flame,
   BadgeCheck, Pencil,
@@ -50,17 +50,8 @@ function useRotatingPlaceholder(active: boolean) {
   return PLACEHOLDERS[idx];
 }
 
-function AnimatedCounter({ to, suffix = "", duration = 2, decimals = 0 }: { to: number; suffix?: string; duration?: number; decimals?: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const mv = useMotionValue(0);
-  const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
-  const display = useTransform(spring, (v) =>
-    (decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString()) + suffix
-  );
-  useEffect(() => { if (inView) mv.set(to); }, [inView, to, mv]);
-  return <motion.span ref={ref}>{display}</motion.span>;
-}
+import { Reveal, AnimatedCounter } from "@/components/site/Reveal";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -75,30 +66,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] as const },
-  }),
-};
-
-function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-80px" }}
-      custom={delay}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 /* Cinematic ambient divider — layered glow between sections */
 function CinematicDivider() {
