@@ -198,13 +198,11 @@ export function FlashDeals() {
           style={{ background: "var(--gradient-ember)" }}
         />
         <div className="relative flex items-center gap-2 mb-4">
-          <motion.div
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
-            className="size-9 grid place-items-center rounded-xl bg-accent text-accent-foreground shadow-[var(--shadow-ember)] shrink-0"
+          <div
+            className="animate-flame-pulse size-9 grid place-items-center rounded-xl bg-accent text-accent-foreground shadow-[var(--shadow-ember)] shrink-0"
           >
             <Flame className="size-4" />
-          </motion.div>
+          </div>
           <div className="min-w-0">
             <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Flash Deals</p>
             <h3 className="text-sm sm:text-base font-display font-semibold truncate">Limited-time prices</h3>
