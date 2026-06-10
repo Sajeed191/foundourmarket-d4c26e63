@@ -67,30 +67,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] as const },
-  }),
-};
-
-function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-80px" }}
-      custom={delay}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 /* Cinematic ambient divider — layered glow between sections */
 function CinematicDivider() {
   return (
