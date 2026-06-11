@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 import { cn } from "@/lib/utils";
+import { ThemeSelector } from "@/components/site/ThemeSelector";
 
 export const Route = createFileRoute("/account_/profile")({
   head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
