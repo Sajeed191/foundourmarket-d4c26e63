@@ -306,6 +306,7 @@ function RootComponent() {
           </WishlistProvider>
         </NotificationsProvider>
       </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
