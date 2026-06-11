@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
+import { ThemeMenu } from "@/components/site/ThemeMenu";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
 import { useCustomerIntelSummary } from "@/lib/use-customer-intel-summary";
 
