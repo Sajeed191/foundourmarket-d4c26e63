@@ -735,7 +735,7 @@ function CheckoutPage() {
                 <TrustCard icon={<Lock className="size-4" />} title="Encrypted" sub="256-bit SSL" />
                 <TrustCard icon={<BadgeCheck className="size-4" />} title="Razorpay" sub="Verified" />
                 <TrustCard icon={<RotateCcw className="size-4" />} title="Easy returns" sub="4-day window" />
-                <TrustCard icon={<Headphones className="size-4" />} title="Fast support" sub="24/7 help" />
+                
                 <TrustCard icon={<PackageCheck className="size-4" />} title="Tracked" sub="Real-time" />
               </section>
 
