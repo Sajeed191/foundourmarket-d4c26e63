@@ -703,7 +703,7 @@ function PhoneField({
           className="flex-1 min-w-0 bg-transparent px-3 py-[0.925rem] text-sm outline-none"
         />
       </div>
-      <FieldError msg={error ?? (typedSymbol ? "Only numbers are allowed" : null)} />
+      <FieldError className="mt-2" msg={error ?? (typedSymbol ? "Only numbers are allowed" : null)} />
     </div>
   );
 }
