@@ -515,18 +515,23 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     min-height: 100dvh;
+    /* Prevent double-tap / pinch zoom while keeping panning + scrolling smooth */
+    touch-action: manipulation;
+    overflow-x: hidden;
   }
   body {
     min-height: 100dvh;
+    max-width: 100%;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     overflow-x: hidden;
   }
-  #root, [data-app-shell] { min-height: 100dvh; }
+  #root, [data-app-shell] { min-height: 100dvh; max-width: 100%; overflow-x: hidden; }
   /* Prevent layout breakage from oversize media */
   img, video, svg, canvas { max-width: 100%; height: auto; }
   /* Better touch targets on mobile */
