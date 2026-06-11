@@ -127,6 +127,7 @@ function isFlashDealProduct(p: Product): boolean {
 
 export function FlashDeals() {
   const { products, loading } = useProducts();
+  const { priceOf } = useRegion();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const now = useNow();
 
