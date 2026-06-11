@@ -83,7 +83,7 @@ export function CategoryCard({
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[var(--shadow-card)]"
     >
       {/* Large image on top — consistent square ratio */}
-      <div className="relative aspect-square w-full overflow-hidden bg-muted/60">dun
+      <div className="relative aspect-square w-full overflow-hidden bg-muted/60">
         {img ? (
           <img
             src={img}
