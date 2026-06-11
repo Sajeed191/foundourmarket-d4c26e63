@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import {
   ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
-  Sparkles, TrendingUp, Zap, Crown, Home as HomeIcon, Clock,
+  Sparkles, TrendingUp, Zap, Grid3x3, Crown, Home as HomeIcon, Clock,
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
+
 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -216,6 +217,15 @@ export function LightMobileDrawer({
                   );
                 })}
               </div>
+              <Link
+                to="/categories"
+                onClick={onClose}
+                className="mt-2.5 flex items-center justify-center gap-2 rounded-2xl bg-card px-4 py-3 ring-1 ring-border shadow-[var(--shadow-card)] active:scale-[0.97] hover:ring-accent/30 transition"
+              >
+                <Grid3x3 className="size-4 text-muted-foreground" />
+                <span className="text-[13px] font-semibold text-foreground">View All Categories</span>
+                <ChevronRight className="size-4 text-muted-foreground/50" />
+              </Link>
             </div>
           )}
 
