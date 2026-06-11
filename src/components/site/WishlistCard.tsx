@@ -197,24 +197,6 @@ export function WishlistCard({
             >
               <Eye className="size-3.5" />
             </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                setShowTracker((s) => !s);
-              }}
-              aria-label="Track price"
-              className={`size-8 grid place-items-center rounded-full border backdrop-blur-xl shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 ${
-                priceAlertsFor(product.slug).length
-                  ? "bg-accent/25 border-accent text-accent"
-                  : "bg-black/40 border-white/20 text-white hover:bg-accent/25 hover:border-accent hover:text-accent"
-              }`}
-            >
-              {priceAlertsFor(product.slug).length ? (
-                <BellRing className="size-3.5" />
-              ) : (
-                <Bell className="size-3.5" />
-              )}
-            </button>
           </div>
         </div>
       </Link>
