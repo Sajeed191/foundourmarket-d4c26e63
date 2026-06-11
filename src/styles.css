@@ -475,6 +475,10 @@
 
 /* Hide the native date-picker indicator so we can show a custom chevron
    aligned exactly like the gender select. The full input remains clickable. */
+.input-glass[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
 .input-glass[type="date"]::-webkit-calendar-picker-indicator {
   position: absolute;
   inset: 0;
@@ -484,6 +488,11 @@
   padding: 0;
   opacity: 0;
   cursor: pointer;
+}
+.input-glass[type="date"]::-webkit-inner-spin-button,
+.input-glass[type="date"]::-webkit-clear-button {
+  display: none;
+  -webkit-appearance: none;
 }
 
 
