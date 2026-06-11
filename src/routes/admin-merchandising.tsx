@@ -138,6 +138,29 @@ function MerchandisingPage() {
       subtitle="Place, rank & preview products across the storefront"
       allow={["admin", "super_admin", "manager", "editor"]}
     >
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="text-[11px] text-muted-foreground font-mono">
+          Reshuffle Best Sellers, Trending &amp; Flash Deals order for every shopper instantly.
+        </p>
+        <button
+          onClick={async () => {
+            setReshuffling(true);
+            const ok = await triggerGlobalReshuffle();
+            setReshuffling(false);
+            if (ok) {
+              toast.success("Collections reshuffled", { description: "New order is live for all shoppers." });
+              logActivity("merchandising.reshuffle", "Triggered global product reshuffle");
+            } else {
+              toast.error("Reshuffle failed", { description: "Only admins can reshuffle." });
+            }
+          }}
+          disabled={reshuffling}
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent border border-accent/40 px-4 py-2 text-xs font-medium hover:bg-accent/25 transition-colors disabled:opacity-50"
+        >
+          <Shuffle className={`size-3.5 ${reshuffling ? "animate-spin" : ""}`} /> Reshuffle all
+        </button>
+      </div>
+
       <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         <KpiCard label="Products" value={totals.products} icon={<Package className="size-4" />} />
         <KpiCard label="Featured" value={totals.counts.featured} icon={<Sparkles className="size-4" />} />
