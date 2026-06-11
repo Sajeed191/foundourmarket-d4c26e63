@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
+import { openShare } from "@/lib/share";
 import { refreshProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
