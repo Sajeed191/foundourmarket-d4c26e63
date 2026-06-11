@@ -105,7 +105,7 @@ export function Nav() {
   const navLinks = [
     { to: "/", label: "Shop" },
     { to: "/category/$slug", params: { slug: "electronics" }, label: "Electronics" },
-    { to: "/category/$slug", params: { slug: "fashion" }, label: "Fashion" },
+    
     { to: "/category/$slug", params: { slug: "home" }, label: "Home" },
     { to: "/category/$slug", params: { slug: "beauty" }, label: "Beauty" },
     { to: "/category/$slug", params: { slug: "pet-supplies" }, label: "Pet Supplies" },
