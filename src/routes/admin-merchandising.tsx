@@ -35,6 +35,7 @@ function MerchandisingPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [moveFor, setMoveFor] = useState<string | null>(null);
+  const [reshuffling, setReshuffling] = useState(false);
   const persisting = useRef(false);
 
   const section = MERCH_SECTIONS.find((s) => s.key === activeKey)!;
