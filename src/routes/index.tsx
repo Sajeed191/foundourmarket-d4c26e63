@@ -28,8 +28,6 @@ import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { FlashDeals } from "@/components/site/FlashDeals";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
-import { NewsletterForm } from "@/components/site/NewsletterForm";
-
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";
@@ -712,24 +710,6 @@ function Home() {
         )}
       </section>
 
-      <CinematicDivider />
-
-      {/* 8 · Join The Inner Circle — compact */}
-      <section className="px-4 sm:px-6 py-4 sm:py-6">
-        <Reveal className="max-w-3xl mx-auto glass-strong p-5 sm:p-7 rounded-3xl text-center relative overflow-hidden">
-          <div aria-hidden className="absolute -bottom-24 -right-24 size-56 rounded-full opacity-40 blur-3xl" style={{ background: "var(--gradient-ember)" }} />
-          <div className="relative z-10">
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2 inline-flex items-center gap-2">
-              <Sparkles className="size-3" /> Inner Circle
-            </p>
-            <h2 className="text-fluid-2xl font-display tracking-tight mb-2">Join the Inner Circle</h2>
-            <p className="text-muted-foreground mb-5 text-pretty max-w-lg mx-auto text-sm">
-              Exclusive drops and curator insights — plus 10% off your first order.
-            </p>
-            <NewsletterForm source="homepage" />
-          </div>
-        </Reveal>
-      </section>
     </>
   );
 }
