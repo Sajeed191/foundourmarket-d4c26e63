@@ -86,8 +86,12 @@ function FallbackSection({ featured }: { featured: Product[] }) {
 }
 
 export function FlashDeals() {
-  const { items, loading, now, products } = useFlashDeals();
+  const { items: allItems, loading, now, products } = useFlashDeals();
   const { priceOf } = useRegion();
+
+  // Homepage shows ONLY the first 4 active flash deals (rotated twice daily by
+  // the shared hook). The remaining deals are loaded on the dedicated /deals page.
+  const items = useMemo(() => allItems.slice(0, 4), [allItems]);
 
   // Featured fallback used only when no flash deals exist.
   const featuredFallback = useMemo(
@@ -126,8 +130,8 @@ export function FlashDeals() {
           </div>
         </div>
 
-        {/* Responsive grid — no horizontal scroll, equal-height cards on all devices. */}
-        <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        {/* 2x2 grid on mobile, 4-up on desktop — exactly 4 featured deals. */}
+        <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {items.map((i) => {
             const p = i.product;
             // Region-resolved regular selling price (INR/USD per market).
@@ -183,6 +187,16 @@ export function FlashDeals() {
               </Link>
             );
           })}
+        </div>
+
+        {/* View All — navigates to the dedicated Flash Deals page. */}
+        <div className="relative mt-5 flex justify-center">
+          <Link
+            to="/deals"
+            className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-6 py-3 text-xs font-mono uppercase tracking-widest hover:opacity-90 transition shadow-[var(--shadow-ember)]"
+          >
+            View All Flash Deals <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       </div>
     </section>
