@@ -244,6 +244,10 @@ function RootComponent() {
 
   useEffect(() => { registerServiceWorker(); }, []);
   useEffect(() => { preloadCrisp(); }, []);
+  // Warm the global products cache immediately on hydration so route components
+  // (home, search, category, product) render with data already in memory instead
+  // of each kicking off its own fetch on mount.
+  useEffect(() => { void loadProducts(); }, []);
   useEffect(() => {
     trackPageView(pathname);
     void captureAttribution();
