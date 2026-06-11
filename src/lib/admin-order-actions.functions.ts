@@ -26,12 +26,48 @@ const SUPPORT_STAFF: StaffRole[] = ["admin", "super_admin", "manager", "support"
 async function getOrder(orderId: string) {
   const { data, error } = await supabaseAdmin
     .from("orders")
-    .select("id, user_id, carrier, tracking_number, total, currency, contact_email, payment_status, payment_method")
+    .select("id, user_id, carrier, tracking_number, total, currency, contact_email, payment_status, payment_method, status, fulfillment_status")
     .eq("id", orderId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Order not found");
   return data;
+}
+
+/** Mirror of the DB lifecycle ordering (order_lifecycle_step). */
+const LIFECYCLE_SEQ = [
+  "pending", "confirmed", "processing", "packed",
+  "shipped", "out_for_delivery", "delivered", "completed",
+] as const;
+
+function seqStep(status?: string | null): number {
+  const i = LIFECYCLE_SEQ.indexOf((status ?? "").toLowerCase() as (typeof LIFECYCLE_SEQ)[number]);
+  return i === -1 ? 0 : i + 1;
+}
+
+/** Customer-facing notification copy for each fulfilment stage. */
+const STAGE_NOTIFY: Record<string, { title: string; body: string; priority: "high" | "normal" }> = {
+  processing: { title: "⚙️ Order processing", body: "We've started preparing your order.", priority: "normal" },
+  packed: { title: "📦 Order packed", body: "Your order has been packed and is ready to ship.", priority: "normal" },
+  shipped: { title: "🚚 Order shipped", body: "Your order is on its way!", priority: "high" },
+  out_for_delivery: { title: "📍 Out for delivery", body: "Your package is out for delivery today.", priority: "high" },
+  delivered: { title: "✅ Delivered", body: "Your order has been delivered. Enjoy!", priority: "high" },
+  cancelled: { title: "❌ Order cancelled", body: "Your order has been cancelled.", priority: "high" },
+};
+
+async function notifyCustomer(userId: string | null | undefined, orderId: string, stage: string) {
+  if (!userId) return;
+  const copy = STAGE_NOTIFY[stage];
+  if (!copy) return;
+  await supabaseAdmin.from("notifications").insert({
+    user_id: userId,
+    type: "order_update",
+    title: copy.title,
+    body: copy.body,
+    link: `/orders/${orderId}`,
+    priority: copy.priority,
+    data: { order_id: orderId, status: stage } as never,
+  });
 }
 
 /**
