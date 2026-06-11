@@ -589,8 +589,8 @@ function CheckoutPage() {
             )}
           </div>
 
-          <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-6 lg:gap-12">
-            <div className="lg:col-span-2 space-y-5 sm:space-y-6">
+          <form onSubmit={placeOrder} className="grid lg:grid-cols-3 gap-6 lg:gap-12 min-w-0">
+            <div className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
               {/* Reservation strip */}
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
