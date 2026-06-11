@@ -130,8 +130,8 @@ export function FlashDeals() {
           </div>
         </div>
 
-        {/* Responsive grid — no horizontal scroll, equal-height cards on all devices. */}
-        <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        {/* 2x2 grid on mobile, 4-up on desktop — exactly 4 featured deals. */}
+        <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {items.map((i) => {
             const p = i.product;
             // Region-resolved regular selling price (INR/USD per market).
