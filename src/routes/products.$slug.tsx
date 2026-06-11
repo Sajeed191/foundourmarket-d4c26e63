@@ -364,7 +364,7 @@ function ProductPage() {
         </nav>
 
 
-        <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+        <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-12 xl:gap-16">
           {/* Gallery */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
