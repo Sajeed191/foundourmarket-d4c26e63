@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCommandCenter } from "@/lib/command-center";
 import { NotificationBell } from "@/components/site/NotificationBell";
+import { ThemeMenu } from "@/components/site/ThemeMenu";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
 import { useCustomerIntelSummary } from "@/lib/use-customer-intel-summary";
 
@@ -502,6 +503,7 @@ export function AdminShell({
               <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-emerald-400/90">
                 <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_oklch(0.7_0.17_160_/_0.6)]" /> Synced
               </span>
+              <ThemeMenu />
               <NotificationBell />
               {actions}
             </div>
