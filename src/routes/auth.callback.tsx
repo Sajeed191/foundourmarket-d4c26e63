@@ -29,6 +29,30 @@ function AuthCallback() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
+    // The managed OAuth broker redirects back here with the issued tokens in
+    // the URL (query string or hash fragment). In the full-page redirect flow
+    // the lovable auth lib does NOT set the session for us, so we must read the
+    // tokens and call setSession ourselves — otherwise the page spins forever.
+    const consumeTokensFromUrl = async (): Promise<boolean> => {
+      if (typeof window === "undefined") return false;
+      const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const fromQuery = new URLSearchParams(window.location.search);
+      const access_token = fromHash.get("access_token") ?? fromQuery.get("access_token");
+      const refresh_token = fromHash.get("refresh_token") ?? fromQuery.get("refresh_token");
+      if (!access_token || !refresh_token) return false;
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (error) return false;
+      // Strip tokens from the URL so a refresh / back doesn't replay them.
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return true;
+    };
+
+    const succeed = () => {
+      if (cancelled) return;
+      setStatus("success");
+      setTimeout(() => nav({ to: dest() as any }), 700);
+    };
+
     const check = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (cancelled) return;
@@ -37,8 +61,7 @@ function AuthCallback() {
         return;
       }
       if (data.session) {
-        setStatus("success");
-        setTimeout(() => nav({ to: dest() as any }), 700);
+        succeed();
       } else {
         // Wait briefly for OAuth token exchange listener to set session
         timer = setTimeout(check, 400);
@@ -46,13 +69,15 @@ function AuthCallback() {
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) {
-        setStatus("success");
-        setTimeout(() => nav({ to: dest() as any }), 700);
-      }
+      if (session) succeed();
     });
 
-    check();
+    // Try to establish the session from URL tokens first, then fall back to
+    // polling getSession (covers the auto-detect / web-message paths too).
+    consumeTokensFromUrl().then((ok) => {
+      if (ok) succeed();
+      else check();
+    });
 
     // Hard timeout after 8s
     const fail = setTimeout(() => {
