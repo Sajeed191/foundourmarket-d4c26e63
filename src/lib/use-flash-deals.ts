@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
+import { useRotationNonce } from "@/lib/use-rotation-nonce";
 
 /** A row from the dedicated flash_deals table (optional flash pricing + window). */
 export type DealRow = {
@@ -85,6 +86,7 @@ export function useFlashDeals() {
   const { products, loading } = useProducts();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const now = useNow();
+  const rotationNonce = useRotationNonce();
 
   function fetchDeals() {
     supabase
@@ -122,8 +124,11 @@ export function useFlashDeals() {
   }, [deals, now]);
 
   // Rotation boundary (12:00 AM / 12:00 PM). Stays fixed between boundaries so
-  // the randomized order is stable until the next rotation.
-  const rotationSeed = currentRotationSeed(now);
+  // the randomized order is stable until the next rotation. The manual reshuffle
+  // nonce lets admins re-randomize the lineup instantly on demand.
+  const rotationSeed = currentRotationSeed(now) + rotationNonce;
+
+
 
   const items = useMemo<FlashItem[]>(() => {
     let totalFlagged = 0;

@@ -3870,6 +3870,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rotation_state: {
+        Row: {
+          id: boolean
+          nonce: number
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          nonce?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          nonce?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_payment_methods: {
         Row: {
           brand: string | null

@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useRotationSeed, seededShuffle } from "@/lib/rotation";
+import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { BadgeKey } from "@/lib/badges";
 
@@ -43,13 +44,15 @@ export function ProductCollection({
 }) {
   const { products, loading } = useProducts();
   const rotationSeed = useRotationSeed();
+  const rotationNonce = useRotationNonce();
 
   const items = useMemo(() => {
     const base = filterFlag ? products.filter((p) => Boolean(p[filterFlag])) : products;
     // Reshuffle the order every 12:00 AM / PM rotation window so the lineup
-    // feels fresh, while staying perfectly stable between boundaries.
-    return seededShuffle([...base], rotationSeed);
-  }, [products, filterFlag, rotationSeed]);
+    // feels fresh, while staying perfectly stable between boundaries. The
+    // manual reshuffle nonce lets admins re-randomize instantly on demand.
+    return seededShuffle([...base], rotationSeed + rotationNonce);
+  }, [products, filterFlag, rotationSeed, rotationNonce]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">
