@@ -51,9 +51,12 @@ export function useRotationNonce(): number {
  */
 export async function triggerGlobalReshuffle(): Promise<boolean> {
   const nonce = Date.now();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("rotation_state")
     .update({ nonce, updated_at: new Date().toISOString() })
-    .eq("id", true);
-  return !error;
+    .eq("id", true)
+    .select("nonce");
+  // RLS can silently block the update (0 rows affected) without an error;
+  // requiring a returned row guarantees the reshuffle actually persisted.
+  return !error && Array.isArray(data) && data.length > 0;
 }
