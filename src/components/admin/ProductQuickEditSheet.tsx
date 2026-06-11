@@ -227,10 +227,8 @@ export function ProductQuickEditSheet({
                 />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Toggle label="In stock" value={form.inStock} onChange={(v) => set("inStock", v)} />
-                <Toggle label="Featured" value={form.featured} onChange={(v) => set("featured", v)} />
-              </div>
+              <Toggle label="In stock" value={form.inStock} onChange={(v) => set("inStock", v)} />
+
 
               <Field label="Collection badges">
                 <div className="grid grid-cols-2 gap-3">
