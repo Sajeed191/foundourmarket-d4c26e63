@@ -113,7 +113,7 @@ export function ShareDialog() {
             )}
             <div className="min-w-0">
               <DrawerTitle>Share</DrawerTitle>
-              <DrawerDescription className="truncate">
+              <DrawerDescription className="line-clamp-3 whitespace-normal break-words">
                 {data?.title ?? "Share this link"}
               </DrawerDescription>
             </div>
