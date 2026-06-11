@@ -82,14 +82,14 @@ export const trackOrder = createServerFn({ method: "POST" })
     // Match the supplied email against each candidate's stored contact email,
     // falling back to the registered email of the order owner (covers legacy
     // orders created before contact_email was captured).
-    let order: Record<string, unknown> | null = null;
+    let order: OrderRow | null = null;
     for (const c of candidates) {
-      const contactEmail = ((c.contact_email as string) ?? "").trim().toLowerCase();
+      const contactEmail = (c.contact_email ?? "").trim().toLowerCase();
       if (contactEmail && contactEmail === supplied) {
         order = c;
         break;
       }
-      const userId = c.user_id as string | null;
+      const userId = c.user_id;
       if (userId) {
         const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
         const ownerEmail = authUser?.user?.email?.trim().toLowerCase() ?? "";
