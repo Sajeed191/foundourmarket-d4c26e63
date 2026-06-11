@@ -78,6 +78,7 @@ const BADGE_STYLES: Record<BadgeKey, Omit<Badge, "key">> = {
 // remaining promotional/computed labels as lower-priority fallbacks.
 const PRIORITY: BadgeKey[] = [
   "flash_deal",
+  "featured",
   "bestseller",
   "new",
   "premium",
