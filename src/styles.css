@@ -823,3 +823,176 @@
   /* Calm ambient orbs (cheaper paint) */
   .orb { opacity: 0.32; filter: blur(60px); }
 }
+
+/* =====================================================================
+   THEME SYSTEM — System / Dark / Grey / Light
+   Dark is the default (defined in :root above). The ThemeProvider sets
+   data-theme on <html> ("dark" | "grey" | "light"); "system" resolves to
+   dark/light at runtime via prefers-color-scheme. Orange accent + brand
+   identity is preserved across every theme.
+   ===================================================================== */
+
+/* ---------- LIGHT ---------- */
+[data-theme="light"] {
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.18 0.012 260);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.012 260);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.012 260);
+
+  --primary: oklch(0.7 0.19 49);
+  --primary-foreground: oklch(0.13 0 0);
+
+  --secondary: oklch(0.95 0.004 260);
+  --secondary-foreground: oklch(0.2 0.012 260);
+
+  --muted: oklch(0.955 0.004 260);
+  --muted-foreground: oklch(0.46 0.014 260);
+
+  --accent: oklch(0.7 0.19 49);
+  --accent-foreground: oklch(0.13 0 0);
+
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.18 0.012 260 / 12%);
+  --input: oklch(0.18 0.012 260 / 16%);
+  --ring: oklch(0.7 0.19 49);
+
+  --gradient-hero: linear-gradient(180deg, oklch(0.985 0.002 260) 0%, oklch(0.95 0.004 260) 100%);
+  --shadow-card: 0 8px 32px -12px oklch(0.2 0.02 260 / 0.18);
+  --shadow-float: 0 30px 80px -30px oklch(0.2 0.02 260 / 0.22), 0 8px 24px -12px oklch(0.2 0.02 260 / 0.14);
+  --shadow-soft: 0 6px 20px -10px oklch(0.2 0.02 260 / 0.18);
+  color-scheme: light;
+}
+
+/* ---------- GREY ---------- */
+[data-theme="grey"] {
+  --background: oklch(0.88 0.004 260);
+  --foreground: oklch(0.2 0.012 260);
+
+  --card: oklch(0.93 0.004 260);
+  --card-foreground: oklch(0.2 0.012 260);
+
+  --popover: oklch(0.94 0.004 260);
+  --popover-foreground: oklch(0.2 0.012 260);
+
+  --primary: oklch(0.68 0.19 49);
+  --primary-foreground: oklch(0.13 0 0);
+
+  --secondary: oklch(0.83 0.005 260);
+  --secondary-foreground: oklch(0.2 0.012 260);
+
+  --muted: oklch(0.83 0.005 260);
+  --muted-foreground: oklch(0.42 0.013 260);
+
+  --accent: oklch(0.68 0.19 49);
+  --accent-foreground: oklch(0.13 0 0);
+
+  --destructive: oklch(0.56 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.2 0.012 260 / 14%);
+  --input: oklch(0.2 0.012 260 / 18%);
+  --ring: oklch(0.68 0.19 49);
+
+  --gradient-hero: linear-gradient(180deg, oklch(0.88 0.004 260) 0%, oklch(0.83 0.005 260) 100%);
+  --shadow-card: 0 8px 32px -12px oklch(0.2 0.02 260 / 0.22);
+  --shadow-float: 0 30px 80px -30px oklch(0.2 0.02 260 / 0.26), 0 8px 24px -12px oklch(0.2 0.02 260 / 0.16);
+  --shadow-soft: 0 6px 20px -10px oklch(0.2 0.02 260 / 0.22);
+  color-scheme: light;
+}
+
+/* ---------- Surface utilities for light & grey ----------
+   The default glass/card utilities use white overlays tuned for the dark
+   theme. On light/grey we swap to dark-tinted overlays so glassmorphism,
+   borders and gradient text stay legible while keeping the orange accent. */
+[data-theme="light"] .glass,
+[data-theme="grey"] .glass {
+  background: oklch(0.2 0.02 260 / 0.04);
+  border-color: oklch(0.2 0.02 260 / 0.1);
+}
+[data-theme="light"] .glass-strong,
+[data-theme="grey"] .glass-strong {
+  background: linear-gradient(135deg, oklch(1 0 0 / 0.7), oklch(1 0 0 / 0.45));
+  border-color: oklch(0.2 0.02 260 / 0.1);
+}
+[data-theme="light"] .glass-reflect::after,
+[data-theme="grey"] .glass-reflect::after {
+  background: linear-gradient(90deg, transparent, oklch(0.2 0.02 260 / 0.18), transparent);
+}
+
+[data-theme="light"] .card-premium {
+  background: linear-gradient(180deg, oklch(1 0 0), oklch(0.97 0.003 260));
+  border-color: oklch(0.2 0.02 260 / 0.08);
+}
+[data-theme="grey"] .card-premium {
+  background: linear-gradient(180deg, oklch(0.95 0.004 260), oklch(0.91 0.004 260));
+  border-color: oklch(0.2 0.02 260 / 0.1);
+}
+
+[data-theme="light"] .card-elevated {
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(0.2 0.02 260 / 0.04), transparent 55%),
+    linear-gradient(180deg, oklch(1 0 0), oklch(0.97 0.003 260));
+  border-color: oklch(0.2 0.02 260 / 0.1);
+}
+[data-theme="grey"] .card-elevated {
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(0.2 0.02 260 / 0.05), transparent 55%),
+    linear-gradient(180deg, oklch(0.95 0.004 260), oklch(0.9 0.004 260));
+  border-color: oklch(0.2 0.02 260 / 0.12);
+}
+
+[data-theme="light"] .card-outline,
+[data-theme="grey"] .card-outline {
+  background: oklch(0.2 0.02 260 / 0.02);
+  border-color: oklch(0.2 0.02 260 / 0.14);
+}
+
+[data-theme="light"] .product-card-glass {
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(0.7 0.19 49 / 0.06), transparent 55%),
+    linear-gradient(180deg, oklch(1 0 0 / 0.92), oklch(0.97 0.003 260 / 0.95));
+  border-color: oklch(0.2 0.02 260 / 0.1);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.6),
+    0 8px 30px -12px oklch(0.2 0.02 260 / 0.18);
+}
+[data-theme="grey"] .product-card-glass {
+  background:
+    radial-gradient(120% 90% at 50% -10%, oklch(0.68 0.19 49 / 0.06), transparent 55%),
+    linear-gradient(180deg, oklch(0.94 0.004 260 / 0.95), oklch(0.9 0.004 260 / 0.96));
+  border-color: oklch(0.2 0.02 260 / 0.12);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.5),
+    0 8px 30px -12px oklch(0.2 0.02 260 / 0.22);
+}
+
+[data-theme="light"] .input-glass,
+[data-theme="grey"] .input-glass {
+  background: oklch(0.2 0.02 260 / 0.03);
+  border-color: oklch(0.2 0.02 260 / 0.14);
+}
+[data-theme="light"] .input-glass:focus,
+[data-theme="grey"] .input-glass:focus {
+  background: oklch(0.2 0.02 260 / 0.05);
+  border-color: oklch(0.7 0.19 49 / 0.6);
+}
+
+[data-theme="light"] .text-gradient-ember,
+[data-theme="grey"] .text-gradient-ember {
+  background: linear-gradient(135deg, oklch(0.25 0.012 260), oklch(0.62 0.19 49));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="light"] ::selection,
+[data-theme="grey"] ::selection {
+  background: oklch(0.7 0.18 49 / 0.35);
+  color: oklch(0.15 0.01 260);
+}

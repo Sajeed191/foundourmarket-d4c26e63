@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { RegionProvider } from "@/lib/region";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
+import { ThemeProvider } from "@/lib/theme";
 import { WishlistProvider } from "@/lib/wishlist";
 import { WishlistAlertsProvider } from "@/lib/wishlist-alerts";
 import { NotificationsProvider } from "@/lib/notifications";
@@ -161,6 +162,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        // No-FOUC theme init: resolve the stored theme preference (default
+        // "system") and set data-theme/.dark on <html> before first paint.
+        children:
+          "(function(){try{var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;var d=document.documentElement;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');}catch(x){document.documentElement.setAttribute('data-theme','dark');document.documentElement.classList.add('dark');}})();",
+      },
+      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
@@ -270,6 +277,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <AuthProvider>
         <NotificationsProvider>
           <WishlistProvider>
@@ -298,6 +306,7 @@ function RootComponent() {
           </WishlistProvider>
         </NotificationsProvider>
       </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

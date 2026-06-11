@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Mail, Bell, Settings as SettingsIcon } from "lucide
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { ThemeSelector } from "@/components/site/ThemeSelector";
 
 export const Route = createFileRoute("/account_/preferences")({
   head: () => ({ meta: [{ title: "Preferences — FoundOurMarket™" }] }),
@@ -119,6 +120,10 @@ function PreferencesPage() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
         <>
+          <div className="mb-6">
+            <ThemeSelector />
+          </div>
+
           <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
             <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
               <Mail className="size-4 text-accent" />
