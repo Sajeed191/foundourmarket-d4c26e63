@@ -80,10 +80,10 @@ export function CategoryCard({
       to={to as never}
       params={params as never}
       onClick={() => void supabase.rpc("track_category_event", { _id: category.id, _event: "click" })}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-colors hover:border-accent/40"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[var(--shadow-card)]"
     >
       {/* Large image on top — consistent square ratio */}
-      <div className="relative aspect-square w-full overflow-hidden bg-white/[0.04]">
+      <div className="relative aspect-square w-full overflow-hidden bg-muted/60">dun
         {img ? (
           <img
             src={img}
