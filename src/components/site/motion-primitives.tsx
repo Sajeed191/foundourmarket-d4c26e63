@@ -56,7 +56,7 @@ export function MotionCounter({
   const mv = useMotionValue(0);
   const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
   const display = useTransform(spring, (v) =>
-    (decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString()) + suffix,
+    (decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString("en-US")) + suffix,
   );
   useEffect(() => {
     if (inView) mv.set(to);
