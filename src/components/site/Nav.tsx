@@ -207,7 +207,7 @@ export function Nav() {
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
-          <div className="flex items-center justify-start px-2.5 sm:px-5 py-2 sm:py-2.5 gap-2">
+          <div className="flex items-center justify-start px-2 sm:px-5 py-2 sm:py-2.5 gap-1 sm:gap-2">
             {/* Zone 1 — Hamburger (mobile only) */}
             <button
               onClick={() => setOpen(!open)}
