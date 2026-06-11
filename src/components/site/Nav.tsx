@@ -207,7 +207,7 @@ export function Nav() {
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
-          <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 gap-2">
+          <div className="flex items-center justify-start px-2.5 sm:px-5 py-2 sm:py-2.5 gap-2">
             {/* Zone 1 — Hamburger (mobile only) */}
             <button
               onClick={() => setOpen(!open)}
@@ -220,12 +220,12 @@ export function Nav() {
             {/* Zone 2 — Logo + Brand */}
             <Link
               to="/"
-              className="min-w-0 flex-1 md:flex-none flex items-center gap-2 sm:gap-2.5 -ml-1 md:ml-0 font-display tracking-tight font-semibold"
+              className="min-w-0 flex-none flex items-center gap-2 sm:gap-2.5 -ml-1 md:ml-0 font-display tracking-tight font-semibold"
             >
               <span className="shrink-0 relative inline-grid place-items-center size-8 sm:size-11 rounded-2xl bg-black/40 ring-1 ring-accent/30 overflow-hidden shadow-[0_0_20px_-4px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
-              <span className="min-w-0 flex flex-col leading-none">
+              <span className="hidden xs:flex min-w-0 flex-col leading-none">
                 <span className="whitespace-nowrap text-[15px] sm:text-xl font-semibold tracking-tight">
                   FoundOurMarket<span className="text-accent">™</span>
                 </span>
@@ -251,11 +251,11 @@ export function Nav() {
             </div>
 
             {/* Zone 3 — Search • Notifications • Cart */}
-            <div className="shrink-0 flex items-center gap-1 sm:gap-2">
+            <div className="shrink-0 ml-auto flex items-center gap-0.5 sm:gap-1">
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
-                className="size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                className="size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
               >
                 <Search className="size-[18px]" />
               </button>
@@ -267,7 +267,7 @@ export function Nav() {
               <Link
                 to="/wishlist"
                 aria-label="Wishlist"
-                className="relative hidden sm:grid size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                className="relative hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
               >
                 <Heart className="size-[18px]" />
                 {wishSlugs.size > 0 && (
@@ -281,21 +281,23 @@ export function Nav() {
                 <Link
                   to="/admin"
                   aria-label="Admin"
-                  className="hidden sm:grid size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                  className="hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
                   title="Admin"
                 >
                   <LayoutDashboard className="size-[18px]" />
                 </Link>
               )}
 
-              <NotificationBell />
+              <div className="scale-90 sm:scale-100 origin-right">
+                <NotificationBell />
+              </div>
 
               {/* Account — desktop dropdown (replaces floating launcher) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     aria-label="Account"
-                    className="hidden md:flex items-center gap-2 h-11 pl-1.5 pr-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                    className="hidden md:flex items-center gap-2 h-10 sm:h-11 pl-1.5 pr-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
                   >
                     <span className="grid place-items-center size-8 rounded-lg bg-accent/15 ring-1 ring-accent/30 overflow-hidden text-accent">
                       {user?.user_metadata?.avatar_url
@@ -335,7 +337,7 @@ export function Nav() {
               <Link
                 to="/cart"
                 aria-label="Cart"
-                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-11 min-w-11 px-3 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
+                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-10 sm:h-11 min-w-10 sm:min-w-11 px-2.5 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
               >
                 <ShoppingBag className="size-[18px]" />
                 <span className="text-xs font-mono font-semibold">{count}</span>
