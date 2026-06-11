@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Heart, ShoppingCart, Check, Eye, TrendingDown, Bell, BellRing } from "lucide-react";
+import { Heart, ShoppingCart, Check, Eye, TrendingDown } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { Price } from "@/components/site/Price";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
-import { useWishlistAlerts } from "@/lib/wishlist-alerts";
+
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { computeBadges } from "@/lib/badges";
 import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
@@ -35,12 +35,8 @@ export function WishlistCard({
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items } = useCart();
   const { toggle } = useWishlist();
-  const { priceAlertsFor, addPriceAlert, removePriceAlert, hasRestock, toggleRestock } =
-    useWishlistAlerts();
   const [imgLoaded, setImgLoaded] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
-  const [showTracker, setShowTracker] = useState(false);
-  const [customTarget, setCustomTarget] = useState("");
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
 
   const price = priceOf(product);
@@ -196,24 +192,6 @@ export function WishlistCard({
               className="size-8 grid place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-xl shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 hover:bg-accent/25 hover:border-accent hover:text-accent"
             >
               <Eye className="size-3.5" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                setShowTracker((s) => !s);
-              }}
-              aria-label="Track price"
-              className={`size-8 grid place-items-center rounded-full border backdrop-blur-xl shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 ${
-                priceAlertsFor(product.slug).length
-                  ? "bg-accent/25 border-accent text-accent"
-                  : "bg-black/40 border-white/20 text-white hover:bg-accent/25 hover:border-accent hover:text-accent"
-              }`}
-            >
-              {priceAlertsFor(product.slug).length ? (
-                <BellRing className="size-3.5" />
-              ) : (
-                <Bell className="size-3.5" />
-              )}
             </button>
           </div>
         </div>
