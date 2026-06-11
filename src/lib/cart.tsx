@@ -13,6 +13,7 @@ type Ctx = {
   items: CartItem[];
   add: (slug: string, qty?: number) => Promise<void>;
   remove: (slug: string) => Promise<void>;
+  removeSaved: (slug: string) => Promise<void>;
   setQty: (slug: string, qty: number) => Promise<void>;
   clear: () => Promise<void>;
   saveForLater: (slug: string) => Promise<void>;
