@@ -24,8 +24,12 @@ export function useRotationNonce(): number {
     };
     load();
 
+    // Unique channel name per hook instance — multiple components subscribe to
+    // rotation state at once (Flash Deals, Trending, Best Sellers). Reusing one
+    // channel topic makes Supabase Realtime drop all but one subscription, so
+    // some rails never receive the new nonce and never reshuffle.
     const channel = supabase
-      .channel("rotation-state-live")
+      .channel(`rotation-state-live-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "rotation_state" },
