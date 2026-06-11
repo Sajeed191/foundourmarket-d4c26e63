@@ -8,10 +8,13 @@ import {
   markOrderStageFn, createShipmentFn, updateTrackingFn, resolveRefundFn,
   sendOrderNotificationFn, sendRetryPaymentLinkFn, openOrderTicketFn,
 } from "@/lib/admin-order-actions.functions";
+import { lifecycleStep } from "@/lib/order-lifecycle";
 
 type Props = {
   orderId: string;
   hasCustomer: boolean;
+  /** Current fulfilment stage — used to disable stages already reached (one-time marking). */
+  currentStage?: string | null;
   onDone: () => void;
 };
 
