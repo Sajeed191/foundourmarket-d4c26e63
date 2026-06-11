@@ -117,7 +117,7 @@ export function LightMobileDrawer({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-5 space-y-5">
           {/* 1. Premium user header */}
           <Link
             to={user ? "/account" : "/auth"}
