@@ -72,10 +72,12 @@ export function CheckoutSummaryDrawer({
               <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="font-mono text-emerald-400">−{fmt(discount)}</dd></div>
             )}
             <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shipping === 0 ? <span className="text-emerald-400">Free</span> : fmt(shipping)}</dd></div>
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">({taxLabel})</span></dt>
-              <dd className="font-mono">{fmt(tax)}</dd>
-            </div>
+            {tax > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground inline-flex items-center gap-1">Tax<span className="text-[10px] text-muted-foreground/70">({taxLabel})</span></dt>
+                <dd className="font-mono">{fmt(tax)}</dd>
+              </div>
+            )}
             <div className="border-t border-white/10 pt-3 flex justify-between items-end">
               <dt className="font-medium text-base">Total</dt>
               <dd className="font-mono text-2xl font-semibold text-accent leading-none">{fmt(total)}</dd>
