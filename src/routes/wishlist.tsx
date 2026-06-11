@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
+import { openShare } from "@/lib/share";
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { useRegion } from "@/lib/region";
