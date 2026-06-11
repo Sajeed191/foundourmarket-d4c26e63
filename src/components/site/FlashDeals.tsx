@@ -263,8 +263,15 @@ export function FlashDeals() {
         <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
           {items.map((i) => {
             const p = i.product;
-            const displayPrice = i.flashPrice ?? p.price;
-            const off = i.flashPrice != null && p.price > 0 ? Math.round(((p.price - i.flashPrice) / p.price) * 100) : 0;
+            // Region-resolved regular selling price (INR/USD per market).
+            const regularPrice = priceOf(p);
+            // Use the flash price ONLY when it's a real value > 0; otherwise fall
+            // back to the product's actual selling price. Never render ₹0 here.
+            const hasFlash = i.flashPrice != null && i.flashPrice > 0;
+            const displayPrice = hasFlash ? (i.flashPrice as number) : regularPrice;
+            const off = hasFlash && regularPrice > 0
+              ? Math.round(((regularPrice - (i.flashPrice as number)) / regularPrice) * 100)
+              : 0;
             const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
             return (
               <Link
