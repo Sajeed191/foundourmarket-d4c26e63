@@ -133,6 +133,16 @@ function ProductSection({
 }) {
   if (products.length === 0 || (!active && !isAdmin)) return null;
   const preview = products.slice(0, 4);
+  // Section-specific badge: inside a dedicated section, each card shows only
+  // that section's badge.
+  const sectionBadge =
+    sectionKey === "trending"
+      ? "trending"
+      : sectionKey === "best_sellers"
+        ? "bestseller"
+        : sectionKey === "new_arrivals"
+          ? "new"
+          : null;
   return (
     <SectionTracker
       sectionKey={sectionKey}
@@ -151,7 +161,7 @@ function ProductSection({
       <LazyMount minHeight={minHeight}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {preview.map((p, i) => (
-            <Reveal key={p.slug} delay={i}><ProductCard product={p} compact /></Reveal>
+            <Reveal key={p.slug} delay={i}><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
           ))}
         </div>
         <ViewAllButton to={viewAllTo} />
