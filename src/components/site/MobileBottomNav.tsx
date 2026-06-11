@@ -66,7 +66,7 @@ export function MobileBottomNav() {
                   <span
                     aria-hidden
                     className={
-                      isLight
+                      frosted
                         ? `absolute inset-0 rounded-full bg-accent/12 ring-1 ring-accent/25 shadow-[0_4px_12px_-4px_oklch(0.66_0.205_47/0.4)] transition-all duration-300 ${active ? "opacity-100 scale-100" : "opacity-0 scale-75"}`
                         : `absolute inset-0 rounded-full bg-accent/15 ring-1 ring-accent/30 transition-opacity duration-200 ${active ? "opacity-100" : "opacity-0"}`
                     }
