@@ -103,10 +103,21 @@ export function ShareDialog() {
     <Drawer open={open} onOpenChange={(o) => !o && setData(null)}>
       <DrawerContent className="max-h-[85dvh]">
         <DrawerHeader className="text-left">
-          <DrawerTitle>Share</DrawerTitle>
-          <DrawerDescription className="truncate">
-            {data?.title ?? "Share this link"}
-          </DrawerDescription>
+          <div className="flex items-center gap-3">
+            {data?.image && (
+              <img
+                src={data.image}
+                alt={data.title ?? "Product"}
+                className="size-14 shrink-0 rounded-xl border border-border/60 object-cover"
+              />
+            )}
+            <div className="min-w-0">
+              <DrawerTitle>Share</DrawerTitle>
+              <DrawerDescription className="truncate">
+                {data?.title ?? "Share this link"}
+              </DrawerDescription>
+            </div>
+          </div>
         </DrawerHeader>
 
         <div className="overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
