@@ -124,8 +124,11 @@ export function useFlashDeals() {
   }, [deals, now]);
 
   // Rotation boundary (12:00 AM / 12:00 PM). Stays fixed between boundaries so
-  // the randomized order is stable until the next rotation.
-  const rotationSeed = currentRotationSeed(now);
+  // the randomized order is stable until the next rotation. The manual reshuffle
+  // nonce lets admins re-randomize the lineup instantly on demand.
+  const rotationSeed = currentRotationSeed(now) + rotationNonce;
+
+
 
   const items = useMemo<FlashItem[]>(() => {
     let totalFlagged = 0;
