@@ -337,7 +337,11 @@ function Home() {
   );
 
   const trending = useMemo(
-    () => [...products].sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0)).slice(0, 8),
+    () =>
+      products
+        .filter((p) => p.trending)
+        .sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0))
+        .slice(0, 8),
     [products]
   );
 
@@ -347,7 +351,11 @@ function Home() {
   );
 
   const bestSellers = useMemo(
-    () => [...products].sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0)).slice(0, 8),
+    () =>
+      products
+        .filter((p) => p.bestseller)
+        .sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0))
+        .slice(0, 8),
     [products]
   );
 
