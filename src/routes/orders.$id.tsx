@@ -186,7 +186,7 @@ function OrderDetailPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="lg:col-span-2 bg-card border border-border rounded-2xl p-5 sm:p-6"
+          className="lg:col-span-2 min-w-0 bg-card border border-border rounded-2xl p-5 sm:p-6"
         >
           <h3 className="text-[10px] font-mono uppercase tracking-widest text-accent mb-4">Items</h3>
           <ul className="space-y-3">
