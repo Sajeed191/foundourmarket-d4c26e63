@@ -46,7 +46,6 @@ const quickActions = [
 
 const mainNav = [
   { to: "/" as const, label: "Home", icon: HomeIcon },
-  { to: "/categories" as const, label: "Categories", icon: Grid3x3 },
   { to: "/products/trending" as const, label: "Trending Products", icon: TrendingUp },
   { to: "/deals" as const, label: "Flash Deals", icon: Zap },
   { to: "/products/best-sellers" as const, label: "Best Sellers", icon: Crown },
