@@ -104,7 +104,7 @@ export function LightMobileDrawer({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <Link to="/" onClick={onClose} className="text-[25px] font-display tracking-tight font-semibold flex items-center gap-3">
+          <Link to="/" onClick={onClose} className="text-[20px] font-display tracking-tight font-semibold flex items-center gap-3">
             <img src="/logo.webp" alt="FoundOurMarket logo" className="size-[45px] rounded-xl object-cover ring-1 ring-border" />
             FoundOurMarket<span className="text-accent">™</span>
           </Link>
