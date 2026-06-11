@@ -20,6 +20,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/lib/theme";
+import { LightMobileDrawer } from "@/components/site/LightMobileDrawer";
 const logoSrc = "/logo.webp";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
@@ -67,6 +69,8 @@ export function Nav() {
   const { count } = useCart();
   const { user } = useAuth();
   const { slugs: wishSlugs } = useWishlist();
+  const { effectiveTheme } = useTheme();
+  const isLight = effectiveTheme === "light";
   const [open, setOpen] = useState(false);
   // Keep the drawer mounted during its exit transition.
   const [drawerMounted, setDrawerMounted] = useState(false);
@@ -337,8 +341,25 @@ export function Nav() {
 
 
       {/* Mobile drawer */}
-      {drawerMounted && (
+      {drawerMounted && isLight && (
+        <LightMobileDrawer
+          visible={drawerVisible}
+          onClose={() => setOpen(false)}
+          user={user}
+          displayName={displayName}
+          initial={initial}
+          membership={membership}
+          ordersCount={ordersCount}
+          cats={cats}
+          wishCount={wishSlugs.size}
+          cartCount={count}
+          isAdmin={isAdmin}
+          avatarUrl={user?.user_metadata?.avatar_url as string | undefined}
+        />
+      )}
+      {drawerMounted && !isLight && (
           <div className="fixed inset-0 z-[100] md:hidden">
+
             <div
               style={{
                 opacity: drawerVisible ? 1 : 0,
