@@ -20,17 +20,17 @@ type Props = {
 
 type Busy = string | null;
 
-function Btn({ icon, label, onClick, busy, tone = "default" }: {
+function Btn({ icon, label, onClick, busy, tone = "default", disabled, done }: {
   icon: React.ReactNode; label: string; onClick: () => void; busy?: boolean;
-  tone?: "default" | "good" | "bad";
+  tone?: "default" | "good" | "bad"; disabled?: boolean; done?: boolean;
 }) {
   const cls = tone === "good" ? "border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10"
     : tone === "bad" ? "border-destructive/30 text-destructive hover:bg-destructive/10"
     : "border-border hover:border-accent/40 hover:bg-muted/40";
   return (
-    <button onClick={onClick} disabled={busy}
-      className={`inline-flex items-center justify-center gap-1.5 text-[11px] px-2.5 py-2 rounded-lg border transition-colors disabled:opacity-50 ${cls}`}>
-      {busy ? <Loader2 className="size-3.5 animate-spin" /> : icon}{label}
+    <button onClick={onClick} disabled={busy || disabled}
+      className={`inline-flex items-center justify-center gap-1.5 text-[11px] px-2.5 py-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${cls}`}>
+      {busy ? <Loader2 className="size-3.5 animate-spin" /> : done ? <CheckCircle2 className="size-3.5" /> : icon}{label}
     </button>
   );
 }
