@@ -297,6 +297,7 @@ function RootComponent() {
                       {!hideSiteChrome && <MobileBottomNav />}
                       <DeferredShell isAuthRoute={isAuthRoute} isAdminRoute={isAdminRoute} />
                       <Toaster position="bottom-center" richColors />
+                      <ShareDialog />
                     </div>
                   </LayoutMetricsProvider>
                  </CommandCenterProvider>
