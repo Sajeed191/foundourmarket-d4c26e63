@@ -2,6 +2,8 @@ export type ShareData = {
   title?: string;
   text?: string;
   url: string;
+  /** Optional product/preview image shown in the in-app share sheet. */
+  image?: string;
 };
 
 const SHARE_EVENT = "fom:open-share";
