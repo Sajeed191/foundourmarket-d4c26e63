@@ -89,7 +89,17 @@ function OrderDetailPage() {
     );
   }
 
-  const currentIdx = STATUSES.findIndex((s) => s.key === order.status);
+  // Derive progress from order.status plus the latest shipment status so the
+  // admin's "out for delivery"/"delivered" marks reflect on the customer page.
+  const shipStatuses = shipments.map((s) => s.status);
+  const reachedKey = shipStatuses.includes("delivered")
+    ? "delivered"
+    : shipStatuses.includes("out_for_delivery")
+      ? "out_for_delivery"
+      : order.status;
+  const orderIdx = STATUSES.findIndex((s) => s.key === order.status);
+  const shipIdx = STATUSES.findIndex((s) => s.key === reachedKey);
+  const currentIdx = Math.max(orderIdx, shipIdx);
   const cancelled = order.status === "cancelled";
   const addr = order.shipping_address;
 
