@@ -412,7 +412,8 @@ function EditProfilePage() {
                 </div>
                 <div className="relative group">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
-                  <input type="date" max={maxDob} value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass input-glass-static !pl-11" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none z-10" />
+                  <input type="date" max={maxDob} value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className="input-glass input-glass-static !pl-11 !pr-10 relative" />
                 </div>
 
               </div>
