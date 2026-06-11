@@ -4,42 +4,88 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildTrackingUrl, courierLabel } from "@/lib/courier";
 
 const schema = z.object({
-  orderId: z.string().trim().min(8).max(64),
+  orderId: z.string().trim().min(6).max(64),
   email: z.string().trim().email().max(255),
 });
+
+const ORDER_COLUMNS =
+  "id, user_id, status, fulfillment_status, currency, subtotal, discount, tax, shipping, total, contact_email, shipping_address, created_at, updated_at";
 
 export const trackOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => schema.parse(input))
   .handler(async ({ data }) => {
+    // Normalize the supplied identifier: drop a leading "#" (shown in the UI),
+    // trim, and lowercase. Customers usually paste the SHORT id (#abc12345) that
+    // we display on the success screen / emails — i.e. the first 8 chars of the
+    // UUID — not the full 36-char UUID. Support both.
+    const rawId = data.orderId.trim().replace(/^#/, "").toLowerCase();
+    const supplied = data.email.trim().toLowerCase();
+
     const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        data.orderId,
-      );
-    if (!isUuid) {
-      return { found: false as const };
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(rawId);
+    const isShortId = /^[0-9a-f]{8}$/.test(rawId);
+
+    if (!isUuid && !isShortId) {
+      console.warn("[trackOrder] invalid order id format", { rawId });
+      return { found: false as const, reason: "invalid_id" as const };
     }
 
-    const { data: order, error } = await supabaseAdmin
-      .from("orders")
-      .select("id, user_id, status, fulfillment_status, currency, subtotal, discount, tax, shipping, total, contact_email, shipping_address, created_at, updated_at")
-      .eq("id", data.orderId)
-      .maybeSingle();
+    // Resolve candidate orders. Full UUID => exact match. Short id => range
+    // scan over the first UUID segment (id BETWEEN prefix-000…0 AND prefix-fff…f).
+    let candidates: Array<Record<string, unknown>> = [];
+    if (isUuid) {
+      const { data: order, error } = await supabaseAdmin
+        .from("orders")
+        .select(ORDER_COLUMNS)
+        .eq("id", rawId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (order) candidates = [order];
+    } else {
+      const { data: rows, error } = await supabaseAdmin
+        .from("orders")
+        .select(ORDER_COLUMNS)
+        .gte("id", `${rawId}-0000-0000-0000-000000000000`)
+        .lte("id", `${rawId}-ffff-ffff-ffff-ffffffffffff`);
+      if (error) throw new Error(error.message);
+      candidates = rows ?? [];
+    }
 
-    if (error) throw new Error(error.message);
-    if (!order) return { found: false as const };
+    console.log("[trackOrder] lookup", {
+      rawId,
+      mode: isUuid ? "uuid" : "short",
+      email: supplied,
+      candidates: candidates.length,
+    });
 
-    // Match the supplied email against the order's stored contact email, and
-    // fall back to the registered email of the order owner (covers legacy
+    if (candidates.length === 0) {
+      return { found: false as const, reason: "not_found" as const };
+    }
+
+    // Match the supplied email against each candidate's stored contact email,
+    // falling back to the registered email of the order owner (covers legacy
     // orders created before contact_email was captured).
-    const supplied = data.email.toLowerCase();
-    let emailMatches = (order.contact_email ?? "").toLowerCase() === supplied;
-    if (!emailMatches && order.user_id) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(order.user_id);
-      const ownerEmail = authUser?.user?.email?.toLowerCase() ?? "";
-      emailMatches = ownerEmail === supplied;
+    let order: Record<string, unknown> | null = null;
+    for (const c of candidates) {
+      const contactEmail = ((c.contact_email as string) ?? "").trim().toLowerCase();
+      if (contactEmail && contactEmail === supplied) {
+        order = c;
+        break;
+      }
+      const userId = c.user_id as string | null;
+      if (userId) {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+        const ownerEmail = authUser?.user?.email?.trim().toLowerCase() ?? "";
+        if (ownerEmail && ownerEmail === supplied) {
+          order = c;
+          break;
+        }
+      }
     }
-    if (!emailMatches) {
-      return { found: false as const };
+
+    if (!order) {
+      console.warn("[trackOrder] email mismatch", { rawId, email: supplied });
+      return { found: false as const, reason: "email_mismatch" as const };
     }
 
 
