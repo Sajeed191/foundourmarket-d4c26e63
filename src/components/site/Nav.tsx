@@ -150,7 +150,7 @@ export function Nav() {
   const membership = (user?.user_metadata?.membership || user?.user_metadata?.tier) as string | undefined;
 
   const collections = [
-    { to: "/deals" as const, label: "Trending Products", desc: "Popular right now", icon: TrendingUp, count: collCounts.flash },
+    { to: "/products/trending" as const, label: "Trending Products", desc: "Popular right now", icon: TrendingUp, count: collCounts.flash },
     { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: Zap, count: collCounts.best },
     { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles, count: collCounts.fresh },
   ];
