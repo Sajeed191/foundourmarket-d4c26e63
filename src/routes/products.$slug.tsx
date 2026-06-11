@@ -425,20 +425,20 @@ function ProductPage() {
                     </span>
                   </div>
                 )}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
                   <button
                     onClick={() => toggleWishlist(product.slug)}
                     aria-label="Wishlist"
-                    className={`size-10 grid place-items-center backdrop-blur-md rounded-full border transition-all ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
+                    className={`size-8 grid place-items-center backdrop-blur-md rounded-full border transition-all ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
                   >
-                    <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+                    <Heart className={`size-3.5 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
                   </button>
                   <button
                     onClick={handleShare}
                     aria-label="Share"
-                    className="size-10 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 hover:text-accent hover:border-accent/50 transition-all"
+                    className="size-8 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 hover:text-accent hover:border-accent/50 transition-all"
                   >
-                    <Share2 className="size-4" />
+                    <Share2 className="size-3.5" />
                   </button>
                 </div>
                 {isAdmin && (
