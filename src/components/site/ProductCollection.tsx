@@ -47,11 +47,14 @@ export function ProductCollection({
   forceBadge?: BadgeKey | null;
 }) {
   const { products, loading } = useProducts();
+  const rotationSeed = useRotationSeed();
 
   const items = useMemo(() => {
     const base = filterFlag ? products.filter((p) => Boolean(p[filterFlag])) : products;
-    return [...base].sort(SORTERS[sort]);
-  }, [products, sort, filterFlag]);
+    // Reshuffle the order every 12:00 AM / PM rotation window so the lineup
+    // feels fresh, while staying perfectly stable between boundaries.
+    return seededShuffle([...base], rotationSeed);
+  }, [products, filterFlag, rotationSeed]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">
