@@ -35,7 +35,7 @@ function Btn({ icon, label, onClick, busy, tone = "default", disabled, done }: {
   );
 }
 
-export function OrderActionCenter({ orderId, hasCustomer, onDone }: Props) {
+export function OrderActionCenter({ orderId, hasCustomer, currentStage, onDone }: Props) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<Busy>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
