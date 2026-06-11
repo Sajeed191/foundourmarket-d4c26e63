@@ -122,18 +122,6 @@ export function Nav() {
     if (!open || drawerDataLoaded.current) return;
     drawerDataLoaded.current = true;
     loadCategories().then((list) => setCats(list.filter((c) => !c.parent_id)));
-    loadProducts().then((prods) => {
-      const cc: Record<string, number> = {};
-      let flash = 0, best = 0, fresh = 0;
-      for (const p of prods) {
-        cc[p.category] = (cc[p.category] ?? 0) + 1;
-        if (p.flashDeal) flash++;
-        if (p.bestseller) best++;
-        if (p.newArrival) fresh++;
-      }
-      setCatCounts(cc);
-      setCollCounts({ flash, best, fresh });
-    });
   }, [open]);
 
   // Customer order count for the profile card (lazy, only when signed in).
@@ -148,9 +136,9 @@ export function Nav() {
   const membership = (user?.user_metadata?.membership || user?.user_metadata?.tier) as string | undefined;
 
   const collections = [
-    { to: "/products/trending" as const, label: "Trending Products", desc: "Popular right now", icon: TrendingUp, count: collCounts.flash },
-    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: Zap, count: collCounts.best },
-    { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles, count: collCounts.fresh },
+    { to: "/products/trending" as const, label: "Trending Products", desc: "Popular right now", icon: TrendingUp },
+    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: Zap },
+    { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles },
   ];
 
   const quickActions = [
@@ -489,9 +477,6 @@ export function Nav() {
                               <span className="block text-sm font-semibold truncate">{c.label}</span>
                               <span className="block text-[11px] text-muted-foreground truncate">{c.desc}</span>
                             </span>
-                            {c.count > 0 && (
-                              <span className="shrink-0 min-w-7 px-2 h-6 rounded-full bg-accent/15 text-accent ring-1 ring-accent/25 text-[11px] font-bold grid place-items-center">{c.count}</span>
-                            )}
                             <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
                           </Link>
                         </div>
@@ -530,7 +515,6 @@ export function Nav() {
                                   : <Fallback className="size-4.5" />}
                               </span>
                               <span className="flex-1 min-w-0 text-sm font-medium truncate">{cat.name}</span>
-                              <span className="shrink-0 text-[11px] text-muted-foreground">{catCounts[cat.slug] ?? 0}</span>
                               <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition" />
                             </Link>
                           </div>
