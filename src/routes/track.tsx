@@ -107,6 +107,14 @@ function TrackPage() {
         setLastUpdated(Date.now());
       } else {
         setActive(null);
+        const reason = (data as { reason?: string })?.reason;
+        if (reason === "email_mismatch") {
+          toast.error("Email doesn't match", { description: "The email you entered doesn't match this order." });
+        } else if (reason === "invalid_id") {
+          toast.error("Invalid Order ID", { description: "Check the Order ID from your confirmation email." });
+        } else {
+          toast.error("Order not found", { description: "We couldn't find an order with those details." });
+        }
       }
     },
   });
