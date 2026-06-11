@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import {
   ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
-  Sparkles, TrendingUp, Zap, Grid3x3, Crown, Home as HomeIcon, Clock,
+  Sparkles, TrendingUp, Zap, Crown, Home as HomeIcon, Clock,
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
+
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, THEME_OPTIONS, type ThemePreference } from "@/lib/theme";
@@ -46,7 +47,6 @@ const quickActions = [
 
 const mainNav = [
   { to: "/" as const, label: "Home", icon: HomeIcon },
-  { to: "/categories" as const, label: "Categories", icon: Grid3x3 },
   { to: "/products/trending" as const, label: "Trending Products", icon: TrendingUp },
   { to: "/deals" as const, label: "Flash Deals", icon: Zap },
   { to: "/products/best-sellers" as const, label: "Best Sellers", icon: Crown },
