@@ -3,9 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { Flame, ArrowRight, Sparkles } from "lucide-react";
 
 import { Price } from "@/components/site/Price";
+import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { trackFlashDealEvent } from "@/lib/flash-deal-analytics";
+import { useProductAdminEditing } from "@/lib/admin-overlay";
 import { useRegion } from "@/lib/region";
 import { useFlashDeals } from "@/lib/use-flash-deals";
+import { useHomepageSections, toggleHomepageSection } from "@/lib/use-homepage-sections";
 import type { Product } from "@/lib/products";
 
 function pad(n: number) {
@@ -88,6 +91,13 @@ function FallbackSection({ featured }: { featured: Product[] }) {
 export function FlashDeals() {
   const { items: allItems, loading, now, products } = useFlashDeals();
   const { priceOf } = useRegion();
+  const { sections } = useHomepageSections();
+  const { canEdit: isAdmin } = useProductAdminEditing();
+
+  // Admin-controlled homepage visibility (separate from product Flash Deal
+  // status). Inactive hides the whole section from shoppers only — products
+  // still appear on the Deals & Offers pages and remain untouched in the DB.
+  const sectionActive = sections.flash_deals?.active ?? true;
 
   // Homepage shows ONLY the first 4 active flash deals (rotated twice daily by
   // the shared hook). The remaining deals are loaded on the dedicated /deals page.
@@ -104,11 +114,34 @@ export function FlashDeals() {
 
   // Record one impression per displayed flash item.
   useEffect(() => {
+    if (!sectionActive) return;
     items.forEach((i) => trackFlashDealEvent("impression", i.dealId, i.product.slug));
-  }, [items]);
+  }, [items, sectionActive]);
+
+  // Section hidden by admin: invisible to shoppers, no empty state, no blank
+  // space. Admins keep a compact control to re-enable it.
+  if (!sectionActive && !isAdmin) return null;
 
   // Avoid flashing the empty state before the catalog resolves.
   if (loading && products.length === 0) return null;
+
+  if (!sectionActive && isAdmin) {
+    return (
+      <section className="px-4 sm:px-6 py-4 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border bg-card/50 px-4 py-3">
+          <span className="text-xs text-muted-foreground">
+            Flash Deals section is hidden from the homepage.
+          </span>
+          <InlineActiveToggle
+            active={false}
+            label="Flash Deals section"
+            size="sm"
+            onToggle={(next) => toggleHomepageSection("flash_deals", next)}
+          />
+        </div>
+      </section>
+    );
+  }
 
   if (items.length === 0) return <FallbackSection featured={featuredFallback} />;
 
@@ -128,6 +161,16 @@ export function FlashDeals() {
             <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Flash Deals</p>
             <h3 className="text-sm sm:text-base font-display font-semibold truncate">Limited-time prices</h3>
           </div>
+          {isAdmin && (
+            <div className="ml-auto shrink-0">
+              <InlineActiveToggle
+                active={sectionActive}
+                label="Flash Deals section"
+                size="sm"
+                onToggle={(next) => toggleHomepageSection("flash_deals", next)}
+              />
+            </div>
+          )}
         </div>
 
         {/* 2x2 grid on mobile, 4-up on desktop — exactly 4 featured deals. */}

@@ -11,6 +11,7 @@ export type HomepageSection = {
 export type SectionMap = Record<string, HomepageSection>;
 
 const DEFAULTS: SectionMap = {
+  flash_deals: { key: "flash_deals", eyebrow: "Limited-time prices", title: "Flash Deals", active: true },
   trending: { key: "trending", eyebrow: "Hot Right Now", title: "Trending Products", active: true },
   new_arrivals: { key: "new_arrivals", eyebrow: "Just Landed", title: "New Arrivals", active: true },
   best_sellers: { key: "best_sellers", eyebrow: "Most Loved", title: "Best Sellers", active: true },
