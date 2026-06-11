@@ -58,6 +58,11 @@ export function OrderActionCenter({ orderId, hasCustomer, currentStage, onDone }
   const retry = useServerFn(sendRetryPaymentLinkFn);
   const openTicket = useServerFn(openOrderTicketFn);
 
+  // One-time marking: a stage is "done" once the order's current lifecycle
+  // step has reached or passed it, so its button is shown completed + disabled.
+  const currentStep = lifecycleStep(currentStage);
+  const stageDone = (stage: string) => currentStep >= lifecycleStep(stage);
+
   const run = async (key: string, fn: () => Promise<unknown>, ok: string) => {
     setBusy(key); setMsg(null);
     try {
