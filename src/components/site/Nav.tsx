@@ -212,7 +212,7 @@ export function Nav() {
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden shrink-0 -ml-0.5 size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+              className="md:hidden shrink-0 -ml-[5px] size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
             >
               <AnimatedHamburger open={open} />
             </button>
