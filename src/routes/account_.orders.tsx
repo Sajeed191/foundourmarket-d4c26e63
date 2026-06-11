@@ -396,7 +396,16 @@ function OrdersPage() {
                   <h2 className="text-[11px] font-mono uppercase tracking-[0.25em] text-foreground">Active Orders</h2>
                   <span className="text-[10px] font-mono text-muted-foreground">({grouped.active.length})</span>
                 </div>
-                <ul className="space-y-2.5">{grouped.active.map((o, i) => renderCard(o, i))}</ul>
+                <ul className="space-y-2.5">
+                  {(showAllActive ? grouped.active : grouped.active.slice(0, 2)).map((o, i) => renderCard(o, i))}
+                </ul>
+                {grouped.active.length > 2 && (
+                  <button onClick={() => setShowAllActive((s) => !s)}
+                    className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-border/60 bg-card/50 text-[10px] font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent active:scale-95 transition">
+                    {showAllActive ? "Show less" : `View all active orders (${grouped.active.length})`}
+                    <ChevronDown className={`size-3.5 transition-transform ${showAllActive ? "rotate-180" : ""}`} />
+                  </button>
+                )}
               </section>
             )}
             {/* Delivered & past orders */}
@@ -408,18 +417,18 @@ function OrdersPage() {
                   <span className="text-[10px] font-mono text-muted-foreground">({grouped.rest.length})</span>
                 </div>
                 <ul className="space-y-2.5">
-                  {grouped.rest.slice(0, visible).map((o, i) => renderCard(o, i))}
+                  {(showAllRest ? grouped.rest : grouped.rest.slice(0, 2)).map((o, i) => renderCard(o, i))}
                 </ul>
-                {visible < grouped.rest.length && (
-                  <div className="mt-5 grid place-items-center">
-                    <button onClick={() => setVisible((v) => v + PAGE)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border/60 bg-card/50 text-xs font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent active:scale-95 transition">
-                      Load more <ChevronDown className="size-3.5" />
-                    </button>
-                  </div>
+                {grouped.rest.length > 2 && (
+                  <button onClick={() => setShowAllRest((s) => !s)}
+                    className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-border/60 bg-card/50 text-[10px] font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent active:scale-95 transition">
+                    {showAllRest ? "Show less" : `View all past orders (${grouped.rest.length})`}
+                    <ChevronDown className={`size-3.5 transition-transform ${showAllRest ? "rotate-180" : ""}`} />
+                  </button>
                 )}
               </section>
             )}
+
           </>
         ) : (
           <>
