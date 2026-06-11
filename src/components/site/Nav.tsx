@@ -150,8 +150,8 @@ export function Nav() {
   const membership = (user?.user_metadata?.membership || user?.user_metadata?.tier) as string | undefined;
 
   const collections = [
-    { to: "/deals" as const, label: "Flash Deals", desc: "Limited time", icon: Flame, count: collCounts.flash },
-    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: TrendingUp, count: collCounts.best },
+    { to: "/deals" as const, label: "Trending Products", desc: "Popular right now", icon: TrendingUp, count: collCounts.flash },
+    { to: "/products/best-sellers" as const, label: "Best Sellers", desc: "Most loved", icon: Zap, count: collCounts.best },
     { to: "/products/new-arrivals" as const, label: "New Arrivals", desc: "Fresh drops", icon: Sparkles, count: collCounts.fresh },
   ];
 
@@ -456,21 +456,21 @@ export function Nav() {
                   </button>
                 </div>
 
-                {/* Featured promo banner */}
+                {/* Trending promo banner */}
                 <div className="px-4 pb-2">
                   <Link
                     to="/deals"
-                    onClick={() => { setOpen(false); trackMenu("Flash Deals", "promo"); }}
+                    onClick={() => { setOpen(false); trackMenu("Trending Products", "promo"); }}
                     className="group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3.5 ring-1 ring-accent/30 active:scale-[0.98] transition"
                     style={{ background: "var(--gradient-ember)" }}
                   >
                     <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent" />
                     <span className="relative grid place-items-center size-10 rounded-xl bg-accent text-accent-foreground shadow-[0_0_20px_-4px_var(--color-accent)]">
-                      <Flame className="size-5" />
+                      <TrendingUp className="size-5" />
                     </span>
                     <span className="relative min-w-0 flex-1">
-                      <span className="block text-sm font-semibold">Today's Flash Deals</span>
-                      <span className="block text-[11px] text-muted-foreground">Limited-time savings on top picks</span>
+                      <span className="block text-sm font-semibold">Trending Now</span>
+                      <span className="block text-[11px] text-muted-foreground">Most popular picks this week</span>
                     </span>
                     <ChevronRight className="relative size-4 text-accent group-hover:translate-x-0.5 transition" />
                   </Link>
