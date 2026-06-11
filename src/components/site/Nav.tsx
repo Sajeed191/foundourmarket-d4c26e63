@@ -267,7 +267,7 @@ export function Nav() {
               <Link
                 to="/wishlist"
                 aria-label="Wishlist"
-                className="relative hidden sm:grid size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                className="relative hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
               >
                 <Heart className="size-[18px]" />
                 {wishSlugs.size > 0 && (
