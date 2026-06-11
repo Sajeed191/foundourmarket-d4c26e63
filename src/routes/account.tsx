@@ -498,7 +498,7 @@ function ActionCard({
         whileHover={{ y: -3 }}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.2, ease }}
-        className="h-full min-h-[104px] sm:min-h-[120px] flex flex-col items-center justify-center text-center gap-2 card-premium px-2.5 py-3.5 sm:py-5"
+        className="h-full min-h-[92px] sm:min-h-[104px] flex flex-col items-center justify-center text-center gap-2 card-premium px-2.5 py-3 sm:py-4 hover:shadow-[var(--shadow-soft)]"
       >
         <span className="relative size-10 rounded-xl bg-accent/10 text-accent grid place-items-center group-hover:bg-accent/25 group-hover:shadow-[0_0_20px_oklch(0.74_0.19_49/0.4)] transition-all">
           <Icon className="size-[18px]" />
