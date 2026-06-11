@@ -473,6 +473,19 @@
   padding-bottom: 0.925rem;
 }
 
+/* Hide the native date-picker indicator so we can show a custom chevron
+   aligned exactly like the gender select. The full input remains clickable. */
+.input-glass[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 
 
 /* Moving light sweep for the flagship CTA */
