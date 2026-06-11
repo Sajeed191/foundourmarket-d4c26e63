@@ -745,7 +745,7 @@ function CheckoutPage() {
             </div>
 
             {/* Summary */}
-            <aside>
+            <aside className="min-w-0">
               <div className="glass border border-white/10 rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-lg font-medium">Summary</h2>
