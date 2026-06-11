@@ -364,7 +364,7 @@ function ProductPage() {
         </nav>
 
 
-        <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+        <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-12 xl:gap-16">
           {/* Gallery */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -376,7 +376,7 @@ function ProductPage() {
               {/* Cinematic ambient backlight */}
               <div aria-hidden className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 animate-pulse" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
               <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
-              <div data-product-image className="relative aspect-square card-premium rounded-3xl overflow-hidden group shadow-[0_40px_80px_-30px_oklch(0_0_0/0.7)]">
+              <div data-product-image className="relative aspect-[4/5] sm:aspect-square card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={activeImage?.id}
@@ -425,20 +425,20 @@ function ProductPage() {
                     </span>
                   </div>
                 )}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
                   <button
                     onClick={() => toggleWishlist(product.slug)}
                     aria-label="Wishlist"
-                    className={`size-10 grid place-items-center backdrop-blur-md rounded-full border transition-all ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
+                    className={`size-8 grid place-items-center backdrop-blur-md rounded-full border transition-all ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
                   >
-                    <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+                    <Heart className={`size-3.5 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
                   </button>
                   <button
                     onClick={handleShare}
                     aria-label="Share"
-                    className="size-10 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 hover:text-accent hover:border-accent/50 transition-all"
+                    className="size-8 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 hover:text-accent hover:border-accent/50 transition-all"
                   >
-                    <Share2 className="size-4" />
+                    <Share2 className="size-3.5" />
                   </button>
                 </div>
                 {isAdmin && (
@@ -455,13 +455,13 @@ function ProductPage() {
 
 
             {galleryImages.length > 1 && (
-              <div className="mt-4 grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-3">
+              <div className="mt-3 grid grid-cols-6 gap-2 sm:gap-2.5">
                 {galleryImages.map((img, i) => (
                   <button
                     key={img.id}
                     onClick={() => setActiveImg(i)}
                     aria-label={`View image ${i + 1}`}
-                    className={`aspect-square rounded-xl overflow-hidden border transition-all bg-card ${i === activeImg ? "border-accent ring-2 ring-accent/30 shadow-[var(--shadow-ember)]" : "border-border opacity-60 hover:opacity-100 hover:border-accent/40"}`}
+                    className={`aspect-square rounded-xl overflow-hidden border transition-all bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
                   >
                     <img src={img.url} alt={img.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   </button>
@@ -487,8 +487,8 @@ function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent/90 mb-2.5">{product.tagline}</p>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-3.5 text-balance leading-[1.12]">{product.name}</h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent/90 mb-2 mt-5 lg:mt-0">{product.tagline}</p>
+            <h1 className="text-[1.6rem] sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-3 text-balance leading-[1.18] sm:leading-[1.12]">{product.name}</h1>
 
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <StarRating
@@ -870,11 +870,11 @@ function ProductPageSkeleton() {
     <div data-product-page data-product-phase="loading" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 product-page-clearance sm:pb-24 lg:pb-16" aria-busy="true">
       <ProductLayoutDiagnostics phase="loading" />
       <div className="mb-6 h-3 w-44 rounded-full bg-white/[0.05] animate-pulse" />
-      <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
-        <div className="space-y-4">
-          <div data-product-image className="aspect-square rounded-3xl border border-border bg-white/[0.04] animate-pulse" />
-          <div className="grid grid-cols-5 gap-2 sm:grid-cols-6 sm:gap-3">
-            {Array.from({ length: 5 }).map((_, i) => (
+      <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-12 xl:gap-16">
+        <div className="space-y-3">
+          <div data-product-image className="aspect-[4/5] sm:aspect-square rounded-2xl sm:rounded-3xl border border-border bg-white/[0.04] animate-pulse" />
+          <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="aspect-square rounded-xl bg-white/[0.04] animate-pulse" />
             ))}
           </div>
