@@ -329,10 +329,10 @@ export function Nav() {
               <Link
                 to="/cart"
                 aria-label="Cart"
-                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-10 sm:h-11 min-w-10 sm:min-w-11 px-2 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
+                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-9 sm:h-10 min-w-9 sm:min-w-10 px-1.5 sm:px-3 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
               >
-                <ShoppingBag className="size-[18px]" />
-                <span className="text-xs font-mono font-semibold">{count}</span>
+                <ShoppingBag className="size-[17px]" />
+                <span className="text-[11px] font-mono font-semibold">{count}</span>
               </Link>
             </div>
           </div>
