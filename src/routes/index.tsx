@@ -387,7 +387,7 @@ function Home() {
       <AnnouncementBar />
 
       {/* 2 · Cinematic Hero */}
-      <section className="relative pt-5 sm:pt-10 md:pt-14 pb-5 sm:pb-9 md:pb-11 px-4 sm:px-6 overflow-hidden">
+      <section className="relative pt-5 sm:pt-10 md:pt-14 pb-5 sm:pb-9 md:pb-11 px-4 sm:px-6 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         {/* Layered ambient mesh + orbs */}
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
           <div className="orb animate-orb" style={{ width: 520, height: 520, top: "8%", left: "55%", background: "var(--gradient-ember)" }} />
@@ -516,11 +516,11 @@ function Home() {
                     to="/category/$slug"
                     params={{ slug: cat.slug }}
                     onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                    className={`group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm shadow-[0_2px_12px_-4px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
+                    className={`group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
                   >
                     {/* Image above name — 1:1, premium rounded capsule.
                         Falls back to an icon inside a soft glass capsule. */}
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04]">
+                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl border border-border bg-muted/60">
                       {hasImage ? (
                         <img
                           src={cat.mobile_image || cat.image || ""}
@@ -537,7 +537,7 @@ function Home() {
                       )}
                     </div>
                     <div className="mt-auto w-full pb-0.5">
-                      <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-white group-hover:text-accent transition-colors">{cat.name}</h3>
+                      <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-foreground group-hover:text-accent transition-colors">{cat.name}</h3>
                       {(categoryCounts[cat.slug] ?? 0) > 0 && (
                         <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide mt-1">
                           {categoryCounts[cat.slug]} {categoryCounts[cat.slug] === 1 ? "Product" : "Products"}

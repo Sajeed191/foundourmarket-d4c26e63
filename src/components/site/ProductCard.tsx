@@ -124,7 +124,7 @@ function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: 
       <div className="relative flex flex-1 flex-col px-3 pb-3 pt-2">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
           {/* Title — max 2 lines */}
-          <h4 className="line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-white/95 transition-colors group-hover:text-accent">
+          <h4 className="line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-foreground/95 transition-colors group-hover:text-accent">
             {product.name}
           </h4>
         </Link>
@@ -134,7 +134,7 @@ function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: 
           {product.reviews > 0 ? (
             <span className="inline-flex items-center gap-1">
               <Star className="size-3.5 fill-accent text-accent" />
-              <span className="text-[12px] font-semibold tabular-nums text-white">{product.rating.toFixed(1)}</span>
+              <span className="text-[12px] font-semibold tabular-nums text-foreground">{product.rating.toFixed(1)}</span>
               <span className="font-mono text-[10px] text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
             </span>
           ) : (
@@ -149,7 +149,7 @@ function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: 
         <div className="mt-1.5 flex min-h-[34px] flex-col justify-center">
           <Price
             value={price}
-            className="block font-display text-[20px] font-bold leading-none tracking-[-0.02em] tabular-nums text-white"
+            className="block font-display text-[20px] font-bold leading-none tracking-[-0.02em] tabular-nums text-foreground"
           />
           {originalPrice && discount ? (
             <span className="mt-1 flex items-center gap-1.5 leading-none">
@@ -196,7 +196,7 @@ function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: 
               >
                 <Minus className="size-4" strokeWidth={2.5} />
               </button>
-              <span className="min-w-7 text-center text-sm font-bold tabular-nums text-white">{cartQty}</span>
+              <span className="min-w-7 text-center text-sm font-bold tabular-nums text-foreground">{cartQty}</span>
               <button
                 onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty + 1); }}
                 aria-label="Increase quantity"

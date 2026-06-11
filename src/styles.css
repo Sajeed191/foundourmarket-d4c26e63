@@ -832,40 +832,52 @@
    identity is preserved across every theme.
    ===================================================================== */
 
-/* ---------- LIGHT ---------- */
+/* ---------- LIGHT ----------
+   Premium light system: layered surfaces (soft page bg #F8F9FB, pure-white
+   section/card surfaces), richer multi-layer shadows for real depth, and a
+   slightly more saturated orange so the brand pops on white. */
 [data-theme="light"] {
-  --background: oklch(0.985 0.002 260);
-  --foreground: oklch(0.18 0.012 260);
+  /* Page background — soft premium grey-blue (#F8F9FB), never pure white */
+  --background: oklch(0.978 0.0035 255);
+  --foreground: oklch(0.17 0.014 260);
 
+  /* Elevated surfaces stay pure white to read as "raised" above the page */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.012 260);
+  --card-foreground: oklch(0.17 0.014 260);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.012 260);
+  --popover-foreground: oklch(0.17 0.014 260);
 
-  --primary: oklch(0.7 0.19 49);
-  --primary-foreground: oklch(0.13 0 0);
+  --primary: oklch(0.66 0.205 47);
+  --primary-foreground: oklch(0.99 0 0);
 
-  --secondary: oklch(0.95 0.004 260);
-  --secondary-foreground: oklch(0.2 0.012 260);
+  --secondary: oklch(0.955 0.004 255);
+  --secondary-foreground: oklch(0.2 0.014 260);
 
-  --muted: oklch(0.955 0.004 260);
-  --muted-foreground: oklch(0.46 0.014 260);
+  --muted: oklch(0.955 0.004 255);
+  --muted-foreground: oklch(0.44 0.016 260);
 
-  --accent: oklch(0.7 0.19 49);
-  --accent-foreground: oklch(0.13 0 0);
+  --accent: oklch(0.66 0.205 47);
+  --accent-foreground: oklch(0.99 0 0);
 
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.18 0.012 260 / 12%);
-  --input: oklch(0.18 0.012 260 / 16%);
-  --ring: oklch(0.7 0.19 49);
+  --border: oklch(0.18 0.012 260 / 10%);
+  --input: oklch(0.18 0.012 260 / 14%);
+  --ring: oklch(0.66 0.205 47);
 
-  --gradient-hero: linear-gradient(180deg, oklch(0.985 0.002 260) 0%, oklch(0.95 0.004 260) 100%);
-  --shadow-card: 0 8px 32px -12px oklch(0.2 0.02 260 / 0.18);
-  --shadow-float: 0 30px 80px -30px oklch(0.2 0.02 260 / 0.22), 0 8px 24px -12px oklch(0.2 0.02 260 / 0.14);
-  --shadow-soft: 0 6px 20px -10px oklch(0.2 0.02 260 / 0.18);
+  /* Hero — soft layered gradient with a warm ember halo instead of flat white */
+  --gradient-hero:
+    radial-gradient(120% 80% at 18% -10%, oklch(0.66 0.205 47 / 0.10), transparent 55%),
+    radial-gradient(110% 75% at 92% 0%, oklch(0.7 0.16 250 / 0.07), transparent 50%),
+    linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.965 0.004 255) 100%);
+  /* Deeper, layered shadows so cards lift cleanly off the soft page */
+  --shadow-ember: 0 12px 40px -12px oklch(0.66 0.205 47 / 0.35), 0 4px 12px -6px oklch(0.66 0.205 47 / 0.25);
+  --shadow-card: 0 2px 4px -2px oklch(0.2 0.02 260 / 0.08), 0 12px 32px -14px oklch(0.2 0.02 260 / 0.16);
+  --shadow-float: 0 1px 2px oklch(0.2 0.02 260 / 0.06), 0 24px 60px -24px oklch(0.2 0.02 260 / 0.22), 0 8px 20px -12px oklch(0.2 0.02 260 / 0.12);
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 260 / 0.05), 0 8px 22px -12px oklch(0.2 0.02 260 / 0.14);
+  --shadow-glow: 0 0 0 1px oklch(0.66 0.205 47 / 0.22), 0 14px 40px -10px oklch(0.66 0.205 47 / 0.3);
   color-scheme: light;
 }
 
