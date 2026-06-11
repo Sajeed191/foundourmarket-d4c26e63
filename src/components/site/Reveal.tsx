@@ -47,8 +47,10 @@ export function AnimatedCounter({
   duration?: number;
   decimals?: number;
 }) {
+  // Fixed en-US grouping so SSR (worker) and client render identical text
+  // (avoids a hydration mismatch from locale-dependent toLocaleString()).
   const formatted =
-    (decimals > 0 ? to.toFixed(decimals) : Math.round(to).toLocaleString()) + suffix;
+    (decimals > 0 ? to.toFixed(decimals) : Math.round(to).toLocaleString("en-US")) + suffix;
   return (
     <Suspense fallback={<span>{formatted}</span>}>
       <MotionCounter to={to} suffix={suffix} duration={duration} decimals={decimals} />
