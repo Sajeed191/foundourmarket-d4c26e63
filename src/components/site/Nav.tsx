@@ -225,7 +225,7 @@ export function Nav() {
               <span className="shrink-0 relative inline-grid place-items-center size-8 sm:size-11 rounded-2xl bg-black/40 ring-1 ring-accent/30 overflow-hidden shadow-[0_0_20px_-4px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
-              <span className="hidden xs:flex min-w-0 flex-col leading-none">
+              <span className="flex min-w-0 flex-col leading-none">
                 <span className="whitespace-nowrap text-[15px] sm:text-xl font-semibold tracking-tight">
                   FoundOurMarket<span className="text-accent">™</span>
                 </span>
