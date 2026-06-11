@@ -91,6 +91,12 @@ function OrderDetailPage() {
   const addr = order.shipping_address;
 
   const deliveredShipment = shipments.find((s) => s.delivered_at);
+  const isDelivered = order.status === "delivered" || shipments.some((s) => s.status === "delivered");
+  const RETURN_WINDOW_DAYS = 4;
+  const deliveredAt = deliveredShipment?.delivered_at ?? (order.status === "delivered" ? order.updated_at : null);
+  const returnWindowOpen = isDelivered && deliveredAt
+    ? Date.now() < new Date(deliveredAt).getTime() + RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000
+    : false;
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   const etaLabel = (() => {
     if (order.status === "delivered") {
@@ -227,7 +233,7 @@ function OrderDetailPage() {
             </motion.div>
           )}
 
-          {(order.status === "delivered" || shipments.some((s) => s.status === "delivered")) && (
+          {returnWindowOpen && (
             <Link
               to="/returns"
               search={{ order: order.id }}
