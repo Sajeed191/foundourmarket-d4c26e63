@@ -88,8 +88,11 @@ export const Route = createFileRoute("/products/$slug")({
       { property: "og:url", content: url },
     ];
     if (p?.image) {
-      meta.push({ property: "og:image", content: p.image });
-      meta.push({ name: "twitter:image", content: p.image });
+      const previewImage = toPreviewImage(p.image);
+      meta.push({ property: "og:image", content: previewImage });
+      meta.push({ property: "og:image:width", content: "800" });
+      meta.push({ name: "twitter:image", content: previewImage });
+      meta.push({ name: "twitter:card", content: "summary_large_image" });
     }
     const scripts = p
       ? [
