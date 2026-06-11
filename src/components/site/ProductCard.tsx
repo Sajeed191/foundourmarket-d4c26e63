@@ -196,7 +196,7 @@ function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: 
               >
                 <Minus className="size-4" strokeWidth={2.5} />
               </button>
-              <span className="min-w-7 text-center text-sm font-bold tabular-nums text-white">{cartQty}</span>
+              <span className="min-w-7 text-center text-sm font-bold tabular-nums text-foreground">{cartQty}</span>
               <button
                 onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty + 1); }}
                 aria-label="Increase quantity"
