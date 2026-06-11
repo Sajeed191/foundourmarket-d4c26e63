@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
+import { openShare } from "@/lib/share";
 import { useAllCategories } from "@/lib/use-categories";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
