@@ -15,9 +15,10 @@ export const Route = createFileRoute("/products/best-sellers")({
     <ProductCollection
       eyebrow="Customer favourites"
       title="Best Sellers"
-      description="The products our customers buy the most, ranked by total sales worldwide."
+      description="Products our team has marked as Best Sellers, ranked by total sales worldwide."
       icon={Award}
       sort="best_sellers"
+      filterFlag="bestseller"
     />
   ),
 });
