@@ -207,12 +207,12 @@ export function Nav() {
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav className="max-w-7xl mx-auto rounded-2xl glass-strong shadow-[var(--shadow-float)] ring-1 ring-white/10">
-          <div className="flex items-center justify-start px-2.5 sm:px-5 py-2 sm:py-2.5 gap-2">
+          <div className="flex items-center justify-start px-2 sm:px-5 py-2 sm:py-2.5 gap-1 sm:gap-2">
             {/* Zone 1 — Hamburger (mobile only) */}
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden shrink-0 -ml-0.5 size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+              className="md:hidden shrink-0 -ml-1 size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
             >
               <AnimatedHamburger open={open} />
             </button>
@@ -220,7 +220,7 @@ export function Nav() {
             {/* Zone 2 — Logo + Brand */}
             <Link
               to="/"
-              className="min-w-0 flex-none flex items-center gap-2 sm:gap-2.5 -ml-1 md:ml-0 font-display tracking-tight font-semibold"
+              className="min-w-0 flex-none flex items-center gap-2 sm:gap-2.5 -ml-0.5 md:ml-0 font-display tracking-tight font-semibold"
             >
               <span className="shrink-0 relative inline-grid place-items-center size-8 sm:size-11 rounded-2xl bg-black/40 ring-1 ring-accent/30 overflow-hidden shadow-[0_0_20px_-4px_var(--color-accent)]">
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
@@ -335,12 +335,12 @@ export function Nav() {
 
 
               {/* Soft divider between actions and cart */}
-              <span aria-hidden className="self-center mx-1 sm:mx-1.5 h-6 w-px bg-gradient-to-b from-transparent via-white/15 to-transparent" />
+              <span aria-hidden className="self-center mx-0.5 sm:mx-1.5 h-6 w-px bg-gradient-to-b from-transparent via-white/15 to-transparent" />
 
               <Link
                 to="/cart"
                 aria-label="Cart"
-                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-10 sm:h-11 min-w-10 sm:min-w-11 px-2.5 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
+                className="shrink-0 relative flex items-center justify-center gap-1 sm:gap-1.5 h-10 sm:h-11 min-w-10 sm:min-w-11 px-2 sm:px-3.5 rounded-xl bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.97] transition-all shadow-[var(--shadow-ember)]"
               >
                 <ShoppingBag className="size-[18px]" />
                 <span className="text-xs font-mono font-semibold">{count}</span>
