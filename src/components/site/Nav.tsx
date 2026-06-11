@@ -251,11 +251,11 @@ export function Nav() {
             </div>
 
             {/* Zone 3 — Search • Notifications • Cart */}
-            <div className="shrink-0 flex items-center gap-1 sm:gap-2">
+            <div className="shrink-0 ml-auto flex items-center gap-0.5 sm:gap-1">
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
-                className="size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent transition-all duration-200"
+                className="size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
               >
                 <Search className="size-[18px]" />
               </button>
