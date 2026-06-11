@@ -20,10 +20,11 @@ export function MobileBottomNav() {
   // managing the store, so the two navigations never stack.
   if (adminMode && isAdmin) return null;
 
-  // Bottom nav is only shown in grey and light themes.
+  // Light & grey themes get a dedicated frosted-glass surface so the bar stays
+  // fully visible against their light backgrounds. Dark is left as before.
   const isLight = effectiveTheme === "light";
   const isGrey = effectiveTheme === "grey";
-  if (!isLight && !isGrey) return null;
+  const frosted = isLight || isGrey;
 
   const items: { to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
@@ -42,11 +43,15 @@ export function MobileBottomNav() {
       {/* Soft ambient glow — reduced ~40%, subtle only */}
       <div
         aria-hidden
-        className="absolute inset-x-16 bottom-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] h-16 -z-10 blur-2xl opacity-[0.12]"
+        className={`absolute inset-x-16 bottom-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] h-16 -z-10 blur-2xl ${frosted ? "opacity-[0.12]" : "opacity-[0.18]"}`}
         style={{ background: "var(--gradient-ember-soft)" }}
       />
       <ul
-        className="bottom-nav-light pointer-events-auto relative max-w-7xl mx-auto grid h-[var(--mobile-nav-surface-height)] grid-cols-5 rounded-[26px] px-1.5 py-2"
+        className={
+          frosted
+            ? "bottom-nav-light pointer-events-auto relative max-w-7xl mx-auto grid h-[var(--mobile-nav-surface-height)] grid-cols-5 rounded-[26px] px-1.5 py-2"
+            : "pointer-events-auto relative max-w-7xl mx-auto grid h-[var(--mobile-nav-surface-height)] grid-cols-5 rounded-2xl glass-strong border border-white/10 shadow-[0_8px_28px_-12px_oklch(0_0_0/0.6)] px-1.5 py-2"
+        }
       >
         {items.map(({ to, label, icon: Icon, match, badge }) => {
           const active = match(pathname);
@@ -60,12 +65,16 @@ export function MobileBottomNav() {
                   {/* Small premium capsule behind icon only */}
                   <span
                     aria-hidden
-                    className={`absolute inset-0 rounded-full bg-accent/12 ring-1 ring-accent/25 shadow-[0_4px_12px_-4px_oklch(0.66_0.205_47/0.4)] transition-all duration-300 ${active ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+                    className={
+                      frosted
+                        ? `absolute inset-0 rounded-full bg-accent/12 ring-1 ring-accent/25 shadow-[0_4px_12px_-4px_oklch(0.66_0.205_47/0.4)] transition-all duration-300 ${active ? "opacity-100 scale-100" : "opacity-0 scale-75"}`
+                        : `absolute inset-0 rounded-full bg-accent/15 ring-1 ring-accent/30 transition-opacity duration-200 ${active ? "opacity-100" : "opacity-0"}`
+                    }
                   />
                   <span className="relative">
                     <Icon
                       className={`size-[19px] transition-colors duration-200 ${
-                        active ? "text-accent" : "text-muted-foreground"
+                        active ? "text-accent" : frosted ? "text-muted-foreground" : "text-white/70"
                       }`}
                       strokeWidth={active ? 2.4 : 2}
                     />
@@ -78,7 +87,7 @@ export function MobileBottomNav() {
                 </span>
                 <span
                   className={`truncate max-w-full leading-none transition-colors duration-200 ${
-                    active ? "text-accent font-semibold" : "text-muted-foreground"
+                    active ? "text-accent font-semibold" : frosted ? "text-muted-foreground" : "text-white/60"
                   }`}
                 >
                   {label}
