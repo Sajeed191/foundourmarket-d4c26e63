@@ -206,7 +206,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
  * out of the entry bundle and off the critical hydration path, cutting TBT and
  * speeding up LCP on the homepage / product / search routes.
  */
-function DeferredShell({ isAuthRoute }: { isAuthRoute: boolean; isAdminRoute?: boolean }) {
+function DeferredShell({ isAuthRoute, hideLiveChat }: { isAuthRoute: boolean; isAdminRoute?: boolean; hideLiveChat?: boolean }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const ric =
