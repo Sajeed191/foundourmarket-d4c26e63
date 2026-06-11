@@ -368,28 +368,8 @@ function OrdersPage() {
           </div>
         </div>
 
-        {/* Failed payment attempts (shown on All) — latest 2 by default */}
-        {showFailedSection && (
-          <section className="mb-5">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="size-3.5 text-rose-400" />
-              <h2 className="text-[11px] font-mono uppercase tracking-[0.25em] text-rose-300">Failed Payments</h2>
-              <span className="text-[10px] font-mono text-muted-foreground">({failedOrders.length})</span>
-            </div>
-            <ul className="space-y-2">
-              {(showAllFailed ? failedOrders : failedOrders.slice(0, 2)).map((o) => (
-                <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} />
-              ))}
-            </ul>
-            {failedOrders.length > 2 && (
-              <button onClick={() => setShowAllFailed((s) => !s)}
-                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/30 bg-rose-500/[0.04] text-[10px] font-mono uppercase tracking-widest text-rose-300 hover:border-rose-500/50 active:scale-95 transition">
-                {showAllFailed ? "Show less" : `View all failed payments (${failedOrders.length})`}
-                <ChevronDown className={`size-3.5 transition-transform ${showAllFailed ? "rotate-180" : ""}`} />
-              </button>
-            )}
-          </section>
-        )}
+
+
 
         {/* List */}
         {orders === null ? (
@@ -456,6 +436,31 @@ function OrdersPage() {
             )}
           </>
         )}
+
+        {/* Failed payment attempts (shown on All) — after Active and Delivered & Past */}
+        {showFailedSection && (
+          <section className="mt-6 mb-5">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="size-3.5 text-rose-400" />
+              <h2 className="text-[11px] font-mono uppercase tracking-[0.25em] text-rose-300">Failed Payments</h2>
+              <span className="text-[10px] font-mono text-muted-foreground">({failedOrders.length})</span>
+            </div>
+            <ul className="space-y-2">
+              {(showAllFailed ? failedOrders : failedOrders.slice(0, 2)).map((o) => (
+                <FailedCard key={o.id} order={o} format={format} onRetry={() => retryPayment()} />
+              ))}
+            </ul>
+            {failedOrders.length > 2 && (
+              <button onClick={() => setShowAllFailed((s) => !s)}
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/30 bg-rose-500/[0.04] text-[10px] font-mono uppercase tracking-widest text-rose-300 hover:border-rose-500/50 active:scale-95 transition">
+                {showAllFailed ? "Show less" : `View all failed payments (${failedOrders.length})`}
+                <ChevronDown className={`size-3.5 transition-transform ${showAllFailed ? "rotate-180" : ""}`} />
+              </button>
+            )}
+          </section>
+        )}
+
+
 
         {/* Recently viewed — compact carousel, max 6 */}
         {(orders?.length ?? 0) > 0 && (
