@@ -161,6 +161,16 @@ export function FlashDeals() {
             <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">Flash Deals</p>
             <h3 className="text-sm sm:text-base font-display font-semibold truncate">Limited-time prices</h3>
           </div>
+          {isAdmin && (
+            <div className="ml-auto shrink-0">
+              <InlineActiveToggle
+                active={sectionActive}
+                label="Flash Deals section"
+                size="sm"
+                onToggle={(next) => toggleHomepageSection("flash_deals", next)}
+              />
+            </div>
+          )}
         </div>
 
         {/* 2x2 grid on mobile, 4-up on desktop — exactly 4 featured deals. */}
