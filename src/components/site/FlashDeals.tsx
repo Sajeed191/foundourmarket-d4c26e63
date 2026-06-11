@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Price } from "@/components/site/Price";
 import { trackFlashDealEvent } from "@/lib/flash-deal-analytics";
 import { useProducts } from "@/lib/use-products";
+import { useRegion } from "@/lib/region";
 import type { Product } from "@/lib/products";
 
 /** A row from the dedicated flash_deals table (optional flash pricing + window). */
