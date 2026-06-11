@@ -12,7 +12,7 @@ type Props = {
   codAvailable: boolean;
   city?: string | null;
   postal?: string | null;
-  /** Return window in days (defaults to 7). */
+  /** Return window in days (defaults to 4). */
   returnsDays?: number;
   /** Market the destination resolved to. */
   region?: "India" | "International";
@@ -31,7 +31,7 @@ export function SmartDeliveryCard({
   codAvailable,
   city,
   postal,
-  returnsDays = 7,
+  returnsDays = 4,
   region = "India",
 }: Props) {
   const serviceable = service?.serviceable === true;

@@ -234,7 +234,7 @@ export function rowToProduct(r: Row): Product {
     codEnabled: r.cod_enabled ?? true,
     returnEligible: r.return_eligible ?? true,
     replacementEligible: r.replacement_eligible ?? true,
-    returnWindowDays: r.return_window_days ?? 7,
+    returnWindowDays: r.return_window_days ?? 4,
     pickupSupported: r.pickup_supported ?? true,
     internationalShipping: r.international_shipping ?? true,
     fragile: r.fragile ?? false,

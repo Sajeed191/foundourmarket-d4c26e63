@@ -13,7 +13,7 @@ function ReturnsPage() {
       slug={slug} sectionKey="returns" title="Returns" icon={<RotateCcw className="size-4" />} cols={COLS}
       toForm={(r) => ({
         return_eligible: r.return_eligible ?? true, replacement_eligible: r.replacement_eligible ?? true,
-        return_window_days: String(r.return_window_days ?? 7), warranty: r.warranty ?? "",
+        return_window_days: String(r.return_window_days ?? 4), warranty: r.warranty ?? "",
       })}
       toPatch={(f) => ({
         return_eligible: f.return_eligible, replacement_eligible: f.replacement_eligible,
