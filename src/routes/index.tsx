@@ -348,13 +348,16 @@ function Home() {
     [products]
   );
 
+  const rotationSeed = useRotationSeed();
+  const rotationNonce = useRotationNonce();
+
   const trending = useMemo(
     () =>
-      products
-        .filter((p) => p.trending)
-        .sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0))
-        .slice(0, 8),
-    [products]
+      seededShuffle(
+        products.filter((p) => p.trending),
+        rotationSeed + rotationNonce,
+      ).slice(0, 8),
+    [products, rotationSeed, rotationNonce]
   );
 
   const newArrivals = useMemo(
@@ -364,11 +367,11 @@ function Home() {
 
   const bestSellers = useMemo(
     () =>
-      products
-        .filter((p) => p.bestseller)
-        .sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0))
-        .slice(0, 8),
-    [products]
+      seededShuffle(
+        products.filter((p) => p.bestseller),
+        rotationSeed + rotationNonce + 1,
+      ).slice(0, 8),
+    [products, rotationSeed, rotationNonce]
   );
 
   const { items: testimonials } = useTestimonials();
