@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import {
   ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
-  Sparkles, TrendingUp, Zap, Crown, Home as HomeIcon, Clock,
+  Sparkles, TrendingUp, Zap, Grid3x3, Crown, Home as HomeIcon, Clock,
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
+
 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
