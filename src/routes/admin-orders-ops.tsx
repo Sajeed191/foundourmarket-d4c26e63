@@ -412,16 +412,106 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return <div className="flex items-center justify-between gap-3 py-1 border-b border-border/40 last:border-0"><span className="text-muted-foreground">{k}</span><span className="text-right font-medium">{v}</span></div>;
 }
 
+/* ---------------- Redesigned section primitives ---------------- */
+
+type Tone = "attn" | "calm" | "normal";
+
+function SectionHeader({ title, sub, icon, actions }: { title: string; sub?: string; icon?: React.ReactNode; actions?: React.ReactNode }) {
+  return (
+    <div className="flex items-end justify-between gap-3 mb-4">
+      <div className="min-w-0">
+        <h2 className="text-lg sm:text-xl font-display font-semibold flex items-center gap-2 tracking-tight">{icon}{title}</h2>
+        {sub && <p className="text-[12px] text-muted-foreground mt-0.5">{sub}</p>}
+      </div>
+      {actions}
+    </div>
+  );
+}
+
+function OverviewStat({ label, value, icon, tone, onClick }: { label: string; value: number; icon: React.ReactNode; tone: Tone; onClick?: () => void }) {
+  const active = tone === "attn" && value > 0;
+  const cls = active
+    ? "border-amber-400/40 bg-amber-400/[0.07]"
+    : tone === "calm"
+      ? "border-emerald-400/25 bg-emerald-400/[0.04]"
+      : "border-border/70 bg-card/40";
+  const valueCls = active ? "text-amber-300" : tone === "calm" ? "text-emerald-300" : "text-foreground";
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left rounded-2xl border p-4 transition-all hover:border-accent/40 ${cls}`}
+    >
+      <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
+        <span className={active ? "text-amber-300" : tone === "calm" ? "text-emerald-300" : "text-accent"}>{icon}</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.18em] truncate">{label}</span>
+      </div>
+      <p className={`text-3xl font-display font-semibold tabular-nums leading-none ${valueCls}`}>{num(value)}</p>
+    </button>
+  );
+}
+
+const PRIORITY_TONE: Record<string, string> = {
+  critical: "text-destructive border-destructive/40 bg-destructive/10",
+  high: "text-amber-300 border-amber-400/40 bg-amber-400/10",
+  medium: "text-sky-300 border-sky-400/40 bg-sky-400/10",
+};
+
+function ActionGroup({ label, count, priority, icon, onView }: { label: string; count: number; priority: "critical" | "high" | "medium"; icon: React.ReactNode; onView: () => void }) {
+  const dim = count === 0;
+  return (
+    <div className={`rounded-2xl border p-4 flex flex-col gap-3 transition-all ${dim ? "border-border/50 bg-card/30 opacity-70" : "card-premium"}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-accent shrink-0">{icon}</span>
+          <span className="text-sm font-medium truncate">{label}</span>
+        </div>
+        <span className={`shrink-0 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border ${PRIORITY_TONE[priority]}`}>{priority}</span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <span className="text-3xl font-display font-semibold tabular-nums leading-none">{num(count)}</span>
+        <button
+          onClick={onView}
+          disabled={dim}
+          className="text-[11px] font-medium px-3 py-1.5 rounded-lg border border-border hover:border-accent/40 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1"
+        >
+          View <ArrowDownRight className="size-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PipelineStage({ label, value, icon, last }: { label: string; value: number; icon: React.ReactNode; last?: boolean }) {
+  return (
+    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="rounded-2xl border border-border/70 bg-card/50 px-4 py-3 min-w-[110px] text-center">
+        <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1.5"><span className="text-accent">{icon}</span><span className="text-[10px] font-mono uppercase tracking-[0.12em]">{label}</span></div>
+        <p className="text-2xl font-display font-semibold tabular-nums leading-none">{num(value)}</p>
+      </div>
+      {!last && <span className="text-muted-foreground/40 text-lg shrink-0">→</span>}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone?: Tone }) {
+  const valueCls = tone === "attn" ? "text-amber-300" : tone === "calm" ? "text-emerald-300" : "text-foreground";
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card/40 p-4">
+      <div className="flex items-center gap-1.5 text-muted-foreground mb-2"><span className="text-accent">{icon}</span><span className="text-[10px] font-mono uppercase tracking-[0.16em] truncate">{label}</span></div>
+      <p className={`text-2xl font-display font-semibold tabular-nums leading-none ${valueCls}`}>{value}</p>
+    </div>
+  );
+}
+
 function OrderOpsPage() {
   const { data, staffPerf, loading, refreshing, error, refresh } = useOrderOperations();
   const [sel, setSel] = useState<EnrichedOrder | null>(null);
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<WarRoomTag | "all">("all");
+  const [actionFilter, setActionFilter] = useState<{ label: string; ids: Set<string> } | null>(null);
 
   const filtered = useMemo(() => {
     if (!data) return [];
     let rows = data.orders;
-    if (filter !== "all") rows = rows.filter((o) => o.tags.includes(filter));
     const t = q.trim().toLowerCase();
     if (t) rows = rows.filter((o) =>
       o.id.toLowerCase().includes(t) ||
@@ -433,7 +523,7 @@ function OrderOpsPage() {
       (o.tracking_number ?? "").toLowerCase().includes(t) ||
       o.items.some((it) => (it.name ?? "").toLowerCase().includes(t)));
     return rows;
-  }, [data, q, filter]);
+  }, [data, q]);
 
   if (loading) {
     return <AdminShell title="Order Operations Center" allow={ALLOW}>
@@ -448,16 +538,75 @@ function OrderOpsPage() {
 
   const k = data.kpis;
   const f = data.fulfillment;
+  const ords = data.orders;
   const maxCourier = Math.max(1, ...data.courierPerformance.map((c) => c.shipments));
   const maxRegion = Math.max(1, ...data.regionPerformance.map((r) => r.orders));
   const maxReason = Math.max(1, ...data.returnReasons.map((r) => r.cnt));
 
-  const warTags: WarRoomTag[] = ["new", "failed_payment", "cod", "high_value", "international", "vip", "refund_request", "return_request", "shipment_delay", "support_linked"];
+  // ---- derived stage / action data (frontend only) ----
+  const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+  const today = +startToday;
+  const isToday = (s: string | null) => (s ? +new Date(s) >= today : false);
+  const stageStr = (o: EnrichedOrder) => `${o.fulfillment_status ?? ""} ${o.ship_status ?? ""} ${o.status ?? ""}`.toLowerCase();
+  const isActive = (o: EnrichedOrder) => !["delivered", "cancelled", "canceled"].includes((o.status ?? "").toLowerCase());
+
+  const packedOrders = ords.filter((o) => /pack/i.test(stageStr(o)) && isActive(o));
+  const ofdOrders = ords.filter((o) => /out.?for.?delivery|ofd/i.test(stageStr(o)) && isActive(o));
+  const cancelOrders = ords.filter((o) => /cancel/i.test(o.status ?? ""));
+  const newToProcess = ords.filter((o) => o.payment_status === "paid" && !o.shipped_at && isActive(o));
+  const failedOrders = data.warRoom.failed_payment;
+  const returnOrders = data.warRoom.return_request;
+  const supportOrders = data.warRoom.support_linked;
+
+  const shippedToday = ords.filter((o) => isToday(o.shipped_at)).length;
+  const deliveredTodayN = ords.filter((o) => isToday(o.delivered_at)).length;
+  const deliveryPerf = k.shipped + k.delivered > 0 ? Math.round((k.delivered / (k.shipped + k.delivered)) * 100) : 0;
+
+  const openTickets = data.staffSupport.reduce((a, s) => a + Math.max(0, s.tickets_handled - s.tickets_resolved), 0);
+  const resolvedTickets = data.staffSupport.reduce((a, s) => a + s.tickets_resolved, 0);
+  const urgentTickets = supportOrders.filter((o) => o.riskScore >= 60).length;
+
+  const overview: { label: string; value: number; icon: React.ReactNode; tone: Tone; orders?: EnrichedOrder[] }[] = [
+    { label: "Pending", value: k.pending, icon: <Clock className="size-3.5" />, tone: "attn", orders: ords.filter((o) => /pending|process/i.test(o.status ?? "")) },
+    { label: "Packed", value: packedOrders.length, icon: <Package className="size-3.5" />, tone: "normal", orders: packedOrders },
+    { label: "Shipped", value: k.shipped, icon: <Truck className="size-3.5" />, tone: "normal", orders: ords.filter((o) => o.shipped_at && !o.delivered_at) },
+    { label: "Out for Delivery", value: ofdOrders.length, icon: <MapPin className="size-3.5" />, tone: "normal", orders: ofdOrders },
+    { label: "Delivered", value: k.delivered, icon: <Check className="size-3.5" />, tone: "calm", orders: ords.filter((o) => o.delivered_at) },
+    { label: "Failed Payments", value: k.failed_payments, icon: <CreditCard className="size-3.5" />, tone: "attn", orders: failedOrders },
+    { label: "Cancel Requests", value: cancelOrders.length, icon: <X className="size-3.5" />, tone: "attn", orders: cancelOrders },
+    { label: "Return Requests", value: returnOrders.length, icon: <RotateCcw className="size-3.5" />, tone: "attn", orders: returnOrders },
+  ];
+
+  const actionGroups: { key: string; label: string; orders: EnrichedOrder[]; priority: "critical" | "high" | "medium"; icon: React.ReactNode }[] = [
+    { key: "new", label: "New Orders To Process", orders: newToProcess, priority: "high", icon: <Sparkles className="size-4" /> },
+    { key: "failed", label: "Failed Payments", orders: failedOrders, priority: "critical", icon: <CreditCard className="size-4" /> },
+    { key: "cancel", label: "Cancellation Requests", orders: cancelOrders, priority: "high", icon: <X className="size-4" /> },
+    { key: "return", label: "Return Requests", orders: returnOrders, priority: "medium", icon: <RotateCcw className="size-4" /> },
+    { key: "support", label: "Customer Support Requests", orders: supportOrders, priority: "medium", icon: <LifeBuoy className="size-4" /> },
+  ];
+
+  const pipeline: { label: string; value: number; icon: React.ReactNode; orders: EnrichedOrder[] }[] = [
+    { label: "Pending", value: k.pending, icon: <Clock className="size-3.5" />, orders: ords.filter((o) => /pending|process/i.test(o.status ?? "")) },
+    { label: "Packed", value: packedOrders.length, icon: <Package className="size-3.5" />, orders: packedOrders },
+    { label: "Shipped", value: k.shipped, icon: <Truck className="size-3.5" />, orders: ords.filter((o) => o.shipped_at && !o.delivered_at) },
+    { label: "Out for Delivery", value: ofdOrders.length, icon: <MapPin className="size-3.5" />, orders: ofdOrders },
+    { label: "Delivered", value: k.delivered, icon: <Check className="size-3.5" />, orders: ords.filter((o) => o.delivered_at) },
+  ];
+
+  const focusOrders = (label: string, list: EnrichedOrder[]) => {
+    if (list.length === 0) return;
+    setActionFilter({ label, ids: new Set(list.map((o) => o.id)) });
+    requestAnimationFrame(() => document.getElementById("recent-orders")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const recentList = actionFilter ? data.orders.filter((o) => actionFilter.ids.has(o.id)) : filtered;
+
+
 
   return (
     <AdminShell
       title="Order Operations Center"
-      subtitle="Live, database-backed fulfilment, delivery & risk intelligence"
+      subtitle="Live operations — see what needs attention, what's blocked, and who needs a response"
       allow={ALLOW}
       actions={
         <div className="flex items-center gap-2">
@@ -467,259 +616,280 @@ function OrderOpsPage() {
         </div>
       }
     >
-      <div className="space-y-5">
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard label="Total Orders" value={num(k.total_orders)} icon={<ShoppingBag className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{k.today_orders} today</span>} />
-          <KpiCard label="Revenue" value={inr(k.revenue)} icon={<Wallet className="size-4" />} />
-          <KpiCard label="Profit" value={inr(k.profit)} icon={<TrendingUp className="size-4" />} />
-          <KpiCard label="AOV" value={inr(data.aov)} icon={<Gauge className="size-4" />} />
-          <KpiCard label="Paid" value={num(k.paid_orders)} icon={<CreditCard className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{k.cod_orders} COD</span>} />
-          <KpiCard label="Satisfaction" value={`${data.satisfactionScore}%`} icon={<Sparkles className="size-4" />} />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard label="Pending" value={num(k.pending)} icon={<Clock className="size-4" />} />
-          <KpiCard label="Processing" value={num(k.processing)} icon={<Package className="size-4" />} />
-          <KpiCard label="Shipped" value={num(k.shipped)} icon={<Truck className="size-4" />} />
-          <KpiCard label="Delivered" value={num(k.delivered)} icon={<Truck className="size-4" />} />
-          <KpiCard label="Returns" value={num(k.returned)} icon={<RotateCcw className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{data.returnRate}% rate</span>} />
-          <KpiCard label="Refunded" value={inr(k.refund_total)} icon={<ArrowDownRight className="size-4" />} sub={<span className="text-[11px] text-muted-foreground">{data.refundRate}% rate</span>} />
-        </div>
+      <div className="space-y-10">
+        {/* SECTION 1 — OPERATIONS OVERVIEW */}
+        <section>
+          <SectionHeader title="Operations Overview" sub="A single glance at the whole pipeline" icon={<Gauge className="size-5 text-accent" />} />
+          <div className="card-premium rounded-3xl p-4 sm:p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {overview.map((o) => (
+                <OverviewStat key={o.label} label={o.label} value={o.value} icon={o.icon} tone={o.tone} onClick={() => focusOrders(o.label, o.orders ?? [])} />
+              ))}
+            </div>
+          </div>
+        </section>
 
-        {/* Order integrity monitor */}
+        {/* SECTION 2 — ACTION REQUIRED */}
+        <section>
+          <SectionHeader title="Action Required" sub="Your primary workspace — orders and customers waiting on you" icon={<AlertTriangle className="size-5 text-amber-300" />} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {actionGroups.map((g) => (
+              <ActionGroup key={g.key} label={g.label} count={g.orders.length} priority={g.priority} icon={g.icon} onView={() => focusOrders(g.label, g.orders)} />
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 3 — ORDER PIPELINE */}
+        <section>
+          <SectionHeader title="Order Pipeline" sub="Spot bottlenecks across the fulfilment flow" icon={<TrendingUp className="size-5 text-accent" />} />
+          <div className="card-premium rounded-3xl p-4 sm:p-5 overflow-x-auto">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+              {pipeline.map((p, i) => (
+                <button key={p.label} onClick={() => focusOrders(p.label, p.orders)} className="text-left">
+                  <PipelineStage label={p.label} value={p.value} icon={p.icon} last={i === pipeline.length - 1} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 4 — RECENT ORDERS */}
+        <section id="recent-orders" className="scroll-mt-24">
+          <SectionHeader
+            title="Recent Orders"
+            sub={actionFilter ? undefined : "Search and review the latest orders"}
+            icon={<ShoppingBag className="size-5 text-accent" />}
+          />
+          <div className="space-y-3">
+            {actionFilter ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent">
+                  {actionFilter.label} · {recentList.length}
+                  <button onClick={() => setActionFilter(null)} className="hover:text-foreground"><X className="size-3.5" /></button>
+                </span>
+                <span className="text-[11px] text-muted-foreground">Showing filtered orders — clear to browse all</span>
+              </div>
+            ) : (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search orders, customers, products, tracking…" className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-background focus:border-accent/40 outline-none" />
+              </div>
+            )}
+            <div className="card-premium rounded-3xl p-3 sm:p-4">
+              <p className="text-[11px] text-muted-foreground mb-2 px-1">{recentList.length} orders</p>
+              <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
+                {recentList.slice(0, 60).map((o) => <OrderRow key={o.id} o={o} onClick={() => setSel(o)} />)}
+                {recentList.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">No orders match.</p>}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 5 — DELIVERY MONITOR */}
+        <section>
+          <SectionHeader title="Delivery Monitor" sub="Live shipping & delivery health" icon={<Truck className="size-5 text-accent" />} />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MiniStat label="Shipped Today" value={num(shippedToday)} icon={<Truck className="size-3.5" />} />
+            <MiniStat label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-3.5" />} tone={f.delayedCount > 0 ? "attn" : "normal"} />
+            <MiniStat label="Delivered Today" value={num(deliveredTodayN)} icon={<Check className="size-3.5" />} tone="calm" />
+            <MiniStat label="Delivery Performance" value={`${deliveryPerf}%`} icon={<Gauge className="size-3.5" />} />
+          </div>
+        </section>
+
+        {/* SECTION 6 — SUPPORT CENTER */}
+        <section>
+          <SectionHeader title="Support Center" sub="Customer conversations, kept separate from fulfilment" icon={<LifeBuoy className="size-5 text-accent" />} />
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <MiniStat label="Open Tickets" value={num(openTickets)} icon={<LifeBuoy className="size-3.5" />} tone={openTickets > 0 ? "attn" : "normal"} />
+            <MiniStat label="Urgent Tickets" value={num(urgentTickets)} icon={<AlertTriangle className="size-3.5" />} tone={urgentTickets > 0 ? "attn" : "normal"} />
+            <MiniStat label="Resolved" value={num(resolvedTickets)} icon={<Check className="size-3.5" />} tone="calm" />
+          </div>
+        </section>
+
+        {/* Integrity monitor preserved */}
         <OrderIntegrityMonitor />
 
-        <Tabs defaultValue="warroom">
-          <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="warroom">War Room</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="fulfillment">Fulfilment</TabsTrigger>
-            <TabsTrigger value="delivery">Delivery</TabsTrigger>
-            <TabsTrigger value="returns">Returns & Refunds</TabsTrigger>
-            <TabsTrigger value="staff">Staff</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-          </TabsList>
+        {/* Advanced analytics — full detail preserved */}
+        <section>
+          <SectionHeader title="Advanced Analytics" sub="Deep operational reporting" icon={<Zap className="size-5 text-accent" />} />
+          <Tabs defaultValue="fulfillment">
+            <TabsList className="flex-wrap h-auto">
+              <TabsTrigger value="fulfillment">Fulfilment</TabsTrigger>
+              <TabsTrigger value="delivery">Delivery</TabsTrigger>
+              <TabsTrigger value="returns">Returns &amp; Refunds</TabsTrigger>
+              <TabsTrigger value="staff">Staff</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+            </TabsList>
 
-          {/* WAR ROOM */}
-          <TabsContent value="warroom" className="space-y-5 mt-4">
-            <Card title="AI Order Assistant" icon={<Sparkles className="size-4 text-accent" />}>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {data.aiInsights.length === 0 && <p className="text-sm text-muted-foreground">All clear — no operational risks detected.</p>}
-                {data.aiInsights.map((i) => (
-                  <div key={i.id} className={`rounded-xl border p-3 ${i.severity === "critical" ? "border-destructive/30 bg-destructive/5" : i.severity === "warning" ? "border-amber-400/30 bg-amber-400/5" : "border-border bg-muted/20"}`}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium">{i.title}</p>
-                      <span className="text-lg font-display font-semibold tabular-nums">{i.count}</span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-1">{i.detail}</p>
-                  </div>
-                ))}
+            {/* FULFILMENT */}
+            <TabsContent value="fulfillment" className="space-y-5 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <KpiCard label="Avg Processing" value={f.avgProcessingHours != null ? `${f.avgProcessingHours.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
+                <KpiCard label="Avg Delivery" value={f.avgDeliveryDays != null ? `${f.avgDeliveryDays.toFixed(1)}d` : "—"} icon={<Truck className="size-4" />} />
+                <KpiCard label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-4" />} />
+                <KpiCard label="In Transit" value={num(ords.filter((o) => o.shipped_at && !o.delivered_at).length)} icon={<Zap className="size-4" />} />
               </div>
-            </Card>
-
-            <div className="grid md:grid-cols-2 gap-3">
-              {warTags.map((t) => {
-                const rows = data.warRoom[t];
-                return (
-                  <Card key={t} title={`${TAG_META[t].label} (${rows.length})`} icon={TAG_META[t].icon}>
-                    {rows.length === 0 ? <p className="text-xs text-muted-foreground">None</p> : (
-                      <div className="space-y-1 max-h-64 overflow-y-auto">
-                        {rows.slice(0, 8).map((o) => <OrderRow key={o.id} o={o} onClick={() => setSel(o)} />)}
-                      </div>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-
-          {/* ORDERS */}
-          <TabsContent value="orders" className="space-y-3 mt-4">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search orders, customers, products…" className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-border bg-background focus:border-accent/40 outline-none" />
+              <div className="grid md:grid-cols-2 gap-3">
+                <Card title="Fastest deliveries" icon={<Zap className="size-4 text-emerald-400" />}>
+                  <div className="space-y-1">{f.fastest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-emerald-400 tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.fastest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
+                </Card>
+                <Card title="Slowest deliveries" icon={<Clock className="size-4 text-destructive" />}>
+                  <div className="space-y-1">{f.slowest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-destructive tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.slowest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
+                </Card>
               </div>
-              <select value={filter} onChange={(e) => setFilter(e.target.value as WarRoomTag | "all")} className="text-sm rounded-lg border border-border bg-background px-3 py-2 outline-none">
-                <option value="all">All tags</option>
-                {warTags.map((t) => <option key={t} value={t}>{TAG_META[t].label}</option>)}
-              </select>
-            </div>
-            <Card>
-              <p className="text-[11px] text-muted-foreground mb-2">{filtered.length} orders</p>
-              <div className="space-y-1 max-h-[70vh] overflow-y-auto">
-                {filtered.map((o) => <OrderRow key={o.id} o={o} onClick={() => setSel(o)} />)}
-                {filtered.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No matching orders</p>}
-              </div>
-            </Card>
-          </TabsContent>
+            </TabsContent>
 
-          {/* FULFILMENT */}
-          <TabsContent value="fulfillment" className="space-y-5 mt-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <KpiCard label="Avg Processing" value={f.avgProcessingHours != null ? `${f.avgProcessingHours.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
-              <KpiCard label="Avg Delivery" value={f.avgDeliveryDays != null ? `${f.avgDeliveryDays.toFixed(1)}d` : "—"} icon={<Truck className="size-4" />} />
-              <KpiCard label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-4" />} />
-              <KpiCard label="In Transit" value={num(data.orders.filter((o) => o.shipped_at && !o.delivered_at).length)} icon={<Zap className="size-4" />} />
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <Card title="Fastest deliveries" icon={<Zap className="size-4 text-emerald-400" />}>
-                <div className="space-y-1">{f.fastest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-emerald-400 tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.fastest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
-              </Card>
-              <Card title="Slowest deliveries" icon={<Clock className="size-4 text-destructive" />}>
-                <div className="space-y-1">{f.slowest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-destructive tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.slowest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* DELIVERY */}
-          <TabsContent value="delivery" className="space-y-5 mt-4">
-            <Card title="Courier performance" icon={<Truck className="size-4 text-accent" />}>
-              <div className="space-y-3">
-                {data.courierPerformance.map((c) => (
-                  <div key={c.courier}>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-medium">{c.courier}</span>
-                      <span className="text-muted-foreground">{c.shipments} shipments · {c.successRate}% success · {c.returnRate}% return · {c.avg_days != null ? `${c.avg_days.toFixed(1)}d` : "—"} · quality {c.quality}</span>
-                    </div>
-                    <Bar value={c.shipments} max={maxCourier} color={c.quality >= 70 ? "bg-emerald-400" : c.quality >= 50 ? "bg-amber-400" : "bg-destructive"} />
-                  </div>
-                ))}
-                {data.courierPerformance.length === 0 && <p className="text-xs text-muted-foreground">No shipment data yet</p>}
-              </div>
-            </Card>
-            <Card title="Region performance" icon={<Globe className="size-4 text-accent" />}>
-              <div className="space-y-3">
-                {data.regionPerformance.map((r) => (
-                  <div key={r.region}>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-medium">{r.region}</span>
-                      <span className="text-muted-foreground">{r.orders} orders · {inr(r.revenue)} · {r.returnRate}% return</span>
-                    </div>
-                    <Bar value={r.orders} max={maxRegion} />
-                  </div>
-                ))}
-                {data.regionPerformance.length === 0 && <p className="text-xs text-muted-foreground">No region data yet</p>}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* RETURNS & REFUNDS */}
-          <TabsContent value="returns" className="space-y-5 mt-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <KpiCard label="Returns" value={num(k.returned)} icon={<RotateCcw className="size-4" />} />
-              <KpiCard label="Return Rate" value={`${data.returnRate}%`} icon={<ArrowDownRight className="size-4" />} />
-              <KpiCard label="Refunded Orders" value={num(k.refunded)} icon={<Wallet className="size-4" />} />
-              <KpiCard label="Refund Total" value={inr(k.refund_total)} icon={<ArrowDownRight className="size-4" />} />
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <Card title="Return reasons" icon={<RotateCcw className="size-4 text-accent" />}>
+            {/* DELIVERY */}
+            <TabsContent value="delivery" className="space-y-5 mt-4">
+              <Card title="Courier performance" icon={<Truck className="size-4 text-accent" />}>
                 <div className="space-y-3">
-                  {data.returnReasons.map((r) => (
-                    <div key={r.reason}>
-                      <div className="flex items-center justify-between text-xs mb-1"><span className="truncate">{r.reason}</span><span className="text-muted-foreground tabular-nums">{r.cnt}</span></div>
-                      <Bar value={r.cnt} max={maxReason} color="bg-orange-400" />
+                  {data.courierPerformance.map((c) => (
+                    <div key={c.courier}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-medium">{c.courier}</span>
+                        <span className="text-muted-foreground">{c.shipments} shipments · {c.successRate}% success · {c.returnRate}% return · {c.avg_days != null ? `${c.avg_days.toFixed(1)}d` : "—"} · quality {c.quality}</span>
+                      </div>
+                      <Bar value={c.shipments} max={maxCourier} color={c.quality >= 70 ? "bg-emerald-400" : c.quality >= 50 ? "bg-amber-400" : "bg-destructive"} />
                     </div>
                   ))}
-                  {data.returnReasons.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
+                  {data.courierPerformance.length === 0 && <p className="text-xs text-muted-foreground">No shipment data yet</p>}
                 </div>
               </Card>
-              <Card title="Most returned products" icon={<Package className="size-4 text-accent" />}>
+              <Card title="Region performance" icon={<Globe className="size-4 text-accent" />}>
+                <div className="space-y-3">
+                  {data.regionPerformance.map((r) => (
+                    <div key={r.region}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-medium">{r.region}</span>
+                        <span className="text-muted-foreground">{r.orders} orders · {inr(r.revenue)} · {r.returnRate}% return</span>
+                      </div>
+                      <Bar value={r.orders} max={maxRegion} />
+                    </div>
+                  ))}
+                  {data.regionPerformance.length === 0 && <p className="text-xs text-muted-foreground">No region data yet</p>}
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* RETURNS & REFUNDS */}
+            <TabsContent value="returns" className="space-y-5 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <KpiCard label="Returns" value={num(k.returned)} icon={<RotateCcw className="size-4" />} />
+                <KpiCard label="Return Rate" value={`${data.returnRate}%`} icon={<ArrowDownRight className="size-4" />} />
+                <KpiCard label="Refunded Orders" value={num(k.refunded)} icon={<Wallet className="size-4" />} />
+                <KpiCard label="Refund Total" value={inr(k.refund_total)} icon={<ArrowDownRight className="size-4" />} />
+              </div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <Card title="Return reasons" icon={<RotateCcw className="size-4 text-accent" />}>
+                  <div className="space-y-3">
+                    {data.returnReasons.map((r) => (
+                      <div key={r.reason}>
+                        <div className="flex items-center justify-between text-xs mb-1"><span className="truncate">{r.reason}</span><span className="text-muted-foreground tabular-nums">{r.cnt}</span></div>
+                        <Bar value={r.cnt} max={maxReason} color="bg-orange-400" />
+                      </div>
+                    ))}
+                    {data.returnReasons.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
+                  </div>
+                </Card>
+                <Card title="Most returned products" icon={<Package className="size-4 text-accent" />}>
+                  <div className="space-y-1">
+                    {data.topReturned.map((p) => <div key={p.slug} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">{p.name ?? p.slug}</span><span className="text-muted-foreground tabular-nums">{p.cnt}</span></div>)}
+                    {data.topReturned.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* STAFF */}
+            <TabsContent value="staff" className="space-y-5 mt-4">
+              <Card title="Support performance" icon={<Users className="size-4 text-accent" />}>
                 <div className="space-y-1">
-                  {data.topReturned.map((p) => <div key={p.slug} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">{p.name ?? p.slug}</span><span className="text-muted-foreground tabular-nums">{p.cnt}</span></div>)}
-                  {data.topReturned.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
+                  {data.staffSupport.map((s) => (
+                    <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
+                      <Avatar name={s.full_name} url={s.avatar_url} size={30} />
+                      <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{s.tickets_resolved}/{s.tickets_handled} resolved</p></div>
+                      <span className="text-[11px] text-muted-foreground">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h avg` : "—"}</span>
+                    </div>
+                  ))}
+                  {data.staffSupport.length === 0 && <p className="text-xs text-muted-foreground">No staff ticket data yet</p>}
                 </div>
               </Card>
-            </div>
-          </TabsContent>
-
-          {/* STAFF */}
-          <TabsContent value="staff" className="space-y-5 mt-4">
-            <Card title="Support performance" icon={<Users className="size-4 text-accent" />}>
-              <div className="space-y-1">
-                {data.staffSupport.map((s) => (
-                  <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
-                    <Avatar name={s.full_name} url={s.avatar_url} size={30} />
-                    <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{s.tickets_resolved}/{s.tickets_handled} resolved</p></div>
-                    <span className="text-[11px] text-muted-foreground">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h avg` : "—"}</span>
-                  </div>
-                ))}
-                {data.staffSupport.length === 0 && <p className="text-xs text-muted-foreground">No staff ticket data yet</p>}
-              </div>
-            </Card>
-            <Card title="Admin activity" icon={<Zap className="size-4 text-accent" />}>
-              <div className="space-y-1">
-                {data.staffActivity.map((s) => (
-                  <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
-                    <Avatar name={s.full_name} url={s.avatar_url} size={30} />
-                    <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{timeAgo(s.last_action)}</p></div>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">{num(s.actions)} actions</span>
-                  </div>
-                ))}
-                {data.staffActivity.length === 0 && <p className="text-xs text-muted-foreground">No admin activity yet</p>}
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-5 mt-4">
-            {(() => {
-              const totPacked = staffPerf.reduce((a, s) => a + s.packed, 0);
-              const totShipped = staffPerf.reduce((a, s) => a + s.shipped, 0);
-              const totRefunds = staffPerf.reduce((a, s) => a + s.refunds_handled, 0);
-              const hrs = staffPerf.map((s) => s.avg_handling_hours).filter((h): h is number => h != null);
-              const avgHrs = hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : null;
-              return (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  <KpiCard label="Packed" value={num(totPacked)} icon={<Package className="size-4" />} />
-                  <KpiCard label="Shipped" value={num(totShipped)} icon={<Truck className="size-4" />} />
-                  <KpiCard label="Refunds Handled" value={num(totRefunds)} icon={<RotateCcw className="size-4" />} />
-                  <KpiCard label="Avg Handling" value={avgHrs != null ? `${avgHrs.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
+              <Card title="Admin activity" icon={<Zap className="size-4 text-accent" />}>
+                <div className="space-y-1">
+                  {data.staffActivity.map((s) => (
+                    <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
+                      <Avatar name={s.full_name} url={s.avatar_url} size={30} />
+                      <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{timeAgo(s.last_action)}</p></div>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{num(s.actions)} actions</span>
+                    </div>
+                  ))}
+                  {data.staffActivity.length === 0 && <p className="text-xs text-muted-foreground">No admin activity yet</p>}
                 </div>
-              );
-            })()}
-            <Card title="Staff performance" icon={<Gauge className="size-4 text-accent" />}
-              actions={<span className="text-[11px] text-muted-foreground">{staffPerf.length} staff · fulfilment KPIs</span>}>
-              {staffPerf.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No fulfilment activity recorded yet. Packed, shipped and refund actions appear here as staff process orders.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="text-muted-foreground border-b border-border/60">
-                        <th className="text-left font-medium py-2 pr-3">Staff</th>
-                        <th className="text-right font-medium py-2 px-2">Packed</th>
-                        <th className="text-right font-medium py-2 px-2">Shipped</th>
-                        <th className="text-right font-medium py-2 px-2">Refunds</th>
-                        <th className="text-right font-medium py-2 px-2">Avg Handling</th>
-                        <th className="text-right font-medium py-2 pl-2">Last Active</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {staffPerf.map((s) => (
-                        <tr key={s.uid} className="border-b border-border/40 last:border-0">
-                          <td className="py-2 pr-3">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <Avatar name={s.full_name} url={s.avatar_url} size={28} />
-                              <div className="min-w-0">
-                                <p className="font-medium truncate">{s.full_name ?? "Staff"}</p>
-                                {s.roles.length > 0 && <p className="text-[10px] text-muted-foreground truncate">{s.roles.join(", ")}</p>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-right tabular-nums py-2 px-2">{num(s.packed)}</td>
-                          <td className="text-right tabular-nums py-2 px-2">{num(s.shipped)}</td>
-                          <td className="text-right tabular-nums py-2 px-2">{num(s.refunds_handled)}</td>
-                          <td className="text-right tabular-nums py-2 px-2">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h` : "—"}</td>
-                          <td className="text-right text-muted-foreground py-2 pl-2">{timeAgo(s.last_action)}</td>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="performance" className="space-y-5 mt-4">
+              {(() => {
+                const totPacked = staffPerf.reduce((a, s) => a + s.packed, 0);
+                const totShipped = staffPerf.reduce((a, s) => a + s.shipped, 0);
+                const totRefunds = staffPerf.reduce((a, s) => a + s.refunds_handled, 0);
+                const hrs = staffPerf.map((s) => s.avg_handling_hours).filter((h): h is number => h != null);
+                const avgHrs = hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : null;
+                return (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <KpiCard label="Packed" value={num(totPacked)} icon={<Package className="size-4" />} />
+                    <KpiCard label="Shipped" value={num(totShipped)} icon={<Truck className="size-4" />} />
+                    <KpiCard label="Refunds Handled" value={num(totRefunds)} icon={<RotateCcw className="size-4" />} />
+                    <KpiCard label="Avg Handling" value={avgHrs != null ? `${avgHrs.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
+                  </div>
+                );
+              })()}
+              <Card title="Staff performance" icon={<Gauge className="size-4 text-accent" />}
+                actions={<span className="text-[11px] text-muted-foreground">{staffPerf.length} staff · fulfilment KPIs</span>}>
+                {staffPerf.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No fulfilment activity recorded yet. Packed, shipped and refund actions appear here as staff process orders.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-border/60">
+                          <th className="text-left font-medium py-2 pr-3">Staff</th>
+                          <th className="text-right font-medium py-2 px-3">Packed</th>
+                          <th className="text-right font-medium py-2 px-3">Shipped</th>
+                          <th className="text-right font-medium py-2 px-3">Refunds</th>
+                          <th className="text-right font-medium py-2 px-3">Actions</th>
+                          <th className="text-right font-medium py-2 px-3">Avg Handling</th>
+                          <th className="text-right font-medium py-2 pl-3">Last Active</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-        </Tabs>
+                      </thead>
+                      <tbody>
+                        {staffPerf.map((s) => (
+                          <tr key={s.uid} className="border-b border-border/40 last:border-0">
+                            <td className="py-2 pr-3">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Avatar name={s.full_name} url={s.avatar_url} size={26} />
+                                <div className="min-w-0">
+                                  <p className="font-medium truncate">{s.full_name ?? "Staff"}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{s.roles.join(", ") || "—"}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="text-right tabular-nums py-2 px-3">{num(s.packed)}</td>
+                            <td className="text-right tabular-nums py-2 px-3">{num(s.shipped)}</td>
+                            <td className="text-right tabular-nums py-2 px-3">{num(s.refunds_handled)}</td>
+                            <td className="text-right tabular-nums py-2 px-3">{num(s.total_actions)}</td>
+                            <td className="text-right tabular-nums py-2 px-3">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h` : "—"}</td>
+                            <td className="text-right text-muted-foreground py-2 pl-3">{timeAgo(s.last_action)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </section>
       </div>
 
       {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} onRefresh={refresh} />}
