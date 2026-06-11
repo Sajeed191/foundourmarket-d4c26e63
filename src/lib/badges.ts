@@ -36,6 +36,7 @@ export const DEFAULT_BADGE_SETTINGS: BadgeSettings = {
 
 export type BadgeKey =
   | "flash_deal"
+  | "featured"
   | "staff_pick"
   | "editors_choice"
   | "gift_idea"
@@ -57,6 +58,7 @@ export type Badge = {
 
 const BADGE_STYLES: Record<BadgeKey, Omit<Badge, "key">> = {
   flash_deal: { label: "Flash Deal", emoji: "⚡", className: "bg-red-500/95 text-white" },
+  featured: { label: "Featured", emoji: "🌟", className: "bg-sky-500/90 text-white" },
   staff_pick: { label: "Staff Pick", emoji: "🏆", className: "bg-accent text-accent-foreground shadow-[var(--shadow-ember)]" },
   editors_choice: { label: "Editor's Choice", emoji: "✨", className: "bg-violet-500/90 text-white" },
   gift_idea: { label: "Gift Idea", emoji: "🎁", className: "bg-pink-500/90 text-white" },
@@ -76,6 +78,7 @@ const BADGE_STYLES: Record<BadgeKey, Omit<Badge, "key">> = {
 // remaining promotional/computed labels as lower-priority fallbacks.
 const PRIORITY: BadgeKey[] = [
   "flash_deal",
+  "featured",
   "bestseller",
   "new",
   "premium",
@@ -110,6 +113,7 @@ export function computeBadges(product: Product, s: BadgeSettings, cap?: number):
 
   // Admin-controlled promotional labels — always honored when flagged.
   if (product.flashDeal) active.add("flash_deal");
+  if (product.featured) active.add("featured");
   if (product.staffPick) active.add("staff_pick");
   if (product.editorsChoice) active.add("editors_choice");
   if (product.giftIdea) active.add("gift_idea");

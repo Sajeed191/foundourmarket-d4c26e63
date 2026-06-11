@@ -25,19 +25,25 @@ export function ProductCollection({
   description,
   icon: Icon,
   sort,
+  filterFlag,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   icon: LucideIcon;
   sort: CollectionSort;
+  /**
+   * When set, only products with this merchandising badge enabled appear in
+   * the collection. Products without the badge NEVER show here.
+   */
+  filterFlag?: "trending" | "bestseller" | "flashDeal" | "featured";
 }) {
   const { products, loading } = useProducts();
 
-  const items = useMemo(
-    () => [...products].sort(SORTERS[sort]),
-    [products, sort],
-  );
+  const items = useMemo(() => {
+    const base = filterFlag ? products.filter((p) => Boolean(p[filterFlag])) : products;
+    return [...base].sort(SORTERS[sort]);
+  }, [products, sort, filterFlag]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">

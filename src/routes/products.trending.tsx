@@ -15,9 +15,10 @@ export const Route = createFileRoute("/products/trending")({
     <ProductCollection
       eyebrow="Hot right now"
       title="Trending Products"
-      description="The most-loved products across the marketplace, ranked by what shoppers are viewing right now."
+      description="Products our team has marked as Trending across the marketplace."
       icon={Flame}
       sort="trending"
+      filterFlag="trending"
     />
   ),
 });
