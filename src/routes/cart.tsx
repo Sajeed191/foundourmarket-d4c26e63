@@ -54,7 +54,7 @@ function shareProduct(slug: string, name: string, image?: string) {
 
 function CartPage() {
   const {
-    detailed, savedDetailed, setQty, remove, saveForLater, moveToCart,
+    detailed, savedDetailed, setQty, remove, removeSaved, saveForLater, moveToCart,
     moveToWishlist, undoRemove, lastRemoved, subtotalUSD, count,
   } = useCart();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
@@ -287,7 +287,7 @@ function CartPage() {
                       <button onClick={() => moveToCart(item.slug)} className="text-[10px] uppercase tracking-widest font-bold bg-accent text-accent-foreground px-3 py-2 rounded-full inline-flex items-center gap-1.5 hover:brightness-110">
                         <RotateCcw className="size-3" /> Move to cart
                       </button>
-                      <button onClick={() => remove(item.slug)} aria-label="Remove" className="text-muted-foreground hover:text-destructive">
+                      <button onClick={() => removeSaved(item.slug)} aria-label="Remove" className="text-muted-foreground hover:text-destructive">
                         <X className="size-4" />
                       </button>
                     </div>

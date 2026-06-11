@@ -13,6 +13,7 @@ type Ctx = {
   items: CartItem[];
   add: (slug: string, qty?: number) => Promise<void>;
   remove: (slug: string) => Promise<void>;
+  removeSaved: (slug: string) => Promise<void>;
   setQty: (slug: string, qty: number) => Promise<void>;
   clear: () => Promise<void>;
   saveForLater: (slug: string) => Promise<void>;
@@ -224,6 +225,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeSaved = async (slug: string) => {
+    setItems((p) => p.filter((i) => !(i.slug === slug && i.savedForLater)));
+    if (user && cartId) {
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("cart_id", cartId)
+        .eq("product_slug", slug)
+        .eq("saved_for_later", true);
+    }
+  };
+
   const undoRemove = async () => {
     if (!lastRemoved) return;
     const { slug, qty } = lastRemoved;
@@ -320,6 +333,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         items: active,
         add,
         remove,
+        removeSaved,
         setQty,
         clear,
         saveForLater,
