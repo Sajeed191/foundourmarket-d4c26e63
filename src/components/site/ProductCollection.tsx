@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { Product } from "@/lib/products";
+import type { BadgeKey } from "@/lib/badges";
 
 export type CollectionSort = "trending" | "newest" | "best_sellers";
 
