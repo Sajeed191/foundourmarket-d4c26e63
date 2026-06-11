@@ -6,7 +6,7 @@ import {
   LogOut, Package, Loader2, RotateCcw, MapPin, Bell, Heart, Clock, Sparkles,
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
   HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
-  Search, Zap, Gift, Tag, Flame, Truck, Lock, BadgeCheck, Globe, Crown,
+  Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -265,21 +265,6 @@ function AccountPage() {
               </div>
             </div>
 
-            {/* Premium hero stat strip */}
-            <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
-              <HeroStat icon={Package} label="Orders" value={stats.count} loading={!orders} />
-              <HeroStat icon={Heart} label="Wishlist" value={wishSlugs.size} />
-              <div className="relative overflow-hidden rounded-2xl glass p-3 sm:p-4 flex flex-col justify-center">
-                <div className="flex items-center gap-1.5 text-emerald-500">
-                  <BadgeCheck className="size-4 shrink-0" />
-                  <span className="text-[11px] sm:text-sm font-semibold leading-none">Verified</span>
-                </div>
-                <p className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5 truncate">
-                  Since {stats.memberSince}
-                </p>
-              </div>
-            </div>
-
             {/* Profile completion — full width below for balanced spacing */}
             <ProfileCompletion user={user} profile={profile} />
           </div>
@@ -396,24 +381,6 @@ function AccountPage() {
 
 
 /* ---------- helpers ---------- */
-
-function HeroStat({
-  icon: Icon, label, value, loading,
-}: { icon: typeof Package; label: string; value: number; loading?: boolean }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl glass p-3 sm:p-4">
-      <div className="flex items-center gap-1.5 text-accent mb-1">
-        <Icon className="size-3.5 shrink-0" />
-        <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{label}</span>
-      </div>
-      {loading ? (
-        <div className="h-6 w-10 rounded-md bg-foreground/5 animate-pulse" />
-      ) : (
-        <AnimatedNumber value={value} className="block text-xl sm:text-2xl font-display font-semibold tabular-nums" />
-      )}
-    </div>
-  );
-}
 
 function SectionHeader({ title, eyebrow }: { title: string; eyebrow?: string }) {
   return (
