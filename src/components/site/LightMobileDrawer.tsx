@@ -100,7 +100,7 @@ export function LightMobileDrawer({
           transform: visible ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)",
         }}
-        className="absolute left-0 top-0 bottom-0 w-[89%] max-w-[400px] flex flex-col overflow-hidden border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
+        className="absolute left-0 top-0 bottom-0 w-[92%] max-w-[420px] flex flex-col overflow-hidden border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
@@ -122,7 +122,7 @@ export function LightMobileDrawer({
           <Link
             to={user ? "/account" : "/auth"}
             onClick={onClose}
-            className="group relative flex items-center gap-3.5 rounded-3xl px-4 py-4 overflow-hidden bg-accent/10 ring-1 ring-accent/20 shadow-[var(--shadow-card)] active:scale-[0.985] transition-transform"
+            className="group relative flex items-center gap-4 rounded-3xl px-5 py-5 overflow-hidden bg-accent/10 ring-1 ring-accent/20 shadow-[var(--shadow-card)] active:scale-[0.985] transition-transform"
           >
             <span className="relative shrink-0">
               <span className="relative grid place-items-center size-13 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-lg ring-2 ring-background shadow-[0_6px_18px_-6px_oklch(0.55_0.16_55/0.7)] overflow-hidden">
