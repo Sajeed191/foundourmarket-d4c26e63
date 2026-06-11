@@ -265,6 +265,21 @@ function AccountPage() {
               </div>
             </div>
 
+            {/* Premium hero stat strip */}
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+              <HeroStat icon={Package} label="Orders" value={stats.count} loading={!orders} />
+              <HeroStat icon={Heart} label="Wishlist" value={wishSlugs.size} />
+              <div className="relative overflow-hidden rounded-2xl glass p-3 sm:p-4 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 text-emerald-500">
+                  <BadgeCheck className="size-4 shrink-0" />
+                  <span className="text-[11px] sm:text-sm font-semibold leading-none">Verified</span>
+                </div>
+                <p className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5 truncate">
+                  Since {stats.memberSince}
+                </p>
+              </div>
+            </div>
+
             {/* Profile completion — full width below for balanced spacing */}
             <ProfileCompletion user={user} profile={profile} />
           </div>
