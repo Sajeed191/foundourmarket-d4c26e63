@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
 import {
   ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
@@ -7,7 +6,6 @@ import {
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useTheme, THEME_OPTIONS, type ThemePreference } from "@/lib/theme";
 import type { Category } from "@/lib/use-categories";
 
