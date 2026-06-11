@@ -8,6 +8,23 @@ export type ShareData = {
 
 const SHARE_EVENT = "fom:open-share";
 
+/** Public, crawlable production domain — used for every shared link. */
+export const SITE_URL = "https://foundourmarket.com";
+
+/**
+ * Rewrites any link (including private preview/lovableproject.com URLs) to the
+ * public production domain so shared previews unfurl with FoundOurMarket
+ * branding and the product image — never an "internal project" placeholder.
+ */
+export function toPublicUrl(rawUrl: string): string {
+  try {
+    const u = new URL(rawUrl, SITE_URL);
+    return `${SITE_URL}${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return SITE_URL;
+  }
+}
+
 /**
  * Opens the share experience for the given data.
  * - Uses the native device share sheet (WhatsApp, Messages, etc.) when available.
@@ -15,6 +32,9 @@ const SHARE_EVENT = "fom:open-share";
  */
 export async function openShare(data: ShareData): Promise<void> {
   if (typeof window === "undefined") return;
+
+  // Always share the public domain so the preview unfurls correctly.
+  data = { ...data, url: toPublicUrl(data.url) };
 
   const canNativeShare =
     typeof navigator !== "undefined" &&
