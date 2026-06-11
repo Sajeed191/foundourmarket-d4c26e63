@@ -137,6 +137,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // weight (Space Grotesk 600) so the LCP text paints with its final font
       // immediately — no swap/reflow on the largest contentful element.
       { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/space-grotesk-latin-600-normal.woff2", crossOrigin: "anonymous" },
+      // Warm up the data API connection (DNS + TLS) on every page so the very
+      // first products/categories query — which happens on most routes — skips
+      // the cold-connection handshake and returns faster.
+      ...(import.meta.env.VITE_SUPABASE_URL
+        ? [
+            { rel: "preconnect", href: import.meta.env.VITE_SUPABASE_URL as string, crossOrigin: "anonymous" },
+            { rel: "dns-prefetch", href: import.meta.env.VITE_SUPABASE_URL as string },
+          ]
+        : []),
       { rel: "preconnect", href: "https://client.crisp.chat", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://client.crisp.chat" },
       { rel: "manifest", href: "/manifest.webmanifest" },
