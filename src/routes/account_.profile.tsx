@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 import { cn } from "@/lib/utils";
+import { ThemeSelector } from "@/components/site/ThemeSelector";
 
 export const Route = createFileRoute("/account_/profile")({
   head: () => ({ meta: [{ title: "Edit Profile — FoundOurMarket™" }] }),
@@ -474,6 +475,9 @@ function EditProfilePage() {
                 <FloatingField icon={Clock} label="Timezone">
                   <input value={form.timezone} onChange={(e) => set("timezone", e.target.value)} maxLength={60} placeholder=" " className="peer input-glass" />
                 </FloatingField>
+              </div>
+              <div className="mt-4">
+                <ThemeSelector />
               </div>
             </Section>
 
