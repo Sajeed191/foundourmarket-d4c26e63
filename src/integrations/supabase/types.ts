@@ -5535,6 +5535,7 @@ export type Database = {
         Row: {
           attributes: Json | null
           bestseller: boolean | null
+          brand: string | null
           category: string | null
           category_position: number | null
           cod_enabled: boolean | null
@@ -5582,6 +5583,7 @@ export type Database = {
           price_inr: number | null
           price_usd: number | null
           priority_score: number | null
+          product_type: string | null
           rating: number | null
           rating_source: string | null
           razorpay_enabled: boolean | null
@@ -5621,6 +5623,7 @@ export type Database = {
         Insert: {
           attributes?: Json | null
           bestseller?: boolean | null
+          brand?: string | null
           category?: string | null
           category_position?: number | null
           cod_enabled?: boolean | null
@@ -5668,6 +5671,7 @@ export type Database = {
           price_inr?: number | null
           price_usd?: number | null
           priority_score?: number | null
+          product_type?: string | null
           rating?: number | null
           rating_source?: string | null
           razorpay_enabled?: boolean | null
@@ -5707,6 +5711,7 @@ export type Database = {
         Update: {
           attributes?: Json | null
           bestseller?: boolean | null
+          brand?: string | null
           category?: string | null
           category_position?: number | null
           cod_enabled?: boolean | null
@@ -5754,6 +5759,7 @@ export type Database = {
           price_inr?: number | null
           price_usd?: number | null
           priority_score?: number | null
+          product_type?: string | null
           rating?: number | null
           rating_source?: string | null
           razorpay_enabled?: boolean | null
@@ -5914,6 +5920,16 @@ export type Database = {
       }
       expire_flash_deals: { Args: never; Returns: number }
       expire_stale_orders: { Args: never; Returns: number }
+      fom_seo_description: {
+        Args: { p_category: string; p_name: string; p_tagline: string }
+        Returns: string
+      }
+      fom_seo_keywords: {
+        Args: { p_category: string; p_name: string; p_tags: string[] }
+        Returns: string[]
+      }
+      fom_seo_title: { Args: { p_name: string }; Returns: string }
+      fom_slugify: { Args: { p_text: string }; Returns: string }
       get_fbt: {
         Args: { _limit?: number; _slug: string }
         Returns: {
