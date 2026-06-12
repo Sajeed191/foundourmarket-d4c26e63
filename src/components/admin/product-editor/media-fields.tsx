@@ -184,9 +184,13 @@ export function ProductMediaGallery({
         onChange={(e) => { if (e.target.files) handleFiles(e.target.files); e.target.value = ""; }} />
 
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-          <span>{images.length}/{MAX_IMAGES} images</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em]">
+          <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-muted-foreground">{images.length} Image{images.length === 1 ? "" : "s"}</span>
+          <span className={cn("rounded-full px-2 py-0.5", primaryUrl ? "bg-accent/15 text-accent" : "bg-amber-500/15 text-amber-400")}>
+            {primaryUrl ? "Hero Set" : "No Hero"}
+          </span>
         </div>
+
         <div className="flex gap-2">
           <button type="button" disabled={atLimit || busy} onClick={() => cameraRef.current?.click()}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:text-foreground hover:border-white/20 active:scale-[0.97] disabled:opacity-40">
