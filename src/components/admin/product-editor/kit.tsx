@@ -629,6 +629,7 @@ export function ReadOnlySection({
         )
       ) : (
         <div className="space-y-5">
+          <EditorNavBar slug={slug} sectionKey={sectionKey} />
           <ProductHeaderStrip h={header} active={sectionKey} />
           {children(row!)}
         </div>
