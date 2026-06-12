@@ -3714,6 +3714,9 @@ export type Database = {
           reason: string
           refund_amount: number
           refund_status: string
+          replacement_order_id: string | null
+          replacement_status: string
+          resolution_type: string
           resolved_at: string | null
           status: string
           updated_at: string
@@ -3729,6 +3732,9 @@ export type Database = {
           reason: string
           refund_amount?: number
           refund_status?: string
+          replacement_order_id?: string | null
+          replacement_status?: string
+          resolution_type?: string
           resolved_at?: string | null
           status?: string
           updated_at?: string
@@ -3744,6 +3750,9 @@ export type Database = {
           reason?: string
           refund_amount?: number
           refund_status?: string
+          replacement_order_id?: string | null
+          replacement_status?: string
+          resolution_type?: string
           resolved_at?: string | null
           status?: string
           updated_at?: string
