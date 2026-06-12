@@ -683,7 +683,7 @@ function OrderOpsPage() {
   const pendingOrders = ords.filter((o) =>
     isActive(o) && !o.shipped_at && !o.delivered_at && !isPaymentFailed(o) &&
     !packedOrders.includes(o) && !ofdOrders.includes(o) && !shippedOrders.includes(o));
-  const cancelOrders = ords.filter((o) => /cancel/i.test(o.status ?? ""));
+  
   const failedOrders = data.warRoom.failed_payment;
   const returnOrders = data.warRoom.return_request;
   const supportOrders = data.warRoom.support_linked;
