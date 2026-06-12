@@ -471,7 +471,7 @@ export function SectionEditor<T extends Record<string, any>>({
           {/* Flush bottom action bar — edge-to-edge, no floating card */}
           <div
             className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
-            style={{ paddingBottom: "calc(var(--mobile-nav-clearance) + max(0.5rem, env(safe-area-inset-bottom)))" }}
+            style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
           >
             <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2.5 pb-1">
               {/* More Actions */}
