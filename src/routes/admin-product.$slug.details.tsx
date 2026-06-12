@@ -50,6 +50,9 @@ function DetailsPage() {
         video_url: r.video_url ?? "",
         seo_title: r.seo_title ?? "", seo_description: r.seo_description ?? "",
         keywords: (r.meta_keywords ?? []).join(", "),
+        rating: Number(r.rating) || 0,
+        reviews: Number(r.reviews) || 0,
+        rating_source: r.rating_source ?? "manual",
       })}
       toPatch={(f) => ({
         name: f.name.trim(),
