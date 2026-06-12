@@ -265,7 +265,7 @@ function AccountPage() {
               }}
             />
           </div>
-          <div className="relative p-4 sm:p-5 lg:p-6">
+          <div className="relative p-3.5 sm:p-4 lg:p-5">
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar with online status */}
               <div className="relative shrink-0 animate-float-soft">
