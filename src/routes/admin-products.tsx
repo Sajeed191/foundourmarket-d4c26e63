@@ -18,6 +18,7 @@ import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { ProductEditorModal } from "@/components/admin/ProductEditorModal";
 import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
+import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 
 export const Route = createFileRoute("/admin-products")({
   head: () => ({
@@ -95,12 +96,16 @@ function scoreColor(score: number): string {
 
 function ProductsPage() {
   return (
-    <AdminShell title="Products" subtitle="Realtime catalog, inventory & performance" allow={["admin", "super_admin", "manager", "warehouse_staff", "editor"]}>
+    <AdminShell title="Products" subtitle="Product Operations Center — catalog, inventory & actions first" allow={["admin", "super_admin", "manager", "warehouse_staff", "editor"]}>
       <ProductsInner />
-      {/* FINANCIAL PRODUCT INSIGHTS */}
-      <div className="mt-8 space-y-6">
-        <ExecutiveSummaryPanel source="product" compact />
-        <FinancialInsightsPanel module="product" />
+      {/* FINANCIAL PRODUCT INSIGHTS — secondary, collapsed by default */}
+      <div className="mt-6">
+        <CollapsibleModule eyebrow="Insights" title="Financial Analytics" sectionId="products-financial" defaultOpen={false}>
+          <div className="space-y-6">
+            <ExecutiveSummaryPanel source="product" compact />
+            <FinancialInsightsPanel module="product" />
+          </div>
+        </CollapsibleModule>
       </div>
     </AdminShell>
   );
@@ -426,40 +431,33 @@ function ProductsInner() {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
   }
 
-  const kpiCards = [
+  const headerChips = [
     { icon: Package, label: "Total", value: String(kpis.total) },
     { icon: CheckCircle2, label: "Active", value: String(kpis.active) },
     { icon: EyeOff, label: "Inactive", value: String(kpis.inactive) },
-    { icon: Star, label: "Featured", value: String(kpis.featured) },
-    { icon: AlertTriangle, label: "Low stock", value: String(kpis.low) },
-    { icon: X, label: "Out of stock", value: String(kpis.oos) },
-    { icon: IndianRupee, label: "Revenue today", value: inr(revenueToday) },
-    { icon: ShoppingCart, label: "Orders today", value: String(ordersToday) },
-    { icon: Boxes, label: "Inventory value", value: inr(kpis.inventoryValue) },
-    { icon: Flame, label: "Best seller", value: kpis.best, wide: true },
-    { icon: Eye, label: "Most viewed", value: kpis.mostViewed, wide: true },
   ];
 
   return (
     <div className="space-y-5 pb-28">
-      {/* Live KPI strip — horizontally scrollable */}
+      {/* 1. Products Header — compact KPI chips */}
       <div className="-mx-1 overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 px-1 min-w-max">
-          {kpiCards.map((k) => (
+        <div className="flex gap-2.5 px-1 min-w-max">
+          {headerChips.map((k) => (
             <div
               key={k.label}
-              className={`relative overflow-hidden glass border border-white/10 rounded-2xl p-3.5 ${k.wide ? "min-w-[180px]" : "min-w-[120px]"}`}
+              className="relative overflow-hidden glass border border-white/10 rounded-xl px-3.5 py-2.5 min-w-[110px] flex items-center gap-2.5"
             >
-              <div className="pointer-events-none absolute -top-6 -right-5 size-16 rounded-full opacity-30" style={{ background: "var(--gradient-ember-soft)", filter: "blur(16px)" }} />
-              <k.icon className="size-4 text-accent mb-2" />
-              <p className="text-lg font-display tabular-nums leading-none truncate">{k.value}</p>
-              <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-1.5">{k.label}</p>
+              <k.icon className="size-4 text-accent shrink-0" />
+              <div className="min-w-0">
+                <p className="text-base font-display tabular-nums leading-none">{k.value}</p>
+                <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-1">{k.label}</p>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Controls */}
+      {/* 2. Search & Actions — sticky on mobile */}
       <div className="sticky top-2 z-20 flex flex-wrap items-center gap-2 glass-strong border border-white/10 rounded-2xl p-2.5">
         <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-emerald-400 px-1">
           <Radio className={`size-3 ${pulse ? "text-accent animate-ping" : ""}`} /> Live
@@ -489,7 +487,7 @@ function ProductsInner() {
         </button>
         <button onClick={() => setEditing("new")}
           className="inline-flex items-center gap-1.5 rounded-xl bg-accent text-accent-foreground font-semibold px-3 py-2 text-[10px] uppercase tracking-widest hover:brightness-110">
-          <Plus className="size-3.5" /> New
+          <Plus className="size-3.5" /> Add Product
         </button>
         <button onClick={() => {
             const ids = filtered.map((p) => p.id);
@@ -505,7 +503,7 @@ function ProductsInner() {
         </button>
       </div>
 
-      {/* Quick filter chips */}
+      {/* 3. Product status filter chips — horizontal scroll */}
       <div className="-mx-1 overflow-x-auto no-scrollbar">
         <div className="flex gap-2 px-1 min-w-max">
           {TAG_CHIPS.map((c) => {
@@ -519,44 +517,6 @@ function ProductsInner() {
           })}
         </div>
       </div>
-
-      {/* Catalog Health Center */}
-      <div className="glass border border-white/10 rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <HeartPulse className="size-4 text-accent" />
-            <h3 className="text-sm font-display">Catalog Health Center</h3>
-          </div>
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-mono ${scoreColor(catalogHealth.avgScore)}`}>
-            <ShieldCheck className="size-3" /> {catalogHealth.avgScore}/100
-          </span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-          {catalogHealth.issues.map((iss) => (
-            <button key={iss.key} onClick={() => setTag(iss.key)}
-              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors ${iss.count > 0 ? "border-white/10 hover:border-accent/40 hover:bg-white/5" : "border-white/5 opacity-60"}`}>
-              <span className={`grid place-items-center size-8 rounded-lg shrink-0 ${iss.count > 0 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
-                <iss.icon className="size-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-display tabular-nums leading-none">{iss.count}</p>
-                <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground mt-1 truncate">{iss.label}</p>
-              </div>
-              {iss.count > 0 && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent shrink-0">
-                  <Wrench className="size-3" /> Fix
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        {catalogHealth.duplicates > 0 && (
-          <p className="mt-3 text-[10px] font-mono text-amber-400 flex items-center gap-1.5">
-            <AlertTriangle className="size-3" /> {catalogHealth.duplicates} possible duplicate products (same name)
-          </p>
-        )}
-      </div>
-
 
       {/* Filter drawer */}
       {showFilters && (
@@ -587,7 +547,7 @@ function ProductsInner() {
         </div>
       )}
 
-      {/* Catalog list (virtualized) */}
+      {/* 4. Product Catalog — PRIMARY SECTION */}
       <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground px-1">
         {filtered.length} of {products.length} products
       </div>
@@ -616,57 +576,97 @@ function ProductsInner() {
         )}
       />
 
-      {/* Product performance analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="glass border border-white/10 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <BarChart3 className="size-4 text-accent" />
-            <h3 className="text-sm font-display">Top performers (90d)</h3>
-          </div>
-          {topSellers.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-6 text-center">No sales recorded yet.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {topSellers.map(({ p, s }, i) => {
-                const max = topSellers[0].s.revenue || 1;
-                return (
-                  <div key={p.id} className="flex items-center gap-3">
-                    <span className="text-[10px] font-mono text-muted-foreground w-4">{i + 1}</span>
-                    <div className="size-8 rounded-lg overflow-hidden bg-white/5 shrink-0">
-                      <img src={resolveImage(p.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs truncate">{p.name}</p>
-                      <div className="mt-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${(s.revenue / max) * 100}%` }} />
+      {/* 5. Inventory Health Center — collapsible, below catalog */}
+      <CollapsibleModule
+        eyebrow="Operations"
+        title="Inventory Health Center"
+        sectionId="products-inventory-health"
+        defaultOpen={false}
+        badge={
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-mono ${scoreColor(catalogHealth.avgScore)}`}>
+            <ShieldCheck className="size-3" /> {catalogHealth.avgScore}/100
+          </span>
+        }
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+          {catalogHealth.issues.map((iss) => (
+            <button key={iss.key} onClick={() => setTag(iss.key)}
+              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors ${iss.count > 0 ? "border-white/10 hover:border-accent/40 hover:bg-white/5" : "border-white/5 opacity-60"}`}>
+              <span className={`grid place-items-center size-8 rounded-lg shrink-0 ${iss.count > 0 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                <iss.icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-display tabular-nums leading-none">{iss.count}</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground mt-1 truncate">{iss.label}</p>
+              </div>
+              {iss.count > 0 && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent shrink-0">
+                  <Wrench className="size-3" /> Fix
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        {catalogHealth.duplicates > 0 && (
+          <p className="mt-3 text-[10px] font-mono text-amber-400 flex items-center gap-1.5">
+            <AlertTriangle className="size-3" /> {catalogHealth.duplicates} possible duplicate products (same name)
+          </p>
+        )}
+      </CollapsibleModule>
+
+      {/* 6. Product Analytics — collapsible, bottom */}
+      <CollapsibleModule eyebrow="Insights" title="Product Analytics" sectionId="products-analytics" defaultOpen={false}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="size-4 text-accent" />
+              <h3 className="text-sm font-display">Top performers (90d)</h3>
+            </div>
+            {topSellers.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-6 text-center">No sales recorded yet.</p>
+            ) : (
+              <div className="space-y-2.5">
+                {topSellers.map(({ p, s }, i) => {
+                  const max = topSellers[0].s.revenue || 1;
+                  return (
+                    <div key={p.id} className="flex items-center gap-3">
+                      <span className="text-[10px] font-mono text-muted-foreground w-4">{i + 1}</span>
+                      <div className="size-8 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                        <img src={resolveImage(p.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs truncate">{p.name}</p>
+                        <div className="mt-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${(s.revenue / max) * 100}%` }} />
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-mono">{inr(s.revenue)}</p>
+                        <p className="text-[9px] text-muted-foreground">{s.units} sold</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs font-mono">{inr(s.revenue)}</p>
-                      <p className="text-[9px] text-muted-foreground">{s.units} sold</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Boxes className="size-4 text-accent" />
+              <h3 className="text-sm font-display">Inventory intelligence</h3>
             </div>
-          )}
-        </div>
-        <div className="glass border border-white/10 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Boxes className="size-4 text-accent" />
-            <h3 className="text-sm font-display">Inventory intelligence</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <IntelStat label="Units on hand" value={(products.reduce((s, p) => s + p.stock_quantity, 0)).toLocaleString()} />
+              <IntelStat label="Reserved" value={(products.reduce((s, p) => s + (p.reserved_quantity ?? 0), 0)).toLocaleString()} />
+              <IntelStat label="Stock value" value={inr(products.reduce((s, p) => s + Number(p.price) * p.stock_quantity, 0))} />
+              <IntelStat label="At cost" value={inr(products.reduce((s, p) => s + Number(p.cost) * p.stock_quantity, 0))} accent />
+            </div>
+            <Link to="/admin-inventory" className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">
+              <Layers className="size-3" /> Full inventory console
+            </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <IntelStat label="Units on hand" value={(products.reduce((s, p) => s + p.stock_quantity, 0)).toLocaleString()} />
-            <IntelStat label="Reserved" value={(products.reduce((s, p) => s + (p.reserved_quantity ?? 0), 0)).toLocaleString()} />
-            <IntelStat label="Stock value" value={inr(products.reduce((s, p) => s + Number(p.price) * p.stock_quantity, 0))} />
-            <IntelStat label="At cost" value={inr(products.reduce((s, p) => s + Number(p.cost) * p.stock_quantity, 0))} accent />
-          </div>
-          <Link to="/admin-inventory" className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-accent hover:underline">
-            <Layers className="size-3" /> Full inventory console
-          </Link>
         </div>
-      </div>
+      </CollapsibleModule>
 
       {/* Bulk actions dock — full bulk operations engine */}
       <BulkActionBar
