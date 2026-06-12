@@ -367,6 +367,50 @@ export function SectionEditor<T extends Record<string, any>>({
     setRecovery(null);
   };
 
+  // More Actions menu + product-level operations.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+
+  async function duplicateProduct() {
+    setActionBusy(true);
+    try {
+      const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
+      if (error || !data) throw new Error(error?.message || "Product not found");
+      const copy: Record<string, any> = { ...data };
+      delete copy.id; delete copy.created_at; delete copy.updated_at;
+      const suffix = Math.random().toString(36).slice(2, 6);
+      copy.slug = `${data.slug}-copy-${suffix}`;
+      copy.sku = data.sku ? `${data.sku}-COPY-${suffix.toUpperCase()}` : null;
+      copy.name = `${data.name ?? "Product"} (Copy)`;
+      copy.status = "draft";
+      const { error: insErr } = await supabase.from("products").insert(copy);
+      if (insErr) throw new Error(insErr.message);
+      await invalidateProducts();
+      logActivity("product_duplicated", "product", row?.id, { from: slug, to: copy.slug });
+      toast.success("Product duplicated as a draft");
+      setMenuOpen(false);
+      navigate({ to: "/admin-product/$slug/details", params: { slug: copy.slug } });
+    } catch (e) {
+      toast.error("Duplicate failed", { description: e instanceof Error ? e.message : "Try again." });
+    } finally { setActionBusy(false); }
+  }
+
+  async function archiveProduct() {
+    setActionBusy(true);
+    try {
+      const { error } = await supabase.from("products").update({ status: "archived", updated_at: new Date().toISOString() }).eq("slug", slug);
+      if (error) throw new Error(error.message);
+      await invalidateProducts();
+      logActivity("product_archived", "product", row?.id, { slug });
+      toast.success("Product archived");
+      setMenuOpen(false);
+      navigate({ to: "/admin-products" });
+    } catch (e) {
+      toast.error("Archive failed", { description: e instanceof Error ? e.message : "Try again." });
+    } finally { setActionBusy(false); }
+  }
+
+
   const header: ProductHeaderInfo | null = row
     ? { id: row.id, slug: row.slug, name: row.name, image: row.image, sku: row.sku, status: row.status, category: row.category }
     : null;
