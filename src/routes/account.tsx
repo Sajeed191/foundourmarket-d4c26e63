@@ -43,6 +43,15 @@ type Order = {
   order_items: { name: string; quantity: number; image: string | null }[];
 };
 
+type Return = {
+  id: string;
+  order_id: string;
+  status: string;
+  refund_status: string;
+  refund_amount: number | null;
+  created_at: string;
+};
+
 type Profile = {
   full_name: string | null;
   phone: string | null;
