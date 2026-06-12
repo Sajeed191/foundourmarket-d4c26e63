@@ -575,26 +575,24 @@ const PRIORITY_BAR: Record<string, string> = {
 function ActionGroup({ label, count, priority, icon, onView }: { label: string; count: number; priority: "critical" | "high" | "medium"; icon: React.ReactNode; onView: () => void }) {
   const dim = count === 0;
   return (
-    <div className={`relative overflow-hidden rounded-2xl border p-4 pl-5 flex flex-col gap-4 transition-colors ${dim ? "border-border/50 bg-card/30" : "border-border/70 bg-card/50 hover:border-accent/40"}`}>
+    <button
+      onClick={onView}
+      disabled={dim}
+      className={`relative text-left overflow-hidden rounded-2xl border p-3.5 pl-4 flex flex-col gap-3 w-full min-w-0 min-h-[112px] transition-colors disabled:cursor-default ${dim ? "border-border/50 bg-card/30" : "border-border/70 bg-card/50 hover:border-accent/40 active:bg-muted/30"}`}
+    >
       <span className={`absolute left-0 top-0 bottom-0 w-1 ${dim ? "bg-border/50" : PRIORITY_BAR[priority]}`} />
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-start justify-between gap-1.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span className={dim ? "text-muted-foreground shrink-0" : "text-accent shrink-0"}>{icon}</span>
-          <span className="text-sm font-medium truncate">{label}</span>
+          <span className="text-[13px] sm:text-sm font-medium truncate">{label}</span>
         </div>
-        <span className={`shrink-0 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border ${PRIORITY_TONE[priority]}`}>{priority}</span>
+        <span className={`shrink-0 size-2 rounded-full ${dim ? "bg-border/50" : PRIORITY_BAR[priority]}`} aria-label={priority} />
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <span className={`text-[32px] font-display font-semibold tabular-nums leading-none ${dim ? "text-muted-foreground/60" : "text-foreground"}`}>{num(count)}</span>
-        <button
-          onClick={onView}
-          disabled={dim}
-          className="text-[11px] font-medium px-3 py-1.5 rounded-lg border border-border hover:border-accent/40 hover:bg-muted/30 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1 transition-colors"
-        >
-          View <ArrowDownRight className="size-3" />
-        </button>
+      <div className="flex items-end justify-between gap-2 mt-auto">
+        <span className={`text-[28px] sm:text-[32px] font-display font-semibold tabular-nums leading-none ${dim ? "text-muted-foreground/60" : "text-foreground"}`}>{num(count)}</span>
+        {!dim && <span className="text-[11px] font-medium text-muted-foreground inline-flex items-center gap-1 shrink-0">View <ArrowDownRight className="size-3" /></span>}
       </div>
-    </div>
+    </button>
   );
 }
 
