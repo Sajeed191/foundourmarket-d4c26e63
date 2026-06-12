@@ -65,7 +65,7 @@ const TAG_META: Record<WarRoomTag, { label: string; cls: string; icon: React.Rea
   cod: { label: "COD", cls: "text-amber-400 border-amber-400/30 bg-amber-400/10", icon: <Wallet className="size-3" /> },
   high_value: { label: "High Value", cls: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10", icon: <TrendingUp className="size-3" /> },
   international: { label: "Intl", cls: "text-cyan-400 border-cyan-400/30 bg-cyan-400/10", icon: <Globe className="size-3" /> },
-  vip: { label: "VIP", cls: "text-violet-400 border-violet-400/30 bg-violet-400/10", icon: <Crown className="size-3" /> },
+  vip: { label: "Loyal", cls: "text-violet-400 border-violet-400/30 bg-violet-400/10", icon: <TrendingUp className="size-3" /> },
   refund_request: { label: "Refund", cls: "text-orange-400 border-orange-400/30 bg-orange-400/10", icon: <Wallet className="size-3" /> },
   return_request: { label: "Return", cls: "text-orange-400 border-orange-400/30 bg-orange-400/10", icon: <RotateCcw className="size-3" /> },
   shipment_delay: { label: "Delayed", cls: "text-destructive border-destructive/30 bg-destructive/10", icon: <Clock className="size-3" /> },
