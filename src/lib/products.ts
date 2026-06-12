@@ -280,6 +280,11 @@ export function rowToProduct(r: Row): Product {
     editorsChoice: r.editors_choice ?? false,
     priorityScore: r.priority_score ?? null,
     collections: r.collections ?? [],
+    seoTitle: r.seo_title ?? null,
+    seoDescription: r.seo_description ?? null,
+    metaKeywords: r.meta_keywords ?? [],
+    brand: r.brand ?? null,
+    productType: r.product_type ?? null,
   };
 }
 
