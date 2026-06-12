@@ -146,12 +146,6 @@ function AccountPage() {
   const stats = useMemo(() => {
     const list = orders ?? [];
     const spent = list.reduce((s, o) => s + Number(o.total || 0), 0);
-    const active = list.filter((o) => !["delivered", "cancelled", "refunded"].includes(String(o.status).toLowerCase())).length;
-    const saved = Math.round(list.reduce((s, o) => s + Number(o.discount || 0), 0));
-    const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
-    const categoryCount = new Map<string, number>();
-    for (const o of list) for (const it of o.order_items) categoryCount.set(it.name, (categoryCount.get(it.name) ?? 0) + it.quantity);
-    const topCategory = [...categoryCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
     const isPaid = (o: Order) => {
       const pm = String(o.payment_method ?? "").toLowerCase();
       const ps = String(o.payment_status ?? "").toLowerCase();
@@ -160,8 +154,21 @@ function AccountPage() {
       if (pm === "cod") return true; // COD orders track without prepayment
       return ps === "succeeded" || ps === "paid"; // prepaid must be successfully captured
     };
-    const latestActive = list.find((o) => isPaid(o) && !["delivered", "cancelled", "refunded"].includes(String(o.status).toLowerCase())) ?? null;
-    return { count: list.length, spent, active, saved, memberSince, topCategory, latestActive };
+    // Successful orders only: paid and not cancelled/refunded/failed.
+    const successful = list.filter(
+      (o) => isPaid(o) && !["cancelled", "refunded", "payment_failed"].includes(String(o.status).toLowerCase()),
+    );
+    // In-progress orders that haven't reached a completed/terminal state.
+    const active = successful.filter(
+      (o) => !["delivered", "completed"].includes(String(o.status).toLowerCase()),
+    ).length;
+    const saved = Math.round(list.reduce((s, o) => s + Number(o.discount || 0), 0));
+    const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
+    const categoryCount = new Map<string, number>();
+    for (const o of list) for (const it of o.order_items) categoryCount.set(it.name, (categoryCount.get(it.name) ?? 0) + it.quantity);
+    const topCategory = [...categoryCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+    const latestActive = successful.find((o) => !["delivered", "completed"].includes(String(o.status).toLowerCase())) ?? null;
+    return { count: successful.length, spent, active, saved, memberSince, topCategory, latestActive };
   }, [orders, user]);
 
   const latestReturn = useMemo(() => {
