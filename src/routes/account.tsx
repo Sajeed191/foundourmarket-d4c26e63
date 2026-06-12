@@ -123,6 +123,11 @@ function AccountPage() {
         { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
         () => loadOrders(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "returns", filter: `user_id=eq.${user.id}` },
+        () => loadReturns(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
