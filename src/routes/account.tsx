@@ -1152,11 +1152,43 @@ function CompactSupportCard({
 }
 
 function ContinueShopping({ items }: { items: Product[] }) {
+  const shown = items.slice(0, 5);
+  const hasMore = items.length > 5;
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-      {items.map((p) => (
-        <ProductCard key={p.slug} product={p} />
-      ))}
+    <div className="-mx-4 sm:mx-0">
+      <div
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-3 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          scrollPaddingLeft: "1rem",
+          scrollPaddingRight: "1rem",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorX: "contain",
+        }}
+      >
+        {shown.map((p) => (
+          <div
+            key={p.slug}
+            className="snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
+          >
+            <ProductCard product={p} />
+          </div>
+        ))}
+        {hasMore && (
+          <Link
+            to="/search"
+            className="snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px] grid place-items-center rounded-[22px] border border-accent/20 bg-card/40 backdrop-blur-xl text-center transition-colors hover:border-accent/40"
+          >
+            <span className="flex flex-col items-center gap-2 px-4 py-8">
+              <span className="grid size-11 place-items-center rounded-full bg-accent/10 text-accent">
+                <Plus className="size-5" />
+              </span>
+              <span className="text-sm font-semibold text-foreground">View all</span>
+              <span className="text-[11px] text-muted-foreground">Browse more products</span>
+            </span>
+          </Link>
+        )}
+        <div aria-hidden className="shrink-0 w-1" />
+      </div>
     </div>
   );
 }
