@@ -258,7 +258,7 @@ function OrdersPage() {
         .select("id,status,total,currency,created_at,tracking_number,carrier,payment_status,fulfillment_status,razorpay_order_id,order_items(name,quantity,image,unit_price,product_slug)")
         .order("created_at", { ascending: false }),
       supabase.from("payments").select("order_id,status,meta,created_at").order("created_at", { ascending: false }),
-      supabase.from("returns").select("order_id,status,refund_status"),
+      supabase.from("returns").select("order_id,status,refund_status,resolution_type,replacement_status,created_at").order("created_at", { ascending: false }),
       supabase.from("refunds").select("order_id,status"),
     ]);
 
@@ -269,22 +269,35 @@ function OrdersPage() {
         failMap.set(p.order_id, { reason: meta.error_description ?? meta.description ?? null, at: p.created_at });
       }
     }
-    const retMap = new Map<string, string>();
-    for (const r of rets ?? []) if (r.order_id) retMap.set(r.order_id, String(r.status));
+    // Keep the most recent return per order (rets ordered desc by created_at).
+    const retMap = new Map<string, ReturnRec>();
+    for (const r of rets ?? []) {
+      if (r.order_id && !retMap.has(r.order_id)) {
+        retMap.set(r.order_id, {
+          status: String(r.status ?? ""),
+          refund_status: String(r.refund_status ?? ""),
+          resolution_type: String(r.resolution_type ?? ""),
+          replacement_status: String(r.replacement_status ?? ""),
+          created_at: String(r.created_at ?? ""),
+        });
+      }
+    }
     const refMap = new Map<string, string>();
     for (const r of refs ?? []) if (r.order_id) refMap.set(r.order_id, String(r.status));
 
-    const built: Order[] = ((rawOrders as Omit<Order, "failed" | "succeeded" | "failReason" | "failAt" | "returnStatus" | "refundStatus">[]) ?? []).map((o) => {
+    const built: Order[] = ((rawOrders as Omit<Order, "failed" | "succeeded" | "failReason" | "failAt" | "returnStatus" | "refundStatus" | "returnRec">[]) ?? []).map((o) => {
       const failed = isFailed(o);
       const fail = failMap.get(o.id);
+      const rec = retMap.get(o.id) ?? null;
       return {
         ...o,
         failed,
         succeeded: isSucceeded(o),
         failReason: fail?.reason ?? null,
         failAt: fail?.at ?? null,
-        returnStatus: retMap.get(o.id) ?? null,
+        returnStatus: rec?.status ?? null,
         refundStatus: refMap.get(o.id) ?? null,
+        returnRec: rec,
       };
     });
     setOrders(built);
