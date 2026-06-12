@@ -91,6 +91,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-marketing-automation", label: "Marketing Automation", icon: Zap, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-acquisition-intelligence", label: "Acquisition Intelligence", icon: Target, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-seo-intelligence", label: "SEO Intelligence", icon: Search, roles: ["admin", "super_admin", "manager", "editor"] },
+      { to: "/admin-seo-health", label: "SEO Health", icon: ShieldCheck, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-search", label: "Search trends", icon: Search, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin", search: { tab: "subscribers" }, label: "Subscribers", icon: ShoppingBag },
     ],
