@@ -625,23 +625,21 @@ function OrderOpsPage() {
         </div>
       }
     >
-      <div className="space-y-10">
+      <div className="space-y-12">
         {/* SECTION 1 — OPERATIONS OVERVIEW */}
         <section>
           <SectionHeader title="Operations Overview" sub="A single glance at the whole pipeline" icon={<Gauge className="size-5 text-accent" />} />
-          <div className="card-premium rounded-3xl p-4 sm:p-5">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {overview.map((o) => (
-                <OverviewStat key={o.label} label={o.label} value={o.value} icon={o.icon} tone={o.tone} onClick={() => focusOrders(o.label, o.orders ?? [])} />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {overview.map((o) => (
+              <OverviewStat key={o.label} label={o.label} value={o.value} icon={o.icon} tone={o.tone} onClick={() => focusOrders(o.label, o.orders ?? [])} />
+            ))}
           </div>
         </section>
 
         {/* SECTION 2 — ACTION REQUIRED */}
-        <section>
+        <section className="relative rounded-3xl border border-amber-400/20 bg-amber-400/[0.02] p-4 sm:p-6">
           <SectionHeader title="Action Required" sub="Your primary workspace — orders and customers waiting on you" icon={<AlertTriangle className="size-5 text-amber-300" />} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {actionGroups.map((g) => (
               <ActionGroup key={g.key} label={g.label} count={g.orders.length} priority={g.priority} icon={g.icon} onView={() => focusOrders(g.label, g.orders)} />
             ))}
@@ -651,8 +649,8 @@ function OrderOpsPage() {
         {/* SECTION 3 — ORDER PIPELINE */}
         <section>
           <SectionHeader title="Order Pipeline" sub="Spot bottlenecks across the fulfilment flow" icon={<TrendingUp className="size-5 text-accent" />} />
-          <div className="card-premium rounded-3xl p-4 sm:p-5 overflow-x-auto">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+          <div className="card-premium rounded-3xl p-4 sm:p-6 overflow-x-auto">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-max pb-1">
               {pipeline.map((p, i) => (
                 <button key={p.label} onClick={() => focusOrders(p.label, p.orders)} className="text-left">
                   <PipelineStage label={p.label} value={p.value} icon={p.icon} last={i === pipeline.length - 1} />
