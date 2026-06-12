@@ -834,6 +834,7 @@ function ProductsInner() {
             <ProductCard
               key={p.id}
               p={p}
+              intl={catalogTab === "international"}
               stat={stats[p.slug] ?? { units: 0, revenue: 0, orders: 0 }}
               selected={selected.has(p.id)}
               busy={busy === p.id}
