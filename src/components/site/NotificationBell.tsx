@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, Check, CheckCheck, Settings, Trash2, ShoppingBag, X } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useNotifications, categoryOf, type NotificationCategory, type Notification } from "@/lib/notifications";
@@ -12,6 +13,7 @@ export function NotificationBell() {
   const [filter, setFilter] = useState<Filter>("all");
   const [pulse, setPulse] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const prevUnread = useRef(unread);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -23,7 +25,10 @@ export function NotificationBell() {
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
@@ -80,8 +85,9 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
+          ref={panelRef}
           className={`fixed right-[max(0.75rem,env(safe-area-inset-right))] left-[max(0.75rem,env(safe-area-inset-left))] sm:left-auto sm:w-[400px] ${
             isAdminRoute
               ? "top-[calc(env(safe-area-inset-top)+7.75rem)] sm:top-[calc(env(safe-area-inset-top)+4.25rem)] lg:right-10"
@@ -185,7 +191,8 @@ export function NotificationBell() {
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
