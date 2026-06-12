@@ -162,6 +162,16 @@ function AccountPage() {
     return { count: list.length, spent, active, saved, memberSince, topCategory, latestActive };
   }, [orders, user]);
 
+  const latestReturn = useMemo(() => {
+    const list = returns ?? [];
+    return (
+      list.find((r) => String(r.status).toLowerCase() !== "rejected" && String(r.refund_status).toLowerCase() !== "issued") ??
+      list[0] ??
+      null
+    );
+  }, [returns]);
+
+
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
   const { slugs: recentSlugs } = useRecentlyViewed();
 
