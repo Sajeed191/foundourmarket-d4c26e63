@@ -73,15 +73,31 @@ export const getReturnsAdminFn = createServerFn({ method: "POST" })
     const orderMap = new Map((orders ?? []).map((o: any) => [o.id, o]));
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
 
-    return rows.map((r) => {
+    // Customer evidence lives in the private "return-photos" bucket as storage
+    // paths. Sign them so staff can actually view the images.
+    const signCache = new Map<string, string>();
+    async function signPhoto(path: string): Promise<string> {
+      if (/^https?:\/\//i.test(path)) return path;
+      if (signCache.has(path)) return signCache.get(path)!;
+      const { data } = await supabaseAdmin.storage
+        .from("return-photos")
+        .createSignedUrl(path, 60 * 60);
+      const url = data?.signedUrl ?? path;
+      signCache.set(path, url);
+      return url;
+    }
+
+    return await Promise.all(rows.map(async (r) => {
       const o: any = orderMap.get(r.order_id);
       const p: any = profileMap.get(r.user_id);
       const addr = o?.shipping_address ?? {};
       const addressParts = [addr.line1, addr.line2, addr.city, addr.state, addr.postal, addr.country]
         .filter(Boolean)
         .join(", ");
+      const photo_urls = await Promise.all(((r.photo_urls ?? []).filter(Boolean)).map(signPhoto));
       return {
         ...r,
+        photo_urls,
         customer: {
           name: addr.full_name || p?.full_name || null,
           email: o?.contact_email || null,
