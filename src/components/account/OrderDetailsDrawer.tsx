@@ -47,6 +47,7 @@ type DrawerData = {
   returns: Return[];
   notifications: Notif[];
   returnWindowDays: number;
+  returnEligible: boolean;
   cost: number;
 };
 
@@ -104,12 +105,18 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     const order = (orderRes.data as FullOrder) ?? null;
     const slugs = (order?.order_items ?? []).map((i) => i.product_slug).filter(Boolean);
     const DEFAULT_RETURN_WINDOW_DAYS = 4;
-    let returnWindowDays = DEFAULT_RETURN_WINDOW_DAYS;
+    let returnWindowDays = 0;
+    let returnEligible = false;
     let cost = 0;
     if (slugs.length) {
-      const { data: prods } = await supabase.from("products").select("slug,return_window_days,return_eligible,cost_price_inr,cost_price_usd").in("slug", slugs);
+      const { data: prods } = await supabase.from("products").select("slug,return_window_days,return_eligible,replacement_eligible,cost_price_inr,cost_price_usd").in("slug", slugs);
+      // Only products the admin marked return- or replacement-eligible open a return window.
+      const eligible = (prods ?? []).filter((p) => p.return_eligible || p.replacement_eligible);
+      returnEligible = eligible.length > 0;
       // Use the longest configured window across eligible items; fall back to the 4-day default.
-      returnWindowDays = Math.max(DEFAULT_RETURN_WINDOW_DAYS, ...((prods ?? []).filter((p) => p.return_eligible).map((p) => Number(p.return_window_days) || 0)));
+      returnWindowDays = returnEligible
+        ? Math.max(DEFAULT_RETURN_WINDOW_DAYS, ...eligible.map((p) => Number(p.return_window_days) || 0))
+        : 0;
       const isInr = (order?.currency ?? "").toUpperCase() === "INR";
       const costMap = new Map((prods ?? []).map((p) => [p.slug, Number((isInr ? p.cost_price_inr : p.cost_price_usd) ?? 0) || 0]));
       cost = (order?.order_items ?? []).reduce((n, it) => n + (costMap.get(it.product_slug) ?? 0) * it.quantity, 0);
@@ -127,6 +134,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
       returns: (retRes.data as Return[]) ?? [],
       notifications,
       returnWindowDays,
+      returnEligible,
       cost,
     };
     if (reqRef.current !== id) return;
@@ -275,7 +283,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     } finally { setCancelling(false); }
   }
 
-  const refundEligible = data ? (data.returnWindowDays > 0) : false;
+  const refundEligible = data ? (data.returnEligible && data.returnWindowDays > 0) : false;
   const windowRemaining = (() => {
     if (!order || !refundEligible) return null;
     const delivered = shipment?.delivered_at ?? shipment?.actual_delivery;
