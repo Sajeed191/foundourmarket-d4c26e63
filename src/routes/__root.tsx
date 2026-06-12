@@ -176,6 +176,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           name: "FoundOurMarket",
           url: "https://foundourmarket.com/",
           logo: "https://foundourmarket.com/logo.webp",
+          description:
+            "Premium global marketplace offering curated products with secure shopping, trusted sellers, and worldwide delivery.",
+          contactPoint: {
+            "@type": "ContactPoint",
+            email: "support@foundourmarket.com",
+            contactType: "customer support",
+            availableLanguage: ["English"],
+          },
+          sameAs: [
+            "https://www.instagram.com/foundourmarket",
+            "https://www.facebook.com/foundourmarket",
+            "https://twitter.com/foundourmarket",
+          ],
         }),
       },
       {
