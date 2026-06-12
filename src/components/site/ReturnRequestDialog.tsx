@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { RotateCcw, Loader2, ImagePlus, X, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -53,6 +53,12 @@ export function ReturnRequestDialog({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => handleOpenChange(false), 1800);
+    return () => clearTimeout(t);
+  }, [done]);
 
   const reset = () => {
     setSelected({});
