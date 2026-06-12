@@ -29,12 +29,31 @@ const REFUND_TIMELINE = [
 ] as const;
 
 const REPLACEMENT_TIMELINE = [
-  { key: "requested", label: "Requested" },
+  { key: "requested", label: "Replacement Approved" },
   { key: "approved", label: "Replacement Approved" },
   { key: "processing", label: "Replacement Processing" },
   { key: "shipped", label: "Replacement Shipped" },
   { key: "delivered", label: "Replacement Delivered" },
 ] as const;
+
+/** Unified compact tracker: Requested → Approved → Processing → Shipped → Delivered. */
+const COMPACT_STEPS = ["Requested", "Approved", "Processing", "Shipped", "Delivered"] as const;
+
+function compactIndex(r: AdminReturnRow): number {
+  if (r.status === "rejected") return -1;
+  if (r.resolution_type === "refund") {
+    if (r.refund_status === "issued" || r.status === "completed") return 4;
+    if (r.status === "received") return 2;
+    if (r.status === "approved") return 1;
+    return 0;
+  }
+  if (r.replacement_status === "delivered") return 4;
+  if (r.replacement_status === "shipped") return 3;
+  if (r.replacement_status === "processing" || r.status === "received") return 2;
+  if (r.replacement_status === "approved" || r.status === "approved") return 1;
+  if (r.status === "completed") return 4;
+  return 0;
+}
 
 function refundTimelineIndex(r: AdminReturnRow): number {
   if (r.refund_status === "issued") return 4;
