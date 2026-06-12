@@ -85,7 +85,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     reqRef.current = id;
     const [orderRes, shipRes, payRes, refRes, retRes, notifRes] = await Promise.all([
       supabase.from("orders")
-        .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,payment_status,fulfillment_status,tracking_number,carrier,shipping_address,razorpay_order_id,razorpay_payment_id,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
+        .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,payment_status,fulfillment_status,tracking_number,carrier,shipping_address,razorpay_order_id,razorpay_payment_id,cancel_window_expires_at,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
         .eq("id", id).maybeSingle(),
       supabase.from("shipments")
         .select("id,status,carrier,tracking_number,tracking_url,shipped_at,packed_at,delivered_at,actual_delivery,estimated_delivery,shipment_events(id,status,description,location,occurred_at)")
