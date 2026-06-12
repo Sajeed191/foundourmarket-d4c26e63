@@ -1079,3 +1079,119 @@ function ReturnTimeline({ ret, format }: { ret: Return; format: (n: number) => s
 
 
 
+/* ---------- premium hub / support / continue-shopping ---------- */
+
+function HubCard({
+  icon: Icon, title, desc, count, loading, to, tone = "amber",
+}: { icon: typeof Package; title: string; desc: string; count?: number; loading?: boolean; to: string; tone?: keyof typeof TONES }) {
+  const t = TONES[tone];
+  return (
+    <Link to={to} className="group block h-full">
+      <motion.div
+        whileHover={{ y: -4 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.25, ease }}
+        className="relative h-full min-h-[112px] overflow-hidden rounded-2xl p-4 sm:p-5 card-premium hover:shadow-[var(--shadow-soft)]"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+          style={{ background: t.glow }}
+        />
+        <div className="relative flex items-start justify-between">
+          <span className={`size-10 rounded-xl grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
+            <Icon className="size-[18px]" />
+          </span>
+          <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <div className="relative mt-3 flex items-baseline gap-2">
+          <p className="text-sm sm:text-base font-display font-semibold group-hover:text-accent transition-colors">{title}</p>
+          {typeof count === "number" && (
+            loading
+              ? <span className="h-4 w-6 rounded bg-foreground/5 animate-pulse" />
+              : count > 0 && <span className="text-xs font-mono tabular-nums text-accent">{count}</span>
+          )}
+        </div>
+        <p className="relative text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{desc}</p>
+      </motion.div>
+    </Link>
+  );
+}
+
+function SupportCard({
+  icon: Icon, title, desc, to, onClick, tone = "amber",
+}: { icon: typeof Package; title: string; desc: string; to?: string; onClick?: () => void; tone?: keyof typeof TONES }) {
+  const t = TONES[tone];
+  const inner = (
+    <motion.div
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.25, ease }}
+      className="relative h-full min-h-[100px] overflow-hidden rounded-2xl p-4 sm:p-5 card-premium hover:shadow-[var(--shadow-soft)] text-left"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+        style={{ background: t.glow }}
+      />
+      <span className={`relative size-10 rounded-xl grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
+        <Icon className="size-[18px]" />
+      </span>
+      <p className="relative text-sm font-display font-semibold mt-3 group-hover:text-accent transition-colors leading-tight">{title}</p>
+      <p className="relative text-[11px] sm:text-xs text-muted-foreground mt-0.5">{desc}</p>
+    </motion.div>
+  );
+  const cls = "group block h-full w-full";
+  if (onClick) return <button onClick={onClick} className={cls}>{inner}</button>;
+  return <Link to={to!} className={cls}>{inner}</Link>;
+}
+
+function ContinueShopping({ items, format }: { items: Product[]; format: (n: number) => string }) {
+  const { add } = useCart();
+  return (
+    <div className="-mx-4 sm:mx-0">
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
+        {items.map((p, i) => (
+          <motion.div
+            key={p.slug}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
+            className="snap-start shrink-0 w-[64%] xs:w-[56%] sm:w-[40%] lg:w-[28%] max-w-[260px] group"
+          >
+            <div className="h-full card-premium rounded-2xl p-2.5 sm:p-3 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)] transition-shadow duration-500">
+              <Link to="/products/$slug" params={{ slug: p.slug }} className="block">
+                <div className="aspect-[4/5] rounded-xl overflow-hidden bg-black/40">
+                  <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                </div>
+              </Link>
+              <div className="px-1 pt-2.5 pb-1">
+                <Link to="/products/$slug" params={{ slug: p.slug }}>
+                  <p className="text-[13px] sm:text-sm font-medium leading-snug line-clamp-2 group-hover:text-accent transition-colors">{p.name}</p>
+                </Link>
+                {typeof p.rating === "number" && p.rating > 0 && (
+                  <div className="mt-1.5 flex items-center gap-1 text-amber-400">
+                    <Star className="size-3 fill-current" />
+                    <span className="text-[11px] font-mono tabular-nums text-muted-foreground">{p.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm text-accent tabular-nums truncate">{format(Number(p.price))}</span>
+                  <button
+                    onClick={() => add(p.slug)}
+                    aria-label="Add to cart"
+                    className="shrink-0 size-9 grid place-items-center rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
