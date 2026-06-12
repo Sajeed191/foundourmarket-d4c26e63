@@ -18,6 +18,7 @@ import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { ProductEditorModal } from "@/components/admin/ProductEditorModal";
 import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
+import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 
 export const Route = createFileRoute("/admin-products")({
   head: () => ({
