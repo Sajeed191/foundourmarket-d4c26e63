@@ -259,6 +259,9 @@ export function SectionEditor<T extends Record<string, any>>({
   const baseline = useRef<string>("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const savedFlash = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigate = useNavigate();
   const [recovery, setRecovery] = useState<{ data: T; savedAt: string } | null>(null);
   const recoveryChecked = useRef(false);
   const inFlight = useRef(false);
