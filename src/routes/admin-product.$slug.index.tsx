@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   FileText, IndianRupee, Boxes, Truck, RotateCcw, Search, Sparkles, BarChart3, Eye, ChevronRight,
   TrendingUp, ShoppingCart, Heart, CheckCircle2, AlertCircle, Loader2, Activity, ArrowLeft,
-  Copy, Archive, Trash2, Send, EyeOff, ExternalLink, ShieldCheck, Lightbulb, DollarSign,
-  Globe, Hash, Wand2, Download, Image as ImageIcon, Film, Tag, ChevronDown, Pencil, Package,
+  Copy, Archive, Trash2, Send, EyeOff, ExternalLink, ShieldCheck, DollarSign,
+  Globe, Hash, Wand2, Download, Image as ImageIcon, ChevronDown, Pencil, Package,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
