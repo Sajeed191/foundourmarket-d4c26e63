@@ -73,6 +73,16 @@ function DetailsPage() {
 
 /* ----------------------------- shell pieces ----------------------------- */
 
+function SummaryStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5 text-center">
+      <p className="text-[8px] font-mono uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+
 function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }: {
   title: string; icon: React.ReactNode; desc?: string; defaultOpen?: boolean;
   badge?: React.ReactNode; children: React.ReactNode;
