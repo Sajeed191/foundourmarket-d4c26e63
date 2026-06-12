@@ -280,14 +280,14 @@ export function ReturnAdminCard({
               </button>
             ))}
           </div>
-          {lightbox != null && (
-            <ImageLightbox
-              images={photos}
-              index={lightbox}
-              onIndexChange={setLightbox}
-              onClose={() => setLightbox(null)}
-            />
-          )}
+          <ImageLightbox
+            images={photos.map((url, i) => ({ id: `${url}-${i}`, url, alt: `Evidence ${i + 1}`, sortOrder: i }))}
+            index={lightbox ?? 0}
+            open={lightbox != null}
+            onIndexChange={setLightbox}
+            onClose={() => setLightbox(null)}
+            alt="Return evidence"
+          />
         </section>
       )}
 
