@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   FileText, IndianRupee, Boxes, Truck, RotateCcw, Search, Sparkles, BarChart3, Eye, ChevronRight,
-  TrendingUp, ShoppingCart, Heart, CheckCircle2, AlertCircle, Loader2, Activity, ArrowLeft,
+  TrendingUp, ShoppingCart, Heart, CheckCircle2, AlertCircle, Loader2, Activity,
   Copy, Archive, Trash2, Send, EyeOff, ExternalLink, ShieldCheck, DollarSign,
   Globe, Hash, Wand2, Download, Image as ImageIcon, ChevronDown, Pencil, Package,
 } from "lucide-react";
@@ -357,21 +357,8 @@ function CommandCenter({ r, slug }: { r: Record<string, any>; slug: string }) {
     toast.success("SKU report exported");
   }
 
-  function goBack() {
-    if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
-    else navigate({ to: "/admin-products" });
-  }
-
   return (
     <div className="space-y-4">
-      {/* Back navigation — sticky on mobile */}
-      <div className="sticky top-0 z-30 -mx-1 px-1 py-1 sm:static bg-background/80 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none">
-        <button onClick={goBack}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-white/20 active:scale-[0.98] transition-all">
-          <ArrowLeft className="size-4" /> Back to Products
-        </button>
-      </div>
-
       {/* COMMAND HEADER */}
       <div className="card-premium rounded-2xl p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">

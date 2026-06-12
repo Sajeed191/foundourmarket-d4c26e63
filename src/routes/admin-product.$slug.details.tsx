@@ -1,8 +1,8 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
-  ChevronDown, ArrowLeft, X, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
+  ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
   Package,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -112,7 +112,6 @@ function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }:
 function CommandCenter({ slug, f, set, row }: {
   slug: string; f: Form; set: (patch: Partial<Form>) => void; row: Record<string, any>;
 }) {
-  const router = useRouter();
   const navigate = useNavigate();
   const [primaryUrl, setPrimaryUrl] = useState<string>(row.image ?? "");
   const [imageCount, setImageCount] = useState<number>(row.image ? 1 : 0);
@@ -142,11 +141,6 @@ function CommandCenter({ slug, f, set, row }: {
     : score >= 40 ? { t: "text-amber-400", b: "bg-amber-500", r: "stroke-amber-400" }
     : { t: "text-destructive", b: "bg-destructive", r: "stroke-destructive" };
 
-  function goBack() {
-    if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
-    else navigate({ to: "/admin-product/$slug", params: { slug } });
-  }
-
   async function togglePublish() {
     const next = status === "published" ? "draft" : "published";
     setPubBusy(true);
@@ -173,29 +167,6 @@ function CommandCenter({ slug, f, set, row }: {
 
   return (
     <div className="space-y-4">
-      {/* Sticky top header */}
-      <div className="sticky top-0 z-30 -mx-4 -mt-4 sm:-mx-5 sm:-mt-5 mb-1 border-b border-white/10 bg-background/85 px-4 py-2.5 backdrop-blur-xl sm:px-5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-          <button type="button" onClick={goBack} aria-label="Back"
-            className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/20 active:scale-95">
-            <ArrowLeft className="size-4" />
-          </button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{f.name || "Untitled product"}</p>
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="font-mono truncate">SKU {row.sku || "—"}</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono uppercase tracking-wider ${status === "published" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
-                {status.replace(/_/g, " ")}
-              </span>
-            </div>
-          </div>
-          <button type="button" onClick={() => navigate({ to: "/admin-products" })} aria-label="Close"
-            className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/20 active:scale-95">
-            <X className="size-4" />
-          </button>
-        </div>
-      </div>
-
       {/* Compact summary + health card */}
       <div className="card-premium rounded-2xl p-3.5">
         <div className="flex items-center gap-3">
