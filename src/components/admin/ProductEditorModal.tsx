@@ -620,7 +620,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {/* Inventory */}
         <CollapsibleModule eyebrow="Step 3" title="Inventory" badge={<Boxes className="size-3.5 text-accent" />}>
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <EField label="Stock qty" type="number" value={String(form.stock_quantity)} onChange={(v) => set({ stock_quantity: Number(v) || 0 })} />
             <EField label="Low stock threshold" type="number" value={String(form.low_stock_threshold)} onChange={(v) => set({ low_stock_threshold: Number(v) || 0 })} />
             <EField label="Sort order" type="number" value={String(form.sort_order)} onChange={(v) => set({ sort_order: Number(v) || 0 })} />
@@ -632,7 +632,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                 ))}
               </select>
             </div>
-            <div className="xs:col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <div className="sm:col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <Toggle checked={form.in_stock} onChange={(v) => set({ in_stock: v })} label="Active / In stock" />
             </div>
           </div>
