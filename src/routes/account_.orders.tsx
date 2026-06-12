@@ -133,6 +133,15 @@ type DisplayStatus = { key: string; label: string; badge: string; step: number }
 function displayStatus(o: Order): DisplayStatus {
   if (o.failed) return { key: "failed", label: "Payment Failed", badge: "bg-rose-500/10 text-rose-300 border-rose-500/30", step: 0 };
   const s = (o.status ?? "").toLowerCase();
+
+  // Returns / replacements take precedence so the order card never shows
+  // "Delivered" while a return or replacement is in flight or resolved.
+  const rv = getReturnView(o);
+  if (rv) {
+    const key = rv.kind === "replacement" ? "replacement" : rv.kind === "refund" ? "refunded" : "returned";
+    return { key, label: rv.label, badge: rv.badge, step: 0 };
+  }
+
   if (o.refundStatus && ["processed", "completed", "refunded", "succeeded"].includes(o.refundStatus.toLowerCase()))
     return { key: "refunded", label: "Refunded", badge: "bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30", step: 0 };
   if (s === "refunded") return { key: "refunded", label: "Refunded", badge: "bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30", step: 0 };
@@ -149,8 +158,15 @@ function displayStatus(o: Order): DisplayStatus {
 
 const ACTIVE_KEYS = ["confirmed", "processing", "shipped", "ofd"];
 
+// An order has an active (in-progress) return/replacement/refund.
+function hasActiveReturn(o: Order): boolean {
+  const rv = getReturnView(o);
+  return !!rv && rv.active;
+}
+
 function classify(o: Order, id: string): boolean {
   const k = displayStatus(o).key;
+  const rv = getReturnView(o);
   switch (id) {
     case "all": return true;
     case "active": return ACTIVE_KEYS.includes(k);
@@ -158,6 +174,8 @@ function classify(o: Order, id: string): boolean {
     case "in_transit": return k === "shipped" || k === "ofd";
     case "pending": return k === "confirmed" || k === "processing";
     case "refunded": return k === "refunded";
+    case "returns": return !!rv;
+    case "replacements": return rv?.kind === "replacement";
     default: return true;
   }
 }
@@ -168,6 +186,8 @@ const FILTERS = [
   { id: "delivered", label: "Delivered" },
   { id: "in_transit", label: "In Transit" },
   { id: "pending", label: "Pending" },
+  { id: "returns", label: "Returns" },
+  { id: "replacements", label: "Replacements" },
   { id: "refunded", label: "Refunded" },
   { id: "failed", label: "Failed Payments" },
 ] as const;
