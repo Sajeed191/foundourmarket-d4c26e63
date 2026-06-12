@@ -202,7 +202,7 @@ function ProductsInner() {
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
-  const [page, setPage] = useState(saved.page ?? 1);
+  const [page, setPage] = useState<number>(saved.page ?? 1);
   const PAGE_SIZE = 24;
   const [summary, setSummary] = useState<CatalogSummary | null>(null);
   const [skuBusy, setSkuBusy] = useState(false);
