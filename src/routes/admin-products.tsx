@@ -483,7 +483,7 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view]);
+  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view, catalogTab]);
 
   // Reset to first page whenever the filtered set changes
   useEffect(() => { setPage(1); }, [cat, state, stock, tag, searchTerm, sort, view]);
