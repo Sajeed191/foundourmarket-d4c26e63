@@ -658,6 +658,42 @@ function CompactTrack({ step }: { step: number }) {
   );
 }
 
+// Customer-facing return / replacement / refund timeline (highlights current stage).
+function ReturnMiniTimeline({ rv }: { rv: ReturnView }) {
+  if (rv.stage < 0) return null;
+  const steps =
+    rv.kind === "refund"
+      ? ["Requested", "Approved", "Refund Processing", "Refund Done", "Refunded"]
+      : rv.kind === "replacement"
+        ? ["Requested", "Approved", "Processing", "Shipped", "Delivered"]
+        : ["Requested", "Approved", "Processing", "Shipped", "Completed"];
+  return (
+    <div className="mt-3 rounded-xl border border-border/50 bg-background/40 p-2.5">
+      <div className="flex items-center">
+        {steps.map((label, i) => {
+          const done = i <= rv.stage;
+          const current = i === rv.stage;
+          return (
+            <div key={label} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className={`grid place-items-center size-5 rounded-full border text-[8px] transition-colors ${done ? "bg-accent/20 border-accent text-accent" : "bg-background border-border text-muted-foreground"} ${current ? "ring-2 ring-accent/40" : ""}`}>
+                  {done ? <Check className="size-2.5" /> : i + 1}
+                </div>
+                <span className={`text-[7px] sm:text-[8px] font-mono uppercase tracking-wide text-center leading-tight w-10 sm:w-12 ${current ? "text-accent font-semibold" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                  {label}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className={`h-px flex-1 mx-0.5 -mt-3 ${i < rv.stage ? "bg-accent/60" : "bg-border/60"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails }: {
   order: Order; index: number; format: (n: number) => string; onReorder: () => void; reordering: boolean; onOpenDetails: () => void;
 }) {
@@ -666,6 +702,8 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
   const itemCount = items.reduce((n, i) => n + i.quantity, 0);
   const isActive = ACTIVE_KEYS.includes(meta.key);
   const isDelivered = meta.key === "delivered";
+  const rv = getReturnView(order);
+  const activeReturn = !!rv && rv.active;
 
   return (
     <motion.li initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index, 8) * 0.03, duration: 0.3 }}>
@@ -686,6 +724,12 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
             <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
               #{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
             </p>
+            {rv && (
+              <p className="text-[10px] font-mono mt-0.5 truncate flex items-center gap-1 text-muted-foreground">
+                {rv.kind === "replacement" ? <Repeat className="size-2.5 text-accent" /> : <RotateCcw className="size-2.5 text-accent" />}
+                Requested {new Date(order.returnRec!.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+              </p>
+            )}
           </div>
           <div className="text-right shrink-0">
             <p className="font-mono text-sm font-semibold">{format(Number(order.total))}</p>
@@ -695,8 +739,8 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
           </div>
         </div>
 
-        {/* Compact tracking for active orders */}
-        {isActive && <CompactTrack step={meta.step} />}
+        {/* Return / replacement timeline takes priority over order tracking */}
+        {rv ? <ReturnMiniTimeline rv={rv} /> : isActive ? <CompactTrack step={meta.step} /> : null}
 
         {/* actions */}
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -706,12 +750,18 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
             className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
             View Details <ArrowRight className="size-3" />
           </button>
-          {isActive && (
+          {rv && (
+            <Link to="/account/returns" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-accent/40 text-accent hover:bg-accent/10 active:scale-95 transition">
+              <RotateCcw className="size-3" /> View Return Status
+            </Link>
+          )}
+          {isActive && !rv && (
             <Link to="/track" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
               <MapPin className="size-3" /> Track
             </Link>
           )}
-          {isDelivered && (
+          {/* Buy Again hidden while a return/replacement is being processed */}
+          {isDelivered && !activeReturn && (
             <button type="button" onClick={(e) => { e.stopPropagation(); onReorder(); }} disabled={reordering}
               className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition disabled:opacity-50">
               {reordering ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />} Buy Again
@@ -722,6 +772,7 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
     </motion.li>
   );
 }
+
 
 function FailedCard({ order, format, onRetry, listItem }: {
   order: Order; format: (n: number) => string; onRetry: () => void; listItem?: boolean;
