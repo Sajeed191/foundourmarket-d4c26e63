@@ -322,6 +322,9 @@ export function SectionEditor<T extends Record<string, any>>({
       setForm({ ...current }); // refresh dirty comparison
       setSaveState("saved");
       setLastSavedAt(new Date());
+      setJustSaved(true);
+      if (savedFlash.current) clearTimeout(savedFlash.current);
+      savedFlash.current = setTimeout(() => setJustSaved(false), 2000);
       logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
       invalidateProducts();
       if (!silent) toast.success(`${title} saved`);
