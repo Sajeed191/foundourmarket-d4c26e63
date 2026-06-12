@@ -156,6 +156,7 @@ function matchesTag(p: Product, tag: TagFilter): boolean {
     case "missing_images": return !(p.image && p.image.trim());
     case "missing_seo": return !p.seo_title || !p.seo_description;
     case "missing_desc": return !p.description || p.description.trim().length < 20;
+    case "missing_sku": return !(p.sku && p.sku.trim());
     default: return true;
   }
 }
