@@ -305,20 +305,27 @@ export function ProductVideoUploader({
 }) {
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [meta, setMeta] = useState<{ size: number; duration: number }>({ size: 0, duration: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  // Reset cached metadata when the underlying video changes/removes.
+  useEffect(() => { if (!value) setMeta({ size: 0, duration: 0 }); }, [value]);
 
   async function handleFile(file: File | null) {
     if (!file) return;
     setError(null);
-    if (!VIDEO_TYPES.includes(file.type)) { setError("Only MP4 or WEBM videos are supported"); return; }
+    if (!VIDEO_TYPES.includes(file.type)) { setError("Only MP4, WEBM or MOV videos are supported"); return; }
     if (file.size > MAX_VIDEO_MB * 1024 * 1024) { setError(`Video exceeds ${MAX_VIDEO_MB}MB`); return; }
     setProgress(0);
     try {
-      const ext = file.type === "video/webm" ? "webm" : "mp4";
+      const ext = VIDEO_EXT[file.type] ?? "mp4";
       const path = `product-video/${slug}/${crypto.randomUUID()}.${ext}`;
       const token = (await supabase.auth.getSession()).data.session?.access_token ?? SUPABASE_KEY;
       await xhrUpload("media", path, file, token, (p) => setProgress(p.total ? p.loaded / p.total : 0));
       const { data } = supabase.storage.from("media").getPublicUrl(path);
+      setMeta((m) => ({ ...m, size: file.size }));
       onChange(data.publicUrl);
       void logMediaEvent("upload", { entityType: "product", entityRef: slug, meta: { kind: "video", size: file.size } });
       toast.success("Video uploaded — save to apply");
@@ -330,40 +337,72 @@ export function ProductVideoUploader({
   }
 
   const uploading = progress !== null;
+  const accept = "video/mp4,video/webm,video/quicktime";
 
   return (
     <div className="space-y-3">
-      <input ref={fileRef} type="file" accept="video/mp4,video/webm" capture="environment" className="hidden"
+      <input ref={fileRef} type="file" accept={accept} className="hidden"
+        onChange={(e) => { handleFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+      <input ref={cameraRef} type="file" accept={accept} capture="environment" className="hidden"
         onChange={(e) => { handleFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
 
       {value ? (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <video src={resolveImage(value)} controls preload="metadata" className="aspect-video w-full bg-black" />
-          <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-white/[0.02] p-2.5">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Play className="size-3.5 text-accent" /> Product video attached
-            </span>
+          <video
+            src={resolveImage(value)} controls preload="metadata" className="aspect-video w-full bg-black"
+            onLoadedMetadata={(e) => setMeta((m) => ({ ...m, duration: e.currentTarget.duration }))}
+          />
+          <div className="space-y-2 border-t border-white/10 bg-white/[0.02] p-2.5">
+            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Play className="size-3.5 text-accent" /> Product video attached
+              </span>
+              <span className="flex items-center gap-2 font-mono">
+                <span>⏱ {formatDuration(meta.duration)}</span>
+                {meta.size > 0 && <span>· {formatBytes(meta.size)}</span>}
+              </span>
+            </div>
             <div className="flex gap-2">
               <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/20 disabled:opacity-40">
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/20 disabled:opacity-40">
                 <RefreshCw className="size-3.5" /> Replace
               </button>
               <button type="button" onClick={() => onChange("")} disabled={uploading}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 disabled:opacity-40">
-                <Trash2 className="size-3.5" /> Remove
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 disabled:opacity-40">
+                <Trash2 className="size-3.5" /> Delete
               </button>
             </div>
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-          className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-white/12 bg-white/[0.02] p-6 text-center transition-all hover:border-accent/40 disabled:opacity-60">
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); if (!uploading && e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]); }}
+          className={cn(
+            "flex w-full flex-col items-center gap-3 rounded-2xl border-2 border-dashed p-6 text-center transition-all",
+            dragging ? "border-accent bg-accent/10" : "border-white/12 bg-white/[0.02]",
+            uploading && "opacity-60 pointer-events-none",
+          )}
+        >
           <span className="grid size-11 place-items-center rounded-2xl border border-accent/30 bg-accent/10 text-accent">
             <Film className="size-5" />
           </span>
-          <span className="text-sm font-medium">Upload product video</span>
-          <span className="text-[11px] text-muted-foreground">MP4 · WEBM · up to {MAX_VIDEO_MB}MB · camera supported</span>
-        </button>
+          <div>
+            <p className="text-sm font-medium">Upload product video</p>
+            <p className="text-[11px] text-muted-foreground">MP4 · WEBM · MOV · up to {MAX_VIDEO_MB}MB · drag & drop on desktop</p>
+          </div>
+          <div className="flex w-full max-w-xs gap-2">
+            <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40">
+              <UploadCloud className="size-3.5" /> Gallery
+            </button>
+            <button type="button" disabled={uploading} onClick={() => cameraRef.current?.click()}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/12 bg-white/[0.03] px-3.5 py-2 text-xs font-medium text-muted-foreground transition-all hover:text-foreground hover:border-white/20 active:scale-[0.97] disabled:opacity-40">
+              <Camera className="size-3.5" /> Camera
+            </button>
+          </div>
+        </div>
       )}
 
       {uploading && (
@@ -384,5 +423,6 @@ export function ProductVideoUploader({
         </p>
       )}
     </div>
+
   );
 }
