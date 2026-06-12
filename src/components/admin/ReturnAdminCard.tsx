@@ -229,37 +229,50 @@ export function ReturnAdminCard({
           </dl>
         </section>
 
-        {/* Original Order Summary */}
+        {/* Original Order Summary (collapsible) */}
         <section className="rounded-xl border border-border/60 bg-background/40 p-3">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Receipt className="size-3.5 text-accent" /> Original Order
-          </p>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-xs">
-            <div>
-              <dt className="text-muted-foreground">Order ID</dt>
-              <dd className="font-mono font-medium mt-0.5">#{r.order_id.slice(0, 8)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><Receipt className="size-3" /> Order Total</dt>
-              <dd className="font-semibold mt-0.5">{fmtMoney(r.order.total, r.order.currency)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><CreditCard className="size-3" /> Payment</dt>
-              <dd className="font-medium mt-0.5 capitalize">{r.order.payment_status ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><Truck className="size-3" /> Delivery</dt>
-              <dd className="font-medium mt-0.5 capitalize">{r.order.fulfillment_status ?? r.order.order_status ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Delivery Date</dt>
-              <dd className="font-medium mt-0.5">{fmtDate(r.order.fulfilled_at)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Order Date</dt>
-              <dd className="font-medium mt-0.5">{fmtDate(r.order.created_at)}</dd>
-            </div>
-          </dl>
+          <button
+            type="button"
+            onClick={() => setOrderOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 min-h-[44px] text-left"
+            aria-expanded={orderOpen}
+          >
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Receipt className="size-3.5 text-accent" /> Original Order
+            </span>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+              <span className="font-mono">#{r.order_id.slice(0, 8)}</span>
+              <ChevronDown className={`size-4 shrink-0 transition-transform ${orderOpen ? "rotate-180" : ""}`} />
+            </span>
+          </button>
+          {orderOpen && (
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-xs mt-3 pt-3 border-t border-border/40">
+              <div>
+                <dt className="text-muted-foreground">Order ID</dt>
+                <dd className="font-mono font-medium mt-0.5">#{r.order_id.slice(0, 8)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><Receipt className="size-3" /> Order Total</dt>
+                <dd className="font-semibold mt-0.5">{fmtMoney(r.order.total, r.order.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><CreditCard className="size-3" /> Payment</dt>
+                <dd className="font-medium mt-0.5 capitalize">{r.order.payment_status ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><Truck className="size-3" /> Delivery</dt>
+                <dd className="font-medium mt-0.5 capitalize">{r.order.fulfillment_status ?? r.order.order_status ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Delivery Date</dt>
+                <dd className="font-medium mt-0.5">{fmtDate(r.order.fulfilled_at)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Order Date</dt>
+                <dd className="font-medium mt-0.5">{fmtDate(r.order.created_at)}</dd>
+              </div>
+            </dl>
+          )}
         </section>
 
         {/* Customer (collapsible) */}
