@@ -837,7 +837,7 @@ function OrderOpsPage() {
         {/* SECTION 5 — DELIVERY MONITOR */}
         <section>
           <SectionHeader title="Delivery Monitor" sub="Live shipping & delivery health" icon={<Truck className="size-5 text-accent" />} />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             <MiniStat label="Shipped Today" value={num(shippedToday)} icon={<Truck className="size-3.5" />} />
             <MiniStat label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-3.5" />} tone={f.delayedCount > 0 ? "attn" : "normal"} />
             <MiniStat label="Delivered Today" value={num(deliveredTodayN)} icon={<Check className="size-3.5" />} tone="calm" />
@@ -845,200 +845,48 @@ function OrderOpsPage() {
           </div>
         </section>
 
-        {/* SECTION 6 — SUPPORT CENTER */}
-        <section className="rounded-3xl border border-border/60 bg-card/30 p-4 sm:p-6">
-          <SectionHeader title="Support Center" sub="Customer conversations, kept separate from fulfilment" icon={<LifeBuoy className="size-5 text-accent" />} />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <MiniStat label="Open Tickets" value={num(openTickets)} icon={<LifeBuoy className="size-3.5" />} tone={openTickets > 0 ? "attn" : "normal"} />
-            <MiniStat label="Urgent Tickets" value={num(urgentTickets)} icon={<AlertTriangle className="size-3.5" />} tone={urgentTickets > 0 ? "attn" : "normal"} />
-            <MiniStat label="Resolved" value={num(resolvedTickets)} icon={<Check className="size-3.5" />} tone="calm" />
+        {/* SECTION 6 — RETURNS OVERVIEW */}
+        <section>
+          <SectionHeader title="Returns Overview" sub="Replacement-first resolution pipeline" icon={<RotateCcw className="size-5 text-accent" />} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+            {returnsBuckets.map((b) => (
+              <OverviewStat
+                key={b.label}
+                label={b.label}
+                value={b.value}
+                icon={b.icon}
+                tone={b.value > 0 ? "attn" : "normal"}
+                onClick={() => focusOrders(b.label, b.orders)}
+              />
+            ))}
           </div>
         </section>
 
-        {/* Integrity monitor preserved */}
-        <OrderIntegrityMonitor />
-
-        {/* Advanced analytics — full detail preserved */}
-        <section>
-          <SectionHeader title="Advanced Analytics" sub="Deep operational reporting" icon={<Zap className="size-5 text-accent" />} />
-          <Tabs defaultValue="fulfillment">
-            <TabsList className="flex-wrap h-auto">
-              <TabsTrigger value="fulfillment">Fulfilment</TabsTrigger>
-              <TabsTrigger value="delivery">Delivery</TabsTrigger>
-              <TabsTrigger value="returns">Returns &amp; Refunds</TabsTrigger>
-              <TabsTrigger value="staff">Staff</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-            </TabsList>
-
-            {/* FULFILMENT */}
-            <TabsContent value="fulfillment" className="space-y-5 mt-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KpiCard label="Avg Processing" value={f.avgProcessingHours != null ? `${f.avgProcessingHours.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
-                <KpiCard label="Avg Delivery" value={f.avgDeliveryDays != null ? `${f.avgDeliveryDays.toFixed(1)}d` : "—"} icon={<Truck className="size-4" />} />
-                <KpiCard label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-4" />} />
-                <KpiCard label="In Transit" value={num(ords.filter((o) => o.shipped_at && !o.delivered_at).length)} icon={<Zap className="size-4" />} />
-              </div>
-              <div className="grid md:grid-cols-2 gap-3">
-                <Card title="Fastest deliveries" icon={<Zap className="size-4 text-emerald-400" />}>
-                  <div className="space-y-1">{f.fastest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-emerald-400 tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.fastest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
-                </Card>
-                <Card title="Slowest deliveries" icon={<Clock className="size-4 text-destructive" />}>
-                  <div className="space-y-1">{f.slowest.map((o) => <div key={o.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">#{o.id.slice(0, 8)} · {o.full_name ?? "Guest"}</span><span className="text-destructive tabular-nums">{o.deliveryDays?.toFixed(1)}d</span></div>)}{f.slowest.length === 0 && <p className="text-xs text-muted-foreground">No delivered orders yet</p>}</div>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* DELIVERY */}
-            <TabsContent value="delivery" className="space-y-5 mt-4">
-              <Card title="Courier performance" icon={<Truck className="size-4 text-accent" />}>
-                <div className="space-y-3">
-                  {data.courierPerformance.map((c) => (
-                    <div key={c.courier}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-medium">{c.courier}</span>
-                        <span className="text-muted-foreground">{c.shipments} shipments · {c.successRate}% success · {c.returnRate}% return · {c.avg_days != null ? `${c.avg_days.toFixed(1)}d` : "—"} · quality {c.quality}</span>
-                      </div>
-                      <Bar value={c.shipments} max={maxCourier} color={c.quality >= 70 ? "bg-emerald-400" : c.quality >= 50 ? "bg-amber-400" : "bg-destructive"} />
-                    </div>
-                  ))}
-                  {data.courierPerformance.length === 0 && <p className="text-xs text-muted-foreground">No shipment data yet</p>}
-                </div>
-              </Card>
-              <Card title="Region performance" icon={<Globe className="size-4 text-accent" />}>
-                <div className="space-y-3">
-                  {data.regionPerformance.map((r) => (
-                    <div key={r.region}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-medium">{r.region}</span>
-                        <span className="text-muted-foreground">{r.orders} orders · {inr(r.revenue)} · {r.returnRate}% return</span>
-                      </div>
-                      <Bar value={r.orders} max={maxRegion} />
-                    </div>
-                  ))}
-                  {data.regionPerformance.length === 0 && <p className="text-xs text-muted-foreground">No region data yet</p>}
-                </div>
-              </Card>
-            </TabsContent>
-
-            {/* RETURNS & REFUNDS */}
-            <TabsContent value="returns" className="space-y-5 mt-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KpiCard label="Returns" value={num(k.returned)} icon={<RotateCcw className="size-4" />} />
-                <KpiCard label="Return Rate" value={`${data.returnRate}%`} icon={<ArrowDownRight className="size-4" />} />
-                <KpiCard label="Refunded Orders" value={num(k.refunded)} icon={<Wallet className="size-4" />} />
-                <KpiCard label="Refund Total" value={inr(k.refund_total)} icon={<ArrowDownRight className="size-4" />} />
-              </div>
-              <div className="grid md:grid-cols-2 gap-3">
-                <Card title="Return reasons" icon={<RotateCcw className="size-4 text-accent" />}>
-                  <div className="space-y-3">
-                    {data.returnReasons.map((r) => (
-                      <div key={r.reason}>
-                        <div className="flex items-center justify-between text-xs mb-1"><span className="truncate">{r.reason}</span><span className="text-muted-foreground tabular-nums">{r.cnt}</span></div>
-                        <Bar value={r.cnt} max={maxReason} color="bg-orange-400" />
-                      </div>
-                    ))}
-                    {data.returnReasons.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
-                  </div>
-                </Card>
-                <Card title="Most returned products" icon={<Package className="size-4 text-accent" />}>
-                  <div className="space-y-1">
-                    {data.topReturned.map((p) => <div key={p.slug} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0"><span className="truncate">{p.name ?? p.slug}</span><span className="text-muted-foreground tabular-nums">{p.cnt}</span></div>)}
-                    {data.topReturned.length === 0 && <p className="text-xs text-muted-foreground">No returns yet</p>}
-                  </div>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* STAFF */}
-            <TabsContent value="staff" className="space-y-5 mt-4">
-              <Card title="Support performance" icon={<Users className="size-4 text-accent" />}>
-                <div className="space-y-1">
-                  {data.staffSupport.map((s) => (
-                    <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
-                      <Avatar name={s.full_name} url={s.avatar_url} size={30} />
-                      <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{s.tickets_resolved}/{s.tickets_handled} resolved</p></div>
-                      <span className="text-[11px] text-muted-foreground">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h avg` : "—"}</span>
-                    </div>
-                  ))}
-                  {data.staffSupport.length === 0 && <p className="text-xs text-muted-foreground">No staff ticket data yet</p>}
-                </div>
-              </Card>
-              <Card title="Admin activity" icon={<Zap className="size-4 text-accent" />}>
-                <div className="space-y-1">
-                  {data.staffActivity.map((s) => (
-                    <div key={s.uid} className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0">
-                      <Avatar name={s.full_name} url={s.avatar_url} size={30} />
-                      <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{s.full_name ?? "Staff"}</p><p className="text-[11px] text-muted-foreground">{timeAgo(s.last_action)}</p></div>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">{num(s.actions)} actions</span>
-                    </div>
-                  ))}
-                  {data.staffActivity.length === 0 && <p className="text-xs text-muted-foreground">No admin activity yet</p>}
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="performance" className="space-y-5 mt-4">
-              {(() => {
-                const totPacked = staffPerf.reduce((a, s) => a + s.packed, 0);
-                const totShipped = staffPerf.reduce((a, s) => a + s.shipped, 0);
-                const totRefunds = staffPerf.reduce((a, s) => a + s.refunds_handled, 0);
-                const hrs = staffPerf.map((s) => s.avg_handling_hours).filter((h): h is number => h != null);
-                const avgHrs = hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : null;
-                return (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <KpiCard label="Packed" value={num(totPacked)} icon={<Package className="size-4" />} />
-                    <KpiCard label="Shipped" value={num(totShipped)} icon={<Truck className="size-4" />} />
-                    <KpiCard label="Refunds Handled" value={num(totRefunds)} icon={<RotateCcw className="size-4" />} />
-                    <KpiCard label="Avg Handling" value={avgHrs != null ? `${avgHrs.toFixed(1)}h` : "—"} icon={<Clock className="size-4" />} />
-                  </div>
-                );
-              })()}
-              <Card title="Staff performance" icon={<Gauge className="size-4 text-accent" />}
-                actions={<span className="text-[11px] text-muted-foreground">{staffPerf.length} staff · fulfilment KPIs</span>}>
-                {staffPerf.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No fulfilment activity recorded yet. Packed, shipped and refund actions appear here as staff process orders.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="text-muted-foreground border-b border-border/60">
-                          <th className="text-left font-medium py-2 pr-3">Staff</th>
-                          <th className="text-right font-medium py-2 px-3">Packed</th>
-                          <th className="text-right font-medium py-2 px-3">Shipped</th>
-                          <th className="text-right font-medium py-2 px-3">Refunds</th>
-                          <th className="text-right font-medium py-2 px-3">Actions</th>
-                          <th className="text-right font-medium py-2 px-3">Avg Handling</th>
-                          <th className="text-right font-medium py-2 pl-3">Last Active</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {staffPerf.map((s) => (
-                          <tr key={s.uid} className="border-b border-border/40 last:border-0">
-                            <td className="py-2 pr-3">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <Avatar name={s.full_name} url={s.avatar_url} size={26} />
-                                <div className="min-w-0">
-                                  <p className="font-medium truncate">{s.full_name ?? "Staff"}</p>
-                                  <p className="text-[10px] text-muted-foreground truncate">{s.roles.join(", ") || "—"}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="text-right tabular-nums py-2 px-3">{num(s.packed)}</td>
-                            <td className="text-right tabular-nums py-2 px-3">{num(s.shipped)}</td>
-                            <td className="text-right tabular-nums py-2 px-3">{num(s.refunds_handled)}</td>
-                            <td className="text-right tabular-nums py-2 px-3">{num(s.total_actions)}</td>
-                            <td className="text-right tabular-nums py-2 px-3">{s.avg_handling_hours != null ? `${s.avg_handling_hours.toFixed(1)}h` : "—"}</td>
-                            <td className="text-right text-muted-foreground py-2 pl-3">{timeAgo(s.last_action)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-          </Tabs>
+        {/* SECTION 7 — SUPPORT CENTER */}
+        <section className="rounded-3xl border border-border/60 bg-card/30 p-4 sm:p-6">
+          <SectionHeader title="Support Center" sub="Customer conversations, kept separate from fulfilment" icon={<LifeBuoy className="size-5 text-accent" />} />
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+            <MiniStat label="Open Tickets" value={num(openTickets)} icon={<LifeBuoy className="size-3.5" />} tone={openTickets > 0 ? "attn" : "normal"} />
+            <MiniStat label="Urgent Tickets" value={num(urgentTickets)} icon={<AlertTriangle className="size-3.5" />} tone={urgentTickets > 0 ? "attn" : "normal"} />
+            <MiniStat label="Resolved" value={num(resolvedTickets)} icon={<Check className="size-3.5" />} tone="calm" />
+            <MiniStat label="Return Cases" value={num(returnOrders.length)} icon={<RotateCcw className="size-3.5" />} tone={returnOrders.length > 0 ? "attn" : "normal"} />
+          </div>
         </section>
+
+        {/* ADVANCED ANALYTICS — moved to dedicated page */}
+        <Link
+          to="/admin-orders-analytics"
+          className="flex items-center justify-between gap-3 card-premium rounded-2xl p-4 sm:p-5 hover:border-accent/40 transition-colors min-h-[60px]"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"><BarChart3 className="size-5" /></span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">Advanced Analytics</p>
+              <p className="text-[12px] text-muted-foreground truncate">Fulfilment, delivery, returns & staff reporting</p>
+            </div>
+          </div>
+          <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+        </Link>
       </div>
 
       {sel && <OrderDrawer o={sel} onClose={() => setSel(null)} onRefresh={refresh} />}
