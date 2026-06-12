@@ -203,7 +203,18 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     if (Object.keys(patch).length === 0) {
       throw new Error("Nothing to update.");
     }
+    // Enforce SKU uniqueness across the catalog.
+    if (typeof patch.sku === "string" && patch.sku.trim()) {
+      const { data: dupe } = await supabase
+        .from("products")
+        .select("slug")
+        .ilike("sku", patch.sku.trim())
+        .neq("slug", data.slug)
+        .limit(1);
+      if (dupe && dupe.length) throw new Error(`SKU "${patch.sku}" is already used by another product.`);
+    }
     patch.updated_at = new Date().toISOString();
+
 
     const { error } = await supabase
       .from("products")

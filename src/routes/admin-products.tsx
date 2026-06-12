@@ -39,6 +39,7 @@ type Product = {
   sort_order: number; created_at: string; updated_at?: string | null;
   price_inr: number | null; compare_price_inr: number | null;
   price_usd: number | null; compare_price_usd: number | null;
+  cost_price_inr?: number | null; cost_price_usd?: number | null;
   india_visible: boolean; international_visible: boolean;
   status?: string | null;
   tags?: string[] | null; features?: string[] | null; meta_keywords?: string[] | null;
@@ -59,6 +60,8 @@ const usd = (v: number) =>
 // Effective sell price: catalog stores the live price in price_inr; the legacy
 // `price` column is 0 for imported products, so always prefer price_inr.
 const priceOf = (p: Product) => Number(p.price_inr ?? p.price) || 0;
+// Effective unit cost: prefer cost_price_inr; fall back to legacy cost. Null-safe.
+const costOf = (p: Product) => Number(p.cost_price_inr ?? p.cost) || 0;
 
 
 
