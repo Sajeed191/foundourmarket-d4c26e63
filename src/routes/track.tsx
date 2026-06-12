@@ -137,6 +137,20 @@ function TrackPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Prefill order ID from URL query param (e.g. scanned invoice QR).
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const oid = params.get("order");
+      if (oid) {
+        setOrderId(oid);
+        // Scroll to form so user sees the pre-filled field.
+        const form = document.querySelector("form");
+        if (form) form.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   // Real-time polling — refetch every 6s while a tracking session is active
   const liveQuery = useQuery({
     queryKey: ["track-live", active?.orderId, active?.email],

@@ -68,8 +68,10 @@ export function buildInvoiceHTML(d: InvoiceData): string {
   });
   const cod = isCod(d);
   const cashAmount = money(d.total, cur);
+  const shortId = d.orderId.replace(/-/g, "").slice(0, 8);
+  const trackingUrl = `https://foundourmarket.com/track?order=${encodeURIComponent(shortId)}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(
-    d.orderId,
+    trackingUrl,
   )}`;
 
   const rows = d.items
