@@ -75,47 +75,79 @@ export const Route = createFileRoute("/products/$slug")({
   head: ({ params, loaderData }) => {
     const p = loaderData?.product;
     const url = `https://foundourmarket.com/products/${params.slug}`;
-    const title = p ? `${p.name} — FoundOurMarket™` : `${params.slug} — FoundOurMarket™`;
+    // Prefer stored, auto-generated SEO fields; never overwrite — only fall back.
+    const title = p
+      ? (p.seoTitle?.trim() || `${p.name} | FoundOurMarket`)
+      : `${params.slug} | FoundOurMarket`;
     const description = p
-      ? (p.description?.slice(0, 160) || `${p.name} — ${p.tagline}. Shop ${p.category} on FoundOurMarket with secure checkout and worldwide delivery.`)
+      ? (p.seoDescription?.trim()
+          || p.description?.slice(0, 160)
+          || `${p.name} — ${p.tagline}. Shop ${p.category} on FoundOurMarket with secure checkout and worldwide delivery.`)
       : "Shop premium products on FoundOurMarket with secure checkout and worldwide delivery.";
+    const imageAlt = p ? `${p.name} — Product Image` : "Product Image";
+    const keywords = p?.metaKeywords?.length ? p.metaKeywords.join(", ") : undefined;
     const meta: Array<Record<string, string>> = [
       { title },
       { name: "description", content: description },
+      ...(keywords ? [{ name: "keywords", content: keywords }] : []),
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "product" },
       { property: "og:url", content: url },
+      { property: "og:site_name", content: "FoundOurMarket" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+      { name: "twitter:card", content: "summary_large_image" },
     ];
     if (p?.image) {
       const previewImage = toPreviewImage(p.image);
       meta.push({ property: "og:image", content: previewImage });
+      meta.push({ property: "og:image:alt", content: imageAlt });
       meta.push({ property: "og:image:width", content: "800" });
       meta.push({ name: "twitter:image", content: previewImage });
-      meta.push({ name: "twitter:card", content: "summary_large_image" });
+      meta.push({ name: "twitter:image:alt", content: imageAlt });
     }
+    const hasRating = !!p && Number(p.reviews) > 0 && Number(p.rating) > 0;
+    const productLd: Record<string, unknown> | null = p
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: p.name,
+          image: p.image ? [p.image] : undefined,
+          description: p.seoDescription || p.description || p.tagline,
+          category: p.category,
+          sku: p.sku ?? undefined,
+          mpn: p.sku ?? undefined,
+          brand: { "@type": "Brand", name: p.brand?.trim() || "FoundOurMarket" },
+          url,
+          offers: {
+            "@type": "Offer",
+            price: p.price,
+            priceCurrency: "USD",
+            availability: p.inStock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            url,
+            seller: { "@type": "Organization", name: "FoundOurMarket" },
+          },
+          ...(hasRating
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: Number(p.rating).toFixed(1),
+                  reviewCount: p.reviews,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
+        }
+      : null;
     const scripts = p
       ? [
           {
             type: "application/ld+json",
-            children: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Product",
-              name: p.name,
-              image: p.image,
-              description: p.description || p.tagline,
-              category: p.category,
-              sku: p.sku ?? undefined,
-              offers: {
-                "@type": "Offer",
-                price: p.price,
-                priceCurrency: "USD",
-                availability: p.inStock
-                  ? "https://schema.org/InStock"
-                  : "https://schema.org/OutOfStock",
-                url,
-              },
-            }),
+            children: JSON.stringify(productLd),
           },
           {
             type: "application/ld+json",
