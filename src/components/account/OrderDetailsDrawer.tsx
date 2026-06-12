@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { cancelMyOrderFn } from "@/lib/order-cancel.functions";
+import { ReturnRequestDialog } from "@/components/site/ReturnRequestDialog";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import {
   X, Loader2, Package, Truck, MapPin, CheckCircle2, Clock, Boxes, RefreshCw,
@@ -21,6 +24,7 @@ type FullOrder = {
   currency: string; promo_code: string | null; contact_email: string | null; payment_method: string | null;
   payment_status: string | null; fulfillment_status: string | null; tracking_number: string | null; carrier: string | null;
   shipping_address: Address; razorpay_order_id: string | null; razorpay_payment_id: string | null;
+  cancel_window_expires_at: string | null;
   created_at: string; updated_at: string; order_items: OrderItem[];
 };
 type ShipmentEvent = { id: string; status: string; description: string | null; location: string | null; occurred_at: string };
@@ -73,6 +77,10 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [ticketing, setTicketing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const cancelOrderFn = useServerFn(cancelMyOrderFn);
   const reqRef = useRef<string | null>(null);
 
   async function load(id: string, useCache = true) {
@@ -81,7 +89,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     reqRef.current = id;
     const [orderRes, shipRes, payRes, refRes, retRes, notifRes] = await Promise.all([
       supabase.from("orders")
-        .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,payment_status,fulfillment_status,tracking_number,carrier,shipping_address,razorpay_order_id,razorpay_payment_id,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
+        .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,payment_status,fulfillment_status,tracking_number,carrier,shipping_address,razorpay_order_id,razorpay_payment_id,cancel_window_expires_at,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
         .eq("id", id).maybeSingle(),
       supabase.from("shipments")
         .select("id,status,carrier,tracking_number,tracking_url,shipped_at,packed_at,delivered_at,actual_delivery,estimated_delivery,shipment_events(id,status,description,location,occurred_at)")
@@ -150,6 +158,13 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
   // lock body scroll while open
   useEffect(() => {
     if (orderId) { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }
+  }, [orderId]);
+
+  // tick every 30s so the cancel/return windows expire live without a reload
+  useEffect(() => {
+    if (!orderId) return;
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
   }, [orderId]);
 
   const order = data?.order ?? null;
@@ -237,15 +252,50 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     if (info.offset.y > 140 || info.velocity.y > 700) onClose();
   }
 
+  async function handleCancel() {
+    if (!order) return;
+    if (!window.confirm("Cancel this order? This cannot be undone.")) return;
+    setCancelling(true);
+    try {
+      await cancelOrderFn({ data: { orderId: order.id } });
+      toast.success("Order cancelled");
+      load(order.id, false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not cancel order");
+    } finally { setCancelling(false); }
+  }
+
   const refundEligible = data ? (data.returnWindowDays > 0) : false;
   const windowRemaining = (() => {
     if (!order || !refundEligible) return null;
     const delivered = shipment?.delivered_at ?? shipment?.actual_delivery;
     if (!delivered) return "Available after delivery";
     const end = new Date(delivered); end.setDate(end.getDate() + data!.returnWindowDays);
-    const days = Math.ceil((end.getTime() - Date.now()) / 864e5);
+    const days = Math.ceil((end.getTime() - now) / 864e5);
     return days > 0 ? `${days} day${days !== 1 ? "s" : ""} left` : "Window closed";
   })();
+
+  // Cancel button: only pending/confirmed orders, within the 1-hour window.
+  const cancellable = (() => {
+    if (!order) return false;
+    const s = (order.status ?? "").toLowerCase();
+    if (!["pending", "confirmed"].includes(s)) return false;
+    const expires = order.cancel_window_expires_at
+      ? new Date(order.cancel_window_expires_at).getTime()
+      : new Date(order.created_at).getTime() + 3_600_000;
+    return now < expires;
+  })();
+
+  // Return button: delivered orders, eligible products, within the return window.
+  const returnWindowOpen = (() => {
+    if (!order || !refundEligible || ret) return false;
+    const delivered = shipment?.delivered_at ?? shipment?.actual_delivery
+      ?? ((order.status ?? "").toLowerCase() === "delivered" ? order.updated_at : null);
+    if (!delivered) return false;
+    const end = new Date(delivered).getTime() + data!.returnWindowDays * 864e5;
+    return now < end;
+  })();
+
 
   return (
     <AnimatePresence>
@@ -505,16 +555,39 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
 
             {/* sticky action bar */}
             {order && (
-              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 py-3 flex gap-2">
-                <button onClick={handleReorder}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
-                  <RefreshCw className="size-3.5" /> Reorder
-                </button>
-                <Link to="/track" onClick={onClose}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
-                  <MapPin className="size-3.5" /> Track
-                </Link>
+              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 py-3 flex flex-col gap-2">
+                {cancellable && (
+                  <button onClick={handleCancel} disabled={cancelling}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25 active:scale-95 transition disabled:opacity-50">
+                    {cancelling ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />} Cancel Order
+                  </button>
+                )}
+                {returnWindowOpen && (
+                  <button onClick={() => setReturnOpen(true)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-accent/40 text-accent hover:bg-accent/10 active:scale-95 transition">
+                    <RotateCcw className="size-3.5" /> Request Return{windowRemaining ? ` · ${windowRemaining}` : ""}
+                  </button>
+                )}
+                <div className="flex gap-2">
+                  <button onClick={handleReorder}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
+                    <RefreshCw className="size-3.5" /> Reorder
+                  </button>
+                  <Link to="/track" onClick={onClose}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
+                    <MapPin className="size-3.5" /> Track
+                  </Link>
+                </div>
               </div>
+            )}
+            {order && user && (
+              <ReturnRequestDialog
+                open={returnOpen}
+                onOpenChange={setReturnOpen}
+                orderId={order.id}
+                userId={user.id}
+                items={order.order_items}
+              />
             )}
           </motion.div>
         </>
