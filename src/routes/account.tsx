@@ -49,6 +49,8 @@ type Return = {
   status: string;
   refund_status: string;
   refund_amount: number | null;
+  resolution_type: string;
+  replacement_status: string;
   created_at: string;
 };
 
