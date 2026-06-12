@@ -763,7 +763,88 @@ function ProductsInner() {
             <AlertTriangle className="size-3" /> {catalogHealth.duplicates} possible duplicate products (same name)
           </p>
         )}
+
+        {/* SKU Operations Center */}
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Tag className="size-4 text-accent" />
+            <h3 className="text-sm font-display">SKU Operations Center</h3>
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground">FOM-000001</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
+            <IntelStat label="Missing SKU" value={String(skuStats.missing)} accent={skuStats.missing > 0} />
+            <IntelStat label="Duplicate SKU" value={String(skuStats.duplicateSku)} accent={skuStats.duplicateSku > 0} />
+            <IntelStat label="Coverage" value={`${skuStats.coverage}%`} />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <button onClick={handleGenerateSkus} disabled={skuBusy || skuStats.missing === 0}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-accent text-accent-foreground font-semibold px-3 py-2 text-[10px] uppercase tracking-widest hover:brightness-110 disabled:opacity-40">
+              {skuBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} Generate Missing SKUs
+            </button>
+            <button onClick={() => { setTag("missing_sku"); }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
+              <Eye className="size-3.5" /> Review Missing SKUs
+            </button>
+            <button onClick={exportSkuReport}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
+              <Download className="size-3.5" /> Export SKU Report
+            </button>
+          </div>
+        </div>
       </CollapsibleModule>
+
+      {/* 5b. Duplicate Product Review — detection only, never auto-merge/delete */}
+      {duplicateReview.length > 0 && (
+        <CollapsibleModule
+          eyebrow="Operations"
+          title="Duplicate Product Review"
+          sectionId="products-duplicate-review"
+          defaultOpen={false}
+          badge={
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 px-2.5 py-1 text-[10px] font-mono">
+              <AlertTriangle className="size-3" /> {duplicateReview.length} group{duplicateReview.length === 1 ? "" : "s"}
+            </span>
+          }
+        >
+          <div className="space-y-3">
+            {duplicateReview.map((g) => (
+              <div key={g.name} className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-medium truncate">{g.name}</p>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-amber-400">{g.count} copies</span>
+                  <button onClick={() => { setQuery(g.name); setView("active"); }}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-widest hover:bg-white/5">
+                    <Search className="size-3" /> Review
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {g.items.map((it) => (
+                    <div key={it.id} className="flex items-center gap-2.5 rounded-xl border border-white/10 p-2">
+                      <div className="size-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                        <img src={resolveImage(it.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-mono text-muted-foreground truncate">ID {it.id.slice(0, 8)}…</p>
+                        <p className="text-[9px] font-mono text-muted-foreground/70">
+                          Stock {it.stock} · {new Date(it.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button onClick={() => navigate({ to: "/admin-product/$slug", params: { slug: it.slug } })}
+                        title="Open product"
+                        className="size-7 grid place-items-center rounded-full border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-foreground shrink-0">
+                        <ExternalLink className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <p className="text-[9px] font-mono text-muted-foreground flex items-center gap-1.5">
+              <ShieldCheck className="size-3" /> Detection only — products are never auto-merged or deleted.
+            </p>
+          </div>
+        </CollapsibleModule>
+      )}
 
       {/* 6. Product Analytics — collapsible, bottom */}
       <CollapsibleModule eyebrow="Insights" title="Product Analytics" sectionId="products-analytics" defaultOpen={false}>
