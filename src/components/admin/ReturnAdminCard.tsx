@@ -427,7 +427,7 @@ export function ReturnAdminCard({
             </button>
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className={`grid grid-cols-1 gap-2 ${resolution === "refund" ? "sm:grid-cols-3" : ""}`}>
           <select
             value={r.status}
             onChange={(e) => onUpdate(r.id, { status: e.target.value })}
@@ -435,21 +435,25 @@ export function ReturnAdminCard({
           >
             {RETURN_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <input
-            type="number"
-            step="0.01"
-            defaultValue={r.refund_amount}
-            placeholder="Refund"
-            onBlur={(e) => Number(e.target.value) !== Number(r.refund_amount) && onUpdate(r.id, { refund_amount: Number(e.target.value) })}
-            className="bg-background border border-border rounded-md px-3 py-2 min-h-[44px] text-xs focus:outline-none focus:border-accent font-mono"
-          />
-          <select
-            value={r.refund_status}
-            onChange={(e) => onUpdate(r.id, { refund_status: e.target.value })}
-            className="bg-background border border-border rounded-md px-3 py-2 min-h-[44px] text-[10px] font-mono uppercase tracking-widest text-accent focus:outline-none focus:border-accent"
-          >
-            {REFUND_STATUSES.map((s) => <option key={s} value={s}>refund: {s}</option>)}
-          </select>
+          {resolution === "refund" && (
+            <>
+              <input
+                type="number"
+                step="0.01"
+                defaultValue={r.refund_amount}
+                placeholder="Refund"
+                onBlur={(e) => Number(e.target.value) !== Number(r.refund_amount) && onUpdate(r.id, { refund_amount: Number(e.target.value) })}
+                className="bg-background border border-border rounded-md px-3 py-2 min-h-[44px] text-xs focus:outline-none focus:border-accent font-mono"
+              />
+              <select
+                value={r.refund_status}
+                onChange={(e) => onUpdate(r.id, { refund_status: e.target.value })}
+                className="bg-background border border-border rounded-md px-3 py-2 min-h-[44px] text-[10px] font-mono uppercase tracking-widest text-accent focus:outline-none focus:border-accent"
+              >
+                {REFUND_STATUSES.map((s) => <option key={s} value={s}>refund: {s}</option>)}
+              </select>
+            </>
+          )}
         </div>
       </div>
     </div>
