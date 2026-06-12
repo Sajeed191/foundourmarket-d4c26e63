@@ -40,10 +40,10 @@ const TRUST = [
 ];
 
 const POLICY_NOTES = [
-  "Returns are available only for selected products within 4 days of successful delivery.",
-  "Clearance, hygiene-sensitive, customized, and protected seller items may not qualify.",
-  "Damaged or defective items are eligible for replacement or full refund within the window.",
-  "Refunds are processed back to your original payment method within 5–7 business days.",
+  "FoundOurMarket operates on a replacement-first policy — eligible items are replaced rather than refunded.",
+  "Eligible products may be returned within 4 days of successful delivery.",
+  "You can request a replacement if the product is defective, damaged, the wrong item, or doesn't fit.",
+  "Refunds are issued only when a replacement is unavailable, and all refund requests are subject to review and approval.",
 ];
 
 const SUPPORT_OPTIONS = [
