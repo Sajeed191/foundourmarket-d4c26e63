@@ -171,8 +171,8 @@ export function ReturnRequestDialog({
             <RotateCcw className="size-4 text-accent" /> Request a return
           </DialogTitle>
           <DialogDescription>
-            Returns are accepted within 4 days of delivery. Tell us what's wrong and
-            attach photos if helpful.
+            FoundOurMarket operates on a replacement-first policy. Requests are accepted
+            within 4 days of delivery. Tell us what's wrong and attach photos if helpful.
           </DialogDescription>
         </DialogHeader>
 
