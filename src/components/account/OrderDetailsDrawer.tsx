@@ -160,6 +160,13 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     if (orderId) { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }
   }, [orderId]);
 
+  // tick every 30s so the cancel/return windows expire live without a reload
+  useEffect(() => {
+    if (!orderId) return;
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, [orderId]);
+
   const order = data?.order ?? null;
   const shipment = data?.shipments?.[0] ?? null;
   const refund = data?.refunds?.[0] ?? null;
