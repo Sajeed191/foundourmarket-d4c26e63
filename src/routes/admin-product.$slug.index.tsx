@@ -54,7 +54,14 @@ const DESC: Record<string, string> = {
   preview: "See exactly how buyers view it",
 };
 
-const SECTION_TO = (key: string) => `/admin-product/$slug/${key}` as const;
+const FIX_TO = {
+  details: "/admin-product/$slug/details",
+  pricing: "/admin-product/$slug/pricing",
+  inventory: "/admin-product/$slug/inventory",
+  seo: "/admin-product/$slug/seo",
+  analytics: "/admin-product/$slug/analytics",
+} as const;
+type FixKey = keyof typeof FIX_TO;
 
 function OverviewPage() {
   const { slug } = Route.useParams();
