@@ -555,16 +555,39 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
 
             {/* sticky action bar */}
             {order && (
-              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 py-3 flex gap-2">
-                <button onClick={handleReorder}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
-                  <RefreshCw className="size-3.5" /> Reorder
-                </button>
-                <Link to="/track" onClick={onClose}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
-                  <MapPin className="size-3.5" /> Track
-                </Link>
+              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 py-3 flex flex-col gap-2">
+                {cancellable && (
+                  <button onClick={handleCancel} disabled={cancelling}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25 active:scale-95 transition disabled:opacity-50">
+                    {cancelling ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />} Cancel Order
+                  </button>
+                )}
+                {returnWindowOpen && (
+                  <button onClick={() => setReturnOpen(true)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-accent/40 text-accent hover:bg-accent/10 active:scale-95 transition">
+                    <RotateCcw className="size-3.5" /> Request Return{windowRemaining ? ` · ${windowRemaining}` : ""}
+                  </button>
+                )}
+                <div className="flex gap-2">
+                  <button onClick={handleReorder}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-accent text-accent-foreground active:scale-95 transition">
+                    <RefreshCw className="size-3.5" /> Reorder
+                  </button>
+                  <Link to="/track" onClick={onClose}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
+                    <MapPin className="size-3.5" /> Track
+                  </Link>
+                </div>
               </div>
+            )}
+            {order && user && (
+              <ReturnRequestDialog
+                open={returnOpen}
+                onOpenChange={setReturnOpen}
+                orderId={order.id}
+                userId={user.id}
+                items={order.order_items}
+              />
             )}
           </motion.div>
         </>
