@@ -195,6 +195,8 @@ type Row = {
   orders_count?: number | null; revenue?: number | string | null;
   premium?: boolean | null; fast_selling?: boolean | null; editors_choice?: boolean | null;
   priority_score?: number | null; collections?: string[] | null;
+  seo_title?: string | null; seo_description?: string | null;
+  meta_keywords?: string[] | null; brand?: string | null; product_type?: string | null;
 };
 
 const num = (v: number | string | null | undefined): number | null =>
