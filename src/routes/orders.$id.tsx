@@ -278,8 +278,7 @@ function OrderDetailPage() {
               </div>
             </div>
           )}
-
-
+          {returnWindowOpen && user && (
             <>
               <button
                 type="button"
