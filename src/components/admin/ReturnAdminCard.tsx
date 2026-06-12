@@ -108,16 +108,12 @@ export function ReturnAdminCard({
 }) {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [customerOpen, setCustomerOpen] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const photos = (r.photo_urls ?? []).filter(Boolean);
 
   const resolution = r.resolution_type === "refund" ? "refund" : "replacement";
-  const TIMELINE = resolution === "refund" ? REFUND_TIMELINE : REPLACEMENT_TIMELINE;
-  const activeIdx =
-    r.status === "rejected"
-      ? -1
-      : resolution === "refund"
-        ? refundTimelineIndex(r)
-        : replacementTimelineIndex(r);
+  const activeIdx = compactIndex(r);
 
   // Return Intelligence values
   const deliveredAt = r.order.fulfilled_at;
