@@ -344,7 +344,72 @@ export function ReturnAdminCard({
         </section>
       )}
 
-      {/* Sticky actions */}
+      {/* Resolution method (replacement-first) */}
+      <section className="mt-4 rounded-xl border border-border/60 bg-background/40 p-3">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-1.5">
+          <Repeat className="size-3.5 text-accent" /> Resolution Method
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onUpdate(r.id, { resolution_type: "replacement" })}
+            className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-mono uppercase tracking-widest transition-colors ${
+              resolution === "replacement"
+                ? "border-accent bg-accent/15 text-accent"
+                : "border-border bg-background text-muted-foreground hover:border-accent/40"
+            }`}
+          >
+            <Repeat className="size-3.5" /> Replacement
+          </button>
+          <button
+            type="button"
+            onClick={() => onUpdate(r.id, { resolution_type: "refund" })}
+            className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-mono uppercase tracking-widest transition-colors ${
+              resolution === "refund"
+                ? "border-amber-400 bg-amber-400/15 text-amber-400"
+                : "border-border bg-background text-muted-foreground hover:border-amber-400/40"
+            }`}
+          >
+            <Wallet className="size-3.5" /> Refund
+          </button>
+        </div>
+
+        {resolution === "replacement" ? (
+          <div className="mt-3">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              Replacement Status
+            </label>
+            <select
+              value={r.replacement_status}
+              onChange={(e) => onUpdate(r.id, { replacement_status: e.target.value })}
+              className="mt-1.5 w-full bg-background border border-border rounded-md px-3 py-2 min-h-[44px] text-[10px] font-mono uppercase tracking-widest text-accent focus:outline-none focus:border-accent"
+            >
+              {REPLACEMENT_STATUSES.map((s) => (
+                <option key={s} value={s}>replacement: {s}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2.5">
+            <div className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-400">
+              <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+              <span>Refunds should only be used when replacement is unavailable.</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground font-mono uppercase tracking-wider">Refund Eligible</span>
+              <span className={`inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-1 rounded-full border ${
+                refundEligible
+                  ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10"
+                  : "text-rose-400 border-rose-400/30 bg-rose-400/10"
+              }`}>
+                {refundEligible ? <ShieldCheck className="size-3" /> : <ShieldX className="size-3" />}
+                {refundEligible ? "Yes" : "No"}
+              </span>
+            </div>
+          </div>
+        )}
+      </section>
+
       <div className="sticky bottom-0 -mx-4 sm:-mx-5 mt-4 px-4 sm:px-5 pt-3 pb-1 bg-gradient-to-t from-card via-card/95 to-transparent backdrop-blur-sm border-t border-border/40 rounded-b-2xl">
         {r.status === "requested" && (
           <div className="flex flex-wrap gap-2 mb-2">
