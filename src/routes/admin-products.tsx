@@ -447,6 +447,38 @@ function ProductsInner() {
     };
   }, [products]);
 
+  // ---- SKU Operations (prefer server summary, fall back to client) ----
+  const skuStats = useMemo(() => {
+    const list = (products ?? []).filter((p) => !p.deleted_at);
+    const total = summary?.counts.total ?? list.length;
+    const missing = summary?.counts.missingSku ?? list.filter((p) => !(p.sku && p.sku.trim())).length;
+    const seen = new Map<string, number>();
+    for (const p of list) {
+      const k = (p.sku ?? "").trim().toLowerCase();
+      if (k) seen.set(k, (seen.get(k) ?? 0) + 1);
+    }
+    const duplicateSku = [...seen.values()].filter((n) => n > 1).reduce((s, n) => s + n, 0);
+    const coverage = total > 0 ? Math.round(((total - missing) / total) * 100) : 100;
+    return { total, missing, duplicateSku, coverage };
+  }, [products, summary]);
+
+  // ---- Duplicate Product Review (server-detected groups, enriched client-side) ----
+  const duplicateReview = useMemo(() => {
+    const groups = summary?.duplicateGroups ?? [];
+    const bySlug = new Map((products ?? []).map((p) => [p.slug, p]));
+    return groups.slice(0, 12).map((g) => ({
+      name: g.name,
+      count: g.count,
+      items: g.slugs
+        .map((slug) => bySlug.get(slug))
+        .filter((p): p is Product => !!p)
+        .map((p) => ({
+          id: p.id, slug: p.slug, image: p.image,
+          stock: p.stock_quantity, created_at: p.created_at,
+        })),
+    }));
+  }, [summary, products]);
+
 
   const topSellers = useMemo(() => {
     return [...(products ?? [])]
