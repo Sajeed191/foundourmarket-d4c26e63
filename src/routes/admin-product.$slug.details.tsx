@@ -141,11 +141,6 @@ function CommandCenter({ slug, f, set, row }: {
     : score >= 40 ? { t: "text-amber-400", b: "bg-amber-500", r: "stroke-amber-400" }
     : { t: "text-destructive", b: "bg-destructive", r: "stroke-destructive" };
 
-  function goBack() {
-    if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
-    else navigate({ to: "/admin-product/$slug", params: { slug } });
-  }
-
   async function togglePublish() {
     const next = status === "published" ? "draft" : "published";
     setPubBusy(true);
