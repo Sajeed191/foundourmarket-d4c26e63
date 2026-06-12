@@ -147,7 +147,11 @@ export const markOrderStageFn = createServerFn({ method: "POST" })
       // Forward stages: the DB enforces single-step status transitions, so we
       // auto-advance through every intermediate lifecycle stage up to the target.
       const targetStep = seqStep(input.stage);
-      const baseStep = Math.max(seqStep(order.status), seqStep(order.fulfillment_status));
+      // The DB trigger validates single-step transitions on `status`, so the
+      // loop must advance from the actual `status` position — using the max of
+      // status/fulfillment_status can skip steps when the two columns drift.
+      const statusStep = seqStep(order.status);
+      const baseStep = Math.max(statusStep, seqStep(order.fulfillment_status));
       if (targetStep <= baseStep) {
         // Already at or past this stage — nothing to do (one-time marking).
         await logSecurity({
