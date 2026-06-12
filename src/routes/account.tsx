@@ -183,8 +183,9 @@ function AccountPage() {
       if (resolution === "replacement") return replacement === "delivered";
       return refund === "issued" || replacement === "delivered";
     };
-    return list.find((r) => !isCompleted(r)) ?? null;
+    return { latest: list.find((r) => !isCompleted(r)) ?? null, activeCount: list.filter((r) => !isCompleted(r)).length };
   }, [returns]);
+  const activeReturns = latestReturn.activeCount;
 
 
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
