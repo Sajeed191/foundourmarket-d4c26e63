@@ -111,7 +111,7 @@ function ProductsPage() {
   );
 }
 
-type SortKey = "newest" | "oldest" | "revenue" | "stock" | "views" | "conversion" | "price";
+type SortKey = "newest" | "oldest" | "revenue" | "stock" | "stock_desc" | "views" | "conversion" | "price" | "price_asc" | "name";
 type StockFilter = "all" | "ok" | "low" | "critical" | "oos";
 type StateFilter = "all" | "active" | "inactive" | "featured";
 type TagFilter =
@@ -367,9 +367,12 @@ function ProductsInner() {
         case "oldest": return +new Date(a.created_at) - +new Date(b.created_at);
         case "revenue": return (stats[b.slug]?.revenue ?? 0) - (stats[a.slug]?.revenue ?? 0);
         case "stock": return a.stock_quantity - b.stock_quantity;
+        case "stock_desc": return b.stock_quantity - a.stock_quantity;
         case "views": return b.views_count - a.views_count;
         case "conversion": return conv(b) - conv(a);
         case "price": return Number(b.price) - Number(a.price);
+        case "price_asc": return Number(a.price) - Number(b.price);
+        case "name": return (a.name ?? "").localeCompare(b.name ?? "");
         default: return +new Date(b.created_at) - +new Date(a.created_at);
       }
     });
@@ -487,13 +490,16 @@ function ProductsInner() {
         </button>
         <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
           className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent/40">
-          <option value="newest" className="bg-background">Newest</option>
-          <option value="oldest" className="bg-background">Oldest</option>
+          <option value="newest" className="bg-background">Newest first</option>
+          <option value="oldest" className="bg-background">Oldest first</option>
+          <option value="price" className="bg-background">Price: High → Low</option>
+          <option value="price_asc" className="bg-background">Price: Low → High</option>
+          <option value="stock_desc" className="bg-background">Inventory: High → Low</option>
+          <option value="stock" className="bg-background">Inventory: Low → High</option>
+          <option value="name" className="bg-background">Alphabetical A–Z</option>
           <option value="revenue" className="bg-background">Top revenue</option>
           <option value="conversion" className="bg-background">Conversion</option>
           <option value="views" className="bg-background">Most viewed</option>
-          <option value="stock" className="bg-background">Low stock first</option>
-          <option value="price" className="bg-background">Price</option>
         </select>
         <button onClick={exportCsv}
           className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
