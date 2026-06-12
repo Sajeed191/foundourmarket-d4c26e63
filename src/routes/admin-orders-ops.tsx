@@ -15,6 +15,7 @@ import { fetchOrderDetail } from "@/lib/order-operations";
 import type { EnrichedOrder, OrderOps, WarRoomTag, OrderDetail } from "@/lib/order-operations";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
 import { OrderActionCenter } from "@/components/admin/OrderActionCenter";
+import { openInvoice } from "@/lib/order-invoice";
 import { OrderIntegrityMonitor } from "@/components/admin/OrderIntegrityMonitor";
 
 export const Route = createFileRoute("/admin-orders-ops")({
