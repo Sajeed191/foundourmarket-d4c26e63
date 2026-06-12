@@ -1246,5 +1246,87 @@ function IconAction({ onClick, title, icon: Icon, danger, active }: { onClick: (
   );
 }
 
+type RegionTopItem = { p: Product; revenue: string; units: number };
+
+function RegionInsightPanel({
+  title, flag, revenue, units, categories, top, onOpen,
+}: {
+  title: string; flag: string; revenue: string; units: string;
+  categories: { name: string; value: string }[];
+  top: RegionTopItem[];
+  onOpen: (slug: string) => void;
+}) {
+  return (
+    <div className="glass border border-white/10 rounded-2xl p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-lg" aria-hidden>{flag}</span>
+        <h3 className="text-sm font-display">{title}</h3>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <IntelStat label="Revenue" value={revenue} accent />
+        <IntelStat label="Units sold" value={units} />
+      </div>
+      <div>
+        <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">Top categories</p>
+        {categories.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No sales recorded yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((c) => (
+              <span key={c.name} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] font-mono">
+                {c.name} · <span className="text-accent">{c.value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <BestSellerColumn title={`Best selling`} items={top} onOpen={onOpen} flush />
+    </div>
+  );
+}
+
+function BestSellerColumn({
+  title, items, onOpen, flush,
+}: {
+  title: string; items: RegionTopItem[]; onOpen: (slug: string) => void; flush?: boolean;
+}) {
+  return (
+    <div className={flush ? "" : "glass border border-white/10 rounded-2xl p-4"}>
+      <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">{title}</p>
+      {items.length === 0 ? (
+        <p className="text-xs text-muted-foreground py-4 text-center">No sales recorded yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(({ p, revenue, units }, i) => {
+            const h = health(p);
+            return (
+              <button key={p.id} onClick={() => onOpen(p.slug)}
+                className="w-full flex items-center gap-3 rounded-xl border border-white/10 p-2 text-left hover:border-accent/40 hover:bg-white/5 transition-colors">
+                <span className="text-[10px] font-mono text-muted-foreground w-4 shrink-0">{i + 1}</span>
+                <div className="size-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                  <img src={resolveImage(p.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs truncate">{p.name}</p>
+                  <p className="text-[9px] font-mono text-muted-foreground mt-0.5">
+                    {units} sold · Stock {p.stock_quantity}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-mono">{revenue}</p>
+                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-widest mt-0.5 ${healthMeta[h].cls}`}>
+                    {healthMeta[h].label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Legacy inline ProductEditor and its helpers removed — unified into ProductEditorModal.
+
 
