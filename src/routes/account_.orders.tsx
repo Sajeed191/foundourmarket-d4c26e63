@@ -622,12 +622,24 @@ function OrdersPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, tone }: { icon: typeof ShoppingBag; label: string; value: string; tone: string }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-card/50 backdrop-blur px-2.5 py-2 flex flex-col gap-0.5">
+function StatCard({ icon: Icon, label, value, tone, onClick }: { icon: typeof ShoppingBag; label: string; value: string; tone: string; onClick?: () => void }) {
+  const inner = (
+    <>
       <Icon className={`size-3.5 ${tone}`} />
       <p className="text-base font-display font-semibold leading-none truncate">{value}</p>
       <p className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground truncate">{label}</p>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="text-left rounded-xl border border-border/60 bg-card/50 backdrop-blur px-2.5 py-2 flex flex-col gap-0.5 hover:border-accent/40 active:scale-[0.97] transition">
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/50 backdrop-blur px-2.5 py-2 flex flex-col gap-0.5">
+      {inner}
     </div>
   );
 }
