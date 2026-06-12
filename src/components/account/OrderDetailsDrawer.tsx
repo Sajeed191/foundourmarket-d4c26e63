@@ -109,7 +109,9 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     let returnEligible = false;
     let cost = 0;
     if (slugs.length) {
-      const { data: prods } = await supabase.from("products").select("slug,return_window_days,return_eligible,replacement_eligible,cost_price_inr,cost_price_usd").in("slug", slugs);
+      // Customers can only read the public view (base `products` is staff-only via RLS),
+      // so eligibility must come from `products_public` or it always resolves to false.
+      const { data: prods } = await supabase.from("products_public").select("slug,return_window_days,return_eligible,replacement_eligible").in("slug", slugs);
       // Only products the admin marked return- or replacement-eligible open a return window.
       const eligible = (prods ?? []).filter((p) => p.return_eligible || p.replacement_eligible);
       returnEligible = eligible.length > 0;
@@ -117,8 +119,10 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
       returnWindowDays = returnEligible
         ? Math.max(DEFAULT_RETURN_WINDOW_DAYS, ...eligible.map((p) => Number(p.return_window_days) || 0))
         : 0;
+      // Cost price is staff-only (not in the public view); used for admin margin display.
+      const { data: costRows } = await supabase.from("products").select("slug,cost_price_inr,cost_price_usd").in("slug", slugs);
       const isInr = (order?.currency ?? "").toUpperCase() === "INR";
-      const costMap = new Map((prods ?? []).map((p) => [p.slug, Number((isInr ? p.cost_price_inr : p.cost_price_usd) ?? 0) || 0]));
+      const costMap = new Map((costRows ?? []).map((p) => [p.slug, Number((isInr ? p.cost_price_inr : p.cost_price_usd) ?? 0) || 0]));
       cost = (order?.order_items ?? []).reduce((n, it) => n + (costMap.get(it.product_slug) ?? 0) * it.quantity, 0);
     }
 
