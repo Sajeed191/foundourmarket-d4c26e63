@@ -336,6 +336,19 @@ export const resolveRefundFn = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
+    // COD: once a refund is approved, the cash was collected then returned —
+    // mark the order's payment as successful (paid) so it no longer reads as pending.
+    if (input.decision === "approved") {
+      const order = await getOrder(input.orderId);
+      const isCod = (order.payment_method ?? "").toLowerCase() === "cod"
+        || (order.payment_status ?? "").toLowerCase() === "cod";
+      if (isCod && (order.payment_status ?? "").toLowerCase() !== "paid") {
+        const { error } = await supabaseAdmin.from("orders")
+          .update({ payment_status: "paid" }).eq("id", input.orderId);
+        if (error) throw new Error(error.message);
+      }
+    }
+
     await logSecurity({
       actorId: userId, actorRole: primaryRole, action: "ops.refund.resolve",
       target: input.orderId, success: true, detail: { decision: input.decision, refundId: input.refundId ?? null },
