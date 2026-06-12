@@ -1,4 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { adminProductsSummary } from "@/lib/admin-products-list.functions";
+import { adminGenerateSkus } from "@/lib/admin-sku.functions";
 import { ExecutiveSummaryPanel } from "@/components/admin/ExecutiveSummaryPanel";
 import { FinancialInsightsPanel } from "@/components/admin/FinancialInsightsPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
