@@ -114,5 +114,5 @@ export const getReturnsAdminFn = createServerFn({ method: "POST" })
           fulfilled_at: o?.fulfilled_at ?? null,
         },
       };
-    });
+    }));
   });
