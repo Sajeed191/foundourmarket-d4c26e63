@@ -381,15 +381,16 @@ function AccountPage() {
         </motion.section>
 
         {/* 7 — SIGN OUT */}
-        <motion.footer {...fadeUp} className="mt-1">
+        <motion.footer {...fadeUp} className="mt-1 flex justify-center">
           <button
             onClick={signOut}
-            className="group w-full flex items-center justify-center gap-2.5 rounded-2xl glass p-3.5 min-h-[48px] hover:border-destructive/50 hover:text-destructive transition-all"
+            className="group relative flex w-full max-w-sm flex-col items-center gap-2 overflow-hidden rounded-2xl card-premium px-6 py-5 hover:shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
           >
-            <span className="size-8 rounded-lg bg-destructive/10 text-destructive grid place-items-center group-hover:bg-destructive/20 transition-colors">
-              <LogOut className="size-4" />
+            <span className="size-11 rounded-2xl bg-destructive/10 text-destructive grid place-items-center ring-1 ring-destructive/20 group-hover:bg-destructive/20 group-hover:scale-105 transition-all">
+              <LogOut className="size-[18px]" />
             </span>
-            <span className="text-[11px] font-medium uppercase tracking-widest">Sign out</span>
+            <span className="text-sm font-display font-semibold group-hover:text-destructive transition-colors">Sign out</span>
+            <span className="text-[11px] text-muted-foreground">End your secure session</span>
           </button>
         </motion.footer>
       </div>
