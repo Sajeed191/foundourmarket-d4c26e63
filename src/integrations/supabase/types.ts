@@ -974,6 +974,13 @@ export type Database = {
             referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       carts: {
@@ -5510,6 +5517,17 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           verified_purchase?: boolean | null
+        }
+        Relationships: []
+      }
+      product_variants_public: {
+        Row: {
+          id: string | null
+          name: string | null
+          price_override: number | null
+          product_slug: string | null
+          sort_order: number | null
+          stock_quantity: number | null
         }
         Relationships: []
       }

@@ -318,12 +318,12 @@ export async function fetchProductImages(slug: string): Promise<ProductImage[]> 
 
 export async function fetchProductVariants(slug: string): Promise<ProductVariant[]> {
   const { data } = await supabase
-    .from("product_variants")
-    .select("id,name,sku,price_override,stock_quantity,sort_order")
+    .from("product_variants_public")
+    .select("id,name,price_override,stock_quantity,sort_order")
     .eq("product_slug", slug)
     .order("sort_order", { ascending: true });
   return (data ?? []).map((r: any) => ({
-    id: r.id, name: r.name, sku: r.sku,
+    id: r.id, name: r.name, sku: null,
     priceOverride: r.price_override != null ? Number(r.price_override) : null,
     stockQuantity: r.stock_quantity, sortOrder: r.sort_order,
   }));
