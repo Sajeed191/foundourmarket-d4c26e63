@@ -103,13 +103,36 @@ export function ProductMediaGallery({
 
   async function setPrimary(img: ProductImage) {
     setBusy(true);
+    // Hero becomes the product thumbnail AND moves to position #1.
+    const reordered = [img, ...images.filter((i) => i.id !== img.id)];
+    setImages(reordered);
     const { error } = await supabase.from("products").update({ image: img.url, updated_at: new Date().toISOString() }).eq("slug", slug);
+    if (error) {
+      setBusy(false);
+      toast.error("Could not set hero", { description: error.message });
+      await refresh();
+      return;
+    }
+    try {
+      await Promise.all(reordered.map((it, i) => supabase.from("product_images").update({ sort_order: i }).eq("id", it.id)));
+    } catch { /* order persistence best-effort */ }
     setBusy(false);
-    if (error) { toast.error("Could not set primary", { description: error.message }); return; }
     onPrimaryChange(img.url);
     await invalidateProducts();
     void logMediaEvent("thumbnail_change", { entityType: "product", entityRef: slug, meta: { url: img.url } });
-    toast.success("Primary image updated");
+    toast.success("Hero image set — it leads the storefront, search & category pages");
+  }
+
+  async function persistOrder(ordered: ProductImage[]) {
+    setBusy(true);
+    try {
+      await Promise.all(ordered.map((img, i) => supabase.from("product_images").update({ sort_order: i }).eq("id", img.id)));
+      await invalidateProducts();
+      void logMediaEvent("reorder", { entityType: "product", entityRef: slug, meta: { order: ordered.map((i) => i.id) } });
+    } catch {
+      toast.error("Reorder failed");
+      await refresh();
+    } finally { setBusy(false); }
   }
 
   async function remove(img: ProductImage) {
