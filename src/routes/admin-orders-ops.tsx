@@ -667,7 +667,7 @@ function OrderOpsPage() {
             sub={actionFilter ? undefined : "Search and review the latest orders"}
             icon={<ShoppingBag className="size-5 text-accent" />}
           />
-          <div className="space-y-3">
+          <div className="space-y-4">
             {actionFilter ? (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent">
@@ -678,15 +678,23 @@ function OrderOpsPage() {
               </div>
             ) : (
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search orders, customers, products, tracking…" className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-background focus:border-accent/40 outline-none" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search orders, customers, products, tracking…" className="w-full pl-10 pr-3 py-3 text-sm rounded-xl border border-border bg-background focus:border-accent/40 outline-none transition-colors" />
               </div>
             )}
             <div className="card-premium rounded-3xl p-3 sm:p-4">
-              <p className="text-[11px] text-muted-foreground mb-2 px-1">{recentList.length} orders</p>
-              <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-1 mb-2.5">
+                <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">{recentList.length} orders</p>
+                {recentList.length > 60 && <p className="text-[10px] text-muted-foreground">Showing first 60</p>}
+              </div>
+              <div className="space-y-1 max-h-[70vh] overflow-y-auto -mx-1 px-1">
                 {recentList.slice(0, 60).map((o) => <OrderRow key={o.id} o={o} onClick={() => setSel(o)} />)}
-                {recentList.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">No orders match.</p>}
+                {recentList.length === 0 && (
+                  <div className="py-12 text-center">
+                    <ShoppingBag className="size-7 text-muted-foreground/40 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No orders match.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -695,7 +703,7 @@ function OrderOpsPage() {
         {/* SECTION 5 — DELIVERY MONITOR */}
         <section>
           <SectionHeader title="Delivery Monitor" sub="Live shipping & delivery health" icon={<Truck className="size-5 text-accent" />} />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <MiniStat label="Shipped Today" value={num(shippedToday)} icon={<Truck className="size-3.5" />} />
             <MiniStat label="Delayed" value={num(f.delayedCount)} icon={<AlertTriangle className="size-3.5" />} tone={f.delayedCount > 0 ? "attn" : "normal"} />
             <MiniStat label="Delivered Today" value={num(deliveredTodayN)} icon={<Check className="size-3.5" />} tone="calm" />
@@ -704,9 +712,9 @@ function OrderOpsPage() {
         </section>
 
         {/* SECTION 6 — SUPPORT CENTER */}
-        <section>
+        <section className="rounded-3xl border border-border/60 bg-card/30 p-4 sm:p-6">
           <SectionHeader title="Support Center" sub="Customer conversations, kept separate from fulfilment" icon={<LifeBuoy className="size-5 text-accent" />} />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <MiniStat label="Open Tickets" value={num(openTickets)} icon={<LifeBuoy className="size-3.5" />} tone={openTickets > 0 ? "attn" : "normal"} />
             <MiniStat label="Urgent Tickets" value={num(urgentTickets)} icon={<AlertTriangle className="size-3.5" />} tone={urgentTickets > 0 ? "attn" : "normal"} />
             <MiniStat label="Resolved" value={num(resolvedTickets)} icon={<Check className="size-3.5" />} tone="calm" />
