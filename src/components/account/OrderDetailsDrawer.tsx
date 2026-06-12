@@ -136,6 +136,8 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     let t: ReturnType<typeof setTimeout> | null = null;
     const refresh = () => { if (t) clearTimeout(t); t = setTimeout(() => load(orderId, false), 400); };
     const ch = supabase.channel(`order-drawer-${orderId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "order_items", filter: `order_id=eq.${orderId}` }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "shipments", filter: `order_id=eq.${orderId}` }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "shipment_events" }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "refunds", filter: `order_id=eq.${orderId}` }, refresh)
