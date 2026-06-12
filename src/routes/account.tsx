@@ -335,101 +335,77 @@ function AccountPage() {
 
 
 
-        {/* 2 — OVERVIEW CARDS */}
+        {/* 2 — CUSTOMER HUB */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
-          <SectionHeader title="Overview" eyebrow="Your account at a glance" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <OverviewCard icon={Package} label="Total orders" value={stats.count} loading={!orders} accent tone="amber" to="/account/orders" />
-            <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} tone="rose" to="/wishlist" />
-            <OverviewCard icon={ShoppingBag} label="Cart items" value={cartCount} tone="blue" to="/cart" />
-            <OverviewCard icon={Wallet} label="Total saved" value={stats.saved} formatter={format} loading={!orders} tone="emerald" />
+          <SectionHeader title="Your hub" eyebrow="Everything in one place" />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <HubCard icon={Package} title="Orders" count={stats.count} loading={!orders} desc="Track & manage" to="/account/orders" tone="amber" />
+            <HubCard icon={Heart} title="Wishlist" count={wishSlugs.size} desc="Your saved items" to="/wishlist" tone="rose" />
+            <HubCard icon={MapPin} title="Addresses" desc="Shipping & billing" to="/account/addresses" tone="blue" />
+            <HubCard icon={LifeBuoy} title="Support" desc="Help & resolutions" to="/account/support" tone="emerald" />
           </div>
         </motion.section>
-
 
 
         {/* 3 — QUICK ACTIONS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }}>
           <SectionHeader title="Quick actions" eyebrow="Jump to" />
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             <ActionCard to="/account/orders" icon={Package} title="Orders" subtitle="Track & invoices" badge={stats.active || undefined} />
+            <ActionCard to="/account/returns" icon={RotateCcw} title="Returns" subtitle="Requests & status" />
             <ActionCard to="/wishlist" icon={Heart} title="Wishlist" subtitle="Saved items" badge={wishSlugs.size || undefined} />
             <ActionCard to="/account/addresses" icon={MapPin} title="Addresses" subtitle="Shipping & billing" />
             <ActionCard to="/account/payments" icon={CreditCard} title="Payments" subtitle="Saved methods" />
             <ActionCard to="/account/profile" icon={UserCog} title="Profile" subtitle="Your details" />
             <ActionCard to="/account/security" icon={Shield} title="Security" subtitle="Account safety" />
-            <ActionCard to="/account/returns" icon={RotateCcw} title="Returns" subtitle="Requests & status" />
-            <ActionCard to="/deals" icon={Gift} title="Offers" subtitle="Deals & promos" />
-            <ActionCard to="/search" icon={Tag} title="Categories" subtitle="Browse all" />
+            <ActionCard to="/account/support" icon={LifeBuoy} title="Support" subtitle="Get help" />
           </div>
         </motion.section>
 
 
-        {/* DESKTOP GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {(stats.latestActive || latestReturn || recentlyViewed.length > 0) && (
-            <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
-              {/* ORDER TRACKING TIMELINE */}
-              {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
-
-              {/* RETURN TRACKING TIMELINE */}
-              {latestReturn && <ReturnTimeline ret={latestReturn} format={format} />}
-
-              {/* RECENTLY VIEWED */}
-              {recentlyViewed.length > 0 && (
-                <SectionBlock title="Recently viewed" icon={Eye}>
-                  <ProductScroller items={recentlyViewed} />
-                </SectionBlock>
-              )}
-            </div>
-          )}
+        {/* 4 — CONTINUE SHOPPING */}
+        {recentlyViewed.length > 0 && (
+          <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
+            <SectionHeader title="Continue shopping" eyebrow="Recently viewed products" />
+            <ContinueShopping items={recentlyViewed} format={format} />
+          </motion.section>
+        )}
 
 
-          {/* SIDEBAR */}
-          <aside className="space-y-6 lg:space-y-8">
-            {/* 8 — ACCOUNT INSIGHTS */}
-            <SectionBlock title="Account insights" icon={TrendingUp}>
-              <div className="grid grid-cols-2 gap-2.5">
-                <InsightStat label="Total orders" value={String(stats.count)} />
-                <InsightStat label="Total spent" value={format(stats.spent)} accent />
-                <InsightStat label="Saved" value={format(stats.saved)} />
-                <InsightStat label="Wishlist" value={String(wishSlugs.size)} />
-                <InsightStat label="Member since" value={stats.memberSince} small />
-                <InsightStat label="Top item" value={stats.topCategory} small truncate />
-              </div>
-            </SectionBlock>
-
-          </aside>
-        </div>
+        {/* 5 — ACTIVE ORDER / ACTIVE RESOLUTION */}
+        {(latestReturn || stats.latestActive) && (
+          <div className="space-y-4 sm:space-y-6">
+            {latestReturn
+              ? <ReturnTimeline ret={latestReturn} format={format} />
+              : stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
+          </div>
+        )}
 
 
-
-        {/* 9 — LEGAL & POLICIES */}
-        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
-          <SectionHeader title="Legal & Policies" eyebrow="Trust & transparency" />
-          <PolicyCrossLinks
-            title="Policies"
-            keys={["privacy", "terms", "refund", "return", "shipping", "buyerProtection"]}
-          />
+        {/* 6 — SUPPORT CENTER */}
+        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }}>
+          <SectionHeader title="Support center" eyebrow="We're here to help" />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <SupportCard icon={HelpCircle} title="Help Center" desc="Guides & FAQ" to="/help" tone="blue" />
+            <SupportCard icon={MessageCircle} title="Chat Support" desc="Talk to us live" onClick={() => openCrispChat()} tone="emerald" />
+            <SupportCard icon={LifeBuoy} title="Email Support" desc="Contact our team" to="/account/support" tone="amber" />
+            <SupportCard icon={RotateCcw} title="Returns & Replacements" desc="Manage resolutions" to="/account/returns" tone="rose" />
+          </div>
         </motion.section>
 
-        {/* 10 — FOOTER ACTIONS — distinct elevated surface */}
-        <motion.footer {...fadeUp} className="account-footer mt-2 relative overflow-hidden rounded-3xl p-5 sm:p-7">
+
+        {/* 7 — SIGN OUT */}
+        <motion.footer {...fadeUp} className="account-footer mt-2 relative overflow-hidden rounded-3xl p-5 sm:p-6">
           <div aria-hidden className="absolute -top-20 -left-10 size-64 rounded-full opacity-30" style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
-          <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <FooterAction icon={LifeBuoy} label="Support" to="/help" />
-            <FooterAction icon={HelpCircle} label="FAQ" to="/help" />
-            <FooterAction icon={MessageCircle} label="Contact" onClick={() => openCrispChat()} />
-            <button
-              onClick={signOut}
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl glass p-4 hover:border-destructive/50 hover:text-destructive hover:-translate-y-0.5 transition-all"
-            >
-              <span className="size-9 rounded-xl bg-destructive/10 text-destructive grid place-items-center group-hover:bg-destructive/20 transition-colors">
-                <LogOut className="size-4" />
-              </span>
-              <span className="text-[11px] uppercase tracking-widest">Sign out</span>
-            </button>
-          </div>
+          <button
+            onClick={signOut}
+            className="group relative w-full flex items-center justify-center gap-2.5 rounded-2xl glass p-4 min-h-[52px] hover:border-destructive/50 hover:text-destructive transition-all"
+          >
+            <span className="size-9 rounded-xl bg-destructive/10 text-destructive grid place-items-center group-hover:bg-destructive/20 transition-colors">
+              <LogOut className="size-4" />
+            </span>
+            <span className="text-[12px] font-medium uppercase tracking-widest">Sign out</span>
+          </button>
         </motion.footer>
       </div>
     </div>
@@ -1102,4 +1078,120 @@ function ReturnTimeline({ ret, format }: { ret: Return; format: (n: number) => s
 
 
 
+
+/* ---------- premium hub / support / continue-shopping ---------- */
+
+function HubCard({
+  icon: Icon, title, desc, count, loading, to, tone = "amber",
+}: { icon: typeof Package; title: string; desc: string; count?: number; loading?: boolean; to: string; tone?: keyof typeof TONES }) {
+  const t = TONES[tone];
+  return (
+    <Link to={to} className="group block h-full">
+      <motion.div
+        whileHover={{ y: -4 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.25, ease }}
+        className="relative h-full min-h-[112px] overflow-hidden rounded-2xl p-4 sm:p-5 card-premium hover:shadow-[var(--shadow-soft)]"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+          style={{ background: t.glow }}
+        />
+        <div className="relative flex items-start justify-between">
+          <span className={`size-10 rounded-xl grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
+            <Icon className="size-[18px]" />
+          </span>
+          <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+        </div>
+        <div className="relative mt-3 flex items-baseline gap-2">
+          <p className="text-sm sm:text-base font-display font-semibold group-hover:text-accent transition-colors">{title}</p>
+          {typeof count === "number" && (
+            loading
+              ? <span className="h-4 w-6 rounded bg-foreground/5 animate-pulse" />
+              : count > 0 && <span className="text-xs font-mono tabular-nums text-accent">{count}</span>
+          )}
+        </div>
+        <p className="relative text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{desc}</p>
+      </motion.div>
+    </Link>
+  );
+}
+
+function SupportCard({
+  icon: Icon, title, desc, to, onClick, tone = "amber",
+}: { icon: typeof Package; title: string; desc: string; to?: string; onClick?: () => void; tone?: keyof typeof TONES }) {
+  const t = TONES[tone];
+  const inner = (
+    <motion.div
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.25, ease }}
+      className="relative h-full min-h-[100px] overflow-hidden rounded-2xl p-4 sm:p-5 card-premium hover:shadow-[var(--shadow-soft)] text-left"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+        style={{ background: t.glow }}
+      />
+      <span className={`relative size-10 rounded-xl grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
+        <Icon className="size-[18px]" />
+      </span>
+      <p className="relative text-sm font-display font-semibold mt-3 group-hover:text-accent transition-colors leading-tight">{title}</p>
+      <p className="relative text-[11px] sm:text-xs text-muted-foreground mt-0.5">{desc}</p>
+    </motion.div>
+  );
+  const cls = "group block h-full w-full";
+  if (onClick) return <button onClick={onClick} className={cls}>{inner}</button>;
+  return <Link to={to!} className={cls}>{inner}</Link>;
+}
+
+function ContinueShopping({ items, format }: { items: Product[]; format: (n: number) => string }) {
+  const { add } = useCart();
+  return (
+    <div className="-mx-4 sm:mx-0">
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
+        {items.map((p, i) => (
+          <motion.div
+            key={p.slug}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
+            className="snap-start shrink-0 w-[64%] xs:w-[56%] sm:w-[40%] lg:w-[28%] max-w-[260px] group"
+          >
+            <div className="h-full card-premium rounded-2xl p-2.5 sm:p-3 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)] transition-shadow duration-500">
+              <Link to="/products/$slug" params={{ slug: p.slug }} className="block">
+                <div className="aspect-[4/5] rounded-xl overflow-hidden bg-black/40">
+                  <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                </div>
+              </Link>
+              <div className="px-1 pt-2.5 pb-1">
+                <Link to="/products/$slug" params={{ slug: p.slug }}>
+                  <p className="text-[13px] sm:text-sm font-medium leading-snug line-clamp-2 group-hover:text-accent transition-colors">{p.name}</p>
+                </Link>
+                {typeof p.rating === "number" && p.rating > 0 && (
+                  <div className="mt-1.5 flex items-center gap-1 text-amber-400">
+                    <Star className="size-3 fill-current" />
+                    <span className="text-[11px] font-mono tabular-nums text-muted-foreground">{p.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm text-accent tabular-nums truncate">{format(Number(p.price))}</span>
+                  <button
+                    onClick={() => add(p.slug)}
+                    aria-label="Add to cart"
+                    className="shrink-0 size-9 grid place-items-center rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
