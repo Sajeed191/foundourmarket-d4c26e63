@@ -431,18 +431,10 @@ function ProductsInner() {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
   }
 
-  const kpiCards = [
+  const headerChips = [
     { icon: Package, label: "Total", value: String(kpis.total) },
     { icon: CheckCircle2, label: "Active", value: String(kpis.active) },
     { icon: EyeOff, label: "Inactive", value: String(kpis.inactive) },
-    { icon: Star, label: "Featured", value: String(kpis.featured) },
-    { icon: AlertTriangle, label: "Low stock", value: String(kpis.low) },
-    { icon: X, label: "Out of stock", value: String(kpis.oos) },
-    { icon: IndianRupee, label: "Revenue today", value: inr(revenueToday) },
-    { icon: ShoppingCart, label: "Orders today", value: String(ordersToday) },
-    { icon: Boxes, label: "Inventory value", value: inr(kpis.inventoryValue) },
-    { icon: Flame, label: "Best seller", value: kpis.best, wide: true },
-    { icon: Eye, label: "Most viewed", value: kpis.mostViewed, wide: true },
   ];
 
   return (
