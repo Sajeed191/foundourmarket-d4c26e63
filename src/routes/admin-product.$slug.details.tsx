@@ -11,6 +11,7 @@ import { invalidateProducts } from "@/lib/use-products";
 import { resolveImage } from "@/lib/products";
 import { SectionEditor, Field, parseList, useNavigate } from "@/components/admin/product-editor/kit";
 import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
+import { CategorySelector } from "@/components/admin/product-editor/category-selector";
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv, type KV,
 } from "@/components/admin/product-editor/field-builders";
@@ -363,7 +364,7 @@ function CommandCenter({ slug, f, set, row }: {
             <Field label="Brand" value={f.brand} onChange={(v) => set({ brand: v })} />
             <Field label="Product Type" value={f.product_type} onChange={(v) => set({ product_type: v })} />
           </div>
-          <Field label="Category" value={f.category} onChange={(v) => set({ category: v })} />
+          <CategorySelector value={f.category} onChange={(v) => set({ category: v })} />
           <Field label="Tags (comma separated)" value={f.tags} onChange={(v) => set({ tags: v })} />
         </div>
       </Collapsible>
