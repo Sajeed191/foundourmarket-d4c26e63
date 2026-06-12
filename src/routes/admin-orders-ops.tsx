@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import {
   ShoppingBag, Loader2, AlertTriangle, Download, RefreshCw, Search, X,
-  Package, Truck, RotateCcw, Wallet, Crown, Globe, ShieldAlert, Sparkles,
+  Package, Truck, RotateCcw, Wallet, Globe, ShieldAlert, Sparkles,
   Clock, Zap, Gauge, TrendingUp, Users, CreditCard, MapPin, Mail, ArrowDownRight,
   Phone, Receipt, Bell, ShieldCheck, Copy, Check, LifeBuoy,
+  CheckCircle2, XCircle, ChevronDown, Hash, Calendar,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { KpiCard } from "@/components/admin/KpiCard";
@@ -64,7 +65,7 @@ const TAG_META: Record<WarRoomTag, { label: string; cls: string; icon: React.Rea
   cod: { label: "COD", cls: "text-amber-400 border-amber-400/30 bg-amber-400/10", icon: <Wallet className="size-3" /> },
   high_value: { label: "High Value", cls: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10", icon: <TrendingUp className="size-3" /> },
   international: { label: "Intl", cls: "text-cyan-400 border-cyan-400/30 bg-cyan-400/10", icon: <Globe className="size-3" /> },
-  vip: { label: "VIP", cls: "text-violet-400 border-violet-400/30 bg-violet-400/10", icon: <Crown className="size-3" /> },
+  vip: { label: "Loyal", cls: "text-violet-400 border-violet-400/30 bg-violet-400/10", icon: <TrendingUp className="size-3" /> },
   refund_request: { label: "Refund", cls: "text-orange-400 border-orange-400/30 bg-orange-400/10", icon: <Wallet className="size-3" /> },
   return_request: { label: "Return", cls: "text-orange-400 border-orange-400/30 bg-orange-400/10", icon: <RotateCcw className="size-3" /> },
   shipment_delay: { label: "Delayed", cls: "text-destructive border-destructive/30 bg-destructive/10", icon: <Clock className="size-3" /> },
@@ -181,11 +182,14 @@ function CopyBtn({ value }: { value: string }) {
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, icon, children, tint }: { title: string; icon: React.ReactNode; children: React.ReactNode; tint?: "danger" | "amber" }) {
+  const ring = tint === "danger" ? "border-destructive/30 bg-destructive/[0.03]"
+    : tint === "amber" ? "border-amber-400/25 bg-amber-400/[0.03]"
+    : "border-border bg-card/40";
   return (
-    <div className="rounded-xl border border-border p-3">
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">{icon}{title}</p>
-      <div className="space-y-1.5 text-xs">{children}</div>
+    <div className={`rounded-2xl border ${ring} p-4`}>
+      <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">{icon}{title}</p>
+      <div className="space-y-1 text-[13px]">{children}</div>
     </div>
   );
 }
@@ -193,9 +197,29 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
 function MonoRow({ k, v, copy }: { k: string; v: string | null | undefined; copy?: boolean }) {
   if (!v) return <Row k={k} v="—" />;
   return (
-    <div className="flex items-center justify-between gap-3 py-1 border-b border-border/40 last:border-0">
-      <span className="text-muted-foreground">{k}</span>
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+      <span className="text-muted-foreground shrink-0">{k}</span>
       <span className="flex items-center gap-1.5 text-right font-mono text-[11px] break-all">{v}{copy && <CopyBtn value={v} />}</span>
+    </div>
+  );
+}
+
+/** Larger, high-contrast status badge for the header. */
+function StatusBadge({ s, kind }: { s: string | null; kind: "order" | "payment" }) {
+  const v = (s || "—").toLowerCase();
+  const fail = v.includes("fail") || v.includes("cancel") || v.includes("declin");
+  const good = v.includes("deliver") || v.includes("complete") || v.includes("paid") || v.includes("captur") || v.includes("success");
+  const transit = v.includes("ship") || v.includes("out_for") || v.includes("transit");
+  const cls = fail ? "text-destructive border-destructive/40 bg-destructive/10"
+    : good ? "text-emerald-400 border-emerald-400/40 bg-emerald-400/10"
+    : transit ? "text-sky-400 border-sky-400/40 bg-sky-400/10"
+    : "text-amber-400 border-amber-400/40 bg-amber-400/10";
+  const dot = fail ? "bg-destructive" : good ? "bg-emerald-400" : transit ? "bg-sky-400" : "bg-amber-400";
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${cls}`}>
+      <span className={`size-1.5 rounded-full ${dot}`} />
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{kind === "order" ? "Order" : "Payment"}</span>
+      <span className="text-[12px] font-semibold capitalize">{(s || "—").replace(/_/g, " ")}</span>
     </div>
   );
 }
@@ -223,185 +247,244 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
   const billing = detail?.addresses.find((x) => x.is_default_billing);
   const cur = detail?.order.currency ?? o.currency ?? "INR";
   const money = (n: number | null | undefined) => (cur === "INR" ? inr(n ?? 0) : `${cur} ${(n ?? 0).toFixed(2)}`);
+  const payFailed = (o.payment_status || "").toLowerCase().includes("fail") || (o.payment_status || "").toLowerCase().includes("declin");
+
+  const recipient = (a.name as string) ?? (a.full_name as string) ?? o.full_name ?? "—";
+  const addrLines = [a.line1, a.line2, a.landmark, a.area, [a.city, a.district].filter(Boolean).join(", "), [a.state ?? a.region, a.postal_code ?? a.postal].filter(Boolean).join(" "), a.country].filter(Boolean) as string[];
+
+  // VIP removed: never surface the vip war-room tag in the details view.
+  const tags = o.tags.filter((t) => t !== "vip");
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md h-full overflow-y-auto bg-card border-l border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar name={o.full_name} url={o.avatar_url} size={44} />
-            <div>
-              <p className="text-sm font-medium">{o.full_name ?? "Guest"}</p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Mail className="size-3" />{o.contact_email ?? "—"}</p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1"><MapPin className="size-3" />{o.market_region ?? o.country ?? "—"}</p>
+      <div className="relative w-full max-w-md h-full overflow-y-auto bg-card border-l border-border" onClick={(e) => e.stopPropagation()}>
+
+        {/* ---- Header ---- */}
+        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur border-b border-border px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar name={o.full_name} url={o.avatar_url} size={46} />
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold truncate leading-tight">{o.full_name ?? "Guest"}</p>
+                <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 truncate"><Mail className="size-3 shrink-0" /><span className="truncate">{o.contact_email ?? "—"}</span></p>
+                <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 truncate"><MapPin className="size-3 shrink-0" />{o.market_region ?? o.country ?? "—"}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/50 shrink-0"><X className="size-4" /></button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <StatusBadge s={o.status} kind="order" />
+            <StatusBadge s={o.payment_status} kind="payment" />
+          </div>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5">{tags.map((t) => <TagPill key={t} t={t} />)}</div>
+          )}
+        </div>
+
+        <div className="p-5 space-y-4">
+
+          {/* ---- Key facts ---- */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-2xl border border-border bg-card/40 p-3 text-center">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</div>
+              <div className="text-base font-bold tabular-nums mt-0.5">{money(o.total)}</div>
+            </div>
+            <div className="rounded-2xl border border-border bg-card/40 p-3 text-center">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Profit</div>
+              <div className={`text-base font-bold tabular-nums mt-0.5 ${o.profit < 0 ? "text-destructive" : "text-emerald-400"}`}>{inr(o.profit)}</div>
+            </div>
+            <div className="rounded-2xl border border-border bg-card/40 p-3 text-center">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Items</div>
+              <div className="text-base font-bold tabular-nums mt-0.5">{o.line_count}</div>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted/50"><X className="size-4" /></button>
-        </div>
 
-        <div className="flex flex-wrap gap-1.5">{o.tags.map((t) => <TagPill key={t} t={t} />)}</div>
+          <OrderActionCenter
+            orderId={o.id}
+            hasCustomer={!!o.user_id}
+            currentStage={o.fulfillment_status || o.ship_status}
+            onDone={() => { setBump((b) => b + 1); onRefresh(); }}
+          />
 
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Total</div><div className="text-sm font-semibold">{money(o.total)}</div></div>
-          <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Profit</div><div className={`text-sm font-semibold ${o.profit < 0 ? "text-destructive" : "text-emerald-400"}`}>{inr(o.profit)}</div></div>
-          <div className="rounded-xl border border-border p-2"><div className="text-[9px] text-muted-foreground uppercase">Risk</div><div className="text-sm font-semibold"><RiskBadge score={o.riskScore} /></div></div>
-        </div>
+          {/* ---- Order Information ---- */}
+          <Section title="Order Information" icon={<ShoppingBag className="size-3.5" />}>
+            <Row k="Status" v={<StatusPill s={o.status} />} />
+            <Row k="Fulfilment" v={<StatusPill s={o.fulfillment_status || o.ship_status} />} />
+            <Row k="Total amount" v={<span className="font-semibold">{money(o.total)}</span>} />
+            <Row k="Placed" v={<span className="flex items-center gap-1.5"><Calendar className="size-3 text-muted-foreground" />{new Date(o.created_at).toLocaleString()}</span>} />
+            <MonoRow k="Order ID" v={o.id} copy />
+          </Section>
 
-        <OrderActionCenter
-          orderId={o.id}
-          hasCustomer={!!o.user_id}
-          currentStage={o.fulfillment_status || o.ship_status}
-          onDone={() => { setBump((b) => b + 1); onRefresh(); }}
-        />
+          {/* ---- Payment Intelligence ---- */}
+          <Section title="Payment" icon={<CreditCard className="size-3.5" />} tint={payFailed ? "danger" : undefined}>
+            {payFailed && (
+              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-2 text-[12px] text-destructive font-medium">
+                <AlertTriangle className="size-3.5 shrink-0" /> Payment failed — action may be required
+              </div>
+            )}
+            <Row k="Payment status" v={<StatusPill s={o.payment_status} />} />
+            <Row k="Amount paid" v={<span className="font-semibold">{money(pay?.amount ?? o.total)}</span>} />
+            <Row k="Currency" v={cur} />
+            <Row k="Method" v={pay?.method ?? o.payment_method ?? "—"} />
+            <Row k="Gateway" v={detail?.order.payment_provider ?? o.payment_provider ?? "—"} />
+            {pay && <Row k="Recorded" v={new Date(pay.created_at).toLocaleString()} />}
 
+            <details className="group mt-2 rounded-xl border border-border/60 bg-muted/20">
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <span className="flex items-center gap-1.5"><Hash className="size-3" /> Technical Payment Details</span>
+                <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="px-3 pb-2 space-y-1">
+                <MonoRow k="Razorpay Order ID" v={pay?.razorpay_order_id ?? o.razorpay_order_id} copy />
+                <MonoRow k="Razorpay Payment ID" v={pay?.razorpay_payment_id ?? o.razorpay_payment_id} copy />
+                <MonoRow k="Transaction ID" v={pay?.transaction_id} copy />
+                <MonoRow k="Bank Ref" v={metaStr("bank_reference") ?? metaStr("rrn")} />
+                <MonoRow k="UPI Txn ID" v={metaStr("upi_transaction_id") ?? metaStr("vpa")} />
+                <MonoRow k="Signature" v={pay?.signature ? `${pay.signature.slice(0, 18)}…` : null} />
+                <Row k="Capture status" v={metaStr("captured") ?? (pay?.status ?? "—")} />
+                <Row k="Settlement" v={metaStr("settlement_status") ?? "—"} />
+                <Row k="Gateway fee" v={pay?.fee != null ? money(pay.fee) : "—"} />
+              </div>
+            </details>
+          </Section>
 
+          {/* ---- Customer Information ---- */}
+          <Section title="Customer" icon={<Users className="size-3.5" />}>
+            <Row k="Name" v={<span className="font-medium">{detail?.profile?.full_name ?? o.full_name ?? "—"}</span>} />
+            <MonoRow k="Email" v={o.contact_email} copy />
+            <MonoRow k="Phone" v={detail?.profile?.phone ?? o.phone ?? a.phone} copy />
+            <div className="grid grid-cols-2 gap-2 pt-2 mt-1 border-t border-border/30">
+              <div className="rounded-lg bg-muted/20 px-2.5 py-2">
+                <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Lifetime orders</div>
+                <div className="text-sm font-semibold tabular-nums">{String(detail?.lifetime.orders ?? o.lifetime_orders)}</div>
+              </div>
+              <div className="rounded-lg bg-muted/20 px-2.5 py-2">
+                <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Lifetime spend</div>
+                <div className="text-sm font-semibold tabular-nums">{money(detail?.lifetime.spend ?? o.lifetime_value)}</div>
+              </div>
+            </div>
+            <MonoRow k="Customer ID" v={o.user_id} copy />
+          </Section>
 
-        {/* Order Information */}
-        <Section title="Order Information" icon={<ShoppingBag className="size-3" />}>
-          <MonoRow k="Order ID" v={o.id} copy />
-          <Row k="Placed" v={new Date(o.created_at).toLocaleString()} />
-          <Row k="Status" v={<StatusPill s={o.status} />} />
-          <Row k="Fulfilment" v={<StatusPill s={o.fulfillment_status || o.ship_status} />} />
-        </Section>
+          {/* ---- Shipping Information (label-style) ---- */}
+          <Section title="Shipping Address" icon={<MapPin className="size-3.5" />}>
+            <div className="rounded-xl border border-dashed border-border bg-muted/10 p-3.5">
+              <p className="text-[14px] font-semibold">{recipient}</p>
+              {(a.phone) && <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 mt-0.5"><Phone className="size-3" />{a.phone}</p>}
+              <div className="mt-2 text-[13px] leading-relaxed text-foreground/90">
+                {addrLines.length > 0 ? addrLines.map((l, i) => <p key={i}>{l}</p>) : <p className="text-muted-foreground">No address on file</p>}
+              </div>
+              {a.address_type && <span className="inline-block mt-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-border text-muted-foreground">{a.address_type}</span>}
+            </div>
+          </Section>
 
-        {/* Payment Intelligence */}
-        <Section title="Payment Intelligence" icon={<CreditCard className="size-3" />}>
-          <Row k="Payment status" v={<StatusPill s={o.payment_status} />} />
-          <Row k="Amount paid" v={money(pay?.amount ?? o.total)} />
-          <Row k="Currency" v={cur} />
-          <Row k="Method" v={pay?.method ?? o.payment_method ?? "—"} />
-          <Row k="Gateway" v={detail?.order.payment_provider ?? o.payment_provider ?? "—"} />
-          <MonoRow k="Razorpay Order ID" v={pay?.razorpay_order_id ?? o.razorpay_order_id} copy />
-          <MonoRow k="Razorpay Payment ID" v={pay?.razorpay_payment_id ?? o.razorpay_payment_id} copy />
-          <MonoRow k="Transaction ID" v={pay?.transaction_id} copy />
-          <MonoRow k="Bank Ref" v={metaStr("bank_reference") ?? metaStr("rrn")} />
-          <MonoRow k="UPI Txn ID" v={metaStr("upi_transaction_id") ?? metaStr("vpa")} />
-          <MonoRow k="Signature" v={pay?.signature ? `${pay.signature.slice(0, 18)}…` : null} />
-          <Row k="Capture status" v={metaStr("captured") ?? (pay?.status ?? "—")} />
-          <Row k="Settlement" v={metaStr("settlement_status") ?? "—"} />
-          <Row k="Gateway fee" v={pay?.fee != null ? money(pay.fee) : "—"} />
-          {pay && <Row k="Recorded" v={new Date(pay.created_at).toLocaleString()} />}
-        </Section>
-
-        {/* Customer Information */}
-        <Section title="Customer Information" icon={<Users className="size-3" />}>
-          <Row k="Full name" v={detail?.profile?.full_name ?? o.full_name ?? "—"} />
-          <MonoRow k="Email" v={o.contact_email} copy />
-          <MonoRow k="Phone" v={detail?.profile?.phone ?? o.phone ?? a.phone} copy />
-          <MonoRow k="Customer ID" v={o.user_id} copy />
-          <Row k="Lifetime orders" v={String(detail?.lifetime.orders ?? o.lifetime_orders)} />
-          <Row k="Lifetime spend" v={money(detail?.lifetime.spend ?? o.lifetime_value)} />
-        </Section>
-
-        {/* Shipping Information */}
-        <Section title="Shipping Information" icon={<MapPin className="size-3" />}>
-          <Row k="Recipient" v={(a.name as string) ?? (a.full_name as string) ?? "—"} />
-          <MonoRow k="Phone" v={a.phone} copy />
-          <Row k="Address line 1" v={a.line1 ?? "—"} />
-          {a.line2 && <Row k="Address line 2" v={a.line2} />}
-          {a.landmark && <Row k="Landmark" v={a.landmark} />}
-          {a.area && <Row k="Area" v={a.area} />}
-          <Row k="City" v={a.city ?? "—"} />
-          {a.district && <Row k="District" v={a.district} />}
-          <Row k="State" v={a.state ?? a.region ?? "—"} />
-          <Row k="Country" v={a.country ?? "—"} />
-          <MonoRow k="PIN code" v={a.postal_code ?? a.postal} />
-          {a.address_type && <Row k="Type" v={a.address_type} />}
-        </Section>
-
-        {/* Billing Information */}
-        <Section title="Billing Information" icon={<Receipt className="size-3" />}>
+          {/* ---- Billing Information ---- */}
           {billing ? (
-            <>
+            <Section title="Billing" icon={<Receipt className="size-3.5" />}>
               <Row k="Billing name" v={billing.full_name ?? "—"} />
               <MonoRow k="Billing phone" v={billing.phone} />
               <Row k="Billing address" v={[billing.line1, billing.city, billing.state, billing.postal].filter(Boolean).join(", ") || "—"} />
-              <Row k="Same as shipping" v="No" />
-            </>
-          ) : (
-            <Row k="Same as shipping" v="Yes" />
-          )}
-        </Section>
+            </Section>
+          ) : null}
 
-        {/* Shipment Timeline */}
-        <Section title="Shipment Timeline" icon={<Truck className="size-3" />}>
-          <Row k="Carrier" v={o.carrier ?? "—"} />
-          <MonoRow k="Tracking" v={o.tracking_number} copy />
-          {(detail?.shipments ?? []).length === 0 && <p className="text-[11px] text-muted-foreground">No shipment yet.</p>}
-          {(detail?.shipments ?? []).flatMap((s) => s.events).slice(0, 8).map((ev) => (
-            <div key={ev.id} className="flex items-start gap-2 py-1 border-b border-border/40 last:border-0">
-              <span className="mt-1 size-1.5 rounded-full bg-accent shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px]">{ev.description ?? ev.status}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(ev.occurred_at).toLocaleString()}{ev.location ? ` · ${ev.location}` : ""}{ev.source ? ` · ${ev.source}` : ""}</p>
-              </div>
+          {/* ---- Shipment Timeline ---- */}
+          <Section title="Shipment Timeline" icon={<Truck className="size-3.5" />}>
+            <div className="flex items-center justify-between gap-3 pb-2 mb-1 border-b border-border/30">
+              <span className="text-muted-foreground text-[12px]">Carrier</span>
+              <span className="font-medium text-[12px]">{o.carrier ?? "—"}</span>
             </div>
-          ))}
-        </Section>
-
-        {/* Refund History */}
-        {(detail?.refunds ?? []).length > 0 && (
-          <Section title="Refund History" icon={<ArrowDownRight className="size-3" />}>
-            {detail!.refunds.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
-                <span className="text-[11px]">{money(r.amount)} · {r.status}</span>
-                <span className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
-              </div>
-            ))}
+            {o.tracking_number && <MonoRow k="Tracking" v={o.tracking_number} copy />}
+            {(detail?.shipments ?? []).flatMap((s) => s.events).length === 0 ? (
+              <p className="text-[12px] text-muted-foreground pt-1">No shipment movement yet.</p>
+            ) : (
+              <ol className="relative ml-1 mt-2 border-l border-border/60 space-y-3 pl-4">
+                {(detail?.shipments ?? []).flatMap((s) => s.events).slice(0, 8).map((ev) => (
+                  <li key={ev.id} className="relative">
+                    <span className="absolute -left-[21px] top-1 size-2 rounded-full bg-accent ring-4 ring-card" />
+                    <p className="text-[12px] font-medium capitalize">{(ev.description ?? ev.status ?? "").replace(/_/g, " ")}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(ev.occurred_at).toLocaleString()}{ev.location ? ` · ${ev.location}` : ""}{ev.source ? ` · ${ev.source}` : ""}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
           </Section>
-        )}
 
-        {/* Support History */}
-        {(detail?.tickets ?? []).length > 0 && (
-          <Section title="Support History" icon={<LifeBuoy className="size-3" />}>
-            {detail!.tickets.map((t) => (
-              <div key={t.id} className="flex items-center justify-between gap-2 py-1 border-b border-border/40 last:border-0">
-                <span className="text-[11px] truncate">{t.subject ?? t.category ?? "Ticket"}</span>
-                <StatusPill s={t.status} />
-              </div>
-            ))}
-          </Section>
-        )}
-
-        {/* Notification History */}
-        {(detail?.notifications ?? []).length > 0 && (
-          <Section title="Notification History" icon={<Bell className="size-3" />}>
-            {detail!.notifications.slice(0, 12).map((n) => (
-              <div key={n.id} className="flex items-start gap-2 py-1 border-b border-border/40 last:border-0">
-                <span className={`mt-1 size-1.5 rounded-full shrink-0 ${n.read_at ? "bg-muted-foreground/40" : "bg-accent"}`} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] truncate">{n.title ?? n.type}</p>
-                  <p className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
+          {/* ---- Refund History ---- */}
+          {(detail?.refunds ?? []).length > 0 && (
+            <Section title="Refund History" icon={<ArrowDownRight className="size-3.5" />}>
+              {detail!.refunds.map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-border/30 last:border-0">
+                  <span className="text-[12px]">{money(r.amount)} · {r.status}</span>
+                  <span className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </Section>
+          )}
+
+          {/* ---- Support History ---- */}
+          {(detail?.tickets ?? []).length > 0 && (
+            <Section title="Support History" icon={<LifeBuoy className="size-3.5" />}>
+              {detail!.tickets.map((t) => (
+                <div key={t.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-border/30 last:border-0">
+                  <span className="text-[12px] truncate">{t.subject ?? t.category ?? "Ticket"}</span>
+                  <StatusPill s={t.status} />
+                </div>
+              ))}
+            </Section>
+          )}
+
+          {/* ---- Notification History ---- */}
+          {(detail?.notifications ?? []).length > 0 && (
+            <Section title="Notification History" icon={<Bell className="size-3.5" />}>
+              {detail!.notifications.slice(0, 12).map((n) => {
+                const label = (n.title ?? n.type ?? "").toLowerCase();
+                const bad = label.includes("fail") || label.includes("cancel") || label.includes("declin");
+                const ok = label.includes("deliver") || label.includes("confirm") || label.includes("ship") || label.includes("paid");
+                const Icon = bad ? XCircle : ok ? CheckCircle2 : Bell;
+                const tone = bad ? "text-destructive" : ok ? "text-emerald-400" : "text-muted-foreground";
+                return (
+                  <div key={n.id} className={`flex items-start gap-2.5 py-1.5 border-b border-border/30 last:border-0 ${bad ? "bg-destructive/[0.04] -mx-1 px-1 rounded" : ""}`}>
+                    <Icon className={`size-3.5 mt-0.5 shrink-0 ${tone}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-medium capitalize">{(n.title ?? n.type ?? "").replace(/_/g, " ")}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </Section>
+          )}
+
+          {/* ---- Risk signals (compact alert) ---- */}
+          {o.riskReasons.length > 0 && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/[0.06] p-3">
+              <p className="text-[11px] uppercase tracking-widest text-destructive mb-1.5 flex items-center gap-1.5"><ShieldAlert className="size-3.5" />Risk signals <RiskBadge score={o.riskScore} /></p>
+              <ul className="text-[12px] text-muted-foreground space-y-0.5 list-disc list-inside">{o.riskReasons.map((r) => <li key={r}>{r}</li>)}</ul>
+            </div>
+          )}
+
+          {/* ---- Products ---- */}
+          <Section title={`Products (${o.line_count})`} icon={<Package className="size-3.5" />}>
+            <div className="space-y-3">
+              {o.items.map((it, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  {it.image ? <img src={it.image} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-border" /> : <div className="size-12 rounded-xl bg-muted/40 grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium leading-snug line-clamp-2">{it.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Qty {it.quantity} · {inr(it.unit_price)} ea</p>
+                  </div>
+                  <span className="text-[13px] font-semibold tabular-nums shrink-0">{inr(it.line_total)}</span>
+                </div>
+              ))}
+            </div>
           </Section>
-        )}
 
-        {o.riskReasons.length > 0 && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-            <p className="text-[10px] uppercase tracking-widest text-destructive mb-1.5 flex items-center gap-1"><ShieldAlert className="size-3" />Risk signals</p>
-            <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc list-inside">{o.riskReasons.map((r) => <li key={r}>{r}</li>)}</ul>
-          </div>
-        )}
-
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Products ({o.line_count})</p>
-          <div className="space-y-2">
-            {o.items.map((it, i) => (
-              <div key={i} className="flex items-center gap-2">
-                {it.image ? <img src={it.image} alt="" className="size-9 rounded-lg object-cover" /> : <div className="size-9 rounded-lg bg-muted/40 grid place-items-center"><Package className="size-4 text-muted-foreground" /></div>}
-                <div className="min-w-0 flex-1"><p className="text-xs truncate">{it.name}</p><p className="text-[10px] text-muted-foreground">×{it.quantity} · {inr(it.unit_price)}</p></div>
-                <span className="text-xs tabular-nums">{inr(it.line_total)}</span>
-              </div>
-            ))}
-          </div>
+          {loading && <div className="flex items-center gap-2 text-[12px] text-muted-foreground"><Loader2 className="size-3.5 animate-spin" /> Loading full payment & customer detail…</div>}
+          {err && <p className="text-[12px] text-destructive">{err}</p>}
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground pt-1"><ShieldCheck className="size-3" /> Staff-only · this view is audit-logged</div>
         </div>
-
-        {loading && <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Loader2 className="size-3 animate-spin" /> Loading full payment & customer detail…</div>}
-        {err && <p className="text-[11px] text-destructive">{err}</p>}
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><ShieldCheck className="size-3" /> Staff-only · this view is audit-logged</div>
       </div>
     </div>
   );
