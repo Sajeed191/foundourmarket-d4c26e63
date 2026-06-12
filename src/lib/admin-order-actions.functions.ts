@@ -162,10 +162,16 @@ export const markOrderStageFn = createServerFn({ method: "POST" })
       }
       // Apply each lifecycle status from the current status step+1 up to the
       // target (1-based steps), one stage at a time so the trigger is satisfied.
+      const isCod = (order.payment_method ?? "").toLowerCase() === "cod"
+        || (order.payment_status ?? "").toLowerCase() === "cod";
       for (let s = statusStep + 1; s <= targetStep; s++) {
         const next = LIFECYCLE_SEQ[s - 1];
+        const orderPatch: Record<string, unknown> = { status: next, fulfillment_status: next };
+        // COD orders are collected on delivery — settle payment automatically
+        // once the order is marked delivered.
+        if (next === "delivered" && isCod) orderPatch.payment_status = "paid";
         const { error: sErr } = await supabaseAdmin.from("orders")
-          .update({ status: next, fulfillment_status: next } as never)
+          .update(orderPatch as never)
           .eq("id", input.orderId);
         if (sErr) throw new Error(sErr.message);
 
