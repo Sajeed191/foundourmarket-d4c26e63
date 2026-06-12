@@ -56,7 +56,7 @@ function AdminReturnsPage() {
     >
       {returns === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
         returns.length === 0 ? <p className="text-sm text-muted-foreground">No returns yet.</p> :
-        <div className="space-y-4">
+        <div className="space-y-5 sm:space-y-6">
           {returns.map((r) => (
             <ReturnAdminCard key={r.id} r={r} products={productMap} onUpdate={update} />
           ))}
