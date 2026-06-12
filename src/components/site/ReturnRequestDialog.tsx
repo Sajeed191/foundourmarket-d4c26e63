@@ -168,7 +168,7 @@ export function ReturnRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md z-[95]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RotateCcw className="size-4 text-accent" /> Request a return
