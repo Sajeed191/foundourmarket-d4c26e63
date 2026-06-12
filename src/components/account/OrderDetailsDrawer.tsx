@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { cancelMyOrderFn } from "@/lib/order-cancel.functions";
@@ -307,7 +308,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
   })();
 
 
-  return (
+  const drawer = (
     <AnimatePresence>
       {orderId && (
         <>
@@ -604,6 +605,8 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
       )}
     </AnimatePresence>
   );
+
+  return typeof document === "undefined" ? null : createPortal(drawer, document.body);
 }
 
 function Section({ title, icon: Icon, children }: { title: string; icon: typeof Truck; children: React.ReactNode }) {
