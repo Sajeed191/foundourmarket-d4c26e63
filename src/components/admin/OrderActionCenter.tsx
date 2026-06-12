@@ -79,11 +79,11 @@ export function OrderActionCenter({ orderId, hasCustomer, currentStage, onDone }
   const field = "w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-border bg-background outline-none focus:border-accent/40";
 
   return (
-    <div className="rounded-xl border border-accent/30 bg-accent/[0.03]">
+    <div className="rounded-xl border border-border bg-muted/20">
       <button onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2.5">
-        <span className="text-[10px] uppercase tracking-widest text-accent flex items-center gap-1.5">
-          <Boxes className="size-3" /> Admin Action Center
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+          <Boxes className="size-3" /> Admin Actions
         </span>
         <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
