@@ -90,7 +90,7 @@ function AuthPage() {
     setError(null);
     try {
       if (isSignup) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -99,6 +99,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // If email confirmation is required, no session is returned — don't
+        // bounce the user to a protected page. Tell them to confirm instead.
+        if (!data.session) {
+          setError("Account created — check your email to confirm, then sign in.");
+          setIsSignup(false);
+          return;
+        }
         nav({ to: resolveDest() as any });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -111,6 +118,7 @@ function AuthPage() {
       setBusy(false);
     }
   };
+
 
   const onForgot = async () => {
     setError(null);
