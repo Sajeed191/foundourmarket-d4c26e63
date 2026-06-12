@@ -8,7 +8,6 @@ import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
-import type { SaveState } from "@/lib/drafts";
 import { writeLocalDraft, readLocalDraft, clearLocalDraft, type SaveState } from "@/lib/drafts";
 import { COMPLETION_COLS, COMPLETION_SECTIONS, computeCompletion, type SectionCompletion, type SectionKey } from "@/lib/product-completion";
 
