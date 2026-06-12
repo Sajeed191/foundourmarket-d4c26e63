@@ -435,7 +435,7 @@ export function SectionEditor<T extends Record<string, any>>({
           <div className="grid place-items-center py-24"><Loader2 className="size-5 animate-spin text-accent" /></div>
         )
       ) : (
-        <div className="space-y-5 pb-[calc(var(--mobile-nav-clearance)+7.5rem)] lg:pb-32">
+        <div className="space-y-5 pb-[calc(var(--mobile-nav-clearance)+5.5rem)] lg:pb-24">
           <ProductHeaderStrip h={header} active={sectionKey} />
 
           {recovery && (
