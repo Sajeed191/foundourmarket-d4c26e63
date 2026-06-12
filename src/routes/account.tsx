@@ -1174,14 +1174,14 @@ function ContinueShopping({ items, format }: { items: Product[]; format: (n: num
 
 function ContinueShoppingCard({ product: p, format }: { product: Product; format: (n: number) => string }) {
   const { add } = useCart();
-  const { compareOf } = useRegion();
+  const { priceOf, compareOf } = useRegion();
   const { has, toggle } = useWishlist();
   const [justAdded, setJustAdded] = useState(false);
   const saved = has(p.slug);
 
-  const price = Number(p.price);
+  const price = priceOf(p);
   const original = compareOf(p) ?? (p.discount ? price * (1 + p.discount / 100) : null);
-  const discount = (original ? discountPercent(price, original) : 0) ?? 0;
+  const discount = discountPercent(price, original) ?? 0;
 
   const handleAdd = () => {
     add(p.slug);
