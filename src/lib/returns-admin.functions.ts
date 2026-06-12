@@ -21,12 +21,22 @@ export type AdminReturnRow = {
   refund_amount: number;
   refund_status: string;
   created_at: string;
+  photo_urls: string[] | null;
   return_items: { id: string; product_slug: string; quantity: number; reason: string | null }[];
   customer: {
     name: string | null;
     email: string | null;
     phone: string | null;
     address: string | null;
+  };
+  order: {
+    currency: string | null;
+    total: number | null;
+    payment_status: string | null;
+    fulfillment_status: string | null;
+    order_status: string | null;
+    created_at: string | null;
+    fulfilled_at: string | null;
   };
 };
 
