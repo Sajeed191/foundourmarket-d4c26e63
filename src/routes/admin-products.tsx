@@ -10,7 +10,7 @@ import {
   Eye, EyeOff, Copy, ExternalLink, Link2, Trash2, Pencil, Boxes,
   TrendingUp, AlertTriangle, CheckCircle2, X, SlidersHorizontal, BarChart3,
   Layers, IndianRupee, Flame, Upload, ShoppingCart, Tag, Image as ImageIcon,
-  FileText, Sparkles, Wrench, ShieldCheck, Crown, HeartPulse,
+  FileText, Sparkles, Wrench, ShieldCheck, Crown, HeartPulse, Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -162,7 +162,20 @@ function matchesTag(p: Product, tag: TagFilter): boolean {
   }
 }
 
+type CatalogTab = "all" | "india" | "international" | "bestsellers" | "low_stock" | "draft";
+const CATALOG_TABS: { key: CatalogTab; label: string }[] = [
+  { key: "all", label: "All Products" },
+  { key: "india", label: "India 🇮🇳" },
+  { key: "international", label: "International 🌍" },
+  { key: "bestsellers", label: "Best Sellers ⭐" },
+  { key: "low_stock", label: "Low Stock ⚠️" },
+  { key: "draft", label: "Draft" },
+];
+
 function ProductsInner() {
+
+
+
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState<Record<string, Stat>>({});
@@ -179,6 +192,7 @@ function ProductsInner() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"active" | "recycle">("active");
   const [tag, setTag] = useState<TagFilter>("all");
+  const [catalogTab, setCatalogTab] = useState<CatalogTab>("all");
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
@@ -365,11 +379,15 @@ function ProductsInner() {
       if (!best || u > best.units) best = { name: p.name, units: u };
       if (!viewed || p.views_count > viewed.views) viewed = { name: p.name, views: p.views_count };
     }
+    const live = list.filter((p) => !p.deleted_at);
     return {
       total: list.length,
       active: list.filter((p) => p.in_stock).length,
       inactive: list.filter((p) => !p.in_stock).length,
       featured: list.filter((p) => p.featured).length,
+      india: live.filter((p) => p.india_visible !== false).length,
+      international: live.filter((p) => p.international_visible !== false).length,
+      missingSku: live.filter((p) => !(p.sku && p.sku.trim())).length,
       oos, low,
       best: best && best.units > 0 ? best.name : "—",
       mostViewed: viewed && viewed.views > 0 ? viewed.name : "—",
@@ -377,9 +395,68 @@ function ProductsInner() {
     };
   }, [products, stats]);
 
+  // ---- Region intelligence: India 🇮🇳 vs International 🌍 ----
+  const regionData = useMemo(() => {
+    const live = (products ?? []).filter((p) => !p.deleted_at);
+    const indiaList = live.filter((p) => p.india_visible !== false);
+    const intlList = live.filter((p) => p.international_visible !== false);
+    const sumUnits = (arr: Product[]) => arr.reduce((s, p) => s + (stats[p.slug]?.units ?? 0), 0);
+    const indiaRevenue = indiaList.reduce((s, p) => s + (stats[p.slug]?.revenue ?? 0), 0);
+    // International revenue prefers USD pricing when available, else falls back to order revenue.
+    const intlRevenue = intlList.reduce((s, p) => {
+      const units = stats[p.slug]?.units ?? 0;
+      const usdPrice = Number(p.price_usd) || 0;
+      return s + (usdPrice > 0 ? usdPrice * units : 0);
+    }, 0);
+    const topCategories = (arr: Product[]) => {
+      const m = new Map<string, number>();
+      for (const p of arr) {
+        const rev = stats[p.slug]?.revenue ?? 0;
+        m.set(p.category, (m.get(p.category) ?? 0) + rev);
+      }
+      return [...m.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    };
+    const topProducts = (arr: Product[], byUsd: boolean) =>
+      arr
+        .map((p) => {
+          const units = stats[p.slug]?.units ?? 0;
+          const rev = byUsd && Number(p.price_usd) > 0 ? Number(p.price_usd) * units : (stats[p.slug]?.revenue ?? 0);
+          return { p, units, rev };
+        })
+        .filter((x) => x.units > 0)
+        .sort((a, b) => b.rev - a.rev)
+        .slice(0, 5);
+    return {
+      india: {
+        count: indiaList.length,
+        revenue: indiaRevenue,
+        units: sumUnits(indiaList),
+        categories: topCategories(indiaList),
+        top: topProducts(indiaList, false),
+      },
+      international: {
+        count: intlList.length,
+        revenue: intlRevenue,
+        units: sumUnits(intlList),
+        categories: topCategories(intlList),
+        top: topProducts(intlList, true),
+      },
+    };
+  }, [products, stats]);
+
   const filtered = useMemo(() => {
     let list = [...(products ?? [])];
     list = view === "recycle" ? list.filter((p) => p.deleted_at) : list.filter((p) => !p.deleted_at);
+    // Catalog tab (region / merchandising lens) — applied before secondary filters.
+    if (view !== "recycle") {
+      switch (catalogTab) {
+        case "india": list = list.filter((p) => p.india_visible !== false); break;
+        case "international": list = list.filter((p) => p.international_visible !== false); break;
+        case "bestsellers": list = list.filter((p) => p.bestseller || (stats[p.slug]?.units ?? 0) > 0); break;
+        case "low_stock": list = list.filter((p) => p.stock_quantity <= p.low_stock_threshold); break;
+        case "draft": list = list.filter((p) => (p.status ?? "") === "draft"); break;
+      }
+    }
     if (cat !== "all") list = list.filter((p) => p.category === cat);
     if (state === "active") list = list.filter((p) => p.in_stock);
     else if (state === "inactive") list = list.filter((p) => !p.in_stock);
@@ -406,10 +483,10 @@ function ProductsInner() {
       }
     });
     return list;
-  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view]);
+  }, [products, cat, state, stock, tag, searchTerm, sort, stats, view, catalogTab]);
 
   // Reset to first page whenever the filtered set changes
-  useEffect(() => { setPage(1); }, [cat, state, stock, tag, searchTerm, sort, view]);
+  useEffect(() => { setPage(1); }, [cat, state, stock, tag, searchTerm, sort, view, catalogTab]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -545,31 +622,35 @@ function ProductsInner() {
     return <div className="min-h-[40vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
   }
 
-  const headerChips = [
-    { icon: Package, label: "Total", value: String(kpis.total) },
+  const headerChips: { icon: typeof Package; label: string; value: string; tab?: CatalogTab; accent?: boolean }[] = [
+    { icon: Package, label: "Total", value: String(kpis.total), tab: "all" },
+    { icon: IndianRupee, label: "India", value: String(kpis.india), tab: "india" },
+    { icon: Globe, label: "International", value: String(kpis.international), tab: "international" },
     { icon: CheckCircle2, label: "Active", value: String(kpis.active) },
-    { icon: EyeOff, label: "Inactive", value: String(kpis.inactive) },
+    { icon: AlertTriangle, label: "Low Stock", value: String(kpis.low), tab: "low_stock", accent: kpis.low > 0 },
+    { icon: Tag, label: "Missing SKU", value: String(kpis.missingSku), accent: kpis.missingSku > 0 },
   ];
 
   return (
     <div className="space-y-5 pb-28">
-      {/* 1. Products Header — compact KPI chips */}
-      <div className="-mx-1 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2.5 px-1 min-w-max">
-          {headerChips.map((k) => (
-            <div
-              key={k.label}
-              className="relative overflow-hidden glass border border-white/10 rounded-xl px-3.5 py-2.5 min-w-[110px] flex items-center gap-2.5"
-            >
-              <k.icon className="size-4 text-accent shrink-0" />
-              <div className="min-w-0">
-                <p className="text-base font-display tabular-nums leading-none">{k.value}</p>
-                <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-1">{k.label}</p>
-              </div>
+      {/* 1. Products Overview — compact KPI chips */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+        {headerChips.map((k) => (
+          <button
+            key={k.label}
+            type="button"
+            onClick={() => k.tab && setCatalogTab(k.tab)}
+            className={`relative overflow-hidden glass border rounded-xl px-3 py-2.5 flex items-center gap-2.5 text-left transition-colors ${k.tab ? "hover:border-accent/40 cursor-pointer" : "cursor-default"} ${k.accent ? "border-amber-500/30 bg-amber-500/[0.04]" : "border-white/10"}`}
+          >
+            <k.icon className={`size-4 shrink-0 ${k.accent ? "text-amber-400" : "text-accent"}`} />
+            <div className="min-w-0">
+              <p className="text-base font-display tabular-nums leading-none">{k.value}</p>
+              <p className="text-[9px] font-mono uppercase tracking-[0.16em] text-muted-foreground mt-1 truncate">{k.label}</p>
             </div>
-          ))}
-        </div>
+          </button>
+        ))}
       </div>
+
 
       {/* 2. Search & Actions — sticky on mobile */}
       <div className="sticky top-2 z-20 flex flex-wrap items-center gap-2 glass-strong border border-white/10 rounded-2xl p-2.5">
@@ -664,7 +745,56 @@ function ProductsInner() {
         </div>
       )}
 
-      {/* 4. Product Catalog — PRIMARY SECTION */}
+      {/* 3b. Product Catalog Tabs */}
+      <div className="-mx-1 overflow-x-auto no-scrollbar">
+        <div className="flex gap-1.5 px-1 min-w-max p-1 glass border border-white/10 rounded-2xl">
+          {CATALOG_TABS.map((t) => {
+            const on = catalogTab === t.key;
+            return (
+              <button key={t.key} onClick={() => setCatalogTab(t.key)}
+                className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-medium transition-colors ${on ? "bg-accent text-accent-foreground shadow" : "text-muted-foreground hover:bg-white/5"}`}>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4a. India Products Section */}
+      {catalogTab === "india" && (
+        <RegionInsightPanel
+          title="India Products"
+          flag="🇮🇳"
+          revenue={inr(regionData.india.revenue)}
+          units={regionData.india.units.toLocaleString()}
+          categories={regionData.india.categories.map(([name, rev]) => ({ name, value: inr(rev) }))}
+          top={regionData.india.top.map((x) => ({ p: x.p, revenue: inr(x.rev), units: x.units }))}
+          onOpen={(slug) => navigate({ to: "/admin-product/$slug", params: { slug } })}
+        />
+      )}
+
+      {/* 4b. International Products Section */}
+      {catalogTab === "international" && (
+        <RegionInsightPanel
+          title="International Products"
+          flag="🌍"
+          revenue={usd(regionData.international.revenue)}
+          units={regionData.international.units.toLocaleString()}
+          categories={regionData.international.categories.map(([name, rev]) => ({ name, value: inr(rev) }))}
+          top={regionData.international.top.map((x) => ({ p: x.p, revenue: usd(x.rev), units: x.units }))}
+          onOpen={(slug) => navigate({ to: "/admin-product/$slug", params: { slug } })}
+        />
+      )}
+
+      {/* 4c. Best Sellers Center */}
+      {catalogTab === "bestsellers" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <BestSellerColumn title="Top India 🇮🇳" items={regionData.india.top.map((x) => ({ p: x.p, revenue: inr(x.rev), units: x.units }))} onOpen={(slug) => navigate({ to: "/admin-product/$slug", params: { slug } })} />
+          <BestSellerColumn title="Top International 🌍" items={regionData.international.top.map((x) => ({ p: x.p, revenue: usd(x.rev), units: x.units }))} onOpen={(slug) => navigate({ to: "/admin-product/$slug", params: { slug } })} />
+        </div>
+      )}
+
+
       <div className="flex items-center justify-between gap-2 px-1">
         <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
           {filtered.length} of {products.length} products
@@ -730,7 +860,7 @@ function ProductsInner() {
       {/* 5. Inventory Health Center — collapsible, below catalog */}
       <CollapsibleModule
         eyebrow="Operations"
-        title="Inventory Health Center"
+        title="Inventory Operations Center"
         sectionId="products-inventory-health"
         defaultOpen={false}
         badge={
@@ -1116,5 +1246,87 @@ function IconAction({ onClick, title, icon: Icon, danger, active }: { onClick: (
   );
 }
 
+type RegionTopItem = { p: Product; revenue: string; units: number };
+
+function RegionInsightPanel({
+  title, flag, revenue, units, categories, top, onOpen,
+}: {
+  title: string; flag: string; revenue: string; units: string;
+  categories: { name: string; value: string }[];
+  top: RegionTopItem[];
+  onOpen: (slug: string) => void;
+}) {
+  return (
+    <div className="glass border border-white/10 rounded-2xl p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-lg" aria-hidden>{flag}</span>
+        <h3 className="text-sm font-display">{title}</h3>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <IntelStat label="Revenue" value={revenue} accent />
+        <IntelStat label="Units sold" value={units} />
+      </div>
+      <div>
+        <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">Top categories</p>
+        {categories.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No sales recorded yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((c) => (
+              <span key={c.name} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] font-mono">
+                {c.name} · <span className="text-accent">{c.value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <BestSellerColumn title={`Best selling`} items={top} onOpen={onOpen} flush />
+    </div>
+  );
+}
+
+function BestSellerColumn({
+  title, items, onOpen, flush,
+}: {
+  title: string; items: RegionTopItem[]; onOpen: (slug: string) => void; flush?: boolean;
+}) {
+  return (
+    <div className={flush ? "" : "glass border border-white/10 rounded-2xl p-4"}>
+      <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">{title}</p>
+      {items.length === 0 ? (
+        <p className="text-xs text-muted-foreground py-4 text-center">No sales recorded yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(({ p, revenue, units }, i) => {
+            const h = health(p);
+            return (
+              <button key={p.id} onClick={() => onOpen(p.slug)}
+                className="w-full flex items-center gap-3 rounded-xl border border-white/10 p-2 text-left hover:border-accent/40 hover:bg-white/5 transition-colors">
+                <span className="text-[10px] font-mono text-muted-foreground w-4 shrink-0">{i + 1}</span>
+                <div className="size-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                  <img src={resolveImage(p.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs truncate">{p.name}</p>
+                  <p className="text-[9px] font-mono text-muted-foreground mt-0.5">
+                    {units} sold · Stock {p.stock_quantity}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-mono">{revenue}</p>
+                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-widest mt-0.5 ${healthMeta[h].cls}`}>
+                    {healthMeta[h].label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Legacy inline ProductEditor and its helpers removed — unified into ProductEditorModal.
+
 
