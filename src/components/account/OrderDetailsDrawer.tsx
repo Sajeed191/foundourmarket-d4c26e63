@@ -47,6 +47,7 @@ type DrawerData = {
   returns: Return[];
   notifications: Notif[];
   returnWindowDays: number;
+  returnEligible: boolean;
   cost: number;
 };
 
