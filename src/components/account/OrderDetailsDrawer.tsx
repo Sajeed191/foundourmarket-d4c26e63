@@ -305,12 +305,12 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
       {orderId && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm" aria-hidden />
+            onClick={onClose} className="fixed inset-0 z-[80] bg-background/70 backdrop-blur-sm" aria-hidden />
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             drag="y" dragControls={undefined} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.4 }} onDragEnd={onDragEnd}
-            className="fixed inset-x-0 bottom-0 z-50 h-[94vh] rounded-t-3xl border-t border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-[81] h-[94vh] rounded-t-3xl border-t border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl flex flex-col"
             role="dialog" aria-modal="true"
           >
             {/* grabber + header */}
@@ -558,7 +558,7 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
 
             {/* sticky action bar */}
             {order && (
-              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 py-3 flex flex-col gap-2">
+              <div className="shrink-0 border-t border-border/50 bg-card/95 backdrop-blur px-4 pt-3 pb-[calc(0.75rem+var(--mobile-safe-bottom))] flex flex-col gap-2">
                 {cancellable && (
                   <button onClick={handleCancel} disabled={cancelling}
                     className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-4 py-2.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25 active:scale-95 transition disabled:opacity-50">
