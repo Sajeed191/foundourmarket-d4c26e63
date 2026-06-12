@@ -4,7 +4,6 @@ import {
   Loader2,
   ArrowLeft,
   Package,
-  Sparkles,
   ShieldCheck,
   Clock,
   BadgeCheck,
@@ -19,10 +18,18 @@ import {
   Copy,
   ExternalLink,
   Check,
+  Truck,
+  RefreshCw,
+  Wallet,
+  Download,
+  Search,
+  CircleDot,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchProductsBySlugs } from "@/lib/products";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -36,10 +43,10 @@ import {
 
 const SUPPORT_EMAIL = "support@foundourmarket.com";
 const SUPPORT_CC = "support@foundourmarket.com";
-const SUPPORT_SUBJECT = "Refund Support Request - FoundOurMarket";
+const SUPPORT_SUBJECT = "Resolution Support Request - FoundOurMarket";
 const SUPPORT_BODY = `Hello FoundOurMarket Support,
 
-I need help regarding a refund request.
+I need help regarding a resolution request.
 
 Order ID:
 Issue:
@@ -81,14 +88,19 @@ const searchSchema = z.object({ order: z.string().optional() });
 export const Route = createFileRoute("/account_/returns")({
   head: () => ({
     meta: [
-      { title: "Refund Status — FoundOurMarket™" },
-      { name: "description", content: "Track refund requests, monitor review progress, and manage returns." },
+      { title: "Resolution Center — FoundOurMarket™" },
+      {
+        name: "description",
+        content:
+          "Track replacements, refunds, approvals, reviews and resolution progress from one premium place.",
+      },
     ],
   }),
   validateSearch: searchSchema,
   component: ReturnsPage,
 });
 
+type ReturnItem = { product_slug: string; quantity: number };
 type ReturnRow = {
   id: string;
   order_id: string;
@@ -99,37 +111,251 @@ type ReturnRow = {
   resolution_type: string;
   replacement_status: string;
   created_at: string;
+  return_items?: ReturnItem[] | null;
 };
 
 type OrderItem = { id: string; name: string; product_slug: string; quantity: number; unit_price: number };
 type OrderForReturn = { id: string; order_items: OrderItem[] };
 
-type FilterKey = "all" | "processing" | "approved" | "refunded" | "rejected";
+type FilterKey = "all" | "reviewing" | "replacement" | "refund" | "completed" | "rejected";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "processing", label: "Processing" },
-  { key: "approved", label: "Approved" },
-  { key: "refunded", label: "Refunded" },
+  { key: "reviewing", label: "Reviewing" },
+  { key: "replacement", label: "Replacement" },
+  { key: "refund", label: "Refund" },
+  { key: "completed", label: "Completed" },
   { key: "rejected", label: "Rejected" },
 ];
 
-function matchFilter(r: ReturnRow, f: FilterKey): boolean {
-  if (f === "all") return true;
-  const s = `${r.status} ${r.refund_status}`.toLowerCase();
-  if (f === "processing") return /requested|pending|review|processing/.test(s);
-  if (f === "approved") return /approved/.test(s);
-  if (f === "refunded") return /refunded|completed|paid/.test(s);
-  if (f === "rejected") return /rejected|denied|cancel/.test(s);
-  return true;
+/* ---------------- Resolution model ---------------- */
+
+type Tone = "neutral" | "blue" | "purple" | "orange" | "indigo" | "green" | "red";
+
+const TONE_CLASS: Record<Tone, string> = {
+  neutral: "text-white/70 bg-white/[0.06] ring-white/15",
+  blue: "text-sky-300 bg-sky-400/10 ring-sky-400/25",
+  purple: "text-violet-300 bg-violet-400/10 ring-violet-400/25",
+  orange: "text-[#FF9F43] bg-[#FF7A00]/12 ring-[#FF7A00]/30",
+  indigo: "text-indigo-300 bg-indigo-400/10 ring-indigo-400/25",
+  green: "text-emerald-300 bg-emerald-400/10 ring-emerald-400/25",
+  red: "text-rose-300 bg-rose-400/10 ring-rose-400/25",
+};
+
+const TONE_GLOW: Record<Tone, string> = {
+  neutral: "rgba(255,255,255,0.12)",
+  blue: "rgba(56,189,248,0.35)",
+  purple: "rgba(167,139,250,0.35)",
+  orange: "rgba(255,122,0,0.4)",
+  indigo: "rgba(129,140,248,0.35)",
+  green: "rgba(52,211,153,0.35)",
+  red: "rgba(251,113,133,0.35)",
+};
+
+const STAGES = ["Requested", "Review", "Approved", "Processing", "Completed"] as const;
+
+type ResolutionView = {
+  isReplacement: boolean;
+  status: string; // primary status label
+  resolution: string; // current resolution label
+  tone: Tone;
+  stage: number; // -1 rejected, 0..4
+  rejected: boolean;
+  expectedLabel: string;
+  expectedDate: string | null;
+  matches: (f: FilterKey) => boolean;
+};
+
+function addBusinessDays(from: Date, days: number): Date {
+  const d = new Date(from);
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return d;
 }
 
-function statusTone(s: string): string {
-  const v = s.toLowerCase();
-  if (/refunded|completed|paid/.test(v)) return "text-emerald-400 bg-emerald-400/10 ring-emerald-400/20";
-  if (/approved/.test(v)) return "text-sky-400 bg-sky-400/10 ring-sky-400/20";
-  if (/rejected|denied|cancel/.test(v)) return "text-rose-400 bg-rose-400/10 ring-rose-400/20";
-  return "text-[#FF9F43] bg-[#FF7A00]/10 ring-[#FF7A00]/25";
+function fmtDate(d: Date): string {
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function deriveView(r: ReturnRow): ResolutionView {
+  const s = (r.status ?? "").toLowerCase();
+  const rep = (r.replacement_status ?? "").toLowerCase();
+  const ref = (r.refund_status ?? "").toLowerCase();
+  const isReplacement = r.resolution_type !== "refund";
+  const created = new Date(r.created_at);
+
+  const rejected = /rejected|denied|cancel/.test(s);
+  const replacementDone = /delivered|completed|fulfilled/.test(rep);
+  const refundDone = /refunded|paid|completed|succeeded/.test(ref);
+  const completed = replacementDone || refundDone;
+
+  let stage = 0;
+  let status = "Requested";
+  let resolution = isReplacement ? "Replacement Requested" : "Refund Requested";
+  let tone: Tone = "neutral";
+
+  if (rejected) {
+    return {
+      isReplacement,
+      status: "Rejected",
+      resolution: isReplacement ? "Replacement Declined" : "Refund Declined",
+      tone: "red",
+      stage: -1,
+      rejected: true,
+      expectedLabel: "Status",
+      expectedDate: null,
+      matches: (f) => f === "all" || f === "rejected",
+    };
+  }
+
+  if (completed) {
+    stage = 4;
+    tone = "green";
+    status = "Completed";
+    resolution = isReplacement
+      ? "Replacement Delivered"
+      : `Refund Processed`;
+  } else if (isReplacement) {
+    // Replacement-first flow
+    if (/shipped|transit|dispatch/.test(rep)) {
+      stage = 3;
+      tone = "indigo";
+      status = "Replacement Shipped";
+      resolution = "Replacement Shipped";
+    } else if (/processing|preparing|packed|approved/.test(rep) || /approved/.test(s)) {
+      stage = /approved/.test(s) && !/processing|preparing|packed/.test(rep) ? 2 : 3;
+      tone = stage === 2 ? "purple" : "orange";
+      status = stage === 2 ? "Replacement Approved" : "Replacement Processing";
+      resolution = status;
+    } else if (/review|pending/.test(s) || /pending|review/.test(rep)) {
+      stage = 1;
+      tone = "blue";
+      status = "In Review";
+      resolution = "Replacement In Review";
+    } else {
+      stage = 0;
+      tone = "neutral";
+      status = "Requested";
+      resolution = "Replacement Requested";
+    }
+  } else {
+    // Refund flow
+    if (/processing|pending_payout|payout/.test(ref)) {
+      stage = 3;
+      tone = "orange";
+      status = "Refund Processing";
+      resolution = "Refund Processing";
+    } else if (/approved/.test(s) || /approved/.test(ref)) {
+      stage = 2;
+      tone = "purple";
+      status = "Refund Approved";
+      resolution = "Refund Approved";
+    } else if (/review|pending/.test(s)) {
+      stage = 1;
+      tone = "blue";
+      status = "In Review";
+      resolution = "Refund In Review";
+    } else {
+      stage = 0;
+      tone = "neutral";
+      status = "Requested";
+      resolution = "Refund Requested";
+    }
+  }
+
+  // Estimated date
+  let expectedLabel = "Expected Resolution";
+  let expectedDate: string | null = null;
+  if (stage === 4) {
+    expectedLabel = "Resolved";
+    expectedDate = "Completed";
+  } else if (isReplacement) {
+    expectedLabel = stage >= 3 ? "Replacement Arriving" : "Expected Resolution";
+    expectedDate = fmtDate(addBusinessDays(created, stage >= 3 ? 4 : 7));
+  } else {
+    expectedLabel = "Expected Resolution";
+    expectedDate = fmtDate(addBusinessDays(created, stage >= 3 ? 2 : 5));
+  }
+
+  const matches = (f: FilterKey): boolean => {
+    if (f === "all") return true;
+    if (f === "completed") return stage === 4;
+    if (f === "rejected") return false;
+    if (f === "reviewing") return stage <= 1;
+    if (f === "replacement") return isReplacement && stage > 1 && stage < 4;
+    if (f === "refund") return !isReplacement && stage > 1 && stage < 4;
+    return false;
+  };
+
+  return { isReplacement, status, resolution, tone, stage, rejected: false, expectedLabel, expectedDate, matches };
+}
+
+/* ---------------- Timeline ---------------- */
+
+function ResolutionTimeline({ view }: { view: ResolutionView }) {
+  if (view.rejected) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] font-medium text-rose-300">
+        <XCircle className="size-3.5" /> Request was declined
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center">
+      {STAGES.map((label, i) => {
+        const done = i < view.stage;
+        const current = i === view.stage;
+        return (
+          <div key={label} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={cn(
+                  "size-5 grid place-items-center rounded-full ring-1 transition-all",
+                  done && "bg-emerald-400/20 ring-emerald-400/40 text-emerald-300",
+                  current && "ring-2",
+                  current && TONE_CLASS[view.tone],
+                  !done && !current && "bg-white/[0.04] ring-white/10 text-white/30"
+                )}
+                style={current ? { boxShadow: `0 0 14px -2px ${TONE_GLOW[view.tone]}` } : undefined}
+              >
+                {done ? (
+                  <Check className="size-3" />
+                ) : current ? (
+                  <motion.span
+                    animate={{ scale: [1, 1.35, 1], opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 1.6, repeat: Infinity }}
+                  >
+                    <CircleDot className="size-3" />
+                  </motion.span>
+                ) : (
+                  <span className="size-1.5 rounded-full bg-current" />
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-[8.5px] font-mono uppercase tracking-wider whitespace-nowrap",
+                  current ? "text-white/85" : done ? "text-white/55" : "text-white/30"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < STAGES.length - 1 && (
+              <div className="flex-1 h-px mx-1 -mt-4 bg-white/10 relative overflow-hidden rounded-full">
+                <div
+                  className={cn("absolute inset-y-0 left-0 rounded-full transition-all", i < view.stage ? "w-full bg-emerald-400/50" : "w-0")}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function ReturnsPage() {
@@ -137,6 +363,7 @@ function ReturnsPage() {
   const nav = useNavigate();
   const { order } = useSearch({ from: "/account_/returns" });
   const [returns, setReturns] = useState<ReturnRow[] | null>(null);
+  const [products, setProducts] = useState<Record<string, { name: string; image: string }>>({});
   const [eligibleOrder, setEligibleOrder] = useState<OrderForReturn | null>(null);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
@@ -147,6 +374,7 @@ function ReturnsPage() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [detail, setDetail] = useState<ReturnRow | null>(null);
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
 
@@ -181,7 +409,6 @@ function ReturnsPage() {
       window.location.href = buildMailto();
     } catch {}
 
-    // If nothing took over the tab within 1.6s, assume no mail handler.
     window.setTimeout(() => {
       document.removeEventListener("visibilitychange", onHide);
       window.removeEventListener("blur", onHide);
@@ -206,10 +433,28 @@ function ReturnsPage() {
     if (!user) return;
     supabase
       .from("returns")
-      .select("id,order_id,status,reason,refund_amount,refund_status,resolution_type,replacement_status,created_at")
+      .select("id,order_id,status,reason,refund_amount,refund_status,resolution_type,replacement_status,created_at,return_items(product_slug,quantity)")
       .order("created_at", { ascending: false })
       .then(({ data }) => setReturns((data as ReturnRow[]) ?? []));
   }, [user]);
+
+  // Resolve product names + thumbnails for nicer cards (read-only enrichment).
+  useEffect(() => {
+    if (!returns || returns.length === 0) return;
+    const slugs = [
+      ...new Set(
+        returns.flatMap((r) => (r.return_items ?? []).map((it) => it.product_slug)).filter(Boolean),
+      ),
+    ];
+    if (slugs.length === 0) return;
+    fetchProductsBySlugs(slugs)
+      .then((list) => {
+        const map: Record<string, { name: string; image: string }> = {};
+        list.forEach((p) => { map[p.slug] = { name: p.name, image: p.image }; });
+        setProducts(map);
+      })
+      .catch(() => {});
+  }, [returns]);
 
   useEffect(() => {
     if (!user || !order) { setEligibleOrder(null); return; }
@@ -221,15 +466,44 @@ function ReturnsPage() {
       .then(({ data }) => setEligibleOrder((data as OrderForReturn) ?? null));
   }, [user, order]);
 
-  const filtered = useMemo(() => (returns ?? []).filter((r) => matchFilter(r, filter)), [returns, filter]);
+  const enriched = useMemo(
+    () => (returns ?? []).map((r) => ({ row: r, view: deriveView(r) })),
+    [returns],
+  );
+
+  const filtered = useMemo(
+    () => enriched.filter(({ view }) => view.matches(filter)),
+    [enriched, filter],
+  );
+
   const counts = useMemo(() => {
-    const c: Record<FilterKey, number> = { all: 0, processing: 0, approved: 0, refunded: 0, rejected: 0 };
-    (returns ?? []).forEach((r) => {
-      c.all++;
-      FILTERS.forEach((f) => { if (f.key !== "all" && matchFilter(r, f.key)) c[f.key]++; });
+    const c: Record<FilterKey, number> = { all: 0, reviewing: 0, replacement: 0, refund: 0, completed: 0, rejected: 0 };
+    enriched.forEach(({ view }) => {
+      FILTERS.forEach((f) => { if (view.matches(f.key)) c[f.key]++; });
     });
     return c;
-  }, [returns]);
+  }, [enriched]);
+
+  const summary = useMemo(() => {
+    let active = 0, review = 0, repProc = 0, refProc = 0, done = 0;
+    enriched.forEach(({ view }) => {
+      if (view.rejected) return;
+      if (view.stage === 4) { done++; return; }
+      active++;
+      if (view.stage <= 1) review++;
+      if (view.isReplacement && view.stage >= 2 && view.stage < 4) repProc++;
+      if (!view.isReplacement && view.stage >= 2 && view.stage < 4) refProc++;
+    });
+    return { active, review, repProc, refProc, done };
+  }, [enriched]);
+
+  function firstSlug(r: ReturnRow): string | null {
+    return r.return_items?.[0]?.product_slug ?? null;
+  }
+  function productFor(r: ReturnRow): { name: string; image: string } | null {
+    const slug = firstSlug(r);
+    return slug ? products[slug] ?? null : null;
+  }
 
   async function submit() {
     if (!user || !eligibleOrder) return;
@@ -251,7 +525,7 @@ function ReturnsPage() {
     });
     await supabase.from("return_items").insert(rows);
     setSubmitting(false);
-    toast.success("Refund request submitted");
+    toast.success("Resolution request submitted");
     nav({ to: "/account/returns" });
   }
 
@@ -262,6 +536,21 @@ function ReturnsPage() {
       </div>
     );
   }
+
+  const SUMMARY_CARDS = [
+    { label: "Active Cases", value: summary.active, icon: Sparkles, tone: "orange" as Tone },
+    { label: "In Review", value: summary.review, icon: Hourglass, tone: "blue" as Tone },
+    { label: "Replacement Processing", value: summary.repProc, icon: RefreshCw, tone: "orange" as Tone },
+    { label: "Refund Processing", value: summary.refProc, icon: Wallet, tone: "purple" as Tone },
+    { label: "Completed", value: summary.done, icon: CheckCircle2, tone: "green" as Tone },
+  ];
+
+  const QUICK_ACTIONS = [
+    { to: "/track", icon: Truck, label: "Track Order", hint: "Live status" },
+    { to: "/account/orders", icon: FileText, label: "View Returns", hint: "All requests" },
+    { kind: "email" as const, icon: MessageCircle, label: "Contact Support", hint: "< 5 min" },
+    { to: "/account/orders", icon: Download, label: "Download Invoice", hint: "Receipts" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#050816] text-white relative overflow-hidden">
@@ -291,64 +580,89 @@ function ReturnsPage() {
           >
             <ArrowLeft className="size-4" />
           </Link>
-          <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/40">Support</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/40">Account</span>
           <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.24em] text-[#FF9F43]">
-            Refunds
+            Resolution
           </span>
         </div>
       </header>
 
-      <main className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-32">
+      <main className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-4 pb-32">
         {/* HERO */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="pt-2 pb-6"
+          className="pt-1 pb-4"
         >
-          <p className="text-[10px] font-mono uppercase tracking-[0.32em] text-[#FF9F43] mb-3">
-            Account · Support
+          <p className="text-[10px] font-mono uppercase tracking-[0.32em] text-[#FF9F43] mb-2">
+            Account · Post-purchase
           </p>
           <h1 className="text-[28px] sm:text-[34px] leading-[1.05] font-display font-semibold tracking-tight">
-            Refund Status
+            Resolution Center
           </h1>
-          <p className="mt-3 text-sm text-white/65 max-w-md leading-relaxed">
-            Track refund requests and monitor review progress.
-          </p>
-          <p className="mt-1.5 text-xs text-white/40 max-w-md leading-relaxed">
-            Refund reviews are completed within approximately 2 business days.
+          <p className="mt-2.5 text-sm text-white/65 max-w-md leading-relaxed">
+            Track replacements, refunds, approvals, reviews, and resolution progress from one place.
           </p>
         </motion.section>
 
-        {/* AI REFUND ASSISTANT */}
+        {/* SUMMARY CARDS */}
         <motion.section
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-2xl overflow-hidden ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-5"
+          transition={{ duration: 0.5, delay: 0.06 }}
+          className="-mx-4 px-4 sm:mx-0 sm:px-0"
         >
-          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/70 to-transparent" />
-          <div aria-hidden className="absolute -top-16 -right-10 size-40 rounded-full blur-3xl opacity-30"
-            style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)" }} />
-          <div className="flex items-start gap-3 relative">
-            <div className="size-9 grid place-items-center rounded-xl bg-[#FF7A00]/15 ring-1 ring-[#FF7A00]/30 text-[#FF9F43] shrink-0">
-              <Sparkles className="size-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold">Refund Assistant</h2>
-                <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-emerald-400/90">
-                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
-                </span>
-              </div>
-              <ul className="mt-3 space-y-1.5 text-[12.5px] text-white/70 leading-relaxed">
-                <li className="flex gap-2"><span className="text-[#FF9F43]">•</span> Average review time: 2 business days</li>
-                <li className="flex gap-2"><span className="text-[#FF9F43]">•</span> Refund updates happen automatically</li>
-                <li className="flex gap-2"><span className="text-[#FF9F43]">•</span> Seller approval may be required for selected products</li>
-                <li className="flex gap-2"><span className="text-[#FF9F43]">•</span> Refund eligibility depends on delivery status</li>
-              </ul>
-            </div>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {SUMMARY_CARDS.map((c, i) => (
+              <motion.div
+                key={c.label}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.06 + i * 0.04 }}
+                className="relative shrink-0 w-[42%] sm:w-auto rounded-2xl ring-1 ring-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-3.5 overflow-hidden"
+              >
+                <div aria-hidden className="absolute -top-8 -right-8 size-20 rounded-full blur-2xl opacity-40"
+                  style={{ background: `radial-gradient(closest-side, ${TONE_GLOW[c.tone]}, transparent)` }} />
+                <c.icon className={cn("relative size-4 mb-2", TONE_CLASS[c.tone].split(" ")[0])} />
+                <p className="relative text-2xl font-display font-semibold leading-none tabular-nums">{c.value}</p>
+                <p className="relative mt-1.5 text-[10px] uppercase tracking-wider text-white/50 leading-tight">{c.label}</p>
+              </motion.div>
+            ))}
           </div>
+        </motion.section>
+
+        {/* QUICK ACTIONS */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+        >
+          {QUICK_ACTIONS.map((a) => {
+            const inner = (
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ y: -1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                className="group relative h-full rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden"
+              >
+                <div className="size-9 grid place-items-center rounded-xl bg-[#FF7A00]/12 ring-1 ring-[#FF7A00]/25 text-[#FF9F43] mb-2.5">
+                  <a.icon className="size-4" />
+                </div>
+                <p className="text-[12.5px] font-semibold leading-tight">{a.label}</p>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-0.5">{a.hint}</p>
+              </motion.div>
+            );
+            if ("kind" in a && a.kind === "email") {
+              return (
+                <button key={a.label} type="button" onClick={openEmailSupport} className="text-left">
+                  {inner}
+                </button>
+              );
+            }
+            return <Link key={a.label} to={a.to!} onClick={() => hapticTap()}>{inner}</Link>;
+          })}
         </motion.section>
 
         {/* ELIGIBLE ORDER FORM (if redirected from order) */}
@@ -362,7 +676,7 @@ function ReturnsPage() {
               className="mt-5 rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-5"
             >
               <h2 className="text-sm font-semibold mb-4">
-                Request refund · Order #{eligibleOrder.id.slice(0, 8)}
+                Request resolution · Order #{eligibleOrder.id.slice(0, 8)}
               </h2>
               <div className="space-y-3 mb-4">
                 {eligibleOrder.order_items.map((it) => (
@@ -401,26 +715,20 @@ function ReturnsPage() {
                 disabled={submitting}
                 className="w-full sm:w-auto bg-[#FF7A00] text-white rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold disabled:opacity-50 hover:brightness-110 shadow-[0_8px_24px_-8px_#FF7A00] transition-all"
               >
-                {submitting ? "Submitting…" : "Submit refund request"}
+                {submitting ? "Submitting…" : "Submit request"}
               </motion.button>
             </motion.section>
           )}
         </AnimatePresence>
 
-        {/* FILTERS */}
+        {/* FILTERS (sticky) */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.16 }}
-          className="mt-7"
+          transition={{ duration: 0.5, delay: 0.14 }}
+          className="mt-6 sticky top-12 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 bg-[#050816]/70 backdrop-blur-xl"
         >
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[11px] font-mono uppercase tracking-[0.24em] text-white/50">Your refunds</h2>
-            {returns && returns.length > 0 && (
-              <span className="text-[10px] font-mono text-white/40">{returns.length} total</span>
-            )}
-          </div>
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {FILTERS.map((f) => {
               const count = counts[f.key];
               const active = filter === f.key;
@@ -455,17 +763,18 @@ function ReturnsPage() {
           {returns === null ? (
             <div className="space-y-3">
               {[0, 1].map((i) => (
-                <div key={i} className="h-24 rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.05] animate-pulse" />
+                <div key={i} className="h-36 rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.05] animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             (() => {
               const emptyMap: Record<FilterKey, { icon: typeof Package; title: string; sub: string }> = {
-                all:       { icon: Package,      title: "No refund requests yet", sub: "Eligible products may be refunded within 4 days after successful delivery." },
-                processing:{ icon: Hourglass,    title: "No refunds in review",   sub: "Submitted requests under review will appear here." },
-                approved:  { icon: CheckCircle2, title: "No approved refunds yet",sub: "Approved refunds awaiting payout will show up here." },
-                refunded:  { icon: BadgeCheck,   title: "No completed refunds",   sub: "Completed refunds will appear here once processed." },
-                rejected:  { icon: XCircle,      title: "No rejected refund requests", sub: "Declined refund requests will appear here with reasons." },
+                all:        { icon: Package,      title: "No Active Resolution Requests", sub: "When a return, replacement, or refund request is submitted it will appear here." },
+                reviewing:  { icon: Hourglass,    title: "Nothing in review",            sub: "Submitted requests under review will appear here." },
+                replacement:{ icon: RefreshCw,    title: "No replacements in progress",  sub: "Approved replacements being prepared or shipped will show here." },
+                refund:     { icon: Wallet,       title: "No refunds in progress",       sub: "Refunds awaiting payout will appear here." },
+                completed:  { icon: CheckCircle2, title: "No completed resolutions",     sub: "Delivered replacements and processed refunds will appear here." },
+                rejected:   { icon: XCircle,      title: "No rejected requests",         sub: "Declined requests will appear here with reasons." },
               };
               const E = emptyMap[filter];
               const Icon = E.icon;
@@ -476,7 +785,7 @@ function ReturnsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl px-6 py-10 sm:py-12 text-center overflow-hidden"
+                  className="relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl px-6 py-12 text-center overflow-hidden"
                 >
                   <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/50 to-transparent" />
                   <div aria-hidden className="absolute -bottom-20 left-1/2 -translate-x-1/2 size-64 rounded-full blur-3xl opacity-20"
@@ -484,9 +793,9 @@ function ReturnsPage() {
                   <motion.div
                     initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.08, type: "spring", stiffness: 220, damping: 18 }}
-                    className="relative size-16 mx-auto mb-5 grid place-items-center rounded-2xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/25"
+                    className="relative size-20 mx-auto mb-5 grid place-items-center rounded-3xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/25"
                   >
-                    <Icon className="size-6 text-[#FF9F43]" />
+                    <Icon className="size-8 text-[#FF9F43]" />
                   </motion.div>
                   <p className="relative text-base font-semibold">{E.title}</p>
                   <p className="relative text-[13px] text-white/55 mt-1.5 max-w-sm mx-auto leading-relaxed">{E.sub}</p>
@@ -496,20 +805,14 @@ function ReturnsPage() {
                         onClick={() => { hapticTap(); setFilter("all"); }}
                         className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/80 hover:text-white ring-1 ring-white/10 hover:ring-white/25 bg-white/[0.03] transition"
                       >
-                        Show all refunds
+                        Show all
                       </button>
                     )}
                     <Link
                       to="/account/orders"
                       className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_20px_-8px_#FF7A00] transition-all"
                     >
-                      View Eligible Orders <ChevronRight className="size-3.5" />
-                    </Link>
-                    <Link
-                      to="/returns"
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white/60 hover:text-white transition"
-                    >
-                      Refund Policy
+                      Browse Orders <ChevronRight className="size-3.5" />
                     </Link>
                   </div>
                 </motion.div>
@@ -517,60 +820,77 @@ function ReturnsPage() {
             })()
           ) : (
             <div className="space-y-2.5">
-              {filtered.map((r, i) => (
-                <motion.div
-                  key={r.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: i * 0.04 }}
-                  className="rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 sm:p-5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all"
-                >
-                  {(() => {
-                  const isReplacement = r.resolution_type !== "refund";
-                  return (
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/40">
-                        Return #{r.id.slice(0, 8)} · Order #{r.order_id.slice(0, 8)}
-                      </p>
-                      <p className="text-sm mt-1.5 text-white/90">{r.reason}</p>
-                      <span className={cn(
-                        "inline-flex items-center gap-1 mt-2 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full ring-1",
-                        isReplacement
-                          ? "text-[#FF9F43] bg-[#FF7A00]/10 ring-[#FF7A00]/25"
-                          : "text-amber-400 bg-amber-400/10 ring-amber-400/25"
-                      )}>
-                        {isReplacement ? "Replacement" : "Refund"}
-                      </span>
-                      <p className="text-[11px] text-white/40 mt-1.5 font-mono">
-                        {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className={cn(
-                        "text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-full ring-1",
-                        statusTone(r.status)
-                      )}>
-                        {r.status}
-                      </span>
-                      {isReplacement ? (
-                        <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-2">
-                          {r.replacement_status}
+              {filtered.map(({ row: r, view }, i) => {
+                const prod = productFor(r);
+                return (
+                  <motion.button
+                    key={r.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: i * 0.04 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => { hapticTap(); setDetail(r); }}
+                    className="w-full text-left rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Thumbnail */}
+                      <div className="size-14 shrink-0 rounded-xl overflow-hidden ring-1 ring-white/10 bg-white/[0.04] grid place-items-center">
+                        {prod?.image ? (
+                          <img src={prod.image} alt={prod.name} className="size-full object-cover" loading="lazy" />
+                        ) : (
+                          <Package className="size-5 text-white/30" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white/90 truncate">
+                          {prod?.name ?? r.reason}
                         </p>
-                      ) : (
-                        <>
-                          <p className="font-mono text-sm mt-2 text-white">${Number(r.refund_amount).toFixed(2)}</p>
-                          <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-0.5">
-                            {r.refund_status}
-                          </p>
-                        </>
-                      )}
+                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/40 mt-0.5 truncate">
+                          REQ #{r.id.slice(0, 8)} · ORD #{r.order_id.slice(0, 8)}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ring-1",
+                            TONE_CLASS[view.tone]
+                          )}>
+                            {view.isReplacement ? <RefreshCw className="size-2.5" /> : <Wallet className="size-2.5" />}
+                            {view.resolution}
+                          </span>
+                          {!view.isReplacement && (
+                            <span className="text-[11px] font-mono text-white/55">${Number(r.refund_amount).toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight className="size-4 text-white/30 shrink-0 mt-1" />
                     </div>
-                  </div>
-                  );
-                  })()}
-                </motion.div>
-              ))}
+
+                    {/* Reason */}
+                    <p className="mt-3 text-[12px] text-white/55 line-clamp-1">
+                      <span className="text-white/40">Reason:</span> {r.reason}
+                    </p>
+
+                    {/* Timeline */}
+                    <div className="mt-3">
+                      <ResolutionTimeline view={view} />
+                    </div>
+
+                    {/* Expected completion */}
+                    {view.expectedDate && (
+                      <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/40">
+                          {view.expectedLabel}
+                        </span>
+                        <span className={cn(
+                          "text-[11px] font-semibold",
+                          view.stage === 4 ? "text-emerald-300" : "text-white/85"
+                        )}>
+                          {view.expectedDate}
+                        </span>
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           )}
         </section>
@@ -584,9 +904,9 @@ function ReturnsPage() {
           className="mt-8 grid grid-cols-3 gap-2"
         >
           {[
-            { icon: ShieldCheck, label: "Secure Refund" },
-            { icon: Clock, label: "2-Day Review" },
-            { icon: BadgeCheck, label: "Buyer Protection" },
+            { icon: RefreshCw, label: "Replacement First" },
+            { icon: Clock, label: "Fast Review" },
+            { icon: ShieldCheck, label: "Buyer Protection" },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl ring-1 ring-white/[0.06] bg-white/[0.02] py-3 px-2">
               <Icon className="size-3.5 text-[#FF9F43]" />
@@ -595,58 +915,49 @@ function ReturnsPage() {
           ))}
         </motion.section>
 
-        {/* QUICK SUPPORT */}
+        {/* SUPPORT CENTER */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.5 }}
-          className="mt-6"
+          className="mt-8"
         >
-          <h3 className="text-[11px] font-mono uppercase tracking-[0.24em] text-white/50 mb-3">Quick support</h3>
-          <div className="grid grid-cols-2 gap-2.5">
+          <h3 className="text-base font-semibold mb-3">Need Help?</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {([
-              { kind: "link",   to: "/help",    icon: MessageCircle, label: "Chat Support", hint: "Live agent" },
-              { kind: "link",   to: "/returns", icon: FileText,      label: "Refund Policy", hint: "Eligibility" },
-              { kind: "link",   to: "/help",    icon: LifeBuoy,      label: "Help Center",   hint: "FAQs" },
-              { kind: "email",  icon: Mail,     label: "Email Support", hint: SUPPORT_EMAIL.replace("@foundourmarket.com","@…") },
+              { kind: "email", icon: MessageCircle, label: "Chat Support", hint: "Average response < 5 min" },
+              { kind: "email", icon: Mail,          label: "Email Support", hint: SUPPORT_EMAIL },
+              { kind: "link",  to: "/help",         icon: LifeBuoy,         label: "Help Center", hint: "Guides & FAQs" },
+              { kind: "link",  to: "/returns",      icon: FileText,         label: "Refund Policy", hint: "Eligibility & timelines" },
             ] as const).map((a) => {
               const inner = (
                 <motion.div
-                  whileTap={{ scale: 0.96 }}
+                  whileTap={{ scale: 0.97 }}
                   whileHover={{ y: -1 }}
                   transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                  className="group relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden"
+                  className="group relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden min-h-[64px]"
                 >
-                  <div aria-hidden className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "radial-gradient(120px 60px at var(--x,50%) 0%, rgba(255,122,0,0.18), transparent 70%)" }} />
-                  <div className="flex items-center gap-2.5 relative">
-                    <div className="size-8 grid place-items-center rounded-lg bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/20 text-[#FF9F43] shrink-0">
-                      <a.icon className="size-3.5" />
+                  <div className="flex items-center gap-3 relative">
+                    <div className="size-10 grid place-items-center rounded-xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/20 text-[#FF9F43] shrink-0">
+                      <a.icon className="size-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-semibold leading-tight truncate">{a.label}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 truncate mt-0.5">{a.hint}</p>
+                      <p className="text-[13px] font-semibold leading-tight">{a.label}</p>
+                      <p className="text-[11px] text-white/45 truncate mt-0.5">{a.hint}</p>
                     </div>
+                    <ChevronRight className="size-4 text-white/25 ml-auto shrink-0" />
                   </div>
                 </motion.div>
               );
               if (a.kind === "email") {
                 return (
-                  <button
-                    key={a.label}
-                    type="button"
-                    onClick={openEmailSupport}
-                    className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/40 rounded-2xl"
-                    aria-label="Email FoundOurMarket support"
-                  >
+                  <button key={a.label} type="button" onClick={openEmailSupport} className="text-left">
                     {inner}
                   </button>
                 );
               }
-              return (
-                <Link key={a.label} to={a.to} onClick={() => hapticTap()}>{inner}</Link>
-              );
+              return <Link key={a.label} to={a.to} onClick={() => hapticTap()}>{inner}</Link>;
             })}
           </div>
         </motion.section>
@@ -660,6 +971,99 @@ function ReturnsPage() {
           <Link to="/returns" className="hover:text-white/80 transition">Refund Policy</Link>
         </footer>
       </main>
+
+      {/* DETAIL DIALOG */}
+      <Dialog open={!!detail} onOpenChange={(o) => { if (!o) setDetail(null); }}>
+        <DialogContent className="bg-[#050816] border-white/[0.08] text-white max-w-md rounded-2xl p-0 overflow-hidden">
+          {detail && (() => {
+            const view = deriveView(detail);
+            const prod = productFor(detail);
+            return (
+              <div className="relative">
+                <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/70 to-transparent" />
+                <div className="p-5">
+                  <DialogHeader className="space-y-0 text-left">
+                    <div className="flex items-start gap-3">
+                      <div className="size-14 shrink-0 rounded-xl overflow-hidden ring-1 ring-white/10 bg-white/[0.04] grid place-items-center">
+                        {prod?.image ? (
+                          <img src={prod.image} alt={prod.name} className="size-full object-cover" />
+                        ) : (
+                          <Package className="size-5 text-white/30" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <DialogTitle className="text-[15px] font-semibold tracking-tight truncate">
+                          {prod?.name ?? detail.reason}
+                        </DialogTitle>
+                        <DialogDescription className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/40 mt-1">
+                          REQ #{detail.id.slice(0, 8)} · ORD #{detail.order_id.slice(0, 8)}
+                        </DialogDescription>
+                        <span className={cn(
+                          "inline-flex items-center gap-1 mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full ring-1",
+                          TONE_CLASS[view.tone]
+                        )}>
+                          {view.status}
+                        </span>
+                      </div>
+                    </div>
+                  </DialogHeader>
+
+                  <div className="mt-5">
+                    <ResolutionTimeline view={view} />
+                  </div>
+
+                  <dl className="mt-5 space-y-2.5 text-[12.5px]">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-white/45">Reason</dt>
+                      <dd className="text-white/85 text-right">{detail.reason}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-white/45">Current Resolution</dt>
+                      <dd className="text-white/85 text-right">{view.resolution}</dd>
+                    </div>
+                    {!view.isReplacement && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-white/45">Refund Amount</dt>
+                        <dd className="text-white/85 text-right font-mono">${Number(detail.refund_amount).toFixed(2)}</dd>
+                      </div>
+                    )}
+                    {view.expectedDate && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-white/45">{view.expectedLabel}</dt>
+                        <dd className={cn("text-right font-semibold", view.stage === 4 ? "text-emerald-300" : "text-white/85")}>
+                          {view.expectedDate}
+                        </dd>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-white/45">Requested</dt>
+                      <dd className="text-white/70 text-right font-mono">
+                        {new Date(detail.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-5 grid grid-cols-2 gap-2">
+                    <Link
+                      to="/track"
+                      onClick={() => { hapticTap(); setDetail(null); }}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-semibold ring-1 ring-white/12 bg-white/[0.03] hover:bg-white/[0.06] transition"
+                    >
+                      <Search className="size-3.5" /> Track
+                    </Link>
+                    <button
+                      onClick={() => { hapticTap(); setDetail(null); openEmailSupport(); }}
+                      className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition"
+                    >
+                      <MessageCircle className="size-3.5" /> Support
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* EMAIL SUPPORT DIALOG */}
       <Dialog open={emailOpen} onOpenChange={(o) => { setEmailOpen(o); if (!o) setSending(false); }}>
@@ -684,7 +1088,6 @@ function ReturnsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            {/* Email pill with copy */}
             <div className="mt-4 rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] px-3 py-2 flex items-center justify-between gap-2">
               <span className="text-[12px] font-mono text-white/85 truncate">{SUPPORT_EMAIL}</span>
               <motion.button
@@ -700,7 +1103,6 @@ function ReturnsPage() {
               </motion.button>
             </div>
 
-            {/* CTAs */}
             <div className="mt-4 grid gap-2">
               <motion.button
                 whileTap={{ scale: 0.985 }}
@@ -735,7 +1137,6 @@ function ReturnsPage() {
               </Link>
             </div>
 
-            {/* Trust footer */}
             <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-center gap-1.5 text-[10.5px] text-white/45">
               <ShieldCheck className="size-3 text-emerald-400/80" />
               <span>Trusted support · Avg reply within 2 business days</span>
