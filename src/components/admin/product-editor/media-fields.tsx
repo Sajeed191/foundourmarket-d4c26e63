@@ -185,6 +185,25 @@ export function ProductMediaGallery({
 
   const atLimit = images.length >= MAX_IMAGES;
 
+  // Sensors: desktop pointer (drag after 6px), mobile long-press (200ms), keyboard.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = images.findIndex((i) => i.id === active.id);
+    const newIndex = images.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(images, oldIndex, newIndex);
+    setImages(next);
+    void persistOrder(next);
+  }
+
+
   return (
     <div className="space-y-3">
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden"
