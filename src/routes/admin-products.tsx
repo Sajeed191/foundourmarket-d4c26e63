@@ -447,6 +447,16 @@ function ProductsInner() {
   const filtered = useMemo(() => {
     let list = [...(products ?? [])];
     list = view === "recycle" ? list.filter((p) => p.deleted_at) : list.filter((p) => !p.deleted_at);
+    // Catalog tab (region / merchandising lens) — applied before secondary filters.
+    if (view !== "recycle") {
+      switch (catalogTab) {
+        case "india": list = list.filter((p) => p.india_visible !== false); break;
+        case "international": list = list.filter((p) => p.international_visible !== false); break;
+        case "bestsellers": list = list.filter((p) => p.bestseller || (stats[p.slug]?.units ?? 0) > 0); break;
+        case "low_stock": list = list.filter((p) => p.stock_quantity <= p.low_stock_threshold); break;
+        case "draft": list = list.filter((p) => (p.status ?? "") === "draft"); break;
+      }
+    }
     if (cat !== "all") list = list.filter((p) => p.category === cat);
     if (state === "active") list = list.filter((p) => p.in_stock);
     else if (state === "inactive") list = list.filter((p) => !p.in_stock);
