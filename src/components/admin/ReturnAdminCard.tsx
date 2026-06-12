@@ -20,35 +20,22 @@ const STATUS_TONE: Record<string, string> = {
   rejected: "text-rose-400 border-rose-400/30 bg-rose-400/10",
 };
 
-const REFUND_TIMELINE = [
-  { key: "requested", label: "Requested" },
-  { key: "approved", label: "Approved" },
-  { key: "received", label: "Item Received" },
-  { key: "processing", label: "Refund Processing" },
-  { key: "completed", label: "Refund Completed" },
-] as const;
+/** Unified compact tracker: Requested → Approved → Processing → Shipped → Delivered. */
+const COMPACT_STEPS = ["Requested", "Approved", "Processing", "Shipped", "Delivered"] as const;
 
-const REPLACEMENT_TIMELINE = [
-  { key: "requested", label: "Requested" },
-  { key: "approved", label: "Replacement Approved" },
-  { key: "processing", label: "Replacement Processing" },
-  { key: "shipped", label: "Replacement Shipped" },
-  { key: "delivered", label: "Replacement Delivered" },
-] as const;
-
-function refundTimelineIndex(r: AdminReturnRow): number {
-  if (r.refund_status === "issued") return 4;
-  if (r.status === "completed") return 4;
-  if (r.status === "received") return 3;
-  if (r.status === "approved") return 1;
-  return 0;
-}
-
-function replacementTimelineIndex(r: AdminReturnRow): number {
+function compactIndex(r: AdminReturnRow): number {
+  if (r.status === "rejected") return -1;
+  if (r.resolution_type === "refund") {
+    if (r.refund_status === "issued" || r.status === "completed") return 4;
+    if (r.status === "received") return 2;
+    if (r.status === "approved") return 1;
+    return 0;
+  }
   if (r.replacement_status === "delivered") return 4;
   if (r.replacement_status === "shipped") return 3;
-  if (r.replacement_status === "processing") return 2;
+  if (r.replacement_status === "processing" || r.status === "received") return 2;
   if (r.replacement_status === "approved" || r.status === "approved") return 1;
+  if (r.status === "completed") return 4;
   return 0;
 }
 
@@ -89,16 +76,12 @@ export function ReturnAdminCard({
 }) {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [customerOpen, setCustomerOpen] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const photos = (r.photo_urls ?? []).filter(Boolean);
 
   const resolution = r.resolution_type === "refund" ? "refund" : "replacement";
-  const TIMELINE = resolution === "refund" ? REFUND_TIMELINE : REPLACEMENT_TIMELINE;
-  const activeIdx =
-    r.status === "rejected"
-      ? -1
-      : resolution === "refund"
-        ? refundTimelineIndex(r)
-        : replacementTimelineIndex(r);
+  const activeIdx = compactIndex(r);
 
   // Return Intelligence values
   const deliveredAt = r.order.fulfilled_at;
@@ -116,9 +99,9 @@ export function ReturnAdminCard({
     resolution === "refund" && isApproved && eligible !== false && withinWindow !== false;
 
   return (
-    <div className="card-premium rounded-2xl p-4 sm:p-5">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[11px] text-muted-foreground break-words">
             Return #{r.id.slice(0, 8)} · Order #{r.order_id.slice(0, 8)}
@@ -133,70 +116,39 @@ export function ReturnAdminCard({
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Compact progress tracker */}
       {r.status !== "rejected" ? (
-        <div className="mb-6">
-          {/* Vertical timeline (mobile, < md) */}
-          <ol className="md:hidden space-y-0">
-            {TIMELINE.map((step, i) => {
+        <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+          <div className="flex items-center">
+            {COMPACT_STEPS.map((label, i) => {
               const done = i <= activeIdx;
               const current = i === activeIdx;
-              const isLast = i === TIMELINE.length - 1;
               return (
-                <li key={step.key} className="flex gap-3">
-                  <div className="flex flex-col items-center">
+                <div key={label} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex flex-col items-center gap-1.5 shrink-0">
                     <div
-                      className={`grid place-items-center size-7 rounded-full border text-[11px] shrink-0 transition-colors ${
+                      className={`grid place-items-center size-6 rounded-full border text-[10px] transition-colors ${
                         done
                           ? "bg-accent/20 border-accent text-accent"
                           : "bg-background border-border text-muted-foreground"
                       } ${current ? "ring-2 ring-accent/40" : ""}`}
                     >
-                      {done ? <Check className="size-3.5" /> : i + 1}
+                      {done ? <Check className="size-3" /> : i + 1}
                     </div>
-                    {!isLast && <div className={`w-px flex-1 my-1 ${i < activeIdx ? "bg-accent" : "bg-border"}`} />}
+                    <span className={`text-[8px] sm:text-[9px] font-mono uppercase tracking-wide text-center leading-tight w-11 sm:w-14 ${current ? "text-accent font-semibold" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                      {label}
+                    </span>
                   </div>
-                  <span className={`text-xs font-mono uppercase tracking-wider leading-7 pb-2 ${done ? "text-foreground" : "text-muted-foreground"}`}>
-                    {step.label}
-                  </span>
-                </li>
+                  {i < COMPACT_STEPS.length - 1 && (
+                    <div className={`h-px flex-1 mx-0.5 mb-4 ${i < activeIdx ? "bg-accent" : "bg-border"}`} />
+                  )}
+                </div>
               );
             })}
-          </ol>
-
-          {/* Horizontal timeline (>= md) */}
-          <div className="hidden md:block overflow-x-auto">
-            <div className="flex items-center">
-              {TIMELINE.map((step, i) => {
-                const done = i <= activeIdx;
-                const current = i === activeIdx;
-                return (
-                  <div key={step.key} className="flex items-center flex-1 last:flex-none">
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                      <div
-                        className={`grid place-items-center size-7 rounded-full border text-[11px] transition-colors ${
-                          done
-                            ? "bg-accent/20 border-accent text-accent"
-                            : "bg-background border-border text-muted-foreground"
-                        } ${current ? "ring-2 ring-accent/40" : ""}`}
-                      >
-                        {done ? <Check className="size-3.5" /> : i + 1}
-                      </div>
-                      <span className={`text-[9px] font-mono uppercase tracking-wider text-center leading-tight w-16 ${done ? "text-foreground" : "text-muted-foreground"}`}>
-                        {step.label}
-                      </span>
-                    </div>
-                    {i < TIMELINE.length - 1 && (
-                      <div className={`h-px flex-1 mx-1 mb-5 ${i < activeIdx ? "bg-accent" : "bg-border"}`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       ) : (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-400">
+        <div className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-400">
           <ShieldX className="size-4 shrink-0" /> This return was rejected.
         </div>
       )}
@@ -277,37 +229,50 @@ export function ReturnAdminCard({
           </dl>
         </section>
 
-        {/* Original Order Summary */}
+        {/* Original Order Summary (collapsible) */}
         <section className="rounded-xl border border-border/60 bg-background/40 p-3">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Receipt className="size-3.5 text-accent" /> Original Order
-          </p>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-xs">
-            <div>
-              <dt className="text-muted-foreground">Order ID</dt>
-              <dd className="font-mono font-medium mt-0.5">#{r.order_id.slice(0, 8)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><Receipt className="size-3" /> Order Total</dt>
-              <dd className="font-semibold mt-0.5">{fmtMoney(r.order.total, r.order.currency)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><CreditCard className="size-3" /> Payment</dt>
-              <dd className="font-medium mt-0.5 capitalize">{r.order.payment_status ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground flex items-center gap-1"><Truck className="size-3" /> Delivery</dt>
-              <dd className="font-medium mt-0.5 capitalize">{r.order.fulfillment_status ?? r.order.order_status ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Delivery Date</dt>
-              <dd className="font-medium mt-0.5">{fmtDate(r.order.fulfilled_at)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Order Date</dt>
-              <dd className="font-medium mt-0.5">{fmtDate(r.order.created_at)}</dd>
-            </div>
-          </dl>
+          <button
+            type="button"
+            onClick={() => setOrderOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 min-h-[44px] text-left"
+            aria-expanded={orderOpen}
+          >
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Receipt className="size-3.5 text-accent" /> Original Order
+            </span>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+              <span className="font-mono">#{r.order_id.slice(0, 8)}</span>
+              <ChevronDown className={`size-4 shrink-0 transition-transform ${orderOpen ? "rotate-180" : ""}`} />
+            </span>
+          </button>
+          {orderOpen && (
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-xs mt-3 pt-3 border-t border-border/40">
+              <div>
+                <dt className="text-muted-foreground">Order ID</dt>
+                <dd className="font-mono font-medium mt-0.5">#{r.order_id.slice(0, 8)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><Receipt className="size-3" /> Order Total</dt>
+                <dd className="font-semibold mt-0.5">{fmtMoney(r.order.total, r.order.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><CreditCard className="size-3" /> Payment</dt>
+                <dd className="font-medium mt-0.5 capitalize">{r.order.payment_status ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground flex items-center gap-1"><Truck className="size-3" /> Delivery</dt>
+                <dd className="font-medium mt-0.5 capitalize">{r.order.fulfillment_status ?? r.order.order_status ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Delivery Date</dt>
+                <dd className="font-medium mt-0.5">{fmtDate(r.order.fulfilled_at)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Order Date</dt>
+                <dd className="font-medium mt-0.5">{fmtDate(r.order.created_at)}</dd>
+              </div>
+            </dl>
+          )}
         </section>
 
         {/* Customer (collapsible) */}
@@ -339,38 +304,50 @@ export function ReturnAdminCard({
         </section>
       </div>
 
-      {/* Customer Evidence */}
+      {/* Customer Evidence (collapsible) */}
       {photos.length > 0 && (
-        <section className="mt-4 rounded-xl border border-border/60 bg-background/40 p-3">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Images className="size-3.5 text-accent" /> Customer Evidence ({photos.length})
-          </p>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-            {photos.map((url, i) => (
-              <button
-                key={url + i}
-                onClick={() => setLightbox(i)}
-                className="aspect-square rounded-lg overflow-hidden border border-border/60 hover:ring-2 hover:ring-accent/50 transition-all"
-              >
-                <img src={url} alt={`Evidence ${i + 1}`} className="size-full object-cover" loading="lazy" />
-              </button>
-            ))}
-          </div>
-          <ImageLightbox
-            images={photos.map((url, i) => ({ id: `${url}-${i}`, url, alt: `Evidence ${i + 1}`, sortOrder: i }))}
-            index={lightbox ?? 0}
-            open={lightbox != null}
-            onIndexChange={setLightbox}
-            onClose={() => setLightbox(null)}
-            alt="Return evidence"
-          />
+        <section className="rounded-xl border border-border/60 bg-background/40 p-3">
+          <button
+            type="button"
+            onClick={() => setEvidenceOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 min-h-[44px] text-left"
+            aria-expanded={evidenceOpen}
+          >
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Images className="size-3.5 text-accent" /> Evidence Gallery ({photos.length})
+            </span>
+            <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${evidenceOpen ? "rotate-180" : ""}`} />
+          </button>
+          {evidenceOpen && (
+            <>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-3 pt-3 border-t border-border/40">
+                {photos.map((url, i) => (
+                  <button
+                    key={url + i}
+                    onClick={() => setLightbox(i)}
+                    className="aspect-square rounded-lg overflow-hidden border border-border/60 hover:ring-2 hover:ring-accent/50 transition-all"
+                  >
+                    <img src={url} alt={`Evidence ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+              <ImageLightbox
+                images={photos.map((url, i) => ({ id: `${url}-${i}`, url, alt: `Evidence ${i + 1}`, sortOrder: i }))}
+                index={lightbox ?? 0}
+                open={lightbox != null}
+                onIndexChange={setLightbox}
+                onClose={() => setLightbox(null)}
+                alt="Return evidence"
+              />
+            </>
+          )}
         </section>
       )}
 
       {/* Resolution method (replacement-first) */}
-      <section className="mt-4 rounded-xl border border-border/60 bg-background/40 p-3">
+      <section className="rounded-xl border border-border/60 bg-background/40 p-3">
         <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-1.5">
-          <Repeat className="size-3.5 text-accent" /> Resolution Method
+          <Repeat className="size-3.5 text-accent" /> Resolution Controls
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -433,7 +410,7 @@ export function ReturnAdminCard({
         )}
       </section>
 
-      <div className="sticky bottom-0 -mx-4 sm:-mx-5 mt-4 px-4 sm:px-5 pt-3 pb-1 bg-gradient-to-t from-card via-card/95 to-transparent backdrop-blur-sm border-t border-border/40 rounded-b-2xl">
+      <div className="sticky bottom-0 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 pt-3 pb-4 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-sm border-t border-border/40">
         {r.status === "requested" && (
           <div className="flex flex-wrap gap-2 mb-2">
             <button
