@@ -160,8 +160,9 @@ export const markOrderStageFn = createServerFn({ method: "POST" })
         });
         return { ok: true, alreadyDone: true };
       }
-      // Apply each lifecycle status from baseStep+1 up to the target (1-based steps).
-      for (let s = baseStep + 1; s <= targetStep; s++) {
+      // Apply each lifecycle status from the current status step+1 up to the
+      // target (1-based steps), one stage at a time so the trigger is satisfied.
+      for (let s = statusStep + 1; s <= targetStep; s++) {
         const next = LIFECYCLE_SEQ[s - 1];
         const { error: sErr } = await supabaseAdmin.from("orders")
           .update({ status: next, fulfillment_status: next } as never)
