@@ -363,7 +363,7 @@ function CommandCenter({ slug, f, set, row }: {
             <Field label="Brand" value={f.brand} onChange={(v) => set({ brand: v })} />
             <Field label="Product Type" value={f.product_type} onChange={(v) => set({ product_type: v })} />
           </div>
-          <Field label="Category" value={f.category} onChange={(v) => set({ category: v })} />
+          <CategorySelector value={f.category} onChange={(v) => set({ category: v })} />
           <Field label="Tags (comma separated)" value={f.tags} onChange={(v) => set({ tags: v })} />
         </div>
       </Collapsible>
