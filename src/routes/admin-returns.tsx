@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, RotateCcw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, RotateCcw, User, Mail, Phone, MapPin, Check, X } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
+import { getReturnsAdminFn, type AdminReturnRow } from "@/lib/returns-admin.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-returns")({
@@ -10,34 +12,31 @@ export const Route = createFileRoute("/admin-returns")({
   component: AdminReturnsPage,
 });
 
-type ReturnRow = {
-  id: string;
-  order_id: string;
-  user_id: string;
-  status: string;
-  reason: string;
-  notes: string | null;
-  refund_amount: number;
-  refund_status: string;
-  created_at: string;
-  return_items: { id: string; product_slug: string; quantity: number; reason: string | null }[];
-};
-
 const RETURN_STATUSES = ["requested", "approved", "received", "completed", "rejected"] as const;
 const REFUND_STATUSES = ["pending", "issued", "failed"] as const;
 
+const STATUS_TONE: Record<string, string> = {
+  requested: "text-amber-400 border-amber-400/30 bg-amber-400/10",
+  approved: "text-sky-400 border-sky-400/30 bg-sky-400/10",
+  received: "text-violet-400 border-violet-400/30 bg-violet-400/10",
+  completed: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10",
+  rejected: "text-rose-400 border-rose-400/30 bg-rose-400/10",
+};
+
 function AdminReturnsPage() {
-  const [returns, setReturns] = useState<ReturnRow[] | null>(null);
+  const [returns, setReturns] = useState<AdminReturnRow[] | null>(null);
+  const fetchReturns = useServerFn(getReturnsAdminFn);
 
   useEffect(() => { void load(); }, []);
 
   async function load() {
-    const { data, error } = await supabase
-      .from("returns")
-      .select("id,order_id,user_id,status,reason,notes,refund_amount,refund_status,created_at,return_items(id,product_slug,quantity,reason)")
-      .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setReturns([]); return; }
-    setReturns((data as ReturnRow[]) ?? []);
+    try {
+      const data = await fetchReturns();
+      setReturns(data ?? []);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load returns");
+      setReturns([]);
+    }
   }
 
   async function update(id: string, patch: Record<string, unknown>) {
@@ -67,13 +66,43 @@ function AdminReturnsPage() {
                   <p className="text-sm mt-1">{r.reason}</p>
                   {r.notes && <p className="text-xs text-muted-foreground mt-1">{r.notes}</p>}
                 </div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-full border ${STATUS_TONE[r.status] ?? "text-muted-foreground border-border"}`}>{r.status}</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
               </div>
+
+              {/* Customer details */}
+              <div className="rounded-xl border border-border/60 bg-background/40 p-3 mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Requested by</p>
+                <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                  <span className="flex items-center gap-2"><User className="size-3.5 text-accent shrink-0" />{r.customer.name ?? "—"}</span>
+                  <span className="flex items-center gap-2"><Phone className="size-3.5 text-accent shrink-0" />{r.customer.phone ?? "—"}</span>
+                  <a href={r.customer.email ? `mailto:${r.customer.email}` : undefined} className="flex items-center gap-2 min-w-0 hover:text-accent"><Mail className="size-3.5 text-accent shrink-0" /><span className="truncate">{r.customer.email ?? "—"}</span></a>
+                  <span className="flex items-start gap-2 sm:col-span-2"><MapPin className="size-3.5 text-accent shrink-0 mt-0.5" /><span>{r.customer.address ?? "—"}</span></span>
+                </div>
+              </div>
+
               <ul className="text-xs text-muted-foreground space-y-1 mb-4">
                 {r.return_items.map((i) => (
                   <li key={i.id} className="font-mono">{i.product_slug} × {i.quantity}{i.reason ? ` — ${i.reason}` : ""}</li>
                 ))}
               </ul>
+
+              {/* Quick actions */}
+              {r.status === "requested" && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button onClick={() => update(r.id, { status: "approved" })}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/30 bg-emerald-400/10 text-emerald-400 px-3 py-2 text-[11px] font-mono uppercase tracking-widest hover:bg-emerald-400/20 transition-colors">
+                    <Check className="size-3.5" /> Approve
+                  </button>
+                  <button onClick={() => update(r.id, { status: "rejected" })}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-400/10 text-rose-400 px-3 py-2 text-[11px] font-mono uppercase tracking-widest hover:bg-rose-400/20 transition-colors">
+                    <X className="size-3.5" /> Reject
+                  </button>
+                </div>
+              )}
+
               <div className="grid sm:grid-cols-3 gap-2">
                 <select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
                   className="bg-background border border-border rounded-md px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-accent focus:outline-none focus:border-accent">
