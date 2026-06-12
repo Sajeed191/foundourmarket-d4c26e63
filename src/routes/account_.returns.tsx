@@ -525,13 +525,24 @@ function ReturnsPage() {
                   transition={{ duration: 0.35, delay: i * 0.04 }}
                   className="rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 sm:p-5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all"
                 >
+                  {(() => {
+                  const isReplacement = r.resolution_type !== "refund";
+                  return (
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
                       <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/40">
-                        Refund #{r.id.slice(0, 8)} · Order #{r.order_id.slice(0, 8)}
+                        Return #{r.id.slice(0, 8)} · Order #{r.order_id.slice(0, 8)}
                       </p>
                       <p className="text-sm mt-1.5 text-white/90">{r.reason}</p>
-                      <p className="text-[11px] text-white/40 mt-1 font-mono">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 mt-2 text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full ring-1",
+                        isReplacement
+                          ? "text-[#FF9F43] bg-[#FF7A00]/10 ring-[#FF7A00]/25"
+                          : "text-amber-400 bg-amber-400/10 ring-amber-400/25"
+                      )}>
+                        {isReplacement ? "Replacement" : "Refund"}
+                      </span>
+                      <p className="text-[11px] text-white/40 mt-1.5 font-mono">
                         {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
@@ -542,12 +553,22 @@ function ReturnsPage() {
                       )}>
                         {r.status}
                       </span>
-                      <p className="font-mono text-sm mt-2 text-white">${Number(r.refund_amount).toFixed(2)}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-0.5">
-                        {r.refund_status}
-                      </p>
+                      {isReplacement ? (
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-2">
+                          {r.replacement_status}
+                        </p>
+                      ) : (
+                        <>
+                          <p className="font-mono text-sm mt-2 text-white">${Number(r.refund_amount).toFixed(2)}</p>
+                          <p className="text-[10px] font-mono uppercase tracking-wider text-white/40 mt-0.5">
+                            {r.refund_status}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
+                  );
+                  })()}
                 </motion.div>
               ))}
             </div>
