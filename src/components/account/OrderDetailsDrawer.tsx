@@ -155,9 +155,16 @@ export function OrderDetailsDrawer({ orderId, onClose }: { orderId: string | nul
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, user]);
 
-  // lock body scroll while open
+  // lock body scroll while open and hide mobile chrome that can cover actions
   useEffect(() => {
-    if (orderId) { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }
+    if (orderId) {
+      document.body.style.overflow = "hidden";
+      document.body.dataset.orderDrawerOpen = "true";
+      return () => {
+        document.body.style.overflow = "";
+        delete document.body.dataset.orderDrawerOpen;
+      };
+    }
   }, [orderId]);
 
   // tick every 30s so the cancel/return windows expire live without a reload
