@@ -73,6 +73,16 @@ function DetailsPage() {
 
 /* ----------------------------- shell pieces ----------------------------- */
 
+function SummaryStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5 text-center">
+      <p className="text-[8px] font-mono uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+
 function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }: {
   title: string; icon: React.ReactNode; desc?: string; defaultOpen?: boolean;
   badge?: React.ReactNode; children: React.ReactNode;
@@ -186,58 +196,89 @@ function CommandCenter({ slug, f, set, row }: {
         </div>
       </div>
 
-      {/* Summary + health card */}
-      <div className="card-premium rounded-2xl p-4">
-        <div className="flex items-center gap-4">
-          <div className="size-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 grid place-items-center">
-            {primaryUrl ? <img src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-7 text-muted-foreground" />}
+      {/* Compact summary + health card */}
+      <div className="card-premium rounded-2xl p-3.5">
+        <div className="flex items-center gap-3">
+          <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 grid place-items-center">
+            {primaryUrl ? <img src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-6 text-muted-foreground" />}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-              <span>Stock: <span className="text-foreground">{stock}</span></span>
-              <span>Price: <span className="text-foreground">{sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"}</span></span>
-              <span>Images: <span className="text-foreground">{imageCount}</span></span>
-            </div>
-            <div className="mt-2 flex gap-2">
-              <button type="button" onClick={togglePublish} disabled={pubBusy}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${status === "published" ? "border border-white/15 text-muted-foreground hover:text-foreground" : "bg-accent text-accent-foreground hover:brightness-110"}`}>
-                {status === "published" ? <><EyeOff className="size-3.5" /> Unpublish</> : <><Send className="size-3.5" /> Publish</>}
-              </button>
+            <p className="truncate text-sm font-semibold">{f.name || "Untitled product"}</p>
+            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="font-mono truncate">SKU {row.sku || "—"}</span>
+              <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-mono uppercase tracking-wider ${status === "published" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
+                {status.replace(/_/g, " ")}
+              </span>
             </div>
           </div>
           {/* Health ring */}
-          <div className="relative size-20 shrink-0">
+          <div className="relative size-16 shrink-0">
             <svg viewBox="0 0 36 36" className="size-full -rotate-90">
               <circle cx="18" cy="18" r="15.5" className="fill-none stroke-white/10" strokeWidth="3" />
               <circle cx="18" cy="18" r="15.5" className={`fill-none ${tone.r}`} strokeWidth="3" strokeLinecap="round"
                 strokeDasharray={`${(score / 100) * 97.4} 97.4`} />
             </svg>
             <div className="absolute inset-0 grid place-content-center text-center">
-              <span className={`text-lg font-bold leading-none ${tone.t}`}>{score}%</span>
-              <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground">Complete</span>
+              <span className={`text-base font-bold leading-none ${tone.t}`}>{score}%</span>
+              <span className="text-[7px] font-mono uppercase tracking-widest text-muted-foreground">Complete</span>
             </div>
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {checks.slice(0, 5).map((c) => (
-            <span key={c.key} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] ${c.ok ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
-              {c.ok ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
-              {c.key}
-            </span>
-          ))}
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
+          <SummaryStat label="Stock" value={String(stock)} />
+          <SummaryStat label="Price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
+          <SummaryStat label="Images" value={String(imageCount)} />
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <button type="button" onClick={togglePublish} disabled={pubBusy}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${status === "published" ? "border border-white/15 text-muted-foreground hover:text-foreground" : "bg-accent text-accent-foreground hover:brightness-110"}`}>
+            {status === "published" ? <><EyeOff className="size-3.5" /> Unpublish</> : <><Send className="size-3.5" /> Publish</>}
+          </button>
         </div>
       </div>
 
-      {/* Media gallery */}
-      <Collapsible title="Product Media Gallery" icon={<ImageIcon className="size-4" />} desc={`${imageCount} image${imageCount === 1 ? "" : "s"} · drag, reorder, set primary`}>
-        <ProductMediaGallery slug={slug} name={f.name} primaryUrl={primaryUrl}
-          onPrimaryChange={(u) => setPrimaryUrl(u)} onCountChange={setImageCount} />
+
+      {/* Media Center — images first, then video, with live health checks */}
+      <Collapsible title="Media Center" icon={<ImageIcon className="size-4" />}
+        desc={`${imageCount} image${imageCount === 1 ? "" : "s"} · ${f.video_url.trim() ? "video attached" : "no video"}`}
+        badge={
+          <span className="flex items-center gap-1">
+            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${imageCount > 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>IMG</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${f.video_url.trim() ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>VID</span>
+          </span>
+        }>
+        <div className="space-y-5">
+          {/* Health checks */}
+          <div className="grid grid-cols-2 gap-2">
+            <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${imageCount > 0 ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
+              {imageCount > 0 ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
+              {imageCount > 0 ? "Images Added" : "Missing Images"}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${f.video_url.trim() ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
+              {f.video_url.trim() ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
+              {f.video_url.trim() ? "Video Added" : "Missing Video"}
+            </span>
+          </div>
+
+          {/* 1. Product Images */}
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              <ImageIcon className="size-3.5 text-accent" /> Product Images
+            </div>
+            <ProductMediaGallery slug={slug} name={f.name} primaryUrl={primaryUrl}
+              onPrimaryChange={(u) => setPrimaryUrl(u)} onCountChange={setImageCount} />
+          </div>
+
+          {/* 2. Product Video */}
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              <Film className="size-3.5 text-accent" /> Product Video
+            </div>
+            <ProductVideoUploader slug={slug} value={f.video_url} onChange={(u) => set({ video_url: u })} />
+          </div>
+        </div>
       </Collapsible>
 
-      {/* Video */}
-      <Collapsible title="Product Video" icon={<Film className="size-4" />} desc="MP4 or WEBM · up to 100MB">
-        <ProductVideoUploader slug={slug} value={f.video_url} onChange={(u) => set({ video_url: u })} />
-      </Collapsible>
 
       {/* Product information */}
       <Collapsible title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">

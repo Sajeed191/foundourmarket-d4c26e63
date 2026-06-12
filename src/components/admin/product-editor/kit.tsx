@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -259,6 +259,9 @@ export function SectionEditor<T extends Record<string, any>>({
   const baseline = useRef<string>("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const savedFlash = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigate = useNavigate();
   const [recovery, setRecovery] = useState<{ data: T; savedAt: string } | null>(null);
   const recoveryChecked = useRef(false);
   const inFlight = useRef(false);
@@ -293,6 +296,18 @@ export function SectionEditor<T extends Record<string, any>>({
   const validationError = form ? validate?.(form) ?? null : null;
   useUnsavedGuard(dirty);
 
+  // Raise floating controls (support orb, toolbars) above the sticky action bar.
+  useEffect(() => {
+    const el = document.documentElement;
+    const prev = el.style.getPropertyValue("--floating-bottom-offset");
+    el.style.setProperty("--floating-bottom-offset", "calc(var(--app-bottom-nav-height) + 8rem)");
+    return () => {
+      if (prev) el.style.setProperty("--floating-bottom-offset", prev);
+      else el.style.removeProperty("--floating-bottom-offset");
+    };
+  }, []);
+
+
   const set = (patch: Partial<T>) => setForm((f) => (f ? { ...f, ...patch } : f));
 
   const doSave = useCallback(
@@ -319,6 +334,9 @@ export function SectionEditor<T extends Record<string, any>>({
       setForm({ ...current }); // refresh dirty comparison
       setSaveState("saved");
       setLastSavedAt(new Date());
+      setJustSaved(true);
+      if (savedFlash.current) clearTimeout(savedFlash.current);
+      savedFlash.current = setTimeout(() => setJustSaved(false), 2000);
       logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
       invalidateProducts();
       if (!silent) toast.success(`${title} saved`);
@@ -373,7 +391,7 @@ export function SectionEditor<T extends Record<string, any>>({
           <div className="grid place-items-center py-24"><Loader2 className="size-5 animate-spin text-accent" /></div>
         )
       ) : (
-        <div className="space-y-5 pb-[calc(var(--mobile-nav-clearance)+5rem)] lg:pb-28">
+        <div className="space-y-5 pb-[calc(var(--mobile-nav-clearance)+7.5rem)] lg:pb-32">
           <ProductHeaderStrip h={header} active={sectionKey} />
 
           {recovery && (
@@ -407,17 +425,49 @@ export function SectionEditor<T extends Record<string, any>>({
             {children(form, set, row!)}
           </motion.div>
 
-          {/* Sticky save bar */}
-          <div className="fixed bottom-[var(--mobile-nav-clearance)] lg:bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/90 backdrop-blur-xl px-4 py-3 pb-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-              <SaveStateBadge state={saveState} lastSavedAt={lastSavedAt} />
-              <button onClick={() => void doSave(false)} disabled={!dirty || saveState === "saving" || !!validationError}
-                className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-xs font-semibold text-accent-foreground transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed">
-                {saveState === "saving" ? <Loader2 className="size-3.5 animate-spin" /> : dirty ? <Save className="size-3.5" /> : <Check className="size-3.5" />}
-                {saveState === "saving" ? "Saving…" : dirty ? `Save Changes (${changedKeys.length})` : "Save Changes"}
-              </button>
+          {/* Sticky bottom action bar */}
+          <div
+            className="fixed bottom-[var(--mobile-nav-clearance)] lg:bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
+            style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 pt-2.5">
+              <div className="flex items-center justify-center">
+                <SaveStateBadge state={saveState} lastSavedAt={lastSavedAt} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void doSave(false)}
+                  disabled={!dirty || saveState === "saving" || !!validationError}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-xs font-medium text-muted-foreground transition-all hover:text-foreground hover:border-white/25 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Save className="size-3.5" /> Save Draft
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/admin-product/$slug/preview", params: { slug } })}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-accent/35 bg-accent/10 px-3 py-2.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]"
+                >
+                  <Eye className="size-3.5" /> Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void doSave(false)}
+                  disabled={(!dirty && !justSaved) || saveState === "saving" || !!validationError}
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed ${justSaved ? "bg-emerald-500 text-white" : "bg-accent text-accent-foreground hover:brightness-110"}`}
+                >
+                  {saveState === "saving" ? (
+                    <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+                  ) : justSaved ? (
+                    <><Check className="size-3.5" /> Changes Saved</>
+                  ) : (
+                    <><Save className="size-3.5" /> Save Changes{dirty ? ` (${changedKeys.length})` : ""}</>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
+
         </div>
       )}
     </AdminShell>
