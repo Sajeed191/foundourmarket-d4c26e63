@@ -43,6 +43,15 @@ type Order = {
   order_items: { name: string; quantity: number; image: string | null }[];
 };
 
+type Return = {
+  id: string;
+  order_id: string;
+  status: string;
+  refund_status: string;
+  refund_amount: number | null;
+  created_at: string;
+};
+
 type Profile = {
   full_name: string | null;
   phone: string | null;
@@ -69,6 +78,7 @@ function AccountPage() {
   const { format } = useRegion();
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [returns, setReturns] = useState<Return[] | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const { slugs: wishSlugs } = useWishlist();
   const { unread } = useNotifications();
@@ -91,6 +101,14 @@ function AccountPage() {
         .then(({ data }) => setOrders((data as Order[]) ?? []));
 
     loadOrders();
+    const loadReturns = () =>
+      supabase
+        .from("returns")
+        .select("id,order_id,status,refund_status,refund_amount,created_at")
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .then(({ data }) => setReturns((data as Return[]) ?? []));
+    loadReturns();
     supabase
       .from("profiles")
       .select("full_name,phone,avatar_url")
@@ -104,6 +122,11 @@ function AccountPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
         () => loadOrders(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "returns", filter: `user_id=eq.${user.id}` },
+        () => loadReturns(),
       )
       .subscribe();
     return () => {
@@ -138,6 +161,16 @@ function AccountPage() {
     const latestActive = list.find((o) => isPaid(o) && !["delivered", "cancelled", "refunded"].includes(String(o.status).toLowerCase())) ?? null;
     return { count: list.length, spent, active, saved, memberSince, topCategory, latestActive };
   }, [orders, user]);
+
+  const latestReturn = useMemo(() => {
+    const list = returns ?? [];
+    return (
+      list.find((r) => String(r.status).toLowerCase() !== "rejected" && String(r.refund_status).toLowerCase() !== "issued") ??
+      list[0] ??
+      null
+    );
+  }, [returns]);
+
 
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
   const { slugs: recentSlugs } = useRecentlyViewed();
@@ -319,10 +352,13 @@ function AccountPage() {
 
         {/* DESKTOP GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {(stats.latestActive || recentlyViewed.length > 0) && (
+          {(stats.latestActive || latestReturn || recentlyViewed.length > 0) && (
             <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
               {/* ORDER TRACKING TIMELINE */}
               {stats.latestActive && <OrderTimeline order={stats.latestActive} format={format} />}
+
+              {/* RETURN TRACKING TIMELINE */}
+              {latestReturn && <ReturnTimeline ret={latestReturn} format={format} />}
 
               {/* RECENTLY VIEWED */}
               {recentlyViewed.length > 0 && (
@@ -938,6 +974,94 @@ function OrderTimeline({ order, format }: { order: Order; format: (n: number) =>
     </motion.section>
   );
 }
+
+function ReturnTimeline({ ret, format }: { ret: Return; format: (n: number) => string }) {
+  const status = String(ret.status).toLowerCase();
+  const refund = String(ret.refund_status).toLowerCase();
+  const rejected = status === "rejected";
+  const steps = [
+    { key: "requested", label: "Requested", icon: RotateCcw },
+    { key: "approved", label: "Approved", icon: CheckCircle2 },
+    { key: "received", label: "Item Received", icon: Box },
+    { key: "processing", label: "Refund Processing", icon: Wallet },
+    { key: "completed", label: "Refund Completed", icon: Home },
+  ];
+  const activeIdx = (() => {
+    if (refund === "issued" || status === "completed") return 4;
+    if (refund === "processing") return 3;
+    if (status === "received") return 2;
+    if (status === "approved") return 1;
+    return 0;
+  })();
+  return (
+    <motion.section {...fadeUp}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm sm:text-base font-medium flex items-center gap-2">
+          <span className="size-7 rounded-lg bg-accent/10 text-accent grid place-items-center">
+            <RotateCcw className="size-3.5" />
+          </span>
+          Return request
+        </h2>
+        <Link to="/account/returns" className="action-link">Details <ArrowRight className="size-3" /></Link>
+      </div>
+      <div className="card-premium rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+        <div aria-hidden className="absolute -top-16 -right-10 size-48 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-ember)" }} />
+        <div className="relative flex items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Return #{ret.id.slice(0, 8)}</p>
+            <p className="text-sm font-medium mt-0.5 truncate">Order #{ret.order_id.slice(0, 8)}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{rejected ? "Status" : "Refund"}</p>
+            <p className="text-sm font-display font-semibold text-accent">
+              {rejected ? "Rejected" : ret.refund_amount ? format(Number(ret.refund_amount)) : "—"}
+            </p>
+          </div>
+        </div>
+        {rejected ? (
+          <p className="relative text-xs text-muted-foreground">This return request was not approved. Contact support for help.</p>
+        ) : (
+          <div className="relative">
+            <div className="absolute top-4 left-4 right-4 h-0.5 bg-white/5 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${(activeIdx / (steps.length - 1)) * 100}%` }}
+                transition={{ duration: 0.9, ease }}
+                className="h-full bg-gradient-to-r from-accent to-primary shadow-[0_0_10px_var(--color-accent)]"
+              />
+            </div>
+            <div className="relative grid grid-cols-5 gap-1">
+              {steps.map((s, i) => {
+                const Icon = s.icon;
+                const done = i <= activeIdx;
+                return (
+                  <div key={s.key} className="flex flex-col items-center gap-1.5 text-center">
+                    <motion.span
+                      initial={false}
+                      animate={done ? { scale: [1, 1.15, 1] } : {}}
+                      transition={{ duration: 0.5, ease }}
+                      className={`size-8 rounded-full grid place-items-center ring-2 transition-all ${
+                        done
+                          ? "bg-accent text-accent-foreground ring-accent shadow-[0_0_14px_var(--color-accent)]"
+                          : "bg-card text-muted-foreground ring-white/10"
+                      }`}
+                    >
+                      <Icon className="size-3.5" />
+                    </motion.span>
+                    <span className={`text-[9px] font-mono uppercase tracking-wider leading-tight ${done ? "text-foreground" : "text-muted-foreground"}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
 
 
 
