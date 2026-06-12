@@ -288,11 +288,8 @@ function AccountPage() {
 
               <div className="min-w-0 flex-1 flex flex-col justify-center">
                 <h1 className="text-xl leading-tight sm:text-2xl lg:text-3xl font-display font-semibold tracking-tight truncate">
-                  Welcome back, <span className="text-gradient-ember">{firstName}</span> 👋
+                  {greeting().text}, <span className="text-gradient-ember">{firstName}</span> {greeting().emoji}
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed line-clamp-2">
-                  Manage your orders, wishlist, addresses, and account preferences.
-                </p>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0 self-center">
