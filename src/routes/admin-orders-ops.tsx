@@ -681,10 +681,12 @@ function OrderOpsPage() {
   // so Overview / Pipeline / Action Required / Recent Orders never drift apart.
   const deliveredOrders = ords.filter((o) => o.delivered_at || /delivered|completed/i.test(o.status ?? ""));
   const shippedOrders = ords.filter((o) => (o.shipped_at || /shipped/i.test(stageStr(o))) && !o.delivered_at && !/delivered|completed/i.test(o.status ?? "") && !ofdOrders.includes(o));
+  // A payment that failed / was not completed — excluded from the Pending stage.
+  const isPaymentFailed = (o: EnrichedOrder) => /fail|declin|error|cancel|void|unpaid/i.test(o.payment_status ?? "");
   // Pending = active orders still early in fulfilment (pending/confirmed/processing),
-  // i.e. not yet packed, shipped, out-for-delivery or delivered.
+  // i.e. not yet packed, shipped, out-for-delivery or delivered, and without a failed payment.
   const pendingOrders = ords.filter((o) =>
-    isActive(o) && !o.shipped_at && !o.delivered_at &&
+    isActive(o) && !o.shipped_at && !o.delivered_at && !isPaymentFailed(o) &&
     !packedOrders.includes(o) && !ofdOrders.includes(o) && !shippedOrders.includes(o));
   const cancelOrders = ords.filter((o) => /cancel/i.test(o.status ?? ""));
   const newToProcess = ords.filter((o) => o.payment_status === "paid" && !o.shipped_at && isActive(o));
