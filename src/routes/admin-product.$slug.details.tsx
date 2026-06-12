@@ -53,7 +53,7 @@ function DetailsPage() {
         keywords: (r.meta_keywords ?? []).join(", "),
         rating: Number(r.rating) || 0,
         reviews: Number(r.reviews) || 0,
-        rating_source: r.rating_source ?? "manual",
+        rating_source: r.rating_source ?? "imported_supplier",
       })}
       toPatch={(f) => ({
         name: f.name.trim(),
@@ -71,7 +71,7 @@ function DetailsPage() {
         meta_keywords: parseList(f.keywords),
         rating: Math.max(0, Math.min(5, Number(f.rating) || 0)),
         reviews: Math.max(0, Math.floor(Number(f.reviews) || 0)),
-        rating_source: f.rating_source || "manual",
+        rating_source: f.rating_source || "imported_supplier",
       })}
       validate={(f) => (f.name.trim() ? null : "Product name is required.")}
     >
@@ -118,6 +118,15 @@ function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }:
 
 /* ----------------------------- rating manager ----------------------------- */
 
+// Allowed values must match the DB check constraint products_rating_source_check.
+const RATING_SOURCES: { value: string; label: string; hint: string }[] = [
+  { value: "customer_reviews", label: "Customer", hint: "Rating reflects real customer reviews on this product." },
+  { value: "imported_supplier", label: "Supplier", hint: "Rating imported from the supplier / source listing." },
+  { value: "marketplace_imported", label: "Marketplace", hint: "Rating imported from an external marketplace." },
+];
+
+const DEFAULT_RATING_SOURCE = "imported_supplier";
+
 function RatingManager({ f, set }: {
   f: Form; set: (patch: Partial<Form>) => void;
 }) {
@@ -128,8 +137,9 @@ function RatingManager({ f, set }: {
 
   function setStar(value: number) {
     // click on same star toggles half / full for fine control
-    set({ rating: value, rating_source: "manual" });
+    set({ rating: value });
   }
+
 
   return (
     <div className="space-y-4">
@@ -167,7 +177,7 @@ function RatingManager({ f, set }: {
       {/* Manual numeric controls */}
       <div className="grid grid-cols-2 gap-3">
         <Field label="Rating (0–5)" type="number" value={String(rating)}
-          onChange={(v) => set({ rating: Math.max(0, Math.min(5, Number(v) || 0)), rating_source: "manual" })}
+          onChange={(v) => set({ rating: Math.max(0, Math.min(5, Number(v) || 0)) })}
           hint="Supports decimals e.g. 4.5" />
         <Field label="Review Count" type="number" value={String(reviews)}
           onChange={(v) => set({ reviews: Math.max(0, Math.floor(Number(v) || 0)) })}
@@ -177,30 +187,30 @@ function RatingManager({ f, set }: {
       {/* Source */}
       <div>
         <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Rating Source</label>
-        <div className="flex gap-2">
-          {(["manual", "auto"] as const).map((src) => (
-            <button key={src} type="button" onClick={() => set({ rating_source: src })}
-              className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold capitalize transition-all active:scale-[0.98] ${
-                f.rating_source === src
+        <div className="grid grid-cols-3 gap-2">
+          {RATING_SOURCES.map((src) => (
+            <button key={src.value} type="button" onClick={() => set({ rating_source: src.value })}
+              className={`rounded-lg border px-2 py-2 text-[11px] font-semibold transition-all active:scale-[0.98] ${
+                f.rating_source === src.value
                   ? "border-accent/40 bg-accent/15 text-accent"
                   : "border-white/10 bg-white/[0.02] text-muted-foreground hover:text-foreground"
               }`}>
-              {src === "manual" ? "Manual" : "Auto (from reviews)"}
+              {src.label}
             </button>
           ))}
         </div>
         <p className="mt-2 text-[10px] text-muted-foreground">
-          {f.rating_source === "auto"
-            ? "Rating is calculated automatically from customer reviews. Manual edits will be overwritten."
-            : "Rating and review count are set manually and won't be recalculated from reviews."}
+          {RATING_SOURCES.find((s) => s.value === f.rating_source)?.hint
+            ?? "Choose where this product's rating comes from."}
         </p>
       </div>
+
 
       {/* Quick presets */}
       <div className="flex flex-wrap gap-1.5">
         {[5, 4.5, 4, 3.5, 0].map((preset) => (
           <button key={preset} type="button"
-            onClick={() => set({ rating: preset, rating_source: "manual" })}
+            onClick={() => set({ rating: preset })}
             className="rounded-full border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[10px] font-medium text-muted-foreground transition-all hover:text-foreground active:scale-95">
             {preset === 0 ? "Reset" : `${preset}★`}
           </button>
