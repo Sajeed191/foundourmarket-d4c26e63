@@ -56,6 +56,11 @@ const inr = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(v) || 0);
 const usd = (v: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(Number(v) || 0);
+// Effective sell price: catalog stores the live price in price_inr; the legacy
+// `price` column is 0 for imported products, so always prefer price_inr.
+const priceOf = (p: Product) => Number(p.price_inr ?? p.price) || 0;
+
+
 
 type StockHealth = "oos" | "critical" | "low" | "ok";
 function health(p: Product): StockHealth {
