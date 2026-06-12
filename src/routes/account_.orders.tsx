@@ -448,13 +448,15 @@ function OrdersPage() {
 
       <div className="container-page max-w-3xl mobile-page-clearance pt-4 md:pb-16">
         {/* Overview cards — successful paid only — compact */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
           <StatCard icon={ShoppingBag} label="Total" value={String(stats.total)} tone="text-accent" />
           <StatCard icon={CheckCircle2} label="Delivered" value={String(stats.delivered)} tone="text-emerald-400" />
           <StatCard icon={Truck} label="In Transit" value={String(stats.inTransit)} tone="text-orange-400" />
+          <StatCard icon={RotateCcw} label="Returns" value={String(stats.returnsInProgress)} tone="text-amber-400" onClick={() => setFilter("returns")} />
           <StatCard icon={RefreshCw} label="Refunded" value={String(stats.refunded)} tone="text-fuchsia-400" />
           <StatCard icon={Wallet} label="Total Spent" value={format(stats.totalSpent)} tone="text-sky-400" />
         </div>
+
 
         {/* Filter pills with counts */}
         <div className="-mx-4 px-4 overflow-x-auto no-scrollbar mb-4">
