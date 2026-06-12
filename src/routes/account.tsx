@@ -245,7 +245,7 @@ function AccountPage() {
       </div>
 
 
-      <div className="container-page py-4 sm:py-8 lg:py-10 space-y-4 sm:space-y-7">
+      <div className="container-page py-3 sm:py-6 lg:py-8 space-y-3 sm:space-y-5">
 
 
         {/* 1 — HEADER */}
@@ -265,8 +265,8 @@ function AccountPage() {
               }}
             />
           </div>
-          <div className="relative p-5 sm:p-7 lg:p-9">
-            <div className="flex items-center gap-4 sm:gap-5">
+          <div className="relative p-4 sm:p-5 lg:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar with online status */}
               <div className="relative shrink-0 animate-float-soft">
                 <motion.div
@@ -274,7 +274,7 @@ function AccountPage() {
                   animate={{ scale: 1, opacity: 1 }}
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.5, ease }}
-                  className="size-14 sm:size-16 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shadow-[var(--shadow-float)] ring-1 ring-accent/30"
+                  className="size-12 sm:size-14 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shadow-[var(--shadow-float)] ring-1 ring-accent/30"
                 >
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -282,48 +282,43 @@ function AccountPage() {
                     <img src={logoSrc} alt="FoundOurMarket logo" className="w-full h-full object-cover" />
                   )}
                 </motion.div>
-                {/* ambient avatar glow */}
                 <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl blur-xl opacity-60 animate-glow" style={{ background: "var(--gradient-ember)" }} />
-                <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
+                <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
               </div>
 
-
-              {/* Welcome text + email — vertically centered beside avatar */}
               <div className="min-w-0 flex-1 flex flex-col justify-center">
-                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-accent mb-1.5 flex items-center gap-1.5 whitespace-nowrap">
+                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-accent mb-1 flex items-center gap-1.5 whitespace-nowrap">
                   <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_oklch(0.7_0.18_150)] animate-pulse" /> Online · {greeting().text} {greeting().emoji}
                 </p>
-                <h1 className="text-[19px] leading-tight sm:text-2xl lg:text-3xl font-display font-semibold truncate tracking-tight">
+                <h1 className="text-lg leading-tight sm:text-xl lg:text-2xl font-display font-semibold truncate tracking-tight">
                   Welcome back, <span className="text-gradient-ember">{firstName}</span>
                 </h1>
-                <p className="text-[11px] sm:text-sm text-muted-foreground truncate mt-0.5">{user.email}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
               </div>
 
-              {/* Action buttons — aligned right */}
-              <div className="flex items-center gap-2 shrink-0 self-center">
+              <div className="flex items-center gap-1.5 shrink-0 self-center">
                 {isAdmin && (
                   <Link
                     to="/account/notifications"
                     aria-label="Notifications"
-                    className="relative size-10 sm:size-11 grid place-items-center rounded-xl glass hover:bg-white/10 hover:text-accent transition-all"
+                    className="relative size-9 sm:size-10 grid place-items-center rounded-xl glass hover:bg-white/10 hover:text-accent transition-all"
                   >
                     <Bell className="size-4" />
                     {unread > 0 && (
-                      <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--color-accent)]" />
+                      <span className="absolute top-1 right-1 size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--color-accent)]" />
                     )}
                   </Link>
                 )}
                 <Link
                   to="/account/profile"
                   aria-label="Settings"
-                  className="size-10 sm:size-11 grid place-items-center rounded-xl glass hover:bg-white/10 hover:text-accent transition-all"
+                  className="size-9 sm:size-10 grid place-items-center rounded-xl glass hover:bg-white/10 hover:text-accent transition-all"
                 >
                   <Settings className="size-4" />
                 </Link>
               </div>
             </div>
 
-            {/* Profile completion — full width below for balanced spacing */}
             <ProfileCompletion user={user} profile={profile} />
           </div>
         </motion.header>
@@ -337,42 +332,24 @@ function AccountPage() {
 
         {/* 2 — CUSTOMER HUB */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
-          <SectionHeader title="Your hub" eyebrow="Everything in one place" />
+          <SectionHeader title="Your Hub" eyebrow="Primary" />
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <HubCard icon={Package} title="Orders" count={stats.count} loading={!orders} desc="Track & manage" to="/account/orders" tone="amber" />
+            <HubCard icon={RotateCcw} title="Returns" count={returns?.length ?? 0} loading={!returns} desc="Requests & status" to="/account/returns" tone="rose" />
             <HubCard icon={Heart} title="Wishlist" count={wishSlugs.size} desc="Your saved items" to="/wishlist" tone="rose" />
             <HubCard icon={MapPin} title="Addresses" desc="Shipping & billing" to="/account/addresses" tone="blue" />
-            <HubCard icon={LifeBuoy} title="Support" desc="Help & resolutions" to="/account/support" tone="emerald" />
           </div>
         </motion.section>
 
-
-        {/* 3 — QUICK ACTIONS */}
-        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }}>
-          <SectionHeader title="Quick actions" eyebrow="Jump to" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <ActionCard to="/account/orders" icon={Package} title="Orders" subtitle="Track & invoices" badge={stats.active || undefined} />
-            <ActionCard to="/account/returns" icon={RotateCcw} title="Returns" subtitle="Requests & status" />
-            <ActionCard to="/wishlist" icon={Heart} title="Wishlist" subtitle="Saved items" badge={wishSlugs.size || undefined} />
-            <ActionCard to="/account/addresses" icon={MapPin} title="Addresses" subtitle="Shipping & billing" />
-            <ActionCard to="/account/payments" icon={CreditCard} title="Payments" subtitle="Saved methods" />
-            <ActionCard to="/account/profile" icon={UserCog} title="Profile" subtitle="Your details" />
-            <ActionCard to="/account/security" icon={Shield} title="Security" subtitle="Account safety" />
-            <ActionCard to="/account/support" icon={LifeBuoy} title="Support" subtitle="Get help" />
-          </div>
-        </motion.section>
-
-
-        {/* 4 — CONTINUE SHOPPING */}
+        {/* 3 — CONTINUE SHOPPING */}
         {recentlyViewed.length > 0 && (
-          <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
-            <SectionHeader title="Continue shopping" eyebrow="Recently viewed products" />
+          <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }}>
+            <SectionHeader title="Continue Shopping" eyebrow="Recently viewed" />
             <ContinueShopping items={recentlyViewed} format={format} />
           </motion.section>
         )}
 
-
-        {/* 5 — ACTIVE ORDER / ACTIVE RESOLUTION */}
+        {/* 4 — ACTIVE ORDER / ACTIVE RESOLUTION */}
         {(latestReturn || stats.latestActive) && (
           <div className="space-y-4 sm:space-y-6">
             {latestReturn
@@ -381,30 +358,38 @@ function AccountPage() {
           </div>
         )}
 
-
-        {/* 6 — SUPPORT CENTER */}
-        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }}>
-          <SectionHeader title="Support center" eyebrow="We're here to help" />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <SupportCard icon={HelpCircle} title="Help Center" desc="Guides & FAQ" to="/help" tone="blue" />
-            <SupportCard icon={MessageCircle} title="Chat Support" desc="Talk to us live" onClick={() => openCrispChat()} tone="emerald" />
-            <SupportCard icon={LifeBuoy} title="Email Support" desc="Contact our team" to="/account/support" tone="amber" />
-            <SupportCard icon={RotateCcw} title="Returns & Replacements" desc="Manage resolutions" to="/account/returns" tone="rose" />
+        {/* 5 — ACCOUNT ACTIONS */}
+        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
+          <SectionHeader title="Account Actions" eyebrow="Manage" />
+          <div className="card-premium rounded-2xl overflow-hidden divide-y divide-border/40">
+            <AccountActionRow to="/account/payments" icon={CreditCard} label="Payments" sublabel="Saved cards & methods" />
+            <AccountActionRow to="/account/profile" icon={UserCog} label="Profile" sublabel="Personal details" />
+            <AccountActionRow to="/account/security" icon={Shield} label="Security" sublabel="Password & 2FA" />
+            <AccountActionRow to="/account/support" icon={LifeBuoy} label="Support" sublabel="Help center & contact" />
           </div>
         </motion.section>
 
+        {/* 6 — SUPPORT CENTER */}
+        <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }}>
+          <SectionHeader title="Support Center" eyebrow="We're here to help" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <CompactSupportCard icon={HelpCircle} title="Help Center" desc="FAQ" to="/help" tone="blue" />
+            <CompactSupportCard icon={MessageCircle} title="Chat" desc="Live support" onClick={() => openCrispChat()} tone="emerald" />
+            <CompactSupportCard icon={LifeBuoy} title="Email" desc="Contact us" to="/account/support" tone="amber" />
+            <CompactSupportCard icon={RotateCcw} title="Returns" desc="Resolutions" to="/account/returns" tone="rose" />
+          </div>
+        </motion.section>
 
         {/* 7 — SIGN OUT */}
-        <motion.footer {...fadeUp} className="account-footer mt-2 relative overflow-hidden rounded-3xl p-5 sm:p-6">
-          <div aria-hidden className="absolute -top-20 -left-10 size-64 rounded-full opacity-30" style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
+        <motion.footer {...fadeUp} className="mt-1">
           <button
             onClick={signOut}
-            className="group relative w-full flex items-center justify-center gap-2.5 rounded-2xl glass p-4 min-h-[52px] hover:border-destructive/50 hover:text-destructive transition-all"
+            className="group w-full flex items-center justify-center gap-2.5 rounded-2xl glass p-3.5 min-h-[48px] hover:border-destructive/50 hover:text-destructive transition-all"
           >
-            <span className="size-9 rounded-xl bg-destructive/10 text-destructive grid place-items-center group-hover:bg-destructive/20 transition-colors">
+            <span className="size-8 rounded-lg bg-destructive/10 text-destructive grid place-items-center group-hover:bg-destructive/20 transition-colors">
               <LogOut className="size-4" />
             </span>
-            <span className="text-[12px] font-medium uppercase tracking-widest">Sign out</span>
+            <span className="text-[11px] font-medium uppercase tracking-widest">Sign out</span>
           </button>
         </motion.footer>
       </div>
@@ -421,9 +406,9 @@ function AccountPage() {
 
 function SectionHeader({ title, eyebrow }: { title: string; eyebrow?: string }) {
   return (
-    <div className="mb-4 sm:mb-5">
-      {eyebrow && <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-1.5">{eyebrow}</p>}
-      <h2 className="text-lg sm:text-xl font-display font-semibold">{title}</h2>
+    <div className="mb-3 sm:mb-4">
+      {eyebrow && <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-1">{eyebrow}</p>}
+      <h2 className="text-base sm:text-lg font-display font-semibold">{title}</h2>
     </div>
   );
 }
@@ -1139,6 +1124,46 @@ function SupportCard({
       </span>
       <p className="relative text-sm font-display font-semibold mt-3 group-hover:text-accent transition-colors leading-tight">{title}</p>
       <p className="relative text-[11px] sm:text-xs text-muted-foreground mt-0.5">{desc}</p>
+    </motion.div>
+  );
+  const cls = "group block h-full w-full";
+  if (onClick) return <button onClick={onClick} className={cls}>{inner}</button>;
+  return <Link to={to!} className={cls}>{inner}</Link>;
+}
+
+function AccountActionRow({
+  to, icon: Icon, label, sublabel,
+}: { to: string; icon: typeof Package; label: string; sublabel: string }) {
+  return (
+    <Link to={to} className="group flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 hover:bg-accent/5 transition-colors">
+      <span className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center shrink-0 group-hover:bg-accent/20 transition-colors">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium group-hover:text-accent transition-colors">{label}</p>
+        <p className="text-[11px] text-muted-foreground">{sublabel}</p>
+      </div>
+      <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+    </Link>
+  );
+}
+
+function CompactSupportCard({
+  icon: Icon, title, desc, to, onClick, tone = "amber",
+}: { icon: typeof Package; title: string; desc: string; to?: string; onClick?: () => void; tone?: keyof typeof TONES }) {
+  const t = TONES[tone];
+  const inner = (
+    <motion.div
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.2, ease }}
+      className="relative h-full min-h-[80px] overflow-hidden rounded-xl p-3 sm:p-3.5 card-premium hover:shadow-[var(--shadow-soft)] text-left"
+    >
+      <span className={`relative size-8 rounded-lg grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
+        <Icon className="size-4" />
+      </span>
+      <p className="relative text-[13px] font-medium mt-2 group-hover:text-accent transition-colors leading-tight">{title}</p>
+      <p className="relative text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{desc}</p>
     </motion.div>
   );
   const cls = "group block h-full w-full";
