@@ -620,7 +620,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {/* Inventory */}
         <CollapsibleModule eyebrow="Step 3" title="Inventory" badge={<Boxes className="size-3.5 text-accent" />}>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <EField label="Stock qty" type="number" value={String(form.stock_quantity)} onChange={(v) => set({ stock_quantity: Number(v) || 0 })} />
             <EField label="Low stock threshold" type="number" value={String(form.low_stock_threshold)} onChange={(v) => set({ low_stock_threshold: Number(v) || 0 })} />
             <EField label="Sort order" type="number" value={String(form.sort_order)} onChange={(v) => set({ sort_order: Number(v) || 0 })} />
@@ -632,7 +632,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                 ))}
               </select>
             </div>
-            <div className="col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <div className="sm:col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <Toggle checked={form.in_stock} onChange={(v) => set({ in_stock: v })} label="Active / In stock" />
             </div>
           </div>
@@ -640,7 +640,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {/* Shipping */}
         <CollapsibleModule eyebrow="Step 4" title="Shipping" badge={<Truck className="size-3.5 text-accent" />}>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <EField label="India Shipping Charge ₹" type="number" value={form.shipping_fee_inr} onChange={(v) => set({ shipping_fee_inr: v })} />
             <EField label="International Shipping Charge $" type="number" value={form.shipping_fee_usd} onChange={(v) => set({ shipping_fee_usd: v })} />
             <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
@@ -651,13 +651,13 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Free Shipping Above (Intl)</p>
               <p className="text-sm mt-1">{settings.free_shipping_threshold_usd != null ? usd(settings.free_shipping_threshold_usd) : "Not set"}</p>
             </div>
-            <p className="col-span-2 text-[10px] text-muted-foreground">Free-shipping thresholds are global and managed in Store Settings → keeps a single source of truth across the platform.</p>
+            <p className="sm:col-span-2 text-[10px] text-muted-foreground">Free-shipping thresholds are global and managed in Store Settings → keeps a single source of truth across the platform.</p>
             <EField label="Weight (kg)" type="number" value={form.weight} onChange={(v) => set({ weight: v })} />
             <EField label="Shipping Class" value={form.shipping_class} onChange={(v) => set({ shipping_class: v })} />
             <EField label="Length (cm)" type="number" value={form.length} onChange={(v) => set({ length: v })} />
             <EField label="Width (cm)" type="number" value={form.width} onChange={(v) => set({ width: v })} />
-            <EField label="Height (cm)" type="number" value={form.height} onChange={(v) => set({ height: v })} className="col-span-2" />
-            <div className="col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <EField label="Height (cm)" type="number" value={form.height} onChange={(v) => set({ height: v })} className="sm:col-span-2" />
+            <div className="sm:col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <Toggle checked={form.cod_enabled} onChange={(v) => set({ cod_enabled: v })} label="COD" />
               <Toggle checked={form.pickup_supported} onChange={(v) => set({ pickup_supported: v })} label="Pickup" />
               <Toggle checked={form.international_shipping} onChange={(v) => set({ international_shipping: v })} label="International Shipping" />
@@ -668,10 +668,10 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {/* Returns & Warranty */}
         <CollapsibleModule eyebrow="Step 5" title="Returns & Warranty" badge={<RotateCcw className="size-3.5 text-accent" />} defaultOpen={false}>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <EField label="Return window (days)" type="number" value={String(form.return_window_days)} onChange={(v) => set({ return_window_days: Number(v) || 0 })} />
             <EField label="Warranty" value={form.warranty} onChange={(v) => set({ warranty: v })} />
-            <div className="col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <div className="sm:col-span-2 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <Toggle checked={form.return_eligible} onChange={(v) => set({ return_eligible: v })} label="Return eligible" />
               <Toggle checked={form.replacement_eligible} onChange={(v) => set({ replacement_eligible: v })} label="Replacement eligible" />
             </div>
