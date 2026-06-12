@@ -562,33 +562,67 @@ function ProductsInner() {
       )}
 
       {/* 4. Product Catalog — PRIMARY SECTION */}
-      <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground px-1">
-        {filtered.length} of {products.length} products
-      </div>
-      <VirtualTable
-        rows={filtered}
-        rowKey={(p) => p.id}
-        estimateSize={188}
-        maxHeight={720}
-        empty="No products match your filters."
-        renderRow={(p) => (
-          <ProductCard
-            p={p}
-            stat={stats[p.slug] ?? { units: 0, revenue: 0, orders: 0 }}
-            selected={selected.has(p.id)}
-            busy={busy === p.id}
-            onSelect={() => toggleSelect(p.id)}
-            onEdit={() => navigate({ to: "/admin-product/$slug", params: { slug: p.slug } })}
-            onDuplicate={() => duplicate(p)}
-            onDelete={() => remove(p)}
-            onToggleActive={() => toggleActive(p)}
-            onToggleFeatured={() => toggleFeatured(p)}
-            onAdjust={(d) => adjustStock(p, d)}
-            onSetStock={(v) => setStockValue(p, v)}
-            onCopyLink={() => copyLink(p)}
-          />
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          {filtered.length} of {products.length} products
+        </div>
+        {totalPages > 1 && (
+          <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            Page {currentPage} / {totalPages}
+          </div>
         )}
-      />
+      </div>
+
+      {paged.length === 0 ? (
+        <div className="glass border border-white/10 rounded-2xl p-8 text-center text-sm text-muted-foreground">
+          No products match your filters.
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {paged.map((p) => (
+            <ProductCard
+              key={p.id}
+              p={p}
+              stat={stats[p.slug] ?? { units: 0, revenue: 0, orders: 0 }}
+              selected={selected.has(p.id)}
+              busy={busy === p.id}
+              onSelect={() => toggleSelect(p.id)}
+              onEdit={() => navigate({ to: "/admin-product/$slug", params: { slug: p.slug } })}
+              onDuplicate={() => duplicate(p)}
+              onDelete={() => remove(p)}
+              onToggleActive={() => toggleActive(p)}
+              onToggleFeatured={() => toggleFeatured(p)}
+              onAdjust={(d) => adjustStock(p, d)}
+              onSetStock={(v) => setStockValue(p, v)}
+              onCopyLink={() => copyLink(p)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest disabled:opacity-40 hover:bg-white/5"
+          >
+            Prev
+          </button>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground tabular-nums">
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest disabled:opacity-40 hover:bg-white/5"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
 
       {/* 5. Inventory Health Center — collapsible, below catalog */}
       <CollapsibleModule
