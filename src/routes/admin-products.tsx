@@ -486,7 +486,7 @@ function ProductsInner() {
   }, [products, cat, state, stock, tag, searchTerm, sort, stats, view, catalogTab]);
 
   // Reset to first page whenever the filtered set changes
-  useEffect(() => { setPage(1); }, [cat, state, stock, tag, searchTerm, sort, view]);
+  useEffect(() => { setPage(1); }, [cat, state, stock, tag, searchTerm, sort, view, catalogTab]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
