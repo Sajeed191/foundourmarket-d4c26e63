@@ -118,6 +118,15 @@ function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }:
 
 /* ----------------------------- rating manager ----------------------------- */
 
+// Allowed values must match the DB check constraint products_rating_source_check.
+const RATING_SOURCES: { value: string; label: string; hint: string }[] = [
+  { value: "customer_reviews", label: "Customer", hint: "Rating reflects real customer reviews on this product." },
+  { value: "imported_supplier", label: "Supplier", hint: "Rating imported from the supplier / source listing." },
+  { value: "marketplace_imported", label: "Marketplace", hint: "Rating imported from an external marketplace." },
+];
+
+const DEFAULT_RATING_SOURCE = "imported_supplier";
+
 function RatingManager({ f, set }: {
   f: Form; set: (patch: Partial<Form>) => void;
 }) {
@@ -128,8 +137,9 @@ function RatingManager({ f, set }: {
 
   function setStar(value: number) {
     // click on same star toggles half / full for fine control
-    set({ rating: value, rating_source: "manual" });
+    set({ rating: value });
   }
+
 
   return (
     <div className="space-y-4">
