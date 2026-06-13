@@ -224,8 +224,8 @@ function ProductPage() {
         item_id: product.sku || product.slug,
         item_name: product.name,
         price: priceOf(product),
-        item_category: product.category,
-        item_brand: product.brand,
+        item_category: product.category ?? undefined,
+        item_brand: product.brand ?? undefined,
       }, market === "india" ? "INR" : "USD")).catch(() => {});
       fetchFBT(product.slug, 4).then(setFbtSlugs);
       fetchAlsoViewed(product.slug, 6).then(setAlsoViewed);
