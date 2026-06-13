@@ -13,6 +13,7 @@ export type Product = {
   name: string;
   tagline: string;
   category: string;
+  categories: string[];
   price: number;
   rating: number;
   reviews: number;
