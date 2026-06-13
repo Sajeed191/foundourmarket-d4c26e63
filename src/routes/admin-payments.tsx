@@ -162,8 +162,6 @@ function PaymentsInner() {
           {[["all", "All Payments"], ["razorpay", "Razorpay"], ["cod", "COD"], ["demo", "Demo Payment"]].map(([v, l]) => <option key={v} value={v} className="bg-background">{l}</option>)}
         </select>
       </div>
-      <div aria-hidden className="hidden" data-page-count={pageCount} />
-      </div>
 
       {/* Table */}
       <div className="glass border border-white/10 rounded-2xl overflow-hidden">
