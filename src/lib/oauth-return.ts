@@ -82,9 +82,10 @@ export async function completeOAuthReturn(
   }
 
   if (code) {
-    const { error } = await withOAuthTimeout(supabase.auth.exchangeCodeForSession(code), timeoutMs).catch(
-      (err: unknown) => ({ error: err instanceof Error ? err : new Error(String(err)) }),
-    );
+    const { error } = await withOAuthTimeout(
+      supabase.auth.exchangeCodeForSession(code),
+      timeoutMs,
+    ).catch((err: unknown) => ({ error: err instanceof Error ? err : new Error(String(err)) }));
     stripAuthParamsFromUrl();
     return error ? { completed: false, error: error.message } : { completed: true };
   }
