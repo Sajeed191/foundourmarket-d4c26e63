@@ -34,6 +34,19 @@ function stripAuthParamsFromUrl() {
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
 }
 
+function hasStoredCodeVerifier() {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (key?.endsWith("-code-verifier") && window.localStorage.getItem(key)) return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 export function hasOAuthReturnParams() {
   const params = mergedAuthParams();
   return AUTH_KEYS.some((key) => params.has(key));
@@ -81,13 +94,21 @@ export async function completeOAuthReturn(
     return error ? { completed: false, error: error.message } : { completed: true };
   }
 
-  if (code) {
+  if (code && hasStoredCodeVerifier()) {
     const { error } = await withOAuthTimeout(
       supabase.auth.exchangeCodeForSession(code),
       timeoutMs,
     ).catch((err: unknown) => ({ error: err instanceof Error ? err : new Error(String(err)) }));
     stripAuthParamsFromUrl();
     return error ? { completed: false, error: error.message } : { completed: true };
+  }
+
+  if (code) {
+    // The Lovable OAuth broker can return a transient `code` that is not a
+    // Supabase PKCE code. Exchanging it without the matching verifier causes a
+    // 400 and sends users back to the sign-in screen, so ignore it safely.
+    stripAuthParamsFromUrl();
+    return { completed: false };
   }
 
   return { completed: false };
