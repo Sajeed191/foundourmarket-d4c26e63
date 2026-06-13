@@ -63,6 +63,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMerchandisingRouteImport } from './routes/admin-merchandising'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
+import { Route as AdminMarketplaceQualityRouteImport } from './routes/admin-marketplace-quality'
 import { Route as AdminMarketingMetricsRouteImport } from './routes/admin-marketing-metrics'
 import { Route as AdminMarketingGrowthRouteImport } from './routes/admin-marketing-growth'
 import { Route as AdminMarketingAutomationRouteImport } from './routes/admin-marketing-automation'
@@ -413,6 +414,11 @@ const AdminMerchandisingRoute = AdminMerchandisingRouteImport.update({
 const AdminMediaRoute = AdminMediaRouteImport.update({
   id: '/admin-media',
   path: '/admin-media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMarketplaceQualityRoute = AdminMarketplaceQualityRouteImport.update({
+  id: '/admin-marketplace-quality',
+  path: '/admin-marketplace-quality',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMarketingMetricsRoute = AdminMarketingMetricsRouteImport.update({
@@ -871,6 +877,7 @@ export interface FileRoutesByFullPath {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-marketing-growth': typeof AdminMarketingGrowthRoute
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
+  '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -1008,6 +1015,7 @@ export interface FileRoutesByTo {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-marketing-growth': typeof AdminMarketingGrowthRoute
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
+  '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -1145,6 +1153,7 @@ export interface FileRoutesById {
   '/admin-marketing-automation': typeof AdminMarketingAutomationRoute
   '/admin-marketing-growth': typeof AdminMarketingGrowthRoute
   '/admin-marketing-metrics': typeof AdminMarketingMetricsRoute
+  '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -1284,6 +1293,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-marketing-growth'
     | '/admin-marketing-metrics'
+    | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
     | '/admin-notifications'
@@ -1421,6 +1431,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-marketing-growth'
     | '/admin-marketing-metrics'
+    | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
     | '/admin-notifications'
@@ -1557,6 +1568,7 @@ export interface FileRouteTypes {
     | '/admin-marketing-automation'
     | '/admin-marketing-growth'
     | '/admin-marketing-metrics'
+    | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
     | '/admin-notifications'
@@ -1695,6 +1707,7 @@ export interface RootRouteChildren {
   AdminMarketingAutomationRoute: typeof AdminMarketingAutomationRoute
   AdminMarketingGrowthRoute: typeof AdminMarketingGrowthRoute
   AdminMarketingMetricsRoute: typeof AdminMarketingMetricsRoute
+  AdminMarketplaceQualityRoute: typeof AdminMarketplaceQualityRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminMerchandisingRoute: typeof AdminMerchandisingRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -2162,6 +2175,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-media'
       fullPath: '/admin-media'
       preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-marketplace-quality': {
+      id: '/admin-marketplace-quality'
+      path: '/admin-marketplace-quality'
+      fullPath: '/admin-marketplace-quality'
+      preLoaderRoute: typeof AdminMarketplaceQualityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-marketing-metrics': {
@@ -2840,6 +2860,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMarketingAutomationRoute: AdminMarketingAutomationRoute,
   AdminMarketingGrowthRoute: AdminMarketingGrowthRoute,
   AdminMarketingMetricsRoute: AdminMarketingMetricsRoute,
+  AdminMarketplaceQualityRoute: AdminMarketplaceQualityRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminMerchandisingRoute: AdminMerchandisingRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
