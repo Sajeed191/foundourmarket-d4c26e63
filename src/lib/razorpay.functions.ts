@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -8,6 +7,7 @@ import {
   rzpFetch,
   verifyPaymentSignature,
   fetchRazorpayDiagnostics,
+  edgeCountry,
 } from "./razorpay.server";
 import {
   type Region,
@@ -44,16 +44,7 @@ const verifySchema = z.object({
   razorpaySignature: z.string().min(1).max(256),
 });
 
-/** Read the edge geo country from trusted request headers (server-only). */
-function edgeCountry(): string | null {
-  const c = (
-    getRequestHeader("cf-ipcountry") ||
-    getRequestHeader("x-vercel-ip-country") ||
-    getRequestHeader("x-country") ||
-    ""
-  ).toUpperCase();
-  return c || null;
-}
+
 
 export type RegionResolution = {
   region: Region;

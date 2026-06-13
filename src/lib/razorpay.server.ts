@@ -1,5 +1,17 @@
 // Server-only Razorpay helpers. Never import from client code.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { getRequestHeader } from "@tanstack/react-start/server";
+
+/** Read the edge geo country from trusted request headers (server-only). */
+export function edgeCountry(): string | null {
+  const c = (
+    getRequestHeader("cf-ipcountry") ||
+    getRequestHeader("x-vercel-ip-country") ||
+    getRequestHeader("x-country") ||
+    ""
+  ).toUpperCase();
+  return c || null;
+}
 
 export const USD_TO_INR = 83; // keep in sync with src/lib/region.tsx
 
