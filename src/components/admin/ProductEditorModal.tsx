@@ -1107,7 +1107,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         </>)}
 
         {tab === "seo" && (
-          <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={false}>
+          <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={true}>
             {row?.slug ? (
               <ProductFaqManager productSlug={row.slug} />
             ) : (
