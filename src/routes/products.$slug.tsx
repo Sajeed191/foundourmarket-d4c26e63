@@ -470,12 +470,16 @@ function ProductPage() {
                 {/* premium glass overlay gradient */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
                 {/* badges */}
-
-                {/* badges */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 items-start z-10">
-                  {product.featured && (
-                    <span className="backdrop-blur-md bg-white/10 border border-white/15 text-white text-[10px] font-semibold font-mono px-2.5 py-1 rounded-full tracking-wider">FEATURED</span>
-                  )}
+                  {computeBadges(product, DEFAULT_BADGE_SETTINGS, 4).map((b) => (
+                    <span
+                      key={b.key}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 backdrop-blur-sm ${b.className}`}
+                    >
+                      <span aria-hidden>{b.emoji}</span>
+                      {b.label}
+                    </span>
+                  ))}
                   {discountPct && (
                     <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">−{discountPct}% SALE</span>
                   )}
