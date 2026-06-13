@@ -70,20 +70,42 @@ export function resolveNotificationLink(
   const t = (n.type || "").toLowerCase();
   const data = (n.data ?? {}) as Record<string, unknown>;
   const cat = categoryOf(n);
-  const orderId = (data.order_id ?? data.orderId) as string | undefined;
+  const explicit = typeof n.link === "string" && n.link.startsWith("/") && !n.link.startsWith("//") ? n.link : null;
+  const str = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = data[key];
+      if (typeof value === "string" && value.trim()) return encodeURIComponent(value.trim());
+    }
+    return null;
+  };
+  const orderId = str("order_id", "orderId", "order");
+  const productSlug = str("product_slug", "productSlug", "slug");
+  const ticketId = str("ticket_id", "ticketId", "support_ticket_id");
+  const returnId = str("return_id", "returnId");
+  const paymentId = str("payment_id", "paymentId", "razorpay_payment_id");
+  const shipmentId = str("shipment_id", "shipmentId");
+
+  if (productSlug && (t.includes("flash") || t.includes("deal") || t.includes("wishlist") || t.includes("price") || t.includes("restock") || t.includes("product"))) {
+    return isAdmin ? `/admin-product/${productSlug}` : `/products/${productSlug}`;
+  }
 
   if (isAdmin) {
+    if (t.includes("return")) return `/admin-returns${returnId ? `?return=${returnId}` : orderId ? `?order=${orderId}` : ""}`;
+    if (t.includes("payment") || t.includes("refund") || t.includes("charge") || t.includes("razorpay")) return `/admin-payments${paymentId ? `?payment=${paymentId}` : orderId ? `?order=${orderId}` : ""}`;
+    if (t.includes("support") || t.includes("ticket") || t.includes("message") || t === "question") return `/admin-support${ticketId ? `?ticket=${ticketId}` : orderId ? `?order=${orderId}` : ""}`;
+    if (t.includes("ship") || t.includes("tracking") || t.includes("delivery") || t.includes("packed") || t.includes("courier")) return `/admin-shipments${orderId ? `?order=${orderId}` : shipmentId ? `?shipment=${shipmentId}` : ""}`;
+    if (t.includes("order")) return `/admin-orders-ops${orderId ? `?order=${orderId}` : ""}`;
     switch (cat) {
       case "shipping":
-        return "/admin-shipments";
+        return `/admin-shipments${orderId ? `?order=${orderId}` : ""}`;
       case "order":
-        return orderId ? `/admin/orders/${orderId}` : "/admin-orders-ops";
+        return `/admin-orders-ops${orderId ? `?order=${orderId}` : ""}`;
       case "payment":
-        return "/admin-payments";
+        return `/admin-payments${paymentId ? `?payment=${paymentId}` : orderId ? `?order=${orderId}` : ""}`;
       case "support":
         if (t.includes("review") || t === "review") return "/admin-products";
-        if (t === "return" || t.includes("return")) return "/admin-returns";
-        return "/admin-support";
+        if (t === "return" || t.includes("return")) return `/admin-returns${returnId ? `?return=${returnId}` : orderId ? `?order=${orderId}` : ""}`;
+        return `/admin-support${ticketId ? `?ticket=${ticketId}` : ""}`;
       case "executive":
         return "/admin-executive";
       case "ai":
@@ -95,24 +117,29 @@ export function resolveNotificationLink(
       case "promotion":
         return "/admin-marketing";
       default:
-        return n.link || "/admin";
+        return explicit || "/admin-notifications";
     }
   }
 
   // Customer-facing destinations
+  if (t.includes("return")) return `/account/returns${orderId ? `?order=${orderId}` : ""}`;
+  if (t.includes("refund")) return `/account/payments${orderId ? `?order=${orderId}` : ""}`;
+  if (t.includes("payment") && (t.includes("fail") || t.includes("retry"))) return `/account/orders${orderId ? `?order=${orderId}&filter=failed` : "?filter=failed"}`;
+  if (t.includes("support") || t.includes("ticket") || t.includes("message")) return `/account/support${ticketId ? `?ticket=${ticketId}` : ""}`;
+  if (t.includes("ship") || t.includes("tracking") || t.includes("delivery") || t.includes("packed") || t.includes("order")) return orderId ? `/orders/${orderId}` : "/account/orders";
   switch (cat) {
     case "shipping":
-      return t === "return" || t.includes("return") ? "/account/returns" : "/account/orders";
+      return orderId ? `/orders/${orderId}` : "/account/orders";
     case "order":
-      return "/account/orders";
+      return orderId ? `/orders/${orderId}` : "/account/orders";
     case "payment":
-      return "/account/payments";
+      return `/account/payments${orderId ? `?order=${orderId}` : ""}`;
     case "support":
-      return "/account/support";
+      return `/account/support${ticketId ? `?ticket=${ticketId}` : ""}`;
     case "promotion":
-      return n.link || "/";
+      return explicit || "/deals";
     default:
-      return n.link || "/account/notifications";
+      return explicit || "/account/notifications";
   }
 }
 
