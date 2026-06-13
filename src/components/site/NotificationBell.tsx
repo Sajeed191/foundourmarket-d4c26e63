@@ -266,8 +266,8 @@ function NotifCard({
           : "border-border/50 bg-white/[0.02] hover:bg-white/[0.04]"
       }`}
     >
-      {n.link ? (
-        <Link to={n.link} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
+      {destination ? (
+        <Link to={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{inner}</div>
       )}
