@@ -2675,7 +2675,15 @@ export type Database = {
           transaction_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personalized_feed_cache: {
         Row: {
@@ -6403,6 +6411,7 @@ export type Database = {
         Args: { _actor: string; _customer: string }
         Returns: Json
       }
+      svc_database_health: { Args: never; Returns: Json }
       svc_executive_analytics: { Args: { _actor: string }; Returns: Json }
       svc_marketing_intelligence: { Args: { _actor?: string }; Returns: Json }
       svc_order_integrity: { Args: { _actor: string }; Returns: Json }

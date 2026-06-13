@@ -38,6 +38,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminVendorsRouteImport } from './routes/admin-vendors'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
+import { Route as AdminSystemHealthRouteImport } from './routes/admin-system-health'
 import { Route as AdminSupportRouteImport } from './routes/admin-support'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
 import { Route as AdminSeoIntelligenceRouteImport } from './routes/admin-seo-intelligence'
@@ -283,6 +284,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
 const AdminTrafficRoute = AdminTrafficRouteImport.update({
   id: '/admin-traffic',
   path: '/admin-traffic',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: '/admin-system-health',
+  path: '/admin-system-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
@@ -861,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
+  '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
@@ -993,6 +1000,7 @@ export interface FileRoutesByTo {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
+  '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
@@ -1125,6 +1133,7 @@ export interface FileRoutesById {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
+  '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
@@ -1259,6 +1268,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
+    | '/admin-system-health'
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
@@ -1391,6 +1401,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
+    | '/admin-system-health'
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
@@ -1522,6 +1533,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-shipments'
     | '/admin-support'
+    | '/admin-system-health'
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
@@ -1655,6 +1667,7 @@ export interface RootRouteChildren {
   AdminSeoIntelligenceRoute: typeof AdminSeoIntelligenceRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
   AdminSupportRoute: typeof AdminSupportRoute
+  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminTrafficRoute: typeof AdminTrafficRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
@@ -1922,6 +1935,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-traffic'
       fullPath: '/admin-traffic'
       preLoaderRoute: typeof AdminTrafficRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-system-health': {
+      id: '/admin-system-health'
+      path: '/admin-system-health'
+      fullPath: '/admin-system-health'
+      preLoaderRoute: typeof AdminSystemHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-support': {
@@ -2760,6 +2780,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSeoIntelligenceRoute: AdminSeoIntelligenceRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
   AdminSupportRoute: AdminSupportRoute,
+  AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminTrafficRoute: AdminTrafficRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVendorsRoute: AdminVendorsRoute,

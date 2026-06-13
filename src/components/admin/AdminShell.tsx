@@ -112,6 +112,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-email-delivery", label: "Email delivery", icon: PackageCheck, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-email-health", label: "Email health", icon: Activity, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-inbox-placement", label: "Inbox placement", icon: MailCheck, roles: ["admin", "super_admin", "manager"] },
+      { to: "/admin-system-health", label: "System health", icon: Cpu, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-activity", label: "Activity log", icon: Activity, roles: ["admin", "super_admin"] },
       { to: "/admin-seed", label: "Seed data", icon: Database, roles: ["admin", "super_admin", "manager"] },
 
