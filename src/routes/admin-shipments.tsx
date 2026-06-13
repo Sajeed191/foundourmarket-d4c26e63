@@ -649,7 +649,10 @@ function OperationsView(props: {
           <BulkBtn onClick={props.onBulkCourier} disabled={props.bulkBusy} icon={<Truck className="size-3" />}>Assign Courier</BulkBtn>
           <BulkBtn onClick={() => props.onBulkStatus("out_for_delivery")} disabled={props.bulkBusy} icon={<RotateCcw className="size-3" />}>Retry Delivery</BulkBtn>
           <BulkBtn onClick={props.onBulkNotify} disabled={props.bulkBusy} icon={<Send className="size-3" />}>Notify</BulkBtn>
-          <BulkBtn onClick={props.onBulkExport} disabled={props.bulkBusy} icon={<Download className="size-3" />}>Export CSV</BulkBtn>
+          <BulkBtn onClick={() => props.onExport("csv", "selected")} disabled={props.bulkBusy} icon={<FileText className="size-3" />}>CSV</BulkBtn>
+          <BulkBtn onClick={() => props.onExport("excel", "selected")} disabled={props.bulkBusy} icon={<FileSpreadsheet className="size-3" />}>Excel</BulkBtn>
+          <BulkBtn onClick={() => props.onExport("pdf", "selected")} disabled={props.bulkBusy} icon={<FileText className="size-3" />}>PDF</BulkBtn>
+          <BulkBtn onClick={() => props.onPackingSlips("selected")} disabled={props.bulkBusy} icon={<Printer className="size-3" />}>Packing Slips</BulkBtn>
           <button onClick={props.clearSelection} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Clear</button>
         </div>
       )}
