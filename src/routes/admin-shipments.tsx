@@ -675,11 +675,20 @@ function OperationsView(props: {
       </div>
 
       {enriched.length === 0 ? (
-        <div className="card-premium rounded-2xl py-16 text-center">
-          <Package className="size-8 mx-auto mb-3 text-muted-foreground" />
-          <p className="text-sm font-semibold">No shipments in this queue</p>
-          <p className="text-xs text-muted-foreground mt-1">Try a different search or queue.</p>
+        <div className="card-premium rounded-2xl py-8 px-5 text-center">
+          <Package className="size-7 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm font-semibold">Nothing in the “{QUEUE_LABEL[queue]}” queue</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {shipments.length > 0 ? `You have ${shipments.length} shipment${shipments.length !== 1 ? "s" : ""} in other queues.` : "Shipments will appear here as orders are placed."}
+          </p>
+          {(queue !== "all" || q) && (
+            <button onClick={() => { setQueue("all"); setQ(""); setVisible(PAGE); }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-medium text-accent hover:bg-accent/20">
+              <Package className="size-3.5" /> View all shipments
+            </button>
+          )}
         </div>
+
       ) : (
         <div className="space-y-3">
           {enriched.slice(0, visible).map(({ order, ship }) => (
