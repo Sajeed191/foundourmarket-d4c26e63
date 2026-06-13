@@ -31,6 +31,8 @@ import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { Toaster } from "@/components/ui/sonner";
 import { ShareDialog } from "@/components/site/ShareDialog";
+import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
+import { safeInternalPath } from "@/lib/safe-redirect";
 
 // Non-critical client-only shell: deferred out of the entry bundle so the
 // homepage/product/search first paint never pays for admin tooling, the live
@@ -274,9 +276,26 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function OAuthReturnScreen() {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-background px-6">
+      <div className="max-w-xs text-center">
+        <div className="mx-auto mb-5 size-16 overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-border">
+          <img src="/logo.webp" alt="FoundOurMarket" className="h-full w-full object-cover" />
+        </div>
+        <h1 className="font-display text-xl font-semibold text-foreground">Signing you in…</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Securing your Google session</p>
+      </div>
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [oauthReturnPending, setOauthReturnPending] = useState(
+    () => typeof window !== "undefined" && hasOAuthReturnParams(),
+  );
 
   useEffect(() => { registerServiceWorker(); }, []);
   useEffect(() => { preloadCrisp(); }, []);
@@ -289,6 +308,24 @@ function RootComponent() {
     void captureAttribution();
     import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
   }, [pathname]);
+  useEffect(() => {
+    if (!oauthReturnPending || typeof window === "undefined") return;
+    let cancelled = false;
+    completeOAuthReturn().then((result) => {
+      if (cancelled) return;
+      if (result.completed) {
+        const stored = safeInternalPath(localStorage.getItem("post_auth_redirect"));
+        if (stored) localStorage.removeItem("post_auth_redirect");
+        window.location.replace(stored ?? "/account");
+        return;
+      }
+      setOauthReturnPending(false);
+      if (result.error && !pathname.startsWith("/auth")) window.location.replace("/auth");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [oauthReturnPending, pathname]);
 
   const isAuthRoute = pathname.startsWith("/auth");
   // Admin routes own their full chrome via <AdminShell> (sidebar + top bar with
@@ -298,6 +335,8 @@ function RootComponent() {
   const isAdminRoute = pathname.startsWith("/admin");
   const isCheckoutRoute = pathname.startsWith("/checkout");
   const hideSiteChrome = isAuthRoute || isAdminRoute;
+
+  if (oauthReturnPending) return <OAuthReturnScreen />;
 
   return (
     <QueryClientProvider client={queryClient}>
