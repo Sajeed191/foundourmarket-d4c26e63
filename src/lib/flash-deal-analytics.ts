@@ -10,13 +10,14 @@ export function trackFlashDealEvent(
   dealId: string | null,
   productId: string | null,
 ) {
-  if (type === "impression" && dealId) {
-    if (seenImpressions.has(dealId)) return;
-    seenImpressions.add(dealId);
+  const key = dealId ?? productId;
+  if (type === "impression") {
+    if (!key || seenImpressions.has(key)) return;
+    seenImpressions.add(key);
   }
   // Fire-and-forget; analytics must never block or break the UI.
   void supabase
     .from("flash_deal_events")
-    .insert({ event_type: type, deal_id: dealId, product_id: productId })
+    .insert({ event_type: type, deal_id: dealId, product_id: null })
     .then(() => {}, () => {});
 }
