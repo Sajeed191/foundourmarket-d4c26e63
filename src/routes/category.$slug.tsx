@@ -55,23 +55,30 @@ function CategoryPage() {
   const subs = cat ? subsByParent(cat.id) : [];
   const childSlugs = useMemo(() => subs.map((s) => s.slug), [subs]);
 
+  // Match a product to a category slug via its primary OR additional categories.
+  const matches = (p: typeof products[number], s: string) =>
+    p.category === s || (p.categories ?? []).includes(s);
+
   // Product count for the whole department (own + all subcategories).
   const totalCount = useMemo(
-    () => products.filter((p) => p.category === slug || childSlugs.includes(p.category)).length,
+    () => products.filter((p) => matches(p, slug) || childSlugs.some((c) => matches(p, c))).length,
     [products, slug, childSlugs],
   );
 
-  // Per-subcategory product counts.
+  // Per-subcategory product counts (counts each category a product belongs to).
   const countBySlug = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const p of products) m[p.category] = (m[p.category] ?? 0) + 1;
+    for (const p of products) {
+      const all = (p.categories ?? []).length ? p.categories : [p.category];
+      for (const c of all) m[c] = (m[c] ?? 0) + 1;
+    }
     return m;
   }, [products]);
 
   // Direct products of this main category (only used as a fallback when there
   // are no subcategories — never lose products).
   const ownItems = useMemo(
-    () => products.filter((p) => p.category === slug),
+    () => products.filter((p) => matches(p, slug)),
     [products, slug],
   );
 
