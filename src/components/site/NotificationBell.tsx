@@ -227,9 +227,10 @@ function EmptyState({ onClose }: { onClose: () => void }) {
 }
 
 function NotifCard({
-  n, onRead, onRemove, onClose,
+  n, isAdmin, onRead, onRemove, onClose,
 }: {
   n: Notification;
+  isAdmin: boolean;
   onRead: (id: string) => void;
   onRemove: (id: string) => void;
   onClose: () => void;
@@ -237,6 +238,7 @@ function NotifCard({
   const cat = categoryOf(n);
   const { Icon, tone, dot } = CAT_META[cat];
   const unread = !n.read_at;
+  const destination = resolveNotificationLink(n, isAdmin);
 
   const inner = (
     <div className="flex items-start gap-3 p-3">
