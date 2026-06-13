@@ -661,16 +661,17 @@ function OperationsView(props: {
             <Download className="size-3.5" /> CSV
           </button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="-mx-1 px-1 flex gap-1.5 overflow-x-auto scrollbar-none">
           {QUEUES.map((key) => (
             <button key={key} onClick={() => { setQueue(key); setVisible(PAGE); }}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
                 queue === key ? "border-accent/50 bg-accent/15 text-accent" : "border-border/60 text-muted-foreground hover:text-foreground"
               }`}>
               {QUEUE_LABEL[key]} <span className="opacity-60 tabular-nums">{queueCount(key)}</span>
             </button>
           ))}
         </div>
+
       </div>
 
       {enriched.length === 0 ? (
