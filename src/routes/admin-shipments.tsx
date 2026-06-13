@@ -542,13 +542,22 @@ function AdminShipmentsPage() {
       subtitle="Live logistics operations — KPIs, delay detection, courier performance and exception management. All metrics computed from real records."
       allow={["admin", "super_admin", "manager", "fulfillment", "warehouse_staff"]}
       actions={
-        <button onClick={() => void load()} disabled={refreshing}
-          className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border hover:border-accent/40 disabled:opacity-50">
-          {refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />} Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <ExportMenu selectedCount={selected.size} onExport={runExport} onPackingSlips={exportPackingSlips} />
+          <button onClick={() => void load()} disabled={refreshing}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-border hover:border-accent/40 disabled:opacity-50">
+            {refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />} Refresh
+          </button>
+        </div>
       }
     >
       <div className="space-y-4">
+        {/* Live operations strip */}
+        <LiveOpsStrip
+          online={online} lastUpdated={lastUpdated} courierCount={couriers.length}
+          pending={kpis.awaitingShipment + kpis.pending} health={health}
+        />
+
         {/* Executive KPI bar */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           <Kpi label="Total" value={kpis.total} icon={<Package className="size-4" />} />
@@ -562,14 +571,18 @@ function AdminShipmentsPage() {
           <Kpi label="Failed" value={kpis.failed} tone={kpis.failed ? "destructive" : undefined} />
           <Kpi label="Returned" value={kpis.returned} tone={kpis.returned ? "orange" : undefined} />
           <Kpi label="Cancelled" value={kpis.cancelled} />
-          <div className="card-premium rounded-2xl p-4">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-[10px] uppercase tracking-widest">Health</span><Gauge className="size-4" />
+          <div className="group relative overflow-hidden card-premium rounded-2xl p-4 hover:border-accent/40 transition-colors">
+            <div className="absolute -top-16 -right-16 size-32 rounded-full bg-accent/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative">
+              <div className="flex items-center justify-between text-muted-foreground mb-1">
+                <span className="text-[10px] uppercase tracking-widest">Health</span><Gauge className="size-4" />
+              </div>
+              <div className={`text-2xl font-semibold tabular-nums ${HEALTH_CLS[health.tier]}`}>{health.score}</div>
+              <div className={`text-[10px] font-medium ${HEALTH_CLS[health.tier]}`}>{HEALTH_LABEL[health.tier]}</div>
             </div>
-            <div className={`text-2xl font-semibold tabular-nums ${HEALTH_CLS[health.tier]}`}>{health.score}</div>
-            <div className={`text-[10px] font-medium ${HEALTH_CLS[health.tier]}`}>{HEALTH_LABEL[health.tier]}</div>
           </div>
         </div>
+
 
         {/* Section tabs */}
         <div className="flex flex-wrap gap-1.5">
