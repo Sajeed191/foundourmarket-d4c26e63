@@ -69,6 +69,7 @@ export type RegionResolution = {
 export async function resolveRegion(
   supabase: any,
   userId: string,
+  countryHeader?: string | null,
 ): Promise<RegionResolution> {
   const { data } = await supabase
     .from("profiles")
@@ -76,7 +77,7 @@ export async function resolveRegion(
     .eq("id", userId)
     .maybeSingle();
 
-  const country = edgeCountry();
+  const country = (countryHeader || "").toUpperCase() || null;
 
   if (data?.market_region === "india" || data?.market_region === "international") {
     return {
