@@ -911,11 +911,12 @@ function ShipmentCard({ order, ship, delay, selected, onToggleSelect, creating, 
           ) : (
             <div className="space-y-2.5">
               <div className="grid grid-cols-2 gap-2">
-                <Field label="Courier" value={ship.carrier ?? ""} onSave={(v) => onAssign({ carrier: v })} placeholder="e.g. Delhivery" />
+                <CourierSelect value={ship.carrier ?? ""} onSave={(v) => onAssign({ carrier: v })} />
                 <Field label="Tracking #" value={ship.tracking_number ?? ""} onSave={(v) => onAssign({ tracking_number: v })} placeholder="AWB number" mono />
                 <Field label="Tracking URL" value={ship.tracking_url ?? ""} onSave={(v) => onAssign({ tracking_url: v })} placeholder="https://…" className="col-span-2" />
                 <DateField label="Est. delivery" value={ship.estimated_delivery} onSave={(v) => onAssign({ estimated_delivery: v })} className="col-span-2" />
               </div>
+              <div className="pt-1"><MiniTimeline status={ship.status} /></div>
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</label>
                 <select value={ship.status} disabled={busy} onChange={(e) => onStatus(e.target.value as ShipStatus)}
@@ -930,9 +931,16 @@ function ShipmentCard({ order, ship, delay, selected, onToggleSelect, creating, 
                 <ActionBtn onClick={() => onStatus("returned")} disabled={busy} icon={<RotateCcw className="size-3" />} tone="orange">Returned</ActionBtn>
                 <ActionBtn onClick={() => onStatus("cancelled")} disabled={busy} icon={<Ban className="size-3" />} tone="destructive">Cancel</ActionBtn>
               </div>
+              <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
+                <ActionBtn onClick={() => runDoc("slip", () => downloadPackingSlip(order.id))} disabled={docBusy === "slip"} icon={<FileText className="size-3" />}>Packing Slip</ActionBtn>
+                <ActionBtn onClick={() => runDoc("inv", () => downloadInvoice(order.id))} disabled={docBusy === "inv"} icon={<Receipt className="size-3" />}>Invoice</ActionBtn>
+                <ActionBtn onClick={() => runDoc("label", () => downloadShippingLabel(order.id))} disabled={docBusy === "label"} icon={<Printer className="size-3" />}>Print Label</ActionBtn>
+                <ActionBtn onClick={copyTracking} icon={<Copy className="size-3" />}>Copy Tracking</ActionBtn>
+              </div>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
