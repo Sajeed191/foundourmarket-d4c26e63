@@ -529,12 +529,16 @@ function ProductPage() {
               </div>
             )}
 
+            const hasVideoFirst = galleryMedia[0]?.id === "video";
+            const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
+            const handleLightboxIndexChange = (i: number) => setActiveImg(hasVideoFirst ? i + 1 : i);
+
             <ImageLightbox
               images={galleryImages}
-              index={activeImg}
+              index={lightboxIndex}
               open={lightboxOpen}
               onClose={() => setLightboxOpen(false)}
-              onIndexChange={setActiveImg}
+              onIndexChange={handleLightboxIndexChange}
               alt={product.name}
             />
           </motion.div>
