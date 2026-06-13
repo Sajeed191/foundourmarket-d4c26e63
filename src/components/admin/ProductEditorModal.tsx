@@ -291,6 +291,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   });
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+  // Stable slug used to group media (images/video) before the row is saved.
+  const mediaSlug = form.slug.trim() || slugify(form.name);
 
   async function uploadImage(file: File) {
     setUploading(true); setError(null);
