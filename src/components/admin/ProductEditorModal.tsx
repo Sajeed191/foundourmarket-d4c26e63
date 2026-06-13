@@ -209,7 +209,10 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     (s) => s && s !== (row?.category ?? ""),
   );
   const [extraCategories, setExtraCategories] = useState<string[]>(initialExtra);
-  const [extraPick, setExtraPick] = useState("");
+  const [extraMain, setExtraMain] = useState("");
+  const [extraSub, setExtraSub] = useState("");
+  const extraMainObj = categories.find((c) => c.slug === extraMain);
+  const extraSubs = extraMainObj ? categories.filter((c) => c.parent_id === extraMainObj.id) : [];
   const allCategorySlugs = useMemo(() => {
     const set = new Set<string>([effectiveCategory, ...extraCategories].filter(Boolean));
     return [...set];
