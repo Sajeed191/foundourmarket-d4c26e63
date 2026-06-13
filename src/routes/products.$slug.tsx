@@ -735,7 +735,7 @@ function ProductPage() {
               <div className="mb-6 rounded-2xl border border-border bg-card/50 p-4">
                 <h2 className="mb-3 text-sm font-semibold">Details</h2>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(product.attributes).map(([k, v]) => (
+                  {Object.entries(product.attributes as Record<string, string>).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/50 px-3 py-1 text-xs">
                       <span className="text-muted-foreground">{k}:</span>
                       <span className="text-foreground">{v}</span>
