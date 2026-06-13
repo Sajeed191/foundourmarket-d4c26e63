@@ -646,8 +646,9 @@ function OperationsView(props: {
         </div>
       )}
 
-      {/* Search + export */}
-      <div className="card-premium rounded-2xl p-3 space-y-3">
+      {/* Search + filters — sticky operations bar */}
+      <div className="card-premium rounded-2xl p-3 space-y-3 sticky top-2 z-20">
+
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
