@@ -21,6 +21,7 @@ import { StarRating } from "@/components/site/StarRating";
 import { useCompare } from "@/hooks/use-compare";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
+import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
