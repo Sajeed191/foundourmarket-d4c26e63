@@ -7,8 +7,8 @@ import {
   rzpFetch,
   verifyPaymentSignature,
   fetchRazorpayDiagnostics,
-  edgeCountry,
 } from "./razorpay.server";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import {
   type Region,
   computeOrderTotals,
@@ -69,6 +69,7 @@ export type RegionResolution = {
 export async function resolveRegion(
   supabase: any,
   userId: string,
+  countryHeader?: string | null,
 ): Promise<RegionResolution> {
   const { data } = await supabase
     .from("profiles")
@@ -76,7 +77,7 @@ export async function resolveRegion(
     .eq("id", userId)
     .maybeSingle();
 
-  const country = edgeCountry();
+  const country = (countryHeader || "").toUpperCase() || null;
 
   if (data?.market_region === "india" || data?.market_region === "international") {
     return {
@@ -188,7 +189,12 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     };
     const { keyId } = getRazorpayCreds();
 
-    const resolution = await resolveRegion(supabase, userId);
+    const edgeCountry =
+      getRequestHeader("cf-ipcountry") ||
+      getRequestHeader("x-vercel-ip-country") ||
+      getRequestHeader("x-country") ||
+      null;
+    const resolution = await resolveRegion(supabase, userId, edgeCountry);
     const region = resolution.region;
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
 
@@ -510,7 +516,12 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       claims?: { email?: string };
     };
 
-    const codResolution = await resolveRegion(supabase, userId);
+    const edgeCountry =
+      getRequestHeader("cf-ipcountry") ||
+      getRequestHeader("x-vercel-ip-country") ||
+      getRequestHeader("x-country") ||
+      null;
+    const codResolution = await resolveRegion(supabase, userId, edgeCountry);
     const region = codResolution.region;
     console.log("[razorpay.placeCod] region resolved", {
       user_id: userId,
