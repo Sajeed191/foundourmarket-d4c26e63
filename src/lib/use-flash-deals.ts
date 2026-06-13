@@ -3,6 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
+import { flashWindowSeed, orderWindowSeed, seededShuffle } from "@/lib/rotation-windows";
+
+/** Maximum products visibly promoted as Flash Deals at any one time. */
+const FLASH_VISIBLE_MAX = 10;
 
 /** A row from the dedicated flash_deals table (optional flash pricing + window). */
 export type DealRow = {
