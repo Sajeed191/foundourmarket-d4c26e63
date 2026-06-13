@@ -182,7 +182,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+   const fileRef = useRef<HTMLInputElement>(null);
+   // Only close on a backdrop click whose press *started* on the backdrop.
+   // Prevents ghost/synthetic clicks (e.g. after a native file/video picker
+   // closes on mobile) from accidentally dismissing the editor.
+   const backdropDownRef = useRef(false);
   // Pending badge assignments for a not-yet-saved product (flushed after insert).
   const [pendingBadges, setPendingBadges] = useState<string[]>([]);
   const [pendingFaqs, setPendingFaqs] = useState<{ question: string; answer: string }[]>([]);
