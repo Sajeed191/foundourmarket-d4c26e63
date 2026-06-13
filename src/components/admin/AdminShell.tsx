@@ -220,11 +220,8 @@ export function AdminShell({
           </div>
           <h1 className="text-2xl font-display font-semibold mb-2">Access restricted</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Signed in as <span className="text-foreground">{user?.email}</span>. You need one of: {required.join(", ")}.
+            Signed in as <span className="text-foreground">{user?.email}</span>. This area requires elevated access. Please contact your super-admin to be granted permission.
           </p>
-          <code className="block text-left text-[11px] bg-card border border-border rounded-xl p-4 font-mono text-muted-foreground overflow-x-auto">
-            insert into user_roles (user_id, role) values ('{user?.id}', 'admin');
-          </code>
           <Link to="/" className="inline-block mt-6 text-xs uppercase tracking-widest text-accent hover:underline">← Back to shop</Link>
         </motion.div>
       </div>
