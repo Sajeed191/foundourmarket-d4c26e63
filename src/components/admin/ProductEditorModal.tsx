@@ -204,6 +204,18 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const subs = mainObj ? categories.filter((c) => c.parent_id === mainObj.id) : [];
   const effectiveCategory = subCat || mainCat;
 
+  // ---- Additional categories (a product can live in several categories) ----
+  const initialExtra = ((row as any)?.categories as string[] | undefined ?? []).filter(
+    (s) => s && s !== (row?.category ?? ""),
+  );
+  const [extraCategories, setExtraCategories] = useState<string[]>(initialExtra);
+  const [extraPick, setExtraPick] = useState("");
+  const allCategorySlugs = useMemo(() => {
+    const set = new Set<string>([effectiveCategory, ...extraCategories].filter(Boolean));
+    return [...set];
+  }, [effectiveCategory, extraCategories]);
+  const catName = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug;
+
   const [form, setForm] = useState({
     slug: row?.slug ?? "", name: row?.name ?? "", tagline: row?.tagline ?? "",
     category: row?.category ?? categories[0]?.slug ?? "",
