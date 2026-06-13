@@ -19,6 +19,7 @@ export type OrderEmailEvent =
   | 'out-for-delivery'
   | 'order-delivered'
   | 'refund-processed'
+  | 'demo-order-received'
 
 interface OrderEmailExtra {
   refundAmount?: number
