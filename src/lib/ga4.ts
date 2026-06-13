@@ -14,6 +14,28 @@ function gtag(...args: unknown[]) {
   window.gtag(...args);
 }
 
+let ga4Loaded = false;
+/**
+ * Lazily inject the gtag.js script + config AFTER first paint / on idle.
+ * Keeping Google Analytics off the critical path removes its main-thread cost
+ * during initial load (lower TBT, faster FCP/LCP). Safe to call repeatedly.
+ */
+export function loadGa4() {
+  if (typeof window === "undefined" || ga4Loaded) return;
+  ga4Loaded = true;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer.push(args);
+  };
+  window.gtag("js", new Date());
+  window.gtag("config", MEASUREMENT_ID);
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+  document.head.appendChild(s);
+}
+
+
 /** Track a SPA page_view after the initial config page_view. */
 export function ga4PageView(path: string, title?: string) {
   gtag("event", "page_view", {
