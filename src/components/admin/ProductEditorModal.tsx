@@ -398,6 +398,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     const payload = {
       slug: finalSlug, name: form.name.trim(),
       tagline: form.tagline.trim() || null, category: effectiveCategory,
+      categories: allCategorySlugs,
       price: Number(form.price) || 0, cost: Number(form.cost) || 0,
       discount: form.discount ? Number(form.discount) : null,
       image: form.image.trim() || null, description: form.description.trim() || null,
