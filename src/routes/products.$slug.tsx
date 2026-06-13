@@ -185,7 +185,7 @@ function ProductPage() {
   const breadcrumbCat = product ? allCats.find((c) => c.slug === product.category) ?? null : null;
   const breadcrumbParent = breadcrumbCat?.parent_id ? allCats.find((c) => c.id === breadcrumbCat.parent_id) ?? null : null;
   const layoutMetrics = useLayoutMetrics();
-  const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
+  const { format, priceOf, compareOf, shippingFeeOf, currencyReady, market } = useRegion();
   const { isProductAdmin: isAdmin } = useIsProductAdmin();
   // True while an admin has the full inline product editor open — used to hide
   // customer purchase UI (sticky Buy Now dock) so staff aren't shown a shopping
@@ -220,6 +220,13 @@ function ProductPage() {
         productSlug: product.slug,
         metadata: { category: product.category, price: product.price },
       })).catch(() => {});
+      import("@/lib/ga4").then((m) => m.ga4ViewItem({
+        item_id: product.sku || product.slug,
+        item_name: product.name,
+        price: priceOf(product),
+        item_category: product.category ?? undefined,
+        item_brand: product.brand ?? undefined,
+      }, market === "india" ? "INR" : "USD")).catch(() => {});
       fetchFBT(product.slug, 4).then(setFbtSlugs);
       fetchAlsoViewed(product.slug, 6).then(setAlsoViewed);
     }

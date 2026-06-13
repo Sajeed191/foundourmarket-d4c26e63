@@ -198,6 +198,9 @@ export async function trackVisit(path: string): Promise<void> {
       referrer,
     },
   });
+
+  // GA4 page_view for SPA route changes.
+  void import("@/lib/ga4").then((m) => m.ga4PageView(path)).catch(() => {});
 }
 
 /** Emit a domain analytics event (product_view, add_to_cart, purchase, …). */

@@ -48,7 +48,7 @@ function writeLS(items: CartItem[]) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { products } = useProducts();
-  const { priceOf } = useRegion();
+  const { priceOf, market } = useRegion();
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -180,6 +180,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = async (slug: string, qty = 1) => {
     import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
     import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
+    const product = products.find((p) => p.slug === slug);
+    if (product) {
+      import("@/lib/ga4").then((m) => m.ga4AddToCart({
+        item_id: product.sku || product.slug,
+        item_name: product.name,
+        price: priceOf(product),
+        quantity: qty,
+        item_category: product.category ?? undefined,
+        item_brand: product.brand ?? undefined,
+      }, market === "india" ? "INR" : "USD")).catch(() => {});
+    }
     if (user && cartId) {
       const existing = items.find((i) => i.slug === slug && !i.savedForLater);
       const newQty = (existing?.qty ?? 0) + qty;

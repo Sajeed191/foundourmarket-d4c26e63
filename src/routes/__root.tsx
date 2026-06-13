@@ -163,6 +163,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        src: "https://www.googletagmanager.com/gtag/js?id=G-V7TKPZHMHQ",
+        async: true,
+      },
+      {
+        children:
+          "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-V7TKPZHMHQ');",
+      },
+      {
         // No-FOUC theme init: resolve the stored theme preference (default
         // "system") and set data-theme/.dark on <html> before first paint.
         children:
@@ -279,6 +287,7 @@ function RootComponent() {
   useEffect(() => {
     trackPageView(pathname);
     void captureAttribution();
+    import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
   }, [pathname]);
 
   const isAuthRoute = pathname.startsWith("/auth");
