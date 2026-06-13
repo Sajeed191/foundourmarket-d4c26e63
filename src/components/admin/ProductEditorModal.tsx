@@ -627,7 +627,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                 </select>
               </div>
             )}
-            <EField label="SKU" value={form.sku} onChange={(v) => set({ sku: v })} />
+            <EField label="SKU (auto if blank)" value={form.sku} onChange={(v) => set({ sku: v })} />
             <EField label="Brand" value={form.brand} onChange={(v) => set({ brand: v })} />
             <EField label="Product Type" value={form.product_type} onChange={(v) => set({ product_type: v })} />
             <EField label="Product Tags (comma separated)" value={form.tags} onChange={(v) => set({ tags: v })} className="col-span-2" />
