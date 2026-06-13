@@ -210,14 +210,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        src: "https://www.googletagmanager.com/gtag/js?id=G-V7TKPZHMHQ",
-        async: true,
-      },
-      {
-        children:
-          "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-V7TKPZHMHQ');",
-      },
-      {
         // No-FOUC theme init: resolve the stored theme preference (default
         // "system") and set data-theme/.dark on <html> before first paint.
         children:
@@ -357,6 +349,20 @@ function RootComponent() {
   }, []);
   useEffect(() => {
     preloadCrisp();
+  }, []);
+  // Bootstrap Google Analytics off the critical path (on idle / after paint) so
+  // gtag.js never competes with hydration on the main thread during load.
+  useEffect(() => {
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const start = () => import("@/lib/ga4").then((m) => m.loadGa4()).catch(() => {});
+    if (w.requestIdleCallback) {
+      w.requestIdleCallback(start, { timeout: 4000 });
+    } else {
+      const t = setTimeout(start, 2500);
+      return () => clearTimeout(t);
+    }
   }, []);
   // Warm the global products cache immediately on hydration so route components
   // (home, search, category, product) render with data already in memory instead
