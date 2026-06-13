@@ -14,9 +14,9 @@ export function GlobalExpansionWidget() {
 
   return (
     <CollapsibleModule
+      eyebrow="International"
       title="Global Expansion"
-      icon={<Globe className="size-3.5" />}
-      storageKey="dash-global-expansion"
+      sectionId="dash-global-expansion"
     >
       {isLoading ? (
         <div className="grid grid-cols-3 gap-3">
