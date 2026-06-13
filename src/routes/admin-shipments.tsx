@@ -479,18 +479,8 @@ function AdminShipmentsPage() {
     const shipmentsByOrder = new Map(shipments.map((s) => [s.order_id, s]));
     return orders
       .map((o) => ({ order: o, ship: shipmentsByOrder.get(o.id) ?? null }))
-      .filter(({ order, ship }) => {
-        if (queue === "all") return true;
-        if (!ship) return queue === "pending" && !["cancelled", "delivered", "returned"].includes(order.status);
-        return matchQueue(queue, ship, delayById.get(ship.id) ?? computeDelay(ship, null));
-      })
-      .filter(({ order, ship }) => {
-        if (!term) return true;
-        const addr = order.shipping_address;
-        const itemText = order.order_items?.map((it) => `${it.name} ${it.product_slug ?? ""}`).join(" ") ?? "";
-        return [order.id, ship?.tracking_number, order.tracking_number, addr?.full_name, addr?.city, addr?.state, order.contact_email, addr?.phone, ship?.carrier, order.carrier, order.payment_method, itemText]
-          .some((v) => (v ?? "").toString().toLowerCase().includes(term));
-      });
+      .filter((pair) => pairMatchesQueue(pair, queue, delayById))
+      .filter((pair) => pairMatchesSearch(pair, term));
   }, [orders, shipments, q, queue, delayById]);
 
   const customerImpact = useMemo(() => {
