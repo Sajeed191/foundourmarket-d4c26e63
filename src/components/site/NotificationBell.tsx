@@ -2,13 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, Check, CheckCheck, Settings, Trash2, ShoppingBag, X } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useNotifications, categoryOf, type NotificationCategory, type Notification } from "@/lib/notifications";
+import { useNotifications, categoryOf, resolveNotificationLink, type NotificationCategory, type Notification } from "@/lib/notifications";
 import { CAT_META, CATEGORY_ORDER, timeAgo } from "@/lib/notification-meta";
+import { useIsAdmin } from "@/lib/use-admin";
 
 type Filter = "all" | NotificationCategory;
 
 export function NotificationBell() {
   const { items, unread, markRead, markAllRead, remove } = useNotifications();
+  const { isAdmin } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [pulse, setPulse] = useState(false);
@@ -164,10 +166,12 @@ export function NotificationBell() {
                   <NotifCard
                     key={n.id}
                     n={n}
+                    isAdmin={isAdmin}
                     onRead={markRead}
                     onRemove={remove}
                     onClose={() => setOpen(false)}
                   />
+
                 ))}
               </ul>
             )}
@@ -223,9 +227,10 @@ function EmptyState({ onClose }: { onClose: () => void }) {
 }
 
 function NotifCard({
-  n, onRead, onRemove, onClose,
+  n, isAdmin, onRead, onRemove, onClose,
 }: {
   n: Notification;
+  isAdmin: boolean;
   onRead: (id: string) => void;
   onRemove: (id: string) => void;
   onClose: () => void;
@@ -233,6 +238,7 @@ function NotifCard({
   const cat = categoryOf(n);
   const { Icon, tone, dot } = CAT_META[cat];
   const unread = !n.read_at;
+  const destination = resolveNotificationLink(n, isAdmin);
 
   const inner = (
     <div className="flex items-start gap-3 p-3">
@@ -260,8 +266,8 @@ function NotifCard({
           : "border-border/50 bg-white/[0.02] hover:bg-white/[0.04]"
       }`}
     >
-      {n.link ? (
-        <Link to={n.link} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
+      {destination ? (
+        <Link to={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{inner}</div>
       )}

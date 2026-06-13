@@ -57,6 +57,65 @@ export function categoryOf(n: Pick<Notification, "type">): NotificationCategory 
   return "other";
 }
 
+/**
+ * Resolve the best destination for a notification when clicked.
+ * Admins are routed to the relevant operational command center; customers
+ * to their account pages. Falls back to an explicit `n.link` first, then to
+ * a category-based route, and finally a sensible home.
+ */
+export function resolveNotificationLink(
+  n: Pick<Notification, "type" | "link" | "data">,
+  isAdmin: boolean,
+): string {
+  const t = (n.type || "").toLowerCase();
+  const data = (n.data ?? {}) as Record<string, unknown>;
+  const cat = categoryOf(n);
+  const orderId = (data.order_id ?? data.orderId) as string | undefined;
+
+  if (isAdmin) {
+    switch (cat) {
+      case "shipping":
+        return "/admin-shipments";
+      case "order":
+        return orderId ? `/admin/orders/${orderId}` : "/admin-orders-ops";
+      case "payment":
+        return "/admin-payments";
+      case "support":
+        if (t.includes("review") || t === "review") return "/admin-products";
+        if (t === "return" || t.includes("return")) return "/admin-returns";
+        return "/admin-support";
+      case "executive":
+        return "/admin-executive";
+      case "ai":
+        return "/admin-ai-operations";
+      case "system":
+        if (t.includes("stock") || t.includes("inventory")) return "/admin-inventory";
+        if (t.includes("email")) return "/admin-email-health";
+        return "/admin-system-health";
+      case "promotion":
+        return "/admin-marketing";
+      default:
+        return n.link || "/admin";
+    }
+  }
+
+  // Customer-facing destinations
+  switch (cat) {
+    case "shipping":
+      return t === "return" || t.includes("return") ? "/account/returns" : "/account/orders";
+    case "order":
+      return "/account/orders";
+    case "payment":
+      return "/account/payments";
+    case "support":
+      return "/account/support";
+    case "promotion":
+      return n.link || "/";
+    default:
+      return n.link || "/account/notifications";
+  }
+}
+
 type Ctx = {
   items: Notification[];
   unread: number;
