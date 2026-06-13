@@ -32,7 +32,9 @@ function StatusPill({ status }: { status: string | null }) {
     pending: "text-amber-400 border-amber-500/30 bg-amber-500/10",
     failed: "text-destructive border-destructive/30 bg-destructive/10",
     refunded: "text-sky-400 border-sky-500/30 bg-sky-500/10",
+    demo: "text-sky-400 border-sky-500/40 bg-sky-500/10",
   };
+  const label = s === "demo" ? "Demo Payment" : s;
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest ${map[s] ?? "text-muted-foreground border-white/10 bg-white/5"}`}>
       {s}
