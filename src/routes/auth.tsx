@@ -80,7 +80,10 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (user) nav({ to: resolveDest() as any });
+    // Hard redirect once a session exists. SPA navigation here can silently
+    // fail if a route chunk fails to load after a new deploy, leaving the user
+    // stuck on the sign-in screen even though OAuth succeeded.
+    if (user && typeof window !== "undefined") window.location.assign(resolveDest());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, nav]);
 
