@@ -498,16 +498,36 @@ function AdminShipmentsPage() {
     for (const s of selectedShipments) await notifyCustomer(s.user_id, s.order_id, s.status);
     setBulkBusy(false); toast.success("Customers notified");
   }
-  function bulkExportCsv() {
-    const rows = (selectedShipments.length ? selectedShipments : shipments);
-    const header = ["shipment_id", "order_id", "carrier", "tracking_number", "status", "estimated_delivery", "shipped_at", "delivered_at"];
-    const csv = [header.join(",")].concat(rows.map((s) =>
-      [s.id, s.order_id, s.carrier ?? "", s.tracking_number ?? "", s.status, s.estimated_delivery ?? "", s.shipped_at ?? "", s.delivered_at ?? ""]
-        .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))).join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    const a = document.createElement("a"); a.href = url; a.download = `shipments-${Date.now()}.csv`; a.click(); URL.revokeObjectURL(url);
-    toast.success(`Exported ${rows.length} rows`);
+  // ── Unified export system ───────────────────────────────────────────────────
+  const exportRowsFor = (scope: ExportScope): ShipmentExportRow[] => {
+    let pairs: { order: Order; ship: Shipment | null }[];
+    if (scope === "selected") {
+      pairs = enriched.filter(({ ship }) => ship && selected.has(ship.id));
+    } else if (scope === "filtered") {
+      pairs = enriched;
+    } else {
+      pairs = (orders ?? []).map((o) => ({ order: o, ship: shipments.find((s) => s.order_id === o.id) ?? null }));
+    }
+    return pairs.map(({ order, ship }) => buildExportRow(order, ship));
+  };
+
+  function runExport(format: "csv" | "excel" | "pdf", scope: ExportScope) {
+    const rows = exportRowsFor(scope);
+    if (!rows.length) { toast.error("Nothing to export"); return; }
+    if (format === "csv") exportShipmentsCsv(rows);
+    else if (format === "excel") exportShipmentsExcel(rows);
+    else exportShipmentsPdf(rows);
+    toast.success(`Exported ${rows.length} shipment(s)`);
   }
+
+  async function exportPackingSlips(scope: ExportScope) {
+    const rows = exportRowsFor(scope);
+    if (!rows.length) { toast.error("Nothing to export"); return; }
+    toast.message(`Generating ${rows.length} packing slip(s)…`);
+    for (const r of rows) await downloadPackingSlip(r.orderId);
+    toast.success("Packing slips downloaded");
+  }
+
 
   const SECTIONS: { key: Section; label: string; icon: React.ReactNode }[] = [
     { key: "operations", label: "Operations", icon: <Activity className="size-3.5" /> },
