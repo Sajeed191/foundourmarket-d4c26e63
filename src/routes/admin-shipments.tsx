@@ -26,6 +26,11 @@ import { AnimatedCounter } from "@/components/site/Reveal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-shipments")({
+  validateSearch: (search) => ({
+    order: typeof search.order === "string" ? search.order : undefined,
+    shipment: typeof search.shipment === "string" ? search.shipment : undefined,
+    queue: typeof search.queue === "string" ? search.queue : undefined,
+  }),
   head: () => ({ meta: [{ title: "Shipment Command Center — Admin" }] }),
   component: AdminShipmentsPage,
 });
