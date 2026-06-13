@@ -459,9 +459,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       width: numOrNull(form.width), height: numOrNull(form.height),
       shipping_class: form.shipping_class.trim() || null,
       video_url: form.video_url.trim() || null, demo_url: form.demo_url.trim() || null,
-      tags: parseList(form.tags), features: parseList(form.features), meta_keywords: autoKeywords,
+      tags: parseList(form.tags), features: featuresList.map((f) => f.trim()).filter(Boolean), meta_keywords: autoKeywords,
       seo_title: autoSeoTitle || null, seo_description: autoSeoDesc || null,
-      specifications: textToKv(form.specifications), attributes: textToKv(form.attributes),
+      specifications: arrayToKv(specsRows), attributes: arrayToKv(attrsRows),
       admin_notes: form.admin_notes.trim() || null,
       scheduled_publish_at: form.scheduled_publish_at ? new Date(form.scheduled_publish_at).toISOString() : null,
     };
