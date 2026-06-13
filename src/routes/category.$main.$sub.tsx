@@ -52,7 +52,7 @@ function SubcategoryPage() {
   const parent = categories.find((c) => c.slug === main);
 
   const items = useMemo(
-    () => products.filter((p) => p.category === sub),
+    () => products.filter((p) => p.category === sub || (p.categories ?? []).includes(sub)),
     [products, sub],
   );
 
