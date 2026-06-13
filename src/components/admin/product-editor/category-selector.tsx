@@ -139,6 +139,8 @@ export function CategorySelector({
     addSlug((data as Cat).slug);
     setNewSubName("");
   }
+
+  if (loading) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3 text-xs text-muted-foreground">
         <Loader2 className="size-4 animate-spin" /> Loading live categories…
