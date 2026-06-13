@@ -917,14 +917,25 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         </>)}
 
         {tab === "basic" && (<>
-        {/* Media */}
+        {/* Media — product video upload + demo link */}
         <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
-          <div className="grid grid-cols-1 gap-3">
-            <EField label="Product Video URL" value={form.video_url} onChange={(v) => set({ video_url: v })} />
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Product Video</label>
+              {mediaSlug ? (
+                <ProductVideoUploader slug={mediaSlug} value={form.video_url} onChange={(v) => set({ video_url: v })} />
+              ) : (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs text-amber-300">
+                  Enter a product name first to upload a video.
+                </p>
+              )}
+            </div>
+            <EField label="Product Video URL (or paste a link)" value={form.video_url} onChange={(v) => set({ video_url: v })} />
             <EField label="Product Demo URL" value={form.demo_url} onChange={(v) => set({ demo_url: v })} />
           </div>
         </CollapsibleModule>
         </>)}
+
 
 
         {tab === "seo" && (<>
