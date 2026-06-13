@@ -24,6 +24,7 @@ import { Route as ReturnPolicyRouteImport } from './routes/return-policy'
 import { Route as ReturnRouteImport } from './routes/return'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecentlyViewedRouteImport } from './routes/recently-viewed'
+import { Route as ProductFeedDotxmlRouteImport } from './routes/product-feed[.]xml'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
@@ -217,6 +218,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RecentlyViewedRoute = RecentlyViewedRouteImport.update({
   id: '/recently-viewed',
   path: '/recently-viewed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductFeedDotxmlRoute = ProductFeedDotxmlRouteImport.update({
+  id: '/product-feed.xml',
+  path: '/product-feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -903,6 +909,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
@@ -1039,6 +1046,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
@@ -1175,6 +1183,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
@@ -1313,6 +1322,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/privacy-policy'
+    | '/product-feed.xml'
     | '/recently-viewed'
     | '/reset-password'
     | '/return'
@@ -1449,6 +1459,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/privacy-policy'
+    | '/product-feed.xml'
     | '/recently-viewed'
     | '/reset-password'
     | '/return'
@@ -1584,6 +1595,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/privacy-policy'
+    | '/product-feed.xml'
     | '/recently-viewed'
     | '/reset-password'
     | '/return'
@@ -1721,6 +1733,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ProductFeedDotxmlRoute: typeof ProductFeedDotxmlRoute
   RecentlyViewedRoute: typeof RecentlyViewedRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnRoute: typeof ReturnRoute
@@ -1876,6 +1889,13 @@ declare module '@tanstack/react-router' {
       path: '/recently-viewed'
       fullPath: '/recently-viewed'
       preLoaderRoute: typeof RecentlyViewedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product-feed.xml': {
+      id: '/product-feed.xml'
+      path: '/product-feed.xml'
+      fullPath: '/product-feed.xml'
+      preLoaderRoute: typeof ProductFeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -2858,6 +2878,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ProductFeedDotxmlRoute: ProductFeedDotxmlRoute,
   RecentlyViewedRoute: RecentlyViewedRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnRoute: ReturnRoute,
@@ -2910,13 +2931,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
