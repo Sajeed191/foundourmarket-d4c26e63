@@ -14,7 +14,14 @@ import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
 import { assignBadge } from "@/lib/use-product-badges";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
+import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
 import type { Product } from "@/lib/products";
+
+const RATING_SOURCES = [
+  { value: "customer_reviews", label: "Customer" },
+  { value: "imported_supplier", label: "Supplier" },
+  { value: "marketplace_imported", label: "Marketplace" },
+] as const;
 
 /** Permissive snake_case row accepted from both /admin and /admin-products. */
 export type ProductEditorRow = {
