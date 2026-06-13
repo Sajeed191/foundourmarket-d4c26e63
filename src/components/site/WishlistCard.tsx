@@ -46,7 +46,7 @@ export function WishlistCard({
   const lowStock =
     product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 10);
 
-  const badgeSettings = useBadgeSettings();
+  const badgeSettings = DEFAULT_BADGE_SETTINGS;
   const assigned = useProductBadges(product.slug);
   const badges = assigned.length
     ? assigned.map((b) => ({
