@@ -105,7 +105,8 @@ export function FlashSaleStrip() {
           {items.map((p) => {
             const left = p.stockQuantity - (p.lowStockThreshold ?? 0);
             const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
-            const salePrice = p.price * (1 - sale.discount_percent / 100);
+            const regionPrice = priceOf(p);
+            const salePrice = regionPrice * (1 - sale.discount_percent / 100);
             return (
               <AdminProductOverlay
                 key={p.slug}
@@ -126,7 +127,7 @@ export function FlashSaleStrip() {
                   <p className="mt-2 text-[11px] font-medium truncate">{p.name}</p>
                   <div className="flex items-baseline gap-1.5">
                     <Price value={salePrice} className="text-xs font-display font-semibold text-accent tabular-nums" />
-                    <Price value={p.price} className="text-[10px] font-mono line-through text-muted-foreground tabular-nums" />
+                    <Price value={regionPrice} className="text-[10px] font-mono line-through text-muted-foreground tabular-nums" />
                   </div>
                   {showOnlyLeft && (
                     <p className="text-[9px] font-mono uppercase tracking-wider text-accent/90 mt-0.5">
