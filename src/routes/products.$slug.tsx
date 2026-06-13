@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, Shield, RotateCcw, Minus, Plus, Scale,
-  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck,
+  ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, BadgeCheck, Play,
 } from "lucide-react";
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -324,12 +324,21 @@ function ProductPage() {
     );
   }
 
-  const galleryImages = (() => {
+  const galleryMedia = (() => {
+    const items: ProductImage[] = [];
+    if (product.videoUrl) {
+      items.push({ id: "video", url: product.videoUrl, alt: `${product.name} — video`, sortOrder: -2 });
+    }
     const main = { id: "main", url: product.image, alt: product.name, sortOrder: -1 };
     const extras = images.filter((img) => img.url && img.url !== product.image);
-    return [main, ...extras];
+    items.push(main, ...extras);
+    return items;
   })();
-  const activeImage = galleryImages[activeImg] ?? galleryImages[0];
+  const galleryImages = galleryMedia.filter((m) => m.id !== "video");
+  const activeMedia = galleryMedia[activeImg] ?? galleryMedia[0];
+  const hasVideoFirst = galleryMedia[0]?.id === "video";
+  const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
+  const handleLightboxIndexChange = (i: number) => setActiveImg(hasVideoFirst ? i + 1 : i);
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
   const basePrice = priceOf(product);
@@ -409,26 +418,43 @@ function ProductPage() {
               <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
               <div data-product-image className="relative aspect-[4/3] sm:aspect-square max-h-[58svh] sm:max-h-none mx-auto w-full card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]">
                 <AnimatePresence mode="wait">
-                  <motion.img
-                    key={activeImage?.id}
-                    src={activeImage?.url || product.image}
-                    alt={activeImage?.alt || product.name}
-                    onClick={() => setLightboxOpen(true)}
-                    initial={{ opacity: 0, scale: 1.04 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
-                  />
+                  {activeMedia?.id === "video" ? (
+                    <motion.video
+                      key="video"
+                      src={activeMedia.url}
+                      controls
+                      autoPlay
+                      muted
+                      playsInline
+                      onClick={(e) => e.stopPropagation()}
+                      initial={{ opacity: 0, scale: 1.04 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute inset-0 w-full h-full object-cover bg-black"
+                    />
+                  ) : (
+                    <motion.img
+                      key={activeMedia?.id}
+                      src={activeMedia?.url || product.image}
+                      alt={activeMedia?.alt || product.name}
+                      onClick={() => setLightboxOpen(true)}
+                      initial={{ opacity: 0, scale: 1.04 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
+                    />
+                  )}
                 </AnimatePresence>
                 {/* Tap-to-expand hint */}
                 <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[9px] font-mono uppercase tracking-widest text-white/80 backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100">
                   Tap to view all
                 </span>
-                {/* Image counter (1/5) */}
-                {galleryImages.length > 1 && (
+                {/* Media counter */}
+                {galleryMedia.length > 1 && (
                   <span className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[10px] font-mono tabular-nums text-white/90 backdrop-blur-md">
-                    {activeImg + 1}/{galleryImages.length}
+                    {activeImg + 1}/{galleryMedia.length}
                   </span>
                 )}
                 {/* premium glass overlay gradient */}
@@ -485,27 +511,34 @@ function ProductPage() {
             </div>
 
 
-            {galleryImages.length > 1 && (
+            {galleryMedia.length > 1 && (
               <div className="mt-2.5 grid grid-cols-6 gap-2 sm:gap-2.5">
-                {galleryImages.map((img, i) => (
+                {galleryMedia.map((item, i) => (
                   <button
-                    key={img.id}
+                    key={item.id}
                     onClick={() => setActiveImg(i)}
-                    aria-label={`View image ${i + 1}`}
-                    className={`aspect-square rounded-xl overflow-hidden border transition-all bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
+                    aria-label={item.id === "video" ? "Play video" : `View image ${i + 1}`}
+                    className={`relative aspect-square rounded-xl overflow-hidden border transition-all bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
                   >
-                    <img src={img.url} alt={img.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                    {item.id === "video" ? (
+                      <div className="w-full h-full bg-black grid place-items-center">
+                        <Play className="size-6 text-white/80" />
+                      </div>
+                    ) : (
+                      <img src={item.url} alt={item.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                    )}
                   </button>
                 ))}
               </div>
             )}
 
+
             <ImageLightbox
               images={galleryImages}
-              index={activeImg}
+              index={lightboxIndex}
               open={lightboxOpen}
               onClose={() => setLightboxOpen(false)}
-              onIndexChange={setActiveImg}
+              onIndexChange={handleLightboxIndexChange}
               alt={product.name}
             />
           </motion.div>

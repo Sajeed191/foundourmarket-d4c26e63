@@ -5620,6 +5620,7 @@ export type Database = {
           trending: boolean | null
           updated_at: string | null
           upsell_products: string[] | null
+          video_url: string | null
           views_count: number | null
           warranty: string | null
           wishlist_count: number | null
@@ -5709,6 +5710,7 @@ export type Database = {
           trending?: boolean | null
           updated_at?: string | null
           upsell_products?: string[] | null
+          video_url?: string | null
           views_count?: number | null
           warranty?: string | null
           wishlist_count?: number | null
@@ -5798,6 +5800,7 @@ export type Database = {
           trending?: boolean | null
           updated_at?: string | null
           upsell_products?: string[] | null
+          video_url?: string | null
           views_count?: number | null
           warranty?: string | null
           wishlist_count?: number | null
