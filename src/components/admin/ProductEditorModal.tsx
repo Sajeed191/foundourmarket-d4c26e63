@@ -16,6 +16,10 @@ import { createFaq } from "@/lib/product-faqs";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
 import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
+import {
+  FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv,
+} from "@/components/admin/product-editor/field-builders";
+import { ListChecks, Layers } from "lucide-react";
 import type { Product } from "@/lib/products";
 
 const RATING_SOURCES = [
