@@ -14,7 +14,14 @@ import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
 import { assignBadge } from "@/lib/use-product-badges";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
+import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
 import type { Product } from "@/lib/products";
+
+const RATING_SOURCES = [
+  { value: "customer_reviews", label: "Customer" },
+  { value: "imported_supplier", label: "Supplier" },
+  { value: "marketplace_imported", label: "Marketplace" },
+] as const;
 
 /** Permissive snake_case row accepted from both /admin and /admin-products. */
 export type ProductEditorRow = {
@@ -51,6 +58,29 @@ const usd = (v: number) =>
 
 function slugify(name: string) {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+/** Auto-generate a readable SKU from name + category, e.g. ELE-WIRELESS-EARB-4821. */
+function makeSku(name: string, category: string): string {
+  const cat = (category || "GEN").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "GEN";
+  const base = name.trim().replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toUpperCase().slice(0, 14) || "ITEM";
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${cat}-${base}-${rand}`;
+}
+/** Auto SEO title from brand + name, trimmed to a search-friendly length. */
+function makeSeoTitle(name: string, brand: string): string {
+  const b = brand.trim();
+  const n = name.trim();
+  const title = b && !n.toLowerCase().includes(b.toLowerCase()) ? `${n} — ${b}` : n;
+  return title.slice(0, 60);
+}
+/** Auto SEO keywords from name, brand, category and tags. */
+function makeKeywords(name: string, brand: string, category: string, tags: string): string[] {
+  const words = name.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+  const out = new Set<string>([...words]);
+  if (brand.trim()) out.add(brand.trim().toLowerCase());
+  if (category.trim()) out.add(category.replace(/-/g, " ").trim().toLowerCase());
+  for (const t of parseList(tags)) out.add(t.toLowerCase());
+  return Array.from(out).slice(0, 12);
 }
 function parseList(text: string): string[] {
   return text.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
@@ -194,14 +224,18 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     shipping_fee_usd: String(row?.shipping_fee_usd ?? 0),
     india_visible: row?.india_visible ?? true,
     international_visible: row?.international_visible ?? true,
-    cod_enabled: row?.cod_enabled ?? true,
+    cod_enabled: row?.cod_enabled ?? false,
     pickup_supported: row?.pickup_supported ?? false,
     international_shipping: row?.international_shipping ?? true,
     fragile: row?.fragile ?? false,
     return_eligible: row?.return_eligible ?? true,
     replacement_eligible: row?.replacement_eligible ?? true,
-    return_window_days: row?.return_window_days ?? 7,
-    warranty: row?.warranty ?? "",
+    return_window_days: row?.return_window_days ?? 4,
+    warranty: row?.warranty ?? "No",
+    rating: row?.rating != null ? String(row.rating) : "",
+    reviews: row?.reviews != null ? String(row.reviews) : "",
+    initial_rating: (row as any)?.initial_rating != null ? String((row as any).initial_rating) : "",
+    rating_source: (row as any)?.rating_source ?? "imported_supplier",
     status: row?.status ?? "published",
     bestseller: row?.bestseller ?? false,
     trending: row?.trending ?? false,
@@ -257,6 +291,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   });
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+  // Stable slug used to group media (images/video) before the row is saved.
+  const mediaSlug = form.slug.trim() || slugify(form.name);
 
   async function uploadImage(file: File) {
     setUploading(true); setError(null);
@@ -333,13 +369,29 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     if (!mainCat) { setError("Select a main category."); return; }
     if (subs.length > 0 && !subCat) { setError("This category has subcategories — selecting a subcategory is required."); return; }
     setSaving(true); setError(null);
+    const finalSlug = form.slug.trim() || slugify(form.name);
+    // Auto SKU / SEO — generated automatically when left blank.
+    const autoSku = form.sku.trim() || makeSku(form.name, effectiveCategory);
+    const autoSeoTitle = form.seo_title.trim() || makeSeoTitle(form.name, form.brand);
+    const autoSeoDesc =
+      form.seo_description.trim() ||
+      (form.description.trim() || form.tagline.trim() || form.name.trim()).slice(0, 160);
+    const autoKeywords =
+      form.meta_keywords.trim()
+        ? parseList(form.meta_keywords)
+        : makeKeywords(form.name, form.brand, effectiveCategory, form.tags);
+    const ratingNum = numOrNull(form.rating);
+    const reviewsNum = numOrNull(form.reviews);
+    const initialRatingNum = numOrNull(form.initial_rating);
     const payload = {
-      slug: form.slug.trim() || slugify(form.name), name: form.name.trim(),
+      slug: finalSlug, name: form.name.trim(),
       tagline: form.tagline.trim() || null, category: effectiveCategory,
       price: Number(form.price) || 0, cost: Number(form.cost) || 0,
       discount: form.discount ? Number(form.discount) : null,
       image: form.image.trim() || null, description: form.description.trim() || null,
-      in_stock: form.in_stock, featured: form.featured, sku: form.sku.trim() || null,
+      in_stock: form.in_stock, featured: form.featured, sku: autoSku,
+      rating: ratingNum ?? undefined, reviews: reviewsNum != null ? Math.round(reviewsNum) : undefined,
+      initial_rating: initialRatingNum ?? undefined, rating_source: form.rating_source,
       stock_quantity: Number(form.stock_quantity) || 0, low_stock_threshold: Number(form.low_stock_threshold) || 0,
       sort_order: Number(form.sort_order) || 0,
       price_inr: priceInr, compare_price_inr: cmpInr, price_usd: priceUsd, compare_price_usd: cmpUsd,
@@ -372,8 +424,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       width: numOrNull(form.width), height: numOrNull(form.height),
       shipping_class: form.shipping_class.trim() || null,
       video_url: form.video_url.trim() || null, demo_url: form.demo_url.trim() || null,
-      tags: parseList(form.tags), features: parseList(form.features), meta_keywords: parseList(form.meta_keywords),
-      seo_title: form.seo_title.trim() || null, seo_description: form.seo_description.trim() || null,
+      tags: parseList(form.tags), features: parseList(form.features), meta_keywords: autoKeywords,
+      seo_title: autoSeoTitle || null, seo_description: autoSeoDesc || null,
       specifications: textToKv(form.specifications), attributes: textToKv(form.attributes),
       admin_notes: form.admin_notes.trim() || null,
       scheduled_publish_at: form.scheduled_publish_at ? new Date(form.scheduled_publish_at).toISOString() : null,
@@ -439,22 +491,23 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         </div>
 
         {tab === "basic" && (<>
-        {/* Image */}
-        <div className="flex gap-3 items-start">
-          <div className="size-20 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
-            {form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" /> : <Package className="size-5 text-muted-foreground" />}
-          </div>
-          <div className="flex-1 space-y-2">
-            <input value={form.image} onChange={(e) => set({ image: e.target.value })} placeholder="Image URL or upload"
-              className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5 disabled:opacity-50">
-              {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />} {uploading ? "Uploading…" : "Upload"}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
-          </div>
-        </div>
+        {/* Images — multiple, drag to reorder, first = primary */}
+        <CollapsibleModule eyebrow="Step 0" title="Product Images" badge={<Sparkles className="size-3.5 text-accent" />}>
+          {mediaSlug ? (
+            <ProductMediaGallery
+              slug={mediaSlug}
+              name={form.name}
+              primaryUrl={form.image || null}
+              onPrimaryChange={(url) => set({ image: url })}
+            />
+          ) : (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs text-amber-300">
+              Enter a product name first — images are organised under the product's slug.
+            </p>
+          )}
+        </CollapsibleModule>
         </>)}
+
 
         {tab === "preview" && (<>
         {/* Live Storefront Preview */}
@@ -574,7 +627,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                 </select>
               </div>
             )}
-            <EField label="SKU" value={form.sku} onChange={(v) => set({ sku: v })} />
+            <EField label="SKU (auto if blank)" value={form.sku} onChange={(v) => set({ sku: v })} />
             <EField label="Brand" value={form.brand} onChange={(v) => set({ brand: v })} />
             <EField label="Product Type" value={form.product_type} onChange={(v) => set({ product_type: v })} />
             <EField label="Product Tags (comma separated)" value={form.tags} onChange={(v) => set({ tags: v })} className="col-span-2" />
@@ -677,7 +730,35 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
           </div>
         </CollapsibleModule>
+
+        {/* Rating Management */}
+        <CollapsibleModule eyebrow="Step 5b" title="Rating Management" badge={<Star className="size-3.5 text-accent" />} defaultOpen={false}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-1">
+              {[1, 2, 3, 4, 5].map((s) => {
+                const r = Number(form.rating) || 0;
+                return (
+                  <button key={s} type="button" onClick={() => set({ rating: String(s) })} aria-label={`${s} stars`}
+                    className="p-0.5">
+                    <Star className={`size-6 transition-colors ${s <= Math.round(r) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+                  </button>
+                );
+              })}
+              <span className="ml-2 text-sm text-muted-foreground">{form.rating ? `${Number(form.rating).toFixed(1)} / 5` : "No rating"}</span>
+            </div>
+            <EField label="Rating (0-5)" type="number" value={form.rating} onChange={(v) => set({ rating: v })} />
+            <EField label="Reviews count" type="number" value={form.reviews} onChange={(v) => set({ reviews: v })} />
+            <EField label="Initial / seed rating" type="number" value={form.initial_rating} onChange={(v) => set({ initial_rating: v })} />
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Rating Source</label>
+              <select value={form.rating_source} onChange={(e) => set({ rating_source: e.target.value })} className="filter-select w-full">
+                {RATING_SOURCES.map((r) => <option key={r.value} value={r.value} className="bg-background">{r.label}</option>)}
+              </select>
+            </div>
+          </div>
+        </CollapsibleModule>
         </>)}
+
 
         {tab === "merch" && (<>
         {/* Visibility & Merchandising */}
@@ -864,21 +945,33 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         </>)}
 
         {tab === "basic" && (<>
-        {/* Media */}
+        {/* Media — product video upload + demo link */}
         <CollapsibleModule eyebrow="Optional" title="Media" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
-          <div className="grid grid-cols-1 gap-3">
-            <EField label="Product Video URL" value={form.video_url} onChange={(v) => set({ video_url: v })} />
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Product Video</label>
+              {mediaSlug ? (
+                <ProductVideoUploader slug={mediaSlug} value={form.video_url} onChange={(v) => set({ video_url: v })} />
+              ) : (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs text-amber-300">
+                  Enter a product name first to upload a video.
+                </p>
+              )}
+            </div>
+            <EField label="Product Video URL (or paste a link)" value={form.video_url} onChange={(v) => set({ video_url: v })} />
             <EField label="Product Demo URL" value={form.demo_url} onChange={(v) => set({ demo_url: v })} />
           </div>
         </CollapsibleModule>
         </>)}
 
 
+
         {tab === "seo" && (<>
         {/* Advanced */}
         <CollapsibleModule eyebrow="Optional" title="Advanced (SEO & specs)" badge={<Sparkles className="size-3.5 text-accent" />} defaultOpen={false}>
           <div className="grid grid-cols-1 gap-3">
-            <EField label="SEO title" value={form.seo_title} onChange={(v) => set({ seo_title: v })} />
+            <p className="text-[10px] text-muted-foreground">SEO title, description and keywords are generated automatically from the product name, brand and tags when left blank.</p>
+            <EField label="SEO title (auto if blank)" value={form.seo_title} onChange={(v) => set({ seo_title: v })} />
             <div>
               <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">SEO description</label>
               <textarea value={form.seo_description} onChange={(e) => set({ seo_description: e.target.value })} rows={2}
