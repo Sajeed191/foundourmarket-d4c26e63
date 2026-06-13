@@ -209,6 +209,7 @@ export function rowToProduct(r: Row): Product {
     name: r.name,
     tagline: r.tagline ?? "",
     category: r.category,
+    categories: (r.categories ?? (r.category ? [r.category] : [])) as string[],
     price: Number(r.price),
     rating: Number(r.rating),
     reviews: r.reviews,
