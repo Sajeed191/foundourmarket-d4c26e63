@@ -1016,7 +1016,7 @@ function InternationalSoon({ live, loading }: { live: boolean; loading: boolean 
 
 function SuccessScreen({ orderId, totalINR, market, method, eta, nav }: {
   orderId: string | null; totalINR: number; market: "india" | "international";
-  method: "razorpay" | "cod"; eta: string;
+  method: "razorpay" | "cod" | "demo"; eta: string;
   nav: ReturnType<typeof useNavigate>;
 }) {
   const inrFmt = (n: number) => formatMoney(market, n);
