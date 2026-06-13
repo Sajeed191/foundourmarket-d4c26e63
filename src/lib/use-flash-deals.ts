@@ -8,7 +8,6 @@ import { useRotationNonce } from "@/lib/use-rotation-nonce";
 export type DealRow = {
   id: string;
   product_id: string;
-  product_slug: string | null;
   flash_price: number;
   start_at: string;
   end_at: string;
@@ -91,10 +90,9 @@ export function useFlashDeals() {
   function fetchDeals() {
     supabase
       .from("flash_deals")
-      .select("id,product_id,flash_price,start_at,end_at,priority,created_at,product:products(slug)")
+      .select("id,product_id,flash_price,start_at,end_at,priority,created_at")
       .then(({ data }) => {
-        const rows = (data as unknown as Array<Omit<DealRow, "product_slug"> & { product: { slug: string } | null }>) ?? [];
-        setDeals(rows.map((r) => ({ ...r, product_slug: r.product?.slug ?? null })));
+        setDeals((data as DealRow[] | null) ?? []);
       });
   }
 
@@ -109,16 +107,16 @@ export function useFlashDeals() {
     };
   }, []);
 
-  // Map of live deal overrides keyed by product slug (only deals in their window).
-  const liveDealBySlug = useMemo(() => {
+  // Map of live deal overrides keyed by public product id (only deals in their window).
+  const liveDealByProductId = useMemo(() => {
     const map = new Map<string, DealRow>();
     for (const d of deals) {
-      if (!d.product_slug) continue;
+      if (!d.product_id) continue;
       const startOk = new Date(d.start_at).getTime() <= now;
       const endOk = new Date(d.end_at).getTime() > now;
       if (!startOk || !endOk) continue;
-      const existing = map.get(d.product_slug);
-      if (!existing || d.priority > existing.priority) map.set(d.product_slug, d);
+      const existing = map.get(d.product_id);
+      if (!existing || d.priority > existing.priority) map.set(d.product_id, d);
     }
     return map;
   }, [deals, now]);
@@ -144,7 +142,7 @@ export function useFlashDeals() {
         excludedUnavailable++;
         continue;
       }
-      const live = liveDealBySlug.get(p.slug) ?? null;
+      const live = p.id ? liveDealByProductId.get(p.id) ?? null : null;
       active.push({
         product: p,
         flashPrice: live ? live.flash_price : null,
@@ -170,7 +168,7 @@ export function useFlashDeals() {
     }
 
     return ordered;
-  }, [products, liveDealBySlug, rotationSeed]);
+  }, [products, liveDealByProductId, rotationSeed]);
 
 
   return { items, loading, now, products };
