@@ -4,7 +4,7 @@ import {
   Loader2, Plus, Search, X, Package, Truck, CheckCircle2, RotateCcw, Ban,
   MapPin, Mail, Phone, User, CalendarClock, Hash, RefreshCw, AlertTriangle,
   Activity, Gauge, Users, Radio, Download, Send, TrendingUp,
-  ShieldAlert, Clock, PackageCheck,
+  ShieldAlert, Clock, PackageCheck, FileText, FileSpreadsheet, Printer, Wifi, WifiOff,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,14 @@ import {
   matchQueue, QUEUE_LABEL, SEVERITY_LABEL, HEALTH_LABEL,
   type ShipRow, type OrderRow, type EventRow, type DelayInfo, type QueueKey, type HealthTier,
 } from "@/lib/shipment-analytics";
+import {
+  downloadPackingSlip, downloadShippingLabel,
+  exportShipmentsCsv, exportShipmentsExcel, exportShipmentsPdf,
+  type ShipmentExportRow,
+} from "@/lib/packing-slip";
+import { downloadInvoice } from "@/lib/invoice";
+import { SUPPORTED_COURIERS } from "@/lib/courier";
+import { AnimatedCounter } from "@/components/site/Reveal";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-shipments")({
