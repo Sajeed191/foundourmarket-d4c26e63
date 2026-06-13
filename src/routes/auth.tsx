@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 import { safeInternalPath } from "@/lib/safe-redirect";
+import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -41,6 +42,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [oauthReturnPending, setOauthReturnPending] = useState(() => typeof window !== "undefined" && hasOAuthReturnParams());
   const [error, setError] = useState<string | null>(null);
   const nav = useNavigate();
   const { redirect } = Route.useSearch();
@@ -60,22 +62,27 @@ function AuthPage() {
     return "/account";
   };
 
-  // Fallback: if the OAuth broker redirects back to /auth (instead of
-  // /auth/callback) with the issued tokens in the URL, establish the session
-  // here so the user isn't stranded on the "Connect Your Account" screen.
+  // Fallback: if the OAuth broker returns to /auth (instead of /auth/callback)
+  // with either tokens or an auth code, finish the exchange here so users are
+  // not stranded back on the "Continue with Google" screen.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const fromQuery = new URLSearchParams(window.location.search);
-    const access_token = fromHash.get("access_token") ?? fromQuery.get("access_token");
-    const refresh_token = fromHash.get("refresh_token") ?? fromQuery.get("refresh_token");
-    if (!access_token || !refresh_token) return;
+    if (!hasOAuthReturnParams()) return;
+    let cancelled = false;
+    setOauthReturnPending(true);
     (async () => {
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-      // Strip tokens from the URL so a refresh / back doesn't replay them.
-      window.history.replaceState({}, document.title, window.location.pathname);
-      if (!error) nav({ to: resolveDest() as any });
+      const result = await completeOAuthReturn();
+      if (cancelled) return;
+      if (result.completed) {
+        window.location.replace(resolveDest());
+        return;
+      }
+      setError(result.error ? "Couldn't finish Google sign-in. Please try again." : null);
+      setOauthReturnPending(false);
     })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -235,7 +242,7 @@ function AuthPage() {
         </motion.div>
 
         {/* Benefits */}
-        {mode === "oauth" && (
+        {mode === "oauth" && !oauthReturnPending && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -324,7 +331,21 @@ function AuthPage() {
         )}
 
         {/* OAuth CTAs */}
-        {mode === "oauth" && (
+        {mode === "oauth" && oauthReturnPending && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.35, ease }}
+            className="mb-5 rounded-2xl px-4 py-5 text-center ring-1 ring-white/[0.08] backdrop-blur-xl"
+            style={{ background: "linear-gradient(160deg, rgba(255,159,67,0.06) 0%, rgba(255,255,255,0.025) 100%)" }}
+          >
+            <Loader2 className="mx-auto mb-3 size-5 animate-spin" style={{ color: "#FF9F43" }} />
+            <p className="text-sm font-medium text-white">Signing you in…</p>
+            <p className="mt-1 text-xs text-white/55">Securing your Google session</p>
+          </motion.div>
+        )}
+
+        {mode === "oauth" && !oauthReturnPending && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
