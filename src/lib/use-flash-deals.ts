@@ -126,23 +126,21 @@ export function useFlashDeals() {
       });
     }
 
-    // Reshuffle every rotation window using a deterministic seed so the homepage,
-    // Offers page and Deals page all compute the exact same randomized order.
-    const ordered = seededShuffle(active, rotationSeed);
+    // Pick the eligible subset for this 6h window (max 10), then reshuffle that
+    // subset's display order every 2h. Excluded eligible products keep their
+    // Flash/Hot badges in the database but are hidden publicly until selected.
+    const selected = seededShuffle(active, flashSeed).slice(0, FLASH_VISIBLE_MAX);
+    const ordered = seededShuffle(selected, orderSeed);
 
     if (typeof window !== "undefined") {
       // eslint-disable-next-line no-console
-      console.info(`[FlashDeals] total Flash Deal products found: ${totalFlagged}`);
-      // eslint-disable-next-line no-console
-      console.info(`[FlashDeals] active Flash Deal products: ${ordered.length} | excluded (inactive/unavailable): ${excludedUnavailable}`);
-      // eslint-disable-next-line no-console
-      console.info(`[FlashDeals] current rotation timestamp: ${new Date(rotationSeed).toISOString()}`);
+      console.info(`[FlashDeals] eligible: ${active.length} | visible this window: ${ordered.length} | excluded unavailable: ${excludedUnavailable} | flagged: ${totalFlagged}`);
       // eslint-disable-next-line no-console
       console.info("[FlashDeals] current display order:", ordered.map((i) => i.product.slug));
     }
 
     return ordered;
-  }, [products, liveDealByProductId, rotationSeed]);
+  }, [products, liveDealByProductId, flashSeed, orderSeed, now]);
 
 
   return { items, loading, now, products };
