@@ -13,10 +13,8 @@ import { ProductImage } from "@/components/site/ProductImage";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { formatSold } from "@/lib/format-sold";
 
-/** Premium card: show at most two badges for a luxury marketplace feel. */
-const MAX_BADGES = 2;
 
-function ProductCardImpl({ product, forceBadge }: { product: Product; compact?: boolean; forceBadge?: BadgeKey | null }) {
+function ProductCardImpl({ product, context = "default", forceBadge }: { product: Product; compact?: boolean; context?: BadgeContext; forceBadge?: BadgeKey | null }) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, setQty, items } = useCart();
   const { has, toggle } = useWishlist();
