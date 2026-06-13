@@ -31,16 +31,22 @@ import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { Toaster } from "@/components/ui/sonner";
 import { ShareDialog } from "@/components/site/ShareDialog";
+import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
+import { safeInternalPath } from "@/lib/safe-redirect";
 
 // Non-critical client-only shell: deferred out of the entry bundle so the
 // homepage/product/search first paint never pays for admin tooling, the live
 // chat widget, the compare tray, or the install prompt. These mount after
 // hydration via the <DeferredShell> gate below.
 const AdminFloatingToolbar = lazy(() =>
-  import("@/components/admin/AdminFloatingToolbar").then((m) => ({ default: m.AdminFloatingToolbar })),
+  import("@/components/admin/AdminFloatingToolbar").then((m) => ({
+    default: m.AdminFloatingToolbar,
+  })),
 );
 const AdminOverlayIndicator = lazy(() =>
-  import("@/components/admin/AdminOverlayIndicator").then((m) => ({ default: m.AdminOverlayIndicator })),
+  import("@/components/admin/AdminOverlayIndicator").then((m) => ({
+    default: m.AdminOverlayIndicator,
+  })),
 );
 const AdminCommandCenter = lazy(() =>
   import("@/components/admin/AdminCommandCenter").then((m) => ({ default: m.AdminCommandCenter })),
@@ -93,12 +99,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">Something went wrong on our end.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="rounded-full bg-accent px-6 py-3 text-xs font-medium uppercase tracking-widest text-accent-foreground"
           >
             Try again
           </button>
-          <a href="/" className="rounded-full border border-border px-6 py-3 text-xs font-medium uppercase tracking-widest">
+          <a
+            href="/"
+            className="rounded-full border border-border px-6 py-3 text-xs font-medium uppercase tracking-widest"
+          >
             Go home
           </a>
         </div>
@@ -111,9 +123,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+      },
       { title: "FoundOurMarket™ | Premium Global Marketplace" },
-      { name: "description", content: "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers." },
+      {
+        name: "description",
+        content:
+          "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers.",
+      },
       { name: "application-name", content: "FoundOurMarket" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "FoundOurMarket" },
@@ -121,16 +141,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "format-detection", content: "telephone=no" },
       { property: "og:title", content: "FoundOurMarket™ | Premium Global Marketplace" },
-      { property: "og:description", content: "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers." },
+      {
+        property: "og:description",
+        content:
+          "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://foundourmarket.com/" },
       { property: "og:site_name", content: "FoundOurMarket" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0a0a0a" },
       { name: "twitter:title", content: "FoundOurMarket™ | Premium Global Marketplace" },
-      { name: "twitter:description", content: "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WNBAvMpbiIc783NsRzlYQb1I1wj1/social-images/social-1779938854051-1000130607.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WNBAvMpbiIc783NsRzlYQb1I1wj1/social-images/social-1779938854051-1000130607.webp" },
+      {
+        name: "twitter:description",
+        content:
+          "Discover premium products worldwide with secure shopping, trusted sellers, and a luxury marketplace experience built for modern consumers.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/WNBAvMpbiIc783NsRzlYQb1I1wj1/social-images/social-1779938854051-1000130607.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/WNBAvMpbiIc783NsRzlYQb1I1wj1/social-images/social-1779938854051-1000130607.webp",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -139,13 +175,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // waterfall that delayed the hero LCP text. Preload only the hero h1
       // weight (Space Grotesk 600) so the LCP text paints with its final font
       // immediately — no swap/reflow on the largest contentful element.
-      { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/space-grotesk-latin-600-normal.woff2", crossOrigin: "anonymous" },
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: "/fonts/space-grotesk-latin-600-normal.woff2",
+        crossOrigin: "anonymous",
+      },
       // Warm up the data API connection (DNS + TLS) on every page so the very
       // first products/categories query — which happens on most routes — skips
       // the cold-connection handshake and returns faster.
       ...(import.meta.env.VITE_SUPABASE_URL
         ? [
-            { rel: "preconnect", href: import.meta.env.VITE_SUPABASE_URL as string, crossOrigin: "anonymous" as const },
+            {
+              rel: "preconnect",
+              href: import.meta.env.VITE_SUPABASE_URL as string,
+              crossOrigin: "anonymous" as const,
+            },
             { rel: "dns-prefetch", href: import.meta.env.VITE_SUPABASE_URL as string },
           ]
         : []),
@@ -227,16 +273,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
  * out of the entry bundle and off the critical hydration path, cutting TBT and
  * speeding up LCP on the homepage / product / search routes.
  */
-function DeferredShell({ isAuthRoute, hideLiveChat }: { isAuthRoute: boolean; isAdminRoute?: boolean; hideLiveChat?: boolean }) {
+function DeferredShell({
+  isAuthRoute,
+  hideLiveChat,
+}: {
+  isAuthRoute: boolean;
+  isAdminRoute?: boolean;
+  hideLiveChat?: boolean;
+}) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const ric =
-      (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
-        .requestIdleCallback;
+    const ric = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
     if (ric) {
       const id = ric(() => setReady(true), { timeout: 3000 });
       return () => {
-        const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void })
+          .cancelIdleCallback;
         cancel?.(id);
       };
     }
@@ -274,21 +330,62 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function OAuthReturnScreen() {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-background px-6">
+      <div className="max-w-xs text-center">
+        <div className="mx-auto mb-5 size-16 overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-border">
+          <img src="/logo.webp" alt="FoundOurMarket" className="h-full w-full object-cover" />
+        </div>
+        <h1 className="font-display text-xl font-semibold text-foreground">Signing you in…</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Securing your Google session</p>
+      </div>
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [oauthReturnPending, setOauthReturnPending] = useState(
+    () => typeof window !== "undefined" && hasOAuthReturnParams(),
+  );
 
-  useEffect(() => { registerServiceWorker(); }, []);
-  useEffect(() => { preloadCrisp(); }, []);
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+  useEffect(() => {
+    preloadCrisp();
+  }, []);
   // Warm the global products cache immediately on hydration so route components
   // (home, search, category, product) render with data already in memory instead
   // of each kicking off its own fetch on mount.
-  useEffect(() => { void loadProducts(); }, []);
+  useEffect(() => {
+    void loadProducts();
+  }, []);
   useEffect(() => {
     trackPageView(pathname);
     void captureAttribution();
     import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
   }, [pathname]);
+  useEffect(() => {
+    if (!oauthReturnPending || typeof window === "undefined") return;
+    let cancelled = false;
+    completeOAuthReturn().then((result) => {
+      if (cancelled) return;
+      if (result.completed) {
+        const stored = safeInternalPath(localStorage.getItem("post_auth_redirect"));
+        if (stored) localStorage.removeItem("post_auth_redirect");
+        window.location.replace(stored ?? "/account");
+        return;
+      }
+      setOauthReturnPending(false);
+      if (result.error && !pathname.startsWith("/auth")) window.location.replace("/auth");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [oauthReturnPending, pathname]);
 
   const isAuthRoute = pathname.startsWith("/auth");
   // Admin routes own their full chrome via <AdminShell> (sidebar + top bar with
@@ -299,38 +396,49 @@ function RootComponent() {
   const isCheckoutRoute = pathname.startsWith("/checkout");
   const hideSiteChrome = isAuthRoute || isAdminRoute;
 
+  if (oauthReturnPending) return <OAuthReturnScreen />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-      <AuthProvider>
-        <NotificationsProvider>
-          <WishlistProvider>
-            <RegionProvider>
-              <WishlistAlertsProvider>
-              <CartProvider>
-                <AdminModeProvider>
-                 <CommandCenterProvider>
-                  <LayoutMetricsProvider>
-                    <div data-app-shell className="min-h-dvh flex flex-col">
-                      {!hideSiteChrome && <Nav />}
-                      <main data-app-content className={hideSiteChrome ? "flex-1" : "flex-1 mobile-page-clearance md:pb-0"}>
-                        <Outlet />
-                      </main>
-                      {!hideSiteChrome && <Footer />}
-                      {!hideSiteChrome && <MobileBottomNav />}
-                      <DeferredShell isAuthRoute={isAuthRoute} isAdminRoute={isAdminRoute} hideLiveChat={isCheckoutRoute} />
-                      <Toaster position="bottom-center" richColors />
-                      <ShareDialog />
-                    </div>
-                  </LayoutMetricsProvider>
-                 </CommandCenterProvider>
-                </AdminModeProvider>
-              </CartProvider>
-              </WishlistAlertsProvider>
-            </RegionProvider>
-          </WishlistProvider>
-        </NotificationsProvider>
-      </AuthProvider>
+        <AuthProvider>
+          <NotificationsProvider>
+            <WishlistProvider>
+              <RegionProvider>
+                <WishlistAlertsProvider>
+                  <CartProvider>
+                    <AdminModeProvider>
+                      <CommandCenterProvider>
+                        <LayoutMetricsProvider>
+                          <div data-app-shell className="min-h-dvh flex flex-col">
+                            {!hideSiteChrome && <Nav />}
+                            <main
+                              data-app-content
+                              className={
+                                hideSiteChrome ? "flex-1" : "flex-1 mobile-page-clearance md:pb-0"
+                              }
+                            >
+                              <Outlet />
+                            </main>
+                            {!hideSiteChrome && <Footer />}
+                            {!hideSiteChrome && <MobileBottomNav />}
+                            <DeferredShell
+                              isAuthRoute={isAuthRoute}
+                              isAdminRoute={isAdminRoute}
+                              hideLiveChat={isCheckoutRoute}
+                            />
+                            <Toaster position="bottom-center" richColors />
+                            <ShareDialog />
+                          </div>
+                        </LayoutMetricsProvider>
+                      </CommandCenterProvider>
+                    </AdminModeProvider>
+                  </CartProvider>
+                </WishlistAlertsProvider>
+              </RegionProvider>
+            </WishlistProvider>
+          </NotificationsProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

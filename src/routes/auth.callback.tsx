@@ -4,9 +4,15 @@ import { motion } from "framer-motion";
 import { Check, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/safe-redirect";
+import { completeOAuthReturn } from "@/lib/oauth-return";
 
 export const Route = createFileRoute("/auth/callback")({
-  head: () => ({ meta: [{ title: "Signing you in… — FoundOurMarket™" }, { name: "robots", content: "noindex, nofollow" }] }),
+  head: () => ({
+    meta: [
+      { title: "Signing you in… — FoundOurMarket™" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: AuthCallback,
 });
 
@@ -29,24 +35,6 @@ function AuthCallback() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
-    // The managed OAuth broker redirects back here with the issued tokens in
-    // the URL (query string or hash fragment). In the full-page redirect flow
-    // the lovable auth lib does NOT set the session for us, so we must read the
-    // tokens and call setSession ourselves — otherwise the page spins forever.
-    const consumeTokensFromUrl = async (): Promise<boolean> => {
-      if (typeof window === "undefined") return false;
-      const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-      const fromQuery = new URLSearchParams(window.location.search);
-      const access_token = fromHash.get("access_token") ?? fromQuery.get("access_token");
-      const refresh_token = fromHash.get("refresh_token") ?? fromQuery.get("refresh_token");
-      if (!access_token || !refresh_token) return false;
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-      if (error) return false;
-      // Strip tokens from the URL so a refresh / back doesn't replay them.
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return true;
-    };
-
     const succeed = () => {
       if (cancelled) return;
       setStatus("success");
@@ -54,7 +42,7 @@ function AuthCallback() {
       // fails to load after a deploy, stranding the user on this screen.
       setTimeout(() => {
         if (typeof window !== "undefined") window.location.assign(dest());
-        else nav({ to: dest() as any });
+        else nav({ to: "/account" });
       }, 700);
     };
 
@@ -77,10 +65,10 @@ function AuthCallback() {
       if (session) succeed();
     });
 
-    // Try to establish the session from URL tokens first, then fall back to
-    // polling getSession (covers the auto-detect / web-message paths too).
-    consumeTokensFromUrl().then((ok) => {
-      if (ok) succeed();
+    // Try to establish the session from URL tokens or auth code first, then
+    // fall back to polling getSession (covers auto-detect / web-message paths).
+    completeOAuthReturn().then((result) => {
+      if (result.completed) succeed();
       else check();
     });
 
@@ -102,10 +90,18 @@ function AuthCallback() {
   }, [nav]);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden" style={{ background: "#050816" }}>
+    <div
+      className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
+      style={{ background: "#050816" }}
+    >
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[600px] h-[50vh] rounded-full opacity-25"
-          style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)", filter: "blur(110px)" }} />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[600px] h-[50vh] rounded-full opacity-25"
+          style={{
+            background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)",
+            filter: "blur(110px)",
+          }}
+        />
       </div>
 
       <motion.div
@@ -140,13 +136,18 @@ function AuthCallback() {
           )}
         </div>
 
-        <p className="text-[10px] font-mono uppercase tracking-[0.35em] mb-2" style={{ color: "#FF9F43" }}>
+        <p
+          className="text-[10px] font-mono uppercase tracking-[0.35em] mb-2"
+          style={{ color: "#FF9F43" }}
+        >
           FoundOurMarket™
         </p>
 
         {status === "loading" && (
           <>
-            <h1 className="text-xl font-display font-semibold text-white mb-1.5">Signing you in…</h1>
+            <h1 className="text-xl font-display font-semibold text-white mb-1.5">
+              Signing you in…
+            </h1>
             <p className="text-sm text-white/55">Securing your session</p>
             <ShimmerBar />
           </>
@@ -159,7 +160,9 @@ function AuthCallback() {
         )}
         {status === "error" && (
           <>
-            <h1 className="text-xl font-display font-semibold text-white mb-1.5">Something went wrong</h1>
+            <h1 className="text-xl font-display font-semibold text-white mb-1.5">
+              Something went wrong
+            </h1>
             <p className="text-sm text-white/55 mb-6">Please try signing in again.</p>
             <button
               onClick={() => nav({ to: "/auth" })}
@@ -182,7 +185,10 @@ function AuthCallback() {
 
 function ShimmerBar() {
   return (
-    <div className="relative mt-6 mx-auto h-0.5 w-44 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+    <div
+      className="relative mt-6 mx-auto h-0.5 w-44 rounded-full overflow-hidden"
+      style={{ background: "rgba(255,255,255,0.06)" }}
+    >
       <motion.div
         className="absolute inset-y-0 w-1/3 rounded-full"
         style={{ background: "linear-gradient(90deg, transparent, #FF7A00, transparent)" }}
