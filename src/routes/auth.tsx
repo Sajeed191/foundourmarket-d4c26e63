@@ -52,6 +52,8 @@ const BENEFITS = [
   { icon: ShieldCheck, label: "Safer account recovery" },
 ];
 
+const oauthRedirectUri = () => `${window.location.origin}/auth/callback`;
+
 function AuthPage() {
   const [mode, setMode] = useState<"oauth" | "email">("oauth");
   const [isSignup, setIsSignup] = useState(false);
@@ -173,7 +175,7 @@ function AuthPage() {
       if (dest) localStorage.setItem("post_auth_redirect", dest);
     }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: oauthRedirectUri(),
       extraParams: { prompt: "select_account" },
     });
     if (result.error) {
