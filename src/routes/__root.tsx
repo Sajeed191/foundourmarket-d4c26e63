@@ -411,6 +411,7 @@ function RootComponent() {
                     <AdminModeProvider>
                       <CommandCenterProvider>
                         <LayoutMetricsProvider>
+                          <BadgeEngineProvider>
                           <div data-app-shell className="min-h-dvh flex flex-col">
                             {!hideSiteChrome && <Nav />}
                             <main
