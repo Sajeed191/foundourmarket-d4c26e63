@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
   ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
-  Package, Star,
+  Package, Star, HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { resolveImage } from "@/lib/products";
 import { SectionEditor, Field, parseList, useNavigate } from "@/components/admin/product-editor/kit";
 import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
 import { CategorySelector } from "@/components/admin/product-editor/category-selector";
+import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv, type KV,
 } from "@/components/admin/product-editor/field-builders";
@@ -404,6 +405,12 @@ function CommandCenter({ slug, f, set, row }: {
       <Collapsible title="Attributes" icon={<Tag className="size-4" />} desc="Variant & buyer-facing attributes">
         <KeyValueBuilder rows={f.attrs} onChange={(v) => set({ attrs: v })}
           keyPlaceholder="e.g. Color" valuePlaceholder="e.g. Black" addLabel="Add Attribute" />
+      </Collapsible>
+
+      {/* FAQs */}
+      <Collapsible title="Product FAQs" icon={<HelpCircle className="size-4" />} defaultOpen={false}
+        desc="Add, edit, reorder & toggle buyer FAQs">
+        <ProductFaqManager productSlug={slug} />
       </Collapsible>
 
       {/* Rating management */}

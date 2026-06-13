@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   X, Upload, Loader2, Package, IndianRupee, DollarSign, AlertTriangle,
   Truck, Percent, RotateCcw, Eye, Sparkles, Boxes, Tag, HelpCircle,
-  Smartphone, Monitor, ShoppingCart, Star,
+  Smartphone, Monitor, ShoppingCart, Star, Plus, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
 import { ProductBadgeManager } from "@/components/admin/ProductBadgeManager";
 import { assignBadge } from "@/lib/use-product-badges";
+import { createFaq } from "@/lib/product-faqs";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { computeBadges, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES } from "@/lib/badges";
 import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
@@ -184,6 +185,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const fileRef = useRef<HTMLInputElement>(null);
   // Pending badge assignments for a not-yet-saved product (flushed after insert).
   const [pendingBadges, setPendingBadges] = useState<string[]>([]);
+  const [pendingFaqs, setPendingFaqs] = useState<{ question: string; answer: string }[]>([]);
+  const [faqQ, setFaqQ] = useState("");
+  const [faqA, setFaqA] = useState("");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
   const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "analytics" | "preview">("basic");
 
@@ -455,6 +459,15 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       try {
         for (const id of pendingBadges) await assignBadge(payload.slug, id);
       } catch { /* non-fatal: product is saved, badges can be retried in editor */ }
+    }
+    // Flush pending FAQs for a newly created product (in display order).
+    if (!row?.id && pendingFaqs.length) {
+      try {
+        let i = 0;
+        for (const faq of pendingFaqs) {
+          await createFaq({ productSlug: payload.slug, question: faq.question, answer: faq.answer, sortOrder: i++ });
+        }
+      } catch { /* non-fatal: product is saved, FAQs can be added in editor */ }
     }
     setSaving(false);
     logActivity(row?.id ? "product_updated" : "product_created", "product", row?.id, { slug: payload.slug });
@@ -1061,9 +1074,50 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         </CollapsibleModule>
         </>)}
 
-        {row?.slug && tab === "seo" && (
+        {tab === "seo" && (
           <CollapsibleModule eyebrow="Content" title="Product FAQs" badge={<HelpCircle className="size-3.5 text-accent" />} defaultOpen={false}>
-            <ProductFaqManager productSlug={row.slug} />
+            {row?.slug ? (
+              <ProductFaqManager productSlug={row.slug} />
+            ) : (
+              <div className="space-y-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Add buyer FAQs now — they’ll be saved with the product when you create it.
+                </p>
+                <div className="space-y-2">
+                  <input value={faqQ} onChange={(e) => setFaqQ(e.target.value)} placeholder="Question"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+                  <textarea value={faqA} onChange={(e) => setFaqA(e.target.value)} placeholder="Answer" rows={2}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
+                  <button type="button"
+                    disabled={!faqQ.trim() || !faqA.trim()}
+                    onClick={() => {
+                      setPendingFaqs((p) => [...p, { question: faqQ.trim(), answer: faqA.trim() }]);
+                      setFaqQ(""); setFaqA("");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-accent/40 bg-accent/10 text-[10px] font-mono uppercase tracking-widest hover:bg-accent/20 disabled:opacity-40">
+                    <Plus className="size-3.5" /> Add FAQ
+                  </button>
+                </div>
+                {pendingFaqs.length > 0 && (
+                  <ul className="space-y-2">
+                    {pendingFaqs.map((faq, i) => (
+                      <li key={i} className="rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{faq.question}</p>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2">{faq.answer}</p>
+                          </div>
+                          <button type="button" onClick={() => setPendingFaqs((p) => p.filter((_, idx) => idx !== i))}
+                            aria-label="Remove FAQ" className="shrink-0 text-muted-foreground hover:text-foreground">
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </CollapsibleModule>
         )}
 
