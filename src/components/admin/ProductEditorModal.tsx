@@ -19,6 +19,7 @@ import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/pr
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv,
 } from "@/components/admin/product-editor/field-builders";
+import type { KV } from "@/components/admin/product-editor/field-builders";
 import { ListChecks, Layers } from "lucide-react";
 import type { Product } from "@/lib/products";
 
@@ -318,6 +319,12 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   });
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+
+  // Dedicated state for structured builders so empty/partial rows persist while
+  // editing (deriving them from text on every keystroke dropped new rows).
+  const [featuresList, setFeaturesList] = useState<string[]>(row?.features ?? []);
+  const [specsRows, setSpecsRows] = useState<KV[]>(kvToArray(row?.specifications));
+  const [attrsRows, setAttrsRows] = useState<KV[]>(kvToArray(row?.attributes));
   // Stable slug used to group media (images/video) before the row is saved.
   const mediaSlug = form.slug.trim() || slugify(form.name);
 
@@ -452,9 +459,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       width: numOrNull(form.width), height: numOrNull(form.height),
       shipping_class: form.shipping_class.trim() || null,
       video_url: form.video_url.trim() || null, demo_url: form.demo_url.trim() || null,
-      tags: parseList(form.tags), features: parseList(form.features), meta_keywords: autoKeywords,
+      tags: parseList(form.tags), features: featuresList.map((f) => f.trim()).filter(Boolean), meta_keywords: autoKeywords,
       seo_title: autoSeoTitle || null, seo_description: autoSeoDesc || null,
-      specifications: textToKv(form.specifications), attributes: textToKv(form.attributes),
+      specifications: arrayToKv(specsRows), attributes: arrayToKv(attrsRows),
       admin_notes: form.admin_notes.trim() || null,
       scheduled_publish_at: form.scheduled_publish_at ? new Date(form.scheduled_publish_at).toISOString() : null,
     };
@@ -728,18 +735,15 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         {/* Features */}
         <CollapsibleModule eyebrow="Step 1b" title="Features" badge={<ListChecks className="size-3.5 text-accent" />} defaultOpen={false}>
           <p className="mb-2 text-[11px] text-muted-foreground">Key selling points buyers care about — shown on the product page.</p>
-          <FeaturesBuilder
-            value={parseList(form.features)}
-            onChange={(v) => set({ features: v.join("\n") })}
-          />
+          <FeaturesBuilder value={featuresList} onChange={setFeaturesList} />
         </CollapsibleModule>
 
         {/* Specifications */}
         <CollapsibleModule eyebrow="Step 1c" title="Specifications" badge={<Layers className="size-3.5 text-accent" />} defaultOpen={false}>
           <p className="mb-2 text-[11px] text-muted-foreground">Technical key/value details — shown as a spec table to customers.</p>
           <KeyValueBuilder
-            rows={kvToArray(textToKv(form.specifications))}
-            onChange={(rows) => set({ specifications: kvToText(arrayToKv(rows)) })}
+            rows={specsRows}
+            onChange={setSpecsRows}
             keyPlaceholder="e.g. Material"
             valuePlaceholder="e.g. Aluminium alloy"
             addLabel="Add Specification"
@@ -750,8 +754,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         <CollapsibleModule eyebrow="Step 1d" title="Attributes" badge={<Tag className="size-3.5 text-accent" />} defaultOpen={false}>
           <p className="mb-2 text-[11px] text-muted-foreground">Variant &amp; buyer-facing attributes (e.g. Color, Size).</p>
           <KeyValueBuilder
-            rows={kvToArray(textToKv(form.attributes))}
-            onChange={(rows) => set({ attributes: kvToText(arrayToKv(rows)) })}
+            rows={attrsRows}
+            onChange={setAttrsRows}
             keyPlaceholder="e.g. Color"
             valuePlaceholder="e.g. Matte Black"
             addLabel="Add Attribute"
