@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Check, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/safe-redirect";
+import { completeOAuthReturn } from "@/lib/oauth-return";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Signing you in… — FoundOurMarket™" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -28,24 +29,6 @@ function AuthCallback() {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
-
-    // The managed OAuth broker redirects back here with the issued tokens in
-    // the URL (query string or hash fragment). In the full-page redirect flow
-    // the lovable auth lib does NOT set the session for us, so we must read the
-    // tokens and call setSession ourselves — otherwise the page spins forever.
-    const consumeTokensFromUrl = async (): Promise<boolean> => {
-      if (typeof window === "undefined") return false;
-      const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-      const fromQuery = new URLSearchParams(window.location.search);
-      const access_token = fromHash.get("access_token") ?? fromQuery.get("access_token");
-      const refresh_token = fromHash.get("refresh_token") ?? fromQuery.get("refresh_token");
-      if (!access_token || !refresh_token) return false;
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-      if (error) return false;
-      // Strip tokens from the URL so a refresh / back doesn't replay them.
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return true;
-    };
 
     const succeed = () => {
       if (cancelled) return;
@@ -77,10 +60,10 @@ function AuthCallback() {
       if (session) succeed();
     });
 
-    // Try to establish the session from URL tokens first, then fall back to
-    // polling getSession (covers the auto-detect / web-message paths too).
-    consumeTokensFromUrl().then((ok) => {
-      if (ok) succeed();
+    // Try to establish the session from URL tokens or auth code first, then
+    // fall back to polling getSession (covers auto-detect / web-message paths).
+    completeOAuthReturn().then((result) => {
+      if (result.completed) succeed();
       else check();
     });
 
