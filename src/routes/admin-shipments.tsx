@@ -300,6 +300,7 @@ function StatusPill({ status }: { status: string }) {
 type Section = "operations" | "couriers" | "customers" | "warroom";
 
 function AdminShipmentsPage() {
+  const search = Route.useSearch();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -318,6 +319,19 @@ function AdminShipmentsPage() {
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { void load(); }, []);
+
+  useEffect(() => {
+    if (search.order || search.shipment) {
+      setSection("operations");
+      setQ(search.order ?? search.shipment ?? "");
+      setQueue("all");
+      setVisible(PAGE);
+    } else if (isQueueKey(search.queue)) {
+      setSection("operations");
+      setQueue(search.queue);
+      setVisible(PAGE);
+    }
+  }, [search.order, search.shipment, search.queue]);
 
   // Realtime: any change to logistics tables refreshes the dashboard (debounced)
   // and pushes a live entry into the War Room feed.
