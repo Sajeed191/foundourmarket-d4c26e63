@@ -97,6 +97,155 @@ const HEALTH_CLS: Record<HealthTier, string> = {
 
 type FeedItem = { id: string; kind: string; label: string; detail: string; at: string; tone: string };
 
+// ── Export row builder (single source of truth for every export format) ────────
+function buildExportRow(order: Order, ship: Shipment | null): ShipmentExportRow {
+  const addr = order.shipping_address;
+  const units = order.order_items?.reduce((a, b) => a + (b.quantity || 0), 0) ?? 0;
+  return {
+    orderId: order.id,
+    trackingNumber: ship?.tracking_number ?? order.tracking_number ?? "",
+    courier: courierLabel(ship?.carrier ?? order.carrier) ?? "",
+    status: ship?.status ?? order.fulfillment_status ?? "pending",
+    customer: addr?.full_name ?? "",
+    email: order.contact_email ?? "",
+    phone: addr?.phone ?? "",
+    city: addr?.city ?? "",
+    state: addr?.state ?? "",
+    total: order.total,
+    currency: order.currency,
+    units,
+    estimatedDelivery: ship?.estimated_delivery ?? null,
+    shippedAt: ship?.shipped_at ?? null,
+    deliveredAt: ship?.delivered_at ?? null,
+    createdAt: order.created_at,
+  };
+}
+
+// ── Mini shipment timeline ─────────────────────────────────────────────────────
+const TIMELINE_STAGES = [
+  { key: "pending", label: "Pending" },
+  { key: "packed", label: "Packed" },
+  { key: "shipped", label: "Pickup" },
+  { key: "in_transit", label: "In Transit" },
+  { key: "out_for_delivery", label: "Out" },
+  { key: "delivered", label: "Delivered" },
+] as const;
+
+const STAGE_INDEX: Record<string, number> = {
+  pending: 0, packed: 1, shipped: 2, in_transit: 3, out_for_delivery: 4, delivered: 5,
+};
+
+function MiniTimeline({ status }: { status: string }) {
+  const terminal = status === "cancelled" || status === "returned" || status === "failed_delivery";
+  const active = STAGE_INDEX[status] ?? 0;
+  return (
+    <div className="flex items-center gap-1 w-full">
+      {TIMELINE_STAGES.map((stage, i) => {
+        const done = !terminal && i <= active;
+        return (
+          <div key={stage.key} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+            <div className="flex items-center w-full">
+              <span className={`size-2 rounded-full shrink-0 transition-colors duration-300 ${done ? "bg-accent shadow-[0_0_8px_color-mix(in_oklab,var(--accent)_60%,transparent)]" : "bg-border"}`} />
+              {i < TIMELINE_STAGES.length - 1 && (
+                <span className={`h-px flex-1 transition-colors duration-300 ${!terminal && i < active ? "bg-accent" : "bg-border"}`} />
+              )}
+            </div>
+            <span className={`text-[8px] uppercase tracking-wide truncate w-full text-center ${done ? "text-accent" : "text-muted-foreground"}`}>{stage.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Searchable courier dropdown (native datalist — lightweight, accessible) ─────
+function CourierSelect({ value, onSave }: { value: string; onSave: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Courier</label>
+      <input
+        list="courier-options"
+        defaultValue={courierLabel(value) ?? value}
+        placeholder="Search courier…"
+        onBlur={(e) => { const v = e.target.value.trim(); if (v !== value) onSave(v); }}
+        className="mt-1 w-full bg-background border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-accent"
+      />
+      <datalist id="courier-options">
+        {SUPPORTED_COURIERS.map((c) => <option key={c.key} value={c.label} />)}
+      </datalist>
+    </div>
+  );
+}
+
+// ── Export menu (CSV / Excel / PDF / Packing slips, with scope) ────────────────
+type ExportScope = "selected" | "filtered" | "all";
+function ExportMenu({ selectedCount, onExport, onPackingSlips }: {
+  selectedCount: number;
+  onExport: (format: "csv" | "excel" | "pdf", scope: ExportScope) => void;
+  onPackingSlips: (scope: ExportScope) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+  const scope: ExportScope = selectedCount > 0 ? "selected" : "filtered";
+  const scopeLabel = selectedCount > 0 ? `${selectedCount} selected` : "filtered view";
+  const items: { label: string; icon: React.ReactNode; run: () => void }[] = [
+    { label: "Export CSV", icon: <FileText className="size-3.5" />, run: () => onExport("csv", scope) },
+    { label: "Export Excel", icon: <FileSpreadsheet className="size-3.5" />, run: () => onExport("excel", scope) },
+    { label: "Export PDF", icon: <FileText className="size-3.5" />, run: () => onExport("pdf", scope) },
+    { label: "Download Packing Slips", icon: <Printer className="size-3.5" />, run: () => onPackingSlips(scope) },
+  ];
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-border hover:border-accent/40">
+        <Download className="size-3.5" /> Export <ChevronDown className={`size-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-30 mt-1.5 w-56 rounded-xl border border-border bg-background/95 backdrop-blur-xl p-1.5 shadow-xl">
+          <div className="px-2.5 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">Scope · {scopeLabel}</div>
+          {items.map((it) => (
+            <button key={it.label} onClick={() => { it.run(); setOpen(false); }}
+              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs hover:bg-accent/10 hover:text-accent">
+              {it.icon}{it.label}
+            </button>
+          ))}
+          <div className="my-1 h-px bg-border/60" />
+          <button onClick={() => { onExport("csv", "all"); setOpen(false); }}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground hover:bg-accent/10 hover:text-accent">
+            <Download className="size-3.5" /> Export ALL as CSV
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Live operations strip ──────────────────────────────────────────────────────
+function LiveOpsStrip({ online, lastUpdated, courierCount, pending, health }: {
+  online: boolean; lastUpdated: number; courierCount: number; pending: number; health: { score: number; tier: HealthTier };
+}) {
+  return (
+    <div className="card-premium rounded-2xl px-4 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+      <span className={`inline-flex items-center gap-1.5 font-semibold ${online ? "text-emerald-400" : "text-muted-foreground"}`}>
+        {online ? <Wifi className="size-3.5" /> : <WifiOff className="size-3.5" />}
+        {online ? "Realtime synced" : "Offline"}
+      </span>
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Truck className="size-3.5 text-accent" />{courierCount} active courier{courierCount !== 1 ? "s" : ""}</span>
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Gauge className={`size-3.5 ${HEALTH_CLS[health.tier]}`} />Health {health.score}</span>
+      {pending > 0 && (
+        <span className="inline-flex items-center gap-1.5 text-amber-400"><AlertTriangle className="size-3.5" />{pending} awaiting action</span>
+      )}
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground ml-auto"><Clock className="size-3.5" />Updated {fmtTime(new Date(lastUpdated).toISOString())}</span>
+    </div>
+  );
+}
+
+
 function StatusPill({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border ${STATUS_CLS[status] ?? STATUS_CLS.pending}`}>
