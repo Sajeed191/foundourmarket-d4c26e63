@@ -123,6 +123,8 @@ const HEALTH_CLS: Record<HealthTier, string> = {
 
 type FeedItem = { id: string; kind: string; label: string; detail: string; at: string; tone: string };
 type ShipmentPair = { order: Order; ship: Shipment | null };
+const OP_QUEUE_KEYS: QueueKey[] = ["all", "pending", "needs_tracking", "packed", "in_transit", "out_for_delivery", "delivered", "delayed", "stuck", "failed_delivery", "returned", "rto", "cancelled"];
+const isQueueKey = (v: string | undefined): v is QueueKey => !!v && OP_QUEUE_KEYS.includes(v as QueueKey);
 
 function pairMatchesSearch({ order, ship }: ShipmentPair, term: string) {
   if (!term) return true;
