@@ -480,7 +480,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
+     <div
+      className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+      onPointerDown={(e) => { backdropDownRef.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && backdropDownRef.current) onClose(); backdropDownRef.current = false; }}
+    >
       <motion.form
         initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         onSubmit={save} onClick={(e) => e.stopPropagation()}
