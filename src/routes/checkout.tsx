@@ -89,7 +89,7 @@ function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [addingAddress, setAddingAddress] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [payMethod, setPayMethod] = useState<"razorpay" | "cod">("razorpay");
+  const [payMethod, setPayMethod] = useState<"razorpay" | "cod" | "demo">("razorpay");
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
   const [reserveLeft, setReserveLeft] = useState(15 * 60);
   const [summaryOpen, setSummaryOpen] = useState(false);
