@@ -29,6 +29,7 @@ import { syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 import { usePaymentGateways } from "@/lib/use-payment-gateways";
+import { GlobalCheckoutBeta } from "@/components/site/GlobalCheckoutBeta";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
