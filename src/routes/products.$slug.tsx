@@ -707,7 +707,7 @@ function ProductPage() {
               <div className="mb-6 rounded-2xl border border-border bg-card/50 p-4">
                 <h2 className="mb-3 text-sm font-semibold">Key Features</h2>
                 <ul className="space-y-2">
-                  {product.features.map((feat, i) => (
+                  {product.features.map((feat: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <span className="mt-1 size-1.5 shrink-0 rounded-full bg-accent" />
                       <span>{feat}</span>
