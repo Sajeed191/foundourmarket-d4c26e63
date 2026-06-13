@@ -346,6 +346,7 @@ function AdminShipmentsPage() {
       .filter((n) => /ship|order|deliver/i.test(`${n.type} ${n.title}`))
       .map((n) => ({ id: `nt-${n.id}`, kind: "notify", label: "Customer Notified", detail: n.title, at: n.created_at, tone: "delivered" }));
     setFeed([...evFeed, ...whFeed, ...ntFeed].sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, 80));
+    setLastUpdated(Date.now());
     if (!silent) setRefreshing(false);
   }
 
