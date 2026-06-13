@@ -69,13 +69,13 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
           {/* Top-left — up to two badges */}
           {labels.length > 0 && (
-            <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1">
+            <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5">
               {labels.map((b) => (
                 <span
                   key={b.key}
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 backdrop-blur-sm ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 backdrop-blur-sm ${b.className}`}
                 >
-                  <span aria-hidden>{b.emoji}</span>
+                  <span aria-hidden className="text-[8px]">{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
