@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   X, Upload, Loader2, Package, IndianRupee, DollarSign, AlertTriangle,
   Truck, Percent, RotateCcw, Eye, Sparkles, Boxes, Tag, HelpCircle,
-  Smartphone, Monitor, ShoppingCart, Star,
+  Smartphone, Monitor, ShoppingCart, Star, Plus, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
