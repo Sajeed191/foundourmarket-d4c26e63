@@ -47,7 +47,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
   return (
     <div
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[22px] border bg-card/40 backdrop-blur-xl transition-[transform,box-shadow,border-color] duration-300 will-change-transform active:scale-[0.99] sm:hover:scale-[1.02] ${
+      className={`group relative flex h-full flex-col overflow-hidden rounded-[22px] border bg-card transition-[transform,box-shadow,border-color] duration-300 active:scale-[0.99] sm:hover:scale-[1.02] ${
         isPremium
           ? "border-accent/45 shadow-[0_8px_30px_-12px_oklch(0.72_0.18_55/0.45)] sm:group-hover:shadow-[0_16px_44px_-12px_oklch(0.72_0.18_55/0.6)]"
           : "border-accent/15 shadow-[0_4px_24px_-14px_oklch(0_0_0/0.7)] sm:group-hover:border-accent/35 sm:group-hover:shadow-[0_14px_40px_-14px_oklch(0.72_0.18_55/0.4)]"
@@ -73,7 +73,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               {labels.map((b) => (
                 <span
                   key={b.key}
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 backdrop-blur-sm ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
                   <span aria-hidden className="text-[8px]">{b.emoji}</span>
                   {b.label}
@@ -93,12 +93,12 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               }
             }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute right-3 top-3 grid size-7 place-items-center rounded-full border shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 active:scale-90 ${
+            className={`absolute right-3 top-3 grid size-7 place-items-center rounded-full border shadow-lg shadow-black/40 transition-all duration-300 active:scale-90 ${
               justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""
             } ${
               saved
                 ? "scale-110 border-accent bg-accent/25 text-accent"
-                : "border-white/25 bg-white/10 text-white hover:scale-110 hover:border-accent hover:bg-accent/25 hover:text-accent"
+                : "border-white/25 bg-black/40 text-white hover:scale-110 hover:border-accent hover:bg-accent/25 hover:text-accent"
             }`}
           >
             <Heart className={`size-3.5 transition-all duration-300 ${saved ? "scale-110 fill-accent" : ""}`} />
@@ -111,7 +111,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               setQuickOpen(true);
             }}
             aria-label={`Quick view ${product.name}`}
-            className="absolute bottom-3 right-3 grid size-7 place-items-center rounded-full border border-white/25 bg-black/45 text-white shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 hover:border-accent hover:text-accent active:scale-90 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
+            className="absolute bottom-3 right-3 grid size-7 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg shadow-black/40 transition-all duration-300 hover:border-accent hover:text-accent active:scale-90 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
           >
             <Eye className="size-3.5" />
           </button>

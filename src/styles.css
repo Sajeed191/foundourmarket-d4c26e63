@@ -844,8 +844,9 @@
   .card-ambient:hover {
     box-shadow: var(--shadow-soft) !important;
   }
-  /* Calm ambient orbs (cheaper paint) */
-  .orb { opacity: 0.32; filter: blur(60px); }
+  /* Calm ambient orbs (cheaper paint) — static on mobile to avoid continuous compositing */
+  .orb { opacity: 0.32; filter: blur(50px); }
+  .animate-orb { animation: none !important; }
 }
 
 /* =====================================================================
