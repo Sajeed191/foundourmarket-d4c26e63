@@ -35,7 +35,15 @@ type ShipAddress = {
   city?: string; state?: string; postal?: string; country?: string;
 } | null;
 
-type Order = OrderRow & { order_items: { quantity: number }[]; shipping_address: ShipAddress };
+type OrderItem = {
+  name: string;
+  quantity: number;
+  image: string | null;
+  product_slug: string | null;
+  unit_price: number | null;
+  line_total: number | null;
+};
+type Order = OrderRow & { payment_method: string | null; order_items: OrderItem[]; shipping_address: ShipAddress };
 type Shipment = ShipRow & { notes: string | null };
 
 const STATUSES = [
@@ -85,6 +93,19 @@ const fmtTime = (s: string) => new Date(s).toLocaleString([], { month: "short", 
 const money = (n: number, c: string | null) =>
   (c === "USD" ? "$" : "₹") + Math.round(n || 0).toLocaleString(c === "USD" ? "en-US" : "en-IN");
 const pct = (n: number) => `${Math.round(n * 100)}%`;
+const shortId = (id: string) => id.slice(0, 8).toUpperCase();
+const safeText = (...values: unknown[]) => values.find((v) => typeof v === "string" && v.trim()) as string | undefined;
+const paymentLabel = (method: string | null | undefined, status: string | null | undefined) => {
+  const raw = (method || status || "").toLowerCase();
+  if (!raw) return "—";
+  if (raw.includes("global_beta") || raw === "demo") return "Demo payment";
+  if (raw.includes("cod") || raw.includes("cash")) return "Cash on delivery";
+  if (raw.includes("upi")) return "UPI";
+  if (raw.includes("card")) return "Card";
+  if (raw.includes("razorpay")) return "Razorpay";
+  if (raw === "paid" || raw === "succeeded" || raw === "captured") return "Online paid";
+  return method ?? status ?? "—";
+};
 
 const SEV_CLS: Record<string, string> = {
   minor: "text-amber-400 border-amber-400/30 bg-amber-400/10",
