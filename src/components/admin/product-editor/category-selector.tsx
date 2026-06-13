@@ -39,6 +39,9 @@ export function CategorySelector({
   const [error, setError] = useState<string | null>(null);
   const [mainId, setMainId] = useState<string | null>(null);
   const [subSlug, setSubSlug] = useState<string>("");
+  const [newSubName, setNewSubName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const selected = Array.isArray(value) ? value : [];
 
