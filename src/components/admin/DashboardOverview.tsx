@@ -6,6 +6,7 @@ import { resolveImage } from "@/lib/products";
 import { StarRating } from "@/components/site/StarRating";
 import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 import { DraftActivityWidget } from "@/components/admin/DraftActivityWidget";
+import { GlobalExpansionWidget } from "@/components/admin/GlobalExpansionWidget";
 
 type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
@@ -393,6 +394,8 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
           )}
         </CollapsibleModule>
       </div>
+
+      <GlobalExpansionWidget />
 
       <DraftActivityWidget />
     </div>

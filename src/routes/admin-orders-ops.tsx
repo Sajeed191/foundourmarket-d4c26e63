@@ -83,6 +83,32 @@ function RiskBadge({ score }: { score: number }) {
   return <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border tabular-nums ${cls}`}>{score}</span>;
 }
 
+function paymentMethodLabel(method: string | null | undefined): string {
+  const v = (method || "").toLowerCase();
+  if (!v) return "—";
+  if (v.includes("global_beta") || v === "demo") return "Demo Payment (Global Beta)";
+  if (v.includes("razorpay")) return "Razorpay";
+  if (v === "cod" || v.includes("cash")) return "Cash on Delivery";
+  if (v.includes("upi")) return "UPI";
+  if (v.includes("card")) return "Card";
+  return method as string;
+}
+
+function PaymentMethodValue({ order, payMethod }: { order: { payment_method?: string | null; payment_status?: string | null }; payMethod?: string | null }) {
+  const raw = payMethod ?? order.payment_method;
+  const isDemo = (raw || "").toLowerCase().includes("global_beta") || (raw || "").toLowerCase() === "demo" || (order.payment_status || "").toLowerCase() === "demo";
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {paymentMethodLabel(raw)}
+      {isDemo && (
+        <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border text-sky-400 border-sky-400/30 bg-sky-400/10">
+          Demo
+        </span>
+      )}
+    </span>
+  );
+}
+
 function StatusPill({ s }: { s: string | null }) {
   const v = (s || "—").toLowerCase();
   const cls = v.includes("deliver") ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10"
@@ -356,8 +382,8 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
             <Row k="Payment status" v={<StatusPill s={o.payment_status} />} />
             <Row k="Amount paid" v={<span className="font-semibold">{money(pay?.amount ?? o.total)}</span>} />
             <Row k="Currency" v={cur} />
-            <Row k="Method" v={pay?.method ?? o.payment_method ?? "—"} />
-            <Row k="Gateway" v={detail?.order.payment_provider ?? o.payment_provider ?? "—"} />
+            <Row k="Method" v={<PaymentMethodValue order={o} payMethod={pay?.method} />} />
+            <Row k="Gateway" v={(detail?.order.payment_provider ?? o.payment_provider) === "global_beta" ? "Global Beta (Demo)" : (detail?.order.payment_provider ?? o.payment_provider ?? "—")} />
             {pay && <Row k="Recorded" v={new Date(pay.created_at).toLocaleString()} />}
 
             <details className="group mt-2 rounded-xl border border-border/60 bg-muted/20">
