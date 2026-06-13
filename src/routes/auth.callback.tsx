@@ -50,7 +50,12 @@ function AuthCallback() {
     const succeed = () => {
       if (cancelled) return;
       setStatus("success");
-      setTimeout(() => nav({ to: dest() as any }), 700);
+      // Hard redirect — SPA navigation can silently no-op if a route chunk
+      // fails to load after a deploy, stranding the user on this screen.
+      setTimeout(() => {
+        if (typeof window !== "undefined") window.location.assign(dest());
+        else nav({ to: dest() as any });
+      }, 700);
     };
 
     const check = async () => {
