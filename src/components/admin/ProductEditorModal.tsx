@@ -19,6 +19,7 @@ import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/pr
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv,
 } from "@/components/admin/product-editor/field-builders";
+import type { KV } from "@/components/admin/product-editor/field-builders";
 import { ListChecks, Layers } from "lucide-react";
 import type { Product } from "@/lib/products";
 
