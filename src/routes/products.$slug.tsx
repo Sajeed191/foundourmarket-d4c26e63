@@ -122,7 +122,9 @@ export const Route = createFileRoute("/products/$slug")({
           url,
           offers: {
             "@type": "Offer",
-            price: p.price,
+            // Stable, crawler-facing USD offer — matches the Merchant feed
+            // (price_usd). Never region-dynamic, to avoid unstable schema.
+            price: p.priceUsd ?? p.price,
             priceCurrency: "USD",
             availability: p.inStock
               ? "https://schema.org/InStock"

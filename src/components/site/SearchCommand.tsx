@@ -4,6 +4,7 @@ import { Search, X, TrendingUp, Clock, Tag, ArrowRight, Loader2, CornerDownLeft,
 import { useProducts } from "@/lib/use-products";
 import { useCategories } from "@/lib/use-categories";
 import { Price } from "@/components/site/Price";
+import { useRegion } from "@/lib/region";
 
 const TRENDING = ["Wireless headphones", "Leather jacket", "Ceramic mug", "Smart watch", "Linen shirt"];
 const RECENT_KEY = "fom-recent-searches";
@@ -34,6 +35,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const nav = useNavigate();
   const { products, loading } = useProducts();
   const { categories } = useCategories();
+  const { priceOf } = useRegion();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -106,11 +108,11 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
     const list: Item[] = [
       ...catMatches.map((c): Item => ({ kind: "category", slug: c.slug, name: c.name })),
       ...brandMatches.map((b): Item => ({ kind: "brand", name: b })),
-      ...shownProducts.map((p): Item => ({ kind: "product", slug: p.slug, name: p.name, category: p.category, image: p.image, price: p.price })),
+      ...shownProducts.map((p): Item => ({ kind: "product", slug: p.slug, name: p.name, category: p.category, image: p.image, price: priceOf(p) })),
     ];
     if (list.length > 0) list.push({ kind: "search", q });
     return list;
-  }, [catMatches, brandMatches, shownProducts, term, q]);
+  }, [catMatches, brandMatches, shownProducts, term, q, priceOf]);
 
   // Reset active index when results change
   useEffect(() => { setActive(0); }, [items.length]);
@@ -265,7 +267,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
                         </div>
-                        <Price value={p.price} className="font-mono text-sm text-accent" />
+                        <Price value={priceOf(p)} className="font-mono text-sm text-accent" />
                       </Link>
                     ))}
                   </div>
