@@ -44,7 +44,11 @@ function DetailsPage() {
       slug={slug} sectionKey="details" title="Product Details" icon={<FileText className="size-4" />} cols={COLS}
       toForm={(r) => ({
         name: r.name ?? "", brand: r.brand ?? "", product_type: r.product_type ?? "",
-        category: r.category ?? "", tags: (r.tags ?? []).join(", "),
+        category: r.category ?? "",
+        categories: ((r.categories ?? []) as string[]).length
+          ? ((r.categories ?? []) as string[])
+          : (r.category ? [r.category] : []),
+        tags: (r.tags ?? []).join(", "),
         description: r.description ?? "",
         features: (r.features ?? []) as string[],
         specs: kvToArray(r.specifications), attrs: kvToArray(r.attributes),
