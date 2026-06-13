@@ -136,14 +136,14 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
-        nav({ to: resolveDest() as any });
+        window.location.assign(resolveDest());
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        nav({ to: resolveDest() as any });
+        window.location.assign(resolveDest());
       }
-    } catch (err: any) {
-      setError(err?.message ?? "Something went wrong");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setBusy(false);
     }
