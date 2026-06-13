@@ -604,7 +604,8 @@ function AdminShipmentsPage() {
             q={q} setQ={setQ} visible={visible} setVisible={setVisible}
             selected={selected} toggleSelect={toggleSelect} clearSelection={clearSelection}
             selectedCount={selected.size} bulkBusy={bulkBusy}
-            onBulkStatus={bulkStatus} onBulkCourier={bulkAssignCourier} onBulkNotify={bulkNotify} onBulkExport={bulkExportCsv}
+            onBulkStatus={bulkStatus} onBulkCourier={bulkAssignCourier} onBulkNotify={bulkNotify}
+            onExport={runExport} onPackingSlips={exportPackingSlips}
             creating={creating} busy={busy}
             onCreate={createShipment} onAssign={assignTracking} onStatus={setStatus}
           />
