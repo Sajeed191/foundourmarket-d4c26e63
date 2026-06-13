@@ -157,6 +157,12 @@ function PaymentsInner() {
           className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent/40">
           {["all", "succeeded", "pending", "failed"].map((s) => <option key={s} value={s} className="bg-background">{s}</option>)}
         </select>
+        <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}
+          className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent/40">
+          {[["all", "All Payments"], ["razorpay", "Razorpay"], ["cod", "COD"], ["demo", "Demo Payment"]].map(([v, l]) => <option key={v} value={v} className="bg-background">{l}</option>)}
+        </select>
+      </div>
+      <div aria-hidden className="hidden" data-page-count={pageCount} />
       </div>
 
       {/* Table */}
