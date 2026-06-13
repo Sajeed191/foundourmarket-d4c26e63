@@ -457,6 +457,21 @@ function CheckoutPage() {
         m.trackEvent("purchase", { value: totalINR, metadata: { order_id: placedOrderId, pay_method: payMethod } });
         m.trackEvent("payment_success", { value: totalINR, metadata: { order_id: placedOrderId, pay_method: payMethod } });
       }).catch(() => {});
+      if (placedOrderId) {
+        import("@/lib/ga4").then((m) => m.ga4Purchase({
+          transaction_id: placedOrderId,
+          value: totalINR,
+          currency: market === "india" ? "INR" : "USD",
+          items: purchaseItemsRef.current.map((i) => ({
+            item_id: i.product.sku || i.product.slug,
+            item_name: i.product.name,
+            price: priceOf(i.product),
+            quantity: i.qty,
+            item_category: i.product.category ?? undefined,
+            item_brand: i.product.brand ?? undefined,
+          })),
+        })).catch(() => {});
+      }
     }
     if (stage === "failed") {
       import("@/lib/visitor").then((m) => m.trackEvent("payment_failed", {
