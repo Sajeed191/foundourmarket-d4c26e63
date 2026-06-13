@@ -394,6 +394,8 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
         </CollapsibleModule>
       </div>
 
+      <GlobalExpansionWidget />
+
       <DraftActivityWidget />
     </div>
   );
