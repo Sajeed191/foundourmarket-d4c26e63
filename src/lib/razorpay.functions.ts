@@ -189,7 +189,12 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     };
     const { keyId } = getRazorpayCreds();
 
-    const resolution = await resolveRegion(supabase, userId);
+    const edgeCountry =
+      getRequestHeader("cf-ipcountry") ||
+      getRequestHeader("x-vercel-ip-country") ||
+      getRequestHeader("x-country") ||
+      null;
+    const resolution = await resolveRegion(supabase, userId, edgeCountry);
     const region = resolution.region;
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
 
