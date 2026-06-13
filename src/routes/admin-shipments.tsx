@@ -934,10 +934,10 @@ function WarRoomView({ feed }: { feed: FeedItem[] }) {
 }
 
 // ── Shared small components ───────────────────────────────────────────────────
-function StatChip({ label, value, icon, tone }: { label: string; value: number; icon?: React.ReactNode; tone?: "emerald" | "amber" | "orange" | "destructive" }) {
+function StatChip({ label, value, icon, tone, highlight }: { label: string; value: number; icon?: React.ReactNode; tone?: "emerald" | "amber" | "orange" | "destructive"; highlight?: boolean }) {
   const toneCls = tone === "emerald" ? "text-emerald-400" : tone === "amber" ? "text-amber-400" : tone === "orange" ? "text-orange-400" : tone === "destructive" ? "text-destructive" : "text-foreground";
   return (
-    <div className="card-premium rounded-xl px-3 py-2 flex items-center gap-2.5 shrink-0 w-[7.5rem] sm:w-auto">
+    <div className={`card-premium rounded-xl px-3 py-2 flex items-center gap-2.5 shrink-0 w-[7.5rem] sm:w-auto ${highlight ? "ring-1 ring-accent/40 border-accent/40" : ""}`}>
       <span className={tone ? toneCls : "text-accent/70"}>{icon}</span>
       <div className="min-w-0">
         <div className={`text-lg font-semibold tabular-nums leading-none ${toneCls}`}><AnimatedCounter to={value} duration={1} /></div>
