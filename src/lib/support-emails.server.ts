@@ -151,6 +151,24 @@ async function enqueue(opts: {
     return false
   }
 
+  // Customer-360 timeline visibility: mirror into email_logs. Never throw.
+  if (opts.timelineUserId) {
+    try {
+      await supabaseAdmin.from('email_logs').insert({
+        user_id: opts.timelineUserId,
+        recipient: opts.recipient,
+        template: opts.templateName,
+        subject,
+        status: 'sent',
+        provider: 'lovable-queue',
+        provider_message_id: opts.messageId,
+        payload: opts.props as never,
+      })
+    } catch (err) {
+      console.error('[support-emails] email_logs insert failed', { template: opts.templateName, err: String(err) })
+    }
+  }
+
   return true
 }
 
