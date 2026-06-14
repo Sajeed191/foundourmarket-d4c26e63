@@ -14,6 +14,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueReturnEmail } from "./return-emails.server";
 
 const REFUND_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 const SUPPORT_STAFF: StaffRole[] = ["admin", "super_admin", "manager", "support"];
@@ -114,8 +115,8 @@ export const refundActionFn = createServerFn({ method: "POST" })
     const amountLabel = `${refund.currency === "USD" ? "$" : "₹"}${Math.round(
       Number(refund.amount) || 0,
     ).toLocaleString()}`;
-    const { notifyCustomer: notify, returnLink } = await import("./customer-notify.server");
-    const refundDeep = returnLink("", refund.order_id).replace("return=&", "");
+    const { notifyCustomer: notify } = await import("./customer-notify.server");
+    const refundDeep = `/account/payments?order=${refund.order_id}`;
     const fireRefund = (title: string, body: string, priority: "low" | "normal" | "high") =>
       notify({
         userId: customer, category: "refund", type: "refund_update",
