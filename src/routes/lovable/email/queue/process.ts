@@ -117,7 +117,7 @@ async function tryFallbackDelivery(
     metadata: {
       delivery_method: 'fallback',
       sender: FALLBACK_FROM,
-      reply_to: PRIMARY_SENDER.email,
+      reply_to: REPLY_TO_ADDRESS,
       provider_message_id: result.providerMessageId ?? null,
       primary_failure_reason: primaryFailureReason.slice(0, 500),
     },
