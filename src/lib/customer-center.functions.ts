@@ -534,3 +534,161 @@ export const getCustomerExtrasFn = createServerFn({ method: "POST" })
       wishlist: (wishlist ?? []) as CustomerWishlistItem[],
     };
   });
+
+// ============================================================
+// Email history (PRIORITY 5) + tags + activity timeline (PRIORITY 6)
+// ============================================================
+
+export type CustomerEmail = {
+  id: string;
+  recipient: string | null;
+  template: string | null;
+  subject: string | null;
+  status: string | null;
+  provider: string | null;
+  error: string | null;
+  body: string | null;
+  created_at: string;
+};
+
+/** Full email-send history for a customer (most recent first). */
+export const listCustomerEmailsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ customerId: z.string().uuid() }).parse(input))
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    await requireStaff(userId, CUST_STAFF, "customers.emails.list", input.customerId);
+
+    const { data, error } = await supabaseAdmin
+      .from("email_logs")
+      .select("id,recipient,template,subject,status,provider,error,payload,created_at")
+      .eq("user_id", input.customerId)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+
+    const emails: CustomerEmail[] = (data ?? []).map((r) => {
+      const payload = (r.payload ?? {}) as Record<string, unknown>;
+      return {
+        id: r.id as string,
+        recipient: (r.recipient as string | null) ?? null,
+        template: (r.template as string | null) ?? null,
+        subject: (r.subject as string | null) ?? null,
+        status: (r.status as string | null) ?? null,
+        provider: (r.provider as string | null) ?? null,
+        error: (r.error as string | null) ?? null,
+        body: (payload.body as string | null) ?? null,
+        created_at: r.created_at as string,
+      };
+    });
+    return { emails };
+  });
+
+/** Tags assigned to a customer. */
+export const listCustomerTagsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ customerId: z.string().uuid() }).parse(input))
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    await requireStaff(userId, CUST_STAFF, "customers.tags.list", input.customerId);
+
+    const { data, error } = await supabaseAdmin
+      .from("customer_tags")
+      .select("tag")
+      .eq("customer_id", input.customerId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { tags: (data ?? []).map((r) => r.tag as string) };
+  });
+
+export type TimelineEvent = {
+  kind:
+    | "account_created"
+    | "order"
+    | "payment"
+    | "shipment"
+    | "review"
+    | "notification"
+    | "email"
+    | "support_ticket"
+    | "admin_action";
+  at: string;
+  title: string;
+  detail?: string | null;
+  link?: string | null;
+};
+
+/** Unified chronological activity timeline for a customer. */
+export const getCustomerTimelineFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ customerId: z.string().uuid() }).parse(input))
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    await requireStaff(userId, CUST_STAFF, "customers.timeline.view", input.customerId);
+    const cid = input.customerId;
+
+    const [
+      prof,
+      orders,
+      payments,
+      shipments,
+      reviews,
+      notifications,
+      emails,
+      tickets,
+      audit,
+    ] = await Promise.all([
+      supabaseAdmin.from("profiles").select("created_at").eq("id", cid).maybeSingle(),
+      supabaseAdmin.from("orders").select("id,total,currency,status,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("payments").select("id,amount,currency,status,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("shipments").select("id,status,carrier,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("product_reviews").select("id,product_slug,rating,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("notifications").select("id,title,type,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("email_logs").select("id,subject,status,template,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("support_tickets").select("id,subject,status,created_at").eq("user_id", cid).order("created_at", { ascending: false }).limit(100),
+      supabaseAdmin.from("security_audit_log").select("action,detail,success,created_at").eq("target", cid).order("created_at", { ascending: false }).limit(100),
+    ]);
+
+    const events: TimelineEvent[] = [];
+    const created = (prof.data?.created_at as string | null) ?? null;
+    if (created) events.push({ kind: "account_created", at: created, title: "Account created" });
+
+    for (const o of orders.data ?? []) {
+      events.push({
+        kind: "order",
+        at: o.created_at as string,
+        title: `Order ${(o.status as string) ?? "placed"}`,
+        detail: o.total != null ? `${o.currency ?? ""} ${o.total}` : null,
+        link: `/admin-orders-ops?order=${o.id}`,
+      });
+    }
+    for (const p of payments.data ?? []) {
+      events.push({ kind: "payment", at: p.created_at as string, title: `Payment ${(p.status as string) ?? ""}`.trim(), detail: p.amount != null ? `${p.currency ?? ""} ${p.amount}` : null });
+    }
+    for (const s of shipments.data ?? []) {
+      events.push({ kind: "shipment", at: s.created_at as string, title: `Shipment ${(s.status as string) ?? ""}`.trim(), detail: (s.carrier as string | null) ?? null });
+    }
+    for (const r of reviews.data ?? []) {
+      events.push({ kind: "review", at: r.created_at as string, title: `Reviewed ${(r.product_slug as string) ?? "a product"}`, detail: `${r.rating}★` });
+    }
+    for (const n of notifications.data ?? []) {
+      events.push({ kind: "notification", at: n.created_at as string, title: (n.title as string) ?? "Notification" });
+    }
+    for (const e of emails.data ?? []) {
+      events.push({ kind: "email", at: e.created_at as string, title: (e.subject as string) ?? (e.template as string) ?? "Email", detail: (e.status as string | null) ?? null });
+    }
+    for (const t of tickets.data ?? []) {
+      events.push({ kind: "support_ticket", at: t.created_at as string, title: (t.subject as string) ?? "Support ticket", detail: (t.status as string | null) ?? null });
+    }
+    for (const a of audit.data ?? []) {
+      events.push({
+        kind: "admin_action",
+        at: a.created_at as string,
+        title: (a.action as string) ?? "Admin action",
+        detail: (a.success as boolean) ? null : "failed",
+      });
+    }
+
+    events.sort((x, y) => new Date(y.at).getTime() - new Date(x.at).getTime());
+    return { events: events.slice(0, 300) };
+  });

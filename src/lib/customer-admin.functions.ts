@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
+import { fireLifecycleEvent } from "./customer-lifecycle.server";
 
 const CUST_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 
@@ -56,6 +57,41 @@ export const setCustomerStatusFn = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
+    // PRIORITY 3 — Ban session termination: revoke sessions + block re-auth.
+    if (input.status === "banned") {
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(input.customerId, {
+          ban_duration: "876600h", // ~100 years — effectively permanent
+        });
+      } catch (e) {
+        console.error("[customers.status.set] ban auth update failed", String(e));
+      }
+      try {
+        // Revoke all active refresh tokens / sessions for the user.
+        await (supabaseAdmin.auth.admin as unknown as {
+          signOut: (id: string, scope?: string) => Promise<unknown>;
+        }).signOut(input.customerId, "global");
+      } catch (e) {
+        console.error("[customers.status.set] session revoke failed", String(e));
+      }
+    } else {
+      // Lifting suspension/ban — clear any auth ban so the user can sign in.
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(input.customerId, {
+          ban_duration: "none",
+        });
+      } catch (e) {
+        console.error("[customers.status.set] ban clear failed", String(e));
+      }
+    }
+
+    // PRIORITY 1 + 2 — branded email + in-app notification for suspend/ban.
+    if (input.status === "banned") {
+      await fireLifecycleEvent({ customerId: input.customerId, event: "account-banned", reason: input.reason });
+    } else if (input.status === "suspended") {
+      await fireLifecycleEvent({ customerId: input.customerId, event: "account-suspended", reason: input.reason });
+    }
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
@@ -67,7 +103,11 @@ export const setCustomerStatusFn = createServerFn({ method: "POST" })
     return { ok: true, status: input.status };
   });
 
-/** Update a customer's editable profile fields (name, phone, and optionally email). */
+/**
+ * Update a customer's editable profile fields plus admin-controlled state:
+ * name, phone, email, account status, internal notes, tags and tier override.
+ * Every change is persisted and audited.
+ */
 export const updateCustomerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -77,6 +117,10 @@ export const updateCustomerFn = createServerFn({ method: "POST" })
         full_name: z.string().trim().max(160).optional(),
         phone: z.string().trim().max(40).optional(),
         email: z.string().trim().email().max(254).optional(),
+        account_status: z.enum(["active", "suspended", "banned", "deleted"]).optional(),
+        note: z.string().trim().max(2000).optional(),
+        tags: z.array(z.string().trim().min(1).max(40)).max(30).optional(),
+        tier_override: z.string().trim().max(40).nullable().optional(),
       })
       .parse(input),
   )
@@ -87,6 +131,8 @@ export const updateCustomerFn = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (input.full_name !== undefined) patch.full_name = input.full_name || null;
     if (input.phone !== undefined) patch.phone = input.phone || null;
+    if (input.account_status !== undefined) patch.account_status = input.account_status;
+    if (input.tier_override !== undefined) patch.tier_override = input.tier_override || null;
     if (Object.keys(patch).length > 0) {
       const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
       if (error) throw new Error(error.message);
@@ -99,13 +145,43 @@ export const updateCustomerFn = createServerFn({ method: "POST" })
       if (ae) throw new Error(ae.message);
     }
 
+    // Internal note (append a new audited note row).
+    if (input.note && input.note.length > 0) {
+      const { error: ne } = await supabaseAdmin.from("customer_notes").insert({
+        customer_id: input.customerId,
+        note: input.note,
+        pinned: false,
+        author_id: userId,
+      });
+      if (ne) throw new Error(ne.message);
+    }
+
+    // Tags — replace the full set when provided.
+    if (input.tags !== undefined) {
+      await supabaseAdmin.from("customer_tags").delete().eq("customer_id", input.customerId);
+      const clean = Array.from(new Set(input.tags.map((t) => t.trim()).filter(Boolean)));
+      if (clean.length > 0) {
+        const { error: te } = await supabaseAdmin
+          .from("customer_tags")
+          .insert(clean.map((tag) => ({ customer_id: input.customerId, tag })) as never);
+        if (te) throw new Error(te.message);
+      }
+    }
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
       action: "customers.update",
       target: input.customerId,
       success: true,
-      detail: { fields: Object.keys({ ...patch, ...(input.email ? { email: 1 } : {}) }) },
+      detail: {
+        fields: Object.keys({
+          ...patch,
+          ...(input.email ? { email: 1 } : {}),
+          ...(input.note ? { note: 1 } : {}),
+          ...(input.tags !== undefined ? { tags: 1 } : {}),
+        }),
+      },
     });
     return { ok: true };
   });
@@ -158,7 +234,34 @@ export const sendCustomerEmailFn = createServerFn({ method: "POST" })
       },
       body: JSON.stringify({ raw }),
     });
-    if (!res.ok) {
+    const sentOk = res.ok;
+    let providerMsgId: string | null = null;
+    if (sentOk) {
+      try {
+        const j = (await res.clone().json().catch(() => null)) as { id?: string } | null;
+        providerMsgId = j?.id ?? null;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // PRIORITY 5 — persist email history (subject, body, sender, recipient, status).
+    try {
+      await supabaseAdmin.from("email_logs").insert({
+        user_id: input.customerId,
+        recipient: input.to,
+        template: "admin-direct",
+        subject: input.subject,
+        status: sentOk ? "sent" : "failed",
+        provider: "gmail",
+        provider_message_id: providerMsgId,
+        payload: { body: input.body, sender: "support@foundourmarket.com" } as never,
+      });
+    } catch (e) {
+      console.error("[customers.email.send] email_logs insert failed", String(e));
+    }
+
+    if (!sentOk) {
       const detail = await res.text().catch(() => "");
       throw new Error(`Failed to send email (${res.status}). ${detail.slice(0, 200)}`);
     }
@@ -177,7 +280,9 @@ export const sendCustomerEmailFn = createServerFn({ method: "POST" })
 /** Soft-delete a customer — never removes the record, just marks it deleted. */
 export const softDeleteCustomerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ customerId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({ customerId: z.string().uuid(), reason: z.string().trim().max(500).optional() }).parse(input),
+  )
   .handler(async ({ data: input, context }) => {
     const { userId } = context as { userId: string };
     const { primaryRole } = await requireStaff(userId, CUST_STAFF, "customers.delete.soft", input.customerId);
@@ -188,12 +293,25 @@ export const softDeleteCustomerFn = createServerFn({ method: "POST" })
       .eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
+    // Revoke active sessions on deletion.
+    try {
+      await (supabaseAdmin.auth.admin as unknown as {
+        signOut: (id: string, scope?: string) => Promise<unknown>;
+      }).signOut(input.customerId, "global");
+    } catch (e) {
+      console.error("[customers.delete.soft] session revoke failed", String(e));
+    }
+
+    // PRIORITY 1 + 2 — closure email + in-app notification.
+    await fireLifecycleEvent({ customerId: input.customerId, event: "account-deleted", reason: input.reason });
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
       action: "customers.delete.soft",
       target: input.customerId,
       success: true,
+      detail: { reason: input.reason ?? null },
     });
     return { ok: true };
   });
@@ -219,6 +337,14 @@ export const setCustomerFlagFn = createServerFn({ method: "POST" })
       : { reviews_disabled: input.value };
     const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
     if (error) throw new Error(error.message);
+
+    // PRIORITY 1 + 2 — email + notification when a restriction is turned ON.
+    if (input.value) {
+      await fireLifecycleEvent({
+        customerId: input.customerId,
+        event: input.flag === "ordering_blocked" ? "ordering-blocked" : "reviews-disabled",
+      });
+    }
 
     await logSecurity({
       actorId: userId,
@@ -281,6 +407,22 @@ export const resetCustomerPasswordFn = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin.auth.resetPasswordForEmail(u.user.email);
     if (error) throw new Error(error.message);
+
+    // Auth already sent the reset email; record history + notify in-app.
+    try {
+      await supabaseAdmin.from("profiles").select("id").eq("id", input.customerId).maybeSingle();
+      await supabaseAdmin.from("email_logs").insert({
+        user_id: input.customerId,
+        recipient: u.user.email,
+        template: "password-reset",
+        subject: "Reset your FoundOurMarket™ password",
+        status: "sent",
+        provider: "supabase-auth",
+      });
+    } catch (e) {
+      console.error("[customers.password.reset] email_logs insert failed", String(e));
+    }
+    await fireLifecycleEvent({ customerId: input.customerId, event: "password-reset", emailAlreadySent: true });
 
     await logSecurity({
       actorId: userId,

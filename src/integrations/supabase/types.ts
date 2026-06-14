@@ -3412,6 +3412,7 @@ export type Database = {
           reviews_disabled: boolean
           suspended_at: string | null
           suspended_by: string | null
+          tier_override: string | null
           timezone: string | null
           updated_at: string
         }
@@ -3440,6 +3441,7 @@ export type Database = {
           reviews_disabled?: boolean
           suspended_at?: string | null
           suspended_by?: string | null
+          tier_override?: string | null
           timezone?: string | null
           updated_at?: string
         }
@@ -3468,6 +3470,7 @@ export type Database = {
           reviews_disabled?: boolean
           suspended_at?: string | null
           suspended_by?: string | null
+          tier_override?: string | null
           timezone?: string | null
           updated_at?: string
         }

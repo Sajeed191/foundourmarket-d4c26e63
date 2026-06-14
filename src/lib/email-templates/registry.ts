@@ -36,6 +36,13 @@ import {
   supportAdminTemplate,
 } from './support-emails'
 import { demoOrderReceivedTemplate } from './demo-order'
+import {
+  suspendedTemplate,
+  bannedTemplate,
+  orderingBlockedTemplate,
+  reviewsDisabledTemplate,
+  accountDeletedTemplate,
+} from './lifecycle-emails'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'test-email': testEmailTemplate,
@@ -51,4 +58,9 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-customer-update': supportCustomerTemplate,
   'support-admin-alert': supportAdminTemplate,
   'demo-order-received': demoOrderReceivedTemplate,
+  'account-suspended': suspendedTemplate,
+  'account-banned': bannedTemplate,
+  'ordering-blocked': orderingBlockedTemplate,
+  'reviews-disabled': reviewsDisabledTemplate,
+  'account-deleted': accountDeletedTemplate,
 }

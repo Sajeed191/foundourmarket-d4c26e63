@@ -235,13 +235,27 @@ const inputCls = "w-full bg-white/[0.03] border border-white/10 rounded-xl px-3 
 const btnPrimary = "inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:opacity-50";
 const btnGhost = "rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/5";
 
+type EditPatch = {
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  account_status?: "active" | "suspended" | "banned" | "deleted";
+  note?: string;
+  tags?: string[];
+  tier_override?: string | null;
+};
+
 function EditModal({ c, busy, onClose, onSave }: {
   c: CustomerRow; busy: boolean; onClose: () => void;
-  onSave: (patch: { full_name?: string; phone?: string; email?: string }) => void;
+  onSave: (patch: EditPatch) => void;
 }) {
   const [name, setName] = useState(c.full_name ?? "");
   const [phone, setPhone] = useState(c.phone ?? "");
   const [email, setEmail] = useState(c.email ?? "");
+  const [status, setStatus] = useState<EditPatch["account_status"]>(c.account_status);
+  const [note, setNote] = useState("");
+  const [tags, setTags] = useState("");
+  const [tier, setTier] = useState("");
   return (
     <Shell title="Edit Customer" onClose={onClose}>
       <div className="space-y-3">
@@ -257,6 +271,27 @@ function EditModal({ c, busy, onClose, onSave }: {
           <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Phone</span>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="Phone" />
         </label>
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Status</span>
+          <select value={status} onChange={(e) => setStatus(e.target.value as EditPatch["account_status"])} className={inputCls}>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="banned">Banned</option>
+            <option value="deleted">Deleted</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Tier override</span>
+          <input value={tier} onChange={(e) => setTier(e.target.value)} className={inputCls} placeholder="e.g. VIP, Gold (leave blank to keep)" />
+        </label>
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Tags (comma separated)</span>
+          <input value={tags} onChange={(e) => setTags(e.target.value)} className={inputCls} placeholder="wholesale, fraud-watch" />
+        </label>
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Internal note</span>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={inputCls} placeholder="Add a private admin note (optional)" />
+        </label>
         <div className="flex items-center justify-end gap-2 pt-2">
           <button onClick={onClose} className={btnGhost}>Cancel</button>
           <button
@@ -265,6 +300,10 @@ function EditModal({ c, busy, onClose, onSave }: {
               full_name: name.trim(),
               phone: phone.trim(),
               email: email.trim() && email.trim() !== (c.email ?? "") ? email.trim() : undefined,
+              account_status: status,
+              note: note.trim() || undefined,
+              tags: tags.trim() ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+              tier_override: tier.trim() ? tier.trim() : undefined,
             })}
             className={btnPrimary}
           >
