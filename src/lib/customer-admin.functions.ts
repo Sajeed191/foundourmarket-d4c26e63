@@ -253,7 +253,9 @@ export const sendCustomerEmailFn = createServerFn({ method: "POST" })
 /** Soft-delete a customer — never removes the record, just marks it deleted. */
 export const softDeleteCustomerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ customerId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({ customerId: z.string().uuid(), reason: z.string().trim().max(500).optional() }).parse(input),
+  )
   .handler(async ({ data: input, context }) => {
     const { userId } = context as { userId: string };
     const { primaryRole } = await requireStaff(userId, CUST_STAFF, "customers.delete.soft", input.customerId);
@@ -264,12 +266,25 @@ export const softDeleteCustomerFn = createServerFn({ method: "POST" })
       .eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
+    // Revoke active sessions on deletion.
+    try {
+      await (supabaseAdmin.auth.admin as unknown as {
+        signOut: (id: string, scope?: string) => Promise<unknown>;
+      }).signOut(input.customerId, "global");
+    } catch (e) {
+      console.error("[customers.delete.soft] session revoke failed", String(e));
+    }
+
+    // PRIORITY 1 + 2 — closure email + in-app notification.
+    await fireLifecycleEvent({ customerId: input.customerId, event: "account-deleted", reason: input.reason });
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
       action: "customers.delete.soft",
       target: input.customerId,
       success: true,
+      detail: { reason: input.reason ?? null },
     });
     return { ok: true };
   });
