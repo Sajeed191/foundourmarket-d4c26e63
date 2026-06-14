@@ -3,17 +3,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Users, Search, Radio, Loader2, ChevronLeft, ChevronRight,
-  IndianRupee, ShieldAlert, LifeBuoy, UserPlus, ShoppingBag,
+  IndianRupee, ShieldAlert, Crown, Activity, ShoppingBag, Mail, Phone, Clock,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { getCustomerCenterFn, type CustomerRow, type CustomerKpis } from "@/lib/customer-center.functions";
+import {
+  computeTier, computeHealth, matchesSegment, riskLevel, initialsOf,
+  SEGMENTS, type SegmentKey, type TierMeta,
+} from "@/lib/customer-tiers";
 
 export const Route = createFileRoute("/admin-customers")({
   head: () => ({
     meta: [
       { title: "Customer Intelligence — FoundOurMarket™" },
-      { name: "description", content: "Customer 360° — orders, payments, shipments, refunds, support & fraud." },
+      { name: "description", content: "Customer 360° — tiers, health, orders, payments, shipments, refunds, support & fraud." },
     ],
   }),
   component: CustomersPage,
@@ -23,15 +27,32 @@ const money = (v: number | null | undefined, c = "INR") =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: c, maximumFractionDigits: 0 }).format(Number(v) || 0);
 const dateOnly = (s: string | null) => (s ? new Date(s).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—");
 
-function riskTone(score: number) {
-  if (score >= 70) return "text-destructive border-destructive/30 bg-destructive/10";
-  if (score >= 35) return "text-amber-400 border-amber-500/30 bg-amber-500/10";
-  return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+function Avatar({ url, name, email, tier }: { url: string | null; name: string | null; email: string | null; tier: TierMeta }) {
+  return (
+    <span className="relative shrink-0">
+      {url ? (
+        <img src={url} alt="" className="size-10 rounded-full object-cover border border-white/10" loading="lazy" />
+      ) : (
+        <span className="size-10 rounded-full grid place-items-center bg-accent/15 text-accent text-xs font-bold border border-accent/20">
+          {initialsOf(name, email)}
+        </span>
+      )}
+      <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background ${tier.dot}`} />
+    </span>
+  );
+}
+
+function TierBadge({ tier }: { tier: TierMeta }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tier.className}`}>
+      <span aria-hidden>{tier.emoji}</span> {tier.label}
+    </span>
+  );
 }
 
 function Kpi({ icon: Icon, label, value, tone }: { icon: typeof Users; label: string; value: string; tone?: string }) {
   return (
-    <div className="glass border border-white/10 rounded-2xl p-3">
+    <div className="card-premium rounded-2xl p-3">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
         <Icon className={`size-3.5 ${tone ?? "text-accent"}`} /> {label}
       </div>
@@ -42,11 +63,16 @@ function Kpi({ icon: Icon, label, value, tone }: { icon: typeof Users; label: st
 
 const PAGE_SIZE = 50;
 
+type Enriched = CustomerRow & {
+  tier: TierMeta;
+  health: ReturnType<typeof computeHealth>;
+};
+
 function CustomersPage() {
   return (
     <AdminShell
       title="Customer Intelligence"
-      subtitle="Customer 360° · orders · payments · shipments · refunds · fraud"
+      subtitle="Customer 360° · tiers · health · value · risk · fraud"
       allow={["admin", "super_admin", "manager"]}
     >
       <CustomersInner />
@@ -59,6 +85,7 @@ function CustomersInner() {
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
+  const [segment, setSegment] = useState<SegmentKey>("all");
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [kpis, setKpis] = useState<CustomerKpis | null>(null);
@@ -88,7 +115,6 @@ function CustomersInner() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Realtime: refresh when relevant tables change.
   useEffect(() => {
     const ping = () => { setPulse(true); setTimeout(() => setPulse(false), 1000); load(); };
     const ch = supabase
@@ -101,23 +127,69 @@ function CustomersInner() {
     return () => { supabase.removeChannel(ch); };
   }, [load]);
 
+  // Enrich every row with tier + health (pure, memoised).
+  const enriched: Enriched[] = useMemo(
+    () =>
+      rows.map((c) => {
+        const tier = computeTier(c.total_orders, c.lifetime_spend);
+        const health = computeHealth({
+          totalOrders: c.total_orders,
+          lifetimeRevenue: c.lifetime_spend,
+          refundCount: c.refund_count,
+          openTickets: c.open_tickets,
+          riskScore: c.risk_score,
+          lastActive: c.last_active,
+        });
+        return { ...c, tier, health };
+      }),
+    [rows],
+  );
+
+  const visible = useMemo(
+    () =>
+      enriched.filter((c) =>
+        matchesSegment(segment, {
+          totalOrders: c.total_orders,
+          lifetimeRevenue: c.lifetime_spend,
+          riskScore: c.risk_score,
+          lastActive: c.last_active,
+          tier: c.tier.key,
+          health: c.health.score,
+        }),
+      ),
+    [enriched, segment],
+  );
+
+  // Intelligence KPIs (page-scoped derived metrics + global totals).
+  const intel = useMemo(() => {
+    const active = enriched.filter((c) =>
+      matchesSegment("active", { totalOrders: c.total_orders, lifetimeRevenue: c.lifetime_spend, riskScore: c.risk_score, lastActive: c.last_active, tier: c.tier.key, health: c.health.score }),
+    ).length;
+    const vip = enriched.filter((c) => c.tier.key === "vip" || c.tier.key === "elite").length;
+    const returning = enriched.filter((c) => c.total_orders >= 2).length;
+    const atRisk = enriched.filter((c) => c.risk_score >= 35 || c.health.score < 35).length;
+    const totalCustomers = kpis?.total_customers ?? enriched.length;
+    const revPerCustomer = totalCustomers > 0 ? (kpis?.total_revenue ?? 0) / totalCustomers : 0;
+    return { active, vip, returning, atRisk, totalCustomers, revPerCustomer };
+  }, [enriched, kpis]);
+
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const open = (id: string) => nav({ to: "/admin-customers/$customerId", params: { customerId: id } });
-  const k = useMemo(() => kpis, [kpis]);
 
   return (
     <div className="space-y-5">
-      {/* KPI bar */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Kpi icon={Users} label="Customers" value={String(k?.total_customers ?? 0)} />
-        <Kpi icon={ShoppingBag} tone="text-emerald-400" label="Paying" value={String(k?.paying_customers ?? 0)} />
-        <Kpi icon={IndianRupee} label="Lifetime Revenue" value={money(k?.total_revenue)} />
-        <Kpi icon={LifeBuoy} tone="text-amber-400" label="Open Tickets" value={String(k?.open_tickets ?? 0)} />
-        <Kpi icon={UserPlus} tone="text-sky-400" label="New Today" value={String(k?.new_today ?? 0)} />
+      {/* Intelligence KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <Kpi icon={Users} label="Total Customers" value={String(intel.totalCustomers)} />
+        <Kpi icon={Activity} tone="text-emerald-400" label="Active" value={String(intel.active)} />
+        <Kpi icon={Crown} tone="text-accent" label="VIP" value={String(intel.vip)} />
+        <Kpi icon={ShoppingBag} tone="text-sky-400" label="Returning" value={String(intel.returning)} />
+        <Kpi icon={IndianRupee} label="Revenue / Customer" value={money(intel.revPerCustomer)} />
+        <Kpi icon={ShieldAlert} tone="text-destructive" label="At Risk" value={String(intel.atRisk)} />
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Search + live */}
+      <div className="flex flex-wrap items-center gap-2 sticky top-2 z-20">
         <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-emerald-400">
           <Radio className={`size-3 ${pulse ? "text-accent animate-ping" : ""}`} /> Live
         </div>
@@ -132,81 +204,97 @@ function CustomersInner() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="glass border border-white/10 rounded-2xl overflow-hidden">
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-[10px] uppercase tracking-widest text-muted-foreground border-b border-white/10">
-                <th className="px-3 py-2.5">Customer</th>
-                <th className="px-3 py-2.5">Phone</th>
-                <th className="px-3 py-2.5">Country</th>
-                <th className="px-3 py-2.5">Orders</th>
-                <th className="px-3 py-2.5">Lifetime</th>
-                <th className="px-3 py-2.5">Paid</th>
-                <th className="px-3 py-2.5">Refunds</th>
-                <th className="px-3 py-2.5">Tickets</th>
-                <th className="px-3 py-2.5">Risk</th>
-                <th className="px-3 py-2.5">Last Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((c) => (
-                <tr key={c.id} onClick={() => open(c.id)} className="border-b border-white/5 hover:bg-white/[0.03] cursor-pointer">
-                  <td className="px-3 py-2.5">
-                    <div className="truncate max-w-[180px] font-medium">{c.full_name || "—"}</div>
-                    <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">{c.email || ""}</div>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono">{c.phone || "—"}</td>
-                  <td className="px-3 py-2.5">{c.country || "—"}</td>
-                  <td className="px-3 py-2.5 tabular-nums">{c.total_orders}</td>
-                  <td className="px-3 py-2.5 font-mono">{money(c.lifetime_spend)}</td>
-                  <td className="px-3 py-2.5 tabular-nums">{c.successful_payments}</td>
-                  <td className="px-3 py-2.5 tabular-nums">{c.refund_count}</td>
-                  <td className="px-3 py-2.5 tabular-nums">{c.open_tickets}</td>
-                  <td className="px-3 py-2.5">
-                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-mono ${riskTone(c.risk_score)}`}>
-                      {c.risk_score}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{dateOnly(c.last_active)}</td>
-                </tr>
-              ))}
-              {!loading && rows.length === 0 && (
-                <tr><td colSpan={10} className="px-3 py-10 text-center text-muted-foreground">No customers found.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Segment filters */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
+        {SEGMENTS.map((s) => (
+          <button
+            key={s.key}
+            onClick={() => setSegment(s.key)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              segment === s.key
+                ? "border-accent/50 bg-accent/15 text-accent"
+                : "border-white/10 text-muted-foreground hover:bg-white/5"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Mobile cards */}
-        <div className="md:hidden divide-y divide-white/5">
-          {rows.map((c) => (
-            <button key={c.id} onClick={() => open(c.id)} className="w-full text-left p-3 hover:bg-white/[0.03]">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold truncate">{c.full_name || c.email || "Customer"}</span>
-                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-mono ${riskTone(c.risk_score)}`}>
-                  <ShieldAlert className="size-3 mr-1" />{c.risk_score}
+      {/* Customer cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {visible.map((c) => {
+          const risk = riskLevel(c.risk_score);
+          return (
+            <button
+              key={c.id}
+              onClick={() => open(c.id)}
+              className="card-premium rounded-2xl p-3.5 text-left hover:border-accent/30 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <Avatar url={c.avatar_url} name={c.full_name} email={c.email} tier={c.tier} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold truncate">{c.full_name || c.email || "Customer"}</span>
+                    <TierBadge tier={c.tier} />
+                  </div>
+                  {c.email && (
+                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                      <Mail className="size-3 shrink-0" /> <span className="truncate">{c.email}</span>
+                    </div>
+                  )}
+                  {c.phone && (
+                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <Phone className="size-3 shrink-0" /> {c.phone}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] py-1.5">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Orders</p>
+                  <p className="text-sm font-bold tabular-nums">{c.total_orders}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] py-1.5">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Lifetime</p>
+                  <p className="text-sm font-bold tabular-nums text-accent">{money(c.lifetime_spend)}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] py-1.5">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Health</p>
+                  <p className={`text-sm font-bold tabular-nums ${c.health.className}`}>{c.health.score}</p>
+                </div>
+              </div>
+
+              <div className="mt-2.5 flex items-center justify-between gap-2 text-[10px]">
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <Clock className="size-3" /> {dateOnly(c.last_order ?? c.last_active)}
+                </span>
+                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono ${risk.className}`}>
+                  <ShieldAlert className="size-3 mr-1" />{risk.label}
                 </span>
               </div>
-              <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                <span className="truncate">{c.email || c.phone || ""}</span>
-                <span className="font-mono">{money(c.lifetime_spend)}</span>
-              </div>
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                {c.total_orders} orders · {c.open_tickets} open tickets · {dateOnly(c.last_active)}
-              </p>
             </button>
-          ))}
-          {!loading && rows.length === 0 && <p className="p-10 text-center text-muted-foreground text-xs">No customers found.</p>}
-        </div>
-
-        {loading && <div className="p-6 grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>}
+          );
+        })}
       </div>
+
+      {loading && <div className="p-6 grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>}
+      {!loading && visible.length === 0 && (
+        <div className="card-premium rounded-2xl p-10 text-center">
+          <Users className="size-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No customers in this segment.</p>
+          {segment !== "all" && (
+            <button onClick={() => setSegment("all")} className="mt-3 rounded-xl border border-white/10 px-3 py-1.5 text-xs hover:bg-white/5">
+              View all customers
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{total} customer{total === 1 ? "" : "s"}</span>
+        <span>{total} customer{total === 1 ? "" : "s"}{segment !== "all" ? ` · ${visible.length} shown` : ""}</span>
         <div className="flex items-center gap-2">
           <button disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}
             className="rounded-full border border-white/10 p-1.5 hover:bg-white/5 disabled:opacity-40"><ChevronLeft className="size-4" /></button>

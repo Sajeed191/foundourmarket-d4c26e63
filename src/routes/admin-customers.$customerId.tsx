@@ -4,13 +4,17 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft, Loader2, Radio, ShieldAlert, IndianRupee, ShoppingBag, Truck,
   RotateCcw, LifeBuoy, Bell, MapPin, Copy, Check, Download, Mail, Plus, X, CreditCard,
-  User, Clock, ExternalLink,
+  User, Clock, ExternalLink, Star, Heart, StickyNote, HeartPulse, Trash2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getCustomerProfileFn, getCustomerRiskFn, createCustomerTicketFn, type CustomerProfile,
+  getCustomerExtrasFn, type CustomerReview, type CustomerWishlistItem,
+  listCustomerNotesFn, addCustomerNoteFn, deleteCustomerNoteFn, type CustomerNote,
 } from "@/lib/customer-center.functions";
+import { computeTier, computeHealth, initialsOf, type TierMeta } from "@/lib/customer-tiers";
+
 
 export const Route = createFileRoute("/admin-customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer Profile — FoundOurMarket™" }] }),
@@ -110,32 +114,49 @@ function ProfileInner() {
   const profileFn = useServerFn(getCustomerProfileFn);
   const riskFn = useServerFn(getCustomerRiskFn);
   const ticketFn = useServerFn(createCustomerTicketFn);
+  const extrasFn = useServerFn(getCustomerExtrasFn);
+  const notesListFn = useServerFn(listCustomerNotesFn);
+  const noteAddFn = useServerFn(addCustomerNoteFn);
+  const noteDelFn = useServerFn(deleteCustomerNoteFn);
 
   const [data, setData] = useState<CustomerProfile | null>(null);
   const [risk, setRisk] = useState<Risk | null>(null);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+  const [wishlist, setWishlist] = useState<CustomerWishlistItem[]>([]);
+  const [notes, setNotes] = useState<CustomerNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
   const reqId = useRef(0);
 
+  const loadNotes = useCallback(async () => {
+    try {
+      const res = await notesListFn({ data: { customerId } });
+      setNotes(res.notes ?? []);
+    } catch { /* ignore */ }
+  }, [notesListFn, customerId]);
+
   const load = useCallback(async () => {
     const id = ++reqId.current;
     setLoading(true);
     try {
-      const [p, r] = await Promise.all([
+      const [p, r, ex] = await Promise.all([
         profileFn({ data: { customerId } }),
         riskFn({ data: { customerId } }).catch(() => null),
+        extrasFn({ data: { customerId } }).catch(() => null),
       ]);
       if (id !== reqId.current) return;
       setData(p);
       setRisk(r as Risk | null);
+      if (ex) { setReviews(ex.reviews ?? []); setWishlist(ex.wishlist ?? []); }
     } finally {
       if (id === reqId.current) setLoading(false);
     }
-  }, [profileFn, riskFn, customerId]);
+  }, [profileFn, riskFn, extrasFn, customerId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); loadNotes(); }, [load, loadNotes]);
+
 
   // Realtime only for this active profile.
   useEffect(() => {
@@ -196,6 +217,16 @@ function ProfileInner() {
   const returnRate = v.total_orders > 0 ? Math.round((v.return_count / v.total_orders) * 100) : 0;
   const aov = v.succeeded_payments > 0 ? v.lifetime_revenue / v.succeeded_payments : 0;
   const score = risk?.score ?? 0;
+  const tier: TierMeta = computeTier(v.total_orders, v.lifetime_revenue);
+  const lastActiveStr = data.orders[0]?.created_at ?? p.last_sign_in_at ?? null;
+  const health = computeHealth({
+    totalOrders: v.total_orders,
+    lifetimeRevenue: v.lifetime_revenue,
+    refundCount: v.refund_count,
+    openTickets: data.tickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length,
+    riskScore: score,
+    lastActive: lastActiveStr,
+  });
 
   return (
     <div className="space-y-5">
@@ -225,7 +256,45 @@ function ProfileInner() {
         </div>
       </div>
 
-      {/* SECTION 1 — Customer Intelligence */}
+      {/* Identity banner — avatar, tier, health, value, risk */}
+      <div className="glass border border-white/10 rounded-2xl p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {p.avatar_url ? (
+              <img src={p.avatar_url} alt="" className="size-14 rounded-2xl object-cover border border-white/10" />
+            ) : (
+              <span className="size-14 rounded-2xl grid place-items-center bg-accent/15 text-accent text-lg font-bold border border-accent/20">
+                {initialsOf(p.full_name, p.email)}
+              </span>
+            )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold truncate">{p.full_name || p.email || "Customer"}</h2>
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tier.className}`}>
+                  <span aria-hidden>{tier.emoji}</span> {tier.label}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{p.email || p.phone || p.id}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:ml-auto sm:w-auto w-full">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-center">
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1"><HeartPulse className="size-3" /> Health</p>
+              <p className={`text-lg font-bold tabular-nums ${health.className}`}>{health.score}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-center">
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1"><IndianRupee className="size-3" /> Value</p>
+              <p className="text-lg font-bold tabular-nums text-accent">{money(v.lifetime_revenue)}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-center">
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1"><ShieldAlert className="size-3" /> Risk</p>
+              <p className={`text-lg font-bold tabular-nums ${score >= 70 ? "text-destructive" : score >= 35 ? "text-amber-400" : "text-emerald-400"}`}>{score}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <Section icon={User} title="Customer Intelligence">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Stat label="Name" value={p.full_name ?? "—"} />
@@ -454,6 +523,51 @@ function ProfileInner() {
         )}
       </Section>
 
+      {/* SECTION 11 — Admin Notes */}
+      <Section icon={StickyNote} title="Admin Notes" count={notes.length}>
+        <NotesPanel
+          notes={notes}
+          onAdd={async (note) => { await noteAddFn({ data: { customerId, note } }); await loadNotes(); }}
+          onDelete={async (noteId) => { await noteDelFn({ data: { customerId, noteId } }); await loadNotes(); }}
+        />
+      </Section>
+
+      {/* SECTION 12 — Reviews */}
+      <Section icon={Star} title="Reviews" count={reviews.length}>
+        {reviews.length === 0 ? <Empty label="No reviews." /> : (
+          <div className="space-y-2">
+            {reviews.map((r) => (
+              <div key={r.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 text-amber-300">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`size-3 ${i < r.rating ? "fill-amber-300" : "opacity-30"}`} />
+                    ))}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{dateOnly(r.created_at)}</span>
+                </div>
+                {r.title && <p className="mt-1 font-medium truncate">{r.title}</p>}
+                {r.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{r.body}</p>}
+                <p className="text-[10px] text-muted-foreground mt-1 font-mono truncate">{r.product_slug}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* SECTION 13 — Wishlist */}
+      <Section icon={Heart} title="Wishlist" count={wishlist.length}>
+        {wishlist.length === 0 ? <Empty label="No saved items." /> : (
+          <div className="flex flex-wrap gap-2">
+            {wishlist.map((w) => (
+              <span key={w.id} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[11px]">
+                <Heart className="size-3 text-accent" /> {w.product_slug}
+              </span>
+            ))}
+          </div>
+        )}
+      </Section>
+
       {showTicket && (
         <TicketModal
           onClose={() => setShowTicket(false)}
@@ -499,6 +613,71 @@ function TicketModal({ onClose, onCreate }: { onClose: () => void; onCreate: (su
           {busy ? <Loader2 className="size-4 animate-spin mx-auto" /> : "Create Ticket"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function NotesPanel({
+  notes, onAdd, onDelete,
+}: {
+  notes: CustomerNote[];
+  onAdd: (note: string) => Promise<void>;
+  onDelete: (noteId: string) => Promise<void>;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const QUICK = ["VIP Buyer", "Frequent Customer", "Refund Sensitive", "High Value Buyer"];
+
+  const add = async (note: string) => {
+    if (note.trim().length < 1) return;
+    setBusy(true);
+    try { await onAdd(note.trim()); setText(""); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-1.5">
+        {QUICK.map((q) => (
+          <button key={q} disabled={busy} onClick={() => add(q)}
+            className="rounded-full border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[11px] hover:bg-white/5 disabled:opacity-40">
+            + {q}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") add(text); }}
+          placeholder="Add a private note…"
+          maxLength={2000}
+          className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-accent/40"
+        />
+        <button
+          disabled={busy || text.trim().length < 1}
+          onClick={() => add(text)}
+          className="rounded-xl bg-accent text-accent-foreground px-3 py-2 text-xs font-medium disabled:opacity-40 inline-flex items-center gap-1"
+        >
+          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />} Add
+        </button>
+      </div>
+      {notes.length === 0 ? (
+        <Empty label="No notes yet." />
+      ) : (
+        <div className="space-y-2">
+          {notes.map((n) => (
+            <div key={n.id} className="flex items-start justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-xs">
+              <div className="min-w-0">
+                <p className="whitespace-pre-wrap break-words">{n.note}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{when(n.created_at)}</p>
+              </div>
+              <button onClick={() => onDelete(n.id)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
