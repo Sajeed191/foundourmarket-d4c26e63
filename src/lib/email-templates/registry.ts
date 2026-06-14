@@ -42,6 +42,7 @@ import {
   orderingBlockedTemplate,
   reviewsDisabledTemplate,
   accountDeletedTemplate,
+  accountRestoredTemplate,
 } from './lifecycle-emails'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
@@ -63,4 +64,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ordering-blocked': orderingBlockedTemplate,
   'reviews-disabled': reviewsDisabledTemplate,
   'account-deleted': accountDeletedTemplate,
+  'account-restored': accountRestoredTemplate,
 }

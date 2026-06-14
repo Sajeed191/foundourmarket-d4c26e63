@@ -9,6 +9,7 @@ import {
 import {
   setCustomerStatusFn, softDeleteCustomerFn, setCustomerFlagFn,
   sendCustomerNotificationFn, resetCustomerPasswordFn, updateCustomerFn, sendCustomerEmailFn,
+  restoreCustomerFn,
 } from "@/lib/customer-admin.functions";
 import type { CustomerRow } from "@/lib/customer-center.functions";
 
@@ -30,6 +31,7 @@ export function CustomerActionsMenu({ c, onChanged }: Props) {
   const resetPw = useServerFn(resetCustomerPasswordFn);
   const updateCustomer = useServerFn(updateCustomerFn);
   const sendEmail = useServerFn(sendCustomerEmailFn);
+  const restore = useServerFn(restoreCustomerFn);
 
   useEffect(() => {
     if (!open) return;
@@ -93,36 +95,44 @@ export function CustomerActionsMenu({ c, onChanged }: Props) {
         onClick={() => run("reset", () => resetPw({ data: { customerId: c.id } }), "Send a password reset email to this customer?")}
       />
       <div className="my-1 h-px bg-white/10" />
-      {c.account_status !== "suspended" ? (
-        <Item icon={PauseCircle} label="Suspend Customer" tone="text-amber-400" k="suspend"
-          onClick={() => run("suspend", () => setStatus({ data: { customerId: c.id, status: "suspended" } }), "Suspend this customer? They can still sign in but cannot place new orders.")} />
+      {c.account_status === "deleted" ? (
+        <Item icon={CheckCircle2} label="Restore Customer" tone="text-emerald-400" k="restore"
+          onClick={() => run("restore", () => restore({ data: { customerId: c.id } }), "Restore this deleted customer? Login, ordering and reviews access will be reinstated.")} />
       ) : (
-        <Item icon={CheckCircle2} label="Reactivate Customer" tone="text-emerald-400" k="reactivate"
-          onClick={() => run("reactivate", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
+        <>
+          {c.account_status !== "suspended" ? (
+            <Item icon={PauseCircle} label="Suspend Customer" tone="text-amber-400" k="suspend"
+              onClick={() => run("suspend", () => setStatus({ data: { customerId: c.id, status: "suspended" } }), "Suspend this customer? They can still sign in but cannot place new orders.")} />
+          ) : (
+            <Item icon={CheckCircle2} label="Reactivate Customer" tone="text-emerald-400" k="reactivate"
+              onClick={() => run("reactivate", () => restore({ data: { customerId: c.id } }))} />
+          )}
+          {c.account_status !== "banned" ? (
+            <Item icon={Ban} label="Ban Customer" tone="text-destructive" onClick={() => { setOpen(false); setModal("ban"); }} />
+          ) : (
+            <Item icon={CheckCircle2} label="Restore Account" tone="text-emerald-400" k="unban"
+              onClick={() => run("unban", () => restore({ data: { customerId: c.id } }))} />
+          )}
+          <Item
+            icon={ShieldOff}
+            label={c.ordering_blocked ? "Allow Ordering" : "Block Ordering"}
+            tone={c.ordering_blocked ? "text-emerald-400" : "text-amber-400"}
+            k="order"
+            onClick={() => run("order", () => setFlag({ data: { customerId: c.id, flag: "ordering_blocked", value: !c.ordering_blocked } }))}
+          />
+          <Item
+            icon={MessageSquareOff}
+            label={c.reviews_disabled ? "Enable Reviews" : "Disable Reviews"}
+            tone={c.reviews_disabled ? "text-emerald-400" : "text-amber-400"}
+            k="reviews"
+            onClick={() => run("reviews", () => setFlag({ data: { customerId: c.id, flag: "reviews_disabled", value: !c.reviews_disabled } }))}
+          />
+          <div className="my-1 h-px bg-white/10" />
+          <Item icon={Trash2} label="Delete Customer" tone="text-destructive" k="delete"
+            onClick={() => run("delete", () => softDelete({ data: { customerId: c.id } }), "Soft-delete this customer? They lose login, ordering and review access. The record is retained and can be restored.")} />
+        </>
       )}
-      {c.account_status !== "banned" ? (
-        <Item icon={Ban} label="Ban Customer" tone="text-destructive" onClick={() => { setOpen(false); setModal("ban"); }} />
-      ) : (
-        <Item icon={CheckCircle2} label="Lift Ban" tone="text-emerald-400" k="unban"
-          onClick={() => run("unban", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
-      )}
-      <Item
-        icon={ShieldOff}
-        label={c.ordering_blocked ? "Allow Ordering" : "Block Ordering"}
-        tone={c.ordering_blocked ? "text-emerald-400" : "text-amber-400"}
-        k="order"
-        onClick={() => run("order", () => setFlag({ data: { customerId: c.id, flag: "ordering_blocked", value: !c.ordering_blocked } }))}
-      />
-      <Item
-        icon={MessageSquareOff}
-        label={c.reviews_disabled ? "Enable Reviews" : "Disable Reviews"}
-        tone={c.reviews_disabled ? "text-emerald-400" : "text-amber-400"}
-        k="reviews"
-        onClick={() => run("reviews", () => setFlag({ data: { customerId: c.id, flag: "reviews_disabled", value: !c.reviews_disabled } }))}
-      />
-      <div className="my-1 h-px bg-white/10" />
-      <Item icon={Trash2} label="Delete Customer" tone="text-destructive" k="delete"
-        onClick={() => run("delete", () => softDelete({ data: { customerId: c.id } }), "Soft-delete this customer? The record is retained but marked deleted.")} />
+
     </>
   );
 

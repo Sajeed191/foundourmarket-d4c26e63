@@ -58,6 +58,10 @@ type Profile = {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  account_status?: string | null;
+  ordering_blocked?: boolean | null;
+  reviews_disabled?: boolean | null;
+  ban_reason?: string | null;
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -73,6 +77,50 @@ function greeting() {
   if (h < 12) return { text: "Good morning", emoji: "☀️" };
   if (h < 18) return { text: "Good afternoon", emoji: "🌤️" };
   return { text: "Good evening", emoji: "🌙" };
+}
+
+const SUPPORT_EMAIL = "support@foundourmarket.com";
+
+function AccountStatusBanner({ profile }: { profile: Profile | null }) {
+  if (!profile) return null;
+  const status = profile.account_status ?? "active";
+  const restrictions: { title: string; msg: string }[] = [];
+
+  if (status === "suspended") {
+    restrictions.push({
+      title: "Account Temporarily Suspended",
+      msg: `Your account is suspended and new orders are paused.${profile.ban_reason ? ` Reason: ${profile.ban_reason}` : ""}`,
+    });
+  } else if (status === "banned") {
+    restrictions.push({
+      title: "Account Restricted",
+      msg: `Your account has been banned and access is revoked.${profile.ban_reason ? ` Reason: ${profile.ban_reason}` : ""}`,
+    });
+  } else if (status === "deleted") {
+    restrictions.push({ title: "Account Closed", msg: "Your account has been closed. Contact support if this is a mistake." });
+  } else {
+    if (profile.ordering_blocked) restrictions.push({ title: "Ordering Disabled", msg: "Ordering is currently disabled on your account. You can still browse." });
+    if (profile.reviews_disabled) restrictions.push({ title: "Reviews Restricted", msg: "Posting reviews has been restricted on your account." });
+  }
+
+  if (restrictions.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      {restrictions.map((r) => (
+        <div key={r.title} className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          <div className="flex items-center gap-2 text-amber-300">
+            <Shield className="size-4 shrink-0" />
+            <p className="text-sm font-semibold">{r.title}</p>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{r.msg}</p>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-1.5 inline-block text-xs font-medium text-amber-300 underline">
+            Contact support
+          </a>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function AccountPage() {
@@ -113,7 +161,7 @@ function AccountPage() {
     loadReturns();
     supabase
       .from("profiles")
-      .select("full_name,phone,avatar_url")
+      .select("full_name,phone,avatar_url,account_status,ordering_blocked,reviews_disabled,ban_reason")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setProfile((data as Profile | null) ?? null));
@@ -247,6 +295,10 @@ function AccountPage() {
 
 
       <div className="container-page py-3 sm:py-6 lg:py-8 space-y-3 sm:space-y-5">
+
+        <AccountStatusBanner profile={profile} />
+
+
 
 
         {/* 1 — HEADER */}
