@@ -370,11 +370,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
               }
 
-              // 403s are permanent configuration or authorization failures for this
-              // message, so move straight to DLQ and stop processing the rest of the batch.
+              // 403s are permanent configuration/authorization failures for the
+              // primary provider (e.g. domain_not_verified, no_matching_sender).
+              // Retrying the primary won't help, so route straight to the governed
+              // Gmail fallback; only DLQ if the fallback also fails.
               if (isForbidden(error)) {
-                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
-                return Response.json({ processed: totalProcessed, stopped: 'forbidden' })
+                await attemptGovernedFallback(supabase, queue, msg, errorMsg.slice(0, 1000))
+                continue
               }
 
               // Log non-429 failures to track real retry attempts.
