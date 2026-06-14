@@ -1,8 +1,9 @@
 // FoundOurMarket™ — Email Sender Governance (server-only enforcement & audit)
 //
-// Wraps the client-safe policy with audit logging into `security_audit_log`.
-// Import only from server code (.server.ts / *.functions.ts handlers).
-import { supabaseAdmin } from '@/integrations/supabase/client.server'
+// Wraps the client-safe policy with audit logging into `security_audit_log`
+// via the shared logSecurity helper. Import only from server code
+// (.server.ts / *.functions.ts handlers).
+import { logSecurity } from '@/lib/admin-guard.server'
 import {
   assertApprovedSender,
   isApprovedSender,
@@ -17,35 +18,19 @@ interface SenderAuditMeta {
   userId?: string | null
 }
 
-/** Write a row to the security audit log. Never throws. */
-async function audit(
-  action: string,
-  category: string,
-  meta: Record<string, unknown>,
-  userId?: string | null,
-) {
-  try {
-    await supabaseAdmin.from('security_audit_log').insert({
-      user_id: userId ?? null,
-      action,
-      category,
-      metadata: meta as never,
-    })
-  } catch (err) {
-    console.error('[email-sender-policy] audit insert failed', String(err))
-  }
-}
-
 /**
  * Enforce the sender policy before a send. Returns the validated `from` string.
  * On violation: logs a security audit event AND throws so the send is blocked.
  */
 export async function enforceSender(from: string, meta: SenderAuditMeta = {}): Promise<string> {
   if (!isApprovedSender(from)) {
-    await audit(
-      'email.sender.violation',
-      'security',
-      {
+    await logSecurity({
+      actorId: meta.userId ?? null,
+      actorRole: 'system',
+      action: 'email.sender.violation',
+      target: meta.recipient ?? null,
+      success: false,
+      detail: {
         attempted_sender: from,
         attempted_email: extractEmail(from),
         recipient: meta.recipient ?? null,
@@ -53,8 +38,7 @@ export async function enforceSender(from: string, meta: SenderAuditMeta = {}): P
         context: meta.context ?? null,
         reason: 'unapproved_sender',
       },
-      meta.userId,
-    )
+    })
     return assertApprovedSender(from) // throws
   }
   return from
@@ -68,10 +52,13 @@ export async function recordSenderUsage(
   const tier = senderTier(from)
   // Only log secondary/fallback usage as an audit event (primary is the norm).
   if (tier === 'secondary') {
-    await audit(
-      'email.sender.fallback_used',
-      'email',
-      {
+    await logSecurity({
+      actorId: meta.userId ?? null,
+      actorRole: 'system',
+      action: 'email.sender.fallback_used',
+      target: meta.recipient ?? null,
+      success: meta.status !== 'failed',
+      detail: {
         sender: from,
         tier,
         recipient: meta.recipient ?? null,
@@ -80,7 +67,6 @@ export async function recordSenderUsage(
         status: meta.status ?? null,
         fallback_reason: meta.fallbackReason ?? null,
       },
-      meta.userId,
-    )
+    })
   }
 }
