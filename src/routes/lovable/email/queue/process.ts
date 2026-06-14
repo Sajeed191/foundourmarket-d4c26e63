@@ -268,9 +268,15 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
-            // Move to DLQ if max failed send attempts reached.
+            // Primary provider exhausted: attempt governed secondary-sender
+            // fallback (foundourmarket@gmail.com) before giving up to DLQ.
             if (failedAttempts >= MAX_RETRIES) {
-              await moveToDlq(supabase, queue, msg, `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`)
+              await attemptGovernedFallback(
+                supabase,
+                queue,
+                msg,
+                `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`
+              )
               continue
             }
 
