@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
+import { fireLifecycleEvent } from "./customer-lifecycle.server";
 
 const CUST_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 
