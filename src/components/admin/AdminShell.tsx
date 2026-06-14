@@ -107,6 +107,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Insights",
     items: [
       { to: "/admin-reports", label: "Reports", icon: FileText, roles: ["admin", "super_admin", "manager"] },
+      { to: "/admin-email-diagnostics", label: "Email diagnostics", icon: Activity, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-emails", label: "Email settings", icon: Mail, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-email-ops", label: "Email operations", icon: ShieldBan, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-email-queue", label: "Email queue", icon: Inbox, roles: ["admin", "super_admin", "manager"] },
