@@ -103,6 +103,12 @@ async function attemptGovernedFallback(
       recipient_email: payload.to,
       status: 'sent',
       error_message: `governed_gmail_fallback (primary failed: ${reason.slice(0, 200)})`,
+      metadata: {
+        delivery_method: 'fallback',
+        sender: 'foundourmarket@gmail.com',
+        reply_to: 'support@foundourmarket.com',
+        primary_failure_reason: reason.slice(0, 300),
+      },
     })
     await supabase.from('security_audit_log').insert({
       action: 'email.sender.fallback_success',
@@ -325,6 +331,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 template_name: payload.label || queue,
                 recipient_email: payload.to,
                 status: 'sent',
+                metadata: {
+                  delivery_method: 'primary',
+                  sender: 'support@foundourmarket.com',
+                  reply_to: 'support@foundourmarket.com',
+                },
               })
 
               // Delete from queue
