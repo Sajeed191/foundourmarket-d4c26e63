@@ -80,6 +80,7 @@ import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
 import { Route as AdminEmailQueueRouteImport } from './routes/admin-email-queue'
 import { Route as AdminEmailOpsRouteImport } from './routes/admin-email-ops'
 import { Route as AdminEmailHealthRouteImport } from './routes/admin-email-health'
+import { Route as AdminEmailDiagnosticsRouteImport } from './routes/admin-email-diagnostics'
 import { Route as AdminEmailDeliveryRouteImport } from './routes/admin-email-delivery'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCustomerIntelligenceRouteImport } from './routes/admin-customer-intelligence'
@@ -503,6 +504,11 @@ const AdminEmailHealthRoute = AdminEmailHealthRouteImport.update({
   path: '/admin-email-health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEmailDiagnosticsRoute = AdminEmailDiagnosticsRouteImport.update({
+  id: '/admin-email-diagnostics',
+  path: '/admin-email-diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEmailDeliveryRoute = AdminEmailDeliveryRouteImport.update({
   id: '/admin-email-delivery',
   path: '/admin-email-delivery',
@@ -861,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
@@ -999,6 +1006,7 @@ export interface FileRoutesByTo {
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
@@ -1137,6 +1145,7 @@ export interface FileRoutesById {
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
+  '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
   '/admin-email-ops': typeof AdminEmailOpsRoute
   '/admin-email-queue': typeof AdminEmailQueueRoute
@@ -1277,6 +1286,7 @@ export interface FileRouteTypes {
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-diagnostics'
     | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
@@ -1415,6 +1425,7 @@ export interface FileRouteTypes {
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-diagnostics'
     | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
@@ -1552,6 +1563,7 @@ export interface FileRouteTypes {
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-email-delivery'
+    | '/admin-email-diagnostics'
     | '/admin-email-health'
     | '/admin-email-ops'
     | '/admin-email-queue'
@@ -1691,6 +1703,7 @@ export interface RootRouteChildren {
   AdminCustomerIntelligenceRoute: typeof AdminCustomerIntelligenceRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminEmailDeliveryRoute: typeof AdminEmailDeliveryRoute
+  AdminEmailDiagnosticsRoute: typeof AdminEmailDiagnosticsRoute
   AdminEmailHealthRoute: typeof AdminEmailHealthRoute
   AdminEmailOpsRoute: typeof AdminEmailOpsRoute
   AdminEmailQueueRoute: typeof AdminEmailQueueRoute
@@ -2296,6 +2309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-email-diagnostics': {
+      id: '/admin-email-diagnostics'
+      path: '/admin-email-diagnostics'
+      fullPath: '/admin-email-diagnostics'
+      preLoaderRoute: typeof AdminEmailDiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-email-delivery': {
       id: '/admin-email-delivery'
       path: '/admin-email-delivery'
@@ -2844,6 +2864,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCustomerIntelligenceRoute: AdminCustomerIntelligenceRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminEmailDeliveryRoute: AdminEmailDeliveryRoute,
+  AdminEmailDiagnosticsRoute: AdminEmailDiagnosticsRoute,
   AdminEmailHealthRoute: AdminEmailHealthRoute,
   AdminEmailOpsRoute: AdminEmailOpsRoute,
   AdminEmailQueueRoute: AdminEmailQueueRoute,
