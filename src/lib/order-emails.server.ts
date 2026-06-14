@@ -145,6 +145,8 @@ export async function enqueueOrderEmail(
       status: 'failed',
       error_message: msg,
     })
+    const { notifyAdminsEmailFailure } = await import('@/lib/email-alerts.server')
+    await notifyAdminsEmailFailure({ template: event, recipient, reason: msg, context: 'order email', refId: orderId })
     return { ok: false, reason: 'render_failed' }
   }
 
@@ -186,6 +188,8 @@ export async function enqueueOrderEmail(
         status: 'failed',
         error_message: msg,
       })
+      const { notifyAdminsEmailFailure } = await import('@/lib/email-alerts.server')
+      await notifyAdminsEmailFailure({ template: event, recipient, reason: msg, context: 'order email', refId: orderId })
       return { ok: false, reason: 'enqueue_failed' }
     }
   } catch (err: any) {
@@ -198,6 +202,8 @@ export async function enqueueOrderEmail(
       status: 'failed',
       error_message: msg,
     })
+    const { notifyAdminsEmailFailure } = await import('@/lib/email-alerts.server')
+    await notifyAdminsEmailFailure({ template: event, recipient, reason: msg, context: 'order email', refId: orderId })
     return { ok: false, reason: 'enqueue_threw' }
   }
 

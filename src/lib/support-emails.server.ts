@@ -86,6 +86,10 @@ async function enqueue(opts: {
       status: 'failed',
       error_message: msg,
     })
+    {
+      const { notifyAdminsEmailFailure } = await import('@/lib/email-alerts.server')
+      await notifyAdminsEmailFailure({ template: opts.templateName, recipient: opts.recipient, reason: msg, context: 'support email' })
+    }
     return false
   }
 
