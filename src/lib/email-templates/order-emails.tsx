@@ -291,3 +291,97 @@ export const refundProcessedTemplate = {
   displayName: 'Refund processed',
   previewData: { orderNumber: '8F3A21C9', customerName: 'Alex', refundAmount: '₹2,499' },
 } satisfies TemplateEntry
+
+/* ---------- Payment failed ---------- */
+function PaymentFailedEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
+  return (
+    <Shell
+      unsubscribeUrl={unsubscribeUrl}
+      badge="✦ Payment Failed"
+      heading="We couldn't process your payment."
+      intro={`${greet(customerName)}unfortunately your payment for order ${ref(orderNumber)} didn't go through. Your order is on hold until payment is completed.`}
+    >
+      <DetailCard>
+        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
+        {amount && <DetailRow label="Amount due" value={amount} />}
+      </DetailCard>
+    </Shell>
+  )
+}
+
+/* ---------- Order processing ---------- */
+function OrderProcessingEmail({ orderNumber, customerName, unsubscribeUrl }: OrderEmailProps) {
+  return (
+    <Shell
+      unsubscribeUrl={unsubscribeUrl}
+      badge="✦ Processing"
+      heading="We're preparing your order."
+      intro={`${greet(customerName)}order ${ref(orderNumber)} is now being processed. We'll let you know as soon as it's packed and ready to ship.`}
+    >
+      <DetailCard>
+        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
+      </DetailCard>
+    </Shell>
+  )
+}
+
+/* ---------- Order packed ---------- */
+function OrderPackedEmail({ orderNumber, customerName, unsubscribeUrl }: OrderEmailProps) {
+  return (
+    <Shell
+      unsubscribeUrl={unsubscribeUrl}
+      badge="✦ Packed"
+      heading="Your order is packed."
+      intro={`${greet(customerName)}order ${ref(orderNumber)} has been packed and is ready for dispatch. It'll be on its way to you very soon.`}
+    >
+      <DetailCard>
+        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
+      </DetailCard>
+    </Shell>
+  )
+}
+
+/* ---------- Order cancelled ---------- */
+function OrderCancelledEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
+  return (
+    <Shell
+      unsubscribeUrl={unsubscribeUrl}
+      badge="✦ Order Cancelled"
+      heading="Your order has been cancelled."
+      intro={`${greet(customerName)}order ${ref(orderNumber)} has been cancelled. If a payment was made, any eligible refund will be processed automatically.`}
+    >
+      <DetailCard>
+        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
+        {amount && <DetailRow label="Order total" value={amount} />}
+      </DetailCard>
+    </Shell>
+  )
+}
+
+export const paymentFailedTemplate = {
+  component: PaymentFailedEmail,
+  subject: (d: Record<string, any>) => `Payment failed${d?.orderNumber ? ` · #${d.orderNumber}` : ''} — FoundOurMarket™`,
+  displayName: 'Payment failed',
+  previewData: { orderNumber: '8F3A21C9', customerName: 'Alex', amount: '₹2,499' },
+} satisfies TemplateEntry
+
+export const orderProcessingTemplate = {
+  component: OrderProcessingEmail,
+  subject: (d: Record<string, any>) => `Order processing${d?.orderNumber ? ` · #${d.orderNumber}` : ''} — FoundOurMarket™`,
+  displayName: 'Order processing',
+  previewData: { orderNumber: '8F3A21C9', customerName: 'Alex' },
+} satisfies TemplateEntry
+
+export const orderPackedTemplate = {
+  component: OrderPackedEmail,
+  subject: (d: Record<string, any>) => `Order packed${d?.orderNumber ? ` · #${d.orderNumber}` : ''} — FoundOurMarket™`,
+  displayName: 'Order packed',
+  previewData: { orderNumber: '8F3A21C9', customerName: 'Alex' },
+} satisfies TemplateEntry
+
+export const orderCancelledTemplate = {
+  component: OrderCancelledEmail,
+  subject: (d: Record<string, any>) => `Order cancelled${d?.orderNumber ? ` · #${d.orderNumber}` : ''} — FoundOurMarket™`,
+  displayName: 'Order cancelled',
+  previewData: { orderNumber: '8F3A21C9', customerName: 'Alex', amount: '₹2,499' },
+} satisfies TemplateEntry
