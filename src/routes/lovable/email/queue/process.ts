@@ -62,6 +62,84 @@ async function moveToDlq(
   }
 }
 
+/**
+ * Governed secondary-sender fallback. Invoked only when the PRIMARY provider has
+ * exhausted retries. Attempts delivery via the approved backup identity
+ * (foundourmarket@gmail.com), audits the full primary-failure -> fallback chain
+ * into both email_send_log and security_audit_log, then resolves the queue
+ * message (sent on success, DLQ on failure). Returns true if the fallback sent.
+ */
+async function attemptGovernedFallback(
+  supabase: SupabaseClient<any, any>,
+  queue: string,
+  msg: { msg_id: number; message: Record<string, unknown> },
+  primaryReason: string
+): Promise<boolean> {
+  const payload = msg.message
+  const recipient = String(payload.to ?? '')
+
+  // Record the primary failure that triggered fallback (security monitoring).
+  await supabase.from('security_audit_log').insert({
+    actor_id: null,
+    actor_role: 'system',
+    action: 'email.delivery.primary_exhausted',
+    target: recipient,
+    success: false,
+    detail: {
+      message_id: payload.message_id,
+      template: payload.label || queue,
+      recipient,
+      reason: primaryReason,
+    },
+  })
+
+  const result = await sendViaFallback({
+    to: recipient,
+    subject: String(payload.subject ?? ''),
+    html: typeof payload.html === 'string' ? payload.html : null,
+    text: typeof payload.text === 'string' ? payload.text : null,
+  })
+
+  // Audit fallback usage (security monitoring of every secondary-sender send).
+  await supabase.from('security_audit_log').insert({
+    actor_id: null,
+    actor_role: 'system',
+    action: result.ok ? 'email.sender.fallback_success' : 'email.sender.fallback_failed',
+    target: recipient,
+    success: result.ok,
+    detail: {
+      message_id: payload.message_id,
+      template: payload.label || queue,
+      recipient,
+      sender: FALLBACK_FROM,
+      tier: 'secondary',
+      provider_message_id: result.providerMessageId ?? null,
+      error: result.error ?? null,
+    },
+  })
+
+  if (result.ok) {
+    await supabase.from('email_send_log').insert({
+      message_id: payload.message_id,
+      template_name: (payload.label || queue) as string,
+      recipient_email: recipient,
+      status: 'sent',
+      error_message: `Delivered via governed fallback (${FALLBACK_FROM}) after primary exhaustion`,
+    })
+    const { error: delError } = await supabase.rpc('delete_email', {
+      queue_name: queue,
+      message_id: msg.msg_id,
+    })
+    if (delError) {
+      console.error('Failed to delete message after fallback send', { queue, msg_id: msg.msg_id, error: delError })
+    }
+    return true
+  }
+
+  await moveToDlq(supabase, queue, msg, `${primaryReason}; fallback failed: ${result.error ?? 'unknown'}`)
+  return false
+}
+
 export const Route = createFileRoute("/lovable/email/queue/process")({
   server: {
     handlers: {
