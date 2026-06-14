@@ -579,7 +579,7 @@ function Home() {
                 {/* top-right — countries */}
                 <div className="absolute z-20 top-2 right-0 animate-float" style={{ animationDelay: "-1s" }}>
                   <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
-                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Globe2 className="size-4.5" /></span>
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Globe2 className="size-[18px]" /></span>
                     <span><span className="block text-sm font-semibold text-foreground leading-none">180+</span><span className="block text-[10px] text-muted-foreground mt-1">Countries</span></span>
                   </div>
                 </div>
@@ -587,7 +587,7 @@ function Home() {
                 {/* mid-left — products */}
                 <div className="absolute z-20 top-1/3 left-0 animate-float-soft" style={{ animationDelay: "-2.5s" }}>
                   <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
-                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Package className="size-4.5" /></span>
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Package className="size-[18px]" /></span>
                     <span><span className="block text-sm font-semibold text-foreground leading-none">2.4k+</span><span className="block text-[10px] text-muted-foreground mt-1">Products</span></span>
                   </div>
                 </div>
@@ -601,7 +601,7 @@ function Home() {
                 {/* trending — mid right */}
                 <div className="absolute z-20 bottom-1/3 right-1 animate-float" style={{ animationDelay: "-4.5s" }}>
                   <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
-                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><TrendingUp className="size-4.5" /></span>
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><TrendingUp className="size-[18px]" /></span>
                     <span><span className="block text-[12px] font-semibold text-foreground leading-none">Trending</span><span className="block text-[10px] text-muted-foreground mt-1">Updated daily</span></span>
                   </div>
                 </div>
