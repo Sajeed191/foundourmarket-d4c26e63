@@ -275,9 +275,14 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
-            // Move to DLQ if max failed send attempts reached.
+            // Primary retries exhausted — attempt the governed Gmail fallback
+            // before giving up to the DLQ.
             if (failedAttempts >= MAX_RETRIES) {
-              await moveToDlq(supabase, queue, msg, `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`)
+              const reason = `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`
+              const delivered = await tryFallbackDelivery(supabase, queue, msg, reason)
+              if (!delivered) {
+                await moveToDlq(supabase, queue, msg, reason)
+              }
               continue
             }
 
