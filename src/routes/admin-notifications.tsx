@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, Search, CheckCheck, Check, Trash2, Archive, ArchiveRestore,
-  Inbox, Sliders, X, RotateCw, Mail, ArrowRight, Dot,
+  Inbox, Sliders, X, RotateCw, Mail, ArrowRight, Dot, ChevronRight,
+  User, FileText, AlertTriangle, Hash, Clock, Activity,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdminShell } from "@/components/admin/AdminShell";
