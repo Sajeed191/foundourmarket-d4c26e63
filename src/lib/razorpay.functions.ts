@@ -461,6 +461,30 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       });
     }
 
+    // In-app notifications: order placed + payment success (mandatory categories,
+    // bypass preferences). Resilient — never fails a verified payment.
+    try {
+      const { notifyCustomer, fmOrderNo, orderLink } = await import("./customer-notify.server");
+      const no = fmOrderNo(order.id);
+      await notifyCustomer({
+        userId, category: "order", type: "order_placed",
+        title: "Order Confirmed",
+        body: `Your order #${no} has been successfully placed.`,
+        link: orderLink(order.id), priority: "high",
+        data: { order_id: order.id }, actorId: userId,
+      });
+      await notifyCustomer({
+        userId, category: "payment", type: "payment_success",
+        title: "Payment Successful",
+        body: `Payment received for Order #${no}.`,
+        link: orderLink(order.id), priority: "high",
+        data: { order_id: order.id }, actorId: userId,
+      });
+    } catch (notifyErr: any) {
+      console.error("[razorpay.verify] notification dispatch failed", {
+        orderId: order.id, error: String(notifyErr?.message ?? notifyErr),
+      });
+    }
 
     return { ok: true, orderId: order.id, alreadyPaid: false };
   });
