@@ -777,6 +777,52 @@ function ProfileInner() {
         )}
       </Section>
 
+      {/* Activity Timeline — unified chronological history, filterable */}
+      <Section icon={Activity} title="Activity Timeline" count={timeline.length}>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(["all", "order", "payment", "shipment", "email", "notification", "support_ticket", "review", "admin_action"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setTlFilter(f)}
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                tlFilter === f
+                  ? "border-accent/50 bg-accent/15 text-accent"
+                  : "border-white/10 bg-white/[0.02] text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f === "support_ticket" ? "support" : f === "admin_action" ? "admin" : f}
+            </button>
+          ))}
+        </div>
+        {(() => {
+          const shown = timeline.filter((e) => tlFilter === "all" || e.kind === tlFilter);
+          if (shown.length === 0) return <Empty label="No activity for this filter." />;
+          return (
+            <ol className="relative border-l border-white/10 ml-2 space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+              {shown.map((e, i) => (
+                <li key={`${e.kind}-${e.at}-${i}`} className="ml-4">
+                  <span className="absolute -left-[5px] mt-1 size-2 rounded-full bg-accent" />
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium truncate">{e.title}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 inline-flex items-center gap-1">
+                        <Clock className="size-3" />{when(e.at)}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">{e.kind.replace("_", " ")}</span>
+                      {e.detail && <span className="text-[10px] text-muted-foreground">{e.detail}</span>}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          );
+        })()}
+      </Section>
+
+
+
       {showTicket && (
         <TicketModal
           onClose={() => setShowTicket(false)}
