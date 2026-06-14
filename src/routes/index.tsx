@@ -495,7 +495,7 @@ function Home() {
                 to="/categories"
                 className="inline-flex items-center justify-center gap-2 h-12 lg:h-14 px-7 lg:px-9 rounded-full bg-accent text-accent-foreground text-xs lg:text-[13px] font-semibold uppercase tracking-widest hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] transition-all shadow-[var(--shadow-ember)] lg:shadow-[0_0_40px_-6px_oklch(0.74_0.19_49/0.6),var(--shadow-ember)]"
               >
-                Shop Now <ArrowRight className="size-4" />
+                Shop Now <ArrowRight className="hidden lg:block size-4" />
               </Link>
               <Link
                 to="/categories"
