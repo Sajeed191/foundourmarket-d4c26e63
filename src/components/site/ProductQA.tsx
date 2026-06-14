@@ -240,6 +240,32 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
         </div>
       </form>
 
+      {/* Frequently asked topics */}
+      <div className="mb-8">
+        <h3 className="mb-4 text-sm font-display tracking-tight">Frequently Asked Questions</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {POPULAR_TOPICS.map((t) => (
+            <div key={t.topic} className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-4">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-1.5">{t.topic}</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{t.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Search */}
+      {items.length > 0 && (
+        <div className="relative mb-6">
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search questions…"
+            className="w-full bg-card border border-border rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-accent"
+          />
+        </div>
+      )}
+
 
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
