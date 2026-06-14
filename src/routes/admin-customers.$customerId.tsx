@@ -114,32 +114,49 @@ function ProfileInner() {
   const profileFn = useServerFn(getCustomerProfileFn);
   const riskFn = useServerFn(getCustomerRiskFn);
   const ticketFn = useServerFn(createCustomerTicketFn);
+  const extrasFn = useServerFn(getCustomerExtrasFn);
+  const notesListFn = useServerFn(listCustomerNotesFn);
+  const noteAddFn = useServerFn(addCustomerNoteFn);
+  const noteDelFn = useServerFn(deleteCustomerNoteFn);
 
   const [data, setData] = useState<CustomerProfile | null>(null);
   const [risk, setRisk] = useState<Risk | null>(null);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+  const [wishlist, setWishlist] = useState<CustomerWishlistItem[]>([]);
+  const [notes, setNotes] = useState<CustomerNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
   const reqId = useRef(0);
 
+  const loadNotes = useCallback(async () => {
+    try {
+      const res = await notesListFn({ data: { customerId } });
+      setNotes(res.notes ?? []);
+    } catch { /* ignore */ }
+  }, [notesListFn, customerId]);
+
   const load = useCallback(async () => {
     const id = ++reqId.current;
     setLoading(true);
     try {
-      const [p, r] = await Promise.all([
+      const [p, r, ex] = await Promise.all([
         profileFn({ data: { customerId } }),
         riskFn({ data: { customerId } }).catch(() => null),
+        extrasFn({ data: { customerId } }).catch(() => null),
       ]);
       if (id !== reqId.current) return;
       setData(p);
       setRisk(r as Risk | null);
+      if (ex) { setReviews(ex.reviews ?? []); setWishlist(ex.wishlist ?? []); }
     } finally {
       if (id === reqId.current) setLoading(false);
     }
-  }, [profileFn, riskFn, customerId]);
+  }, [profileFn, riskFn, extrasFn, customerId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); loadNotes(); }, [load, loadNotes]);
+
 
   // Realtime only for this active profile.
   useEffect(() => {
