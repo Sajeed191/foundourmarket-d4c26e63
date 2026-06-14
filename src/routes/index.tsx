@@ -380,11 +380,7 @@ function Home() {
     ? categories.filter((c) => !c.parent_id)
     : categories.slice(0, categoryLimit);
 
-  // Desktop-only hero showcase products (decorative floating cards).
-  const heroShowcase = useMemo(
-    () => (newArrivals.length ? newArrivals : trending).slice(0, 4),
-    [newArrivals, trending],
-  );
+  // Desktop hero uses a curated featured product image (see assets/hero-product).
   const trendingChips = ["Wireless earbuds", "Smart watch", "Linen shirt", "Ceramic mug", "Air fryer"];
 
 
