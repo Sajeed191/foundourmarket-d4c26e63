@@ -397,9 +397,10 @@ function NotificationsCenter() {
 
 /* ───────────────────────── Row ───────────────────────── */
 
-function Row({ n, selected, onToggle, onRead, onArchive, onRemove, archivedView }: {
+function Row({ n, selected, onToggle, onRead, onArchive, onRemove, onOpen, archivedView }: {
   n: AdminNotification; selected: boolean; onToggle: () => void;
-  onRead: (r: boolean) => void; onArchive: (a: boolean) => void; onRemove: () => void; archivedView: boolean;
+  onRead: (r: boolean) => void; onArchive: (a: boolean) => void; onRemove: () => void;
+  onOpen: () => void; archivedView: boolean;
 }) {
   const p = priorityOf(n);
   const PM = PRIORITY_META[p];
@@ -407,6 +408,8 @@ function Row({ n, selected, onToggle, onRead, onArchive, onRemove, archivedView 
   const CM = OPS_META[cat];
   const action = actionFor(n);
   const unread = !n.read_at;
+  const summary = summarize(n.body);
+  const expandable = hasMoreDetail(n);
 
   return (
     <motion.li layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -423,18 +426,26 @@ function Row({ n, selected, onToggle, onRead, onArchive, onRemove, archivedView 
         </button>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${PM.tone}`}>
-              <PM.Icon className="size-2.5" /> {PM.label}
-            </span>
-            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-              <CM.Icon className={`size-3 ${CM.tone}`} /> {CM.label}
-            </span>
-            {unread && <span className="size-1.5 rounded-full bg-accent" />}
-            <span className="ml-auto text-[10px] font-mono text-muted-foreground">{timeAgo(n.created_at)}</span>
-          </div>
-          <p className={`mt-1.5 text-sm leading-snug ${unread ? "font-semibold" : "text-foreground/90"}`}>{n.title}</p>
-          {n.body && <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed line-clamp-2">{n.body}</p>}
+          {/* Tappable summary region opens the detail drawer */}
+          <button onClick={onOpen} className="block w-full text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${PM.tone}`}>
+                <PM.Icon className="size-2.5" /> {PM.label}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                <CM.Icon className={`size-3 ${CM.tone}`} /> {CM.label}
+              </span>
+              {unread && <span className="size-1.5 rounded-full bg-accent" />}
+              <span className="ml-auto text-[10px] font-mono text-muted-foreground shrink-0">{timeAgo(n.created_at)}</span>
+            </div>
+            <p className={`mt-1.5 text-sm leading-snug break-words ${unread ? "font-semibold" : "text-foreground/90"}`}>{n.title}</p>
+            {summary && <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed line-clamp-2 break-words">{summary}</p>}
+            {expandable && (
+              <span className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-medium text-accent">
+                Tap to view details <ChevronRight className="size-3" />
+              </span>
+            )}
+          </button>
 
           <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
             {action && (
@@ -453,6 +464,87 @@ function Row({ n, selected, onToggle, onRead, onArchive, onRemove, archivedView 
         </div>
       </div>
     </motion.li>
+  );
+}
+
+/* ───────────────────────── Detail drawer ───────────────────────── */
+
+function DetailDrawer({ n, onClose, onArchive, onRemove }: {
+  n: AdminNotification; onClose: () => void; onArchive: () => void; onRemove: () => void;
+}) {
+  const p = priorityOf(n);
+  const PM = PRIORITY_META[p];
+  const cat = opsCategoryOf(n);
+  const CM = OPS_META[cat];
+  const action = actionFor(n);
+  const { fields, fullError } = detailMeta(n);
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
+      <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[88vh] flex-col rounded-t-3xl border-t border-accent/20 bg-popover/95 backdrop-blur-2xl sm:inset-y-0 sm:right-0 sm:left-auto sm:bottom-auto sm:w-[92vw] sm:max-w-[440px] sm:rounded-t-none sm:rounded-l-3xl sm:border-l sm:border-t-0">
+        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-border sm:hidden" />
+        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-border/60">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${PM.tone}`}>
+                <PM.Icon className="size-2.5" /> {PM.label}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                <CM.Icon className={`size-3 ${CM.tone}`} /> {CM.label}
+              </span>
+            </div>
+            <p className="mt-1.5 text-sm font-semibold leading-snug break-words">{n.title}</p>
+          </div>
+          <button onClick={onClose} className="size-8 shrink-0 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          <div className="space-y-2.5">
+            {fields.map((f) => (
+              <div key={f.label} className="flex items-start gap-3">
+                <span className="mt-0.5 size-7 shrink-0 grid place-items-center rounded-lg border border-border/60 bg-white/5">
+                  <f.Icon className="size-3.5 text-muted-foreground" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                  <p className={`text-sm break-words ${f.mono ? "font-mono text-xs" : ""}`}>{f.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {fullError && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
+                <AlertTriangle className="size-3 text-rose-400" /> Full message
+              </p>
+              <pre className="rounded-xl border border-border/60 bg-background/60 p-3 text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap break-words font-mono max-h-72 overflow-y-auto">
+                {fullError}
+              </pre>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 border-t border-border/60 px-5 py-3.5">
+          {action && (
+            <Link to={action.to} onClick={onClose}
+              className="inline-flex items-center gap-1 rounded-full bg-accent/15 border border-accent/30 px-3.5 py-2 text-xs font-medium text-accent hover:bg-accent/25 transition-colors">
+              {action.label} <ArrowRight className="size-3.5" />
+            </Link>
+          )}
+          <div className="ml-auto flex items-center gap-1.5">
+            <RowBtn onClick={onArchive} title={n.archived_at ? "Restore" : "Archive"}>
+              {n.archived_at ? <ArchiveRestore className="size-3.5" /> : <Archive className="size-3.5" />}
+            </RowBtn>
+            <RowBtn danger onClick={onRemove} title="Delete"><Trash2 className="size-3.5" /></RowBtn>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }
 
