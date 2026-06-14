@@ -358,6 +358,22 @@ export const resetCustomerPasswordFn = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.auth.resetPasswordForEmail(u.user.email);
     if (error) throw new Error(error.message);
 
+    // Auth already sent the reset email; record history + notify in-app.
+    try {
+      await supabaseAdmin.from("profiles").select("id").eq("id", input.customerId).maybeSingle();
+      await supabaseAdmin.from("email_logs").insert({
+        user_id: input.customerId,
+        recipient: u.user.email,
+        template: "password-reset",
+        subject: "Reset your FoundOurMarket™ password",
+        status: "sent",
+        provider: "supabase-auth",
+      });
+    } catch (e) {
+      console.error("[customers.password.reset] email_logs insert failed", String(e));
+    }
+    await fireLifecycleEvent({ customerId: input.customerId, event: "password-reset", emailAlreadySent: true });
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
