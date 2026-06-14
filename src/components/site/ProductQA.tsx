@@ -36,6 +36,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionDraft, setQuestionDraft] = useState("");
+  const [search, setSearch] = useState("");
   // Synchronous guard against rapid double taps (state updates are async).
   const submittingRef = useRef(false);
 
