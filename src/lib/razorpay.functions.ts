@@ -634,6 +634,32 @@ export const placeCodOrder = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.rpc("commit_order_stock", { _order_id: order.id });
 
+    // Branded order-confirmation email (idempotent, resilient).
+    try {
+      await enqueueOrderEmail(order.id, "order-confirmed");
+    } catch (emailErr: any) {
+      console.error("[razorpay.placeCod] order email dispatch failed", {
+        orderId: order.id, error: String(emailErr?.message ?? emailErr),
+      });
+    }
+
+    // In-app order-placed notification (mandatory category, bypasses prefs).
+    try {
+      const { notifyCustomer, fmOrderNo, orderLink } = await import("./customer-notify.server");
+      const no = fmOrderNo(order.id);
+      await notifyCustomer({
+        userId, category: "order", type: "order_placed",
+        title: "Order Confirmed",
+        body: `Your order #${no} has been successfully placed with Cash on Delivery.`,
+        link: orderLink(order.id), priority: "high",
+        data: { order_id: order.id }, actorId: userId,
+      });
+    } catch (notifyErr: any) {
+      console.error("[razorpay.placeCod] notification dispatch failed", {
+        orderId: order.id, error: String(notifyErr?.message ?? notifyErr),
+      });
+    }
+
     return { ok: true, orderId: order.id, total: priced.totals.total };
   });
 

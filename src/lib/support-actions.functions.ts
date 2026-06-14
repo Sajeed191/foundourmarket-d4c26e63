@@ -14,6 +14,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueReturnEmail } from "./return-emails.server";
 
 const REFUND_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 const SUPPORT_STAFF: StaffRole[] = ["admin", "super_admin", "manager", "support"];
@@ -27,24 +28,8 @@ async function orderUserId(orderId: string): Promise<string | null> {
   return data?.user_id ?? null;
 }
 
-async function notifyCustomer(
-  userId: string | null,
-  type: string,
-  title: string,
-  body: string,
-  priority: "low" | "normal" | "high" = "normal",
-) {
-  if (!userId) return;
-  await supabaseAdmin.from("notifications").insert({
-    user_id: userId,
-    type,
-    title,
-    body,
-    link: "/account/orders",
-    priority,
-    data: {} as never,
-  });
-}
+
+
 
 /* ------------------------------ Refund actions ---------------------------- */
 
@@ -114,14 +99,25 @@ export const refundActionFn = createServerFn({ method: "POST" })
     const amountLabel = `${refund.currency === "USD" ? "$" : "₹"}${Math.round(
       Number(refund.amount) || 0,
     ).toLocaleString()}`;
-    if (input.action === "approve")
-      await notifyCustomer(customer, "refund_update", "Refund approved", `Your refund of ${amountLabel} has been approved and is being processed.`, "high");
-    else if (input.action === "complete")
-      await notifyCustomer(customer, "refund_update", "Refund completed", `Your refund of ${amountLabel} has been completed.`, "normal");
-    else if (input.action === "reject")
-      await notifyCustomer(customer, "refund_update", "Refund update", `We've reviewed your refund request. ${input.note ?? "Please contact support for details."}`, "normal");
-    else if (input.action === "request_evidence")
-      await notifyCustomer(customer, "refund_update", "Information needed for your refund", input.note ?? "Please reply with supporting evidence (photos / details) so we can process your refund.", "high");
+    const { notifyCustomer: notify } = await import("./customer-notify.server");
+    const refundDeep = `/account/payments?order=${refund.order_id}`;
+    const fireRefund = (title: string, body: string, priority: "low" | "normal" | "high") =>
+      notify({
+        userId: customer, category: "refund", type: "refund_update",
+        title, body, link: refundDeep, priority,
+        data: { order_id: refund.order_id, refund_id: refund.id }, actorId: userId,
+      });
+    if (input.action === "approve") {
+      await fireRefund("Refund initiated", `Your refund of ${amountLabel} has been approved and is being processed.`, "high");
+      await enqueueReturnEmail(refund.order_id, "refund-initiated", { refundAmount: Number(refund.amount) || 0, refundCurrency: refund.currency }, `refund-${refund.id}-initiated`);
+    } else if (input.action === "complete") {
+      await fireRefund("Refund completed", `Your refund of ${amountLabel} has been completed.`, "normal");
+      await enqueueReturnEmail(refund.order_id, "refund-completed", { refundAmount: Number(refund.amount) || 0, refundCurrency: refund.currency }, `refund-${refund.id}-completed`);
+    } else if (input.action === "reject") {
+      await fireRefund("Refund update", `We've reviewed your refund request. ${input.note ?? "Please contact support for details."}`, "normal");
+    } else if (input.action === "request_evidence") {
+      await fireRefund("Information needed for your refund", input.note ?? "Please reply with supporting evidence (photos / details) so we can process your refund.", "high");
+    }
 
     await logSecurity({
       actorId: userId,
@@ -175,18 +171,23 @@ export const returnActionFn = createServerFn({ method: "POST" })
     let label: string | null = null;
     let title = "";
     let body = "";
+    let category: "return" | "refund" = "return";
+    let emailEvent: import("./return-emails.server").ReturnEmailEvent | null = null;
+    let refundAmt: number | undefined;
 
     switch (input.action) {
       case "approve":
         patch.status = "approved";
         title = "Return approved";
         body = "Your return request has been approved. A return label will follow shortly.";
+        emailEvent = "return-approved";
         break;
       case "reject":
         patch.status = "rejected";
         patch.resolved_at = new Date().toISOString();
         title = "Return update";
         body = input.note ?? "We were unable to approve this return. Please contact support for details.";
+        emailEvent = "return-rejected";
         break;
       case "generate_label":
         patch.status = "approved";
@@ -205,8 +206,11 @@ export const returnActionFn = createServerFn({ method: "POST" })
         patch.resolved_at = new Date().toISOString();
         if (input.refundAmount != null) patch.refund_amount = input.refundAmount;
         const amt = input.refundAmount ?? (Number(ret.refund_amount) || 0);
+        refundAmt = amt || undefined;
+        category = "refund";
         title = "Return refunded";
         body = `Your return has been refunded${amt ? ` (₹${Math.round(amt).toLocaleString()})` : ""}.`;
+        emailEvent = "refund-completed";
         break;
       }
     }
@@ -220,7 +224,30 @@ export const returnActionFn = createServerFn({ method: "POST" })
       .eq("id", input.returnId);
     if (uErr) throw new Error(uErr.message);
 
-    await notifyCustomer(ret.user_id ?? (await orderUserId(ret.order_id)), "return_update", title, body, input.action === "generate_label" ? "high" : "normal");
+    // Centralized notification (in-app + audit + timeline), preference-aware.
+    const customerId = ret.user_id ?? (await orderUserId(ret.order_id));
+    const { notifyCustomer: notify } = await import("./customer-notify.server");
+    await notify({
+      userId: customerId,
+      category,
+      type: category === "refund" ? "refund_update" : "return_update",
+      title,
+      body,
+      link: `/account/returns?return=${input.returnId}&order=${ret.order_id}`,
+      priority: input.action === "generate_label" ? "high" : "normal",
+      data: { return_id: input.returnId, order_id: ret.order_id },
+      actorId: userId,
+    });
+
+    // Branded email for the lifecycle stages that warrant one.
+    if (emailEvent) {
+      await enqueueReturnEmail(
+        ret.order_id,
+        emailEvent,
+        { refundAmount: refundAmt, reason: input.action === "reject" ? input.note ?? null : null },
+        `return-${input.returnId}-${emailEvent}`,
+      );
+    }
 
     await logSecurity({
       actorId: userId,

@@ -5,7 +5,7 @@ import {
   Bell, Check, Trash2, ArrowLeft, Settings as SettingsIcon, CheckCheck, Search, ShoppingBag, X,
 } from "lucide-react";
 import {
-  useNotifications, categoryOf, type NotificationCategory, type Notification,
+  useNotifications, categoryOf, resolveNotificationLink, type NotificationCategory, type Notification,
 } from "@/lib/notifications";
 import { CAT_META, CATEGORY_ORDER, timeAgo } from "@/lib/notification-meta";
 
@@ -186,6 +186,8 @@ function Row({
   const cat = categoryOf(n);
   const { Icon, tone, dot } = CAT_META[cat];
   const unread = !n.read_at;
+  // Always route clicks through the centralized resolver (consistent, future-proof, no dead links).
+  const dest = resolveNotificationLink(n, false);
 
   const content = (
     <div className="flex items-start gap-3 p-4 sm:p-5">
@@ -216,8 +218,8 @@ function Row({
         unread ? "border-accent/30 bg-accent/[0.05]" : "border-border"
       }`}
     >
-      {n.link ? (
-        <Link to={n.link} onClick={() => unread && onRead(n.id)}>{content}</Link>
+      {dest ? (
+        <Link to={dest} onClick={() => unread && onRead(n.id)}>{content}</Link>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{content}</div>
       )}
