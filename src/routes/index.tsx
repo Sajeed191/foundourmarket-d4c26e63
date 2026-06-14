@@ -425,91 +425,156 @@ function Home() {
         </div>
 
 
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div
-            className="hero-rise inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
-          >
-            <span className="size-1.5 rounded-full bg-accent animate-glow" />
-            Live · 180+ countries · 2.4k products
-          </div>
-
-          <h1
-            className="hero-rise-h1 text-fluid-hero font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
-          >
-            <span className="sr-only">FoundOurMarket — Premium Global Marketplace. </span>
-            <span aria-hidden="true">Whatever you need.</span>
-            <br />
-            <span className="text-gradient-ember">All in one place.</span>
-          </h1>
-
-          <p
-            className="hero-rise hero-rise-1 text-fluid-base text-muted-foreground max-w-xl mx-auto text-balance mb-7 sm:mb-9 px-2"
-          >
-            A premium independent marketplace, sourcing top-quality products from across the world — delivered with cinematic precision.
-          </p>
-
-          {/* Search — primary action, premium glass, 52px+ height */}
-          <form
-            className="hero-rise hero-rise-2 max-w-2xl mx-auto relative group"
-            onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
-          >
-            <div className={`relative glass-strong rounded-full ring-1 transition-colors ${searchFocused ? "ring-accent/50" : "ring-white/10"}`}>
-              <Search className={`absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                placeholder={rotatingPlaceholder}
-                aria-label="Search products"
-                className="w-full min-h-[56px] bg-transparent rounded-full pl-12 sm:pl-14 pr-28 sm:pr-36 py-4 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/60"
-              />
-              <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-semibold px-5 sm:px-7 py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
-                Search
-              </button>
+        <div className="max-w-5xl lg:max-w-[1480px] mx-auto relative z-10 lg:grid lg:grid-cols-[1.05fr_minmax(0,0.92fr)] lg:gap-16 lg:items-center text-center lg:text-left">
+          {/* LEFT — headline, search, CTAs, stats */}
+          <div className="lg:max-w-none">
+            <div
+              className="hero-rise inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full glass text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              <span className="size-1.5 rounded-full bg-accent animate-glow" />
+              Live · 180+ countries · 2.4k products
             </div>
-          </form>
 
-          {/* Primary hero CTAs */}
-          <div
-            className="hero-rise hero-rise-3 mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Link
-              to="/categories"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-accent text-accent-foreground text-xs font-semibold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all shadow-[var(--shadow-ember)]"
+            <h1
+              className="hero-rise-h1 text-fluid-hero lg:text-[clamp(3.25rem,1.5vw+3.25rem,5.25rem)] lg:leading-[0.98] lg:tracking-[-0.035em] font-display font-semibold tracking-tight text-balance mb-5 sm:mb-7"
             >
-              Shop Now
-            </Link>
-            <Link
-              to="/categories"
-              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full glass-strong ring-1 ring-white/15 text-xs font-semibold uppercase tracking-widest hover:ring-accent/40 hover:text-foreground active:scale-[0.98] transition-all"
+              <span className="sr-only">FoundOurMarket — Premium Global Marketplace. </span>
+              <span aria-hidden="true">Whatever you need.</span>
+              <br />
+              <span className="text-gradient-ember">All in one place.</span>
+            </h1>
+
+            <p
+              className="hero-rise hero-rise-1 text-fluid-base text-muted-foreground max-w-xl mx-auto lg:mx-0 text-balance mb-7 sm:mb-9 px-2 lg:px-0"
             >
-              Browse Categories
-            </Link>
+              A premium independent marketplace, sourcing top-quality products from across the world — delivered with cinematic precision.
+            </p>
+
+            {/* Search — primary action, premium glass, flagship desktop height */}
+            <form
+              className="hero-rise hero-rise-2 max-w-2xl mx-auto lg:mx-0 relative group"
+              onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
+            >
+              <div className={`relative glass-strong rounded-full ring-1 transition-all duration-300 ${searchFocused ? "ring-accent/50 lg:shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.12),var(--shadow-float)]" : "ring-white/10 lg:shadow-[var(--shadow-float)]"}`}>
+                <Search className={`absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 size-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  placeholder={rotatingPlaceholder}
+                  aria-label="Search products"
+                  className="w-full min-h-[56px] lg:min-h-[64px] bg-transparent rounded-full pl-12 sm:pl-14 pr-28 sm:pr-36 py-4 text-base sm:text-lg focus:outline-none placeholder:text-muted-foreground/60"
+                />
+                <button type="submit" className="absolute right-1.5 sm:right-2 lg:right-2.5 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-semibold px-5 sm:px-7 py-3 lg:py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-[var(--shadow-ember)]">
+                  Search
+                </button>
+              </div>
+              {/* Trending chips — desktop only */}
+              <div className="hidden lg:flex flex-wrap items-center gap-2 mt-4">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/70 mr-1">Trending</span>
+                {trendingChips.map((c) => (
+                  <Link
+                    key={c}
+                    to="/search"
+                    search={{ q: c }}
+                    className="rounded-full glass px-3.5 py-1.5 text-xs text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:ring-accent/40 transition-all"
+                  >
+                    {c}
+                  </Link>
+                ))}
+              </div>
+            </form>
+
+            {/* Primary hero CTAs */}
+            <div
+              className="hero-rise hero-rise-3 mt-5 sm:mt-7 lg:mt-9 flex flex-wrap items-center justify-center lg:justify-start gap-3"
+            >
+              <Link
+                to="/categories"
+                className="inline-flex items-center justify-center gap-2 h-12 lg:h-14 px-7 lg:px-9 rounded-full bg-accent text-accent-foreground text-xs lg:text-[13px] font-semibold uppercase tracking-widest hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] transition-all shadow-[var(--shadow-ember)] lg:shadow-[0_0_40px_-6px_oklch(0.74_0.19_49/0.6),var(--shadow-ember)]"
+              >
+                Shop Now <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                to="/categories"
+                className="inline-flex items-center justify-center gap-2 h-12 lg:h-14 px-7 lg:px-9 rounded-full glass-strong ring-1 ring-white/15 text-xs lg:text-[13px] font-semibold uppercase tracking-widest hover:ring-accent/40 hover:-translate-y-0.5 hover:text-foreground active:scale-[0.98] transition-all"
+              >
+                Browse Categories
+              </Link>
+            </div>
+
+            {/* Floating live stats */}
+            <div
+              className="hero-rise hero-rise-4 mt-6 sm:mt-9 lg:mt-12 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto lg:mx-0 lg:max-w-none"
+            >
+              {[
+                { value: "180+", label: "Countries", hint: "Worldwide reach" },
+                { value: "2.4k+", label: "Products", hint: "Curated daily" },
+                { value: "98%", label: "Happy buyers", hint: "5-star average" },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="glass-strong rounded-2xl px-3 sm:px-6 py-4 sm:py-6 lg:py-7 text-left transition-all duration-300 lg:hover:-translate-y-1 lg:hover:ring-1 lg:hover:ring-accent/30 lg:hover:shadow-[0_18px_50px_-18px_oklch(0.74_0.19_49/0.4)]"
+                >
+                  <div className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">{s.value}</div>
+                  <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5">{s.label}</div>
+                  <div className="hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5">{s.hint}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Floating live stats */}
-          <div
-            className="hero-rise hero-rise-4 mt-6 sm:mt-9 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto"
-          >
-            {[
-              { value: "180+", label: "Countries", hint: "Worldwide reach" },
-              { value: "2.4k+", label: "Products", hint: "Curated daily" },
-              { value: "98%", label: "Happy buyers", hint: "5-star average" },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="glass-strong rounded-2xl px-3 sm:px-6 py-4 sm:py-6 text-left"
-              >
-                <div className="text-2xl sm:text-4xl font-display font-semibold tracking-tight text-gradient-ember">{s.value}</div>
-                <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-1.5">{s.label}</div>
-                <div className="hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5">{s.hint}</div>
-              </div>
-            ))}
+          {/* RIGHT — cinematic floating product showcase (desktop only) */}
+          <div aria-hidden className="hidden lg:block relative h-[540px] xl:h-[580px]">
+            {/* glow base */}
+            <div className="absolute inset-0 -z-10">
+              <div className="orb animate-orb" style={{ width: 480, height: 480, top: "10%", left: "20%", background: "var(--gradient-ember)" }} />
+            </div>
+
+            {/* floating product cards */}
+            <div className="absolute inset-0 grid grid-cols-2 gap-5 p-6">
+              {heroShowcase.map((p, i) => (
+                <div
+                  key={p.slug}
+                  className={`group relative overflow-hidden rounded-3xl glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] ${i % 2 === 0 ? "animate-float-soft mt-8" : "animate-float -mt-2"}`}
+                  style={{ animationDelay: `${i * -1.4}s` }}
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <img
+                      src={p.image}
+                      alt=""
+                      loading="lazy"
+                      className="size-full object-cover [transition:transform_900ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <p className="text-[13px] font-semibold tracking-tight text-foreground line-clamp-1">{p.name}</p>
+                      <p className="mt-1 flex items-center gap-1 text-[11px] text-accent">
+                        <Star className="size-3 fill-accent" /> {(p.rating || 4.8).toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* live activity pill */}
+            <div className="absolute -top-1 right-6 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-white/10 px-4 py-2 shadow-[var(--shadow-float)]">
+              <span className="size-1.5 rounded-full bg-accent animate-glow" />
+              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">142 shopping now</span>
+            </div>
+
+            {/* glowing verified chip */}
+            <div className="absolute bottom-2 left-2 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-accent/30 px-4 py-2 shadow-[0_0_40px_-10px_oklch(0.74_0.19_49/0.6)]">
+              <BadgeCheck className="size-4 text-accent" />
+              <span className="text-[11px] font-semibold text-foreground">Verified Suppliers</span>
+            </div>
           </div>
         </div>
       </section>
+
 
       {/* Trust strip — compact, between hero and categories */}
       <TrustBadgesStrip />
