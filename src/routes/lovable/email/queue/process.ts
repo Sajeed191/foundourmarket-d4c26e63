@@ -382,12 +382,34 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
               }
 
-              // 403s are permanent configuration or authorization failures for this
+              // Permanent sender/domain configuration rejections (400
+              // sender_domain_mismatch, 403 no_matching_sender,
+              // 403 domain_not_verified) will never succeed on the primary
+              // provider. Route the message through the governed Gmail
+              // fallback identity instead of failing the customer.
+              if (isSenderConfigError(error)) {
+                const delivered = await tryFallbackDelivery(
+                  supabase,
+                  queue,
+                  msg,
+                  errorMsg
+                )
+                if (delivered) {
+                  totalProcessed++
+                  continue
+                }
+                // Fallback also failed — record and DLQ this message.
+                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
+                continue
+              }
+
+              // Other 403s are permanent authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
               if (isForbidden(error)) {
                 await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
                 return Response.json({ processed: totalProcessed, stopped: 'forbidden' })
               }
+
 
               // Log non-429 failures to track real retry attempts.
               await supabase.from('email_send_log').insert({
