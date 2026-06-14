@@ -4,13 +4,17 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft, Loader2, Radio, ShieldAlert, IndianRupee, ShoppingBag, Truck,
   RotateCcw, LifeBuoy, Bell, MapPin, Copy, Check, Download, Mail, Plus, X, CreditCard,
-  User, Clock, ExternalLink,
+  User, Clock, ExternalLink, Star, Heart, StickyNote, HeartPulse, Trash2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getCustomerProfileFn, getCustomerRiskFn, createCustomerTicketFn, type CustomerProfile,
+  getCustomerExtrasFn, type CustomerReview, type CustomerWishlistItem,
+  listCustomerNotesFn, addCustomerNoteFn, deleteCustomerNoteFn, type CustomerNote,
 } from "@/lib/customer-center.functions";
+import { computeTier, computeHealth, initialsOf, type TierMeta } from "@/lib/customer-tiers";
+
 
 export const Route = createFileRoute("/admin-customers/$customerId")({
   head: () => ({ meta: [{ title: "Customer Profile — FoundOurMarket™" }] }),
