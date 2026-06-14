@@ -159,6 +159,12 @@ export function ReturnRequestDialog({
       const { error: itemsErr } = await supabase.from("return_items").insert(rows);
       if (itemsErr) throw itemsErr;
 
+      // Fire customer notification + branded email + audit (server-side).
+      try {
+        const { notifyReturnRequestedFn } = await import("@/lib/return-notify.functions");
+        await notifyReturnRequestedFn({ data: { returnId: ret.id } });
+      } catch { /* non-blocking */ }
+
       setDone(true);
       toast.success("Return request submitted");
       onSubmitted?.();
