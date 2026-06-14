@@ -16,7 +16,6 @@ import {
   toMinorUnits,
 } from "./pricing";
 import { enqueueOrderEmail } from "./order-emails.server";
-import { assertCustomerAllowed } from "./customer-restrictions.server";
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),
@@ -189,6 +188,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       claims?: { email?: string };
     };
     const { keyId } = getRazorpayCreds();
+    const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
     const edgeCountry =
@@ -342,6 +342,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
   .inputValidator((input) => verifySchema.parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
+    const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "payment");
 
     // Fetch the order via admin and confirm ownership
@@ -518,6 +519,7 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       userId: string;
       claims?: { email?: string };
     };
+    const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
     const edgeCountry =
