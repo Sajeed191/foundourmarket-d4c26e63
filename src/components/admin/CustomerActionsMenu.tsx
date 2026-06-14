@@ -12,6 +12,7 @@ import {
   restoreCustomerFn,
 } from "@/lib/customer-admin.functions";
 import type { CustomerRow } from "@/lib/customer-center.functions";
+import { PRIMARY_FROM } from "@/lib/email-sender-policy";
 
 type Props = { c: CustomerRow; onChanged: () => void };
 
