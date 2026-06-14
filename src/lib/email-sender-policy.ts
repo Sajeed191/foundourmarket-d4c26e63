@@ -9,11 +9,29 @@ export interface SenderIdentity {
   name: string
 }
 
-/** Default sender for ALL customer-facing communications. */
+/**
+ * Default sender for ALL customer-facing communications.
+ *
+ * IMPORTANT (deliverability): the From-address domain MUST match the verified
+ * sending domain (`notify.mail.foundourmarket.com`) so that SPF, DKIM and DMARC
+ * all align. Sending From the root `foundourmarket.com` while signing with the
+ * delegated subdomain triggers the provider's `sender_domain_mismatch` rejection
+ * and forces every message through the Gmail backup (which lands in Spam).
+ *
+ * Customers still see the friendly display name "FoundOurMarket Support", and
+ * every reply is routed to the human mailbox via REPLY_TO below.
+ */
 export const PRIMARY_SENDER: SenderIdentity = {
-  email: 'support@foundourmarket.com',
+  email: 'support@notify.mail.foundourmarket.com',
   name: 'FoundOurMarket Support',
 }
+
+/**
+ * Human-monitored mailbox customers reach when they reply. Kept on the root
+ * brand domain so replies land in the real support inbox, independent of the
+ * authenticated sending subdomain used in the From header.
+ */
+export const REPLY_TO_ADDRESS = 'support@foundourmarket.com'
 
 /** Automatic fallback — used ONLY on primary provider outage / delivery failure. */
 export const FALLBACK_SENDER: SenderIdentity = {
