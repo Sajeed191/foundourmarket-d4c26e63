@@ -16,6 +16,7 @@ import {
   toMinorUnits,
 } from "./pricing";
 import { enqueueOrderEmail } from "./order-emails.server";
+import { assertCustomerAllowed } from "./customer-restrictions.server";
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),
@@ -188,6 +189,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       claims?: { email?: string };
     };
     const { keyId } = getRazorpayCreds();
+    await assertCustomerAllowed(userId, "order");
 
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
@@ -340,6 +342,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
   .inputValidator((input) => verifySchema.parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
+    await assertCustomerAllowed(userId, "payment");
 
     // Fetch the order via admin and confirm ownership
     const { data: order, error: oErr } = await supabaseAdmin
@@ -515,6 +518,7 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       userId: string;
       claims?: { email?: string };
     };
+    await assertCustomerAllowed(userId, "order");
 
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
