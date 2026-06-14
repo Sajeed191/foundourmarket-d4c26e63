@@ -51,6 +51,11 @@ function StatusPill({ status }: { status: string | null }) {
     open: "text-amber-400 border-amber-500/30 bg-amber-500/10",
     failed: "text-destructive border-destructive/30 bg-destructive/10",
     cancelled: "text-destructive border-destructive/30 bg-destructive/10",
+    dlq: "text-destructive border-destructive/30 bg-destructive/10",
+    bounced: "text-orange-400 border-orange-500/30 bg-orange-500/10",
+    complained: "text-orange-400 border-orange-500/30 bg-orange-500/10",
+    suppressed: "text-zinc-400 border-zinc-500/30 bg-zinc-500/10",
+    sent: "text-sky-400 border-sky-500/30 bg-sky-500/10",
     refunded: "text-sky-400 border-sky-500/30 bg-sky-500/10",
   };
   return (
