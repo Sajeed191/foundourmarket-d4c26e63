@@ -296,6 +296,14 @@ export const setCustomerFlagFn = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
+    // PRIORITY 1 + 2 — email + notification when a restriction is turned ON.
+    if (input.value) {
+      await fireLifecycleEvent({
+        customerId: input.customerId,
+        event: input.flag === "ordering_blocked" ? "ordering-blocked" : "reviews-disabled",
+      });
+    }
+
     await logSecurity({
       actorId: userId,
       actorRole: primaryRole,
