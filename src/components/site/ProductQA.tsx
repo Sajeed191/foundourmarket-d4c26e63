@@ -188,7 +188,21 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   }
 
 
-  return (
+  const answeredCount = items.filter((q) => q.answer).length;
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? items.filter((it) => it.question.toLowerCase().includes(q) || (it.answer ?? "").toLowerCase().includes(q))
+    : items;
+
+  const POPULAR_TOPICS = [
+    { topic: "Shipping", a: "Most orders ship within 24–48 hours with full international tracking provided." },
+    { topic: "Warranty", a: "Every product is covered by our marketplace warranty and quality guarantee." },
+    { topic: "Returns", a: "Hassle-free returns are accepted within the protection window after delivery." },
+    { topic: "Compatibility", a: "Check the Specifications tab — compatibility details are listed per product." },
+    { topic: "Sizing", a: "Refer to the size guide on the product gallery for precise measurements." },
+    { topic: "Materials", a: "Material composition is listed in the product Description and Specs." },
+  ];
+
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-border">
       <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
         <div>
