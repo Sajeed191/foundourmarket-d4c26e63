@@ -215,7 +215,7 @@ export function Nav() {
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
               <span className="flex min-w-0 flex-col leading-none">
-                <span className="truncate text-[15px] sm:text-xl font-semibold tracking-tight">
+                <span className="truncate text-[15px] sm:text-xl lg:text-[22px] font-semibold tracking-tight">
                   FoundOurMarket<span className="text-accent">™</span>
                 </span>
                 <span className="mt-0.5 text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-accent/80 truncate">
