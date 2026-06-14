@@ -80,7 +80,7 @@ export async function enqueueOrderEmail(
 
   const { data: order, error } = await supabaseAdmin
     .from('orders')
-    .select('id, contact_email, total, currency, tracking_number, carrier, shipping_address')
+    .select('id, user_id, contact_email, total, currency, tracking_number, carrier, shipping_address')
     .eq('id', orderId)
     .maybeSingle()
 
