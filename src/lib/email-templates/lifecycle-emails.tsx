@@ -257,6 +257,23 @@ function AccountDeletedEmail({ name, reason, timestamp }: LifecycleEmailProps) {
   )
 }
 
+const SUCCESS = '#34d399'
+
+function AccountRestoredEmail({ name, reason, timestamp }: LifecycleEmailProps) {
+  return (
+    <Shell
+      preview="Your FoundOurMarket™ account has been restored"
+      badge="Account Restored"
+      badgeColor={SUCCESS}
+      heading="Your account has been restored"
+      intro={`${greet(name)}good news — your FoundOurMarket™ account has been fully restored. You can sign in and use the marketplace as normal again.`}
+      reason={reason}
+      timestamp={timestamp}
+      note="Restored access: sign-in, browsing, ordering & checkout, and writing reviews. If you need anything, our support team is here to help."
+    />
+  )
+}
+
 export const suspendedTemplate = {
   component: SuspendedEmail,
   subject: 'Your FoundOurMarket™ account has been suspended',
