@@ -9,6 +9,7 @@ import {
 import {
   setCustomerStatusFn, softDeleteCustomerFn, setCustomerFlagFn,
   sendCustomerNotificationFn, resetCustomerPasswordFn, updateCustomerFn, sendCustomerEmailFn,
+  restoreCustomerFn,
 } from "@/lib/customer-admin.functions";
 import type { CustomerRow } from "@/lib/customer-center.functions";
 
