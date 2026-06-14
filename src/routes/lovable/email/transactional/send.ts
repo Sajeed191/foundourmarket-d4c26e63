@@ -2,6 +2,8 @@ import * as React from 'react'
 import { render } from '@react-email/components'
 import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 // Configuration baked in at scaffold time
@@ -306,7 +308,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           payload: {
             message_id: messageId,
             to: effectiveRecipient,
-            from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+            from: await enforceSender(PRIMARY_FROM, { recipient: effectiveRecipient, template: templateName, context: 'transactional route' }),
             reply_to: `support@${FROM_DOMAIN}`,
             sender_domain: SENDER_DOMAIN,
             subject: resolvedSubject,
