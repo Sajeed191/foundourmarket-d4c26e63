@@ -57,6 +57,26 @@ const NOTIFY_COPY: Record<LifecycleEvent, { title: string; body: (reason?: strin
     body: (r) => `Good news — your account has been fully restored. You can sign in and shop as normal again.${r ? ` Note: ${r}` : ''}`,
     link: '/account',
   },
+  'account-reactivated': {
+    title: 'Your account has been reactivated',
+    body: (r) => `Your account is active again — you can sign in and shop as normal.${r ? ` Note: ${r}` : ''}`,
+    link: '/account',
+  },
+  'ban-removed': {
+    title: 'The ban on your account has been lifted',
+    body: (r) => `Good news — the ban on your account has been removed and access restored.${r ? ` Note: ${r}` : ''}`,
+    link: '/account',
+  },
+  'ordering-unblocked': {
+    title: 'Ordering has been re-enabled',
+    body: (r) => `Ordering has been re-enabled on your account. You can place new orders again.${r ? ` Note: ${r}` : ''}`,
+    link: '/account',
+  },
+  'reviews-restored': {
+    title: 'Reviewing has been restored',
+    body: (r) => `You can post product reviews again on your account.${r ? ` Note: ${r}` : ''}`,
+    link: '/account',
+  },
   'password-reset': {
     title: 'Password reset requested',
     body: () => 'A password reset email has been sent to your inbox.',
