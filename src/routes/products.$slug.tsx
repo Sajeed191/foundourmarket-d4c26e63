@@ -818,6 +818,9 @@ function ProductPage() {
               ))}
             </div>
 
+            <SellerTrustCard product={product} />
+
+
 
 
 
