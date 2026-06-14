@@ -524,6 +524,11 @@ function ReturnsPage() {
       return { return_id: r.id, order_item_id: iid, product_slug: it.product_slug, quantity: q };
     });
     await supabase.from("return_items").insert(rows);
+    // Fire customer notification + branded email + audit (server-side).
+    try {
+      const { notifyReturnRequestedFn } = await import("@/lib/return-notify.functions");
+      await notifyReturnRequestedFn({ data: { returnId: r.id } });
+    } catch { /* non-blocking */ }
     setSubmitting(false);
     toast.success("Resolution request submitted");
     nav({ to: "/account/returns" });
