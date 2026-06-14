@@ -53,7 +53,7 @@ export const setCustomerStatusFn = createServerFn({ method: "POST" })
       patch.reviews_disabled = false;
     }
 
-    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", input.customerId);
+    const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
     await logSecurity({
@@ -88,7 +88,7 @@ export const updateCustomerFn = createServerFn({ method: "POST" })
     if (input.full_name !== undefined) patch.full_name = input.full_name || null;
     if (input.phone !== undefined) patch.phone = input.phone || null;
     if (Object.keys(patch).length > 0) {
-      const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", input.customerId);
+      const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
       if (error) throw new Error(error.message);
     }
 
@@ -217,7 +217,7 @@ export const setCustomerFlagFn = createServerFn({ method: "POST" })
     const patch = input.flag === "ordering_blocked"
       ? { ordering_blocked: input.value }
       : { reviews_disabled: input.value };
-    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", input.customerId);
+    const { error } = await supabaseAdmin.from("profiles").update(patch as never).eq("id", input.customerId);
     if (error) throw new Error(error.message);
 
     await logSecurity({
