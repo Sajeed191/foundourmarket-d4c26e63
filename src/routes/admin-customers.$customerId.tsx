@@ -5,6 +5,7 @@ import {
   ArrowLeft, Loader2, Radio, ShieldAlert, IndianRupee, ShoppingBag, Truck,
   RotateCcw, LifeBuoy, Bell, MapPin, Copy, Check, Download, Mail, Plus, X, CreditCard,
   User, Clock, ExternalLink, Star, Heart, StickyNote, HeartPulse, Trash2,
+  Tag, Activity, Zap, Send, KeyRound, Ban, ShieldCheck, RefreshCw,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +14,14 @@ import {
   getCustomerExtrasFn, type CustomerReview, type CustomerWishlistItem,
   listCustomerNotesFn, addCustomerNoteFn, deleteCustomerNoteFn, type CustomerNote,
   listCustomerEmailsFn, type CustomerEmail,
+  listCustomerTagsFn, addCustomerTagFn, removeCustomerTagFn, CUSTOMER_TAGS,
+  getCustomerTimelineFn, type TimelineEvent,
 } from "@/lib/customer-center.functions";
+import {
+  setCustomerStatusFn, restoreCustomerFn, sendCustomerNotificationFn, resetCustomerPasswordFn,
+} from "@/lib/customer-admin.functions";
 import { computeTier, computeHealth, initialsOf, type TierMeta } from "@/lib/customer-tiers";
+import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/admin-customers/$customerId")({
