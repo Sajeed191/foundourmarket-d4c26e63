@@ -117,7 +117,7 @@ function AccountPage() {
     loadReturns();
     supabase
       .from("profiles")
-      .select("full_name,phone,avatar_url")
+      .select("full_name,phone,avatar_url,account_status,ordering_blocked,reviews_disabled,ban_reason")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setProfile((data as Profile | null) ?? null));
