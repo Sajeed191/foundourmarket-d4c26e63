@@ -63,11 +63,67 @@ export function CustomerActionsMenu({ c, onChanged }: Props) {
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       disabled={busy !== null}
-      className={`w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs hover:bg-white/5 disabled:opacity-50 ${tone ?? "text-foreground"}`}
+      className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm hover:bg-white/5 active:bg-white/10 disabled:opacity-50 transition-colors ${tone ?? "text-foreground"}`}
     >
-      {k && busy === k ? <Loader2 className="size-3.5 animate-spin" /> : <Icon className="size-3.5 shrink-0" />}
+      {k && busy === k ? <Loader2 className="size-4 animate-spin shrink-0" /> : <Icon className="size-4 shrink-0" />}
       {label}
     </button>
+  );
+
+  const menu = (
+    <>
+      <Item icon={User} label="View Profile" onClick={() => goProfile()} />
+      <Item icon={ShoppingBag} label="View Orders" onClick={goOrders} />
+      <Item icon={MapPin} label="View Addresses" onClick={() => goProfile("addresses")} />
+      <Item icon={Pencil} label="Edit Customer" onClick={() => { setOpen(false); setModal("edit"); }} />
+      <div className="my-1 h-px bg-white/10" />
+      <Item
+        icon={Mail}
+        label="Send Email"
+        onClick={() => {
+          if (!c.email) { window.alert("This customer has no email on file."); return; }
+          setOpen(false); setModal("email");
+        }}
+      />
+      <Item icon={Bell} label="Send Notification" onClick={() => { setOpen(false); setModal("notify"); }} />
+      <Item
+        icon={KeyRound}
+        label="Reset Password"
+        k="reset"
+        onClick={() => run("reset", () => resetPw({ data: { customerId: c.id } }), "Send a password reset email to this customer?")}
+      />
+      <div className="my-1 h-px bg-white/10" />
+      {c.account_status !== "suspended" ? (
+        <Item icon={PauseCircle} label="Suspend Customer" tone="text-amber-400" k="suspend"
+          onClick={() => run("suspend", () => setStatus({ data: { customerId: c.id, status: "suspended" } }), "Suspend this customer? They can still sign in but cannot place new orders.")} />
+      ) : (
+        <Item icon={CheckCircle2} label="Reactivate Customer" tone="text-emerald-400" k="reactivate"
+          onClick={() => run("reactivate", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
+      )}
+      {c.account_status !== "banned" ? (
+        <Item icon={Ban} label="Ban Customer" tone="text-destructive" onClick={() => { setOpen(false); setModal("ban"); }} />
+      ) : (
+        <Item icon={CheckCircle2} label="Lift Ban" tone="text-emerald-400" k="unban"
+          onClick={() => run("unban", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
+      )}
+      <Item
+        icon={ShieldOff}
+        label={c.ordering_blocked ? "Allow Ordering" : "Block Ordering"}
+        tone={c.ordering_blocked ? "text-emerald-400" : "text-amber-400"}
+        k="order"
+        onClick={() => run("order", () => setFlag({ data: { customerId: c.id, flag: "ordering_blocked", value: !c.ordering_blocked } }))}
+      />
+      <Item
+        icon={MessageSquareOff}
+        label={c.reviews_disabled ? "Enable Reviews" : "Disable Reviews"}
+        tone={c.reviews_disabled ? "text-emerald-400" : "text-amber-400"}
+        k="reviews"
+        onClick={() => run("reviews", () => setFlag({ data: { customerId: c.id, flag: "reviews_disabled", value: !c.reviews_disabled } }))}
+      />
+      <div className="my-1 h-px bg-white/10" />
+      <Item icon={Trash2} label="Delete Customer" tone="text-destructive" k="delete"
+        onClick={() => run("delete", () => softDelete({ data: { customerId: c.id } }), "Soft-delete this customer? The record is retained but marked deleted.")} />
+    </>
   );
 
   return (
@@ -80,60 +136,32 @@ export function CustomerActionsMenu({ c, onChanged }: Props) {
         <MoreVertical className="size-4" />
       </button>
 
-      {open && (
-        <div className="absolute right-0 z-50 mt-1 w-56 max-h-[70vh] overflow-y-auto rounded-xl border border-white/10 bg-[oklch(0.16_0.01_260)] shadow-2xl py-1 backdrop-blur-xl">
-          <Item icon={User} label="View Profile" onClick={() => goProfile()} />
-          <Item icon={ShoppingBag} label="View Orders" onClick={goOrders} />
-          <Item icon={MapPin} label="View Addresses" onClick={() => goProfile("addresses")} />
-          <Item icon={Pencil} label="Edit Customer" onClick={() => { setOpen(false); setModal("edit"); }} />
-          <div className="my-1 h-px bg-white/10" />
-          <Item
-            icon={Mail}
-            label="Send Email"
-            onClick={() => {
-              if (!c.email) { window.alert("This customer has no email on file."); return; }
-              setOpen(false); setModal("email");
-            }}
-          />
-          <Item icon={Bell} label="Send Notification" onClick={() => { setOpen(false); setModal("notify"); }} />
-          <Item
-            icon={KeyRound}
-            label="Reset Password"
-            k="reset"
-            onClick={() => run("reset", () => resetPw({ data: { customerId: c.id } }), "Send a password reset email to this customer?")}
-          />
-          <div className="my-1 h-px bg-white/10" />
-          {c.account_status !== "suspended" ? (
-            <Item icon={PauseCircle} label="Suspend Customer" tone="text-amber-400" k="suspend"
-              onClick={() => run("suspend", () => setStatus({ data: { customerId: c.id, status: "suspended" } }), "Suspend this customer? They can still sign in but cannot place new orders.")} />
-          ) : (
-            <Item icon={CheckCircle2} label="Reactivate Customer" tone="text-emerald-400" k="reactivate"
-              onClick={() => run("reactivate", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
-          )}
-          {c.account_status !== "banned" ? (
-            <Item icon={Ban} label="Ban Customer" tone="text-destructive" onClick={() => { setOpen(false); setModal("ban"); }} />
-          ) : (
-            <Item icon={CheckCircle2} label="Lift Ban" tone="text-emerald-400" k="unban"
-              onClick={() => run("unban", () => setStatus({ data: { customerId: c.id, status: "active" } }))} />
-          )}
-          <Item
-            icon={ShieldOff}
-            label={c.ordering_blocked ? "Allow Ordering" : "Block Ordering"}
-            tone={c.ordering_blocked ? "text-emerald-400" : "text-amber-400"}
-            k="order"
-            onClick={() => run("order", () => setFlag({ data: { customerId: c.id, flag: "ordering_blocked", value: !c.ordering_blocked } }))}
-          />
-          <Item
-            icon={MessageSquareOff}
-            label={c.reviews_disabled ? "Enable Reviews" : "Disable Reviews"}
-            tone={c.reviews_disabled ? "text-emerald-400" : "text-amber-400"}
-            k="reviews"
-            onClick={() => run("reviews", () => setFlag({ data: { customerId: c.id, flag: "reviews_disabled", value: !c.reviews_disabled } }))}
-          />
-          <div className="my-1 h-px bg-white/10" />
-          <Item icon={Trash2} label="Delete Customer" tone="text-destructive" k="delete"
-            onClick={() => run("delete", () => softDelete({ data: { customerId: c.id } }), "Soft-delete this customer? The record is retained but marked deleted.")} />
-        </div>
+      {open && createPortal(
+        <div
+          className="fixed inset-0 z-[120] flex items-end sm:items-center sm:justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+        >
+          <div
+            className="w-full sm:max-w-sm max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-white/10 bg-[oklch(0.16_0.01_260)] shadow-2xl backdrop-blur-xl p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mt-1 mb-2 h-1.5 w-10 rounded-full bg-white/15 sm:hidden" />
+            <div className="flex items-center justify-between px-2 py-1.5">
+              <h3 className="text-sm font-semibold">Customer Actions</h3>
+              <button onClick={() => setOpen(false)} className="rounded-full p-1 text-muted-foreground hover:bg-white/10">
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="px-1">{menu}</div>
+            <button
+              onClick={() => setOpen(false)}
+              className="mt-2 w-full rounded-xl border border-white/10 px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-white/5"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {modal === "edit" && (
