@@ -25,6 +25,70 @@ export const Route = createFileRoute("/admin-notifications")({
 const PAGE = 80;
 type View = "inbox" | "unread" | "archived";
 
+/* ── message hygiene: keep cards short & strip raw payloads ── */
+
+/** True for a line that looks like a raw API payload / JSON / stack noise. */
+function isNoiseLine(line: string): boolean {
+  const t = line.trim();
+  if (!t) return true;
+  if (/^[[{]/.test(t) || /[}\]]$/.test(t)) return true;          // JSON-ish
+  if (/"[\w-]+"\s*:/.test(t)) return true;                        // "key": value
+  if (/^\s*at\s+.+:\d+:\d+/.test(t)) return true;                 // stack frames
+  if (/^(stack|trace|payload|raw|request id|x-request)/i.test(t)) return true;
+  if (t.length > 160 && !/\s/.test(t)) return true;               // long tokens
+  return false;
+}
+
+/** A compact human summary of a notification body for the card. */
+function summarize(body: string | null, max = 140): string {
+  if (!body) return "";
+  const lines = body.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !isNoiseLine(l));
+  let text = lines.join(" — ");
+  if (!text) text = body.replace(/\s+/g, " ").trim();
+  if (text.length > max) text = text.slice(0, max).replace(/\s+\S*$/, "") + "…";
+  return text;
+}
+
+/** Whether the card should show a "view details" affordance. */
+function hasMoreDetail(n: AdminNotification): boolean {
+  const body = n.body ?? "";
+  const data = n.data ?? {};
+  return body.length > 140 || /\r?\n/.test(body) ||
+    Object.keys(data).length > 0;
+}
+
+type DetailMeta = { label: string; value: string; Icon: typeof User; mono?: boolean };
+
+/** Extract structured detail fields from a notification's data + body. */
+function detailMeta(n: AdminNotification): { fields: DetailMeta[]; fullError: string | null } {
+  const data = (n.data ?? {}) as Record<string, unknown>;
+  const pick = (...keys: string[]): string | null => {
+    for (const k of keys) {
+      const v = data[k];
+      if (typeof v === "string" && v.trim()) return v.trim();
+      if (typeof v === "number") return String(v);
+    }
+    return null;
+  };
+  const fields: DetailMeta[] = [];
+  const recipient = pick("recipient", "to", "email", "to_email", "customer_email");
+  if (recipient) fields.push({ label: "Recipient", value: recipient, Icon: User, mono: true });
+  const template = pick("template", "template_id", "template_name", "type");
+  if (template) fields.push({ label: "Template", value: template, Icon: FileText });
+  const status = pick("status", "delivery_status", "state");
+  if (status) fields.push({ label: "Delivery status", value: status, Icon: Activity });
+  const audit = pick("audit_ref", "audit_id", "audit_reference", "reference", "request_id", "message_id");
+  if (audit) fields.push({ label: "Audit reference", value: audit, Icon: Hash, mono: true });
+  fields.push({
+    label: "Timestamp",
+    value: new Date(n.created_at).toLocaleString(),
+    Icon: Clock,
+  });
+  const fullError = pick("error", "error_message", "reason", "detail") ?? (n.body ?? null);
+  return { fields, fullError };
+}
+
+
 function NotificationsCenter() {
   const { user } = useAuth();
   const [items, setItems] = useState<AdminNotification[] | null>(null);
