@@ -8,7 +8,7 @@
 // Import only from server code (queue processor / *.server.ts handlers).
 import {
   FALLBACK_SENDER,
-  PRIMARY_SENDER,
+  REPLY_TO_ADDRESS,
   formatSender,
 } from '@/lib/email-sender-policy'
 
@@ -46,7 +46,7 @@ function base64Url(input: string): string {
 
 function buildMime(input: FallbackSendInput): string {
   const from = formatSender(FALLBACK_SENDER)
-  const replyTo = PRIMARY_SENDER.email // governance: always the support mailbox
+  const replyTo = REPLY_TO_ADDRESS // governance: always the human support mailbox
   const boundary = `fom_${crypto.randomUUID().replace(/-/g, '')}`
   const headers = [
     `From: ${encodeHeader(FALLBACK_SENDER.name)} <${FALLBACK_SENDER.email}>`,

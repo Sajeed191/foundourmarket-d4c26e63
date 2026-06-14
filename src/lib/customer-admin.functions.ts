@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
 import { fireLifecycleEvent } from "./customer-lifecycle.server";
-import { FALLBACK_FROM, FALLBACK_SENDER, PRIMARY_SENDER } from "./email-sender-policy";
+import { FALLBACK_FROM, FALLBACK_SENDER, REPLY_TO_ADDRESS } from "./email-sender-policy";
 import { enforceSender, recordSenderUsage } from "./email-sender-policy.server";
 
 const CUST_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
@@ -208,7 +208,7 @@ function encodeRawEmail(from: string, to: string, subject: string, body: string)
   const msg = [
     `From: ${from}`,
     `To: ${to}`,
-    `Reply-To: ${PRIMARY_SENDER.email}`,
+    `Reply-To: ${REPLY_TO_ADDRESS}`,
     `Subject: ${subject}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "",

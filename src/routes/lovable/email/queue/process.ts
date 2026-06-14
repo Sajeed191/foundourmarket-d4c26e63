@@ -2,7 +2,7 @@ import { sendLovableEmail } from '@lovable.dev/email-js'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 import { sendViaFallback } from '@/lib/email-fallback.server'
-import { FALLBACK_FROM, PRIMARY_SENDER } from '@/lib/email-sender-policy'
+import { FALLBACK_FROM, REPLY_TO_ADDRESS } from '@/lib/email-sender-policy'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -117,7 +117,7 @@ async function tryFallbackDelivery(
     metadata: {
       delivery_method: 'fallback',
       sender: FALLBACK_FROM,
-      reply_to: PRIMARY_SENDER.email,
+      reply_to: REPLY_TO_ADDRESS,
       provider_message_id: result.providerMessageId ?? null,
       primary_failure_reason: primaryFailureReason.slice(0, 500),
     },
