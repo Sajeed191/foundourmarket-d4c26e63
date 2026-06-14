@@ -11,7 +11,7 @@ import type { LifecycleEmailProps } from '@/lib/email-templates/lifecycle-emails
 const SITE_NAME = 'FoundOurMarket'
 const SENDER_DOMAIN = 'notify.send.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
-const FROM = `${SITE_NAME} <support@${FROM_DOMAIN}>`
+const FROM = `FoundOurMarket Support <support@${FROM_DOMAIN}>`
 
 export type LifecycleEvent =
   | 'account-suspended'
