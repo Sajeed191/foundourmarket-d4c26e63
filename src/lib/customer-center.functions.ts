@@ -797,6 +797,7 @@ export const getSecurityAuditFn = createServerFn({ method: "POST" })
     return { rows: (data ?? []) as SecurityAuditRow[] };
   });
 
+export type TimelineEvent = {
   kind:
     | "account_created"
     | "order"
