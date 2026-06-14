@@ -451,7 +451,7 @@ function ProfileInner() {
         </div>
       </Section>
 
-
+      <Section icon={User} title="Customer Intelligence">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Stat label="Name" value={p.full_name ?? "—"} />
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
