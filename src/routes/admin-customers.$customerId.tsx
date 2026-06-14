@@ -217,6 +217,16 @@ function ProfileInner() {
   const returnRate = v.total_orders > 0 ? Math.round((v.return_count / v.total_orders) * 100) : 0;
   const aov = v.succeeded_payments > 0 ? v.lifetime_revenue / v.succeeded_payments : 0;
   const score = risk?.score ?? 0;
+  const tier: TierMeta = computeTier(v.total_orders, v.lifetime_revenue);
+  const lastActiveStr = data.orders[0]?.created_at ?? p.last_sign_in_at ?? null;
+  const health = computeHealth({
+    totalOrders: v.total_orders,
+    lifetimeRevenue: v.lifetime_revenue,
+    refundCount: v.refund_count,
+    openTickets: data.tickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length,
+    riskScore: score,
+    lastActive: lastActiveStr,
+  });
 
   return (
     <div className="space-y-5">
