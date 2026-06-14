@@ -38,6 +38,7 @@ import { ImageLightbox } from "@/components/site/ImageLightbox";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
 import { ProductHighlights, LiveActivity, TrustGuarantee } from "@/components/site/ProductTrustBlocks";
+import { SellerTrustCard, ProductComparison } from "@/components/site/ProductSellerTrust";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
