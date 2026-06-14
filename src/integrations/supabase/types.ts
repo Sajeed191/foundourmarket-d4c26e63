@@ -3388,56 +3388,71 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           alt_phone: string | null
           avatar_url: string | null
           birth_date: string | null
           country: string | null
           country_code: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           full_name: string | null
           gender: string | null
           id: string
           is_seeded: boolean
           language: string | null
           market_region: string | null
+          ordering_blocked: boolean
           phone: string | null
           region_locked_at: string | null
+          reviews_disabled: boolean
           timezone: string | null
           updated_at: string
         }
         Insert: {
+          account_status?: string
           alt_phone?: string | null
           avatar_url?: string | null
           birth_date?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           full_name?: string | null
           gender?: string | null
           id: string
           is_seeded?: boolean
           language?: string | null
           market_region?: string | null
+          ordering_blocked?: boolean
           phone?: string | null
           region_locked_at?: string | null
+          reviews_disabled?: boolean
           timezone?: string | null
           updated_at?: string
         }
         Update: {
+          account_status?: string
           alt_phone?: string | null
           avatar_url?: string | null
           birth_date?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           full_name?: string | null
           gender?: string | null
           id?: string
           is_seeded?: boolean
           language?: string | null
           market_region?: string | null
+          ordering_blocked?: boolean
           phone?: string | null
           region_locked_at?: string | null
+          reviews_disabled?: boolean
           timezone?: string | null
           updated_at?: string
         }

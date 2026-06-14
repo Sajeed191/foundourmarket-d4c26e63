@@ -12,6 +12,7 @@ import {
   computeTier, computeHealth, matchesSegment, riskLevel, initialsOf,
   SEGMENTS, type SegmentKey, type TierMeta,
 } from "@/lib/customer-tiers";
+import { CustomerActionsMenu, StatusBadge } from "@/components/admin/CustomerActionsMenu";
 
 export const Route = createFileRoute("/admin-customers")({
   head: () => ({
@@ -226,20 +227,35 @@ function CustomersInner() {
         {visible.map((c) => {
           const risk = riskLevel(c.risk_score);
           return (
-            <button
+            <div
               key={c.id}
+              role="button"
+              tabIndex={0}
               onClick={() => open(c.id)}
-              className="card-premium rounded-2xl p-3.5 text-left hover:border-accent/30 transition-colors"
+              onKeyDown={(e) => { if (e.key === "Enter") open(c.id); }}
+              className="card-premium rounded-2xl p-3.5 text-left hover:border-accent/30 transition-colors cursor-pointer"
             >
               <div className="flex items-start gap-3">
                 <Avatar url={c.avatar_url} name={c.full_name} email={c.email} tier={c.tier} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold truncate">{c.full_name || c.email || "Customer"}</span>
-                    <TierBadge tier={c.tier} />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <TierBadge tier={c.tier} />
+                      <CustomerActionsMenu c={c} onChanged={load} />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <StatusBadge status={c.account_status} />
+                    {c.ordering_blocked && (
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">No ordering</span>
+                    )}
+                    {c.reviews_disabled && (
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">No reviews</span>
+                    )}
                   </div>
                   {c.email && (
-                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                    <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
                       <Mail className="size-3 shrink-0" /> <span className="truncate">{c.email}</span>
                     </div>
                   )}
@@ -274,7 +290,7 @@ function CustomersInner() {
                   <ShieldAlert className="size-3 mr-1" />{risk.label}
                 </span>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
