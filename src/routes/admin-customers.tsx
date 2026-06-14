@@ -12,6 +12,7 @@ import {
   computeTier, computeHealth, matchesSegment, riskLevel, initialsOf,
   SEGMENTS, type SegmentKey, type TierMeta,
 } from "@/lib/customer-tiers";
+import { CustomerActionsMenu, StatusBadge } from "@/components/admin/CustomerActionsMenu";
 
 export const Route = createFileRoute("/admin-customers")({
   head: () => ({
