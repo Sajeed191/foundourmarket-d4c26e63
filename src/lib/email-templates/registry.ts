@@ -64,4 +64,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ordering-blocked': orderingBlockedTemplate,
   'reviews-disabled': reviewsDisabledTemplate,
   'account-deleted': accountDeletedTemplate,
+  'account-restored': accountRestoredTemplate,
 }
