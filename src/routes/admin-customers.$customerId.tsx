@@ -383,7 +383,7 @@ function ProfileInner() {
       </Section>
 
       {/* SECTION 5 — Address Intelligence */}
-      <Section icon={MapPin} title="Address Intelligence" count={data.addresses.length}>
+      <Section id="addresses" icon={MapPin} title="Address Intelligence" count={data.addresses.length}>
         {data.addresses.length === 0 ? <Empty /> : (
           <div className="grid sm:grid-cols-2 gap-3">
             {data.addresses.map((a) => {
