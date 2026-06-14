@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 import { render } from '@react-email/components'
 import * as React from 'react'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 import type { OrderEmailProps } from '@/lib/email-templates/order-emails'
 import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
@@ -157,7 +159,7 @@ export async function enqueueOrderEmail(
       payload: {
         message_id: messageId,
         to: recipient,
-        from: `FoundOurMarket Support <support@${FROM_DOMAIN}>`,
+        from: await enforceSender(PRIMARY_FROM, { recipient, template: event, context: 'order email' }),
         reply_to: `support@${FROM_DOMAIN}`,
         sender_domain: SENDER_DOMAIN,
         subject,

@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
 
@@ -149,7 +151,7 @@ export const createPlacementTest = createServerFn({ method: "POST" })
         payload: {
           message_id: messageId,
           to: recipient,
-          from: `FoundOurMarket Support <support@${FROM_DOMAIN}>`,
+          from: await enforceSender(PRIMARY_FROM, { recipient, template: 'inbox placement', context: 'inbox placement' }),
           reply_to: `support@${FROM_DOMAIN}`,
           sender_domain: SENDER_DOMAIN,
           subject,
