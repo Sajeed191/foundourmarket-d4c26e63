@@ -422,7 +422,7 @@ function Home() {
         </div>
 
 
-        <div className="max-w-5xl lg:max-w-[1480px] mx-auto relative z-10 lg:grid lg:grid-cols-[1fr_minmax(0,1.05fr)] lg:gap-20 xl:gap-24 lg:items-center text-center lg:text-left">
+        <div className="max-w-5xl lg:max-w-[1480px] mx-auto relative z-10 lg:grid lg:grid-cols-[1fr_minmax(0,1.05fr)] lg:gap-20 xl:gap-24 lg:items-start text-center lg:text-left">
           {/* LEFT — headline, search, CTAs, stats */}
           <div className="lg:max-w-[640px]">
             <div
