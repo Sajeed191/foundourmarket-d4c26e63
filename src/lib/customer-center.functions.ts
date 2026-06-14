@@ -36,6 +36,10 @@ export type CustomerRow = {
   refund_count: number;
   open_tickets: number;
   risk_score: number;
+  account_status: "active" | "suspended" | "banned" | "deleted";
+  ordering_blocked: boolean;
+  reviews_disabled: boolean;
+  deleted_at: string | null;
   last_active: string | null;
   last_sign_in_at: string | null;
   last_order: string | null;
@@ -200,6 +204,10 @@ export type CustomerProfile = {
     email: string | null;
     last_sign_in_at: string | null;
     email_confirmed_at: string | null;
+    account_status: "active" | "suspended" | "banned" | "deleted";
+    ordering_blocked: boolean;
+    reviews_disabled: boolean;
+    deleted_at: string | null;
   } | null;
   value: {
     lifetime_revenue: number;
