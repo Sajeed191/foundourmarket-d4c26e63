@@ -462,10 +462,10 @@ export const getEmailDiagnostics = createServerFn({ method: "POST" })
     const ms = data.range === "24h" ? 864e5 : data.range === "30d" ? 30 * 864e5 : 7 * 864e5;
     const since = new Date(Date.now() - ms).toISOString();
 
-    const [logRes, supRes, queueRes] = await Promise.all([
+    const [logRes, supRes, queueRes, auditRes] = await Promise.all([
       supabaseAdmin
         .from("email_send_log")
-        .select("id, message_id, template_name, recipient_email, status, error_message, created_at")
+        .select("id, message_id, template_name, recipient_email, status, error_message, metadata, created_at")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(5000),
@@ -475,6 +475,12 @@ export const getEmailDiagnostics = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false })
         .limit(2000),
       supabaseAdmin.rpc("email_queue_status"),
+      supabaseAdmin
+        .from("security_audit_log")
+        .select("action, created_at")
+        .in("action", ["email.sender.fallback_success", "email.sender.fallback_failed", "email.delivery.primary_exhausted"])
+        .gte("created_at", since)
+        .limit(5000),
     ]);
 
     if (logRes.error) throw new Error(logRes.error.message);
