@@ -379,6 +379,18 @@ function NotificationsCenter() {
           />
         )}
       </AnimatePresence>
+
+      {/* Detail drawer */}
+      <AnimatePresence>
+        {detail && (
+          <DetailDrawer
+            n={detail}
+            onClose={() => setDetail(null)}
+            onArchive={() => { archive([detail.id], !detail.archived_at); setDetail(null); }}
+            onRemove={() => { remove([detail.id]); setDetail(null); }}
+          />
+        )}
+      </AnimatePresence>
     </AdminShell>
   );
 }
