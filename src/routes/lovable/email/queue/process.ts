@@ -1,8 +1,6 @@
 import { sendLovableEmail } from '@lovable.dev/email-js'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
-import { sendViaFallback } from '@/lib/email-fallback.server'
-import { FALLBACK_FROM, REPLY_TO_ADDRESS } from '@/lib/email-sender-policy'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -62,92 +60,7 @@ async function moveToDlq(
   }
 }
 
-// Detect permanent sender/domain configuration failures from the primary
-// provider. Retrying these never helps — they are the signal to route the
-// message through the governed Gmail fallback identity instead.
-function isSenderConfigError(error: unknown): boolean {
-  const msg =
-    error instanceof Error ? error.message : typeof error === 'string' ? error : ''
-  return (
-    msg.includes('sender_domain_mismatch') ||
-    msg.includes('no_matching_sender') ||
-    msg.includes('domain_not_verified')
-  )
-}
-
-/**
- * Governed emergency delivery via the approved Gmail backup identity.
- * Used ONLY after the primary provider permanently rejects a message or
- * exhausts retries. On the Gmail path the visible From is the Gmail backup
- * mailbox (sender_domain is irrelevant to Gmail), while Reply-To stays the
- * official support mailbox so customer replies always return to support.
- * Returns true when the email was accepted by Gmail and removed from the queue.
- */
-async function tryFallbackDelivery(
-  supabase: SupabaseClient<any, any>,
-  queue: string,
-  msg: { msg_id: number; message: Record<string, any> },
-  primaryFailureReason: string
-): Promise<boolean> {
-  const payload = msg.message
-  const result = await sendViaFallback({
-    to: payload.to,
-    subject: payload.subject,
-    html: payload.html,
-    text: payload.text,
-  })
-
-  if (!result.ok) {
-    console.error('Gmail fallback delivery failed', {
-      queue,
-      msg_id: msg.msg_id,
-      message_id: payload.message_id,
-      error: result.error,
-    })
-    return false
-  }
-
-  // Log success with routing metadata so diagnostics can distinguish
-  // primary vs fallback deliveries.
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: payload.label || queue,
-    recipient_email: payload.to,
-    status: 'sent',
-    metadata: {
-      delivery_method: 'fallback',
-      sender: FALLBACK_FROM,
-      reply_to: REPLY_TO_ADDRESS,
-      provider_message_id: result.providerMessageId ?? null,
-      primary_failure_reason: primaryFailureReason.slice(0, 500),
-    },
-  })
-
-  const { error: delError } = await supabase.rpc('delete_email', {
-    queue_name: queue,
-    message_id: msg.msg_id,
-  })
-  if (delError) {
-    console.error('Failed to delete fallback-sent message from queue', {
-      queue,
-      msg_id: msg.msg_id,
-      error: delError,
-    })
-  }
-
-  console.warn('Email delivered via governed Gmail fallback', {
-    queue,
-    msg_id: msg.msg_id,
-    message_id: payload.message_id,
-    reason: primaryFailureReason.slice(0, 200),
-  })
-  return true
-}
-
 export const Route = createFileRoute("/lovable/email/queue/process")({
-
-
-
   server: {
     handlers: {
       POST: async ({ request }) => {
@@ -275,14 +188,9 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
-            // Primary retries exhausted — attempt the governed Gmail fallback
-            // before giving up to the DLQ.
+            // Move to DLQ if max failed send attempts reached.
             if (failedAttempts >= MAX_RETRIES) {
-              const reason = `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`
-              const delivered = await tryFallbackDelivery(supabase, queue, msg, reason)
-              if (!delivered) {
-                await moveToDlq(supabase, queue, msg, reason)
-              }
+              await moveToDlq(supabase, queue, msg, `Max retries (${MAX_RETRIES}) exceeded (attempted ${failedAttempts} times)`)
               continue
             }
 
@@ -382,34 +290,12 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
               }
 
-              // Permanent sender/domain configuration rejections (400
-              // sender_domain_mismatch, 403 no_matching_sender,
-              // 403 domain_not_verified) will never succeed on the primary
-              // provider. Route the message through the governed Gmail
-              // fallback identity instead of failing the customer.
-              if (isSenderConfigError(error)) {
-                const delivered = await tryFallbackDelivery(
-                  supabase,
-                  queue,
-                  msg,
-                  errorMsg
-                )
-                if (delivered) {
-                  totalProcessed++
-                  continue
-                }
-                // Fallback also failed — record and DLQ this message.
-                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
-                continue
-              }
-
-              // Other 403s are permanent authorization failures for this
+              // 403s are permanent configuration or authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
               if (isForbidden(error)) {
                 await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
                 return Response.json({ processed: totalProcessed, stopped: 'forbidden' })
               }
-
 
               // Log non-429 failures to track real retry attempts.
               await supabase.from('email_send_log').insert({
