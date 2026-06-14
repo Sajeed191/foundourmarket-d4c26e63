@@ -24,6 +24,7 @@ export type SupportEvent =
   | 'staff_reply'
   | 'resolved'
   | 'closed'
+  | 'escalated'
 
 function deterministicId(seed: string): string {
   const h = createHash('sha256').update(seed).digest('hex')
