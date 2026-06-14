@@ -252,6 +252,10 @@ function AccountPage() {
 
       <div className="container-page py-3 sm:py-6 lg:py-8 space-y-3 sm:space-y-5">
 
+        <AccountStatusBanner profile={profile} />
+
+
+
 
         {/* 1 — HEADER */}
         <div className="relative z-30">
