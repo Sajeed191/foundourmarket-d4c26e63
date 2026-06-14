@@ -5,6 +5,7 @@ import {
   ArrowLeft, Loader2, Radio, ShieldAlert, IndianRupee, ShoppingBag, Truck,
   RotateCcw, LifeBuoy, Bell, MapPin, Copy, Check, Download, Mail, Plus, X, CreditCard,
   User, Clock, ExternalLink, Star, Heart, StickyNote, HeartPulse, Trash2,
+  Tag, Activity, Zap, Send, KeyRound, Ban, ShieldCheck, RefreshCw,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +14,14 @@ import {
   getCustomerExtrasFn, type CustomerReview, type CustomerWishlistItem,
   listCustomerNotesFn, addCustomerNoteFn, deleteCustomerNoteFn, type CustomerNote,
   listCustomerEmailsFn, type CustomerEmail,
+  listCustomerTagsFn, addCustomerTagFn, removeCustomerTagFn, CUSTOMER_TAGS,
+  getCustomerTimelineFn, type TimelineEvent,
 } from "@/lib/customer-center.functions";
+import {
+  setCustomerStatusFn, restoreCustomerFn, sendCustomerNotificationFn, resetCustomerPasswordFn,
+} from "@/lib/customer-admin.functions";
 import { computeTier, computeHealth, initialsOf, type TierMeta } from "@/lib/customer-tiers";
+import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/admin-customers/$customerId")({
@@ -125,6 +132,14 @@ function ProfileInner() {
   const noteAddFn = useServerFn(addCustomerNoteFn);
   const noteDelFn = useServerFn(deleteCustomerNoteFn);
   const emailsFn = useServerFn(listCustomerEmailsFn);
+  const tagsListFn = useServerFn(listCustomerTagsFn);
+  const tagAddFn = useServerFn(addCustomerTagFn);
+  const tagRemoveFn = useServerFn(removeCustomerTagFn);
+  const timelineFn = useServerFn(getCustomerTimelineFn);
+  const statusFn = useServerFn(setCustomerStatusFn);
+  const restoreFn = useServerFn(restoreCustomerFn);
+  const notifyFn = useServerFn(sendCustomerNotificationFn);
+  const resetPwFn = useServerFn(resetCustomerPasswordFn);
 
   const [data, setData] = useState<CustomerProfile | null>(null);
   const [risk, setRisk] = useState<Risk | null>(null);
@@ -133,6 +148,9 @@ function ProfileInner() {
   const [notes, setNotes] = useState<CustomerNote[]>([]);
   const [emails, setEmails] = useState<CustomerEmail[]>([]);
   const [emailFilter, setEmailFilter] = useState<string>("all");
+  const [tags, setTags] = useState<string[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [tlFilter, setTlFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
@@ -153,6 +171,20 @@ function ProfileInner() {
     } catch { /* ignore */ }
   }, [emailsFn, customerId]);
 
+  const loadTags = useCallback(async () => {
+    try {
+      const res = await tagsListFn({ data: { customerId } });
+      setTags(res.tags ?? []);
+    } catch { /* ignore */ }
+  }, [tagsListFn, customerId]);
+
+  const loadTimeline = useCallback(async () => {
+    try {
+      const res = await timelineFn({ data: { customerId } });
+      setTimeline(res.events ?? []);
+    } catch { /* ignore */ }
+  }, [timelineFn, customerId]);
+
   const load = useCallback(async () => {
     const id = ++reqId.current;
     setLoading(true);
@@ -171,7 +203,60 @@ function ProfileInner() {
     }
   }, [profileFn, riskFn, extrasFn, customerId]);
 
-  useEffect(() => { load(); loadNotes(); loadEmails(); }, [load, loadNotes, loadEmails]);
+  useEffect(() => { load(); loadNotes(); loadEmails(); loadTags(); loadTimeline(); }, [load, loadNotes, loadEmails, loadTags, loadTimeline]);
+
+  // Quick-action handlers — each re-verifies staff server-side.
+  const doStatus = useCallback(async (status: "suspended" | "banned") => {
+    const reason = window.prompt(`Reason for ${status === "banned" ? "ban" : "suspension"} (optional):`) ?? undefined;
+    try {
+      await statusFn({ data: { customerId, status, reason } });
+      toast.success(`Customer ${status}`);
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "Action failed"); }
+  }, [statusFn, customerId, load]);
+
+  const doRestore = useCallback(async () => {
+    try {
+      await restoreFn({ data: { customerId } });
+      toast.success("Customer restored");
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "Action failed"); }
+  }, [restoreFn, customerId, load]);
+
+  const doResetPw = useCallback(async () => {
+    if (!window.confirm("Send a password-reset email to this customer?")) return;
+    try {
+      await resetPwFn({ data: { customerId } });
+      toast.success("Password reset email sent");
+      loadEmails();
+    } catch (e: any) { toast.error(e?.message ?? "Action failed"); }
+  }, [resetPwFn, customerId, loadEmails]);
+
+  const doNotify = useCallback(async () => {
+    const title = window.prompt("Notification title:")?.trim();
+    if (!title) return;
+    const body = window.prompt("Notification message:")?.trim();
+    if (!body) return;
+    try {
+      await notifyFn({ data: { customerId, title, body } });
+      toast.success("Notification sent");
+      loadTimeline();
+    } catch (e: any) { toast.error(e?.message ?? "Action failed"); }
+  }, [notifyFn, customerId, loadTimeline]);
+
+  const addTag = useCallback(async (tag: string) => {
+    try {
+      const res = await tagAddFn({ data: { customerId, tag: tag as (typeof CUSTOMER_TAGS)[number] } });
+      setTags(res.tags ?? []);
+    } catch (e: any) { toast.error(e?.message ?? "Could not add tag"); }
+  }, [tagAddFn, customerId]);
+
+  const removeTag = useCallback(async (tag: string) => {
+    try {
+      const res = await tagRemoveFn({ data: { customerId, tag } });
+      setTags(res.tags ?? []);
+    } catch (e: any) { toast.error(e?.message ?? "Could not remove tag"); }
+  }, [tagRemoveFn, customerId]);
 
   // Scroll to the section referenced by the URL hash once data is rendered
   // (e.g. /admin-customers/:id#orders or #addresses from the actions menu).
@@ -322,6 +407,49 @@ function ProfileInner() {
         </div>
       </div>
 
+      {/* Quick Actions — full support console without navigating away */}
+      <Section icon={Zap} title="Quick Actions">
+        <div className="flex flex-wrap gap-2">
+          {p.email && (
+            <a href={`mailto:${p.email}`} className="qa-btn"><Mail className="size-3.5" /> Send Email</a>
+          )}
+          <button onClick={doNotify} className="qa-btn"><Send className="size-3.5" /> Send Notification</button>
+          <button onClick={() => setShowTicket(true)} className="qa-btn"><Plus className="size-3.5" /> Add Ticket</button>
+          <button onClick={doResetPw} className="qa-btn"><KeyRound className="size-3.5" /> Reset Password</button>
+          <button onClick={() => doStatus("suspended")} className="qa-btn text-amber-300"><ShieldAlert className="size-3.5" /> Suspend</button>
+          <button onClick={() => doStatus("banned")} className="qa-btn text-destructive"><Ban className="size-3.5" /> Ban</button>
+          <button onClick={doRestore} className="qa-btn text-emerald-300"><ShieldCheck className="size-3.5" /> Restore</button>
+          <Link to="/admin-orders-ops" className="qa-btn"><ShoppingBag className="size-3.5" /> View Orders</Link>
+          <Link to="/admin-shipments" className="qa-btn"><Truck className="size-3.5" /> View Shipments</Link>
+        </div>
+      </Section>
+
+      {/* Segmentation Tags */}
+      <Section icon={Tag} title="Tags" count={tags.length}>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {tags.length === 0 ? (
+            <span className="text-xs text-muted-foreground">No tags yet.</span>
+          ) : tags.map((t) => (
+            <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent px-3 py-1 text-[11px] font-medium">
+              {t}
+              <button onClick={() => removeTag(t)} aria-label={`Remove ${t}`} className="hover:text-destructive">
+                <X className="size-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {CUSTOMER_TAGS.filter((t) => !tags.includes(t)).map((t) => (
+            <button
+              key={t}
+              onClick={() => addTag(t)}
+              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
+            >
+              <Plus className="size-3" /> {t}
+            </button>
+          ))}
+        </div>
+      </Section>
 
       <Section icon={User} title="Customer Intelligence">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -648,6 +776,52 @@ function ProfileInner() {
           </div>
         )}
       </Section>
+
+      {/* Activity Timeline — unified chronological history, filterable */}
+      <Section icon={Activity} title="Activity Timeline" count={timeline.length}>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(["all", "order", "payment", "shipment", "email", "notification", "support_ticket", "review", "admin_action"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setTlFilter(f)}
+              className={`rounded-full border px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                tlFilter === f
+                  ? "border-accent/50 bg-accent/15 text-accent"
+                  : "border-white/10 bg-white/[0.02] text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {f === "support_ticket" ? "support" : f === "admin_action" ? "admin" : f}
+            </button>
+          ))}
+        </div>
+        {(() => {
+          const shown = timeline.filter((e) => tlFilter === "all" || e.kind === tlFilter);
+          if (shown.length === 0) return <Empty label="No activity for this filter." />;
+          return (
+            <ol className="relative border-l border-white/10 ml-2 space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+              {shown.map((e, i) => (
+                <li key={`${e.kind}-${e.at}-${i}`} className="ml-4">
+                  <span className="absolute -left-[5px] mt-1 size-2 rounded-full bg-accent" />
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium truncate">{e.title}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 inline-flex items-center gap-1">
+                        <Clock className="size-3" />{when(e.at)}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">{e.kind.replace("_", " ")}</span>
+                      {e.detail && <span className="text-[10px] text-muted-foreground">{e.detail}</span>}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          );
+        })()}
+      </Section>
+
+
 
       {showTicket && (
         <TicketModal

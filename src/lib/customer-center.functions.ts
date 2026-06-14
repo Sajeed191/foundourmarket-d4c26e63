@@ -648,6 +648,155 @@ export const listCustomerTagsFn = createServerFn({ method: "POST" })
     return { tags: (data ?? []).map((r) => r.tag as string) };
   });
 
+/** Canonical operations segmentation tags. */
+export const CUSTOMER_TAGS = [
+  "VIP",
+  "Wholesale",
+  "High Value",
+  "High Risk",
+  "Frequent Buyer",
+  "Refund Sensitive",
+  "Support Escalation",
+  "Manual Review",
+] as const;
+
+/** Add a segmentation tag to a customer (idempotent). */
+export const addCustomerTagFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        customerId: z.string().uuid(),
+        tag: z.enum(CUSTOMER_TAGS),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, CUST_STAFF, "customers.tags.add", input.customerId);
+
+    const { error } = await supabaseAdmin
+      .from("customer_tags")
+      .upsert({ customer_id: input.customerId, tag: input.tag }, { onConflict: "customer_id,tag" });
+    if (error) throw new Error(error.message);
+
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "customers.tags.add",
+      target: input.customerId,
+      success: true,
+      detail: { tag: input.tag },
+    });
+
+    const { data } = await supabaseAdmin
+      .from("customer_tags")
+      .select("tag")
+      .eq("customer_id", input.customerId)
+      .order("created_at", { ascending: true });
+    return { tags: (data ?? []).map((r) => r.tag as string) };
+  });
+
+/** Remove a segmentation tag from a customer. */
+export const removeCustomerTagFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ customerId: z.string().uuid(), tag: z.string().min(1).max(64) }).parse(input),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, CUST_STAFF, "customers.tags.remove", input.customerId);
+
+    const { error } = await supabaseAdmin
+      .from("customer_tags")
+      .delete()
+      .eq("customer_id", input.customerId)
+      .eq("tag", input.tag);
+    if (error) throw new Error(error.message);
+
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "customers.tags.remove",
+      target: input.customerId,
+      success: true,
+      detail: { tag: input.tag },
+    });
+
+    const { data } = await supabaseAdmin
+      .from("customer_tags")
+      .select("tag")
+      .eq("customer_id", input.customerId)
+      .order("created_at", { ascending: true });
+    return { tags: (data ?? []).map((r) => r.tag as string) };
+  });
+
+export type SecurityAuditRow = {
+  id: string;
+  actor_id: string | null;
+  actor_role: string | null;
+  action: string;
+  target: string | null;
+  source_ip: string | null;
+  success: boolean;
+  detail: Record<string, any>;
+  created_at: string;
+};
+
+/**
+ * Browse the security audit log with optional category + free-text filters.
+ * Staff-gated; reads are themselves not logged to avoid feedback noise.
+ */
+export const getSecurityAuditFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        category: z
+          .enum(["all", "customer", "order", "payment", "shipment", "security", "admin"])
+          .optional()
+          .default("all"),
+        search: z.string().trim().max(120).optional(),
+        limit: z.number().int().min(1).max(500).optional().default(200),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data: input, context }) => {
+    const { userId } = context as { userId: string };
+    await requireStaff(userId, CUST_STAFF, "security.audit.browse", null);
+
+    // Action prefixes that map to each high-level category.
+    const PREFIXES: Record<string, string[]> = {
+      customer: ["customers.", "notify.", "account."],
+      order: ["ops.order", "order", "support.order"],
+      payment: ["support.refund", "payment", "razorpay", "refund"],
+      shipment: ["ops.ship", "ship", "courier"],
+      security: ["auth.", "security.", "role", "login", "lock"],
+      admin: ["admin", "ops.", "support."],
+    };
+
+    let q = supabaseAdmin
+      .from("security_audit_log")
+      .select("id,actor_id,actor_role,action,target,source_ip,success,detail,created_at")
+      .order("created_at", { ascending: false })
+      .limit(input.limit);
+
+    if (input.category && input.category !== "all") {
+      const prefixes = PREFIXES[input.category] ?? [];
+      if (prefixes.length) {
+        q = q.or(prefixes.map((p) => `action.ilike.${p}%`).join(","));
+      }
+    }
+    if (input.search) {
+      const s = input.search.replace(/[%,]/g, "");
+      q = q.or(`action.ilike.%${s}%,target.ilike.%${s}%,actor_id.ilike.%${s}%,source_ip.ilike.%${s}%`);
+    }
+
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    return { rows: (data ?? []) as SecurityAuditRow[] };
+  });
+
 export type TimelineEvent = {
   kind:
     | "account_created"
