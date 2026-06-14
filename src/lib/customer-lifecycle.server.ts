@@ -216,6 +216,8 @@ export async function fireLifecycleEvent(opts: {
       const msg = String((err as Error)?.message ?? err).slice(0, 500)
       console.error('[lifecycle] email enqueue failed', { customerId, event, err: msg })
       await supabaseAdmin.from('email_logs').update({ status: 'failed', error: msg }).eq('user_id', customerId).eq('template', event).eq('status', 'pending')
+      const { notifyAdminsEmailFailure } = await import('@/lib/email-alerts.server')
+      await notifyAdminsEmailFailure({ template: event, recipient: email, reason: msg, context: 'account lifecycle', refId: customerId })
     }
   }
 
