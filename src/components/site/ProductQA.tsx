@@ -203,6 +203,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     { topic: "Materials", a: "Material composition is listed in the product Description and Specs." },
   ];
 
+  return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-border">
       <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
         <div>
