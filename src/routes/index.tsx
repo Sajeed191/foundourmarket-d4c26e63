@@ -526,52 +526,99 @@ function Home() {
             </div>
           </div>
 
-          {/* RIGHT — cinematic floating product showcase (desktop only) */}
-          <div aria-hidden className="hidden lg:block relative h-[540px] xl:h-[580px]">
-            {/* glow base */}
+          {/* RIGHT — cinematic featured showcase (desktop only) */}
+          <div aria-hidden className="hidden lg:block relative h-[560px] xl:h-[600px]">
+            {/* ambient glow base */}
             <div className="absolute inset-0 -z-10">
-              <div className="orb animate-orb" style={{ width: 480, height: 480, top: "10%", left: "20%", background: "var(--gradient-ember)" }} />
+              <div className="orb animate-orb" style={{ width: 560, height: 560, top: "4%", left: "14%", background: "var(--gradient-ember)" }} />
+              <div
+                className="absolute inset-0"
+                style={{ background: "radial-gradient(48% 42% at 60% 42%, oklch(0.74 0.19 49 / 0.14), transparent 72%)" }}
+              />
             </div>
 
-            {/* floating product cards */}
-            <div className="absolute inset-0 grid grid-cols-2 gap-5 p-6">
-              {heroShowcase.map((p, i) => (
-                <div
-                  key={p.slug}
-                  className={`group relative overflow-hidden rounded-3xl glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] ${i % 2 === 0 ? "animate-float-soft mt-8" : "animate-float -mt-2"}`}
-                  style={{ animationDelay: `${i * -1.4}s` }}
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden">
-                    <img
-                      src={p.image}
-                      alt=""
-                      loading="lazy"
-                      className="size-full object-cover [transition:transform_900ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="text-[13px] font-semibold tracking-tight text-foreground line-clamp-1">{p.name}</p>
-                      <p className="mt-1 flex items-center gap-1 text-[11px] text-accent">
-                        <Star className="size-3 fill-accent" /> {(p.rating || 4.8).toFixed(1)}
-                      </p>
+            {heroShowcase[0] && (
+              <>
+                {/* ONE large featured hero product card */}
+                <div className="absolute left-1/2 top-1/2 z-10 w-[78%] max-w-[420px] -translate-x-1/2 -translate-y-1/2 animate-float-soft">
+                  <div className="group relative overflow-hidden rounded-[2rem] glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float),0_0_90px_-26px_oklch(0.74_0.19_49/0.55)]">
+                    {/* soft top sheen */}
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    <div className="relative aspect-[4/5] overflow-hidden">
+                      <img
+                        src={heroShowcase[0].image}
+                        alt=""
+                        loading="lazy"
+                        className="size-full object-cover [transition:transform_1100ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+                      {/* edge glow ring */}
+                      <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-accent/15" />
+                      {/* featured tag */}
+                      <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full glass-strong ring-1 ring-accent/30 px-3 py-1.5">
+                        <Sparkles className="size-3.5 text-accent" />
+                        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-foreground">Featured</span>
+                      </div>
+                      {/* product info */}
+                      <div className="absolute inset-x-0 bottom-0 p-6">
+                        <p className="text-lg font-display font-semibold tracking-tight text-foreground line-clamp-2">
+                          {heroShowcase[0].name}
+                        </p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <span className="inline-flex items-center gap-1 text-[12px] text-accent">
+                            <Star className="size-3.5 fill-accent" /> {(heroShowcase[0].rating || 4.9).toFixed(1)}
+                          </span>
+                          <span className="text-[12px] text-muted-foreground">Curated worldwide</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* live activity pill */}
-            <div className="absolute z-20 -top-3 right-4 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-white/10 px-4 py-2 shadow-[var(--shadow-float)]">
-              <span className="size-1.5 rounded-full bg-accent animate-glow" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">142 shopping now</span>
-            </div>
+                {/* floating premium UI cards */}
+                {/* top-right — countries */}
+                <div className="absolute z-20 top-2 right-0 animate-float" style={{ animationDelay: "-1s" }}>
+                  <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Globe2 className="size-4.5" /></span>
+                    <span><span className="block text-sm font-semibold text-foreground leading-none">180+</span><span className="block text-[10px] text-muted-foreground mt-1">Countries</span></span>
+                  </div>
+                </div>
 
-            {/* glowing verified chip */}
-            <div className="absolute z-20 -bottom-3 left-2 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-accent/30 px-4 py-2 shadow-[0_0_40px_-10px_oklch(0.74_0.19_49/0.6)]">
-              <BadgeCheck className="size-4 text-accent" />
-              <span className="text-[11px] font-semibold text-foreground">Verified Suppliers</span>
-            </div>
+                {/* mid-left — products */}
+                <div className="absolute z-20 top-1/3 left-0 animate-float-soft" style={{ animationDelay: "-2.5s" }}>
+                  <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><Package className="size-4.5" /></span>
+                    <span><span className="block text-sm font-semibold text-foreground leading-none">2.4k+</span><span className="block text-[10px] text-muted-foreground mt-1">Products</span></span>
+                  </div>
+                </div>
 
+                {/* live orders pill — top center */}
+                <div className="absolute z-20 -top-3 left-6 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-white/10 px-4 py-2 shadow-[var(--shadow-float)] animate-float" style={{ animationDelay: "-3.5s" }}>
+                  <span className="size-1.5 rounded-full bg-accent animate-glow" />
+                  <span className="text-[11px] font-mono uppercase tracking-[0.16em] text-muted-foreground">142 live orders</span>
+                </div>
+
+                {/* trending — mid right */}
+                <div className="absolute z-20 bottom-1/3 right-1 animate-float" style={{ animationDelay: "-4.5s" }}>
+                  <div className="flex items-center gap-2.5 rounded-2xl glass-strong ring-1 ring-white/12 px-4 py-3 shadow-[var(--shadow-float)]">
+                    <span className="grid place-items-center size-9 rounded-xl bg-accent/15 ring-1 ring-accent/25 text-accent"><TrendingUp className="size-4.5" /></span>
+                    <span><span className="block text-[12px] font-semibold text-foreground leading-none">Trending</span><span className="block text-[10px] text-muted-foreground mt-1">Updated daily</span></span>
+                  </div>
+                </div>
+
+                {/* buyer protected — bottom left glowing */}
+                <div className="absolute z-20 -bottom-3 left-2 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-accent/30 px-4 py-2 shadow-[0_0_44px_-10px_oklch(0.74_0.19_49/0.6)] animate-float-soft" style={{ animationDelay: "-1.8s" }}>
+                  <ShieldCheck className="size-4 text-accent" />
+                  <span className="text-[11px] font-semibold text-foreground">Buyer Protected</span>
+                </div>
+
+                {/* fast shipping — bottom right */}
+                <div className="absolute z-20 bottom-4 right-0 inline-flex items-center gap-2 rounded-full glass-strong ring-1 ring-white/12 px-4 py-2 shadow-[var(--shadow-float)] animate-float" style={{ animationDelay: "-2.2s" }}>
+                  <Truck className="size-4 text-accent" />
+                  <span className="text-[11px] font-semibold text-foreground">Fast Global Shipping</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
