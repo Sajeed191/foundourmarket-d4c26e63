@@ -4,6 +4,8 @@ import { parseEmailWebhookPayload } from '@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from '@lovable.dev/webhooks-js'
 import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 import { SignupEmail } from '@/lib/email-templates/signup'
 import { InviteEmail } from '@/lib/email-templates/invite'
 import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
@@ -177,7 +179,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             run_id,
             message_id: messageId,
             to: payload.data.email,
-            from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+            from: await enforceSender(PRIMARY_FROM, { recipient: payload.data.email, template: emailType, context: 'auth route' }),
             reply_to: `support@${FROM_DOMAIN}`,
             sender_domain: SENDER_DOMAIN,
             subject: EMAIL_SUBJECTS[emailType] || 'Notification',

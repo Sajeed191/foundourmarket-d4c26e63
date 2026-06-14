@@ -12,6 +12,7 @@ import {
   restoreCustomerFn,
 } from "@/lib/customer-admin.functions";
 import type { CustomerRow } from "@/lib/customer-center.functions";
+import { PRIMARY_FROM } from "@/lib/email-sender-policy";
 
 type Props = { c: CustomerRow; onChanged: () => void };
 
@@ -334,6 +335,11 @@ function EmailModal({ to, name, busy, onClose, onSend }: {
   return (
     <Shell title="Send Email" onClose={onClose}>
       <div className="space-y-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">From (locked)</div>
+          <div className="font-mono text-sm text-foreground">{PRIMARY_FROM}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">Customer emails always send from the official FoundOurMarket sender. This cannot be changed.</div>
+        </div>
         <div className="text-xs text-muted-foreground">To: <span className="font-mono text-foreground">{to}</span></div>
         <input value={subject} onChange={(e) => setSubject(e.target.value)} className={inputCls} placeholder="Subject" />
         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={6} className={inputCls} placeholder="Message" />

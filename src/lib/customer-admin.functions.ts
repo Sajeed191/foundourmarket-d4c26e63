@@ -9,6 +9,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
 import { fireLifecycleEvent } from "./customer-lifecycle.server";
+import { FALLBACK_FROM, FALLBACK_SENDER, PRIMARY_SENDER } from "./email-sender-policy";
+import { enforceSender, recordSenderUsage } from "./email-sender-policy.server";
 
 const CUST_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 
@@ -202,9 +204,11 @@ export const updateCustomerFn = createServerFn({ method: "POST" })
 
 const GMAIL_GW = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 
-function encodeRawEmail(to: string, subject: string, body: string): string {
+function encodeRawEmail(from: string, to: string, subject: string, body: string): string {
   const msg = [
+    `From: ${from}`,
     `To: ${to}`,
+    `Reply-To: ${PRIMARY_SENDER.email}`,
     `Subject: ${subject}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "",
@@ -238,7 +242,15 @@ export const sendCustomerEmailFn = createServerFn({ method: "POST" })
     const key = process.env.GOOGLE_MAIL_API_KEY;
     if (!lov || !key) throw new Error("Email is not available — connect a Gmail mailbox first.");
 
-    const raw = encodeRawEmail(input.to, input.subject, input.body);
+    // The connected Gmail mailbox is the approved FoundOurMarket backup sender.
+    // Enforce the governance policy before composing the message.
+    const senderFrom = await enforceSender(FALLBACK_FROM, {
+      recipient: input.to,
+      template: "admin-direct",
+      context: "admin customer message",
+      userId,
+    });
+    const raw = encodeRawEmail(senderFrom, input.to, input.subject, input.body);
     const res = await fetch(`${GMAIL_GW}/users/me/messages/send`, {
       method: "POST",
       headers: {
@@ -269,7 +281,14 @@ export const sendCustomerEmailFn = createServerFn({ method: "POST" })
         status: sentOk ? "sent" : "failed",
         provider: "gmail",
         provider_message_id: providerMsgId,
-        payload: { body: input.body, sender: "support@foundourmarket.com" } as never,
+        payload: { body: input.body, sender: FALLBACK_SENDER.email, sender_tier: "secondary" } as never,
+      });
+      await recordSenderUsage(senderFrom, {
+        recipient: input.to,
+        template: "admin-direct",
+        context: "admin customer message",
+        status: sentOk ? "sent" : "failed",
+        userId,
       });
     } catch (e) {
       console.error("[customers.email.send] email_logs insert failed", String(e));

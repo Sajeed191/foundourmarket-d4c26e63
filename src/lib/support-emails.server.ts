@@ -4,6 +4,8 @@ import { createHash, randomUUID } from 'node:crypto'
 import { render } from '@react-email/components'
 import * as React from 'react'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 import type {
   SupportCustomerEmailProps,
@@ -100,7 +102,7 @@ async function enqueue(opts: {
       payload: {
         message_id: opts.messageId,
         to: opts.recipient,
-        from: `FoundOurMarket Support <support@${FROM_DOMAIN}>`,
+        from: await enforceSender(PRIMARY_FROM, { recipient: opts.recipient, template: opts.templateName, context: 'support email' }),
         reply_to: `support@${FROM_DOMAIN}`,
         sender_domain: SENDER_DOMAIN,
         subject,

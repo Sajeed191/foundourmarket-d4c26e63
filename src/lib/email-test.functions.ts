@@ -4,6 +4,8 @@ import * as React from "react";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { PRIMARY_FROM } from '@/lib/email-sender-policy'
+import { enforceSender } from '@/lib/email-sender-policy.server'
 import { TestEmail } from "@/lib/email-templates/test-email";
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
@@ -75,7 +77,7 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       payload: {
         message_id: messageId,
         to: recipient,
-        from: `FoundOurMarket Support <support@${FROM_DOMAIN}>`,
+        from: await enforceSender(PRIMARY_FROM, { recipient, template: 'test email', context: 'test email' }),
         reply_to: `support@${FROM_DOMAIN}`,
         sender_domain: SENDER_DOMAIN,
         subject: "FoundOurMarket™ — Test email delivery ✦",
