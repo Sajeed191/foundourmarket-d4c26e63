@@ -110,6 +110,12 @@ function AdminSupportPage() {
     return () => clearInterval(id);
   }, []);
 
+  // Activity-derived presence directory + heartbeat for the current agent.
+  const { presenceOf } = useAgentPresence(true);
+  useEffect(() => {
+    if (typeof document !== "undefined" && document.visibilityState === "visible") void pingPresence("dashboard");
+  }, []);
+
   const load = useCallback(async () => {
     const [t, m, o, rf, rt, pf, sh, fr] = await Promise.all([
       supabase.from("support_tickets").select("id,user_id,subject,category,status,priority,order_id,market_region,last_message_at,resolved_at,assigned_to,tags,created_at,channel,first_response_at").order("last_message_at", { ascending: false }).limit(500),
