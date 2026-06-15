@@ -18,6 +18,7 @@ import { useRegion } from "@/lib/region";
 import { useAddresses, addressCompleteness, type Address } from "@/lib/use-addresses";
 import { computeCheckoutState, type CheckoutState, type DeliveryStatus } from "@/lib/checkout-state";
 import { CheckoutProgress } from "@/components/site/CheckoutProgress";
+import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { CheckoutSummaryDrawer } from "@/components/site/CheckoutSummaryDrawer";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
