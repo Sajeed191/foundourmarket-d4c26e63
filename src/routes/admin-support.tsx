@@ -192,7 +192,7 @@ function AdminSupportPage() {
       const sla = computeSla(ticket, stage, firstStaffAt, lastSenderRole);
       const firstReply = computeFirstReplySla(ticket, stage, firstStaffAt, nowTick);
       const escalations = detectEscalation(ticket, escCtx);
-      return { ticket, stage, sla, firstReply, channel: normChannel(ticket.channel), lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
+      return { ticket, stage, sla, firstReply, firstStaffReplyAt: firstStaffAt, channel: normChannel(ticket.channel), lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
     });
   }, [tickets, msgAgg, escCtx, profiles, nowTick]);
 
