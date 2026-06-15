@@ -17,7 +17,7 @@ export const Route = createFileRoute("/account_/notifications")({
 type Filter = "all" | NotificationCategory;
 
 function NotificationsPage() {
-  const { items, unread, markRead, markAllRead, remove, clearAll, loading } = useNotifications();
+  const { items, unread, markRead, markAllRead, remove, archive, clearAll, loading } = useNotifications();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
