@@ -147,6 +147,7 @@ import { Route as ApiPublicWebhooksCourierRouteImport } from './routes/api/publi
 import { Route as ApiPublicTrackOpenRouteImport } from './routes/api/public/track.open'
 import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/track.click'
 import { Route as ApiPublicSupportInboundEmailRouteImport } from './routes/api/public/support/inbound-email'
+import { Route as AccountSupportTicketTicketIdRouteImport } from './routes/account_.support.ticket.$ticketId'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -854,6 +855,12 @@ const ApiPublicSupportInboundEmailRoute =
     path: '/api/public/support/inbound-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AccountSupportTicketTicketIdRoute =
+  AccountSupportTicketTicketIdRouteImport.update({
+    id: '/ticket/$ticketId',
+    path: '/ticket/$ticketId',
+    getParentRoute: () => AccountSupportRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -955,7 +962,7 @@ export interface FileRoutesByFullPath {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/account/support': typeof AccountSupportRoute
+  '/account/support': typeof AccountSupportRouteWithChildren
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -985,6 +992,7 @@ export interface FileRoutesByFullPath {
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
+  '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1095,7 +1103,7 @@ export interface FileRoutesByTo {
   '/account/profile': typeof AccountProfileRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
-  '/account/support': typeof AccountSupportRoute
+  '/account/support': typeof AccountSupportRouteWithChildren
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -1124,6 +1132,7 @@ export interface FileRoutesByTo {
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug': typeof AdminProductSlugIndexRoute
+  '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1235,7 +1244,7 @@ export interface FileRoutesById {
   '/account_/profile': typeof AccountProfileRoute
   '/account_/returns': typeof AccountReturnsRoute
   '/account_/security': typeof AccountSecurityRoute
-  '/account_/support': typeof AccountSupportRoute
+  '/account_/support': typeof AccountSupportRouteWithChildren
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -1265,6 +1274,7 @@ export interface FileRoutesById {
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
+  '/account_/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1407,6 +1417,7 @@ export interface FileRouteTypes {
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/admin-product/$slug/'
+    | '/account/support/ticket/$ticketId'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1546,6 +1557,7 @@ export interface FileRouteTypes {
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/admin-product/$slug'
+    | '/account/support/ticket/$ticketId'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1686,6 +1698,7 @@ export interface FileRouteTypes {
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
     | '/admin-product/$slug/'
+    | '/account_/support/ticket/$ticketId'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1797,7 +1810,7 @@ export interface RootRouteChildren {
   AccountProfileRoute: typeof AccountProfileRoute
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
-  AccountSupportRoute: typeof AccountSupportRoute
+  AccountSupportRoute: typeof AccountSupportRouteWithChildren
   AdminProductSlugRoute: typeof AdminProductSlugRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -2792,6 +2805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupportInboundEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account_/support/ticket/$ticketId': {
+      id: '/account_/support/ticket/$ticketId'
+      path: '/ticket/$ticketId'
+      fullPath: '/account/support/ticket/$ticketId'
+      preLoaderRoute: typeof AccountSupportTicketTicketIdRouteImport
+      parentRoute: typeof AccountSupportRoute
+    }
   }
 }
 
@@ -2836,6 +2856,18 @@ const HelpRouteChildren: HelpRouteChildren = {
 }
 
 const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
+
+interface AccountSupportRouteChildren {
+  AccountSupportTicketTicketIdRoute: typeof AccountSupportTicketTicketIdRoute
+}
+
+const AccountSupportRouteChildren: AccountSupportRouteChildren = {
+  AccountSupportTicketTicketIdRoute: AccountSupportTicketTicketIdRoute,
+}
+
+const AccountSupportRouteWithChildren = AccountSupportRoute._addFileChildren(
+  AccountSupportRouteChildren,
+)
 
 interface AdminProductSlugRouteChildren {
   AdminProductSlugAnalyticsRoute: typeof AdminProductSlugAnalyticsRoute
@@ -2966,7 +2998,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountProfileRoute: AccountProfileRoute,
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
-  AccountSupportRoute: AccountSupportRoute,
+  AccountSupportRoute: AccountSupportRouteWithChildren,
   AdminProductSlugRoute: AdminProductSlugRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,

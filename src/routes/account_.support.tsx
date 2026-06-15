@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Loader2, Plus, Send, LifeBuoy, X, ChevronRight,
   ShieldCheck, MessageSquare, CheckCircle2, Check, CheckCheck,
-  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud, Mail,
+  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud, Mail, Search,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -67,6 +67,10 @@ type Ticket = {
   priority: string;
   last_message_at: string;
   created_at: string;
+  ticket_number?: string;
+  unread_customer_count?: number;
+  order_id?: string | null;
+  channel?: string | null;
 };
 
 type Message = {
@@ -114,6 +118,25 @@ function SupportAvailabilityBanner() {
 }
 
 
+const FILTERS = [
+  { id: "all", label: "All" },
+  { id: "open", label: "Open" },
+  { id: "pending", label: "Pending" },
+  { id: "resolved", label: "Resolved" },
+  { id: "closed", label: "Closed" },
+  { id: "unread", label: "Unread" },
+  { id: "high", label: "High Priority" },
+] as const;
+type FilterId = (typeof FILTERS)[number]["id"];
+
+function priorityTone(p: string) {
+  const v = p.toLowerCase();
+  if (v === "urgent") return "text-rose-400 bg-rose-400/10 ring-rose-400/25";
+  if (v === "high") return "text-amber-400 bg-amber-400/10 ring-amber-400/25";
+  if (v === "low") return "text-muted-foreground bg-white/[0.04] ring-white/10";
+  return "text-foreground/70 bg-white/[0.04] ring-white/10";
+}
+
 function SupportPage() {
   const { user, loading } = useAuth();
   const { market } = useRegion();
@@ -121,8 +144,9 @@ function SupportPage() {
   const search = useSearch({ from: Route.id });
   const deepLinkTicket = search.ticket;
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+  const [filter, setFilter] = useState<FilterId>("all");
+  const [query, setQuery] = useState("");
 
   const prefill = useMemo(
     () => ({
@@ -138,21 +162,22 @@ function SupportPage() {
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
 
-  // Deep-link: open the exact ticket from ?ticket=<id> (e.g. a notification tap).
+  // Deep-link: a notification tap (?ticket=<id>) opens the dedicated full-page conversation.
   useEffect(() => {
-    if (deepLinkTicket) setActiveId(deepLinkTicket);
-  }, [deepLinkTicket]);
+    if (deepLinkTicket) {
+      nav({ to: "/account/support/ticket/$ticketId", params: { ticketId: deepLinkTicket }, replace: true });
+    }
+  }, [deepLinkTicket, nav]);
 
   // Deep-link: open the compose sheet pre-filled with order/return/refund context.
   useEffect(() => {
     if (wantsCompose && !deepLinkTicket) setComposing(true);
   }, [wantsCompose, deepLinkTicket]);
 
-
   const loadTickets = useCallback(async () => {
     const { data, error } = await supabase
       .from("support_tickets")
-      .select("id,subject,category,status,priority,last_message_at,created_at")
+      .select("id,subject,category,status,priority,last_message_at,created_at,ticket_number,unread_customer_count,order_id,channel")
       .order("last_message_at", { ascending: false });
     if (error) { toast.error(error.message); setTickets([]); return; }
     setTickets((data as Ticket[]) ?? []);
@@ -167,6 +192,21 @@ function SupportPage() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, loadTickets]);
+
+  const visible = useMemo(() => {
+    if (!tickets) return null;
+    const q = query.trim().toLowerCase();
+    return tickets.filter((t) => {
+      if (filter === "unread") { if (!(t.unread_customer_count && t.unread_customer_count > 0)) return false; }
+      else if (filter === "high") { if (!["high", "urgent"].includes(t.priority.toLowerCase())) return false; }
+      else if (filter !== "all") { if (t.status.toLowerCase() !== filter) return false; }
+      if (q) {
+        const hay = `${t.subject} ${t.ticket_number ?? ""} ${t.id}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [tickets, filter, query]);
 
   if (loading || !user) {
     return <div className="min-h-[60vh] grid place-items-center"><Loader2 className="size-5 animate-spin text-accent" /></div>;
@@ -199,7 +239,6 @@ function SupportPage() {
 
         <SupportAvailabilityBanner />
 
-
         <button
           onClick={() => setComposing(true)}
           className="group w-full mb-6 flex items-center gap-3 rounded-2xl glass-strong p-4 text-left hover:border-accent/40 transition-all"
@@ -212,32 +251,72 @@ function SupportPage() {
           <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent transition-colors" />
         </button>
 
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground/60">Your tickets</h2>
-          {tickets && tickets.length > 0 && <span className="text-[10px] font-mono text-muted-foreground/40">{tickets.length}</span>}
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by ticket number, subject, or order"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent/60 transition"
+          />
         </div>
 
-        {tickets === null ? (
+        {/* Filters */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar -mx-1 px-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition",
+                filter === f.id ? "bg-accent/15 text-accent ring-accent/40" : "bg-white/[0.03] text-muted-foreground ring-white/10 hover:ring-accent/30",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-[11px] font-mono uppercase tracking-[0.24em] text-muted-foreground/60">Your tickets</h2>
+          {visible && visible.length > 0 && <span className="text-[10px] font-mono text-muted-foreground/40">{visible.length}</span>}
+        </div>
+
+        {visible === null ? (
           <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        ) : tickets.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="rounded-2xl glass p-8 text-center">
             <LifeBuoy className="size-6 text-accent mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No tickets yet. Open one above and we'll take care of it.</p>
+            <p className="text-sm text-muted-foreground">{tickets && tickets.length > 0 ? "No tickets match this filter." : "No tickets yet. Open one above and we'll take care of it."}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
-            {tickets.map((t) => (
-              <button key={t.id} onClick={() => setActiveId(t.id)} className="group w-full flex items-center gap-3 rounded-2xl glass p-4 text-left hover:border-accent/40 transition-all">
-                <span className="size-9 grid place-items-center rounded-xl bg-white/[0.04] text-muted-foreground group-hover:text-accent transition-colors"><MessageSquare className="size-4" /></span>
-                <div className="min-w-0 flex-1">
+            {visible.map((t) => {
+              const unread = t.unread_customer_count && t.unread_customer_count > 0 ? t.unread_customer_count : 0;
+              return (
+                <Link
+                  key={t.id}
+                  to="/account/support/ticket/$ticketId"
+                  params={{ ticketId: t.id }}
+                  className="group block rounded-2xl glass p-4 hover:border-accent/40 transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="text-[10px] font-mono tracking-wider text-muted-foreground/70">{t.ticket_number ?? `#${t.id.slice(0, 8)}`}</span>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ring-1", statusTone(t.status))}>{t.status}</span>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ring-1", priorityTone(t.priority))}>{t.priority}</span>
+                    {t.channel === "email" && <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-sky-400 bg-sky-400/10 ring-1 ring-sky-400/25"><Mail className="size-2.5" /> Email</span>}
+                    {unread > 0 && <span className="ml-auto size-5 grid place-items-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold">{unread}</span>}
+                  </div>
                   <p className="text-sm font-medium truncate">{t.subject}</p>
-                  <p className="text-[11px] text-muted-foreground/70 font-mono mt-0.5">
-                    #{t.id.slice(0, 8)} · {new Date(t.last_message_at).toLocaleDateString()}
+                  <p className="text-[11px] text-muted-foreground/70 mt-1 flex items-center gap-1.5">
+                    <span>{new Date(t.last_message_at).toLocaleDateString()}</span>
+                    {t.order_id && <span className="inline-flex items-center gap-1"><Package className="size-3" /> Linked order</span>}
+                    <ChevronRight className="size-3.5 ml-auto text-muted-foreground/40 group-hover:text-accent transition-colors" />
                   </p>
-                </div>
-                <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-widest ring-1", statusTone(t.status))}>{t.status}</span>
-              </button>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
@@ -254,26 +333,11 @@ function SupportPage() {
             }}
             onContinue={(id) => {
               setComposing(false);
-              if (wantsCompose) nav({ to: "/account/support", search: {}, replace: true });
-              setActiveId(id);
+              nav({ to: "/account/support/ticket/$ticketId", params: { ticketId: id } });
             }}
             onCreated={(id) => {
               setComposing(false);
-              if (wantsCompose) nav({ to: "/account/support", search: {}, replace: true });
-              void loadTickets();
-              setActiveId(id);
-            }}
-          />
-        )}
-
-        {activeId && (
-          <ThreadSheet
-            ticketId={activeId}
-            userId={user.id}
-            isStaff={false}
-            onClose={() => {
-              setActiveId(null);
-              if (deepLinkTicket) nav({ to: "/account/support", search: {}, replace: true });
+              nav({ to: "/account/support/ticket/$ticketId", params: { ticketId: id } });
             }}
           />
         )}
@@ -691,7 +755,7 @@ function validateFiles(list: FileList | File[]): File[] {
   return out;
 }
 
-function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFiles: (f: File[]) => void; compact?: boolean }) {
+export function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFiles: (f: File[]) => void; compact?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
@@ -747,7 +811,7 @@ function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFile
   );
 }
 
-function Attachment({ path }: { path: string }) {
+export function Attachment({ path }: { path: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const pdf = isPdf(path);
   useEffect(() => {
@@ -783,7 +847,7 @@ function Attachment({ path }: { path: string }) {
   );
 }
 
-async function uploadAttachments(userId: string, ticketId: string, files: File[]): Promise<string[]> {
+export async function uploadAttachments(userId: string, ticketId: string, files: File[]): Promise<string[]> {
   const urls: string[] = [];
   for (const f of files) {
     if (!ALLOWED_TYPES.includes(f.type) || f.size > MAX_BYTES) continue;
