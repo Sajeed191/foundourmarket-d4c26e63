@@ -426,8 +426,8 @@ function AuthPage() {
             }}
           >
             <Loader2 className="mx-auto mb-3 size-5 animate-spin" style={{ color: "#FF9F43" }} />
-            <p className="text-sm font-medium text-white">Signing you in…</p>
-            <p className="mt-1 text-xs text-white/55">Securing your Google session</p>
+            <p className="text-sm font-medium text-white">Completing sign-in…</p>
+            <p className="mt-1 text-xs text-white/55">Just a moment while we finish up</p>
           </motion.div>
         )}
 

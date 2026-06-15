@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trackOrder } from "@/lib/track-order.functions";
 import { computeEta } from "@/lib/courier-sync.service";
 import { useRegion } from "@/lib/region";
+import { safeExternalUrl } from "@/lib/safe-redirect";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 
@@ -723,9 +724,9 @@ function ShipmentDetails({ shipment }: { shipment: ShipmentInfo }) {
             <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Tracking #</p>
             <p className="text-sm font-mono truncate">{shipment.tracking_number}</p>
           </div>
-          {shipment.tracking_url && (
+          {safeExternalUrl(shipment.tracking_url) && (
             <a
-              href={shipment.tracking_url}
+              href={safeExternalUrl(shipment.tracking_url)!}
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 inline-flex items-center gap-1.5 bg-accent text-accent-foreground px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider"

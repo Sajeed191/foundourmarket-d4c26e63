@@ -21,6 +21,7 @@ import {
   setCustomerStatusFn, restoreCustomerFn, sendCustomerNotificationFn, resetCustomerPasswordFn,
 } from "@/lib/customer-admin.functions";
 import { computeTier, computeHealth, initialsOf, type TierMeta } from "@/lib/customer-tiers";
+import { safeExternalUrl } from "@/lib/safe-redirect";
 import { toast } from "sonner";
 
 
@@ -584,7 +585,7 @@ function ProfileInner() {
                 </div>
                 <div className="text-right shrink-0 text-[10px] text-muted-foreground">
                   <p>{s.delivered_at ? `Delivered ${dateOnly(s.delivered_at)}` : s.estimated_delivery ? `ETA ${dateOnly(s.estimated_delivery)}` : dateOnly(s.created_at)}</p>
-                  {s.tracking_url && <a href={s.tracking_url} target="_blank" rel="noreferrer" className="text-accent hover:underline">Track</a>}
+                  {safeExternalUrl(s.tracking_url) && <a href={safeExternalUrl(s.tracking_url)!} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Track</a>}
                 </div>
               </div>
             ))}
