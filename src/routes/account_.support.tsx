@@ -56,8 +56,6 @@ export const Route = createFileRoute("/account_/support")({
   component: SupportPage,
 });
 
-const CATEGORIES = SUPPORT_CATEGORIES;
-
 
 type Ticket = {
   id: string;
