@@ -594,59 +594,131 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/* ---------- Attachment system (Phase 4 — secure attachments) ---------- */
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_FILES = 5;
+const isImg = (path: string) => /\.(jpe?g|png|webp)$/i.test(path);
+const isPdf = (path: string) => /\.pdf$/i.test(path);
+const fileLabel = (path: string) => path.split("/").pop() ?? "file";
+const prettyBytes = (n: number) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`);
+
+function validateFiles(list: FileList | File[]): File[] {
+  const out: File[] = [];
+  for (const f of Array.from(list)) {
+    if (!ALLOWED_TYPES.includes(f.type)) { toast.error(`${f.name}: unsupported type`, { description: "JPG, PNG, WEBP or PDF only." }); continue; }
+    if (f.size > MAX_BYTES) { toast.error(`${f.name}: too large`, { description: "Max 10 MB per file." }); continue; }
+    out.push(f);
+  }
+  return out;
+}
+
 function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFiles: (f: File[]) => void; compact?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [drag, setDrag] = useState(false);
+
   function add(list: FileList | null) {
     if (!list) return;
-    const next = [...files, ...Array.from(list)].filter((f) => f.type.startsWith("image/")).slice(0, 5);
+    const next = [...files, ...validateFiles(list)].slice(0, MAX_FILES);
     setFiles(next);
   }
+
   return (
     <div>
-      <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={(e) => add(e.target.files)} />
-      {!compact && (
-        <button type="button" onClick={() => inputRef.current?.click()} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-accent transition">
-          <Paperclip className="size-3.5" /> Attach images
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
+
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); add(e.dataTransfer.files); }}
+        className={cn(
+          "rounded-xl border border-dashed transition flex items-center gap-2 flex-wrap",
+          compact ? "px-2.5 py-1.5" : "px-3 py-2.5",
+          drag ? "border-accent/70 bg-accent/[0.06]" : "border-white/10 bg-white/[0.02]",
+        )}
+      >
+        <button type="button" onClick={() => inputRef.current?.click()} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-accent transition">
+          <UploadCloud className="size-3.5" /> {compact ? "Attach" : "Attach files"}
         </button>
-      )}
+        <button type="button" onClick={() => cameraRef.current?.click()} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-accent transition sm:hidden">
+          <Camera className="size-3.5" /> Camera
+        </button>
+        {!compact && <span className="text-[10px] text-muted-foreground/60 ml-auto">JPG · PNG · WEBP · PDF · 10 MB</span>}
+      </div>
+
       {files.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {files.map((f, i) => (
-            <div key={i} className="relative size-14 rounded-lg overflow-hidden ring-1 ring-white/10">
-              <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
-              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute top-0.5 right-0.5 size-4 grid place-items-center rounded-full bg-black/70 text-white"><X className="size-2.5" /></button>
+            <div key={i} className="relative">
+              {f.type === "application/pdf" ? (
+                <div className="size-14 rounded-lg ring-1 ring-white/10 bg-white/[0.04] grid place-content-center text-center px-1">
+                  <FileText className="size-5 mx-auto text-accent" />
+                  <span className="block text-[8px] text-muted-foreground truncate max-w-[3.2rem]">{f.name}</span>
+                </div>
+              ) : (
+                <img src={URL.createObjectURL(f)} alt={f.name} className="size-14 rounded-lg object-cover ring-1 ring-white/10" />
+              )}
+              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute -top-1 -right-1 size-4 grid place-items-center rounded-full bg-black/80 text-white ring-1 ring-white/20"><X className="size-2.5" /></button>
             </div>
           ))}
         </div>
-      )}
-      {compact && (
-        <button type="button" onClick={() => inputRef.current?.click()} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-accent transition">
-          <ImageIcon className="size-3" /> Attach
-        </button>
       )}
     </div>
   );
 }
 
-function AttachmentImage({ path }: { path: string }) {
+function Attachment({ path }: { path: string }) {
   const [url, setUrl] = useState<string | null>(null);
+  const pdf = isPdf(path);
   useEffect(() => {
     let active = true;
     supabase.storage.from("support-attachments").createSignedUrl(path, 3600).then(({ data }) => { if (active) setUrl(data?.signedUrl ?? null); });
     return () => { active = false; };
   }, [path]);
+
+  async function download() {
+    const { data } = await supabase.storage.from("support-attachments").createSignedUrl(path, 3600, { download: fileLabel(path) });
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
+
+  if (pdf) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl glass px-3 py-2 max-w-[16rem]">
+        <FileText className="size-5 text-accent shrink-0" />
+        <span className="text-xs truncate flex-1 min-w-0">{fileLabel(path)}</span>
+        <a href={url ?? "#"} target="_blank" rel="noreferrer" title="View" className="size-7 grid place-items-center rounded-lg hover:bg-white/10 text-muted-foreground hover:text-accent transition"><Eye className="size-3.5" /></a>
+        <button onClick={download} title="Download" className="size-7 grid place-items-center rounded-lg hover:bg-white/10 text-muted-foreground hover:text-accent transition"><Download className="size-3.5" /></button>
+      </div>
+    );
+  }
+
   if (!url) return <div className="size-20 rounded-lg bg-white/5 animate-pulse" />;
-  return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt="attachment" className="size-20 rounded-lg object-cover ring-1 ring-white/10 hover:ring-accent/40 transition" /></a>;
+  return (
+    <div className="relative group">
+      <a href={url} target="_blank" rel="noreferrer">
+        <img src={url} alt="attachment" className="size-20 rounded-lg object-cover ring-1 ring-white/10 hover:ring-accent/40 transition" />
+      </a>
+      <button onClick={download} title="Download" className="absolute bottom-1 right-1 size-6 grid place-items-center rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition"><Download className="size-3" /></button>
+    </div>
+  );
 }
 
 async function uploadAttachments(userId: string, ticketId: string, files: File[]): Promise<string[]> {
   const urls: string[] = [];
   for (const f of files) {
-    const ext = f.name.split(".").pop() || "png";
+    if (!ALLOWED_TYPES.includes(f.type) || f.size > MAX_BYTES) continue;
+    const ext = f.name.split(".").pop()?.toLowerCase() || (f.type === "application/pdf" ? "pdf" : "png");
     const path = `${userId}/${ticketId}/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("support-attachments").upload(path, f, { upsert: false });
+    const { error } = await supabase.storage.from("support-attachments").upload(path, f, { upsert: false, contentType: f.type });
     if (error) { toast.error(`Upload failed: ${error.message}`); continue; }
+    // Register metadata (best-effort; storage upload is the source of truth).
+    await supabase.from("support_attachments").insert({
+      ticket_id: ticketId, uploaded_by: userId, file_name: f.name, file_type: f.type, file_size: f.size, storage_path: path,
+    });
     urls.push(path);
   }
   return urls;
 }
+
