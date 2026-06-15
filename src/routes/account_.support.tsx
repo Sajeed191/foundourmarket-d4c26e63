@@ -552,7 +552,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
   }
 
   return (
-    <Sheet onClose={onClose} title={ticket?.subject ?? "Conversation"} subtitle={ticket ? `#${ticket.id.slice(0, 8)} · ${ticket.status}` : undefined}>
+    <Sheet onClose={onClose} title={ticket?.subject ?? "Conversation"} subtitle={ticket ? `#${ticket.id.slice(0, 8)} · ${ticket.status}` : undefined} fullPage>
       <div className="flex flex-col h-[60dvh] min-h-0">
         <div ref={scrollRef} onScroll={onScroll} className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
           {messages === null ? (
