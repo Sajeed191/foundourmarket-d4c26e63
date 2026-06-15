@@ -208,7 +208,11 @@ function AdminSupportPage() {
         .some((v) => (v ?? "").toString().toLowerCase().includes(term));
     });
     const open = (e: Enriched) => e.stage !== "resolved" && e.stage !== "closed";
+    // First-reply breached tickets always float to the very top of every sort.
+    const breachRank = (e: Enriched) => (e.firstReply.status === "breached" ? 0 : e.firstReply.status === "due_soon" ? 1 : 2);
     return [...list].sort((a, b) => {
+      const br = breachRank(a) - breachRank(b);
+      if (br !== 0) return br;
       if (sortBy === "priority") return PRIORITY_RANK[a.sla.priority] - PRIORITY_RANK[b.sla.priority] || (+new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at));
       if (sortBy === "oldest") return (open(b) ? 1 : 0) - (open(a) ? 1 : 0) || (+new Date(a.ticket.created_at) - +new Date(b.ticket.created_at));
       return +new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at);
