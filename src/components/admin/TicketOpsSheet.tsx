@@ -262,6 +262,35 @@ export function TicketOpsSheet({
       .slice(0, 4);
     return { openT, resolvedCount: resolvedT.length, lastDate, total: userTickets.length, previous };
   }, [userTickets]);
+
+  // ── Customer satisfaction history (future-ready: trend, lifetime satisfaction, VIP/risk flags) ──
+  const ticketNumberById = useMemo(() => new Map(userTickets.map((t) => [t.id, t.ticket_number])), [userTickets]);
+  const satisfaction = useMemo(() => {
+    const total = ratings.length;
+    if (!total) {
+      return {
+        total: 0, avg: 0, positivePct: 0, negativePct: 0,
+        health: null as null | "excellent" | "average" | "risk",
+        recent: [] as RatingRow[], poorlyRatedBefore: false,
+        trend: [] as { rating: number; at: string }[],
+      };
+    }
+    const sum = ratings.reduce((a, r) => a + (r.rating || 0), 0);
+    const avg = sum / total;
+    const positive = ratings.filter((r) => r.rating >= 4).length;
+    const negative = ratings.filter((r) => r.rating <= 2).length;
+    const health = avg >= 4.5 ? "excellent" : avg >= 3 ? "average" : "risk";
+    return {
+      total, avg,
+      positivePct: Math.round((positive / total) * 100),
+      negativePct: Math.round((negative / total) * 100),
+      health,
+      recent: ratings.slice(0, 5),
+      poorlyRatedBefore: negative > 0,
+      // future: chronological trend series for sparkline / lifetime satisfaction
+      trend: [...ratings].sort((a, b) => +new Date(a.rated_at) - +new Date(b.rated_at)).map((r) => ({ rating: r.rating, at: r.rated_at })),
+    };
+  }, [ratings]);
   const assignedName = ticket?.assigned_to ? nameOf(ticket.assigned_to) : null;
   const status = (ticket?.status ?? "open") as string;
   const priority = (ticket?.priority ?? "normal") as string;
