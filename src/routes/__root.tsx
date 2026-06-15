@@ -409,7 +409,7 @@ function RootComponent() {
   const isCheckoutRoute = pathname.startsWith("/checkout");
   // Dedicated full-page support conversation owns the entire screen (its own
   // header + composer with safe-area handling). Suppress all site chrome.
-  const isTicketRoute = /^\/account\/support\/ticket\//.test(pathname);
+  const isTicketRoute = /^\/account\/support\/(ticket\/|new)/.test(pathname);
   const hideSiteChrome = isAuthRoute || isAdminRoute || isTicketRoute;
 
   if (oauthReturnPending) return <OAuthReturnScreen />;
