@@ -383,8 +383,35 @@ function SupportSettingsView() {
 function DashboardView({ kpis, enriched }: { kpis: ReturnType<typeof computeSupportKpis>; enriched: Enriched[] }) {
   const critical = enriched.filter((e) => e.sla.critical).slice(0, 6);
   const escalations = enriched.filter((e) => e.escalations.length && e.stage !== "resolved" && e.stage !== "closed").slice(0, 6);
+
+  // ── Queue Health — instant operational visibility (all from real records) ──
+  const isOpen = (e: Enriched) => e.stage !== "resolved" && e.stage !== "closed" && e.stage !== "spam";
+  const openTickets = enriched.filter(isOpen);
+  const health = {
+    open: openTickets.length,
+    waitingCustomer: openTickets.filter((e) => e.stage === "pending_customer").length,
+    waitingStaff: openTickets.filter((e) => !isStaffSender(e.lastSenderRole)).length,
+    breached: openTickets.filter((e) => e.firstReply.status === "breached").length,
+    dueSoon: openTickets.filter((e) => e.firstReply.status === "due_soon").length,
+    unassigned: openTickets.filter((e) => !e.ticket.assigned_to).length,
+    urgent: openTickets.filter((e) => e.sla.priority === "urgent").length,
+  };
+  const breachedList = openTickets.filter((e) => e.firstReply.status === "breached").slice(0, 6);
+
   return (
     <div className="space-y-4">
+      <div>
+        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Queue Health</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <Kpi label="Open Tickets" value={health.open} icon={<Inbox className="size-4" />} />
+          <Kpi label="Waiting Customer" value={health.waitingCustomer} />
+          <Kpi label="Waiting Staff" value={health.waitingStaff} tone={health.waitingStaff ? "amber" : undefined} />
+          <Kpi label="SLA Breached" value={health.breached} icon={<AlertTriangle className="size-4" />} tone={health.breached ? "destructive" : undefined} />
+          <Kpi label="Unassigned" value={health.unassigned} tone={health.unassigned ? "amber" : undefined} />
+          <Kpi label="Urgent" value={health.urgent} icon={<Flame className="size-4" />} tone={health.urgent ? "destructive" : undefined} />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <Kpi label="Open" value={kpis.open} icon={<Inbox className="size-4" />} />
         <Kpi label="Pending Customer" value={kpis.pendingCustomer} />
