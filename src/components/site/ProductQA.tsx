@@ -158,8 +158,8 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this question?")) return;
-    const { error } = await supabase.from("product_questions").delete().eq("id", id);
+    if (!confirm("Are you sure you want to delete this question?")) return;
+    const { error } = await supabase.rpc("soft_delete_own_question", { p_id: id });
     if (error) {
       console.error("[ProductQA] delete failed", { id, code: error.code, message: error.message });
       toast.error("Couldn't delete the question.");
