@@ -574,6 +574,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
               );
             })
           )}
+          <TypingIndicator show={otherTyping} label={isStaff ? "Customer" : "Support"} />
           <div ref={endRef} />
         </div>
 
