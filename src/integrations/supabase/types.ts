@@ -4574,8 +4574,10 @@ export type Database = {
           attachments: Json
           body: string
           created_at: string
+          delivered_at: string
           id: string
           is_seeded: boolean
+          read_at: string | null
           sender_id: string
           sender_role: string
           ticket_id: string
@@ -4584,8 +4586,10 @@ export type Database = {
           attachments?: Json
           body: string
           created_at?: string
+          delivered_at?: string
           id?: string
           is_seeded?: boolean
+          read_at?: string | null
           sender_id: string
           sender_role?: string
           ticket_id: string
@@ -4594,8 +4598,10 @@ export type Database = {
           attachments?: Json
           body?: string
           created_at?: string
+          delivered_at?: string
           id?: string
           is_seeded?: boolean
+          read_at?: string | null
           sender_id?: string
           sender_role?: string
           ticket_id?: string
@@ -4603,6 +4609,98 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          message_id: string | null
+          notification_type: string
+          read: boolean
+          ticket_id: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          notification_type?: string
+          read?: boolean
+          ticket_id: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          notification_type?: string
+          read?: boolean
+          ticket_id?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_notifications_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          meta: Json
+          ticket_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          meta?: Json
+          ticket_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          meta?: Json
+          ticket_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_events_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "support_tickets"
@@ -4643,7 +4741,9 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: string
+          closed_at: string | null
           created_at: string
+          first_response_at: string | null
           id: string
           is_seeded: boolean
           last_message_at: string
@@ -4654,13 +4754,18 @@ export type Database = {
           status: string
           subject: string
           tags: string[]
+          ticket_number: string
+          unread_admin_count: number
+          unread_customer_count: number
           updated_at: string
           user_id: string
         }
         Insert: {
           assigned_to?: string | null
           category?: string
+          closed_at?: string | null
           created_at?: string
+          first_response_at?: string | null
           id?: string
           is_seeded?: boolean
           last_message_at?: string
@@ -4671,13 +4776,18 @@ export type Database = {
           status?: string
           subject: string
           tags?: string[]
+          ticket_number: string
+          unread_admin_count?: number
+          unread_customer_count?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           assigned_to?: string | null
           category?: string
+          closed_at?: string | null
           created_at?: string
+          first_response_at?: string | null
           id?: string
           is_seeded?: boolean
           last_message_at?: string
@@ -4688,6 +4798,9 @@ export type Database = {
           status?: string
           subject?: string
           tags?: string[]
+          ticket_number?: string
+          unread_admin_count?: number
+          unread_customer_count?: number
           updated_at?: string
           user_id?: string
         }
