@@ -250,8 +250,9 @@ function SupportPage() {
 
         <SupportAvailabilityBanner />
 
-        <button
-          onClick={() => setComposing(true)}
+        <Link
+          to="/account/support/new"
+          search={{}}
           className="group w-full mb-6 flex items-center gap-3 rounded-2xl glass-strong p-4 text-left hover:border-accent/40 transition-all"
         >
           <span className="size-10 grid place-items-center rounded-xl bg-accent/15 text-accent ring-1 ring-accent/30"><Plus className="size-5" /></span>
@@ -260,7 +261,7 @@ function SupportPage() {
             <p className="text-xs text-muted-foreground">Describe your issue and attach screenshots</p>
           </div>
           <ChevronRight className="size-4 text-muted-foreground group-hover:text-accent transition-colors" />
-        </button>
+        </Link>
 
         {/* Search */}
         <div className="relative mb-3">
