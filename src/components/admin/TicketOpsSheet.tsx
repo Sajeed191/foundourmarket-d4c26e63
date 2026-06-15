@@ -105,7 +105,7 @@ export function TicketOpsSheet({
   const load = useCallback(async () => {
     const [t, ev, nt, ord] = await Promise.all([
       supabase.from("support_tickets")
-        .select("id,ticket_number,subject,category,status,priority,order_id,user_id,assigned_to,created_at,first_response_at,resolved_at,closed_at,last_message_at")
+        .select("id,ticket_number,subject,category,status,priority,order_id,user_id,assigned_to,created_at,first_response_at,resolved_at,closed_at,last_message_at,channel,source,guest_email,guest_name")
         .eq("id", ticketId).maybeSingle(),
       supabase.from("support_ticket_events").select("id,event_type,from_status,to_status,actor_id,meta,created_at").eq("ticket_id", ticketId).order("created_at", { ascending: false }).limit(200),
       supabase.from("support_internal_notes").select("id,body,author_id,created_at").eq("ticket_id", ticketId).order("created_at", { ascending: false }),
