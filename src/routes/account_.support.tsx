@@ -691,7 +691,7 @@ function validateFiles(list: FileList | File[]): File[] {
   return out;
 }
 
-function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFiles: (f: File[]) => void; compact?: boolean }) {
+export function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFiles: (f: File[]) => void; compact?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
@@ -747,7 +747,7 @@ function AttachmentPicker({ files, setFiles, compact }: { files: File[]; setFile
   );
 }
 
-function Attachment({ path }: { path: string }) {
+export function Attachment({ path }: { path: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const pdf = isPdf(path);
   useEffect(() => {
@@ -783,7 +783,7 @@ function Attachment({ path }: { path: string }) {
   );
 }
 
-async function uploadAttachments(userId: string, ticketId: string, files: File[]): Promise<string[]> {
+export async function uploadAttachments(userId: string, ticketId: string, files: File[]): Promise<string[]> {
   const urls: string[] = [];
   for (const f of files) {
     if (!ALLOWED_TYPES.includes(f.type) || f.size > MAX_BYTES) continue;
