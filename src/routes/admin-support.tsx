@@ -493,11 +493,13 @@ function TicketsView(props: {
   priorityFilter: Priority | "all"; setPriorityFilter: (p: Priority | "all") => void;
   assignFilter: "all" | "me" | "unassigned"; setAssignFilter: (a: "all" | "me" | "unassigned") => void;
   sortBy: "activity" | "priority" | "oldest"; setSortBy: (s: "activity" | "priority" | "oldest") => void;
+  presenceOf: (id: string | null | undefined) => { state: PresenceState; lastActiveAt: string | null };
+  profiles: Map<string, string>;
   q: string; setQ: (v: string) => void;
   onOpen: (id: string) => void; onManage: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
   onStatus: (id: string, s: TicketStage) => void; onPriority: (id: string, p: Priority) => void;
 }) {
-  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ } = props;
+  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ, presenceOf, profiles } = props;
   const FILTERS: (TicketStage | "all" | "overdue")[] = ["all", "overdue", ...STAGE_ORDER];
   const PRIO_FILTERS: (Priority | "all")[] = ["all", ...PRIORITIES];
   const ASSIGN_FILTERS: { key: "all" | "me" | "unassigned"; label: string }[] = [
