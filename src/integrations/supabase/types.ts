@@ -4516,7 +4516,7 @@ export type Database = {
           id: string
           storage_path: string
           ticket_id: string
-          uploaded_by: string
+          uploaded_by: string | null
         }
         Insert: {
           created_at?: string
@@ -4526,7 +4526,7 @@ export type Database = {
           id?: string
           storage_path: string
           ticket_id: string
-          uploaded_by: string
+          uploaded_by?: string | null
         }
         Update: {
           created_at?: string
@@ -4536,7 +4536,7 @@ export type Database = {
           id?: string
           storage_path?: string
           ticket_id?: string
-          uploaded_by?: string
+          uploaded_by?: string | null
         }
         Relationships: [
           {
@@ -4578,6 +4578,72 @@ export type Database = {
         }
         Relationships: []
       }
+      support_email_events: {
+        Row: {
+          created_at: string
+          direction: string
+          from_email: string | null
+          id: string
+          message_id: string | null
+          provider_message_id: string | null
+          raw: Json | null
+          rejection_reason: string | null
+          reply_to_id: string | null
+          status: string
+          subject: string | null
+          thread_id: string | null
+          ticket_id: string | null
+          to_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          from_email?: string | null
+          id?: string
+          message_id?: string | null
+          provider_message_id?: string | null
+          raw?: Json | null
+          rejection_reason?: string | null
+          reply_to_id?: string | null
+          status?: string
+          subject?: string | null
+          thread_id?: string | null
+          ticket_id?: string | null
+          to_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          from_email?: string | null
+          id?: string
+          message_id?: string | null
+          provider_message_id?: string | null
+          raw?: Json | null
+          rejection_reason?: string | null
+          reply_to_id?: string | null
+          status?: string
+          subject?: string | null
+          thread_id?: string | null
+          ticket_id?: string | null
+          to_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_email_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_email_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_internal_notes: {
         Row: {
           author_id: string
@@ -4614,37 +4680,64 @@ export type Database = {
         Row: {
           attachments: Json
           body: string
+          channel: string
           created_at: string
           delivered_at: string
+          delivery_status: string | null
           id: string
+          inbound_email_id: string | null
           is_seeded: boolean
+          processing_status: string | null
           read_at: string | null
-          sender_id: string
+          received_at: string | null
+          reply_to_id: string | null
+          sender_email: string | null
+          sender_id: string | null
           sender_role: string
+          source: string | null
+          thread_id: string | null
           ticket_id: string
         }
         Insert: {
           attachments?: Json
           body: string
+          channel?: string
           created_at?: string
           delivered_at?: string
+          delivery_status?: string | null
           id?: string
+          inbound_email_id?: string | null
           is_seeded?: boolean
+          processing_status?: string | null
           read_at?: string | null
-          sender_id: string
+          received_at?: string | null
+          reply_to_id?: string | null
+          sender_email?: string | null
+          sender_id?: string | null
           sender_role?: string
+          source?: string | null
+          thread_id?: string | null
           ticket_id: string
         }
         Update: {
           attachments?: Json
           body?: string
+          channel?: string
           created_at?: string
           delivered_at?: string
+          delivery_status?: string | null
           id?: string
+          inbound_email_id?: string | null
           is_seeded?: boolean
+          processing_status?: string | null
           read_at?: string | null
-          sender_id?: string
+          received_at?: string | null
+          reply_to_id?: string | null
+          sender_email?: string | null
+          sender_id?: string | null
           sender_role?: string
+          source?: string | null
+          thread_id?: string | null
           ticket_id?: string
         }
         Relationships: [
@@ -4844,11 +4937,14 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: string
+          channel: string
           closed_at: string | null
           context: Json
           created_at: string
           dispute_id: string | null
           first_response_at: string | null
+          guest_email: string | null
+          guest_name: string | null
           id: string
           is_seeded: boolean
           last_message_at: string
@@ -4860,6 +4956,7 @@ export type Database = {
           return_id: string | null
           seller_id: string | null
           shipment_id: string | null
+          source: string | null
           status: string
           subject: string
           tags: string[]
@@ -4867,16 +4964,19 @@ export type Database = {
           unread_admin_count: number
           unread_customer_count: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           assigned_to?: string | null
           category?: string
+          channel?: string
           closed_at?: string | null
           context?: Json
           created_at?: string
           dispute_id?: string | null
           first_response_at?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
           id?: string
           is_seeded?: boolean
           last_message_at?: string
@@ -4888,6 +4988,7 @@ export type Database = {
           return_id?: string | null
           seller_id?: string | null
           shipment_id?: string | null
+          source?: string | null
           status?: string
           subject: string
           tags?: string[]
@@ -4895,16 +4996,19 @@ export type Database = {
           unread_admin_count?: number
           unread_customer_count?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           assigned_to?: string | null
           category?: string
+          channel?: string
           closed_at?: string | null
           context?: Json
           created_at?: string
           dispute_id?: string | null
           first_response_at?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
           id?: string
           is_seeded?: boolean
           last_message_at?: string
@@ -4916,6 +5020,7 @@ export type Database = {
           return_id?: string | null
           seller_id?: string | null
           shipment_id?: string | null
+          source?: string | null
           status?: string
           subject?: string
           tags?: string[]
@@ -4923,7 +5028,7 @@ export type Database = {
           unread_admin_count?: number
           unread_customer_count?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

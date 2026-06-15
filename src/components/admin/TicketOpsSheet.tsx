@@ -63,6 +63,7 @@ type FullTicket = {
   status: string; priority: string; order_id: string | null; user_id: string;
   assigned_to: string | null; created_at: string; first_response_at: string | null;
   resolved_at: string | null; closed_at: string | null; last_message_at: string;
+  channel?: string | null; source?: string | null; guest_email?: string | null; guest_name?: string | null;
 };
 type EventRow = { id: string; event_type: string; from_status: string | null; to_status: string | null; actor_id: string | null; meta: Record<string, unknown>; created_at: string };
 type NoteRow = { id: string; body: string; author_id: string; created_at: string };
@@ -104,7 +105,7 @@ export function TicketOpsSheet({
   const load = useCallback(async () => {
     const [t, ev, nt, ord] = await Promise.all([
       supabase.from("support_tickets")
-        .select("id,ticket_number,subject,category,status,priority,order_id,user_id,assigned_to,created_at,first_response_at,resolved_at,closed_at,last_message_at")
+        .select("id,ticket_number,subject,category,status,priority,order_id,user_id,assigned_to,created_at,first_response_at,resolved_at,closed_at,last_message_at,channel,source,guest_email,guest_name")
         .eq("id", ticketId).maybeSingle(),
       supabase.from("support_ticket_events").select("id,event_type,from_status,to_status,actor_id,meta,created_at").eq("ticket_id", ticketId).order("created_at", { ascending: false }).limit(200),
       supabase.from("support_internal_notes").select("id,body,author_id,created_at").eq("ticket_id", ticketId).order("created_at", { ascending: false }),
@@ -306,6 +307,14 @@ export function TicketOpsSheet({
               <p className="font-mono text-[11px] text-accent">{ticket?.ticket_number ?? "…"}</p>
               <h2 className="text-base font-semibold truncate">{ticket?.subject ?? "Loading…"}</h2>
               {ticket && <p className="text-[11px] text-muted-foreground mt-0.5">{ticket.category} · opened {fmt(ticket.created_at)}</p>}
+              {ticket?.channel === "email" && (
+                <p className="mt-1 inline-flex flex-wrap items-center gap-1 rounded-full bg-sky-500/10 ring-1 ring-sky-500/30 px-2 py-0.5 text-[10px] font-mono text-sky-400">
+                  <Mail className="size-3" /> Email
+                  {(ticket.guest_email || ticket.source) && (
+                    <span className="text-muted-foreground/80">· {ticket.guest_email ?? ticket.source}</span>
+                  )}
+                </p>
+              )}
             </div>
             <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted shrink-0"><X className="size-4" /></button>
           </div>

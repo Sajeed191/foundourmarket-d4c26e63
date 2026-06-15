@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Loader2, Plus, Send, LifeBuoy, X, ChevronRight,
   ShieldCheck, MessageSquare, CheckCircle2, Check, CheckCheck,
-  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud,
+  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud, Mail,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -76,6 +76,10 @@ type Message = {
   created_at: string;
   delivered_at: string | null;
   read_at: string | null;
+  channel?: string | null;
+  source?: string | null;
+  sender_email?: string | null;
+  received_at?: string | null;
 };
 
 function statusTone(s: string) {
@@ -453,7 +457,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
 
   const load = useCallback(async () => {
     const [{ data: m }, { data: t }] = await Promise.all([
-      supabase.from("support_messages").select("id,ticket_id,sender_id,sender_role,body,attachments,created_at,delivered_at,read_at").eq("ticket_id", ticketId).order("created_at"),
+      supabase.from("support_messages").select("id,ticket_id,sender_id,sender_role,body,attachments,created_at,delivered_at,read_at,channel,source,sender_email,received_at").eq("ticket_id", ticketId).order("created_at"),
       supabase.from("support_tickets").select("id,subject,category,status,priority,last_message_at,created_at").eq("id", ticketId).maybeSingle(),
     ]);
     setMessages(((m as Message[]) ?? []).map((x) => ({ ...x, attachments: (x.attachments as unknown as string[]) ?? [] })));
@@ -505,7 +509,15 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
                     {m.sender_role === "staff" && !mine && (
                       <p className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent mb-1"><ShieldCheck className="size-3" /> Support team</p>
                     )}
+                    {m.channel === "email" && (
+                      <p className="flex flex-wrap items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-sky-400 mb-1">
+                        <Mail className="size-3" /> Email
+                        {m.sender_email && <span className="text-muted-foreground/70 normal-case tracking-normal">· {m.sender_email}</span>}
+                        {m.received_at && <span className="text-muted-foreground/50 normal-case tracking-normal">· received {new Date(m.received_at).toLocaleString()}</span>}
+                      </p>
+                    )}
                     <p className="text-sm whitespace-pre-wrap break-words">{m.body}</p>
+
                     {m.attachments.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {m.attachments.map((p) => <Attachment key={p} path={p} />)}
