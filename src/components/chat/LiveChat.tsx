@@ -321,34 +321,40 @@ export function LiveChat() {
                 </div>
               </div>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((v) => !v)}
-                  aria-label="More options"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="More options"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  collisionPadding={12}
+                  className="z-[90] w-52 rounded-2xl border-border/60 bg-popover/95 p-1.5 backdrop-blur-xl shadow-[var(--shadow-float)]"
+                  style={{
+                    marginBottom: "env(safe-area-inset-bottom)",
+                    marginRight: "env(safe-area-inset-right)",
+                  }}
                 >
-                  <MoreVertical className="h-5 w-5" />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-11 z-20 w-44 overflow-hidden rounded-2xl border border-border/60 bg-popover/95 backdrop-blur-xl shadow-[var(--shadow-float)] animate-scale-in">
-                    <button
-                      type="button"
-                      onClick={() => { setMessages([]); setOperatorJoined(false); setMenuOpen(false); toast.success("Conversation cleared"); }}
-                      className="block w-full px-4 py-3 text-left text-sm text-foreground hover:bg-foreground/5"
-                    >
-                      Clear conversation
-                    </button>
-                    <button
-                      type="button"
-                      onClick={closePanel}
-                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-foreground hover:bg-foreground/5"
-                    >
-                      <X className="h-4 w-4" /> Close chat
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <DropdownMenuItem
+                    onSelect={() => { setMessages([]); setOperatorJoined(false); toast.success("Conversation cleared"); }}
+                    className="cursor-pointer rounded-xl px-3 py-2.5 text-sm text-foreground focus:bg-foreground/5"
+                  >
+                    Clear conversation
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={closePanel}
+                    className="cursor-pointer gap-2 rounded-xl px-3 py-2.5 text-sm text-foreground focus:bg-foreground/5"
+                  >
+                    <X className="h-4 w-4" /> Close chat
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
