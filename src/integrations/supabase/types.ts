@@ -4776,7 +4776,7 @@ export type Database = {
           status?: string
           subject: string
           tags?: string[]
-          ticket_number: string
+          ticket_number?: string
           unread_admin_count?: number
           unread_customer_count?: number
           updated_at?: string
