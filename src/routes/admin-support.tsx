@@ -238,9 +238,13 @@ function AdminSupportPage() {
         ) : section === "tickets" ? (
           <TicketsView
             tickets={visibleTickets} stageFilter={stageFilter} setStageFilter={setStageFilter} stageCount={stageCount}
-            q={q} setQ={setQ} onOpen={setActiveId} on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
+            priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
+            assignFilter={assignFilter} setAssignFilter={setAssignFilter}
+            sortBy={sortBy} setSortBy={setSortBy}
+            q={q} setQ={setQ} onOpen={setActiveId} onManage={setManageId} on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
             onStatus={(id, st) => update(id, { status: st })} onPriority={(id, p) => update(id, { priority: priorityToDb(p) })}
           />
+
         ) : section === "refunds" ? (
           <RefundsView refunds={refunds} orders={orders} onChanged={load} />
         ) : section === "returns" ? (
