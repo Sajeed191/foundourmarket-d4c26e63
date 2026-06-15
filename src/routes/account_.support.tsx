@@ -560,14 +560,6 @@ function Sheet({ title, subtitle, children, onClose, fullPage }: { title: string
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">{label}</label>
-      {children}
-    </div>
-  );
-}
 
 /* ---------- Attachment system (Phase 4 — secure attachments) ---------- */
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
