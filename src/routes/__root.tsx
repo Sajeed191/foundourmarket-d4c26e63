@@ -442,7 +442,7 @@ function RootComponent() {
                             <DeferredShell
                               isAuthRoute={isAuthRoute}
                               isAdminRoute={isAdminRoute}
-                              hideLiveChat={isCheckoutRoute}
+                              hideLiveChat={isCheckoutRoute || isTicketRoute}
                             />
                             <Toaster position="bottom-center" richColors />
                             <ShareDialog />
