@@ -260,10 +260,34 @@ function AccountPage() {
       .slice(0, 8),
     [products, wishSlugs],
   );
-  const recentlyViewed = useMemo(() => {
+  // Product names the user has already purchased — never resurface these.
+  const purchasedNames = useMemo(() => {
+    const s = new Set<string>();
+    for (const o of orders ?? []) for (const it of o.order_items ?? []) if (it.name) s.add(it.name);
+    return s;
+  }, [orders]);
+
+  /**
+   * Personalized "Continue Shopping" — only products THIS user has interacted
+   * with (cart > saved > recently viewed), excluding anything already purchased.
+   * Empty for brand-new visitors so the section hides entirely.
+   */
+  const continueShopping = useMemo(() => {
     const map = new Map(products.map((p) => [p.slug, p] as const));
-    return recentSlugs.map((s) => map.get(s)).filter(Boolean).slice(0, 8) as Product[];
-  }, [products, recentSlugs]);
+    const seen = new Set<string>();
+    const out: { product: Product; badge: "cart" | "saved" | "viewed" }[] = [];
+    const push = (slug: string, badge: "cart" | "saved" | "viewed") => {
+      if (!slug || seen.has(slug)) return;
+      const p = map.get(slug);
+      if (!p || purchasedNames.has(p.name)) return;
+      seen.add(slug);
+      out.push({ product: p, badge });
+    };
+    for (const i of cart.items) push(i.slug, "cart");
+    for (const s of wishSlugs) push(s, "saved");
+    for (const s of recentSlugs) push(s, "viewed");
+    return out.slice(0, 10);
+  }, [products, cart.items, wishSlugs, recentSlugs, purchasedNames]);
 
   if (loading || !user) {
     return <PremiumLoader />;
@@ -408,11 +432,11 @@ function AccountPage() {
           </div>
         </motion.section>
 
-        {/* 4 — RECENTLY VIEWED */}
-        {recentlyViewed.length > 0 && (
+        {/* 4 — CONTINUE SHOPPING (personalized; hidden for brand-new visitors) */}
+        {continueShopping.length > 0 && (
           <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
             <SectionHeader title="Continue Shopping" eyebrow="Pick up where you left off" />
-            <ContinueShopping items={recentlyViewed} />
+            <ContinueShopping items={continueShopping} />
           </motion.section>
         )}
 
@@ -1205,9 +1229,17 @@ function CompactSupportCard({
   return <Link to={to!} className={cls}>{inner}</Link>;
 }
 
-function ContinueShopping({ items }: { items: Product[] }) {
-  const shown = items.slice(0, 5);
-  const hasMore = items.length > 5;
+type ContinueItem = { product: Product; badge: "cart" | "saved" | "viewed" };
+
+const CONTINUE_BADGE: Record<ContinueItem["badge"], { label: string; icon: string }> = {
+  cart: { label: "In Cart", icon: "🛒" },
+  saved: { label: "Saved", icon: "❤️" },
+  viewed: { label: "Recently Viewed", icon: "👀" },
+};
+
+function ContinueShopping({ items }: { items: ContinueItem[] }) {
+  const shown = items.slice(0, 9);
+  const hasMore = items.length > 9;
   return (
     <div className="-mx-4 sm:mx-0">
       <div
@@ -1219,12 +1251,16 @@ function ContinueShopping({ items }: { items: Product[] }) {
           overscrollBehaviorX: "contain",
         }}
       >
-        {shown.map((p) => (
+        {shown.map(({ product, badge }) => (
           <div
-            key={p.slug}
-            className="snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
+            key={product.slug}
+            className="relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
           >
-            <ProductCard product={p} />
+            <span className="pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
+              <span aria-hidden>{CONTINUE_BADGE[badge].icon}</span>
+              {CONTINUE_BADGE[badge].label}
+            </span>
+            <ProductCard product={product} />
           </div>
         ))}
         {hasMore && (
