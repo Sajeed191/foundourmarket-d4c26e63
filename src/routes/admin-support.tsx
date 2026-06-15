@@ -419,7 +419,7 @@ function SupportSettingsView() {
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
-function DashboardView({ kpis, enriched }: { kpis: ReturnType<typeof computeSupportKpis>; enriched: Enriched[] }) {
+function DashboardView({ kpis, enriched, team, avgFirstReplyTodayMin }: { kpis: ReturnType<typeof computeSupportKpis>; enriched: Enriched[]; team: TeamMember[]; avgFirstReplyTodayMin: number | null }) {
   const critical = enriched.filter((e) => e.sla.critical).slice(0, 6);
   const escalations = enriched.filter((e) => e.escalations.length && e.stage !== "resolved" && e.stage !== "closed").slice(0, 6);
 
