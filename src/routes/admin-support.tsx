@@ -498,7 +498,7 @@ function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: 
   e: Enriched; onOpen: () => void; onManage: () => void; on360: () => void; onAi: () => void;
   onStatus: (s: TicketStage) => void; onPriority: (p: Priority) => void;
 }) {
-  const { ticket, stage, sla, escalations, customerName } = e;
+  const { ticket, stage, sla, firstReply, channel, escalations, customerName } = e;
 
   return (
     <div className={cn("card-premium rounded-2xl p-4 md:p-5", sla.critical && "border-destructive/40")}>
