@@ -275,13 +275,3 @@ export function FooterHelpLinks() {
   );
 }
 
-/* ---------------- Section 10 — Sticky help button ---------------- */
-export function StickyHelpButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick}
-      className="sm:hidden fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 h-12 px-5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold shadow-xl shadow-orange-500/30 active:scale-95 transition"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <Headphones className="size-4" /> Help
-    </button>
-  );
-}

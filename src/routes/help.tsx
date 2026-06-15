@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
 import {
   TrustHeaderCards, ContactDetailStrip, TicketStatusOverview, OrderHelpCenter,
-  KnowledgeBase, StripeTrustSection, DisputePrevention, FooterHelpLinks, StickyHelpButton,
+  KnowledgeBase, StripeTrustSection, DisputePrevention, FooterHelpLinks,
 } from "@/components/site/HelpEnhancements";
 
 export const Route = createFileRoute("/help")({
@@ -952,8 +952,6 @@ function HelpPage() {
           FoundOurMarket™ · Premium support, 24/7
         </p>
       </div>
-
-      <StickyHelpButton onClick={() => { loadCrisp().then(() => openCrispChat()).catch(() => toast.error("Live chat is loading — try again in a moment")); }} />
     </div>
   );
 }
