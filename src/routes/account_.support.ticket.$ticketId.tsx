@@ -185,8 +185,9 @@ function TicketPage() {
 
   async function setStatus(status: "resolved" | "open") {
     setMenuOpen(false);
-    const patch: Record<string, unknown> = { status };
-    if (status === "resolved") patch.resolved_at = new Date().toISOString();
+    const patch = status === "resolved"
+      ? { status, resolved_at: new Date().toISOString() }
+      : { status };
     const { error } = await supabase.from("support_tickets").update(patch).eq("id", ticketId);
     if (error) { toast.error(error.message); return; }
     toast.success(status === "resolved" ? "Ticket marked resolved" : "Ticket reopened");
