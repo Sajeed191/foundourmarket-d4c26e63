@@ -15,6 +15,7 @@ import { useRegion } from "@/lib/region";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
+import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -59,7 +60,7 @@ function CartPage() {
   } = useCart();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
 
-  const [promo] = useState<AutoPromo>(null);
+  const [promo, setPromo] = useState<AutoPromo>(null);
   const [ship, setShip] = useState<ShipState>(null);
 
   // Pull the latest admin pricing/shipping when the cart opens.
@@ -302,6 +303,24 @@ function CartPage() {
         <aside className="lg:col-span-1">
           <div className="lg:sticky lg:top-24 space-y-4">
             <ShippingBox subtotalUSD={subtotalUSD} ship={ship} setShip={setShip} format={format} />
+
+            {detailed.length > 0 && (
+              <CouponInput
+                items={detailed.map((i) => ({ slug: i.slug, qty: i.qty }))}
+                format={format}
+                onChange={(a: AppliedCoupon | null) =>
+                  setPromo(
+                    a
+                      ? {
+                          label: a.kind === "percent" ? `Coupon ${a.code} · ${a.value}% off` : `Coupon ${a.code}`,
+                          discount: a.discount,
+                        }
+                      : null,
+                  )
+                }
+              />
+            )}
+
 
 
             <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">

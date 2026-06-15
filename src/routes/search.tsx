@@ -24,6 +24,7 @@ type SearchParams = {
 };
 
 const PRICE_MAX = 1000;
+const PAGE_SIZE = 60;
 
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
@@ -178,8 +179,10 @@ function SearchPage() {
 
   const [query, setQuery] = useState(search.q ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [results, setResults] = useState<Product[]>([]);
+  const [rawRows, setRawRows] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
@@ -216,10 +219,14 @@ function SearchPage() {
     }
   }, [search.q]);
 
+  const sort = search.sort ?? "relevance";
+
+  // Reset and fetch the first page whenever the query / RPC-handled filters change.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const sort = search.sort ?? "relevance";
+    setRawRows([]);
+    setHasMore(false);
     (supabase.rpc as any)("search_products", {
       q: search.q ?? null,
       category_filter: search.cat ?? null,
@@ -227,20 +234,52 @@ function SearchPage() {
       max_price: search.max ?? null,
       min_rating: search.rating ?? null,
       sort_by: RPC_SORTS.has(sort) ? sort : "relevance",
-      page_limit: 60,
+      page_limit: PAGE_SIZE,
       page_offset: 0,
     }).then(({ data }: { data: any[] | null }) => {
       if (cancelled) return;
-      let rows = (data ?? []).map((r: any) => rowToProduct(r));
-      if (search.stock === "in") rows = rows.filter((p) => p.inStock);
-      if (search.free === "1") rows = rows.filter((p) => shippingFeeOf(p) <= 0);
-      if (search.disc === "1") rows = rows.filter((p) => discountPercent(p.price, compareOf(p)) != null);
-      rows = applyClientSort(rows, sort, (p) => discountPercent(p.price, compareOf(p)) ?? 0);
-      setResults(rows);
+      const rows = (data ?? []).map((r: any) => rowToProduct(r));
+      setHasMore(rows.length === PAGE_SIZE);
+      setRawRows(rows);
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [search.q, search.cat, search.min, search.max, search.sort, search.stock, search.rating, search.free, search.disc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.q, search.cat, search.min, search.max, search.rating, sort]);
+
+  // Load the next page and append (deduped by slug) — preserves filters/sorting.
+  function loadMore() {
+    if (loading || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    (supabase.rpc as any)("search_products", {
+      q: search.q ?? null,
+      category_filter: search.cat ?? null,
+      min_price: search.min ?? null,
+      max_price: search.max ?? null,
+      min_rating: search.rating ?? null,
+      sort_by: RPC_SORTS.has(sort) ? sort : "relevance",
+      page_limit: PAGE_SIZE,
+      page_offset: rawRows.length,
+    }).then(({ data }: { data: any[] | null }) => {
+      const rows = (data ?? []).map((r: any) => rowToProduct(r));
+      setHasMore(rows.length === PAGE_SIZE);
+      setRawRows((prev) => {
+        const seen = new Set(prev.map((p) => p.slug));
+        return [...prev, ...rows.filter((r: Product) => !seen.has(r.slug))];
+      });
+      setLoadingMore(false);
+    });
+  }
+
+  // Client-side filters / sorts that the RPC does not handle, applied to the
+  // accumulated raw rows so pagination stays consistent.
+  const results = useMemo(() => {
+    let rows = rawRows;
+    if (search.stock === "in") rows = rows.filter((p) => p.inStock);
+    if (search.free === "1") rows = rows.filter((p) => shippingFeeOf(p) <= 0);
+    if (search.disc === "1") rows = rows.filter((p) => discountPercent(p.price, compareOf(p)) != null);
+    return applyClientSort(rows, sort, (p) => discountPercent(p.price, compareOf(p)) ?? 0);
+  }, [rawRows, search.stock, search.free, search.disc, sort, shippingFeeOf, compareOf]);
 
 
   function update(patch: Partial<SearchParams>) {
@@ -432,9 +471,22 @@ function SearchPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
-              {results.map((p) => <ProductCard key={p.slug} product={p} />)}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+                {results.map((p) => <ProductCard key={p.slug} product={p} />)}
+              </div>
+              {hasMore && (
+                <div className="mt-8 sm:mt-10 flex justify-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+                  >
+                    {loadingMore ? "Loading…" : "Load More"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

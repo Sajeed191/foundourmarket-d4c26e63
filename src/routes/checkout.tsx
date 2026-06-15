@@ -18,6 +18,7 @@ import { useRegion } from "@/lib/region";
 import { useAddresses, addressCompleteness, type Address } from "@/lib/use-addresses";
 import { computeCheckoutState, type CheckoutState, type DeliveryStatus } from "@/lib/checkout-state";
 import { CheckoutProgress } from "@/components/site/CheckoutProgress";
+import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { CheckoutSummaryDrawer } from "@/components/site/CheckoutSummaryDrawer";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
@@ -180,12 +181,14 @@ function CheckoutPage() {
     () => detailed.reduce((s, i) => s + shippingFeeOf(i.product) * i.qty, 0),
     [detailed, shippingFeeOf],
   );
-  const totals = computeOrderTotals(market, subtotalUSD, 0, productShipping);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const couponDiscountUSD = coupon?.discount ?? 0;
+  const totals = computeOrderTotals(market, subtotalUSD, couponDiscountUSD, productShipping);
   const subtotalINR = totals.subtotal;
   const shippingINR = totals.shipping;
   const taxINR = totals.tax;
   const totalINR = totals.total;
-  const savingsINR = 0;
+  const savingsINR = totals.discount;
   const itemsCount = useMemo(() => detailed.reduce((s, i) => s + i.qty, 0), [detailed]);
 
   const eta = formatEta(3, 5);
@@ -205,7 +208,7 @@ function CheckoutPage() {
         data: {
           items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
           addressId: selectedAddress.id,
-          promoCode: null,
+          promoCode: coupon?.code ?? null,
           attribution: buildOrderAttribution(),
         },
       });
@@ -408,7 +411,7 @@ function CheckoutPage() {
         data: {
           items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
           addressId: selectedAddress.id,
-          promoCode: null,
+          promoCode: coupon?.code ?? null,
           attribution: buildOrderAttribution(),
         },
       });
@@ -825,9 +828,23 @@ function CheckoutPage() {
                   </div>
                 )}
 
+                {detailed.length > 0 && (
+                  <div className="mb-4">
+                    <CouponInput
+                      items={detailed.map((i) => ({ slug: i.slug, qty: i.qty }))}
+                      format={(usd) => fmt(computeOrderTotals(market, usd, 0).subtotal)}
+                      onChange={setCoupon}
+                    />
+                  </div>
+                )}
+
                 <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">
                   <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{fmt(subtotalINR)}</dd></div>
+                  {savingsINR > 0 && (
+                    <div className="flex justify-between"><dt className="text-accent">{coupon ? `Coupon ${coupon.code}` : "Discount"}</dt><dd className="font-mono text-accent">−{fmt(savingsINR)}</dd></div>
+                  )}
                   <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : fmt(shippingINR)}</dd></div>
+
                   <div className="border-t border-white/10 pt-3 flex justify-between items-end">
                     <dt className="font-medium text-base">Total</dt>
                     <dd className="text-right">
