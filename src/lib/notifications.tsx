@@ -12,6 +12,7 @@ export type Notification = {
   link: string | null;
   data: Record<string, unknown> | null;
   read_at: string | null;
+  archived_at?: string | null;
   created_at: string;
 };
 
