@@ -506,13 +506,17 @@ function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: 
         <button onClick={onOpen} className="text-left group min-w-0 flex items-start gap-3 flex-1">
           <span className="size-9 mt-0.5 grid place-items-center rounded-xl bg-white/[0.04] text-muted-foreground group-hover:text-accent transition-colors shrink-0"><MessageSquare className="size-4" /></span>
           <div className="min-w-0">
-            <p className="text-sm font-medium group-hover:text-accent transition-colors truncate">{ticket.subject}</p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <ChannelBadge channel={channel} />
+              <p className="text-sm font-medium group-hover:text-accent transition-colors truncate">{ticket.subject}</p>
+            </div>
             <p className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">
               #{ticket.id.slice(0, 8)} · {customerName} · {ticket.category}{ticket.market_region ? ` · ${ticket.market_region}` : ""} · {fmtTime(ticket.last_message_at)}
             </p>
           </div>
         </button>
         <div className="flex flex-col items-end gap-1 shrink-0">
+          <FirstReplyBadge fr={firstReply} />
           <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border", STAGE_CLS[stage])}>{STAGE_LABEL[stage]}</span>
           <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border", PRIORITY_CLS[sla.priority])}>{PRIORITY_LABEL[sla.priority]}</span>
         </div>
