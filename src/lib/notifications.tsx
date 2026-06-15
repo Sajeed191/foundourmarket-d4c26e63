@@ -230,7 +230,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         }))
       .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => setItems((prev) => prev.map(n => n.id === (payload.new as Notification).id ? payload.new as Notification : n)))
+        (payload) => setItems((prev) => {
+          const n = payload.new as Notification;
+          if (n.archived_at) return prev.filter((p) => p.id !== n.id);
+          return prev.map((p) => (p.id === n.id ? n : p));
+        }))
       .on("postgres_changes",
         { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => setItems((prev) => prev.filter(n => n.id !== (payload.old as { id: string }).id)))
