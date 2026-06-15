@@ -347,9 +347,9 @@ export function TicketOpsSheet({
               </div>
             </Block>
 
-            {/* Customer context */}
-            <Block title="Customer context" icon={<User className="size-3.5" />}>
-              <div className="rounded-xl border border-border/60 bg-background/40 p-3 space-y-2">
+            {/* Customer overview */}
+            <Block title="Customer overview" icon={<User className="size-3.5" />}>
+              <div className="rounded-xl border border-border/60 bg-background/40 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{customer?.name ?? "Customer"}</p>
@@ -358,10 +358,15 @@ export function TicketOpsSheet({
                   <button onClick={() => onOpen360(ticket.user_id, customer?.name ?? "Customer")}
                     className="inline-flex items-center gap-0.5 text-[11px] text-accent hover:underline shrink-0">360 <ChevronRight className="size-3" /></button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1"><Package className="size-3" />Orders</p><p className="text-sm font-semibold tabular-nums">{orders.length}</p></div>
-                  <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1"><TrendingUp className="size-3" />Total spend</p><p className="text-sm font-semibold tabular-nums">{money(ltv, currency)}</p></div>
+                  <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1"><TrendingUp className="size-3" />Spend</p><p className="text-sm font-semibold tabular-nums">{money(ltv, currency)}</p></div>
+                  <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1"><TrendingUp className="size-3" />Avg order</p><p className="text-sm font-semibold tabular-nums">{money(aov, currency)}</p></div>
                 </div>
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Clock className="size-3" /> Member since{" "}
+                  <span className="text-foreground">{customer?.createdAt ? new Date(customer.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—"}</span>
+                </p>
                 {ticket.order_id && (
                   <p className="text-[11px] text-muted-foreground">Linked order <span className="font-mono text-foreground">#{ticket.order_id.slice(0, 8)}</span></p>
                 )}
@@ -379,6 +384,44 @@ export function TicketOpsSheet({
                 )}
               </div>
             </Block>
+
+            {/* Support history */}
+            <Block title="Support history" icon={<History className="size-3.5" />}>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open tickets</p><p className="text-sm font-semibold tabular-nums">{support.openT}</p></div>
+                <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Resolved</p><p className="text-sm font-semibold tabular-nums">{support.resolvedCount}</p></div>
+                <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Total requests</p><p className="text-sm font-semibold tabular-nums">{support.total}</p></div>
+                <div className="rounded-lg bg-white/[0.03] px-2.5 py-1.5"><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Last ticket</p><p className="text-sm font-semibold">{support.lastDate ? new Date(support.lastDate).toLocaleDateString() : "—"}</p></div>
+              </div>
+            </Block>
+
+            {/* Previous resolutions */}
+            {support.previous.length > 0 && (
+              <Block title="Previous resolutions" icon={<ShieldCheck className="size-3.5" />}>
+                <div className="space-y-1.5">
+                  {support.previous.map((t) => (
+                    <button
+                      key={t.id}
+                      disabled={t.id === ticketId}
+                      onClick={() => onOpenTicket?.(t.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/40 px-2.5 py-2 text-left transition-colors",
+                        t.id === ticketId ? "opacity-60" : "hover:border-accent/40 hover:bg-accent/[0.04]",
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-mono text-[11px] text-accent truncate">{t.ticket_number ?? `#${t.id.slice(0, 8)}`}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{t.category}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{new Date(t.resolved_at ?? t.closed_at ?? t.created_at).toLocaleDateString()}</span>
+                        {t.id !== ticketId && <ChevronRight className="size-3 text-muted-foreground" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </Block>
+            )}
 
             {/* Internal notes */}
             <Block title="Internal notes" icon={<StickyNote className="size-3.5" />} hint="Admin only — never shown to customers">
