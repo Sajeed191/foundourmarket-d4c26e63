@@ -208,6 +208,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
+      .is("archived_at", null)
       .order("created_at", { ascending: false })
       .limit(100);
     setItems((data ?? []) as Notification[]);
