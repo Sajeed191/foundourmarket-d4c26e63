@@ -509,7 +509,15 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
                     {m.sender_role === "staff" && !mine && (
                       <p className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-accent mb-1"><ShieldCheck className="size-3" /> Support team</p>
                     )}
+                    {m.channel === "email" && (
+                      <p className="flex flex-wrap items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-sky-400 mb-1">
+                        <Mail className="size-3" /> Email
+                        {m.sender_email && <span className="text-muted-foreground/70 normal-case tracking-normal">· {m.sender_email}</span>}
+                        {m.received_at && <span className="text-muted-foreground/50 normal-case tracking-normal">· received {new Date(m.received_at).toLocaleString()}</span>}
+                      </p>
+                    )}
                     <p className="text-sm whitespace-pre-wrap break-words">{m.body}</p>
+
                     {m.attachments.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {m.attachments.map((p) => <Attachment key={p} path={p} />)}
