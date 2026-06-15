@@ -196,7 +196,7 @@ export function NotificationLink({
       console.error("[notification] navigation failed — falling back", { dest, to, err });
       if (isSupport) {
         toast("Conversation not found. Opening Support Center.");
-        void navigate({ to: "/account_/support" as never, search: {} as never });
+        void navigate({ to: "/account/support" as never, search: {} as never });
       } else {
         void navigate({ to: "/account/notifications" as never, search: {} as never });
       }
