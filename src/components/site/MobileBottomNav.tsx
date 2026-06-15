@@ -15,6 +15,7 @@ export function MobileBottomNav() {
   const { adminMode } = useAdminMode();
   const { isAdmin } = useIsAdmin();
   const { effectiveTheme } = useTheme();
+  const { count: supportUnread } = useSupportUnread();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Hand the bottom dock over to the admin bar when a staff member is actively
