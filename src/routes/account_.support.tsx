@@ -526,8 +526,8 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
 
   return (
     <Sheet onClose={onClose} title={ticket?.subject ?? "Conversation"} subtitle={ticket ? `#${ticket.id.slice(0, 8)} · ${ticket.status}` : undefined}>
-      <div className="flex flex-col h-[60vh]">
-        <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+      <div className="flex flex-col h-[60dvh] min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
           {messages === null ? (
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
           ) : messages.length === 0 ? (
@@ -615,7 +615,7 @@ function Sheet({ title, subtitle, children, onClose }: { title: string; subtitle
       <motion.div
         initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl glass-strong p-5 max-h-[90vh] overflow-y-auto"
+        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl glass-strong p-5 max-h-[92dvh] overflow-y-auto"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex items-start justify-between mb-4">
