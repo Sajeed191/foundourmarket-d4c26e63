@@ -396,12 +396,24 @@ function TicketsView(props: {
   tickets: Enriched[];
   stageFilter: TicketStage | "all" | "overdue"; setStageFilter: (s: TicketStage | "all" | "overdue") => void;
   stageCount: (s: TicketStage | "all" | "overdue") => number;
+  priorityFilter: Priority | "all"; setPriorityFilter: (p: Priority | "all") => void;
+  assignFilter: "all" | "me" | "unassigned"; setAssignFilter: (a: "all" | "me" | "unassigned") => void;
+  sortBy: "activity" | "priority" | "oldest"; setSortBy: (s: "activity" | "priority" | "oldest") => void;
   q: string; setQ: (v: string) => void;
-  onOpen: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
+  onOpen: (id: string) => void; onManage: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
   onStatus: (id: string, s: TicketStage) => void; onPriority: (id: string, p: Priority) => void;
 }) {
-  const { tickets, stageFilter, setStageFilter, stageCount, q, setQ } = props;
+  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ } = props;
   const FILTERS: (TicketStage | "all" | "overdue")[] = ["all", "overdue", ...STAGE_ORDER];
+  const PRIO_FILTERS: (Priority | "all")[] = ["all", ...PRIORITIES];
+  const ASSIGN_FILTERS: { key: "all" | "me" | "unassigned"; label: string }[] = [
+    { key: "all", label: "All tickets" }, { key: "me", label: "Assigned to me" }, { key: "unassigned", label: "Unassigned" },
+  ];
+  const SORTS: { key: "activity" | "priority" | "oldest"; label: string }[] = [
+    { key: "activity", label: "Latest activity" }, { key: "priority", label: "Highest priority" }, { key: "oldest", label: "Oldest unresolved" },
+  ];
+  const pill = (active: boolean) => cn("rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+    active ? "border-accent/50 bg-accent/15 text-accent" : "border-border/60 text-muted-foreground hover:text-foreground");
   return (
     <div className="space-y-4">
       <div className="card-premium rounded-2xl p-3 space-y-3">
@@ -413,11 +425,29 @@ function TicketsView(props: {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
-            <button key={f} onClick={() => setStageFilter(f)}
-              className={cn("rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                stageFilter === f ? "border-accent/50 bg-accent/15 text-accent" : "border-border/60 text-muted-foreground hover:text-foreground")}>
+            <button key={f} onClick={() => setStageFilter(f)} className={pill(stageFilter === f)}>
               {f === "all" ? "All" : f === "overdue" ? "Overdue" : STAGE_LABEL[f as TicketStage]} <span className="opacity-60 tabular-nums">{stageCount(f)}</span>
             </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Priority</span>
+          {PRIO_FILTERS.map((p) => (
+            <button key={p} onClick={() => setPriorityFilter(p)} className={pill(priorityFilter === p)}>
+              {p === "all" ? "Any" : PRIORITY_LABEL[p]}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Owner</span>
+          {ASSIGN_FILTERS.map((a) => (
+            <button key={a.key} onClick={() => setAssignFilter(a.key)} className={pill(assignFilter === a.key)}>{a.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Sort</span>
+          {SORTS.map((s) => (
+            <button key={s.key} onClick={() => setSortBy(s.key)} className={pill(sortBy === s.key)}>{s.label}</button>
           ))}
         </div>
       </div>
@@ -431,23 +461,22 @@ function TicketsView(props: {
         <div className="space-y-3">
           {tickets.map((e) => (
             <TicketCard key={e.ticket.id} e={e}
-              onOpen={() => props.onOpen(e.ticket.id)} on360={() => props.on360(e.ticket.user_id, e.customerName)} onAi={() => props.onAi(e.ticket.id)}
+              onOpen={() => props.onOpen(e.ticket.id)} onManage={() => props.onManage(e.ticket.id)}
+              on360={() => props.on360(e.ticket.user_id, e.customerName)} onAi={() => props.onAi(e.ticket.id)}
               onStatus={(st) => props.onStatus(e.ticket.id, st)} onPriority={(p) => props.onPriority(e.ticket.id, p)} />
           ))}
         </div>
       )}
     </div>
   );
-
-  // local alias to avoid prop drilling user_id name
-  function userName(_e: Enriched) { return _e.customerName; }
 }
 
-function TicketCard({ e, onOpen, on360, onAi, onStatus, onPriority }: {
-  e: Enriched; onOpen: () => void; on360: () => void; onAi: () => void;
+function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: {
+  e: Enriched; onOpen: () => void; onManage: () => void; on360: () => void; onAi: () => void;
   onStatus: (s: TicketStage) => void; onPriority: (p: Priority) => void;
 }) {
   const { ticket, stage, sla, escalations, customerName } = e;
+
   return (
     <div className={cn("card-premium rounded-2xl p-4 md:p-5", sla.critical && "border-destructive/40")}>
       <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
