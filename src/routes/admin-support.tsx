@@ -71,11 +71,14 @@ type Enriched = {
   stage: TicketStage;
   sla: SlaInfo;
   firstReply: FirstReplySla;
+  firstStaffReplyAt: number | null;
   channel: SupportChannel;
   lastSenderRole: string | null;
   escalations: EscalationReason[];
   customerName: string;
 };
+
+export type TeamMember = { id: string; name: string; state: PresenceState; lastActiveAt: string | null };
 
 function AdminSupportPage() {
   const { user } = useAuth();
