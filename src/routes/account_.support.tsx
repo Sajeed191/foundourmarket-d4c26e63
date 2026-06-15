@@ -214,10 +214,25 @@ function SupportPage() {
           <ComposeSheet
             userId={user.id}
             market={market}
-            onClose={() => setComposing(false)}
-            onCreated={(id) => { setComposing(false); void loadTickets(); setActiveId(id); }}
+            prefill={prefill}
+            onClose={() => {
+              setComposing(false);
+              if (wantsCompose) nav({ to: "/account_/support", search: {}, replace: true });
+            }}
+            onContinue={(id) => {
+              setComposing(false);
+              if (wantsCompose) nav({ to: "/account_/support", search: {}, replace: true });
+              setActiveId(id);
+            }}
+            onCreated={(id) => {
+              setComposing(false);
+              if (wantsCompose) nav({ to: "/account_/support", search: {}, replace: true });
+              void loadTickets();
+              setActiveId(id);
+            }}
           />
         )}
+
         {activeId && (
           <ThreadSheet
             ticketId={activeId}
