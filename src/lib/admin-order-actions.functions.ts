@@ -195,6 +195,19 @@ export const markOrderStageFn = createServerFn({ method: "POST" })
         }
         // Notify the customer instantly for every stage advance.
         await notifyCustomer(order.user_id, input.orderId, next);
+        // Branded shipment lifecycle email (Shipped / Out for delivery /
+        // Delivered). Idempotent per (order, event) — never fails fulfilment.
+        const emailEvent = STAGE_EMAIL[next];
+        if (emailEvent) {
+          try {
+            await enqueueOrderEmail(input.orderId, emailEvent);
+          } catch (emailErr: any) {
+            console.error("[order.markStage] shipment email failed", {
+              orderId: input.orderId, stage: next,
+              error: String(emailErr?.message ?? emailErr),
+            });
+          }
+        }
       }
     }
 
