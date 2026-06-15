@@ -91,6 +91,28 @@ function statusTone(s: string) {
   return "text-accent bg-accent/10 ring-accent/25";
 }
 
+// Customer-facing support availability — aggregate only, no staff names.
+function SupportAvailabilityBanner() {
+  const a = useSupportAvailability();
+  const meta = PRESENCE_META[a.state];
+  const label = a.state === "online" ? "Support Online" : a.state === "away" ? "Support Team Away" : "Support Team Offline";
+  const sub = a.state === "online"
+    ? "We typically reply in real time."
+    : a.state === "away"
+      ? "We'll reply as soon as an agent is back."
+      : a.lastActiveAt ? `Last active ${fmtLastActive(a.lastActiveAt)}` : "Leave a message and we'll get back to you.";
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-2xl glass p-3.5">
+      <span aria-hidden className="text-lg leading-none">{meta.dot}</span>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+
 function SupportPage() {
   const { user, loading } = useAuth();
   const { market } = useRegion();
