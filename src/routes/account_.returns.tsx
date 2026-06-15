@@ -30,6 +30,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProductsBySlugs } from "@/lib/products";
+import { supportSearch } from "@/lib/support-context";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
