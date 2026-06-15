@@ -24,6 +24,7 @@ type SearchParams = {
 };
 
 const PRICE_MAX = 1000;
+const PAGE_SIZE = 60;
 
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
