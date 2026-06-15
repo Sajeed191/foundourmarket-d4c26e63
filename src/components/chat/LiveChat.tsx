@@ -110,7 +110,12 @@ function formatDate(iso: string): string {
 export function LiveChat() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthRoute = pathname.startsWith("/auth");
-  const isProductPage = pathname.startsWith("/products/");
+  // High-intent / bottom-nav pages where the floating support orb must never
+  // appear (it overlaps the mobile bottom nav and product CTAs).
+  const hideSupportRoutes = ["/products/", "/product/", "/cart", "/checkout", "/account"];
+  const isProductPage = hideSupportRoutes.some((p) =>
+    p.endsWith("/") ? pathname.startsWith(p) : pathname === p || pathname.startsWith(p + "/"),
+  );
   const { user } = useAuth();
 
   const customerName = useMemo(() => {
