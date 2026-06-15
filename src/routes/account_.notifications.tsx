@@ -5,7 +5,7 @@ import {
   Bell, Check, Trash2, ArrowLeft, Settings as SettingsIcon, CheckCheck, Search, ShoppingBag, X, Archive,
 } from "lucide-react";
 import {
-  useNotifications, categoryOf, resolveNotificationLink, type NotificationCategory, type Notification,
+  useNotifications, categoryOf, resolveNotificationLink, NotificationLink, type NotificationCategory, type Notification,
 } from "@/lib/notifications";
 import { CAT_META, CATEGORY_ORDER, timeAgo } from "@/lib/notification-meta";
 
@@ -220,7 +220,7 @@ function Row({
       }`}
     >
       {dest ? (
-        <Link to={dest} onClick={() => unread && onRead(n.id)}>{content}</Link>
+        <NotificationLink dest={dest} onClick={() => unread && onRead(n.id)}>{content}</NotificationLink>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{content}</div>
       )}

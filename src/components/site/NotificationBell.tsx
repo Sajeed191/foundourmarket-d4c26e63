@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, Check, CheckCheck, Settings, Trash2, ShoppingBag, X, LifeBuoy } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useNotifications, categoryOf, resolveNotificationLink, type NotificationCategory, type Notification } from "@/lib/notifications";
+import { useNotifications, categoryOf, resolveNotificationLink, NotificationLink, type NotificationCategory, type Notification } from "@/lib/notifications";
 import { CAT_META, CATEGORY_ORDER, timeAgo } from "@/lib/notification-meta";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useSupportUnread } from "@/lib/use-support-unread";
@@ -291,7 +291,7 @@ function NotifCard({
       }`}
     >
       {destination ? (
-        <Link to={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
+        <NotificationLink dest={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</NotificationLink>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{inner}</div>
       )}

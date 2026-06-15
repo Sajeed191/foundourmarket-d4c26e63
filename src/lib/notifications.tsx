@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode, type MouseEvent } from "react";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -143,6 +144,70 @@ export function resolveNotificationLink(
     default:
       return explicit || "/account/notifications";
   }
+}
+
+/**
+ * Split a resolved destination string (which may contain a query string, e.g.
+ * `/account/support?ticket=abc`) into a TanStack-friendly `{ to, search }`
+ * pair. Passing the raw string to `<Link to>` makes the router treat the whole
+ * thing — query string included — as the pathname, which matches no route and
+ * renders a 404. Always navigate with the split form instead.
+ */
+export function splitDestination(dest: string): { to: string; search: Record<string, string> } {
+  const [path, qs] = dest.split("?");
+  const search: Record<string, string> = {};
+  if (qs) {
+    for (const [k, v] of new URLSearchParams(qs).entries()) search[k] = v;
+  }
+  return { to: path || "/", search };
+}
+
+/**
+ * Safe, logged, fallback-protected notification navigation. Renders an anchor
+ * (for accessibility / middle-click) but intercepts the click to navigate via
+ * the router using a split `{ to, search }`. If navigation fails (stale or
+ * invalid deep link), it falls back to the section index — support deep links
+ * fall back to the Support Center with a friendly toast — so a notification can
+ * never strand the user on a 404 page.
+ */
+export function NotificationLink({
+  dest,
+  onClick,
+  className,
+  children,
+}: {
+  dest: string;
+  onClick?: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  const navigate = useNavigate();
+  const { to, search } = splitDestination(dest);
+  const isSupport = to.includes("support");
+
+  const handle = (e: MouseEvent<HTMLAnchorElement>) => {
+    // Respect new-tab / modifier clicks — let the browser handle the href.
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onClick?.();
+    // eslint-disable-next-line no-console
+    console.log("[notification] navigate", { dest, to, search });
+    void navigate({ to: to as never, search: search as never }).catch((err) => {
+      console.error("[notification] navigation failed — falling back", { dest, to, err });
+      if (isSupport) {
+        toast("Conversation not found. Opening Support Center.");
+        void navigate({ to: "/account_/support" as never, search: {} as never });
+      } else {
+        void navigate({ to: "/account/notifications" as never, search: {} as never });
+      }
+    });
+  };
+
+  return (
+    <a href={dest} onClick={handle} className={className}>
+      {children}
+    </a>
+  );
 }
 
 type Ctx = {
