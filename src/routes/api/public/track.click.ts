@@ -82,9 +82,10 @@ export const Route = createFileRoute("/api/public/track/click")({
             ip_hash: ipHash,
           });
 
-          // Only allow http(s) or same-site relative targets.
+          // Only allow same-site relative targets or allowlisted hosts —
+          // never an arbitrary external URL.
           const target = link.target_url;
-          if (/^https?:\/\//i.test(target) || target.startsWith("/")) {
+          if (isSafeTarget(target)) {
             return redirect(target);
           }
           return redirect(SAFE_FALLBACK);
