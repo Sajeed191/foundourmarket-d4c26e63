@@ -12,8 +12,9 @@ import { useRegion } from "@/lib/region";
 import { markTicketRead } from "@/lib/use-support-unread";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { SUPPORT_CATEGORIES, type SupportCategoryId, type SupportContextSnapshot } from "@/lib/support-context";
-import { useSupportAvailability, fmtLastActive } from "@/lib/support-presence";
+import { useSupportAvailability, fmtLastActive, useTypingIndicator } from "@/lib/support-presence";
 import { PRESENCE_META } from "@/lib/support-analytics";
+import { TypingIndicator } from "@/components/support/TypingDots";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TicketRatingPrompt } from "@/components/site/TicketRatingPrompt";
@@ -481,6 +482,8 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const myRole = isStaff ? "staff" : "customer";
+  const { otherTyping, notifyTyping, notifyStop } = useTypingIndicator(ticketId, myRole);
 
   const load = useCallback(async () => {
     const [{ data: m }, { data: t }] = await Promise.all([
@@ -504,7 +507,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     return () => { supabase.removeChannel(ch); };
   }, [ticketId, load]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, otherTyping]);
 
   async function send() {
     if (!reply.trim() && files.length === 0) return;
@@ -515,6 +518,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
+    notifyStop();
     if (isStaff) void import("@/lib/support-presence").then((m) => m.pingPresence("send_message"));
     fireSupportEmail(ticketId, isStaff ? "staff_reply" : "customer_reply");
     setReply(""); setFiles([]);
@@ -570,6 +574,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
               );
             })
           )}
+          <TypingIndicator show={otherTyping} label={isStaff ? "Customer" : "Support"} />
           <div ref={endRef} />
         </div>
 
@@ -587,7 +592,8 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
           <div className="mt-3 space-y-2">
             <AttachmentPicker files={files} setFiles={setFiles} compact />
             <div className="flex items-end gap-2">
-              <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={1} placeholder="Write a reply…"
+              <textarea value={reply} onChange={(e) => { setReply(e.target.value); if (e.target.value.trim()) notifyTyping(); else notifyStop(); }} rows={1} placeholder="Write a reply…"
+                onBlur={notifyStop}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
                 className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent/60 resize-none transition max-h-32" />
               <button onClick={send} disabled={sending} className="size-10 shrink-0 grid place-items-center rounded-xl bg-accent text-accent-foreground disabled:opacity-50 hover:brightness-110 transition">

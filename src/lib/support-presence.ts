@@ -109,6 +109,66 @@ export function useSupportAvailability() {
   return data;
 }
 
+/**
+ * Phase 6C — Realtime-only typing indicators.
+ *
+ * Uses Supabase Realtime broadcast on a per-ticket channel. Nothing is ever
+ * written to the database. The other party's "typing" state auto-expires after
+ * 5s of silence; outgoing broadcasts are debounced to at most one every ~1.5s.
+ */
+export function useTypingIndicator(ticketId: string | null, myRole: "staff" | "customer") {
+  const [otherTyping, setOtherTyping] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastSentRef = useRef(0);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!ticketId) return;
+    setOtherTyping(false);
+    const ch = supabase.channel(`typing:${ticketId}`, { config: { broadcast: { self: false } } });
+    const onActivity = (payload: any) => {
+      if (payload?.payload?.role === myRole) return; // ignore my own echoes
+      setOtherTyping(true);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setOtherTyping(false), 5000);
+    };
+    const onStop = (payload: any) => {
+      if (payload?.payload?.role === myRole) return;
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      setOtherTyping(false);
+    };
+    ch.on("broadcast", { event: "typing" }, onActivity)
+      .on("broadcast", { event: "stop" }, onStop)
+      .subscribe();
+    channelRef.current = ch;
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+      supabase.removeChannel(ch);
+      channelRef.current = null;
+      setOtherTyping(false);
+    };
+  }, [ticketId, myRole]);
+
+  const notifyTyping = useCallback(() => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    const now = Date.now();
+    if (now - lastSentRef.current < 1500) return; // debounce broadcasts
+    lastSentRef.current = now;
+    void ch.send({ type: "broadcast", event: "typing", payload: { role: myRole } });
+  }, [myRole]);
+
+  const notifyStop = useCallback(() => {
+    const ch = channelRef.current;
+    if (!ch) return;
+    lastSentRef.current = 0;
+    void ch.send({ type: "broadcast", event: "stop", payload: { role: myRole } });
+  }, [myRole]);
+
+  return { otherTyping, notifyTyping, notifyStop };
+}
+
 /** "2 minutes ago", "15 minutes ago", "1 hour ago", "just now". */
 export function fmtLastActive(ts: string | number | null | undefined, now = Date.now()): string {
   if (ts == null) return "never";
