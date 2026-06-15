@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Loader2, Plus, Send, LifeBuoy, Paperclip, X, ChevronRight,
-  ShieldCheck, MessageSquare, ImageIcon, CheckCircle2, Check, CheckCheck,
+  ArrowLeft, Loader2, Plus, Send, LifeBuoy, X, ChevronRight,
+  ShieldCheck, MessageSquare, CheckCircle2, Check, CheckCheck,
   Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
