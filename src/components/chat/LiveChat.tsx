@@ -268,7 +268,7 @@ export function LiveChat() {
   return (
     <>
       {/* Floating support orb */}
-      {!open && (
+      {!open && !isProductPage && (
         <button
           type="button"
           data-floating-control
