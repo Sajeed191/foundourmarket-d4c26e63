@@ -482,6 +482,9 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
+  const prevMessageCount = useRef(0);
   const myRole = isStaff ? "staff" : "customer";
   const { otherTyping, notifyTyping, notifyStop } = useTypingIndicator(ticketId, myRole);
 
@@ -507,7 +510,31 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     return () => { supabase.removeChannel(ch); };
   }, [ticketId, load]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, otherTyping]);
+  // Smart auto-scroll: only snap to bottom on first load, own messages, or when already near bottom.
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }, []);
+
+  useEffect(() => {
+    if (!messages || !scrollRef.current) return;
+    const count = messages.length;
+    const firstLoad = prevMessageCount.current === 0 && count > 0;
+    const grew = count > prevMessageCount.current;
+    const ownMessage = grew && messages[count - 1]?.sender_id === userId;
+
+    if (firstLoad || ownMessage || (grew && isAtBottomRef.current)) {
+      endRef.current?.scrollIntoView({ behavior: firstLoad ? "auto" : "smooth" });
+    }
+    prevMessageCount.current = count;
+  }, [messages, userId]);
+
+  useEffect(() => {
+    if (otherTyping && isAtBottomRef.current) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [otherTyping]);
 
   async function send() {
     if (!reply.trim() && files.length === 0) return;
