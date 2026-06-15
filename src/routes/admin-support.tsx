@@ -69,6 +69,8 @@ type Enriched = {
   ticket: TicketRow;
   stage: TicketStage;
   sla: SlaInfo;
+  firstReply: FirstReplySla;
+  channel: SupportChannel;
   lastSenderRole: string | null;
   escalations: EscalationReason[];
   customerName: string;
