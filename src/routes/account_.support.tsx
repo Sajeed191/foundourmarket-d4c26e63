@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useRegion } from "@/lib/region";
+
 import { markTicketRead } from "@/lib/use-support-unread";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { SUPPORT_CATEGORIES, type SupportCategoryId, type SupportContextSnapshot } from "@/lib/support-context";
