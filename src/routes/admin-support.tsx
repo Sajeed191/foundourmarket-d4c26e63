@@ -1087,6 +1087,48 @@ function FirstReplyBadge({ fr }: { fr: FirstReplySla }) {
   );
 }
 
+// ── Presence (activity-derived, never manual) ────────────────────────────────
+function PresenceTag({ state, lastActiveAt, showLabel = false }: { state: PresenceState; lastActiveAt: string | null; showLabel?: boolean }) {
+  const meta = PRESENCE_META[state];
+  const title = state === "offline"
+    ? (lastActiveAt ? `Last active ${fmtLastActive(lastActiveAt)}` : "No recent activity")
+    : `${meta.label} · active ${fmtLastActive(lastActiveAt)}`;
+  return (
+    <span title={title} className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+      <span aria-hidden>{meta.dot}</span>
+      {showLabel && <span>{meta.label}</span>}
+    </span>
+  );
+}
+
+function SupportTeamPanel({ team }: { team: TeamMember[] }) {
+  const online = team.filter((m) => m.state === "online");
+  const away = team.filter((m) => m.state === "away");
+  const offline = team.filter((m) => m.state === "offline");
+  return (
+    <div className="card-premium rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2"><Users className="size-4 text-accent" /><span className="text-sm font-semibold">Support Team</span></div>
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>🟢 {online.length}</span><span>🟡 {away.length}</span><span>🔴 {offline.length}</span>
+        </div>
+      </div>
+      {team.length === 0 ? <Empty text="No agent activity yet." /> : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {team.map((m) => (
+            <div key={m.id} className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-background/40 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{m.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{m.lastActiveAt ? `Last active ${fmtLastActive(m.lastActiveAt)}` : "No activity yet"}</p>
+              </div>
+              <PresenceTag state={m.state} lastActiveAt={m.lastActiveAt} showLabel />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 function Kpi({ label, value, icon, tone }: { label: string; value: number; icon?: React.ReactNode; tone?: "emerald" | "amber" | "destructive" }) {
