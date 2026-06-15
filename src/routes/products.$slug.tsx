@@ -620,25 +620,19 @@ function ProductPage() {
               </div>
             )}
 
-            {/* Social proof / urgency strip */}
-            {socialProof && (
+            {/* Real activity strip — only rendered when we have genuine data */}
+            {socialProof && (socialProof.sold > 0 || socialProof.views > 0) && (
               <div className="mb-5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
-                  <Users className="size-3 text-accent" /> {socialProof.viewers} viewing today
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
-                  <ShoppingBagIcon className="size-3 text-accent" /> {socialProof.sold} sold this week
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-accent">
-                  <Sparkles className="size-3" /> Trending
-                </span>
-              </div>
-            )}
-
-            {/* Live activity badges */}
-            {socialProof && (
-              <div className="mb-5">
-                <LiveActivity viewers={socialProof.viewers} addedToCart={socialProof.addedToCart} purchases={socialProof.purchases} />
+                {socialProof.sold > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
+                    <ShoppingBagIcon className="size-3 text-accent" /> {formatSold(socialProof.sold)} sold
+                  </span>
+                )}
+                {socialProof.views > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
+                    <Users className="size-3 text-accent" /> {formatSold(socialProof.views)} views
+                  </span>
+                )}
               </div>
             )}
 
