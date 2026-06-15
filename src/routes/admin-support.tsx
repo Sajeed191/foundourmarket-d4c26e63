@@ -4,7 +4,7 @@ import {
   Loader2, LifeBuoy, MessageSquare, Search, X, Gauge, Inbox, RotateCcw,
   Banknote, AlertTriangle, Clock, Flame, Sparkles, User, Package, Truck,
   Bell, ShieldAlert, Copy, ChevronRight, TrendingUp,
-  Check, Ban, FileText, Mail, Phone, MapPin, Users, Activity, Radio,
+  Check, Ban, FileText, Mail, Phone, MapPin, Users, Activity, Radio, SlidersHorizontal,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ThreadSheet } from "@/routes/account_.support";
+import { TicketOpsSheet } from "@/components/admin/TicketOpsSheet";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { useSupportSettings, updateSupportSettings, type SupportStatusMode } from "@/lib/use-support-settings";
 import { suggestSupportReply } from "@/lib/support-ai.functions";
@@ -83,8 +84,12 @@ function AdminSupportPage() {
 
   const [section, setSection] = useState<Section>("dashboard");
   const [stageFilter, setStageFilter] = useState<TicketStage | "all" | "overdue">("all");
+  const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
+  const [assignFilter, setAssignFilter] = useState<"all" | "me" | "unassigned">("all");
+  const [sortBy, setSortBy] = useState<"activity" | "priority" | "oldest">("activity");
   const [q, setQ] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [manageId, setManageId] = useState<string | null>(null);
   const [c360, setC360] = useState<{ userId: string; name: string } | null>(null);
   const [aiTicket, setAiTicket] = useState<string | null>(null);
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -174,16 +179,27 @@ function AdminSupportPage() {
 
   const kpis = useMemo(() => computeSupportKpis(enriched), [enriched]);
 
+  const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   const visibleTickets = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return enriched.filter((e) => {
+    const list = enriched.filter((e) => {
       if (stageFilter === "overdue") { if (!e.sla.overdue) return false; }
       else if (stageFilter !== "all" && e.stage !== stageFilter) return false;
+      if (priorityFilter !== "all" && e.sla.priority !== priorityFilter) return false;
+      if (assignFilter === "me" && e.ticket.assigned_to !== user?.id) return false;
+      if (assignFilter === "unassigned" && e.ticket.assigned_to) return false;
       if (!term) return true;
       return [e.ticket.subject, e.ticket.id, e.ticket.category, e.customerName, e.ticket.order_id]
         .some((v) => (v ?? "").toString().toLowerCase().includes(term));
     });
-  }, [enriched, stageFilter, q]);
+    const open = (e: Enriched) => e.stage !== "resolved" && e.stage !== "closed";
+    return [...list].sort((a, b) => {
+      if (sortBy === "priority") return PRIORITY_RANK[a.sla.priority] - PRIORITY_RANK[b.sla.priority] || (+new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at));
+      if (sortBy === "oldest") return (open(b) ? 1 : 0) - (open(a) ? 1 : 0) || (+new Date(a.ticket.created_at) - +new Date(b.ticket.created_at));
+      return +new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at);
+    });
+  }, [enriched, stageFilter, priorityFilter, assignFilter, sortBy, q, user?.id]);
+
 
   const stageCount = (s: TicketStage | "all" | "overdue") =>
     s === "all" ? enriched.length : s === "overdue" ? enriched.filter((e) => e.sla.overdue).length : enriched.filter((e) => e.stage === s).length;
@@ -223,9 +239,13 @@ function AdminSupportPage() {
         ) : section === "tickets" ? (
           <TicketsView
             tickets={visibleTickets} stageFilter={stageFilter} setStageFilter={setStageFilter} stageCount={stageCount}
-            q={q} setQ={setQ} onOpen={setActiveId} on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
+            priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
+            assignFilter={assignFilter} setAssignFilter={setAssignFilter}
+            sortBy={sortBy} setSortBy={setSortBy}
+            q={q} setQ={setQ} onOpen={setActiveId} onManage={setManageId} on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
             onStatus={(id, st) => update(id, { status: st })} onPriority={(id, p) => update(id, { priority: priorityToDb(p) })}
           />
+
         ) : section === "refunds" ? (
           <RefundsView refunds={refunds} orders={orders} onChanged={load} />
         ) : section === "returns" ? (
@@ -240,9 +260,18 @@ function AdminSupportPage() {
       </div>
 
       {activeId && user && <ThreadSheet ticketId={activeId} userId={user.id} isStaff onClose={() => setActiveId(null)} />}
+      {manageId && user && (
+        <TicketOpsSheet
+          ticketId={manageId} currentUserId={user.id}
+          onClose={() => setManageId(null)}
+          onOpenThread={() => { setActiveId(manageId); }}
+          onOpen360={(uid, name) => setC360({ userId: uid, name })}
+        />
+      )}
       {c360 && <Customer360Sheet userId={c360.userId} name={c360.name} onClose={() => setC360(null)} />}
       {aiTicket && <AiAssistSheet ticketId={aiTicket} onClose={() => setAiTicket(null)} />}
     </AdminShell>
+
   );
 }
 
@@ -367,12 +396,24 @@ function TicketsView(props: {
   tickets: Enriched[];
   stageFilter: TicketStage | "all" | "overdue"; setStageFilter: (s: TicketStage | "all" | "overdue") => void;
   stageCount: (s: TicketStage | "all" | "overdue") => number;
+  priorityFilter: Priority | "all"; setPriorityFilter: (p: Priority | "all") => void;
+  assignFilter: "all" | "me" | "unassigned"; setAssignFilter: (a: "all" | "me" | "unassigned") => void;
+  sortBy: "activity" | "priority" | "oldest"; setSortBy: (s: "activity" | "priority" | "oldest") => void;
   q: string; setQ: (v: string) => void;
-  onOpen: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
+  onOpen: (id: string) => void; onManage: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
   onStatus: (id: string, s: TicketStage) => void; onPriority: (id: string, p: Priority) => void;
 }) {
-  const { tickets, stageFilter, setStageFilter, stageCount, q, setQ } = props;
+  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ } = props;
   const FILTERS: (TicketStage | "all" | "overdue")[] = ["all", "overdue", ...STAGE_ORDER];
+  const PRIO_FILTERS: (Priority | "all")[] = ["all", ...PRIORITIES];
+  const ASSIGN_FILTERS: { key: "all" | "me" | "unassigned"; label: string }[] = [
+    { key: "all", label: "All tickets" }, { key: "me", label: "Assigned to me" }, { key: "unassigned", label: "Unassigned" },
+  ];
+  const SORTS: { key: "activity" | "priority" | "oldest"; label: string }[] = [
+    { key: "activity", label: "Latest activity" }, { key: "priority", label: "Highest priority" }, { key: "oldest", label: "Oldest unresolved" },
+  ];
+  const pill = (active: boolean) => cn("rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+    active ? "border-accent/50 bg-accent/15 text-accent" : "border-border/60 text-muted-foreground hover:text-foreground");
   return (
     <div className="space-y-4">
       <div className="card-premium rounded-2xl p-3 space-y-3">
@@ -384,11 +425,29 @@ function TicketsView(props: {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
-            <button key={f} onClick={() => setStageFilter(f)}
-              className={cn("rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                stageFilter === f ? "border-accent/50 bg-accent/15 text-accent" : "border-border/60 text-muted-foreground hover:text-foreground")}>
+            <button key={f} onClick={() => setStageFilter(f)} className={pill(stageFilter === f)}>
               {f === "all" ? "All" : f === "overdue" ? "Overdue" : STAGE_LABEL[f as TicketStage]} <span className="opacity-60 tabular-nums">{stageCount(f)}</span>
             </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Priority</span>
+          {PRIO_FILTERS.map((p) => (
+            <button key={p} onClick={() => setPriorityFilter(p)} className={pill(priorityFilter === p)}>
+              {p === "all" ? "Any" : PRIORITY_LABEL[p]}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Owner</span>
+          {ASSIGN_FILTERS.map((a) => (
+            <button key={a.key} onClick={() => setAssignFilter(a.key)} className={pill(assignFilter === a.key)}>{a.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mr-1">Sort</span>
+          {SORTS.map((s) => (
+            <button key={s.key} onClick={() => setSortBy(s.key)} className={pill(sortBy === s.key)}>{s.label}</button>
           ))}
         </div>
       </div>
@@ -402,23 +461,22 @@ function TicketsView(props: {
         <div className="space-y-3">
           {tickets.map((e) => (
             <TicketCard key={e.ticket.id} e={e}
-              onOpen={() => props.onOpen(e.ticket.id)} on360={() => props.on360(e.ticket.user_id, e.customerName)} onAi={() => props.onAi(e.ticket.id)}
+              onOpen={() => props.onOpen(e.ticket.id)} onManage={() => props.onManage(e.ticket.id)}
+              on360={() => props.on360(e.ticket.user_id, e.customerName)} onAi={() => props.onAi(e.ticket.id)}
               onStatus={(st) => props.onStatus(e.ticket.id, st)} onPriority={(p) => props.onPriority(e.ticket.id, p)} />
           ))}
         </div>
       )}
     </div>
   );
-
-  // local alias to avoid prop drilling user_id name
-  function userName(_e: Enriched) { return _e.customerName; }
 }
 
-function TicketCard({ e, onOpen, on360, onAi, onStatus, onPriority }: {
-  e: Enriched; onOpen: () => void; on360: () => void; onAi: () => void;
+function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: {
+  e: Enriched; onOpen: () => void; onManage: () => void; on360: () => void; onAi: () => void;
   onStatus: (s: TicketStage) => void; onPriority: (p: Priority) => void;
 }) {
   const { ticket, stage, sla, escalations, customerName } = e;
+
   return (
     <div className={cn("card-premium rounded-2xl p-4 md:p-5", sla.critical && "border-destructive/40")}>
       <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
@@ -453,12 +511,17 @@ function TicketCard({ e, onOpen, on360, onAi, onStatus, onPriority }: {
           className="bg-background border border-border rounded-lg px-2.5 py-1.5 text-[11px] focus:outline-none focus:border-accent">
           {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
         </select>
+        <button onClick={onManage} className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 text-accent px-2.5 py-1.5 text-[11px] font-semibold hover:bg-accent/20">
+          <SlidersHorizontal className="size-3" /> Manage
+        </button>
         <button onClick={onAi} className="inline-flex items-center gap-1 rounded-lg border border-accent/30 text-accent px-2.5 py-1.5 text-[11px] font-medium hover:bg-accent/10">
           <Sparkles className="size-3" /> AI Assist
         </button>
         <button onClick={on360} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium hover:border-accent/40">
           <User className="size-3" /> Customer 360
         </button>
+        {ticket.assigned_to && <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><User className="size-3" /> Assigned</span>}
+
       </div>
     </div>
   );
