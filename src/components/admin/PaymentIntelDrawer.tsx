@@ -10,6 +10,7 @@ import { fetchOrderDetail, type OrderDetail } from "@/lib/order-operations";
 import { getPaymentFraudFn, createPaymentTicketFn, type FraudIntel } from "@/lib/payment-center.functions";
 import { createRazorpayRefund } from "@/lib/razorpay.functions";
 import { downloadInvoice } from "@/lib/invoice";
+import { safeExternalUrl } from "@/lib/safe-redirect";
 import type { PaymentRow } from "@/lib/payment-center.functions";
 
 const money = (v: number | null | undefined, c = "INR") =>
