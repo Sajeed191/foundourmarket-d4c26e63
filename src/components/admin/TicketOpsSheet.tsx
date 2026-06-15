@@ -169,6 +169,7 @@ export function TicketOpsSheet({
       .on("postgres_changes", { event: "*", schema: "public", table: "support_ticket_events", filter: `ticket_id=eq.${ticketId}` }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_internal_notes", filter: `ticket_id=eq.${ticketId}` }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_messages", filter: `ticket_id=eq.${ticketId}` }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_ticket_ratings" }, schedule)
       .subscribe();
     return () => { supabase.removeChannel(ch); if (reloadTimer.current) clearTimeout(reloadTimer.current); };
   }, [ticketId, load]);
