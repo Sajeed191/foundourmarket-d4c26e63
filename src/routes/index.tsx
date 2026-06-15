@@ -502,14 +502,14 @@ function Home() {
               </Link>
             </div>
 
-            {/* Floating live stats */}
+            {/* Trust pillars — honest value props, no fabricated statistics */}
             <div
               className="hero-rise hero-rise-4 mt-6 sm:mt-9 lg:mt-12 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-3xl mx-auto lg:mx-0 lg:max-w-none"
             >
               {[
-                { value: "180+", label: "Countries", hint: "Worldwide reach" },
-                { value: "2.4k+", label: "Products", hint: "Curated daily" },
-                { value: "98%", label: "Happy buyers", hint: "5-star average" },
+                { value: "Global", label: "Shipping", hint: "Worldwide delivery" },
+                { value: "Secure", label: "Checkout", hint: "256-bit encrypted" },
+                { value: "Easy", label: "Returns", hint: "Hassle-free process" },
               ].map((s) => (
                 <div
                   key={s.label}
