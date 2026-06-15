@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Check, CheckCheck, Settings, Trash2, ShoppingBag, X } from "lucide-react";
+import { Bell, Check, CheckCheck, Settings, Trash2, ShoppingBag, X, LifeBuoy } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useNotifications, categoryOf, resolveNotificationLink, type NotificationCategory, type Notification } from "@/lib/notifications";
 import { CAT_META, CATEGORY_ORDER, timeAgo } from "@/lib/notification-meta";
 import { useIsAdmin } from "@/lib/use-admin";
+import { useSupportUnread } from "@/lib/use-support-unread";
 
 type Filter = "all" | NotificationCategory;
 
