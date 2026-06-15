@@ -277,9 +277,9 @@ function AccountPage() {
     const seen = new Set<string>();
     const out: { product: Product; badge: "cart" | "saved" | "viewed" }[] = [];
     const push = (slug: string, badge: "cart" | "saved" | "viewed") => {
-      if (!slug || seen.has(slug) || purchasedSlugs.has(slug)) return;
+      if (!slug || seen.has(slug)) return;
       const p = map.get(slug);
-      if (!p) return;
+      if (!p || purchasedNames.has(p.name)) return;
       seen.add(slug);
       out.push({ product: p, badge });
     };
@@ -287,7 +287,7 @@ function AccountPage() {
     for (const s of wishSlugs) push(s, "saved");
     for (const s of recentSlugs) push(s, "viewed");
     return out.slice(0, 10);
-  }, [products, cart.items, wishSlugs, recentSlugs, purchasedSlugs]);
+  }, [products, cart.items, wishSlugs, recentSlugs, purchasedNames]);
 
   if (loading || !user) {
     return <PremiumLoader />;
