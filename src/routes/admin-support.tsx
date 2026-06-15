@@ -974,6 +974,35 @@ function Sheet({ title, subtitle, onClose, children }: { title: string; subtitle
   );
 }
 
+function ChannelBadge({ channel, className }: { channel: SupportChannel; className?: string }) {
+  const meta = CHANNEL_META[channel];
+  return (
+    <span title={meta.label}
+      className={cn("inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shrink-0", className)}>
+      <span aria-hidden>{meta.icon}</span><span className="hidden sm:inline">{meta.label}</span>
+    </span>
+  );
+}
+
+function FirstReplyBadge({ fr }: { fr: FirstReplySla }) {
+  if (fr.status === "answered") return null;
+  const cls =
+    fr.status === "breached" ? "text-destructive border-destructive/40 bg-destructive/10"
+    : fr.status === "due_soon" ? "text-amber-400 border-amber-400/40 bg-amber-400/10"
+    : "text-emerald-400 border-emerald-400/30 bg-emerald-400/10";
+  const dot = fr.status === "breached" ? "🔴" : fr.status === "due_soon" ? "🟡" : "🟢";
+  const text =
+    fr.status === "breached" ? `Breached ${fmtCountdownMin(fr.remainingMin ?? 0)}`
+    : `Due ${fmtCountdownMin(fr.remainingMin ?? 0)}`;
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border", cls)}>
+      <span aria-hidden>{dot}</span>{text}
+    </span>
+  );
+}
+
+
+
 function Kpi({ label, value, icon, tone }: { label: string; value: number; icon?: React.ReactNode; tone?: "emerald" | "amber" | "destructive" }) {
   const t = tone === "emerald" ? "text-emerald-400" : tone === "amber" ? "text-amber-400" : tone === "destructive" ? "text-destructive" : "";
   return (
