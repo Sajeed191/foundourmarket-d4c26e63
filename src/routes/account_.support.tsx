@@ -76,6 +76,10 @@ type Message = {
   created_at: string;
   delivered_at: string | null;
   read_at: string | null;
+  channel?: string | null;
+  source?: string | null;
+  sender_email?: string | null;
+  received_at?: string | null;
 };
 
 function statusTone(s: string) {
