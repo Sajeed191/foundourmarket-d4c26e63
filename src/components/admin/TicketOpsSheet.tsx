@@ -100,7 +100,6 @@ export function TicketOpsSheet({
 
     // message replies for the timeline
     const msgs = (ord.data as { id: string; sender_role: string | null; created_at: string }[]) ?? [];
-    (load as unknown as { _msgs?: typeof msgs })._msgs = msgs;
     setMsgRows(msgs);
 
     if (tk) {
