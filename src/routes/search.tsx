@@ -178,8 +178,10 @@ function SearchPage() {
 
   const [query, setQuery] = useState(search.q ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [results, setResults] = useState<Product[]>([]);
+  const [rawRows, setRawRows] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
