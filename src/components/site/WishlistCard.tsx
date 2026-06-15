@@ -137,12 +137,12 @@ export function WishlistCard({
           <div
             className={`absolute flex flex-col items-start gap-1 ${discount ? "top-9" : "top-2"} ${
               selectMode ? "left-10" : "left-2"
-            }`}
+            } md:gap-1.5 lg:gap-2`}
           >
             {badges.slice(0, 2).map((b) => (
               <span
                 key={b.key}
-                className={`inline-flex items-center gap-1 text-[9px] font-bold font-mono px-1.5 min-h-[18px] leading-none rounded-md tracking-wider whitespace-nowrap shadow-sm ${
+                className={`inline-flex items-center gap-1 text-[9px] font-bold font-mono px-1.5 min-h-[18px] leading-none rounded-md tracking-wider whitespace-nowrap shadow-sm md:gap-1 md:text-[10px] md:px-2 md:min-h-[20px] lg:gap-1.5 lg:text-sm lg:px-3 lg:min-h-[26px] ${
                   b.className ?? ""
                 } ${badgeAnimationClass(b.animation)}`}
                 style={
@@ -155,7 +155,7 @@ export function WishlistCard({
                       }
                 }
               >
-                {b.emoji && <span aria-hidden>{b.emoji}</span>}
+                {b.emoji && <span aria-hidden className="md:text-[10px] lg:text-base">{b.emoji}</span>}
                 {b.label}
               </span>
             ))}
