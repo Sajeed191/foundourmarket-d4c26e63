@@ -258,6 +258,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setItems(prev => prev.filter(n => n.id !== id));
     await supabase.from("notifications").delete().eq("id", id);
   };
+  const archive = async (id: string) => {
+    if (!user) return;
+    setItems(prev => prev.filter(n => n.id !== id));
+    await supabase.from("notifications").update({ archived_at: new Date().toISOString() }).eq("id", id);
+  };
   const clearAll = async () => {
     if (!user) return;
     setItems([]);
@@ -267,7 +272,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const unread = items.filter(n => !n.read_at).length;
 
   return (
-    <NotificationsCtx.Provider value={{ items, unread, loading, markRead, markAllRead, remove, clearAll, refresh }}>
+    <NotificationsCtx.Provider value={{ items, unread, loading, markRead, markAllRead, remove, archive, clearAll, refresh }}>
+      <TabBadge unread={unread} />
       {children}
     </NotificationsCtx.Provider>
   );
