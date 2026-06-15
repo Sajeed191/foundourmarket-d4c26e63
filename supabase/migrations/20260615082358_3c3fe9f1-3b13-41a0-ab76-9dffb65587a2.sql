@@ -1,0 +1,1 @@
+ALTER TABLE public.support_messages ALTER COLUMN sender_id DROP NOT NULL;

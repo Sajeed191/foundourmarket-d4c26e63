@@ -4692,7 +4692,7 @@ export type Database = {
           received_at: string | null
           reply_to_id: string | null
           sender_email: string | null
-          sender_id: string
+          sender_id: string | null
           sender_role: string
           source: string | null
           thread_id: string | null
@@ -4713,7 +4713,7 @@ export type Database = {
           received_at?: string | null
           reply_to_id?: string | null
           sender_email?: string | null
-          sender_id: string
+          sender_id?: string | null
           sender_role?: string
           source?: string | null
           thread_id?: string | null
@@ -4734,7 +4734,7 @@ export type Database = {
           received_at?: string | null
           reply_to_id?: string | null
           sender_email?: string | null
-          sender_id?: string
+          sender_id?: string | null
           sender_role?: string
           source?: string | null
           thread_id?: string | null
