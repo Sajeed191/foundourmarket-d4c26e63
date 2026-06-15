@@ -110,6 +110,7 @@ function formatDate(iso: string): string {
 export function LiveChat() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthRoute = pathname.startsWith("/auth");
+  const isProductPage = pathname.startsWith("/products/");
   const { user } = useAuth();
 
   const customerName = useMemo(() => {
@@ -267,7 +268,7 @@ export function LiveChat() {
   return (
     <>
       {/* Floating support orb */}
-      {!open && (
+      {!open && !isProductPage && (
         <button
           type="button"
           data-floating-control
