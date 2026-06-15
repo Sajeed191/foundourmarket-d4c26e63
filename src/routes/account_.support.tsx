@@ -139,7 +139,7 @@ function priorityTone(p: string) {
 
 function SupportPage() {
   const { user, loading } = useAuth();
-  const { market } = useRegion();
+  
   const nav = useNavigate();
   const search = useSearch({ from: Route.id });
   const deepLinkTicket = search.ticket;
