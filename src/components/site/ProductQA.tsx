@@ -268,7 +268,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
             const canDelete = isAdmin || q.is_mine;
             const canAnswer = isAdmin && !q.answer;
             const canEditQuestion = q.is_mine;
-            const name = q.author_name || "Anonymous";
+            const name = q.author_name || "Customer";
             return (
               <li key={q.id} className="bg-card border border-border rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-4">
