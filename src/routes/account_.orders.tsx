@@ -770,6 +770,13 @@ function OrderCard({ order, index, format, onReorder, reordering, onOpenDetails 
               {reordering ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />} Buy Again
             </button>
           )}
+          <Link
+            to="/account/support"
+            onClick={(e) => e.stopPropagation()}
+            search={supportSearch({ order: order.id, category: "order_issue", subject: `Help with order #${order.id.slice(0, 8)}` })}
+            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border/60 hover:border-accent/40 hover:text-accent active:scale-95 transition">
+            <LifeBuoy className="size-3" /> Contact Support
+          </Link>
         </div>
       </div>
     </motion.li>
