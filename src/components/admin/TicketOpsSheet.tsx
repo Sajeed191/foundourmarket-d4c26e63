@@ -231,6 +231,17 @@ export function TicketOpsSheet({
 
   const ltv = useMemo(() => orders.filter((o) => PAID.includes((o.payment_status ?? o.status ?? "").toLowerCase())).reduce((a, b) => a + (b.total || 0), 0), [orders]);
   const currency = orders[0]?.currency ?? null;
+  const aov = orders.length ? ltv / orders.length : 0;
+  const support = useMemo(() => {
+    const openT = userTickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length;
+    const resolvedT = userTickets.filter((t) => t.status === "resolved" || t.status === "closed");
+    const lastDate = userTickets[0]?.created_at ?? null;
+    const previous = resolvedT
+      .map((t) => ({ ...t, at: t.resolved_at ?? t.closed_at ?? t.created_at }))
+      .sort((a, b) => +new Date(b.at) - +new Date(a.at))
+      .slice(0, 4);
+    return { openT, resolvedCount: resolvedT.length, lastDate, total: userTickets.length, previous };
+  }, [userTickets]);
   const assignedName = ticket?.assigned_to ? nameOf(ticket.assigned_to) : null;
   const status = (ticket?.status ?? "open") as string;
   const priority = (ticket?.priority ?? "normal") as string;
