@@ -482,6 +482,8 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const myRole = isStaff ? "staff" : "customer";
+  const { otherTyping, notifyTyping, notifyStop } = useTypingIndicator(ticketId, myRole);
 
   const load = useCallback(async () => {
     const [{ data: m }, { data: t }] = await Promise.all([
