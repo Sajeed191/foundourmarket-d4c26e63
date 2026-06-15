@@ -36,6 +36,16 @@ const PRIORITY_CLS: Record<string, string> = {
 };
 
 const fmt = (s: string) => new Date(s).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const ago = (s: string) => {
+  const diff = Date.now() - +new Date(s);
+  const d = Math.floor(diff / 86400000);
+  if (d <= 0) return "today";
+  if (d === 1) return "yesterday";
+  if (d < 7) return `${d} days ago`;
+  if (d < 30) { const w = Math.floor(d / 7); return `${w} week${w > 1 ? "s" : ""} ago`; }
+  if (d < 365) { const m = Math.floor(d / 30); return `${m} month${m > 1 ? "s" : ""} ago`; }
+  const y = Math.floor(d / 365); return `${y} year${y > 1 ? "s" : ""} ago`;
+};
 const money = (n: number, c: string | null) =>
   (c === "USD" ? "$" : "₹") + Math.round(n || 0).toLocaleString(c === "USD" ? "en-US" : "en-IN");
 const dur = (ms: number | null) => {
