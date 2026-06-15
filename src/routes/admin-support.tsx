@@ -98,6 +98,13 @@ function AdminSupportPage() {
   const [c360, setC360] = useState<{ userId: string; name: string } | null>(null);
   const [aiTicket, setAiTicket] = useState<string | null>(null);
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  // Live SLA countdown — re-render every 30s without refetching.
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const load = useCallback(async () => {
     const [t, m, o, rf, rt, pf, sh, fr] = await Promise.all([
