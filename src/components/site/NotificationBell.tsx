@@ -164,7 +164,7 @@ export function NotificationBell() {
             {!isAdmin && supportUnread > 0 && (
               <div className="p-2 pb-0">
                 <Link
-                  to="/account_/support"
+                  to="/account/support"
                   onClick={() => setOpen(false)}
                   className="flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/10 p-3 transition-colors hover:bg-accent/15"
                 >
