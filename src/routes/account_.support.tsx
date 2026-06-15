@@ -19,6 +19,9 @@ function fireSupportEmail(ticketId: string, event: "created" | "customer_reply" 
 }
 
 export const Route = createFileRoute("/account_/support")({
+  validateSearch: (search: Record<string, unknown>): { ticket?: string } => ({
+    ticket: typeof search.ticket === "string" ? search.ticket : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Support — FoundOurMarket™" },
