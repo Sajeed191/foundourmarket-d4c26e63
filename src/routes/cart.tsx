@@ -15,6 +15,7 @@ import { useRegion } from "@/lib/region";
 import { RelatedProducts } from "@/components/site/RelatedProducts";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
+import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
