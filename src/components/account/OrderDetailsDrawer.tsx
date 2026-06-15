@@ -16,6 +16,7 @@ import { useIsAdmin } from "@/lib/use-admin";
 import { useRegion } from "@/lib/region";
 import { useCart } from "@/lib/cart";
 import { downloadInvoice } from "@/lib/invoice";
+import { safeExternalUrl } from "@/lib/safe-redirect";
 import { toast } from "sonner";
 
 type OrderItem = { id: string; name: string; quantity: number; image: string | null; unit_price: number; line_total: number; product_slug: string };
