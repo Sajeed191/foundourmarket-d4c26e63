@@ -220,7 +220,7 @@ function Row({
       }`}
     >
       {dest ? (
-        <Link to={dest} onClick={() => unread && onRead(n.id)}>{content}</Link>
+        <NotificationLink dest={dest} onClick={() => unread && onRead(n.id)}>{content}</NotificationLink>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{content}</div>
       )}
