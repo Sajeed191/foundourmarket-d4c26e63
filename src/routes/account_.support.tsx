@@ -74,11 +74,17 @@ function SupportPage() {
   const { user, loading } = useAuth();
   const { market } = useRegion();
   const nav = useNavigate();
+  const { ticket: deepLinkTicket } = useSearch({ from: Route.id });
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
+
+  // Deep-link: open the exact ticket from ?ticket=<id> (e.g. a notification tap).
+  useEffect(() => {
+    if (deepLinkTicket) setActiveId(deepLinkTicket);
+  }, [deepLinkTicket]);
 
   const loadTickets = useCallback(async () => {
     const { data, error } = await supabase
