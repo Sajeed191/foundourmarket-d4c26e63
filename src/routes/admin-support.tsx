@@ -511,12 +511,17 @@ function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: 
           className="bg-background border border-border rounded-lg px-2.5 py-1.5 text-[11px] focus:outline-none focus:border-accent">
           {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
         </select>
+        <button onClick={onManage} className="inline-flex items-center gap-1 rounded-lg border border-accent/40 bg-accent/10 text-accent px-2.5 py-1.5 text-[11px] font-semibold hover:bg-accent/20">
+          <SlidersHorizontal className="size-3" /> Manage
+        </button>
         <button onClick={onAi} className="inline-flex items-center gap-1 rounded-lg border border-accent/30 text-accent px-2.5 py-1.5 text-[11px] font-medium hover:bg-accent/10">
           <Sparkles className="size-3" /> AI Assist
         </button>
         <button onClick={on360} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium hover:border-accent/40">
           <User className="size-3" /> Customer 360
         </button>
+        {ticket.assigned_to && <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><User className="size-3" /> Assigned</span>}
+
       </div>
     </div>
   );
