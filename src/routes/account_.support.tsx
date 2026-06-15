@@ -457,7 +457,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
 
   const load = useCallback(async () => {
     const [{ data: m }, { data: t }] = await Promise.all([
-      supabase.from("support_messages").select("id,ticket_id,sender_id,sender_role,body,attachments,created_at,delivered_at,read_at").eq("ticket_id", ticketId).order("created_at"),
+      supabase.from("support_messages").select("id,ticket_id,sender_id,sender_role,body,attachments,created_at,delivered_at,read_at,channel,source,sender_email,received_at").eq("ticket_id", ticketId).order("created_at"),
       supabase.from("support_tickets").select("id,subject,category,status,priority,last_message_at,created_at").eq("id", ticketId).maybeSingle(),
     ]);
     setMessages(((m as Message[]) ?? []).map((x) => ({ ...x, attachments: (x.attachments as unknown as string[]) ?? [] })));
