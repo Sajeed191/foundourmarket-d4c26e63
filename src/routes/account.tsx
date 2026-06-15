@@ -432,11 +432,11 @@ function AccountPage() {
           </div>
         </motion.section>
 
-        {/* 4 — RECENTLY VIEWED */}
-        {recentlyViewed.length > 0 && (
+        {/* 4 — CONTINUE SHOPPING (personalized; hidden for brand-new visitors) */}
+        {continueShopping.length > 0 && (
           <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
             <SectionHeader title="Continue Shopping" eyebrow="Pick up where you left off" />
-            <ContinueShopping items={recentlyViewed} />
+            <ContinueShopping items={continueShopping} />
           </motion.section>
         )}
 
