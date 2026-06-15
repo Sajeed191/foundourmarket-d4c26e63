@@ -63,10 +63,11 @@ type TimelineItem = { id: string; at: string; label: string; sub?: string; tone:
 const PAID = ["paid", "succeeded", "delivered", "shipped", "completed"];
 
 export function TicketOpsSheet({
-  ticketId, currentUserId, onClose, onOpenThread, onOpen360,
+  ticketId, currentUserId, onClose, onOpenThread, onOpen360, onOpenTicket,
 }: {
   ticketId: string; currentUserId: string; onClose: () => void;
   onOpenThread: () => void; onOpen360: (userId: string, name: string) => void;
+  onOpenTicket?: (ticketId: string) => void;
 }) {
   const [ticket, setTicket] = useState<FullTicket | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
