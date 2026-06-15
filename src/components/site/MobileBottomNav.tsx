@@ -42,12 +42,6 @@ export function MobileBottomNav() {
       aria-label="Primary mobile navigation"
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.75rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
-      {/* Soft ambient glow — reduced ~40%, subtle only */}
-      <div
-        aria-hidden
-        className={`absolute inset-x-16 bottom-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] h-16 -z-10 blur-2xl ${frosted ? "opacity-[0.12]" : "opacity-[0.18]"}`}
-        style={{ background: "var(--gradient-ember-soft)" }}
-      />
       <ul
         className={
           frosted
