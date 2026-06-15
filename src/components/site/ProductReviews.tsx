@@ -251,9 +251,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this review?")) return;
-    const { error } = await supabase.from("product_reviews").delete().eq("id", id);
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    const { error } = await supabase.rpc("soft_delete_own_review", { p_id: id });
     if (error) { toast.error(error.message); return; }
+    toast.success("Review deleted.");
     await load();
     onAggregateChange?.();
   }
