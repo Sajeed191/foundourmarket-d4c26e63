@@ -108,7 +108,7 @@ function AdminSupportPage() {
 
   const load = useCallback(async () => {
     const [t, m, o, rf, rt, pf, sh, fr] = await Promise.all([
-      supabase.from("support_tickets").select("id,user_id,subject,category,status,priority,order_id,market_region,last_message_at,resolved_at,assigned_to,tags,created_at").order("last_message_at", { ascending: false }).limit(500),
+      supabase.from("support_tickets").select("id,user_id,subject,category,status,priority,order_id,market_region,last_message_at,resolved_at,assigned_to,tags,created_at,channel,first_response_at").order("last_message_at", { ascending: false }).limit(500),
       supabase.from("support_messages").select("id,ticket_id,sender_id,sender_role,created_at").order("created_at", { ascending: true }).limit(4000),
       supabase.from("orders").select("id,user_id,total,currency,status,payment_status").limit(2000),
       supabase.from("refunds").select("id,order_id,amount,currency,status,reason,created_at").order("created_at", { ascending: false }).limit(500),
