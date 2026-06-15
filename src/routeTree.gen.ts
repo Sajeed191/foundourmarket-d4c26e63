@@ -137,6 +137,7 @@ import { Route as AdminProductSlugMerchandisingRouteImport } from './routes/admi
 import { Route as AdminProductSlugInventoryRouteImport } from './routes/admin-product.$slug.inventory'
 import { Route as AdminProductSlugDetailsRouteImport } from './routes/admin-product.$slug.details'
 import { Route as AdminProductSlugAnalyticsRouteImport } from './routes/admin-product.$slug.analytics'
+import { Route as AccountSupportNewRouteImport } from './routes/account_.support_.new'
 import { Route as AccountPaymentMethodsAddRouteImport } from './routes/account_.payment-methods.add'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -799,6 +800,11 @@ const AdminProductSlugAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AdminProductSlugRoute,
   } as any)
+const AccountSupportNewRoute = AccountSupportNewRouteImport.update({
+  id: '/account_/support_/new',
+  path: '/account/support/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountPaymentMethodsAddRoute =
   AccountPaymentMethodsAddRouteImport.update({
     id: '/account_/payment-methods/add',
@@ -979,6 +985,7 @@ export interface FileRoutesByFullPath {
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
+  '/account/support/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
   '/admin-product/$slug/details': typeof AdminProductSlugDetailsRoute
   '/admin-product/$slug/inventory': typeof AdminProductSlugInventoryRoute
@@ -1119,6 +1126,7 @@ export interface FileRoutesByTo {
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
+  '/account/support/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
   '/admin-product/$slug/details': typeof AdminProductSlugDetailsRoute
   '/admin-product/$slug/inventory': typeof AdminProductSlugInventoryRoute
@@ -1261,6 +1269,7 @@ export interface FileRoutesById {
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
+  '/account_/support_/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
   '/admin-product/$slug/details': typeof AdminProductSlugDetailsRoute
   '/admin-product/$slug/inventory': typeof AdminProductSlugInventoryRoute
@@ -1404,6 +1413,7 @@ export interface FileRouteTypes {
     | '/products/new-arrivals'
     | '/products/trending'
     | '/account/payment-methods/add'
+    | '/account/support/new'
     | '/admin-product/$slug/analytics'
     | '/admin-product/$slug/details'
     | '/admin-product/$slug/inventory'
@@ -1544,6 +1554,7 @@ export interface FileRouteTypes {
     | '/products/new-arrivals'
     | '/products/trending'
     | '/account/payment-methods/add'
+    | '/account/support/new'
     | '/admin-product/$slug/analytics'
     | '/admin-product/$slug/details'
     | '/admin-product/$slug/inventory'
@@ -1685,6 +1696,7 @@ export interface FileRouteTypes {
     | '/products/new-arrivals'
     | '/products/trending'
     | '/account_/payment-methods/add'
+    | '/account_/support_/new'
     | '/admin-product/$slug/analytics'
     | '/admin-product/$slug/details'
     | '/admin-product/$slug/inventory'
@@ -1823,6 +1835,7 @@ export interface RootRouteChildren {
   ProductsNewArrivalsRoute: typeof ProductsNewArrivalsRoute
   ProductsTrendingRoute: typeof ProductsTrendingRoute
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
+  AccountSupportNewRoute: typeof AccountSupportNewRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   CategoryMainSubRoute: typeof CategoryMainSubRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -2736,6 +2749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductSlugAnalyticsRouteImport
       parentRoute: typeof AdminProductSlugRoute
     }
+    '/account_/support_/new': {
+      id: '/account_/support_/new'
+      path: '/account/support/new'
+      fullPath: '/account/support/new'
+      preLoaderRoute: typeof AccountSupportNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/payment-methods/add': {
       id: '/account_/payment-methods/add'
       path: '/account/payment-methods/add'
@@ -3000,6 +3020,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsNewArrivalsRoute: ProductsNewArrivalsRoute,
   ProductsTrendingRoute: ProductsTrendingRoute,
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
+  AccountSupportNewRoute: AccountSupportNewRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   CategoryMainSubRoute: CategoryMainSubRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,

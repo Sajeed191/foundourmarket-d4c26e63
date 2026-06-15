@@ -144,7 +144,6 @@ function SupportPage() {
   const search = useSearch({ from: Route.id });
   const deepLinkTicket = search.ticket;
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
-  const [composing, setComposing] = useState(false);
   const [filter, setFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
 
