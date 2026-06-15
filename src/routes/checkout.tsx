@@ -828,9 +828,23 @@ function CheckoutPage() {
                   </div>
                 )}
 
+                {detailed.length > 0 && (
+                  <div className="mb-4">
+                    <CouponInput
+                      items={detailed.map((i) => ({ slug: i.slug, qty: i.qty }))}
+                      format={(usd) => fmt(computeOrderTotals(market, usd, 0).subtotal)}
+                      onChange={setCoupon}
+                    />
+                  </div>
+                )}
+
                 <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">
                   <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-mono">{fmt(subtotalINR)}</dd></div>
+                  {savingsINR > 0 && (
+                    <div className="flex justify-between"><dt className="text-accent">{coupon ? `Coupon ${coupon.code}` : "Discount"}</dt><dd className="font-mono text-accent">−{fmt(savingsINR)}</dd></div>
+                  )}
                   <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="font-mono">{shippingINR === 0 ? <span className="text-emerald-400">Free</span> : fmt(shippingINR)}</dd></div>
+
                   <div className="border-t border-white/10 pt-3 flex justify-between items-end">
                     <dt className="font-medium text-base">Total</dt>
                     <dd className="text-right">
