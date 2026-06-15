@@ -16,6 +16,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueOrderEmail, type OrderEmailEvent } from "./order-emails.server";
 
 const FULFILL_STAFF: StaffRole[] = [
   "admin", "super_admin", "manager", "fulfillment", "warehouse_staff",
