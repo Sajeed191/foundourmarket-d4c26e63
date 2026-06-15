@@ -21,9 +21,11 @@ import { refundActionFn, returnActionFn } from "@/lib/support-actions.functions"
 import {
   deriveStage, computeSla, computeSupportKpis, detectEscalation,
   groupByStatus, refundRisk, normPriority, isStaffSender,
+  computeFirstReplySla, fmtCountdownMin, normChannel, CHANNEL_META,
   STAGE_LABEL, STAGE_ORDER, PRIORITY_LABEL, ESCALATION_LABEL,
   type TicketRow, type MessageRow, type OrderLite, type RefundRow, type ReturnRow,
   type TicketStage, type SlaInfo, type EscalationReason, type EscalationContext, type Priority,
+  type FirstReplySla, type SupportChannel,
 } from "@/lib/support-analytics";
 
 
