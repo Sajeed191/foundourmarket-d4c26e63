@@ -507,7 +507,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     return () => { supabase.removeChannel(ch); };
   }, [ticketId, load]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, otherTyping]);
 
   async function send() {
     if (!reply.trim() && files.length === 0) return;
