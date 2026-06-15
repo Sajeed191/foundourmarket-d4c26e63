@@ -319,14 +319,47 @@ export const resolveRefundFn = createServerFn({ method: "POST" })
     const { userId } = context as { userId: string };
     const { primaryRole } = await requireStaff(userId, REFUND_STAFF, "ops.refund.resolve", input.orderId);
     const status = input.decision === "approved" ? "approved" : "rejected";
+    const order = await getOrder(input.orderId);
 
+    const isCod = (order.payment_method ?? "").toLowerCase() === "cod"
+      || (order.payment_status ?? "").toLowerCase() === "cod";
+    const isPrepaidRazorpay =
+      !isCod
+      && (order.payment_method ?? "").toLowerCase() === "razorpay"
+      && ["succeeded", "paid", "refunded"].includes((order.payment_status ?? "").toLowerCase());
+
+    // APPROVED + prepaid Razorpay → move real money through the canonical
+    // refund path (gateway call, stores razorpay_refund_id, marks order
+    // refunded, emails + notifies the customer, webhook reconciles status).
+    if (input.decision === "approved" && isPrepaidRazorpay) {
+      const { executeRazorpayRefund } = await import("./refund-execute.server");
+      const result = await executeRazorpayRefund({
+        orderId: input.orderId,
+        amount: input.amount,
+        reason: input.reason ?? null,
+        source: "admin_resolve",
+        actorId: userId,
+        existingRefundId: input.refundId,
+      });
+      await logSecurity({
+        actorId: userId, actorRole: primaryRole, action: "ops.refund.resolve",
+        target: input.orderId, success: true,
+        detail: {
+          decision: input.decision, mode: "razorpay_gateway",
+          refundId: result.refund?.id ?? input.refundId ?? null,
+          amount: result.refundAmount,
+        },
+      });
+      return { ok: true, refund: result.refund, mode: "razorpay_gateway" };
+    }
+
+    // Otherwise (rejection, COD, or non-prepaid) → status-only resolution.
     if (input.refundId) {
       const { error } = await supabaseAdmin.from("refunds")
         .update({ status, reason: input.reason ?? undefined })
         .eq("id", input.refundId).eq("order_id", input.orderId);
       if (error) throw new Error(error.message);
     } else {
-      const order = await getOrder(input.orderId);
       const { error } = await supabaseAdmin.from("refunds").insert({
         order_id: input.orderId,
         amount: input.amount ?? Number(order.total ?? 0),
@@ -339,9 +372,6 @@ export const resolveRefundFn = createServerFn({ method: "POST" })
     // COD: once a refund is approved, the cash was collected then returned —
     // mark the order's payment as successful (paid) so it no longer reads as pending.
     if (input.decision === "approved") {
-      const order = await getOrder(input.orderId);
-      const isCod = (order.payment_method ?? "").toLowerCase() === "cod"
-        || (order.payment_status ?? "").toLowerCase() === "cod";
       if (isCod && (order.payment_status ?? "").toLowerCase() !== "paid") {
         const { error } = await supabaseAdmin.from("orders")
           .update({ payment_status: "paid" }).eq("id", input.orderId);
@@ -351,9 +381,10 @@ export const resolveRefundFn = createServerFn({ method: "POST" })
 
     await logSecurity({
       actorId: userId, actorRole: primaryRole, action: "ops.refund.resolve",
-      target: input.orderId, success: true, detail: { decision: input.decision, refundId: input.refundId ?? null },
+      target: input.orderId, success: true,
+      detail: { decision: input.decision, mode: "status_only", refundId: input.refundId ?? null },
     });
-    return { ok: true };
+    return { ok: true, mode: "status_only" };
   });
 
 /* ----------------- Notifications, retry link & support ticket ------------ */
