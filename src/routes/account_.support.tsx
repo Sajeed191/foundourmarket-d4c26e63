@@ -592,7 +592,8 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
           <div className="mt-3 space-y-2">
             <AttachmentPicker files={files} setFiles={setFiles} compact />
             <div className="flex items-end gap-2">
-              <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={1} placeholder="Write a reply…"
+              <textarea value={reply} onChange={(e) => { setReply(e.target.value); if (e.target.value.trim()) notifyTyping(); else notifyStop(); }} rows={1} placeholder="Write a reply…"
+                onBlur={notifyStop}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
                 className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent/60 resize-none transition max-h-32" />
               <button onClick={send} disabled={sending} className="size-10 shrink-0 grid place-items-center rounded-xl bg-accent text-accent-foreground disabled:opacity-50 hover:brightness-110 transition">
