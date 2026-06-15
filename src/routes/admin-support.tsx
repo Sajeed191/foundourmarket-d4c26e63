@@ -205,6 +205,30 @@ function AdminSupportPage() {
 
   const kpis = useMemo(() => computeSupportKpis(enriched), [enriched]);
 
+  // Support team presence (agents with any assigned ticket OR a presence row).
+  const team = useMemo<TeamMember[]>(() => {
+    const ids = new Set<string>();
+    for (const e of enriched) if (e.ticket.assigned_to) ids.add(e.ticket.assigned_to);
+    if (user?.id) ids.add(user.id);
+    return [...ids].map((id) => {
+      const p = presenceOf(id);
+      return { id, name: profiles.get(id) ?? `Agent ${id.slice(0, 6)}`, state: p.state, lastActiveAt: p.lastActiveAt };
+    }).filter((m) => m.lastActiveAt || m.id === user?.id)
+      .sort((a, b) => (b.lastActiveAt ? +new Date(b.lastActiveAt) : 0) - (a.lastActiveAt ? +new Date(a.lastActiveAt) : 0));
+  }, [enriched, presenceOf, profiles, user?.id, nowTick]);
+
+  // Average first-reply time for tickets first answered today (operational KPI).
+  const avgFirstReplyTodayMin = useMemo(() => {
+    const now = new Date();
+    const sameDay = (t: number) => { const d = new Date(t); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate(); };
+    const vals = enriched
+      .filter((e) => e.firstStaffReplyAt != null && sameDay(e.firstStaffReplyAt) && e.firstReply.answeredInMin != null)
+      .map((e) => e.firstReply.answeredInMin as number);
+    if (!vals.length) return null;
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }, [enriched, nowTick]);
+
+
   const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   const visibleTickets = useMemo(() => {
     const term = q.trim().toLowerCase();
