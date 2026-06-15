@@ -307,6 +307,14 @@ export function TicketOpsSheet({
               <p className="font-mono text-[11px] text-accent">{ticket?.ticket_number ?? "…"}</p>
               <h2 className="text-base font-semibold truncate">{ticket?.subject ?? "Loading…"}</h2>
               {ticket && <p className="text-[11px] text-muted-foreground mt-0.5">{ticket.category} · opened {fmt(ticket.created_at)}</p>}
+              {ticket?.channel === "email" && (
+                <p className="mt-1 inline-flex flex-wrap items-center gap-1 rounded-full bg-sky-500/10 ring-1 ring-sky-500/30 px-2 py-0.5 text-[10px] font-mono text-sky-400">
+                  <Mail className="size-3" /> Email
+                  {(ticket.guest_email || ticket.source) && (
+                    <span className="text-muted-foreground/80">· {ticket.guest_email ?? ticket.source}</span>
+                  )}
+                </p>
+              )}
             </div>
             <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted shrink-0"><X className="size-4" /></button>
           </div>
