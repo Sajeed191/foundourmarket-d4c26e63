@@ -88,10 +88,23 @@ function SupportPage() {
   const { user, loading } = useAuth();
   const { market } = useRegion();
   const nav = useNavigate();
-  const { ticket: deepLinkTicket } = useSearch({ from: Route.id });
+  const search = useSearch({ from: Route.id });
+  const deepLinkTicket = search.ticket;
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+
+  const prefill = useMemo(
+    () => ({
+      order: search.order,
+      return: search.return,
+      refund: search.refund,
+      category: (search.category as SupportCategoryId) || undefined,
+      subject: search.subject,
+    }),
+    [search.order, search.return, search.refund, search.category, search.subject],
+  );
+  const wantsCompose = !!(search.compose || search.order || search.return || search.refund);
 
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
 
@@ -99,6 +112,12 @@ function SupportPage() {
   useEffect(() => {
     if (deepLinkTicket) setActiveId(deepLinkTicket);
   }, [deepLinkTicket]);
+
+  // Deep-link: open the compose sheet pre-filled with order/return/refund context.
+  useEffect(() => {
+    if (wantsCompose && !deepLinkTicket) setComposing(true);
+  }, [wantsCompose, deepLinkTicket]);
+
 
   const loadTickets = useCallback(async () => {
     const { data, error } = await supabase
