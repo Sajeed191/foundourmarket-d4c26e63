@@ -330,8 +330,8 @@ function OAuthReturnScreen() {
         <div className="mx-auto mb-5 size-16 overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-border">
           <img src="/logo.webp" alt="FoundOurMarket" className="h-full w-full object-cover" />
         </div>
-        <h1 className="font-display text-xl font-semibold text-foreground">Signing you in…</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Securing your Google session</p>
+        <h1 className="font-display text-xl font-semibold text-foreground">Completing sign-in…</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Just a moment while we finish up</p>
       </div>
     </div>
   );
