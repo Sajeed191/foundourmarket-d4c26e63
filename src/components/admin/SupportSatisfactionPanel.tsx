@@ -111,9 +111,12 @@ export function SupportSatisfactionPanel({
 
     const firstResp = tickets.filter((t) => t.first_response_at).map((t) => +new Date(t.first_response_at!) - +new Date(t.created_at));
     const resolution = tickets
-      .map((t) => t.resolved_at ?? t.closed_at)
-      .filter(Boolean)
-      .map((end, i) => +new Date(end as string) - +new Date(tickets.filter((t) => t.resolved_at ?? t.closed_at)[i].created_at));
+      .map((t) => {
+        const end = t.resolved_at ?? t.closed_at;
+        return end ? +new Date(end) - +new Date(t.created_at) : null;
+      })
+      .filter((v): v is number => v != null);
+
 
     return {
       average: avg(all),
