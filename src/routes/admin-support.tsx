@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ThreadSheet } from "@/routes/account_.support";
+import { TicketOpsSheet } from "@/components/admin/TicketOpsSheet";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { useSupportSettings, updateSupportSettings, type SupportStatusMode } from "@/lib/use-support-settings";
 import { suggestSupportReply } from "@/lib/support-ai.functions";
