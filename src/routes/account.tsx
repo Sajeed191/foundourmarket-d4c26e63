@@ -260,10 +260,10 @@ function AccountPage() {
       .slice(0, 8),
     [products, wishSlugs],
   );
-  // Slugs the user has already purchased — never resurface these.
-  const purchasedSlugs = useMemo(() => {
+  // Product names the user has already purchased — never resurface these.
+  const purchasedNames = useMemo(() => {
     const s = new Set<string>();
-    for (const o of orders ?? []) for (const it of o.order_items ?? []) if (it.product_slug) s.add(it.product_slug);
+    for (const o of orders ?? []) for (const it of o.order_items ?? []) if (it.name) s.add(it.name);
     return s;
   }, [orders]);
 
