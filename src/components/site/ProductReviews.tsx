@@ -492,7 +492,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   </button>
                 ))}
               </div>
-              {user ? (
+              {!user ? (
+                <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
+                  Sign in to review
+                </Link>
+              ) : eligible ? (
                 <button
                   onClick={openCompose}
                   className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 hover:shadow-[var(--shadow-ember)]"
@@ -500,9 +504,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   <Pencil className="size-3.5" /> Write a review
                 </button>
               ) : (
-                <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
-                  Sign in to review
-                </Link>
+                <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <ShieldCheck className="size-3.5" /> Verified purchasers only
+                </span>
               )}
             </div>
           </div>
