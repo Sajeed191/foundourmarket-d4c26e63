@@ -183,11 +183,14 @@ function AdminSupportPage() {
     return tickets.map((ticket) => {
       const lastSenderRole = msgAgg.lastSender.get(ticket.id) ?? null;
       const stage = deriveStage(ticket, lastSenderRole, msgAgg.has.has(ticket.id));
-      const sla = computeSla(ticket, stage, msgAgg.firstStaff.get(ticket.id) ?? null, lastSenderRole);
+      const firstStaffAt = msgAgg.firstStaff.get(ticket.id)
+        ?? (ticket.first_response_at ? +new Date(ticket.first_response_at) : null);
+      const sla = computeSla(ticket, stage, firstStaffAt, lastSenderRole);
+      const firstReply = computeFirstReplySla(ticket, stage, firstStaffAt, nowTick);
       const escalations = detectEscalation(ticket, escCtx);
-      return { ticket, stage, sla, lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
+      return { ticket, stage, sla, firstReply, channel: normChannel(ticket.channel), lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
     });
-  }, [tickets, msgAgg, escCtx, profiles]);
+  }, [tickets, msgAgg, escCtx, profiles, nowTick]);
 
   const kpis = useMemo(() => computeSupportKpis(enriched), [enriched]);
 
