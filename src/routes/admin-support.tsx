@@ -447,9 +447,12 @@ function DashboardView({ kpis, enriched, team, avgFirstReplyTodayMin }: { kpis: 
           <Kpi label="Waiting Staff" value={health.waitingStaff} tone={health.waitingStaff ? "amber" : undefined} />
           <Kpi label="SLA Breached" value={health.breached} icon={<AlertTriangle className="size-4" />} tone={health.breached ? "destructive" : undefined} />
           <Kpi label="Unassigned" value={health.unassigned} tone={health.unassigned ? "amber" : undefined} />
-          <Kpi label="Urgent" value={health.urgent} icon={<Flame className="size-4" />} tone={health.urgent ? "destructive" : undefined} />
+          <KpiText label="Avg First Reply Today" value={avgFirstReplyTodayMin == null ? "—" : fmtCountdownMin(avgFirstReplyTodayMin)} icon={<Clock className="size-4" />} />
         </div>
       </div>
+
+      <SupportTeamPanel team={team} />
+
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <Kpi label="Open" value={kpis.open} icon={<Inbox className="size-4" />} />
