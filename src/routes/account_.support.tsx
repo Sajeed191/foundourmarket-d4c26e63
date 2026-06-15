@@ -12,6 +12,8 @@ import { useRegion } from "@/lib/region";
 import { markTicketRead } from "@/lib/use-support-unread";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { SUPPORT_CATEGORIES, type SupportCategoryId, type SupportContextSnapshot } from "@/lib/support-context";
+import { useSupportAvailability, fmtLastActive } from "@/lib/support-presence";
+import { PRESENCE_META } from "@/lib/support-analytics";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TicketRatingPrompt } from "@/components/site/TicketRatingPrompt";
@@ -88,6 +90,28 @@ function statusTone(s: string) {
   if (v === "pending") return "text-sky-400 bg-sky-400/10 ring-sky-400/20";
   return "text-accent bg-accent/10 ring-accent/25";
 }
+
+// Customer-facing support availability — aggregate only, no staff names.
+function SupportAvailabilityBanner() {
+  const a = useSupportAvailability();
+  const meta = PRESENCE_META[a.state];
+  const label = a.state === "online" ? "Support Online" : a.state === "away" ? "Support Team Away" : "Support Team Offline";
+  const sub = a.state === "online"
+    ? "We typically reply in real time."
+    : a.state === "away"
+      ? "We'll reply as soon as an agent is back."
+      : a.lastActiveAt ? `Last active ${fmtLastActive(a.lastActiveAt)}` : "Leave a message and we'll get back to you.";
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-2xl glass p-3.5">
+      <span aria-hidden className="text-lg leading-none">{meta.dot}</span>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
 
 function SupportPage() {
   const { user, loading } = useAuth();
@@ -171,6 +195,9 @@ function SupportPage() {
             Open a ticket and our team replies in real time. Track every conversation here.
           </p>
         </motion.div>
+
+        <SupportAvailabilityBanner />
+
 
         <button
           onClick={() => setComposing(true)}
@@ -488,6 +515,7 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
+    if (isStaff) void import("@/lib/support-presence").then((m) => m.pingPresence("send_message"));
     fireSupportEmail(ticketId, isStaff ? "staff_reply" : "customer_reply");
     setReply(""); setFiles([]);
   }

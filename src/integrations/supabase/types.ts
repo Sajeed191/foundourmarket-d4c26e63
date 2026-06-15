@@ -4507,6 +4507,30 @@ export type Database = {
         }
         Relationships: []
       }
+      support_agent_presence: {
+        Row: {
+          created_at: string
+          last_action: string | null
+          last_active_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_action?: string | null
+          last_active_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_action?: string | null
+          last_active_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_attachments: {
         Row: {
           created_at: string
@@ -6748,6 +6772,7 @@ export type Database = {
         Returns: string
       }
       support_admin_unread_count: { Args: never; Returns: number }
+      support_availability: { Args: never; Returns: Json }
       support_unread_count: { Args: never; Returns: number }
       svc_acquisition_metrics: {
         Args: { p_since: string; p_window_days: number }

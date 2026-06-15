@@ -22,11 +22,12 @@ import {
   deriveStage, computeSla, computeSupportKpis, detectEscalation,
   groupByStatus, refundRisk, normPriority, isStaffSender,
   computeFirstReplySla, fmtCountdownMin, normChannel, CHANNEL_META,
-  STAGE_LABEL, STAGE_ORDER, PRIORITY_LABEL, ESCALATION_LABEL,
+  STAGE_LABEL, STAGE_ORDER, PRIORITY_LABEL, ESCALATION_LABEL, PRESENCE_META,
   type TicketRow, type MessageRow, type OrderLite, type RefundRow, type ReturnRow,
   type TicketStage, type SlaInfo, type EscalationReason, type EscalationContext, type Priority,
-  type FirstReplySla, type SupportChannel,
+  type FirstReplySla, type SupportChannel, type PresenceState,
 } from "@/lib/support-analytics";
+import { useAgentPresence, pingPresence, fmtLastActive } from "@/lib/support-presence";
 
 
 export const Route = createFileRoute("/admin-support")({
@@ -70,11 +71,14 @@ type Enriched = {
   stage: TicketStage;
   sla: SlaInfo;
   firstReply: FirstReplySla;
+  firstStaffReplyAt: number | null;
   channel: SupportChannel;
   lastSenderRole: string | null;
   escalations: EscalationReason[];
   customerName: string;
 };
+
+export type TeamMember = { id: string; name: string; state: PresenceState; lastActiveAt: string | null };
 
 function AdminSupportPage() {
   const { user } = useAuth();
@@ -104,6 +108,12 @@ function AdminSupportPage() {
   useEffect(() => {
     const id = setInterval(() => setNowTick(Date.now()), 30000);
     return () => clearInterval(id);
+  }, []);
+
+  // Activity-derived presence directory + heartbeat for the current agent.
+  const { presenceOf } = useAgentPresence(true);
+  useEffect(() => {
+    if (typeof document !== "undefined" && document.visibilityState === "visible") void pingPresence("dashboard");
   }, []);
 
   const load = useCallback(async () => {
@@ -145,6 +155,7 @@ function AdminSupportPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from("support_tickets") as any).update(patch).eq("id", id);
     if (error) { toast.error(error.message); return; }
+    void pingPresence("ticket_update");
     logActivity("support_update", "support_ticket", id, patch);
     if (patch.status === "resolved" || patch.status === "closed") {
       void notifySupportEvent({ data: { ticketId: id, event: patch.status as "resolved" | "closed" } }).catch(() => {});
@@ -188,11 +199,35 @@ function AdminSupportPage() {
       const sla = computeSla(ticket, stage, firstStaffAt, lastSenderRole);
       const firstReply = computeFirstReplySla(ticket, stage, firstStaffAt, nowTick);
       const escalations = detectEscalation(ticket, escCtx);
-      return { ticket, stage, sla, firstReply, channel: normChannel(ticket.channel), lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
+      return { ticket, stage, sla, firstReply, firstStaffReplyAt: firstStaffAt, channel: normChannel(ticket.channel), lastSenderRole, escalations, customerName: profiles.get(ticket.user_id) ?? "Customer" };
     });
   }, [tickets, msgAgg, escCtx, profiles, nowTick]);
 
   const kpis = useMemo(() => computeSupportKpis(enriched), [enriched]);
+
+  // Support team presence (agents with any assigned ticket OR a presence row).
+  const team = useMemo<TeamMember[]>(() => {
+    const ids = new Set<string>();
+    for (const e of enriched) if (e.ticket.assigned_to) ids.add(e.ticket.assigned_to);
+    if (user?.id) ids.add(user.id);
+    return [...ids].map((id) => {
+      const p = presenceOf(id);
+      return { id, name: profiles.get(id) ?? `Agent ${id.slice(0, 6)}`, state: p.state, lastActiveAt: p.lastActiveAt };
+    }).filter((m) => m.lastActiveAt || m.id === user?.id)
+      .sort((a, b) => (b.lastActiveAt ? +new Date(b.lastActiveAt) : 0) - (a.lastActiveAt ? +new Date(a.lastActiveAt) : 0));
+  }, [enriched, presenceOf, profiles, user?.id, nowTick]);
+
+  // Average first-reply time for tickets first answered today (operational KPI).
+  const avgFirstReplyTodayMin = useMemo(() => {
+    const now = new Date();
+    const sameDay = (t: number) => { const d = new Date(t); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate(); };
+    const vals = enriched
+      .filter((e) => e.firstStaffReplyAt != null && sameDay(e.firstStaffReplyAt) && e.firstReply.answeredInMin != null)
+      .map((e) => e.firstReply.answeredInMin as number);
+    if (!vals.length) return null;
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }, [enriched, nowTick]);
+
 
   const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   const visibleTickets = useMemo(() => {
@@ -255,16 +290,20 @@ function AdminSupportPage() {
         {tickets === null ? (
           <div className="grid place-items-center py-20"><Loader2 className="size-5 animate-spin text-accent" /></div>
         ) : section === "dashboard" ? (
-          <DashboardView kpis={kpis} enriched={enriched} />
+          <DashboardView kpis={kpis} enriched={enriched} team={team} avgFirstReplyTodayMin={avgFirstReplyTodayMin} />
         ) : section === "tickets" ? (
           <TicketsView
             tickets={visibleTickets} stageFilter={stageFilter} setStageFilter={setStageFilter} stageCount={stageCount}
             priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
             assignFilter={assignFilter} setAssignFilter={setAssignFilter}
-            sortBy={sortBy} setSortBy={setSortBy}
-            q={q} setQ={setQ} onOpen={setActiveId} onManage={setManageId} on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
+            sortBy={sortBy} setSortBy={setSortBy} presenceOf={presenceOf} profiles={profiles}
+            q={q} setQ={setQ}
+            onOpen={(id) => { setActiveId(id); void pingPresence("open_ticket"); }}
+            onManage={(id) => { setManageId(id); void pingPresence("manage_ticket"); }}
+            on360={(uid, name) => setC360({ userId: uid, name })} onAi={setAiTicket}
             onStatus={(id, st) => update(id, { status: st })} onPriority={(id, p) => update(id, { priority: priorityToDb(p) })}
           />
+
 
         ) : section === "refunds" ? (
           <RefundsView refunds={refunds} orders={orders} onChanged={load} />
@@ -380,7 +419,7 @@ function SupportSettingsView() {
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
-function DashboardView({ kpis, enriched }: { kpis: ReturnType<typeof computeSupportKpis>; enriched: Enriched[] }) {
+function DashboardView({ kpis, enriched, team, avgFirstReplyTodayMin }: { kpis: ReturnType<typeof computeSupportKpis>; enriched: Enriched[]; team: TeamMember[]; avgFirstReplyTodayMin: number | null }) {
   const critical = enriched.filter((e) => e.sla.critical).slice(0, 6);
   const escalations = enriched.filter((e) => e.escalations.length && e.stage !== "resolved" && e.stage !== "closed").slice(0, 6);
 
@@ -408,9 +447,12 @@ function DashboardView({ kpis, enriched }: { kpis: ReturnType<typeof computeSupp
           <Kpi label="Waiting Staff" value={health.waitingStaff} tone={health.waitingStaff ? "amber" : undefined} />
           <Kpi label="SLA Breached" value={health.breached} icon={<AlertTriangle className="size-4" />} tone={health.breached ? "destructive" : undefined} />
           <Kpi label="Unassigned" value={health.unassigned} tone={health.unassigned ? "amber" : undefined} />
-          <Kpi label="Urgent" value={health.urgent} icon={<Flame className="size-4" />} tone={health.urgent ? "destructive" : undefined} />
+          <KpiText label="Avg First Reply Today" value={avgFirstReplyTodayMin == null ? "—" : fmtCountdownMin(avgFirstReplyTodayMin)} icon={<Clock className="size-4" />} />
         </div>
       </div>
+
+      <SupportTeamPanel team={team} />
+
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <Kpi label="Open" value={kpis.open} icon={<Inbox className="size-4" />} />
@@ -454,11 +496,13 @@ function TicketsView(props: {
   priorityFilter: Priority | "all"; setPriorityFilter: (p: Priority | "all") => void;
   assignFilter: "all" | "me" | "unassigned"; setAssignFilter: (a: "all" | "me" | "unassigned") => void;
   sortBy: "activity" | "priority" | "oldest"; setSortBy: (s: "activity" | "priority" | "oldest") => void;
+  presenceOf: (id: string | null | undefined) => { state: PresenceState; lastActiveAt: string | null };
+  profiles: Map<string, string>;
   q: string; setQ: (v: string) => void;
   onOpen: (id: string) => void; onManage: (id: string) => void; on360: (uid: string, name: string) => void; onAi: (id: string) => void;
   onStatus: (id: string, s: TicketStage) => void; onPriority: (id: string, p: Priority) => void;
 }) {
-  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ } = props;
+  const { tickets, stageFilter, setStageFilter, stageCount, priorityFilter, setPriorityFilter, assignFilter, setAssignFilter, sortBy, setSortBy, q, setQ, presenceOf, profiles } = props;
   const FILTERS: (TicketStage | "all" | "overdue")[] = ["all", "overdue", ...STAGE_ORDER];
   const PRIO_FILTERS: (Priority | "all")[] = ["all", ...PRIORITIES];
   const ASSIGN_FILTERS: { key: "all" | "me" | "unassigned"; label: string }[] = [
@@ -516,6 +560,8 @@ function TicketsView(props: {
         <div className="space-y-3">
           {tickets.map((e) => (
             <TicketCard key={e.ticket.id} e={e}
+              assignedName={e.ticket.assigned_to ? (profiles.get(e.ticket.assigned_to) ?? "Agent") : null}
+              assignedPresence={e.ticket.assigned_to ? presenceOf(e.ticket.assigned_to) : null}
               onOpen={() => props.onOpen(e.ticket.id)} onManage={() => props.onManage(e.ticket.id)}
               on360={() => props.on360(e.ticket.user_id, e.customerName)} onAi={() => props.onAi(e.ticket.id)}
               onStatus={(st) => props.onStatus(e.ticket.id, st)} onPriority={(p) => props.onPriority(e.ticket.id, p)} />
@@ -526,11 +572,13 @@ function TicketsView(props: {
   );
 }
 
-function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: {
-  e: Enriched; onOpen: () => void; onManage: () => void; on360: () => void; onAi: () => void;
+function TicketCard({ e, assignedName, assignedPresence, onOpen, onManage, on360, onAi, onStatus, onPriority }: {
+  e: Enriched; assignedName: string | null; assignedPresence: { state: PresenceState; lastActiveAt: string | null } | null;
+  onOpen: () => void; onManage: () => void; on360: () => void; onAi: () => void;
   onStatus: (s: TicketStage) => void; onPriority: (p: Priority) => void;
 }) {
   const { ticket, stage, sla, firstReply, channel, escalations, customerName } = e;
+
 
   return (
     <div className={cn("card-premium rounded-2xl p-4 md:p-5", sla.critical && "border-destructive/40")}>
@@ -590,7 +638,13 @@ function TicketCard({ e, onOpen, onManage, on360, onAi, onStatus, onPriority }: 
         <button onClick={on360} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium hover:border-accent/40">
           <User className="size-3" /> Customer 360
         </button>
-        {ticket.assigned_to && <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><User className="size-3" /> Assigned</span>}
+        {ticket.assigned_to && (
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <User className="size-3" />
+            <span className="font-medium text-foreground/80">{assignedName}</span>
+            {assignedPresence && <PresenceTag state={assignedPresence.state} lastActiveAt={assignedPresence.lastActiveAt} />}
+          </span>
+        )}
 
       </div>
     </div>
@@ -1033,6 +1087,48 @@ function FirstReplyBadge({ fr }: { fr: FirstReplySla }) {
   );
 }
 
+// ── Presence (activity-derived, never manual) ────────────────────────────────
+function PresenceTag({ state, lastActiveAt, showLabel = false }: { state: PresenceState; lastActiveAt: string | null; showLabel?: boolean }) {
+  const meta = PRESENCE_META[state];
+  const title = state === "offline"
+    ? (lastActiveAt ? `Last active ${fmtLastActive(lastActiveAt)}` : "No recent activity")
+    : `${meta.label} · active ${fmtLastActive(lastActiveAt)}`;
+  return (
+    <span title={title} className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+      <span aria-hidden>{meta.dot}</span>
+      {showLabel && <span>{meta.label}</span>}
+    </span>
+  );
+}
+
+function SupportTeamPanel({ team }: { team: TeamMember[] }) {
+  const online = team.filter((m) => m.state === "online");
+  const away = team.filter((m) => m.state === "away");
+  const offline = team.filter((m) => m.state === "offline");
+  return (
+    <div className="card-premium rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2"><Users className="size-4 text-accent" /><span className="text-sm font-semibold">Support Team</span></div>
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>🟢 {online.length}</span><span>🟡 {away.length}</span><span>🔴 {offline.length}</span>
+        </div>
+      </div>
+      {team.length === 0 ? <Empty text="No agent activity yet." /> : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {team.map((m) => (
+            <div key={m.id} className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-background/40 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{m.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{m.lastActiveAt ? `Last active ${fmtLastActive(m.lastActiveAt)}` : "No activity yet"}</p>
+              </div>
+              <PresenceTag state={m.state} lastActiveAt={m.lastActiveAt} showLabel />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 function Kpi({ label, value, icon, tone }: { label: string; value: number; icon?: React.ReactNode; tone?: "emerald" | "amber" | "destructive" }) {
