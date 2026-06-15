@@ -75,7 +75,8 @@ export function TicketOpsSheet({
   const [staff, setStaff] = useState<Staff[]>([]);
   const [names, setNames] = useState<Map<string, string>>(new Map());
   const [orders, setOrders] = useState<OrderLite[]>([]);
-  const [customer, setCustomer] = useState<{ name: string; email: string | null } | null>(null);
+  const [customer, setCustomer] = useState<{ name: string; email: string | null; createdAt: string | null } | null>(null);
+  const [userTickets, setUserTickets] = useState<{ id: string; ticket_number: string | null; category: string; status: string; created_at: string; resolved_at: string | null; closed_at: string | null }[]>([]);
   const [msgRows, setMsgRows] = useState<{ id: string; sender_role: string | null; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
