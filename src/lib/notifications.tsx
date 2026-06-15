@@ -210,6 +210,7 @@ export function NotificationLink({
   );
 }
 
+type Ctx = {
   items: Notification[];
   unread: number;
   loading: boolean;
