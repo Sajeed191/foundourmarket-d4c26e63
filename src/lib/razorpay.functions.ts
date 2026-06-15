@@ -695,79 +695,17 @@ export const createRazorpayRefund = createServerFn({ method: "POST" })
     const { userId } = context as { userId: string };
     await assertRefundStaff(userId);
 
-    const { data: pay, error: pErr } = await supabaseAdmin
-      .from("payments")
-      .select("id,order_id,amount,currency,status,razorpay_payment_id")
-      .eq("id", data.paymentId)
-      .maybeSingle();
-    if (pErr || !pay) throw new Error("Payment not found.");
-    if (pay.status !== "succeeded") throw new Error("Only successful payments can be refunded.");
-    if (!pay.razorpay_payment_id) throw new Error("This payment has no Razorpay reference.");
-
-    // Guard against duplicate full refunds
-    const { data: priorRefunds } = await supabaseAdmin
-      .from("refunds")
-      .select("amount,status")
-      .eq("payment_id", pay.id);
-    const refundedSoFar = (priorRefunds ?? [])
-      .filter((r) => r.status !== "failed")
-      .reduce((s, r) => s + Number(r.amount), 0);
-    const maxRefundable = Number(pay.amount) - refundedSoFar;
-    if (maxRefundable <= 0) throw new Error("This payment is already fully refunded.");
-
-    const refundAmount = data.amount ? Math.min(data.amount, maxRefundable) : maxRefundable;
-
-    let rzpRefund;
-    try {
-      rzpRefund = await rzpFetch<{ id: string; amount: number; currency: string; status: string }>(
-        `/payments/${pay.razorpay_payment_id}/refund`,
-        {
-          method: "POST",
-          body: {
-            amount: Math.round(refundAmount * 100),
-            notes: { reason: data.reason ?? "admin_initiated", order_id: pay.order_id },
-          },
-        },
-      );
-    } catch (e: any) {
-      await supabaseAdmin.from("refunds").insert({
-        order_id: pay.order_id,
-        payment_id: pay.id,
-        razorpay_payment_id: pay.razorpay_payment_id,
-        amount: refundAmount,
-        currency: pay.currency,
-        reason: data.reason ?? null,
-        status: "failed",
-        notes: { error: String(e?.message ?? e) },
-      });
-      throw new Error(e?.message ?? "Refund request failed at the gateway.");
-    }
-
-    const { data: refundRow } = await supabaseAdmin
-      .from("refunds")
-      .insert({
-        order_id: pay.order_id,
-        payment_id: pay.id,
-        razorpay_refund_id: rzpRefund.id,
-        razorpay_payment_id: pay.razorpay_payment_id,
-        amount: (rzpRefund.amount ?? Math.round(refundAmount * 100)) / 100,
-        currency: rzpRefund.currency ?? pay.currency,
-        reason: data.reason ?? null,
-        status: rzpRefund.status === "processed" ? "processed" : "pending",
-        notes: { source: "admin_initiated" },
-      })
-      .select("id,status,amount")
-      .single();
-
-    // Mark order refunded when fully refunded
-    if (refundAmount >= maxRefundable) {
-      await supabaseAdmin
-        .from("orders")
-        .update({ status: "refunded", payment_status: "refunded" })
-        .eq("id", pay.order_id);
-    }
-
-    return { ok: true, refund: refundRow };
+    // Single canonical path: moves real money, persists the gateway refund id,
+    // marks the order refunded, and notifies the customer (email + in-app +
+    // timeline). The refund.processed webhook reconciles the final status.
+    const { executeRazorpayRefund } = await import("./refund-execute.server");
+    return executeRazorpayRefund({
+      paymentId: data.paymentId,
+      amount: data.amount,
+      reason: data.reason ?? null,
+      source: "admin_initiated",
+      actorId: userId,
+    });
   });
 
 
