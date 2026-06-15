@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ThreadSheet } from "@/routes/account_.support";
 import { TicketOpsSheet } from "@/components/admin/TicketOpsSheet";
+import { SupportSatisfactionPanel } from "@/components/admin/SupportSatisfactionPanel";
 import { notifySupportEvent } from "@/lib/support.functions";
 import { useSupportSettings, updateSupportSettings, type SupportStatusMode } from "@/lib/use-support-settings";
 import { suggestSupportReply } from "@/lib/support-ai.functions";
@@ -60,7 +61,7 @@ const PRIORITY_CLS: Record<Priority, string> = {
   urgent: "text-destructive border-destructive/30 bg-destructive/10",
 };
 
-type Section = "dashboard" | "tickets" | "refunds" | "returns" | "agents" | "warroom" | "settings";
+type Section = "dashboard" | "tickets" | "refunds" | "returns" | "agents" | "satisfaction" | "warroom" | "settings";
 
 type Enriched = {
   ticket: TicketRow;
@@ -210,6 +211,7 @@ function AdminSupportPage() {
     { key: "refunds", label: "Refunds", icon: <Banknote className="size-3.5" /> },
     { key: "returns", label: "Returns", icon: <RotateCcw className="size-3.5" /> },
     { key: "agents", label: "Agents", icon: <Users className="size-3.5" /> },
+    { key: "satisfaction", label: "Satisfaction", icon: <Sparkles className="size-3.5" /> },
     { key: "warroom", label: "War Room", icon: <Radio className="size-3.5" /> },
     { key: "settings", label: "Settings", icon: <Gauge className="size-3.5" /> },
   ];
@@ -252,6 +254,8 @@ function AdminSupportPage() {
           <ReturnsView returns={returns} onChanged={load} />
         ) : section === "agents" ? (
           <AgentPerformanceView enriched={enriched} profiles={profiles} />
+        ) : section === "satisfaction" ? (
+          user ? <SupportSatisfactionPanel currentUserId={user.id} onOpenThread={setActiveId} /> : null
         ) : section === "settings" ? (
           <SupportSettingsView />
         ) : (

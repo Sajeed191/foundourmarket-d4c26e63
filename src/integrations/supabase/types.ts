@@ -4708,6 +4708,68 @@ export type Database = {
           },
         ]
       }
+      support_ticket_ratings: {
+        Row: {
+          assigned_agent: string | null
+          category: string | null
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          priority: string | null
+          rated_at: string
+          rating: number
+          resolution_time_ms: number | null
+          reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          ticket_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_agent?: string | null
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          priority?: string | null
+          rated_at?: string
+          rating: number
+          resolution_time_ms?: number | null
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          ticket_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_agent?: string | null
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          priority?: string | null
+          rated_at?: string
+          rating?: number
+          resolution_time_ms?: number | null
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          ticket_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_ratings_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_ticket_reads: {
         Row: {
           id: string
