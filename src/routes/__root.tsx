@@ -64,6 +64,11 @@ const InstallPrompt = lazy(() =>
 const LiveChat = lazy(() =>
   import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
 );
+const FloatingSupportBadge = lazy(() =>
+  import("@/components/chat/FloatingSupportBadge").then((m) => ({
+    default: m.FloatingSupportBadge,
+  })),
+);
 const RegionSelectModal = lazy(() =>
   import("@/components/site/RegionSelectModal").then((m) => ({ default: m.RegionSelectModal })),
 );
