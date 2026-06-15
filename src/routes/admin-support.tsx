@@ -178,16 +178,27 @@ function AdminSupportPage() {
 
   const kpis = useMemo(() => computeSupportKpis(enriched), [enriched]);
 
+  const PRIORITY_RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   const visibleTickets = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return enriched.filter((e) => {
+    const list = enriched.filter((e) => {
       if (stageFilter === "overdue") { if (!e.sla.overdue) return false; }
       else if (stageFilter !== "all" && e.stage !== stageFilter) return false;
+      if (priorityFilter !== "all" && e.sla.priority !== priorityFilter) return false;
+      if (assignFilter === "me" && e.ticket.assigned_to !== user?.id) return false;
+      if (assignFilter === "unassigned" && e.ticket.assigned_to) return false;
       if (!term) return true;
       return [e.ticket.subject, e.ticket.id, e.ticket.category, e.customerName, e.ticket.order_id]
         .some((v) => (v ?? "").toString().toLowerCase().includes(term));
     });
-  }, [enriched, stageFilter, q]);
+    const open = (e: Enriched) => e.stage !== "resolved" && e.stage !== "closed";
+    return [...list].sort((a, b) => {
+      if (sortBy === "priority") return PRIORITY_RANK[a.sla.priority] - PRIORITY_RANK[b.sla.priority] || (+new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at));
+      if (sortBy === "oldest") return (open(b) ? 1 : 0) - (open(a) ? 1 : 0) || (+new Date(a.ticket.created_at) - +new Date(b.ticket.created_at));
+      return +new Date(b.ticket.last_message_at) - +new Date(a.ticket.last_message_at);
+    });
+  }, [enriched, stageFilter, priorityFilter, assignFilter, sortBy, q, user?.id]);
+
 
   const stageCount = (s: TicketStage | "all" | "overdue") =>
     s === "all" ? enriched.length : s === "overdue" ? enriched.filter((e) => e.sla.overdue).length : enriched.filter((e) => e.stage === s).length;
