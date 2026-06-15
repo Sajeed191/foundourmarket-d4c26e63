@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Loader2, Plus, Send, LifeBuoy, X, ChevronRight,
   ShieldCheck, MessageSquare, CheckCircle2, Check, CheckCheck,
-  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud, Mail,
+  Package, Truck, RotateCcw, AlertCircle, FileText, Download, Eye, Camera, UploadCloud, Mail, Search,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
