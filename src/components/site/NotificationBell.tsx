@@ -291,7 +291,7 @@ function NotifCard({
       }`}
     >
       {destination ? (
-        <Link to={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</Link>
+        <NotificationLink dest={destination} onClick={() => { if (unread) onRead(n.id); onClose(); }}>{inner}</NotificationLink>
       ) : (
         <div onClick={() => unread && onRead(n.id)} className={unread ? "cursor-pointer" : ""}>{inner}</div>
       )}
