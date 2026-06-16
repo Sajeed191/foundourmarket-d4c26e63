@@ -105,9 +105,9 @@
   --product-page-bottom-clearance: calc(var(--app-bottom-nav-height) + var(--app-cta-height) + var(--product-dock-gap) + 1.5rem);
   --floating-bottom-offset: calc(var(--app-bottom-nav-height) + 1.5rem);
   --z-page-content: 1;
-  --z-floating-controls: 55;
-  --z-top-header: 60;
-  --z-bottom-nav: 70;
+  --z-floating-controls: 800;
+  --z-top-header: 900;
+  --z-bottom-nav: 1200;
 
   /* Deep charcoal noir */
   --background: oklch(0.115 0.008 260);
@@ -608,7 +608,10 @@
     pointer-events: none;
   }
   [data-app-header] { z-index: var(--z-top-header) !important; }
-  [data-app-bottom-nav] { z-index: var(--z-bottom-nav) !important; }
+  [data-app-bottom-nav] {
+    z-index: var(--z-bottom-nav) !important;
+    padding-bottom: calc(var(--mobile-safe-bottom) + var(--mobile-nav-edge-gap)) !important;
+  }
   [data-floating-control] { z-index: var(--z-floating-controls) !important; }
   /* When the mobile hamburger sidebar is open, clear every floating mobile UI
      element out of the way so the menu reads as a full-screen navigation. */
