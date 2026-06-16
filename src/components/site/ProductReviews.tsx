@@ -1038,12 +1038,33 @@ function WriteReviewModal(props: {
   const { open, onClose, step, setStep, rating, setRating, hoverRating, setHoverRating, title, setTitle, body, setBody, pendingMedia, setPendingMedia, uploading, submitting, fileRef, onPickFiles, onSubmit } = props;
   const last = step === STEPS.length;
   const canNext = step !== 3 || body.trim().length > 0;
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  // A draft is "dirty" once the shopper has written something or attached media.
+  const isDirty = title.trim().length > 0 || body.trim().length > 0 || pendingMedia.length > 0;
+
+  // Intercept close: if there is an in-progress draft, ask for confirmation via a
+  // centered modal instead of letting the prompt fall toward the bottom nav.
+  function requestClose() {
+    if (isDirty && !submitting) {
+      setConfirmDiscard(true);
+      return;
+    }
+    onClose();
+  }
+
+  function discardAndClose() {
+    setConfirmDiscard(false);
+    onClose();
+  }
 
   useEffect(() => {
     if (open) {
       document.body.setAttribute("data-review-wizard-open", "");
       return () => document.body.removeAttribute("data-review-wizard-open");
     }
+    // Reset the confirm dialog whenever the wizard is fully closed.
+    setConfirmDiscard(false);
   }, [open]);
 
   return (
@@ -1054,7 +1075,7 @@ function WriteReviewModal(props: {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
-          onClick={onClose}
+          onClick={requestClose}
         >
           <motion.div
             initial={{ y: 40, opacity: 0, scale: 0.98 }}
@@ -1066,7 +1087,7 @@ function WriteReviewModal(props: {
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-display">Write a review</h3>
-              <button onClick={onClose} className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground">
+              <button onClick={requestClose} className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground">
                 <X className="size-4" />
               </button>
             </div>
@@ -1152,7 +1173,7 @@ function WriteReviewModal(props: {
             {/* nav */}
             <div className="mt-6 flex items-center justify-between gap-3">
               <button
-                onClick={() => (step === 1 ? onClose() : setStep(step - 1))}
+                onClick={() => (step === 1 ? requestClose() : setStep(step - 1))}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="size-3.5" /> {step === 1 ? "Cancel" : "Back"}
@@ -1170,6 +1191,44 @@ function WriteReviewModal(props: {
               )}
             </div>
           </motion.div>
+
+          {/* Centered discard confirmation — never rendered near the bottom nav */}
+          <AnimatePresence>
+            {confirmDiscard && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={(e) => { e.stopPropagation(); setConfirmDiscard(false); }}
+                className="absolute inset-0 z-[10] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
+                >
+                  <p className="text-base font-display">Discard your review draft?</p>
+                  <p className="mt-1.5 text-sm text-muted-foreground">Your unsaved review will be lost.</p>
+                  <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
+                    <button
+                      onClick={() => setConfirmDiscard(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent"
+                    >
+                      Continue Editing
+                    </button>
+                    <button
+                      onClick={discardAndClose}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110"
+                    >
+                      <Trash2 className="size-3.5" /> Discard
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
