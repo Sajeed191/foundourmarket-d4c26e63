@@ -167,9 +167,17 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   );
   const hasReviewed = !!myReview;
 
-  // Resolve which of the four customer states applies.
-  const customerState: "guest" | "not_purchased" | "can_review" | "reviewed" =
-    !user ? "guest" : hasReviewed ? "reviewed" : eligible ? "can_review" : "not_purchased";
+  // Resolve which of the five customer states applies.
+  const customerState: "guest" | "not_purchased" | "purchased_pending" | "can_review" | "reviewed" =
+    !user
+      ? "guest"
+      : hasReviewed
+        ? "reviewed"
+        : eligible
+          ? "can_review"
+          : purchase.purchased && !purchase.delivered
+            ? "purchased_pending"
+            : "not_purchased";
 
   const isSaved = user ? wishlist.has(productSlug) : false;
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
@@ -463,14 +471,15 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             </motion.div>
           )}
 
-          {/* ── Review submission area (no status labels) ────────────────── */}
+          {/* ── Single smart action card ─────────────────────────────────── */}
           <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">
             <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
 
-            {/* Guest */}
+            {/* CASE 1 — Guest */}
             {customerState === "guest" && (
               <div className="relative">
-                <p className="text-base sm:text-lg font-display leading-snug">Sign in to write a review</p>
+                <p className="text-base sm:text-lg font-display leading-snug">Sign in to share your experience</p>
+                <p className="mt-1 text-sm text-muted-foreground">Only verified purchasers can review products.</p>
                 <div className="mt-4">
                   <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
                     <LogIn className="size-3.5" /> Sign In
@@ -479,37 +488,40 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               </div>
             )}
 
-            {/* Signed in, not purchased */}
+            {/* CASE 2 — Signed in, not purchased */}
             {customerState === "not_purchased" && (
               <div className="relative flex items-start gap-2.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.05] p-4">
                 <Lock className="size-4 text-sky-300 shrink-0 mt-0.5" />
-                <p className="text-sm text-foreground/90">Only verified purchasers can review this product.</p>
+                <p className="text-sm text-foreground/90">Only verified purchasers can review this product after delivery.</p>
               </div>
             )}
 
-            {/* Purchased, not yet reviewed */}
+            {/* CASE 3 — Purchased, awaiting delivery */}
+            {customerState === "purchased_pending" && (
+              <div className="relative flex items-start gap-2.5 rounded-2xl border border-amber-500/15 bg-amber-500/[0.05] p-4">
+                <Truck className="size-4 text-amber-300 shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground/90">Your review will be available once the order is delivered.</p>
+              </div>
+            )}
+
+            {/* CASE 4 — Delivered/completed, no review yet */}
             {customerState === "can_review" && (
               <div className="relative">
-                <p className="text-base sm:text-lg font-display leading-snug">How was your experience?</p>
-                <p className="mt-1 text-sm text-muted-foreground">Share a star rating, your review and photos to help other shoppers.</p>
+                <p className="text-base sm:text-lg font-display leading-snug">Share your experience</p>
+                <p className="mt-1 text-sm text-muted-foreground">Help other shoppers by rating this product and uploading photos.</p>
                 <div className="mt-4">
                   <button onClick={openCompose} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
-                    <Pencil className="size-3.5" /> Write a Review
+                    <Pencil className="size-3.5" /> Write Review
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Already reviewed */}
+            {/* CASE 5 — Already reviewed */}
             {customerState === "reviewed" && myReview && (
               <div className="relative">
-                <p className="text-base sm:text-lg font-display">Your Review</p>
-                <div className="mt-3 flex items-center gap-3">
-                  <StarRating rating={myReview.rating} starClassName="size-4" />
-                  <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">{fmtDate(myReview.created_at)}</span>
-                </div>
-                {myReview.title && <p className="mt-3 text-base font-display leading-snug">{myReview.title}</p>}
-                {myReview.body && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{myReview.body}</p>}
+                <p className="text-base sm:text-lg font-display leading-snug">Thank you for your review</p>
+                <p className="mt-1 text-sm text-muted-foreground">You can edit or delete your review anytime.</p>
                 <div className="mt-4 flex flex-wrap gap-2.5">
                   <button onClick={startEditMyReview} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
                     <Pencil className="size-3.5" /> Edit Review
@@ -600,7 +612,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <span className="shrink-0 self-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
                 {sortChips.map((c) => (
@@ -616,29 +628,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   </button>
                 ))}
               </div>
-              {!user ? (
-                <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
-                  Sign in to review
-                </Link>
-              ) : hasReviewed ? (
-                <button
-                  onClick={startEditMyReview}
-                  className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent transition-all hover:brightness-110"
-                >
-                  <Pencil className="size-3.5" /> Edit your review
-                </button>
-              ) : eligible ? (
-                <button
-                  onClick={openCompose}
-                  className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 hover:shadow-[var(--shadow-ember)]"
-                >
-                  <Pencil className="size-3.5" /> Write a review
-                </button>
-              ) : (
-                <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                  <ShieldCheck className="size-3.5" /> Verified purchasers only
-                </span>
-              )}
             </div>
           </div>
 
@@ -980,16 +969,12 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
         <span className="inline-grid size-16 place-items-center rounded-2xl bg-accent/15 text-accent animate-glow">
           <Star className="size-8 fill-accent" />
         </span>
-        <h3 className="mt-5 text-xl font-display">Be the first to review this product</h3>
+        <h3 className="mt-5 text-xl font-display">Be the first to review</h3>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">Share your experience and help other customers shop with confidence.</p>
-        {canWrite ? (
+        {canWrite && (
           <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write a review
+            <Pencil className="size-3.5" /> Write Review
           </button>
-        ) : (
-          <Link to="/auth" className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
-            Sign in to review
-          </Link>
         )}
       </div>
     </div>
