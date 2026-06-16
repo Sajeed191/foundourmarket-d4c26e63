@@ -360,7 +360,11 @@ function Home() {
   );
 
   const newArrivals = useMemo(
-    () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")).slice(0, 8),
+    () =>
+      products
+        .filter((p) => p.newArrival)
+        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+        .slice(0, 8),
     [products]
   );
 
