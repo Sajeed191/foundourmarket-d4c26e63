@@ -1061,16 +1061,15 @@ function WriteReviewModal(props: {
 }) {
   const { onClose, onDiscard, step, setStep, rating, setRating, hoverRating, setHoverRating, title, setTitle, body, setBody, pendingMedia, setPendingMedia, uploading, submitting, fileRef, onPickFiles, onSubmit } = props;
   const last = step === STEPS.length;
-  const canNext = step !== 3 || body.trim().length > 0;
+  const canNext = (step !== 1 || rating > 0) && (step !== 3 || body.trim().length > 0);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
-  // A draft is "dirty" once the shopper has written something or attached media.
-  const isDirty = rating > 0 || title.trim().length > 0 || body.trim().length > 0 || pendingMedia.length > 0;
+  const hasUnsavedChanges = rating > 0 || title.trim().length > 0 || body.trim().length > 0 || pendingMedia.length > 0;
 
   // Intercept close: if there is an in-progress draft, ask for confirmation via a
   // centered modal instead of letting the prompt fall toward the bottom nav.
   function requestClose() {
-    if (isDirty && !submitting) {
+    if (hasUnsavedChanges && !submitting) {
       setConfirmDiscard(true);
       return;
     }
@@ -1093,7 +1092,7 @@ function WriteReviewModal(props: {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/70 p-0 pb-[var(--app-bottom-nav-height)] backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/70 p-0 pb-[var(--app-bottom-nav-height)] backdrop-blur-sm sm:items-center sm:p-4"
           onClick={requestClose}
         >
           <motion.div
@@ -1219,7 +1218,7 @@ function WriteReviewModal(props: {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={(e) => { e.stopPropagation(); setConfirmDiscard(false); }}
-                className="absolute inset-0 z-[10] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
               >
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
@@ -1228,8 +1227,8 @@ function WriteReviewModal(props: {
                   onClick={(e) => e.stopPropagation()}
                   className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
                 >
-                  <p className="text-base font-display">Discard your review draft?</p>
-                  <p className="mt-1.5 text-sm text-muted-foreground">Your unsaved review will be lost.</p>
+                  <p className="text-base font-display">Discard review?</p>
+                  <p className="mt-1.5 text-sm text-muted-foreground">You have unsaved changes. Do you want to continue editing or discard this review?</p>
                   <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
                     <button
                       onClick={() => setConfirmDiscard(false)}
