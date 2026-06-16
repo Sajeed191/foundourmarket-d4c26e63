@@ -134,9 +134,14 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [user]);
 
   const loadEligibility = useCallback(async () => {
-    if (!user) { setEligible(false); return; }
-    const { data } = await supabase.rpc("can_review_product", { _slug: productSlug });
+    if (!user) { setEligible(false); setPurchase({ purchased: false, delivered: false }); return; }
+    const [{ data }, { data: ps }] = await Promise.all([
+      supabase.rpc("can_review_product", { _slug: productSlug }),
+      supabase.rpc("customer_product_state", { _slug: productSlug }),
+    ]);
     setEligible(data === true);
+    if (ps && typeof ps === "object") setPurchase(ps as PurchaseState);
+    else setPurchase({ purchased: false, delivered: false });
   }, [user, productSlug]);
 
   useEffect(() => { setLoading(true); load(); }, [load]);
