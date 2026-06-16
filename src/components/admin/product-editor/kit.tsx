@@ -310,6 +310,7 @@ export function SectionEditor<T extends Record<string, any>>({
   const inFlight = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<T | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   formRef.current = form;
 
   // Seed isolated state once from the loaded row, and surface any newer local draft.
