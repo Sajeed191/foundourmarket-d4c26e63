@@ -1038,12 +1038,33 @@ function WriteReviewModal(props: {
   const { open, onClose, step, setStep, rating, setRating, hoverRating, setHoverRating, title, setTitle, body, setBody, pendingMedia, setPendingMedia, uploading, submitting, fileRef, onPickFiles, onSubmit } = props;
   const last = step === STEPS.length;
   const canNext = step !== 3 || body.trim().length > 0;
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  // A draft is "dirty" once the shopper has written something or attached media.
+  const isDirty = title.trim().length > 0 || body.trim().length > 0 || pendingMedia.length > 0;
+
+  // Intercept close: if there is an in-progress draft, ask for confirmation via a
+  // centered modal instead of letting the prompt fall toward the bottom nav.
+  function requestClose() {
+    if (isDirty && !submitting) {
+      setConfirmDiscard(true);
+      return;
+    }
+    onClose();
+  }
+
+  function discardAndClose() {
+    setConfirmDiscard(false);
+    onClose();
+  }
 
   useEffect(() => {
     if (open) {
       document.body.setAttribute("data-review-wizard-open", "");
       return () => document.body.removeAttribute("data-review-wizard-open");
     }
+    // Reset the confirm dialog whenever the wizard is fully closed.
+    setConfirmDiscard(false);
   }, [open]);
 
   return (
