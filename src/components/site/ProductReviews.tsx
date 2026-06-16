@@ -159,6 +159,25 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [productSlug, load, loadMyVotes]);
 
   const published = useMemo(() => reviews.filter((r) => r.status === "published"), [reviews]);
+
+  // The signed-in customer's own review for this product (one review per customer).
+  const myReview = useMemo(
+    () => (user ? reviews.find((r) => r.user_id === user.id) ?? null : null),
+    [reviews, user],
+  );
+  const hasReviewed = !!myReview;
+
+  // Resolve which of the four customer states applies.
+  const customerState: "guest" | "not_purchased" | "can_review" | "reviewed" =
+    !user ? "guest" : hasReviewed ? "reviewed" : eligible ? "can_review" : "not_purchased";
+
+  const statusLabel =
+    customerState === "guest" ? "Guest Visitor"
+    : customerState === "reviewed" ? "Verified Reviewer"
+    : eligible ? "Verified Purchaser"
+    : "Logged In User";
+
+  const isSaved = user ? wishlist.has(productSlug) : false;
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
