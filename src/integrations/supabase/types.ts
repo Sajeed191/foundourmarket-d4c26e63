@@ -6364,6 +6364,7 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: Json
       }
+      customer_product_state: { Args: { _slug: string }; Returns: Json }
       customer_restriction_message: {
         Args: { _operation: string; _user_id: string }
         Returns: string

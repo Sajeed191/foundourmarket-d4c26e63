@@ -7,11 +7,14 @@ import {
   ImagePlus, X, Pin, Sparkles, ShieldCheck, EyeOff, Eye, MessageSquare, Play, Brain,
   Camera, BadgeCheck, PackageCheck, ChevronLeft, ChevronRight, ThumbsUp as Recommend,
   Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn,
+  LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Lock, Bookmark, Truck, CalendarCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth";
+import { useCart } from "@/lib/cart";
+import { useWishlist } from "@/lib/wishlist";
 import { useIsAdmin } from "@/lib/use-admin";
 import {
   type Review, type ReviewMedia, REPORT_REASONS,
@@ -22,6 +25,14 @@ import { cn } from "@/lib/utils";
 import { StarRating } from "@/components/site/StarRating";
 
 type ProfileMap = Record<string, { full_name: string | null; avatar_url: string | null }>;
+
+type PurchaseState = {
+  purchased: boolean;
+  delivered: boolean;
+  status?: string | null;
+  purchased_at?: string | null;
+  delivered_at?: string | null;
+};
 
 type ReviewFilter = "all" | "verified" | "photo" | "5" | "4" | "3" | "2" | "1";
 type ReviewSort = "newest" | "helpful" | "highest" | "lowest";
@@ -51,12 +62,16 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const runAnalyze = useServerFn(analyzeReviews);
+  const cart = useCart();
+  const wishlist = useWishlist();
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
   const [myVotes, setMyVotes] = useState<Record<string, "helpful" | "not_helpful">>({});
   const [trust, setTrust] = useState<number | null>(null);
   const [eligible, setEligible] = useState(false);
+  const [purchase, setPurchase] = useState<PurchaseState>({ purchased: false, delivered: false });
+  const [buyingAgain, setBuyingAgain] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // browse state
@@ -119,9 +134,14 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [user]);
 
   const loadEligibility = useCallback(async () => {
-    if (!user) { setEligible(false); return; }
-    const { data } = await supabase.rpc("can_review_product", { _slug: productSlug });
+    if (!user) { setEligible(false); setPurchase({ purchased: false, delivered: false }); return; }
+    const [{ data }, { data: ps }] = await Promise.all([
+      supabase.rpc("can_review_product", { _slug: productSlug }),
+      supabase.rpc("customer_product_state", { _slug: productSlug }),
+    ]);
     setEligible(data === true);
+    if (ps && typeof ps === "object") setPurchase(ps as PurchaseState);
+    else setPurchase({ purchased: false, delivered: false });
   }, [user, productSlug]);
 
   useEffect(() => { setLoading(true); load(); }, [load]);
@@ -139,6 +159,25 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [productSlug, load, loadMyVotes]);
 
   const published = useMemo(() => reviews.filter((r) => r.status === "published"), [reviews]);
+
+  // The signed-in customer's own review for this product (one review per customer).
+  const myReview = useMemo(
+    () => (user ? reviews.find((r) => r.user_id === user.id) ?? null : null),
+    [reviews, user],
+  );
+  const hasReviewed = !!myReview;
+
+  // Resolve which of the four customer states applies.
+  const customerState: "guest" | "not_purchased" | "can_review" | "reviewed" =
+    !user ? "guest" : hasReviewed ? "reviewed" : eligible ? "can_review" : "not_purchased";
+
+  const statusLabel =
+    customerState === "guest" ? "Guest Visitor"
+    : customerState === "reviewed" ? "Verified Reviewer"
+    : eligible ? "Verified Purchaser"
+    : "Logged In User";
+
+  const isSaved = user ? wishlist.has(productSlug) : false;
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
@@ -217,6 +256,36 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     if (!eligible) { toast.error("Only verified purchasers can review this product."); return; }
     setStep(1); setRating(5); setTitle(""); setBody(""); setPendingMedia([]);
     setShowCompose(true);
+  }
+
+  function scrollToQuestions() {
+    document.getElementById("questions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function startEditMyReview() {
+    if (!myReview) return;
+    setEditingId(myReview.id);
+    setEditRating(myReview.rating);
+    setEditTitle(myReview.title ?? "");
+    setEditBody(myReview.body ?? "");
+    document.getElementById(`review-${myReview.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function buyAgain() {
+    setBuyingAgain(true);
+    try {
+      await cart.add(productSlug, 1);
+      toast.success("Added to cart");
+    } catch (e) {
+      toast.error("Could not add to cart", { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setBuyingAgain(false);
+    }
+  }
+
+  async function toggleSave() {
+    await wishlist.toggle(productSlug);
+    toast.success(wishlist.has(productSlug) ? "Removed from saved" : "Saved to your list");
   }
 
   async function submit(e?: React.FormEvent) {
@@ -340,6 +409,116 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
         <ReviewsSkeleton />
       ) : (
         <>
+          {/* ── Smart customer status panel ─────────────────────────────── */}
+          <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">
+            <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
+            {/* Status chip */}
+            <div className="relative mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground/70 mb-1.5">Your status</p>
+                <span className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider",
+                  customerState === "guest" && "border-white/15 bg-white/5 text-muted-foreground",
+                  customerState === "not_purchased" && "border-sky-500/25 bg-sky-500/[0.08] text-sky-300",
+                  (customerState === "can_review" || customerState === "reviewed") && "border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-300",
+                )}>
+                  {customerState === "guest" ? <Users className="size-3" />
+                    : customerState === "not_purchased" ? <Lock className="size-3" />
+                    : customerState === "reviewed" ? <BadgeCheck className="size-3" />
+                    : <ShieldCheck className="size-3" />}
+                  {statusLabel}
+                </span>
+              </div>
+            </div>
+
+            {/* State 1 — Guest */}
+            {customerState === "guest" && (
+              <div className="relative">
+                <p className="text-base sm:text-lg font-display leading-snug max-w-md">
+                  Sign in to ask questions, save products and leave reviews.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
+                    <LogIn className="size-3.5" /> Sign In
+                  </Link>
+                  <Link to="/auth" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent">
+                    <UserPlus className="size-3.5" /> Create Account
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* State 2 — Signed in, not purchased */}
+            {customerState === "not_purchased" && (
+              <div className="relative">
+                <div className="flex items-start gap-2.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.05] p-4">
+                  <Lock className="size-4 text-sky-300 shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground/90">Only verified purchasers can review this product. You can still ask questions and save it for later.</p>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <Link to="/products/$slug" params={{ slug: productSlug }} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
+                    <ShoppingBag className="size-3.5" /> Purchase Product To Review
+                  </Link>
+                  <button onClick={scrollToQuestions} className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent">
+                    <HelpCircle className="size-3.5" /> Ask Question
+                  </button>
+                  <button onClick={toggleSave} className={cn("inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all", isSaved ? "border-accent/40 bg-accent/10 text-accent" : "border-white/15 text-foreground hover:border-accent/40 hover:text-accent")}>
+                    <Bookmark className={cn("size-3.5", isSaved && "fill-accent")} /> {isSaved ? "Saved" : "Save Product"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* State 3 — Purchased, not yet reviewed */}
+            {customerState === "can_review" && (
+              <div className="relative">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+                  <BadgeCheck className="size-3" /> Verified Purchase
+                </span>
+                <p className="mt-3 text-base sm:text-lg font-display leading-snug">How was your experience?</p>
+                <p className="mt-1 text-sm text-muted-foreground">Share a star rating, title, your review and photos to help other shoppers.</p>
+                <SmartActions
+                  purchase={purchase}
+                  primary={{ label: "Submit Review", icon: <Pencil className="size-3.5" />, onClick: openCompose }}
+                  onBuyAgain={buyAgain} buyingAgain={buyingAgain}
+                  onAsk={scrollToQuestions} onSave={toggleSave} isSaved={isSaved}
+                />
+              </div>
+            )}
+
+            {/* State 4 — Already reviewed */}
+            {customerState === "reviewed" && myReview && (
+              <div className="relative">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <p className="text-base sm:text-lg font-display">Your Review</p>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+                    <BadgeCheck className="size-3" /> Verified Purchase
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <StarRating rating={myReview.rating} starClassName="size-4" />
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">{fmtDate(myReview.created_at)}</span>
+                </div>
+                {myReview.title && <p className="mt-3 text-base font-display leading-snug">{myReview.title}</p>}
+                {myReview.body && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{myReview.body}</p>}
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <button onClick={startEditMyReview} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
+                    <Pencil className="size-3.5" /> Edit Review
+                  </button>
+                  <button onClick={() => remove(myReview.id)} className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-destructive/50 hover:text-destructive">
+                    <Trash2 className="size-3.5" /> Delete Review
+                  </button>
+                </div>
+                <SmartActions
+                  purchase={purchase}
+                  onBuyAgain={buyAgain} buyingAgain={buyingAgain}
+                  onAsk={scrollToQuestions} onSave={toggleSave} isSaved={isSaved}
+                />
+              </div>
+            )}
+          </div>
+
+
           {/* Summary header */}
           {hasReviews && (
             <motion.div
@@ -496,6 +675,13 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
                   Sign in to review
                 </Link>
+              ) : hasReviewed ? (
+                <button
+                  onClick={startEditMyReview}
+                  className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent transition-all hover:brightness-110"
+                >
+                  <Pencil className="size-3.5" /> Edit your review
+                </button>
               ) : eligible ? (
                 <button
                   onClick={openCompose}
@@ -527,6 +713,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                       <motion.li
                         layout
                         key={r.id}
+                        id={`review-${r.id}`}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
@@ -723,7 +910,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
       )}
 
       {/* Sticky mobile write button */}
-      {user && eligible && !showCompose && (
+      {user && eligible && !hasReviewed && !showCompose && (
         <button
           onClick={openCompose}
           className="sm:hidden fixed bottom-5 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground shadow-[var(--shadow-ember)]"
@@ -767,6 +954,55 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 }
 
 /* ---------- Sub components ---------- */
+
+function SmartActions({
+  purchase, primary, onBuyAgain, buyingAgain, onAsk, onSave, isSaved,
+}: {
+  purchase: PurchaseState;
+  primary?: { label: string; icon: React.ReactNode; onClick: () => void };
+  onBuyAgain: () => void;
+  buyingAgain: boolean;
+  onAsk: () => void;
+  onSave: () => void;
+  isSaved: boolean;
+}) {
+  return (
+    <div className="mt-5 border-t border-border/40 pt-5">
+      {/* Purchase facts */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+        {purchase.purchased_at && (
+          <span className="inline-flex items-center gap-1 text-emerald-400/90"><CalendarCheck className="size-3" /> Purchased on {fmtDate(purchase.purchased_at)}</span>
+        )}
+        {purchase.delivered && (
+          <span className="inline-flex items-center gap-1"><Truck className="size-3" /> Delivered</span>
+        )}
+        <span className="inline-flex items-center gap-1 text-emerald-400/90"><BadgeCheck className="size-3" /> Verified Purchase</span>
+      </div>
+      {/* Actions */}
+      <div className="mt-3.5 flex flex-wrap gap-2">
+        {primary && (
+          <button onClick={primary.onClick} className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
+            {primary.icon} {primary.label}
+          </button>
+        )}
+        <button onClick={onBuyAgain} disabled={buyingAgain} className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent disabled:opacity-60">
+          {buyingAgain ? <Loader2 className="size-3.5 animate-spin" /> : <Repeat className="size-3.5" />} Buy Again
+        </button>
+        <button onClick={onAsk} className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent">
+          <HelpCircle className="size-3.5" /> Ask Question
+        </button>
+        <button onClick={onSave} className={cn("inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-all", isSaved ? "border-accent/40 bg-accent/10 text-accent" : "border-white/15 text-foreground hover:border-accent/40 hover:text-accent")}>
+          <Bookmark className={cn("size-3.5", isSaved && "fill-accent")} /> {isSaved ? "Saved" : "Save"}
+        </button>
+        <Link to="/account/support/new" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent">
+          <LifeBuoy className="size-3.5" /> Contact Support
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
 
 function StatCard({ icon, value, label, highlight }: { icon: React.ReactNode; value: string; label: string; highlight?: boolean }) {
   return (
