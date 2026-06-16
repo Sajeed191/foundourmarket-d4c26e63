@@ -575,7 +575,7 @@ export function SectionEditor<T extends Record<string, any>>({
               {/* Save Changes — primary CTA (65%) */}
               <button
                 type="button"
-                onClick={() => void doSave(false)}
+                onClick={() => { if (dirty) setConfirmOpen(true); else void doSave(false); }}
                 disabled={(!dirty && !justSaved) || saveState === "saving" || !!validationError}
                 className={`inline-flex h-11 basis-[65%] grow items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${justSaved ? "bg-emerald-500 text-white" : "bg-accent text-accent-foreground hover:brightness-110"}`}
               >
