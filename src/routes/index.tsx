@@ -116,8 +116,18 @@ function iconForCategory(slug: string, name: string): LucideIcon {
   return Package;
 }
 
+/* Elegant empty-state messaging per home section — sections stay visible even
+   when no products currently carry the required badge. */
+const SECTION_EMPTY_COPY: Record<string, string> = {
+  trending: "More trending products are on the way.",
+  new_arrivals: "New products are arriving soon.",
+  best_sellers: "More best sellers are on the way.",
+};
+
 /* Single product section (lazy-mounted). Shows exactly 4 products in a 2×2
-   mobile grid (no carousel) with a full-width premium "View All" button. */
+   mobile grid (no carousel) with a full-width premium "View All" button.
+   When no products carry the section's badge, an elegant empty state renders
+   instead of hiding the section. */
 function ProductSection({
   sectionKey, eyebrow, title, icon, products, isAdmin, active, viewAllTo, prominent = false, minHeight = 260,
 }: {
@@ -132,8 +142,11 @@ function ProductSection({
   prominent?: boolean;
   minHeight?: number;
 }) {
-  if (products.length === 0 || (!active && !isAdmin)) return null;
+  // Only the admin-controlled active toggle hides the section. An empty product
+  // list now shows an elegant message rather than disappearing.
+  if (!active && !isAdmin) return null;
   const preview = products.slice(0, 4);
+  const isEmpty = preview.length === 0;
   // Section-specific badge: inside a dedicated section, each card shows only
   // that section's badge.
   const sectionBadge =
@@ -153,20 +166,33 @@ function ProductSection({
         eyebrow={eyebrow}
         title={title}
         icon={icon}
-        href={viewAllTo}
+        href={isEmpty ? undefined : viewAllTo}
         sectionKey={sectionKey}
         editable={isAdmin}
         active={active}
         prominent={prominent}
       />
-      <LazyMount minHeight={minHeight}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {preview.map((p, i) => (
-            <Reveal key={p.slug} delay={i}><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
-          ))}
+      {isEmpty ? (
+        <div className="grid place-items-center rounded-3xl border border-dashed border-accent/20 bg-card/40 px-6 py-12 text-center">
+          {icon && (
+            <div className="mb-3 grid size-11 place-items-center rounded-2xl bg-accent/10 text-accent ring-1 ring-accent/20">
+              {(() => { const I = icon; return <I className="size-5" />; })()}
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">
+            {SECTION_EMPTY_COPY[sectionKey] ?? "More products are on the way."}
+          </p>
         </div>
-        <ViewAllButton to={viewAllTo} />
-      </LazyMount>
+      ) : (
+        <LazyMount minHeight={minHeight}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {preview.map((p, i) => (
+              <Reveal key={p.slug} delay={i}><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
+            ))}
+          </div>
+          <ViewAllButton to={viewAllTo} />
+        </LazyMount>
+      )}
     </SectionTracker>
   );
 }
