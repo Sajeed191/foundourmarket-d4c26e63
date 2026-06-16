@@ -969,16 +969,12 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
         <span className="inline-grid size-16 place-items-center rounded-2xl bg-accent/15 text-accent animate-glow">
           <Star className="size-8 fill-accent" />
         </span>
-        <h3 className="mt-5 text-xl font-display">Be the first to review this product</h3>
+        <h3 className="mt-5 text-xl font-display">Be the first to review</h3>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">Share your experience and help other customers shop with confidence.</p>
-        {canWrite ? (
+        {canWrite && (
           <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write a review
+            <Pencil className="size-3.5" /> Write Review
           </button>
-        ) : (
-          <Link to="/auth" className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
-            Sign in to review
-          </Link>
         )}
       </div>
     </div>
