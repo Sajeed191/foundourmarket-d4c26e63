@@ -10,9 +10,10 @@ export function NotificationBell() {
   const { count: supportUnread } = useSupportUnread();
   const totalUnread = unread + (isAdmin ? 0 : supportUnread);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = pathname === "/account/notifications" || pathname === "/admin/notifications";
+  const isActive = pathname === "/account/notifications" || pathname === "/admin-notifications";
 
-  const to = isAdmin ? "/admin/notifications" : "/account/notifications";
+  const to = isAdmin ? "/admin-notifications" : "/account/notifications";
+
 
   return (
     <Link
