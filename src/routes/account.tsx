@@ -13,8 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
 import { useWishlist } from "@/lib/wishlist";
-
-
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useIsAdmin } from "@/lib/use-admin";
 
