@@ -675,6 +675,13 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
                   Sign in to review
                 </Link>
+              ) : hasReviewed ? (
+                <button
+                  onClick={startEditMyReview}
+                  className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent transition-all hover:brightness-110"
+                >
+                  <Pencil className="size-3.5" /> Edit your review
+                </button>
               ) : eligible ? (
                 <button
                   onClick={openCompose}
