@@ -873,6 +873,13 @@ function WriteReviewModal(props: {
   const last = step === STEPS.length;
   const canNext = step !== 3 || body.trim().length > 0;
 
+  useEffect(() => {
+    if (open) {
+      document.body.setAttribute("data-review-wizard-open", "");
+      return () => document.body.removeAttribute("data-review-wizard-open");
+    }
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open && (
