@@ -543,7 +543,7 @@ export function SectionEditor<T extends Record<string, any>>({
                         icon={<FileText className="size-4" />}
                         label="Save Draft"
                         disabled={!dirty || saveState === "saving" || !!validationError}
-                        onClick={() => { setMenuOpen(false); void doSave(false); }}
+                        onClick={() => { setMenuOpen(false); setConfirmOpen(true); }}
                       />
                       <MenuItem
                         icon={<Copy className="size-4" />}
