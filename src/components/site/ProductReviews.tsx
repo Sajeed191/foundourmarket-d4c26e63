@@ -1253,7 +1253,7 @@ function WriteReviewModal(props: {
                       onClick={discardAndClose}
                       className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110"
                     >
-                      <Trash2 className="size-3.5" /> Discard
+                      <Trash2 className="size-3.5" /> Discard Review
                     </button>
                   </div>
                 </motion.div>
