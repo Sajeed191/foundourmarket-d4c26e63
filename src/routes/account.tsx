@@ -415,18 +415,6 @@ function AccountPage() {
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0 self-center">
-                {isAdmin && (
-                  <Link
-                    to="/account/notifications"
-                    aria-label="Notifications"
-                    className="relative size-9 sm:size-10 grid place-items-center rounded-xl glass hover:bg-white/10 hover:text-accent transition-all"
-                  >
-                    <Bell className="size-4" />
-                    {unread > 0 && (
-                      <span className="absolute top-1 right-1 size-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--color-accent)]" />
-                    )}
-                  </Link>
-                )}
                 <Link
                   to="/account/profile"
                   aria-label="Settings"
