@@ -440,6 +440,15 @@ function AccountPage() {
         </motion.header>
         </div>
 
+        {/* 1.5 — ACTIVE JOURNEY TRACKING (single card, auto-hides when complete) */}
+        <AnimatePresence>
+          {activeJourney && (
+            <TrackingWidget key={activeJourney.type} journey={activeJourney} format={format} />
+          )}
+        </AnimatePresence>
+
+
+
 
 
 
