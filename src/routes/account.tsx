@@ -1031,7 +1031,7 @@ function TrackingWidget({ journey, format }: { journey: Journey; format: (n: num
   let idLabel: string;
   let metaRight: { label: string; value: string } | null = null;
   let statusLabel: string;
-  let detailsLink: React.ReactNode;
+  let detailsLink: ReactNode;
 
   if (journey.type === "order") {
     const o = journey.order;
