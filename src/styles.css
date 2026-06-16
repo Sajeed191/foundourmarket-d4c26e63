@@ -615,8 +615,8 @@
     z-index: var(--z-bottom-nav) !important;
     padding-bottom: calc(var(--mobile-safe-bottom) + var(--mobile-nav-edge-gap)) !important;
   }
-  [data-product-cta] { z-index: var(--z-buy-now-bar) !important; }
   [data-floating-control] { z-index: var(--z-floating-controls) !important; }
+  [data-product-cta] { z-index: var(--z-buy-now-bar) !important; }
   /* When the mobile hamburger sidebar is open, clear every floating mobile UI
      element out of the way so the menu reads as a full-screen navigation. */
   body[data-menu-open] [data-app-bottom-nav],
