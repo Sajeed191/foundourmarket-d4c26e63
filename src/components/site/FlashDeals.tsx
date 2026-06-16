@@ -53,7 +53,7 @@ function FallbackSection({ featured }: { featured: Product[] }) {
           <div className="size-11 grid place-items-center rounded-2xl bg-accent/15 text-accent ring-1 ring-accent/30">
             <Sparkles className="size-5" />
           </div>
-          <h3 className="text-base sm:text-lg font-display font-semibold">No Flash Deals Available Right Now</h3>
+          <h3 className="text-base sm:text-lg font-display font-semibold">More deals are on the way.</h3>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
             New limited-time prices drop daily. Explore our full collection in the meantime.
           </p>
