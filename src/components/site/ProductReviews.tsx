@@ -879,34 +879,38 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
       {user && eligible && !hasReviewed && !showCompose && (
         <button
           onClick={openCompose}
-          className="sm:hidden fixed bottom-5 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground shadow-[var(--shadow-ember)]"
+          data-floating-control
+          className="sm:hidden fixed right-4 bottom-[var(--floating-bottom-offset)] z-[var(--z-floating-controls)] inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground shadow-[var(--shadow-ember)]"
         >
           <Pencil className="size-4" /> Write Review
         </button>
       )}
 
       {/* Write review multi-step modal */}
-      <WriteReviewModal
-        open={showCompose && !!user}
-        onClose={() => setShowCompose(false)}
-        step={step}
-        setStep={setStep}
-        rating={rating}
-        setRating={setRating}
-        hoverRating={hoverRating}
-        setHoverRating={setHoverRating}
-        title={title}
-        setTitle={setTitle}
-        body={body}
-        setBody={setBody}
-        pendingMedia={pendingMedia}
-        setPendingMedia={setPendingMedia}
-        uploading={uploading}
-        submitting={submitting}
-        fileRef={fileRef}
-        onPickFiles={onPickFiles}
-        onSubmit={submit}
-      />
+      {showCompose && !!user && (
+        <WriteReviewModal
+          key={composeSessionRef.current}
+          onClose={closeCompose}
+          onDiscard={discardReviewDraft}
+          step={step}
+          setStep={setStep}
+          rating={rating}
+          setRating={setRating}
+          hoverRating={hoverRating}
+          setHoverRating={setHoverRating}
+          title={title}
+          setTitle={setTitle}
+          body={body}
+          setBody={setBody}
+          pendingMedia={pendingMedia}
+          setPendingMedia={setPendingMedia}
+          uploading={uploading}
+          submitting={submitting}
+          fileRef={fileRef}
+          onPickFiles={onPickFiles}
+          onSubmit={submit}
+        />
+      )}
 
       {/* Lightbox gallery */}
       <Lightbox
