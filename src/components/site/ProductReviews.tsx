@@ -26,6 +26,14 @@ import { StarRating } from "@/components/site/StarRating";
 
 type ProfileMap = Record<string, { full_name: string | null; avatar_url: string | null }>;
 
+type PurchaseState = {
+  purchased: boolean;
+  delivered: boolean;
+  status?: string | null;
+  purchased_at?: string | null;
+  delivered_at?: string | null;
+};
+
 type ReviewFilter = "all" | "verified" | "photo" | "5" | "4" | "3" | "2" | "1";
 type ReviewSort = "newest" | "helpful" | "highest" | "lowest";
 
