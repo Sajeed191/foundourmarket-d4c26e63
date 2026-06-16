@@ -235,6 +235,47 @@ function AccountPage() {
   }, [returns]);
   const activeReturns = latestReturn.activeCount;
 
+  /**
+   * Single active customer journey for the "Tracking" widget.
+   * Priority: Replacement → Refund → Active Order. Only ONE card is ever shown,
+   * and it disappears automatically once the journey reaches a terminal state.
+   */
+  const activeJourney = useMemo<
+    | { type: "replacement"; ret: Return; order: Order | null }
+    | { type: "refund"; ret: Return; order: Order | null }
+    | { type: "order"; order: Order }
+    | null
+  >(() => {
+    const retList = returns ?? [];
+    const orderList = orders ?? [];
+    const orderFor = (id: string) => orderList.find((o) => o.id === id) ?? null;
+
+    const isRejected = (r: Return) => /rejected|denied|cancel/.test(String(r.status).toLowerCase());
+
+    // Replacement (highest priority)
+    const replacement = retList.find((r) => {
+      if (String(r.resolution_type ?? "").toLowerCase() === "refund") return false;
+      if (isRejected(r)) return false;
+      const rep = String(r.replacement_status ?? "").toLowerCase();
+      return !/delivered|completed|fulfilled|cancel/.test(rep);
+    });
+    if (replacement) return { type: "replacement", ret: replacement, order: orderFor(replacement.order_id) };
+
+    // Refund (second priority)
+    const refund = retList.find((r) => {
+      if (String(r.resolution_type ?? "").toLowerCase() !== "refund") return false;
+      if (isRejected(r)) return false;
+      const ref = String(r.refund_status ?? "").toLowerCase();
+      return !/refunded|issued|paid|completed|succeeded|cancel/.test(ref);
+    });
+    if (refund) return { type: "refund", ret: refund, order: orderFor(refund.order_id) };
+
+    // Active order (lowest priority)
+    if (stats.latestActive) return { type: "order", order: stats.latestActive };
+    return null;
+  }, [returns, orders, stats.latestActive]);
+
+
 
   const cartCount = cart.items.reduce((s, i) => s + i.qty, 0);
   const { slugs: recentSlugs } = useRecentlyViewed();
