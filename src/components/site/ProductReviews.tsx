@@ -83,7 +83,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   // compose form
   const [showCompose, setShowCompose] = useState(false);
   const [step, setStep] = useState(1);
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -254,7 +254,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }
 
   function discardReviewDraft() {
-    toast.dismiss();
     closeCompose();
   }
 
@@ -873,17 +872,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             </>
           )}
         </>
-      )}
-
-      {/* Sticky mobile write button */}
-      {user && eligible && !hasReviewed && !showCompose && (
-        <button
-          onClick={openCompose}
-          data-floating-control
-          className="sm:hidden fixed right-4 bottom-[var(--floating-bottom-offset)] z-[var(--z-floating-controls)] inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground shadow-[var(--shadow-ember)]"
-        >
-          <Pencil className="size-4" /> Write Review
-        </button>
       )}
 
       {/* Write review multi-step modal */}
