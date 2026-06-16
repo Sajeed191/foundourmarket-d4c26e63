@@ -984,40 +984,149 @@ function PremiumLoader() {
   );
 }
 
-function OrderTimeline({ order, format }: { order: Order; format: (n: number) => string }) {
-  const status = String(order.status).toLowerCase();
+type Journey =
+  | { type: "replacement"; ret: Return; order: Order | null }
+  | { type: "refund"; ret: Return; order: Order | null }
+  | { type: "order"; order: Order };
+
+function orderStepIndex(status: string): number {
+  const s = status.toLowerCase();
   const steps = [
-    { key: "ordered", label: "Ordered", icon: CheckCircle2, match: ["pending", "confirmed", "processing", "packed", "shipped", "in_transit", "out_for_delivery", "delivered", "completed"] },
-    { key: "packed", label: "Packed", icon: Box, match: ["packed", "shipped", "in_transit", "out_for_delivery", "delivered", "completed"] },
-    { key: "shipped", label: "Shipped", icon: Truck, match: ["shipped", "in_transit", "out_for_delivery", "delivered", "completed"] },
-    { key: "out", label: "Out for Delivery", icon: MapPin, match: ["out_for_delivery", "delivered", "completed"] },
-    { key: "delivered", label: "Delivered", icon: Home, match: ["delivered", "completed"] },
+    ["pending", "confirmed", "processing", "packed", "shipped", "in_transit", "out_for_delivery", "delivered", "completed"],
+    ["packed", "shipped", "in_transit", "out_for_delivery", "delivered", "completed"],
+    ["shipped", "in_transit", "out_for_delivery", "delivered", "completed"],
+    ["out_for_delivery", "delivered", "completed"],
+    ["delivered", "completed"],
   ];
-  const activeIdx = steps.reduce((acc, s, i) => (s.match.includes(status) ? i : acc), 0);
-  const eta = new Date(new Date(order.created_at).getTime() + 7 * 86400000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return steps.reduce((acc, m, i) => (m.includes(s) ? i : acc), 0);
+}
+
+function refundStepIndex(ret: Return): number {
+  const s = String(ret.status ?? "").toLowerCase();
+  const ref = String(ret.refund_status ?? "").toLowerCase();
+  if (/refunded|issued|paid|completed|succeeded/.test(ref)) return 3;
+  if (/processing|pending_payout|payout|approved/.test(ref) || /approved/.test(s)) return 2;
+  if (/review|pending/.test(s)) return 1;
+  return 0;
+}
+
+function replacementStepIndex(ret: Return): number {
+  const s = String(ret.status ?? "").toLowerCase();
+  const rep = String(ret.replacement_status ?? "").toLowerCase();
+  if (/delivered|completed|fulfilled/.test(rep)) return 3;
+  if (/shipped|transit|dispatch/.test(rep)) return 2;
+  if (/processing|preparing|packed|approved/.test(rep) || /approved/.test(s)) return 1;
+  return 0;
+}
+
+function TrackingWidget({ journey, format }: { journey: Journey; format: (n: number) => string }) {
+  const sourceOrder = journey.type === "order" ? journey.order : journey.order;
+  const item = sourceOrder?.order_items?.[0] ?? null;
+  const productName = item?.name ?? "Your item";
+  const productImage = item?.image ?? logoSrc;
+
+  let title: string;
+  let steps: { label: string; icon: typeof Truck }[];
+  let activeIdx: number;
+  let idLabel: string;
+  let metaRight: { label: string; value: string } | null = null;
+  let statusLabel: string;
+  let detailsLink: React.ReactNode;
+
+  if (journey.type === "order") {
+    const o = journey.order;
+    title = "Tracking Your Order";
+    steps = [
+      { label: "Ordered", icon: CheckCircle2 },
+      { label: "Packed", icon: Box },
+      { label: "Shipped", icon: Truck },
+      { label: "Out for Delivery", icon: MapPin },
+      { label: "Delivered", icon: Home },
+    ];
+    activeIdx = orderStepIndex(o.status);
+    idLabel = `Order #${o.id.slice(0, 8)}`;
+    statusLabel = steps[activeIdx].label;
+    metaRight = {
+      label: "Est. delivery",
+      value: new Date(new Date(o.created_at).getTime() + 7 * 86400000).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    };
+    detailsLink = (
+      <Link to="/orders/$id" params={{ id: o.id }} className="action-link">
+        View Details <ArrowRight className="size-3" />
+      </Link>
+    );
+  } else if (journey.type === "refund") {
+    const r = journey.ret;
+    title = "Tracking Your Refund";
+    steps = [
+      { label: "Requested", icon: CheckCircle2 },
+      { label: "Under Review", icon: Eye },
+      { label: "Approved", icon: Shield },
+      { label: "Refunded", icon: Wallet },
+    ];
+    activeIdx = refundStepIndex(r);
+    idLabel = `Refund #${r.id.slice(0, 8)}`;
+    statusLabel = steps[activeIdx].label;
+    metaRight = r.refund_amount != null ? { label: "Refund amount", value: format(Number(r.refund_amount)) } : null;
+    detailsLink = (
+      <Link to="/account/returns" className="action-link">
+        View Details <ArrowRight className="size-3" />
+      </Link>
+    );
+  } else {
+    const r = journey.ret;
+    title = "Tracking Your Replacement";
+    steps = [
+      { label: "Requested", icon: CheckCircle2 },
+      { label: "Approved", icon: Shield },
+      { label: "Shipped", icon: Truck },
+      { label: "Delivered", icon: Home },
+    ];
+    activeIdx = replacementStepIndex(r);
+    idLabel = `Replacement #${r.id.slice(0, 8)}`;
+    statusLabel = steps[activeIdx].label;
+    detailsLink = (
+      <Link to="/account/returns" className="action-link">
+        View Details <ArrowRight className="size-3" />
+      </Link>
+    );
+  }
+
   return (
-    <motion.section {...fadeUp}>
-      <div className="flex items-center justify-between mb-4">
+    <motion.section {...fadeUp} exit={{ opacity: 0, y: -10 }} className="relative z-20">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm sm:text-base font-medium flex items-center gap-2">
           <span className="size-7 rounded-lg bg-accent/10 text-accent grid place-items-center">
             <Truck className="size-3.5" />
           </span>
-          Tracking your order
+          {title}
         </h2>
-        <Link to="/orders/$id" params={{ id: order.id }} className="action-link">Details <ArrowRight className="size-3" /></Link>
+        {detailsLink}
       </div>
       <div className="card-premium rounded-2xl p-4 sm:p-5 relative overflow-hidden">
         <div aria-hidden className="absolute -top-16 -right-10 size-48 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-ember)" }} />
-        <div className="relative flex items-center justify-between gap-3 mb-4">
-          <div className="min-w-0">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Order #{order.id.slice(0, 8)}</p>
-            <p className="text-sm font-medium mt-0.5 truncate">{order.order_items.length} item{order.order_items.length === 1 ? "" : "s"} · {format(Number(order.total))}</p>
+
+        {/* Product row */}
+        <div className="relative flex items-start gap-3 mb-4">
+          <div className="size-16 shrink-0 rounded-xl overflow-hidden bg-secondary border border-white/10 grid place-items-center">
+            <img src={productImage} alt={productName} className="w-full h-full object-cover" loading="lazy" />
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Est. delivery</p>
-            <p className="text-sm font-display font-semibold text-accent">{eta}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium leading-snug line-clamp-2">{productName}</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">{idLabel}</p>
+            <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent/10 text-accent px-2 py-0.5 text-[10px] font-semibold">
+              <span className="size-1.5 rounded-full bg-accent animate-pulse" /> {statusLabel}
+            </span>
           </div>
+          {metaRight && (
+            <div className="text-right shrink-0">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{metaRight.label}</p>
+              <p className="text-sm font-display font-semibold text-accent">{metaRight.value}</p>
+            </div>
+          )}
         </div>
+
+        {/* Timeline */}
         <div className="relative">
           <div className="absolute top-4 left-4 right-4 h-0.5 bg-white/5 rounded-full overflow-hidden">
             <motion.div
@@ -1027,15 +1136,16 @@ function OrderTimeline({ order, format }: { order: Order; format: (n: number) =>
               className="h-full bg-gradient-to-r from-accent to-primary shadow-[0_0_10px_var(--color-accent)]"
             />
           </div>
-          <div className="relative grid grid-cols-5 gap-1">
+          <div className="relative grid gap-1" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
             {steps.map((s, i) => {
               const Icon = s.icon;
               const done = i <= activeIdx;
+              const current = i === activeIdx;
               return (
-                <div key={s.key} className="flex flex-col items-center gap-1.5 text-center">
+                <div key={s.label} className="flex flex-col items-center gap-1.5 text-center">
                   <motion.span
                     initial={false}
-                    animate={done ? { scale: [1, 1.15, 1] } : {}}
+                    animate={current ? { scale: [1, 1.15, 1] } : {}}
                     transition={{ duration: 0.5, ease }}
                     className={`size-8 rounded-full grid place-items-center ring-2 transition-all ${
                       done
@@ -1045,7 +1155,7 @@ function OrderTimeline({ order, format }: { order: Order; format: (n: number) =>
                   >
                     <Icon className="size-3.5" />
                   </motion.span>
-                  <span className={`text-[9px] font-mono uppercase tracking-wider leading-tight ${done ? "text-foreground" : "text-muted-foreground"}`}>
+                  <span className={`text-[9px] font-mono uppercase tracking-wider leading-tight ${current ? "text-foreground font-semibold" : done ? "text-foreground/80" : "text-muted-foreground"}`}>
                     {s.label}
                   </span>
                 </div>
@@ -1057,6 +1167,7 @@ function OrderTimeline({ order, format }: { order: Order; format: (n: number) =>
     </motion.section>
   );
 }
+
 
 function ReturnTimeline({ ret, format }: { ret: Return; format: (n: number) => string }) {
   const status = String(ret.status).toLowerCase();
