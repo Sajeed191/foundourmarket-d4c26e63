@@ -171,12 +171,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const customerState: "guest" | "not_purchased" | "can_review" | "reviewed" =
     !user ? "guest" : hasReviewed ? "reviewed" : eligible ? "can_review" : "not_purchased";
 
-  const statusLabel =
-    customerState === "guest" ? "Guest Visitor"
-    : customerState === "reviewed" ? "Verified Reviewer"
-    : eligible ? "Verified Purchaser"
-    : "Logged In User";
-
   const isSaved = user ? wishlist.has(productSlug) : false;
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
   const buckets = ratingBuckets(published);
