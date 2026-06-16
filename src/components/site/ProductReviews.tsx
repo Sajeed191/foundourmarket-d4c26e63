@@ -612,7 +612,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <span className="shrink-0 self-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
                 {sortChips.map((c) => (
@@ -628,29 +628,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   </button>
                 ))}
               </div>
-              {!user ? (
-                <Link to="/auth" className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110">
-                  Sign in to review
-                </Link>
-              ) : hasReviewed ? (
-                <button
-                  onClick={startEditMyReview}
-                  className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent transition-all hover:brightness-110"
-                >
-                  <Pencil className="size-3.5" /> Edit your review
-                </button>
-              ) : eligible ? (
-                <button
-                  onClick={openCompose}
-                  className="hidden sm:inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 hover:shadow-[var(--shadow-ember)]"
-                >
-                  <Pencil className="size-3.5" /> Write a review
-                </button>
-              ) : (
-                <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                  <ShieldCheck className="size-3.5" /> Verified purchasers only
-                </span>
-              )}
             </div>
           </div>
 
