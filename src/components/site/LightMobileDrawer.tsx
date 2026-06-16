@@ -80,7 +80,7 @@ export function LightMobileDrawer({
     label === "Wishlist" ? wishCount : label === "Cart" ? cartCount : 0;
 
   return (
-    <div className="fixed inset-0 z-[100] md:hidden">
+    <div className="fixed inset-0 z-[var(--z-modal-overlay)] md:hidden">
       {/* Soft blurred backdrop */}
       <div
         style={{ opacity: visible ? 1 : 0, transition: "opacity 0.3s ease" }}
