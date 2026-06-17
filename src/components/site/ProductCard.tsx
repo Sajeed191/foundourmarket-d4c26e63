@@ -71,8 +71,10 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           {/* Premium fade overlay */}
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-80" />
 
-          {/* Top-left — admin-assigned custom badges take priority, else auto badges */}
-          {assigned.length > 0 ? (
+          {/* Top-left — inside a dedicated section (forceBadge) show ONLY that
+              section's single badge; elsewhere admin-assigned custom badges take
+              priority, else auto badges (max 3). */}
+          {!forceBadge && assigned.length > 0 ? (
             <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 md:gap-1 lg:gap-1.5">
               {assigned.slice(0, 3).map((b) => (
                 <span
