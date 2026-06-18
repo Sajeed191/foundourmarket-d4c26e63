@@ -187,6 +187,9 @@ export function FlashDeals() {
               ? Math.round(((regularPrice - (i.flashPrice as number)) / regularPrice) * 100)
               : 0;
             const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
+            // Flash section shows ONLY the Flash/Hot deal badge — never any
+            // other badge. Flash Deal takes priority when both flags are set.
+            const dealBadge = singleBadge(p.flashDeal ? "flash_deal" : "hot_deal");
             return (
               <Link
                 key={p.slug}
