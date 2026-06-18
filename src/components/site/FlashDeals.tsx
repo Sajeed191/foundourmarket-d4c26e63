@@ -10,6 +10,7 @@ import { useRegion } from "@/lib/region";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { useHomepageSections, toggleHomepageSection } from "@/lib/use-homepage-sections";
 import type { Product } from "@/lib/products";
+import { singleBadge } from "@/lib/badges";
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -187,6 +188,9 @@ export function FlashDeals() {
               ? Math.round(((regularPrice - (i.flashPrice as number)) / regularPrice) * 100)
               : 0;
             const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
+            // Flash section shows ONLY the Flash/Hot deal badge — never any
+            // other badge. Flash Deal takes priority when both flags are set.
+            const dealBadge = singleBadge(p.flashDeal ? "flash_deal" : "hot_deal");
             return (
               <Link
                 key={p.slug}
@@ -204,8 +208,14 @@ export function FlashDeals() {
                       className="w-full h-full object-cover group-active:scale-105 transition-transform"
                     />
                   )}
+                  <span
+                    className={`absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${dealBadge.className}`}
+                  >
+                    <span aria-hidden>{dealBadge.emoji}</span>
+                    {dealBadge.label}
+                  </span>
                   {off > 0 && (
-                    <span className="absolute top-1.5 left-1.5 inline-flex items-center rounded-full bg-accent text-black text-[9px] font-bold font-mono px-2 py-0.5 shadow-[var(--shadow-ember)]">
+                    <span className="absolute top-1.5 right-1.5 inline-flex items-center rounded-full bg-accent text-black text-[9px] font-bold font-mono px-2 py-0.5 shadow-[var(--shadow-ember)]">
                       -{off}%
                     </span>
                   )}
