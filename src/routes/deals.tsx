@@ -70,7 +70,9 @@ function DealsPage() {
   const [activeCat, setActiveCat] = useState<string>("all");
 
   const dealProducts = useMemo(
-    () => items.map((i) => i.product),
+    () => items
+      .filter((i) => i.product.flashDeal || i.product.hotDeal)
+      .map((i) => i.product),
     [items],
   );
 
@@ -301,7 +303,7 @@ function DealsPage() {
                   transition={{ duration: 0.4, ease, delay: Math.min(i * 0.04, 0.3) }}
                   className="h-full [&>*]:h-full"
                 >
-                  <ProductCard product={p} />
+                  <ProductCard product={p} forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"} />
                 </motion.div>
               ))}
             </div>
