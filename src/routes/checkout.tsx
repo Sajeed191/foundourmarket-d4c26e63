@@ -326,40 +326,9 @@ function CheckoutPage() {
         },
       } satisfies Parameters<typeof openRazorpay>[0];
 
-      // Full Razorpay Checkout configuration logged immediately before open().
-      console.log("[checkout] Razorpay Checkout config (pre-open)", {
-        key: rzpOptions.key,
-        currency: rzpOptions.currency,
-        amount: rzpOptions.amount,
-        order_id: rzpOptions.order_id,
-        name: rzpOptions.name,
-        description: rzpOptions.description,
-        image: rzpOptions.image,
-        prefill: rzpOptions.prefill,
-        notes: rzpOptions.notes,
-        theme: rzpOptions.theme,
-        method: (rzpOptions as { method?: unknown }).method ?? "none (account defaults)",
-        "config.display": (rzpOptions as { config?: unknown }).config ?? "none (Razorpay adaptive UPI)",
-      });
+      // NOTE: Do not log the Razorpay config or payload — it contains customer
+      // PII (email/phone via prefill) and would leak it into the browser console.
 
-      // Final checkout payload (must contain NO customer_id; prefill only).
-      console.log("RAZORPAY_PAYLOAD", rzpOptions);
-
-      // Production-domain audit: the origin Razorpay validates against its
-      // registered "Website Origins" is the page that opens Checkout —
-      // window.location.origin. This MUST be https://foundourmarket.com in prod.
-      const rzpKey = String(created.keyId ?? "");
-      console.log("RAZORPAY_CHECKOUT_INIT_DATA", {
-        origin: window.location.origin,
-        checkout_domain: "https://checkout.razorpay.com",
-        razorpay_key: rzpKey,
-        mode: rzpKey.startsWith("rzp_live")
-          ? "live"
-          : rzpKey.startsWith("rzp_test")
-            ? "test"
-            : "unknown",
-        order_id: created.razorpayOrderId,
-      });
 
       const rzp = openRazorpay(rzpOptions);
 
