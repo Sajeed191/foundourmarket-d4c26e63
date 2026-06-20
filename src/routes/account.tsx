@@ -1409,7 +1409,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
         ))}
         {hasMore && (
           <Link
-            to="/search"
+            to="/continue-shopping"
             className="snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px] grid place-items-center rounded-[22px] border border-accent/20 bg-card/40 backdrop-blur-xl text-center transition-colors hover:border-accent/40"
           >
             <span className="flex flex-col items-center gap-2 px-4 py-8">
@@ -1417,7 +1417,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
                 <Plus className="size-5" />
               </span>
               <span className="text-sm font-semibold text-foreground">View all</span>
-              <span className="text-[11px] text-muted-foreground">Browse more products</span>
+              <span className="text-[11px] text-muted-foreground">Continue shopping</span>
             </span>
           </Link>
         )}
