@@ -14,11 +14,12 @@ export type RecEvent =
   | { type: "add_to_cart"; productSlug: string }
   | { type: "purchase"; productSlug: string }
   | { type: "wishlist"; productSlug: string }
+  | { type: "begin_checkout"; productSlug: string }
   | { type: "search"; query: string }
   | { type: "category_view"; category: string };
 
 const WEIGHTS: Record<string, number> = {
-  view: 1, add_to_cart: 3, purchase: 8, wishlist: 2, search: 1, category_view: 1,
+  view: 1, add_to_cart: 3, purchase: 8, wishlist: 2, begin_checkout: 5, search: 1, category_view: 1,
 };
 
 export async function recordEvent(e: RecEvent) {
