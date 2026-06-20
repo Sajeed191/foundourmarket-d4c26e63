@@ -26,6 +26,7 @@ import { SavedAddressRail } from "@/components/site/SavedAddressRail";
 import { SmartDeliveryCard } from "@/components/site/SmartDeliveryCard";
 import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder, placeCodOrder } from "@/lib/razorpay.functions";
 import { buildOrderAttribution } from "@/lib/marketing-tracking";
+import { recordEvent } from "@/lib/personalization";
 import { syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
 import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpay-loader";
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
