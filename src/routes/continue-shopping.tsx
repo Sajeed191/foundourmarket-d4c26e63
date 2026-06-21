@@ -114,9 +114,10 @@ function ActivityCard({ entry }: { entry: Entry }) {
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="mt-2.5 inline-flex items-center justify-center gap-1.5 w-full rounded-full bg-accent text-accent-foreground py-2 text-[11px] uppercase tracking-widest font-bold transition-all hover:brightness-110 active:scale-[0.98] shadow-[var(--shadow-ember)]"
+        className="mt-3 inline-flex h-11 sm:h-12 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 sm:px-5 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 active:scale-[0.97] shadow-[var(--shadow-ember)]"
       >
-        Continue Shopping <ArrowRight className="size-3.5" />
+        <span className="truncate">Continue Shopping</span>
+        <ArrowRight className="size-3.5 shrink-0" />
       </Link>
     </div>
   );
