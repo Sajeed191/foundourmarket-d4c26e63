@@ -804,7 +804,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 7 · Social Proof — verified customer reviews */}
-      <section className="cv-auto px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
         <Reveal className="text-center mb-4 sm:mb-6">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2 inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent animate-glow" /> Customer Stories
