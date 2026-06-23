@@ -69,11 +69,14 @@ const RPC_SORTS = new Set(["relevance", "price_asc", "price_desc", "rating", "ne
 function applyClientSort(rows: Product[], sort: string | undefined, discountOf: (p: Product) => number): Product[] {
   switch (sort) {
     case "trending":
-      return [...rows].sort((a, b) => b.viewsCount - a.viewsCount);
+      // Only products merchandised as Trending, ordered by views.
+      return rows.filter((p) => Boolean(p.trending)).sort((a, b) => b.viewsCount - a.viewsCount);
     case "best_selling":
-      return [...rows].sort((a, b) => b.soldCount - a.soldCount);
+      // Only products merchandised as Best Sellers, ordered by units sold.
+      return rows.filter((p) => Boolean(p.bestseller)).sort((a, b) => b.soldCount - a.soldCount);
     case "discount":
-      return [...rows].sort((a, b) => discountOf(b) - discountOf(a));
+      // Only products that actually have a discount, ordered by biggest first.
+      return rows.filter((p) => discountOf(p) > 0).sort((a, b) => discountOf(b) - discountOf(a));
     default:
       return rows;
   }
