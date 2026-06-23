@@ -317,8 +317,8 @@ function SearchPage() {
   if (search.free === "1") activeChips.push({ label: "Free shipping", clear: () => update({ free: undefined }) });
   if (search.disc === "1") activeChips.push({ label: "On sale", clear: () => update({ disc: undefined }) });
   if (search.rating) activeChips.push({ label: `${search.rating}★ & up`, clear: () => update({ rating: undefined }) });
-  if (search.min) activeChips.push({ label: `Min $${search.min}`, clear: () => update({ min: undefined }) });
-  if (search.max) activeChips.push({ label: `Max $${search.max}`, clear: () => update({ max: undefined }) });
+  if (search.min) activeChips.push({ label: `Min ${fmtPrice(search.min)}`, clear: () => update({ min: undefined }) });
+  if (search.max) activeChips.push({ label: `Max ${fmtPrice(search.max)}`, clear: () => update({ max: undefined }) });
 
   const resultCount = useMemo(() => results.length, [results]);
 
