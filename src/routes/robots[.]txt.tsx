@@ -23,6 +23,7 @@ export const Route = createFileRoute("/robots.txt")({
           "Disallow: /reset-password",
           "",
           `Sitemap: ${origin}/sitemap.xml`,
+          `Sitemap: ${origin}/product-feed.xml`,
           "",
         ].join("\n");
         return new Response(body, {

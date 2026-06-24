@@ -27,6 +27,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           { loc: `${origin}/compare` },
           { loc: `${origin}/returns` },
           { loc: `${origin}/help` },
+          { loc: `${origin}/privacy` },
+          { loc: `${origin}/terms` },
           { loc: `${origin}/pages/shipping` },
           { loc: `${origin}/pages/returns` },
         ];
