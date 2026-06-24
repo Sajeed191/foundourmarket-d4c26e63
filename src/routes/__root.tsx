@@ -226,6 +226,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "FoundOurMarket",
+          alternateName: "FoundOurMarket Marketplace",
           url: "https://foundourmarket.com/",
           logo: "https://foundourmarket.com/logo.webp",
           description:
