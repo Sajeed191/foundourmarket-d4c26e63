@@ -53,9 +53,9 @@ export function Footer() {
 
       <div className="relative max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-6 gap-x-5 gap-y-4 sm:gap-5">
         <div className="col-span-2 space-y-3">
-          <div className="text-lg sm:text-xl font-display tracking-tighter font-semibold">
+          <Link to="/" aria-label="FoundOurMarket home" className="inline-block text-lg sm:text-xl font-display tracking-tighter font-semibold hover:opacity-90 transition-opacity">
             FoundOurMarket<span className="text-accent">™</span>
-          </div>
+          </Link>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-[38ch]">
             Whatever you need. All in one place. A premium independent marketplace sourcing top-quality products worldwide.
           </p>
