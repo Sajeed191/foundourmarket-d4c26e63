@@ -948,13 +948,14 @@ function CheckoutPage() {
 
               {/* Trust & security */}
               <section className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                <TrustCard icon={<ShieldHalf className="size-4" />} title="PCI-DSS" sub="Compliant" />
-                <TrustCard icon={<Lock className="size-4" />} title="Encrypted" sub="256-bit SSL" />
-                <TrustCard icon={<BadgeCheck className="size-4" />} title="Razorpay" sub="Verified" />
-                <TrustCard icon={<RotateCcw className="size-4" />} title="Easy returns" sub="4-day window" />
-                
-                <TrustCard icon={<PackageCheck className="size-4" />} title="Tracked" sub="Real-time" />
+                <TrustCard icon={<Lock className="size-4" />} title="Secure Checkout" sub="256-bit SSL" />
+                <TrustCard icon={<BadgeCheck className="size-4" />} title="Razorpay Protected" sub="PCI-DSS payments" />
+                <TrustCard icon={<RotateCcw className="size-4" />} title="Easy Returns" sub="4-day window" />
+                <TrustCard icon={<LifeBuoy className="size-4" />} title="Customer Support" sub="Available to help" />
+                <TrustCard icon={<PackageCheck className="size-4" />} title="Tracked Delivery" sub="Real-time" />
+                <TrustCard icon={<ShieldHalf className="size-4" />} title="Encrypted" sub="End-to-end" />
               </section>
+
 
               {error && stage === "review" && (
                 <p className="text-xs text-destructive flex items-center gap-1.5"><XCircle className="size-3.5" />{error}</p>
