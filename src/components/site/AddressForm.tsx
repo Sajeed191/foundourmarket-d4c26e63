@@ -179,15 +179,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           // Pincode not in lookup DB — soft, non-blocking. Admin-only signal.
           setPinState("unverified");
           setResolvedPin(null);
-          trackAddr("pincode_lookup_unverified", { pincode: pin, reason: "not_found" });
+          trackAddr("unknown_pin_entered", { pincode: pin, reason: "not_found" });
         }
       } catch {
         // Network/API failure — also soft and non-blocking.
         if (cancelled) return;
         setPinState("unverified");
         setResolvedPin(null);
-        trackAddr("pincode_lookup_failed", { pincode: pin, reason: "lookup_error" });
+        trackAddr("serviceability_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
+
     })();
     return () => {
       cancelled = true;
