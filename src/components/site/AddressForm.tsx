@@ -573,16 +573,11 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         />
       </div>
 
-      {/* Phase 3 — PIN ↔ City ↔ State consistency warning */}
-      {consistency.status === "mismatch" && (
-        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/[0.08] px-3.5 py-2.5 space-y-1">
-          {consistency.issues.map((issue) => (
-            <p key={issue} className="text-[11px] text-amber-400 flex items-center gap-1.5">
-              <AlertCircle className="size-3 shrink-0" /> {issue}
-            </p>
-          ))}
-        </div>
-      )}
+      {/* PIN ↔ City mismatch is intentionally NOT surfaced: customers often
+          enter nearby cities, towns, villages, or local names that differ from
+          postal records, and that must never block or alarm them. */}
+
+
 
       <textarea
         placeholder="Delivery instructions (optional)"
