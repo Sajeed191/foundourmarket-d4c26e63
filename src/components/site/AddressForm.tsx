@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2, ShieldAlert } from "lucide-react";
+import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
 import { type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
-import {
-  scoreAddressQuality,
-  assessAddressRisk,
-  type MarketRegion,
-} from "@/lib/address-intelligence";
 
 /** Friendly country name from an ISO code, with a safe fallback. */
 const REGION_NAMES =
@@ -112,7 +107,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [phoneValid, setPhoneValid] = useState<boolean>(!!initial?.phone);
-  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified">("idle");
+  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified" | "unsupported">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
   // City/state/areas the postal service resolved for the current PIN.
   const [resolvedPin, setResolvedPin] = useState<{
@@ -133,12 +128,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     );
   };
 
-  const expectedRegion: MarketRegion = market === "india" ? "india" : "international";
-  const quality = useMemo(
-    () => scoreAddressQuality(form, { expectedRegion }),
-    [form, expectedRegion],
-  );
-  const risk = useMemo(() => assessAddressRisk(form), [form]);
 
 
   // Keep the country field aligned with the detected region until the user
@@ -175,11 +164,18 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           setPinState("valid");
           setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
           setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
+        } else if (r.serviceable === false) {
+          // Confirmed unsupported destination — the ONLY case that blocks save
+          // & checkout. (A failed/unknown lookup keeps serviceable === true.)
+          setPinState("unsupported");
+          setResolvedPin(null);
+          trackAddr("unsupported_pincode_blocked", { pincode: pin });
         } else {
-          // Pincode not in lookup DB — soft, non-blocking. Admin-only signal.
+          // PIN couldn't be auto-verified (not in lookup DB or transient gap) —
+          // soft, NON-BLOCKING. Customer types city/state and continues.
           setPinState("unverified");
           setResolvedPin(null);
-          trackAddr("unknown_pin_entered", { pincode: pin, reason: "not_found" });
+          trackAddr("unknown_pin_entered", { pincode: pin, reason: r.reason ?? "not_found" });
         }
       } catch {
         // Network/API failure — also soft and non-blocking.
@@ -188,6 +184,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         setResolvedPin(null);
         trackAddr("serviceability_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
+
 
     })();
     return () => {
@@ -348,9 +345,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     return failed.length === 0;
   };
 
+  // Block save/checkout ONLY for a confirmed-unsupported destination.
+  const blockedByServiceability = pinState === "unsupported";
+
   const submit = async (ev?: React.FormEvent | React.MouseEvent) => {
     ev?.preventDefault();
     setError(null);
+    if (blockedByServiceability) {
+      setError("We're unable to deliver to this PIN code yet. Please use a different delivery address.");
+      return;
+    }
     if (!validateAll()) return;
     setBusy(true);
     try {
@@ -552,7 +556,14 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           {pinState === "unverified" && !errors.postal && (
             <p className="text-[11px] text-amber-400/90 mt-1 flex items-center gap-1">
               <AlertCircle className="size-3 shrink-0" />
-              We could not verify this pincode. Please check your delivery details.
+              We could not verify this PIN right now. Please confirm your address details.
+            </p>
+          )}
+          {/* Hard block — confirmed unsupported destination only. */}
+          {pinState === "unsupported" && !errors.postal && (
+            <p className="text-[11px] text-destructive mt-1 flex items-start gap-1">
+              <AlertCircle className="size-3 shrink-0 mt-0.5" />
+              We're unable to deliver to this PIN code yet. Please use a different delivery address.
             </p>
           )}
         </div>
@@ -626,59 +637,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         className={`${base} border-border resize-none`}
       />
 
-      {/* Address quality score (Phase 2 — weighted + region-aware) */}
-      <div className="rounded-2xl border border-border bg-background/40 px-3.5 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Address quality · {quality.grade}
-          </span>
-          <span
-            className={`text-xs font-semibold tabular-nums ${
-              quality.score >= 90 ? "text-emerald-400" : quality.score >= 75 ? "text-accent" : "text-muted-foreground"
-            }`}
-          >
-            {quality.score}%
-          </span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              quality.score >= 90 ? "bg-emerald-400" : "bg-accent"
-            }`}
-            style={{ width: `${quality.score}%` }}
-          />
-        </div>
-        <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
-          {quality.checks.map((c) => (
-            <span
-              key={c.label}
-              className={`inline-flex items-center gap-1 text-[10px] ${
-                c.ok ? "text-emerald-400" : "text-muted-foreground/60"
-              }`}
-            >
-              {c.ok ? <CheckCircle2 className="size-2.5" /> : <AlertCircle className="size-2.5" />}
-              {c.label}
-            </span>
-          ))}
-        </div>
-        {/* Phase 6 — surface fraud/risk flags inline */}
-        {risk.level !== "low" && risk.flags.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/5 pt-2">
-            <span
-              className={`inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest ${
-                risk.level === "high" ? "text-destructive" : "text-amber-400"
-              }`}
-            >
-              <ShieldAlert className="size-3" /> {risk.level} risk
-            </span>
-            {risk.flags.map((f) => (
-              <span key={f} className="text-[10px] text-muted-foreground">
-                {f}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Internal address-quality scores, confidence %, and risk diagnostics
+          are intentionally NOT surfaced to customers. */}
 
 
       <div className="flex flex-wrap gap-x-6 gap-y-2 pt-0.5 text-xs text-muted-foreground">
@@ -712,7 +672,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         <button
           type="button"
           onClick={submit}
-          disabled={busy}
+          disabled={busy || blockedByServiceability}
           className="flex-1 bg-accent text-accent-foreground font-bold px-5 py-3.5 rounded-2xl text-[11px] uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60 inline-flex items-center justify-center gap-2 shadow-[0_0_30px_-8px_var(--color-accent)]"
         >
           {busy && <Loader2 className="size-3.5 animate-spin" />}

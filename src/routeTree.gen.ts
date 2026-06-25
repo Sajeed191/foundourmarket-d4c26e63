@@ -46,6 +46,7 @@ import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
 import { Route as AdminSystemHealthRouteImport } from './routes/admin-system-health'
 import { Route as AdminSupportRouteImport } from './routes/admin-support'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
+import { Route as AdminServiceabilityRouteImport } from './routes/admin-serviceability'
 import { Route as AdminSeoIntelligenceRouteImport } from './routes/admin-seo-intelligence'
 import { Route as AdminSeoHealthRouteImport } from './routes/admin-seo-health'
 import { Route as AdminSeedRouteImport } from './routes/admin-seed'
@@ -336,6 +337,11 @@ const AdminSupportRoute = AdminSupportRouteImport.update({
 const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
   id: '/admin-shipments',
   path: '/admin-shipments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminServiceabilityRoute = AdminServiceabilityRouteImport.update({
+  id: '/admin-serviceability',
+  path: '/admin-serviceability',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSeoIntelligenceRoute = AdminSeoIntelligenceRouteImport.update({
@@ -943,6 +949,7 @@ export interface FileRoutesByFullPath {
   '/admin-seed': typeof AdminSeedRoute
   '/admin-seo-health': typeof AdminSeoHealthRoute
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
+  '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
@@ -1088,6 +1095,7 @@ export interface FileRoutesByTo {
   '/admin-seed': typeof AdminSeedRoute
   '/admin-seo-health': typeof AdminSeoHealthRoute
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
+  '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
@@ -1233,6 +1241,7 @@ export interface FileRoutesById {
   '/admin-seed': typeof AdminSeedRoute
   '/admin-seo-health': typeof AdminSeoHealthRoute
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
+  '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
@@ -1380,6 +1389,7 @@ export interface FileRouteTypes {
     | '/admin-seed'
     | '/admin-seo-health'
     | '/admin-seo-intelligence'
+    | '/admin-serviceability'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-system-health'
@@ -1525,6 +1535,7 @@ export interface FileRouteTypes {
     | '/admin-seed'
     | '/admin-seo-health'
     | '/admin-seo-intelligence'
+    | '/admin-serviceability'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-system-health'
@@ -1669,6 +1680,7 @@ export interface FileRouteTypes {
     | '/admin-seed'
     | '/admin-seo-health'
     | '/admin-seo-intelligence'
+    | '/admin-serviceability'
     | '/admin-shipments'
     | '/admin-support'
     | '/admin-system-health'
@@ -1815,6 +1827,7 @@ export interface RootRouteChildren {
   AdminSeedRoute: typeof AdminSeedRoute
   AdminSeoHealthRoute: typeof AdminSeoHealthRoute
   AdminSeoIntelligenceRoute: typeof AdminSeoIntelligenceRoute
+  AdminServiceabilityRoute: typeof AdminServiceabilityRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
@@ -2149,6 +2162,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-shipments'
       fullPath: '/admin-shipments'
       preLoaderRoute: typeof AdminShipmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-serviceability': {
+      id: '/admin-serviceability'
+      path: '/admin-serviceability'
+      fullPath: '/admin-serviceability'
+      preLoaderRoute: typeof AdminServiceabilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-seo-intelligence': {
@@ -3024,6 +3044,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSeedRoute: AdminSeedRoute,
   AdminSeoHealthRoute: AdminSeoHealthRoute,
   AdminSeoIntelligenceRoute: AdminSeoIntelligenceRoute,
+  AdminServiceabilityRoute: AdminServiceabilityRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemHealthRoute: AdminSystemHealthRoute,
