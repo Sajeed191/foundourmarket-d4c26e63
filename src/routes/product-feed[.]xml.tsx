@@ -22,8 +22,20 @@ function resolveUrl(raw: string | null | undefined): string | null {
 export const Route = createFileRoute("/product-feed.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
         const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
+
+        // Market-aware feed: ?market=in -> INR, ?market=global -> USD.
+        // Default (no param) preserves prior behaviour: prefer USD, fall back to INR.
+        const marketParam = (new URL(request.url).searchParams.get("market") || "")
+          .trim()
+          .toLowerCase();
+        const market: "in" | "global" | "auto" =
+          marketParam === "in"
+            ? "in"
+            : marketParam === "global"
+              ? "global"
+              : "auto";
 
         const { data: products } = await sb
           .from("products_public")
@@ -54,13 +66,18 @@ export const Route = createFileRoute("/product-feed.xml")({
 
         const items: string[] = [];
         for (const p of list as any[]) {
-          // Pricing: prefer USD for Google Shopping (international free listings),
-          // fall back to INR. Skip products with no valid price.
+          // Pricing per requested market. Keep product IDs identical across feeds.
           const usd = p.price_usd != null ? Number(p.price_usd) : null;
           const inr = p.price_inr != null ? Number(p.price_inr) : null;
           let price: string | null = null;
-          if (usd != null && usd > 0) price = `${usd.toFixed(2)} USD`;
-          else if (inr != null && inr > 0) price = `${inr.toFixed(2)} INR`;
+          if (market === "in") {
+            if (inr != null && inr > 0) price = `${inr.toFixed(2)} INR`;
+          } else if (market === "global") {
+            if (usd != null && usd > 0) price = `${usd.toFixed(2)} USD`;
+          } else {
+            if (usd != null && usd > 0) price = `${usd.toFixed(2)} USD`;
+            else if (inr != null && inr > 0) price = `${inr.toFixed(2)} INR`;
+          }
           if (!price) continue;
 
           const id = p.sku || p.slug;
@@ -98,7 +115,7 @@ export const Route = createFileRoute("/product-feed.xml")({
           `<?xml version="1.0" encoding="UTF-8"?>\n` +
           `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n` +
           `<channel>\n` +
-          `  <title>FoundOurMarket\u2122 Product Feed</title>\n` +
+          `  <title>FoundOurMarket\u2122 Product Feed${market === "in" ? " (India / INR)" : market === "global" ? " (International / USD)" : ""}</title>\n` +
           `  <link>${ORIGIN}</link>\n` +
           `  <description>Everything You Need \u2014 All in One Place</description>\n` +
           `${items.join("\n")}\n` +
