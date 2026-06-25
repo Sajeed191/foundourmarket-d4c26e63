@@ -239,6 +239,10 @@ function CheckoutPage() {
       toast.error("Please select or add a shipping address.");
       return;
     }
+    // Disable double-click: ignore re-entry while a payment init is in flight.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
     setError(null);
     setStage("processing");
     logCheckout("payment_initialized", {
@@ -248,10 +252,24 @@ function CheckoutPage() {
       items: detailed.length,
     });
     try {
-      await loadRazorpay();
-      let created;
+      // SDK load (loader itself retries once internally on transient failure).
       try {
-        created = await createOrder({
+        await loadRazorpay();
+      } catch (sdkErr: any) {
+        logCheckout("payment_init_failed", {
+          category: classifyCheckoutFailure(sdkErr),
+          stage: "sdk_load",
+          market,
+          value: totalINR,
+          error: String(sdkErr?.message ?? sdkErr),
+        });
+        throw sdkErr;
+      }
+
+      // Order creation with a single retry on transient (network/gateway) errors.
+      let created;
+      const createOnce = () =>
+        createOrder({
           data: {
             items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
             addressId: selectedAddress.id,
@@ -259,13 +277,46 @@ function CheckoutPage() {
             attribution: buildOrderAttribution(),
           },
         });
-      } catch (orderErr: any) {
-        logCheckout("order_create_failed", {
-          market,
-          value: totalINR,
-          error: String(orderErr?.message ?? orderErr),
-        });
-        throw orderErr;
+      try {
+        created = await createOnce();
+      } catch (firstErr: any) {
+        const cat = classifyCheckoutFailure(firstErr);
+        // Only retry transient categories — never retry Stock/Validation/Auth
+        // (those won't succeed on a second attempt and could double-charge risk).
+        if (cat === "Network" || cat === "Gateway" || cat === "Other") {
+          logCheckout("order_create_failed", {
+            category: cat,
+            attempt: 1,
+            retrying: true,
+            market,
+            value: totalINR,
+            error: String(firstErr?.message ?? firstErr),
+          });
+          await new Promise((r) => setTimeout(r, 600));
+          try {
+            created = await createOnce();
+          } catch (secondErr: any) {
+            logCheckout("order_create_failed", {
+              category: classifyCheckoutFailure(secondErr),
+              attempt: 2,
+              retrying: false,
+              market,
+              value: totalINR,
+              error: String(secondErr?.message ?? secondErr),
+            });
+            throw secondErr;
+          }
+        } else {
+          logCheckout("order_create_failed", {
+            category: cat,
+            attempt: 1,
+            retrying: false,
+            market,
+            value: totalINR,
+            error: String(firstErr?.message ?? firstErr),
+          });
+          throw firstErr;
+        }
       }
       logCheckout("order_created", {
         orderId: created.orderId,
