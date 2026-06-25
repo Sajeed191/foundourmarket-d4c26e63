@@ -97,6 +97,9 @@ function CheckoutPage() {
   const [reserveLeft, setReserveLeft] = useState(15 * 60);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const purchaseItemsRef = useRef<typeof detailed>([]);
+  // Hard guard against double-submit (double-tap / impatient retap on mobile).
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const isIndia = market === "india";
 
