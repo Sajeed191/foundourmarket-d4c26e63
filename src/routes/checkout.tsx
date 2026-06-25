@@ -324,6 +324,12 @@ function CheckoutPage() {
           ondismiss: () => {
             setStage("failed");
             setError("Payment was cancelled. Your cart is safe — you can try again.");
+            logCheckout("payment_cancelled", {
+              stage: "checkout_modal",
+              currency: created.currency,
+              orderId: created.orderId,
+              value: totalINR,
+            });
             void import("@/lib/visitor").then((m) =>
               m.trackEvent("payment_abandoned", {
                 value: totalINR,
@@ -346,6 +352,12 @@ function CheckoutPage() {
             });
             setPlacedOrderId(created.orderId);
             setStage("success");
+            logCheckout("payment_success", {
+              orderId: created.orderId,
+              currency: created.currency,
+              value: totalINR,
+              gateway: "razorpay",
+            });
             void import("@/lib/visitor").then((m) =>
               m.trackEvent("payment_success", {
                 value: totalINR,
@@ -356,8 +368,16 @@ function CheckoutPage() {
             if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
             syncMethods().catch(() => {});
           } catch (e: any) {
+            const friendly = friendlyCheckoutError(e);
             setStage("failed");
-            setError(e?.message ?? "We couldn't verify your payment. If charged, it will auto-resolve.");
+            setError(friendly);
+            toast.error(friendly);
+            logCheckout("payment_failed", {
+              stage: "verification",
+              orderId: created.orderId,
+              error: String(e?.message ?? e),
+              value: totalINR,
+            });
           }
         },
       } satisfies Parameters<typeof openRazorpay>[0];
@@ -369,8 +389,19 @@ function CheckoutPage() {
       const rzp = openRazorpay(rzpOptions);
 
       rzp.on("payment.failed", (resp: any) => {
+        const friendly = friendlyCheckoutError(resp?.error?.description ?? "Payment failed. Please try again.");
         setStage("failed");
-        setError(resp?.error?.description ?? "Payment failed. Please try again.");
+        setError(friendly);
+        toast.error(friendly);
+        logCheckout("payment_failed", {
+          stage: "payment",
+          orderId: created.orderId,
+          currency: created.currency,
+          method_selected: resp?.error?.method ?? null,
+          reason: resp?.error?.description ?? null,
+          code: resp?.error?.code ?? null,
+          value: totalINR,
+        });
         void import("@/lib/visitor").then((m) =>
           m.trackEvent("payment_failed", {
             value: totalINR,
@@ -389,6 +420,13 @@ function CheckoutPage() {
 
       // method_shown: the checkout modal is about to render every method the
       // account supports for this currency (no client-side filtering applied).
+      logCheckout("payment_initialized", {
+        stage: "modal_open",
+        currency: created.currency,
+        orderId: created.orderId,
+        region: created.debug?.market ?? null,
+        value: totalINR,
+      });
       void import("@/lib/visitor").then((m) =>
         m.trackEvent("payment_methods_shown", {
           value: totalINR,
@@ -397,10 +435,18 @@ function CheckoutPage() {
       );
       rzp.open();
     } catch (e: any) {
+      const friendly = friendlyCheckoutError(e);
       setStage("failed");
-      setError(e?.message ?? "Could not start checkout. Please retry.");
+      setError(friendly);
+      toast.error(friendly);
+      logCheckout("payment_init_failed", {
+        error: String(e?.message ?? e),
+        market,
+        value: totalINR,
+      });
     }
   }
+
 
   async function placeCod() {
     if (!user || !selectedAddress) {
