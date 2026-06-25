@@ -116,7 +116,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [phoneValid, setPhoneValid] = useState<boolean>(!!initial?.phone);
   const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
-  const [geo, setGeo] = useState<{ confidence: number; source: string } | null>(null);
   // City/state/areas the postal service resolved for the current PIN.
   const [resolvedPin, setResolvedPin] = useState<{
     city: string | null;
