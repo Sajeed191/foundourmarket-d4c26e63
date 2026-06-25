@@ -166,9 +166,13 @@ function CategoryPage() {
           </div>
         </>
       ) : ownItems.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-          {ownItems.map((p) => (<ProductCard key={p.slug} product={p} />))}
-        </div>
+        <VirtualizedProductGrid
+          items={ownItems}
+          cols={{ base: 2, sm: 3, lg: 4 }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
+          renderItem={(p) => <ProductCard key={p.slug} product={p} />}
+        />
+
       ) : (
         <div className="py-20 text-center border border-dashed border-border rounded-2xl">
           <p className="text-muted-foreground">Subcategories coming soon</p>
