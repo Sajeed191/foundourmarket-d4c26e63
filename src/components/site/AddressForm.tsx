@@ -112,7 +112,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [phoneValid, setPhoneValid] = useState<boolean>(!!initial?.phone);
-  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified">("idle");
+  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified" | "unsupported">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
   // City/state/areas the postal service resolved for the current PIN.
   const [resolvedPin, setResolvedPin] = useState<{
