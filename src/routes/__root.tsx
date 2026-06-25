@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   Outlet,
   Link,
@@ -36,44 +36,46 @@ import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { useLowEndDevice } from "@/lib/use-low-end-device";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
+import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 
 // Non-critical client-only shell: deferred out of the entry bundle so the
 // homepage/product/search first paint never pays for admin tooling, the live
 // chat widget, the compare tray, or the install prompt. These mount after
 // hydration via the <DeferredShell> gate below.
-const AdminFloatingToolbar = lazy(() =>
+const AdminFloatingToolbar = lazyWithRetry(() =>
   import("@/components/admin/AdminFloatingToolbar").then((m) => ({
     default: m.AdminFloatingToolbar,
   })),
 );
-const AdminOverlayIndicator = lazy(() =>
+const AdminOverlayIndicator = lazyWithRetry(() =>
   import("@/components/admin/AdminOverlayIndicator").then((m) => ({
     default: m.AdminOverlayIndicator,
   })),
 );
-const AdminCommandCenter = lazy(() =>
+const AdminCommandCenter = lazyWithRetry(() =>
   import("@/components/admin/AdminCommandCenter").then((m) => ({ default: m.AdminCommandCenter })),
 );
-const AdminMobileBar = lazy(() =>
+const AdminMobileBar = lazyWithRetry(() =>
   import("@/components/admin/AdminMobileBar").then((m) => ({ default: m.AdminMobileBar })),
 );
-const CompareTray = lazy(() =>
+const CompareTray = lazyWithRetry(() =>
   import("@/components/site/CompareTray").then((m) => ({ default: m.CompareTray })),
 );
-const InstallPrompt = lazy(() =>
+const InstallPrompt = lazyWithRetry(() =>
   import("@/components/site/InstallPrompt").then((m) => ({ default: m.InstallPrompt })),
 );
-const LiveChat = lazy(() =>
+const LiveChat = lazyWithRetry(() =>
   import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
 );
-const SupportReplyWatcher = lazy(() =>
+const SupportReplyWatcher = lazyWithRetry(() =>
   import("@/components/chat/SupportReplyWatcher").then((m) => ({
     default: m.SupportReplyWatcher,
   })),
 );
-const RegionSelectModal = lazy(() =>
+const RegionSelectModal = lazyWithRetry(() =>
   import("@/components/site/RegionSelectModal").then((m) => ({ default: m.RegionSelectModal })),
 );
+
 
 function NotFoundComponent() {
   return (
@@ -326,9 +328,30 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <noscript>
+          <div
+            style={{
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              maxWidth: "28rem",
+              margin: "3rem auto",
+              padding: "1.5rem",
+              textAlign: "center",
+              color: "#111",
+            }}
+          >
+            <h1 style={{ fontSize: "1.25rem", margin: "0 0 0.5rem" }}>
+              FoundOurMarket™
+            </h1>
+            <p style={{ color: "#4b5563", margin: 0 }}>
+              This store needs JavaScript enabled to load. Please turn on
+              JavaScript or update your browser, then reload the page.
+            </p>
+          </div>
+        </noscript>
         {children}
         <Scripts />
       </body>
+
     </html>
   );
 }
@@ -357,6 +380,7 @@ function RootComponent() {
   const lowEnd = useLowEndDevice();
 
   useEffect(() => {
+    installChunkRecovery();
     registerServiceWorker();
   }, []);
   // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
