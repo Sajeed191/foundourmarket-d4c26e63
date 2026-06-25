@@ -501,5 +501,6 @@ function RootComponent() {
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
