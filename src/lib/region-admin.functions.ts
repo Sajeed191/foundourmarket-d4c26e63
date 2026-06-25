@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireStaff, logSecurity, adminRpc } from "./admin-guard.server";
 
 const STAFF = ["admin", "super_admin", "manager"] as const;
+// Mutating a customer's locked market is restricted to super admins only.
+const SUPER_ONLY = ["super_admin"] as const;
 
 /* ---------------- Customer-facing ---------------- */
 
