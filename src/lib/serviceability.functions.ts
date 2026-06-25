@@ -75,19 +75,9 @@ export const validatePincode = createServerFn({ method: "POST" })
       };
     }
 
-    if (res.reason === "not_found") {
-      return {
-        serviceable: false,
-        allowProceed: false,
-        status: "not_serviceable",
-        postal,
-        city: null,
-        state: null,
-        message: "We couldn't find this PIN code. Please double-check it.",
-      };
-    }
-
-    // service_down — never block a valid customer on API downtime.
+    // A valid 6-digit PIN must NEVER block checkout just because it isn't in
+    // our lookup network (postal API gap, new locality, or service downtime).
+    // We let the order proceed and confirm delivery availability after placement.
     return {
       serviceable: false,
       allowProceed: true,
@@ -95,7 +85,6 @@ export const validatePincode = createServerFn({ method: "POST" })
       postal,
       city: null,
       state: null,
-      message:
-        "Delivery verification is temporarily unavailable. Our team will confirm availability before dispatch.",
+      message: "Delivery availability will be confirmed after order placement.",
     };
   });

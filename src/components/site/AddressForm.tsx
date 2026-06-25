@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2, ShieldAlert, Navigation } from "lucide-react";
+import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2, ShieldAlert } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
 import { type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
@@ -8,9 +8,7 @@ import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
 import {
   scoreAddressQuality,
-  pinCityStateConsistency,
   assessAddressRisk,
-  gpsFillConfidence,
   type MarketRegion,
 } from "@/lib/address-intelligence";
 
@@ -114,9 +112,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [phoneValid, setPhoneValid] = useState<boolean>(!!initial?.phone);
-  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
+  const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
-  const [geo, setGeo] = useState<{ confidence: number; source: string } | null>(null);
   // City/state/areas the postal service resolved for the current PIN.
   const [resolvedPin, setResolvedPin] = useState<{
     city: string | null;
@@ -141,16 +138,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     () => scoreAddressQuality(form, { expectedRegion }),
     [form, expectedRegion],
   );
-  const consistency = useMemo(
-    () =>
-      resolvedPin
-        ? pinCityStateConsistency(
-            { city: form.city, state: form.state },
-            resolvedPin,
-          )
-        : { status: "unknown" as const, issues: [] },
-    [form.city, form.state, resolvedPin],
-  );
   const risk = useMemo(() => assessAddressRisk(form), [form]);
 
 
@@ -162,8 +149,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   }, [regionCountryName]);
 
 
-  // Auto city/state from Indian pincode (and remember resolved data for the
-  // PIN ↔ City ↔ State consistency check + area autocomplete).
+  // Auto city/state from Indian pincode (best-effort autofill + area
+  // autocomplete). A lookup miss or network/API failure NEVER blocks the
+  // customer — it only shows a soft, non-blocking notice and lets them type
+  // city/state manually.
   useEffect(() => {
     const pin = (form.postal ?? "").trim();
     if (form.country !== "India") return;
@@ -179,21 +168,32 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     let cancelled = false;
     setPinState("checking");
     (async () => {
-      const r = await validatePin({ data: { pincode: pin } });
-      if (cancelled) return;
-      if (r.valid) {
-        setPinState("valid");
-        setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
-        setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
-      } else {
-        setPinState("invalid");
+      try {
+        const r = await validatePin({ data: { pincode: pin } });
+        if (cancelled) return;
+        if (r.valid) {
+          setPinState("valid");
+          setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
+          setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
+        } else {
+          // Pincode not in lookup DB — soft, non-blocking. Admin-only signal.
+          setPinState("unverified");
+          setResolvedPin(null);
+          trackAddr("pincode_lookup_unverified", { pincode: pin, reason: "not_found" });
+        }
+      } catch {
+        // Network/API failure — also soft and non-blocking.
+        if (cancelled) return;
+        setPinState("unverified");
         setResolvedPin(null);
+        trackAddr("pincode_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [form.postal, form.country, validatePin]);
+
 
   // Phase 1 — full structured GPS fill: reverse-geocode coordinates into every
   // address field, detect the region, sync country, and store a confidence score.
@@ -230,11 +230,9 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
 
           if (country) countryTouched.current = true;
 
-          const components = { line1, area, city, district, state, postal, country };
-          setGeo({
-            confidence: gpsFillConfidence(components),
-            source: "GPS + Reverse Geocode + Region Engine",
-          });
+          // Reverse-geocoded fields auto-fill the form silently; no confidence
+          // score or detection source is surfaced to the customer.
+
 
           setForm((p) => ({
             ...p,
@@ -248,7 +246,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           }));
         } catch {
           // Coordinates are still saved even if reverse geocode fails.
-          setGeo({ confidence: 35, source: "GPS coordinates only" });
         }
         setGeoBusy(false);
       },
@@ -395,21 +392,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         Use current location
       </button>
 
-      {/* Location confidence after a GPS fill (Phase 1) */}
-      {geo && (
-        <div className="flex items-center justify-between rounded-2xl border border-accent/30 bg-accent/[0.06] px-3.5 py-2.5">
-          <div className="flex items-center gap-2">
-            <Navigation className="size-3.5 text-accent" />
-            <div>
-              <p className="text-[11px] font-medium text-accent">Location confidence {geo.confidence}%</p>
-              <p className="text-[10px] text-muted-foreground">Source: {geo.source}</p>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            {market === "india" ? "🇮🇳 India" : "🌍 International"}
-          </span>
-        </div>
-      )}
+      {/* Geo detection runs silently in the background — no confidence scores,
+          detection methods, or region diagnostics are ever shown to customers. */}
+
+
 
 
 
@@ -534,10 +520,17 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             <span className="absolute right-3 top-1/2 -translate-y-1/2">
               {pinState === "checking" && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
               {pinState === "valid" && <CheckCircle2 className="size-4 text-accent" />}
-              {pinState === "invalid" && <AlertCircle className="size-4 text-destructive" />}
             </span>
           </div>
           <Err k="postal" />
+          {/* Soft, non-blocking notice when the PIN couldn't be auto-verified.
+              The customer can still type city/state and continue to payment. */}
+          {pinState === "unverified" && !errors.postal && (
+            <p className="text-[11px] text-amber-400/90 mt-1 flex items-center gap-1">
+              <AlertCircle className="size-3 shrink-0" />
+              We could not verify this pincode. Please check your delivery details.
+            </p>
+          )}
         </div>
         <div>
           <input
@@ -588,16 +581,11 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         />
       </div>
 
-      {/* Phase 3 — PIN ↔ City ↔ State consistency warning */}
-      {consistency.status === "mismatch" && (
-        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/[0.08] px-3.5 py-2.5 space-y-1">
-          {consistency.issues.map((issue) => (
-            <p key={issue} className="text-[11px] text-amber-400 flex items-center gap-1.5">
-              <AlertCircle className="size-3 shrink-0" /> {issue}
-            </p>
-          ))}
-        </div>
-      )}
+      {/* PIN ↔ City mismatch is intentionally NOT surfaced: customers often
+          enter nearby cities, towns, villages, or local names that differ from
+          postal records, and that must never block or alarm them. */}
+
+
 
       <textarea
         placeholder="Delivery instructions (optional)"
