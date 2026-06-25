@@ -280,7 +280,7 @@ export const adminReviewRegionRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const { primaryRole } = await requireStaff(userId, [...STAFF], "region.review_request");
+    const { primaryRole } = await requireStaff(userId, [...SUPER_ONLY], "region.review_request");
 
     const { data: req, error: rErr } = await supabaseAdmin
       .from("region_change_requests")
