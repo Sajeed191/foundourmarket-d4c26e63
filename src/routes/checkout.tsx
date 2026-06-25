@@ -175,6 +175,24 @@ function CheckoutPage() {
   const allowProceed = service?.allowProceed === true;
   const serviceDown = service?.status === "service_down";
 
+  // Analytics: surface serviceability failures so the funnel shows pre-payment
+  // drop-off caused by "delivery unavailable" instead of it being invisible.
+  useEffect(() => {
+    if (serviceChecking || !service || !selectedPostal) return;
+    if (!serviceable && !serviceDown) {
+      logCheckout("order_create_failed", {
+        stage: "serviceability",
+        reason: "delivery_unavailable",
+        postal: selectedPostal,
+      });
+      void import("@/lib/visitor").then((m) =>
+        m.trackEvent("serviceability_failed", {
+          metadata: { postal: selectedPostal, message: service.message ?? null },
+        }),
+      );
+    }
+  }, [serviceChecking, service, serviceable, serviceDown, selectedPostal]);
+
   // COD availability is driven by the per-product admin toggle: COD is offered
   // when every product in the cart has COD enabled at the product level. The
   // global store toggle, when explicitly turned on, also makes COD available
