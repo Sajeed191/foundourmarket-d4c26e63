@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { ProductCard } from "@/components/site/ProductCard";
+import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
+import type { Product } from "@/lib/products";
 
 export const Route = createFileRoute("/deals")({
   head: () => ({
