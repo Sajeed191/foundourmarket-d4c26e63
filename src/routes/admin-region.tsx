@@ -322,18 +322,20 @@ function AdminRegionPage() {
                       </span>
                     )}
                     <ConfidenceBadge value={c.confidence ?? null} />
-                    <div className="ml-auto flex gap-1.5">
-                      {(["india", "international"] as const).map((rg) => (
-                        <button
-                          key={rg}
-                          disabled={busy === c.id || c.market_region === rg}
-                          onClick={() => override(c.id, rg)}
-                          className="rounded-lg border border-border px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider hover:border-accent/40 disabled:opacity-40"
-                        >
-                          {rg === "india" ? "Set 🇮🇳" : "Set 🌍"}
-                        </button>
-                      ))}
-                    </div>
+                    {isSuperAdmin && (
+                      <div className="ml-auto flex gap-1.5">
+                        {(["india", "international"] as const).map((rg) => (
+                          <button
+                            key={rg}
+                            disabled={busy === c.id || c.market_region === rg}
+                            onClick={() => override(c.id, rg)}
+                            className="rounded-lg border border-border px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider hover:border-accent/40 disabled:opacity-40"
+                          >
+                            {rg === "india" ? "Set 🇮🇳" : "Set 🌍"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
