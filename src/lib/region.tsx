@@ -187,8 +187,23 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     if (cached === "india" || cached === "international") setMarket(cached);
   }, []);
 
+  // Watchdog failsafe: detection runs against an edge server function that can
+  // hang on a dead/captive network (common on low-end Android). If resolution
+  // hasn't settled within 7s, stop blocking pricing — default to the cached or
+  // International region and let the site continue instead of stalling forever.
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => {
+      setLoading(false);
+      setNeedsSelection(false);
+      setSoftConfirm(false);
+    }, 7000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   // Resolve the authoritative region whenever auth state settles.
   useEffect(() => {
+
     if (authLoading) return;
     let cancelled = false;
 
