@@ -356,9 +356,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     return failed.length === 0;
   };
 
+  // Block save/checkout ONLY for a confirmed-unsupported destination.
+  const blockedByServiceability = pinState === "unsupported";
+
   const submit = async (ev?: React.FormEvent | React.MouseEvent) => {
     ev?.preventDefault();
     setError(null);
+    if (blockedByServiceability) {
+      setError("We're unable to deliver to this PIN code yet. Please use a different delivery address.");
+      return;
+    }
     if (!validateAll()) return;
     setBusy(true);
     try {
