@@ -178,6 +178,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, user]);
 
   const add = async (slug: string, qty = 1) => {
+    import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty })).catch(() => {});
     import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
     import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
     const product = products.find((p) => p.slug === slug);

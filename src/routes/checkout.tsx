@@ -32,6 +32,7 @@ import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpa
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 import { usePaymentGateways } from "@/lib/use-payment-gateways";
 import { GlobalCheckoutBeta } from "@/components/site/GlobalCheckoutBeta";
+import { logCheckout, friendlyCheckoutError } from "@/lib/checkout-logger";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -113,6 +114,11 @@ function CheckoutPage() {
     if (beganCheckoutRef.current) return;
     if (loading || !user || !cartHydrated || detailed.length === 0) return;
     beganCheckoutRef.current = true;
+    logCheckout("proceed_to_checkout", {
+      items: detailed.length,
+      market,
+      value: detailed.reduce((s, i) => s + i.qty, 0),
+    });
     for (const i of detailed) void recordEvent({ type: "begin_checkout", productSlug: i.slug });
   }, [loading, user, cartHydrated, detailed]);
 
@@ -209,19 +215,43 @@ function CheckoutPage() {
   async function payWithRazorpay() {
     if (!user || !selectedAddress) {
       setError("Please select or add a shipping address.");
+      toast.error("Please select or add a shipping address.");
       return;
     }
     setError(null);
     setStage("processing");
+    logCheckout("payment_initialized", {
+      stage: "loading_sdk",
+      market,
+      value: totalINR,
+      items: detailed.length,
+    });
     try {
       await loadRazorpay();
-      const created = await createOrder({
-        data: {
-          items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
-          addressId: selectedAddress.id,
-          promoCode: coupon?.code ?? null,
-          attribution: buildOrderAttribution(),
-        },
+      let created;
+      try {
+        created = await createOrder({
+          data: {
+            items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
+            addressId: selectedAddress.id,
+            promoCode: coupon?.code ?? null,
+            attribution: buildOrderAttribution(),
+          },
+        });
+      } catch (orderErr: any) {
+        logCheckout("order_create_failed", {
+          market,
+          value: totalINR,
+          error: String(orderErr?.message ?? orderErr),
+        });
+        throw orderErr;
+      }
+      logCheckout("order_created", {
+        orderId: created.orderId,
+        razorpayOrderId: created.razorpayOrderId,
+        currency: created.currency,
+        amount_minor: created.amount,
+        pricing_source: created.debug?.pricingSource ?? null,
       });
 
       // Audit: the displayed price must equal the charged Razorpay amount.
@@ -299,6 +329,12 @@ function CheckoutPage() {
           ondismiss: () => {
             setStage("failed");
             setError("Payment was cancelled. Your cart is safe — you can try again.");
+            logCheckout("payment_cancelled", {
+              stage: "checkout_modal",
+              currency: created.currency,
+              orderId: created.orderId,
+              value: totalINR,
+            });
             void import("@/lib/visitor").then((m) =>
               m.trackEvent("payment_abandoned", {
                 value: totalINR,
@@ -321,6 +357,12 @@ function CheckoutPage() {
             });
             setPlacedOrderId(created.orderId);
             setStage("success");
+            logCheckout("payment_success", {
+              orderId: created.orderId,
+              currency: created.currency,
+              value: totalINR,
+              gateway: "razorpay",
+            });
             void import("@/lib/visitor").then((m) =>
               m.trackEvent("payment_success", {
                 value: totalINR,
@@ -331,8 +373,16 @@ function CheckoutPage() {
             if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
             syncMethods().catch(() => {});
           } catch (e: any) {
+            const friendly = friendlyCheckoutError(e);
             setStage("failed");
-            setError(e?.message ?? "We couldn't verify your payment. If charged, it will auto-resolve.");
+            setError(friendly);
+            toast.error(friendly);
+            logCheckout("payment_failed", {
+              stage: "verification",
+              orderId: created.orderId,
+              error: String(e?.message ?? e),
+              value: totalINR,
+            });
           }
         },
       } satisfies Parameters<typeof openRazorpay>[0];
@@ -344,8 +394,19 @@ function CheckoutPage() {
       const rzp = openRazorpay(rzpOptions);
 
       rzp.on("payment.failed", (resp: any) => {
+        const friendly = friendlyCheckoutError(resp?.error?.description ?? "Payment failed. Please try again.");
         setStage("failed");
-        setError(resp?.error?.description ?? "Payment failed. Please try again.");
+        setError(friendly);
+        toast.error(friendly);
+        logCheckout("payment_failed", {
+          stage: "payment",
+          orderId: created.orderId,
+          currency: created.currency,
+          method_selected: resp?.error?.method ?? null,
+          reason: resp?.error?.description ?? null,
+          code: resp?.error?.code ?? null,
+          value: totalINR,
+        });
         void import("@/lib/visitor").then((m) =>
           m.trackEvent("payment_failed", {
             value: totalINR,
@@ -364,6 +425,13 @@ function CheckoutPage() {
 
       // method_shown: the checkout modal is about to render every method the
       // account supports for this currency (no client-side filtering applied).
+      logCheckout("payment_initialized", {
+        stage: "modal_open",
+        currency: created.currency,
+        orderId: created.orderId,
+        region: created.debug?.market ?? null,
+        value: totalINR,
+      });
       void import("@/lib/visitor").then((m) =>
         m.trackEvent("payment_methods_shown", {
           value: totalINR,
@@ -372,18 +440,28 @@ function CheckoutPage() {
       );
       rzp.open();
     } catch (e: any) {
+      const friendly = friendlyCheckoutError(e);
       setStage("failed");
-      setError(e?.message ?? "Could not start checkout. Please retry.");
+      setError(friendly);
+      toast.error(friendly);
+      logCheckout("payment_init_failed", {
+        error: String(e?.message ?? e),
+        market,
+        value: totalINR,
+      });
     }
   }
+
 
   async function placeCod() {
     if (!user || !selectedAddress) {
       setError("Please select or add a shipping address.");
+      toast.error("Please select or add a shipping address.");
       return;
     }
     setError(null);
     setStage("processing");
+    logCheckout("order_created", { paymentMethod: "cod", value: totalINR, items: detailed.length });
     try {
       // Order totals and line prices are computed server-side from trusted
       // database prices — never from client state (anti price-tampering).
@@ -398,21 +476,35 @@ function CheckoutPage() {
 
       setPlacedOrderId(placed.orderId);
       setStage("success");
+      logCheckout("cod_order_placed", { orderId: placed.orderId, value: totalINR });
       clear();
       if (selectedAddress) markUsed(selectedAddress.id).catch(() => {});
     } catch (e: any) {
+      const friendly = friendlyCheckoutError(e);
       setStage("failed");
-      setError(e?.message ?? "Could not place your COD order.");
+      setError(friendly);
+      toast.error(friendly);
+      logCheckout("cod_order_failed", { error: String(e?.message ?? e), value: totalINR });
     }
   }
+
 
 
   const placeOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!allowProceed) {
-      setError(service?.message ?? "This address isn't serviceable yet.");
+      const m = service?.message ?? "This address isn't serviceable yet.";
+      setError(m);
+      toast.error(m);
+      logCheckout("order_create_failed", { reason: "not_serviceable", postal: selectedPostal });
       return;
     }
+    logCheckout("address_submitted", {
+      paymentMethod: payMethod,
+      postal: selectedPostal,
+      market,
+      value: totalINR,
+    });
     purchaseItemsRef.current = detailed;
     import("@/lib/ga4").then((m) => m.ga4BeginCheckout(
       detailed.map((i) => ({
