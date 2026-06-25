@@ -419,14 +419,27 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         metadata: { region, source: "manual", confidence },
       });
       if (userId) {
-        const res = await lockFn({ data: { region, countryCode: countryRef.current } });
-        setMarket(res.region);
-        setLocked(true);
-        setNeedsSelection(false);
-        setSoftConfirm(false);
-        persistRegion(res.region);
-        if (typeof window !== "undefined") localStorage.removeItem(GUEST_CHOICE_KEY);
-        return;
+        try {
+          const res = await lockFn({ data: { region, countryCode: countryRef.current } });
+          setMarket(res.region);
+          setLocked(true);
+          setNeedsSelection(false);
+          setSoftConfirm(false);
+          persistRegion(res.region);
+          if (typeof window !== "undefined") localStorage.removeItem(GUEST_CHOICE_KEY);
+          return;
+        } catch {
+          // Failsafe: the server lock failed (flaky network / session not
+          // ready). Never trap the shopper in the modal — apply the chosen
+          // region locally and continue. The server lock re-resolves on the
+          // next load via the auth-settled effect above.
+          setMarket(region);
+          setNeedsSelection(false);
+          setSoftConfirm(false);
+          persistRegion(region);
+          if (typeof window !== "undefined") localStorage.setItem(GUEST_CHOICE_KEY, region);
+          return;
+        }
       }
       // Guest: persist the explicit choice so it's inherited on login.
       setMarket(region);
