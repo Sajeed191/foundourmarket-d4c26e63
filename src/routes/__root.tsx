@@ -328,9 +328,30 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <noscript>
+          <div
+            style={{
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              maxWidth: "28rem",
+              margin: "3rem auto",
+              padding: "1.5rem",
+              textAlign: "center",
+              color: "#111",
+            }}
+          >
+            <h1 style={{ fontSize: "1.25rem", margin: "0 0 0.5rem" }}>
+              FoundOurMarket™
+            </h1>
+            <p style={{ color: "#4b5563", margin: 0 }}>
+              This store needs JavaScript enabled to load. Please turn on
+              JavaScript or update your browser, then reload the page.
+            </p>
+          </div>
+        </noscript>
         {children}
         <Scripts />
       </body>
+
     </html>
   );
 }
