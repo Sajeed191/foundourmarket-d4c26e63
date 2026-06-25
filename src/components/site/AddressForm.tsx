@@ -520,10 +520,17 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             <span className="absolute right-3 top-1/2 -translate-y-1/2">
               {pinState === "checking" && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
               {pinState === "valid" && <CheckCircle2 className="size-4 text-accent" />}
-              {pinState === "invalid" && <AlertCircle className="size-4 text-destructive" />}
             </span>
           </div>
           <Err k="postal" />
+          {/* Soft, non-blocking notice when the PIN couldn't be auto-verified.
+              The customer can still type city/state and continue to payment. */}
+          {pinState === "unverified" && !errors.postal && (
+            <p className="text-[11px] text-amber-400/90 mt-1 flex items-center gap-1">
+              <AlertCircle className="size-3 shrink-0" />
+              We could not verify this pincode. Please check your delivery details.
+            </p>
+          )}
         </div>
         <div>
           <input
