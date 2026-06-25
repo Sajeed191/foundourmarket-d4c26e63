@@ -817,6 +817,50 @@
   contain-intrinsic-size: auto 600px;
 }
 
+/* ===== Low-end device mode =====
+   Activated on <html data-low-end="true"> for devices reporting <=4GB RAM,
+   <=4 cores, or prefers-reduced-motion (see use-low-end-device + __root).
+   Strips GPU-expensive effects (blur/backdrop-filter, multi-layer shadows,
+   continuous + decorative animations) globally so 2–4GB Android phones stay
+   smooth. Modern devices never get this attribute and keep the full design. */
+html[data-low-end="true"] *,
+html[data-low-end="true"] *::before,
+html[data-low-end="true"] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-low-end="true"] .glass,
+html[data-low-end="true"] .glass-strong,
+html[data-low-end="true"] .product-card-glass,
+html[data-low-end="true"] .card-premium,
+html[data-low-end="true"] .card-elevated,
+html[data-low-end="true"] .card-ambient,
+html[data-low-end="true"] .card-outline {
+  box-shadow: var(--shadow-soft) !important;
+}
+/* Kill continuous / decorative animations; keep one-shot transitions static. */
+html[data-low-end="true"] .badge-anim-pulse,
+html[data-low-end="true"] .badge-anim-bounce,
+html[data-low-end="true"] .badge-anim-glow,
+html[data-low-end="true"] .badge-anim-float,
+html[data-low-end="true"] .badge-anim-slide,
+html[data-low-end="true"] .badge-anim-flash,
+html[data-low-end="true"] .badge-anim-shine::after,
+html[data-low-end="true"] .orb,
+html[data-low-end="true"] [data-decorative] {
+  animation: none !important;
+}
+/* Hide purely decorative floating glow/orb layers entirely. */
+html[data-low-end="true"] [data-decorative] {
+  display: none !important;
+}
+/* Disable hover scale / transform flourishes that thrash compositing. */
+html[data-low-end="true"] .group:hover .group-hover\:scale-\[1\.08\],
+html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
+  transform: none !important;
+}
+
+
 /* Floating support orb hide/show on scroll direction */
 .orb-hidden { animation: none !important; transform: translateY(160%); opacity: 0; pointer-events: none; }
 
