@@ -6,11 +6,6 @@ import { type Address, type AddressInput, type AddressType } from "@/lib/use-add
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
-import {
-  scoreAddressQuality,
-  assessAddressRisk,
-  type MarketRegion,
-} from "@/lib/address-intelligence";
 
 /** Friendly country name from an ISO code, with a safe fallback. */
 const REGION_NAMES =
