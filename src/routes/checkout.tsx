@@ -645,7 +645,7 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
-  const busy = stage === "processing" || stage === "verifying";
+  const busy = submitting || stage === "processing" || stage === "verifying";
 
   /* ---------- checkout readiness engine — single source of truth ---------- */
   const serviceabilityStatus: DeliveryStatus =
