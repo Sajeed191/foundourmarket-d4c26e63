@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
+import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
+import type { Product } from "@/lib/products";
 import { Loader2, ArrowRight } from "lucide-react";
 
 function titleize(slug: string) {
