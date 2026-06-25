@@ -115,7 +115,7 @@ export const Route = createFileRoute("/product-feed.xml")({
           `<?xml version="1.0" encoding="UTF-8"?>\n` +
           `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n` +
           `<channel>\n` +
-          `  <title>FoundOurMarket\u2122 Product Feed</title>\n` +
+          `  <title>FoundOurMarket\u2122 Product Feed${market === "in" ? " (India / INR)" : market === "global" ? " (International / USD)" : ""}</title>\n` +
           `  <link>${ORIGIN}</link>\n` +
           `  <description>Everything You Need \u2014 All in One Place</description>\n` +
           `${items.join("\n")}\n` +
