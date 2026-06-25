@@ -140,16 +140,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     () => scoreAddressQuality(form, { expectedRegion }),
     [form, expectedRegion],
   );
-  const consistency = useMemo(
-    () =>
-      resolvedPin
-        ? pinCityStateConsistency(
-            { city: form.city, state: form.state },
-            resolvedPin,
-          )
-        : { status: "unknown" as const, issues: [] },
-    [form.city, form.state, resolvedPin],
-  );
   const risk = useMemo(() => assessAddressRisk(form), [form]);
 
 
