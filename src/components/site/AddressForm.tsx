@@ -129,6 +129,13 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const set = <K extends keyof AddressInput>(k: K, v: AddressInput[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
 
+  /** Lightweight, fire-and-forget address-funnel analytics. */
+  const trackAddr = (event: string, meta: Record<string, unknown> = {}) => {
+    void import("@/lib/visitor").then((m) =>
+      m.trackEvent(event, { metadata: { form: "address", market, ...meta } }),
+    );
+  };
+
   const expectedRegion: MarketRegion = market === "india" ? "india" : "international";
   const quality = useMemo(
     () => scoreAddressQuality(form, { expectedRegion }),
@@ -300,6 +307,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       else delete next[k];
       return next;
     });
+    // Field abandonment: user left a required field empty or invalid.
+    if (e) trackAddr("address_field_abandoned", { field: k, reason: e });
   };
 
   const validateAll = () => {
@@ -311,7 +320,11 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     }
     setErrors(e);
     setTouched(Object.fromEntries(keys.map((k) => [k, true])));
-    return Object.keys(e).length === 0;
+    const failed = Object.keys(e);
+    if (failed.length > 0) {
+      trackAddr("address_validation_failed", { fields: failed, count: failed.length });
+    }
+    return failed.length === 0;
   };
 
   const submit = async (ev?: React.FormEvent | React.MouseEvent) => {
@@ -439,6 +452,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       <div>
         <input
           autoFocus
+          autoComplete="name"
           placeholder="Full name *"
           value={form.full_name}
           onChange={(e) => set("full_name", e.target.value)}
@@ -479,6 +493,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       <div>
         <input
           placeholder="Address line 1 *"
+          autoComplete="address-line1"
           value={form.line1}
           onChange={(e) => set("line1", e.target.value)}
           onBlur={() => markTouched("line1")}
@@ -490,6 +505,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       <div className="grid grid-cols-2 gap-3">
         <input
           placeholder="Address line 2 (optional)"
+          autoComplete="address-line2"
           value={form.line2 ?? ""}
           onChange={(e) => set("line2", e.target.value)}
           className={cls("line2")}
@@ -508,6 +524,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           <div className="relative">
             <input
               placeholder="PIN code *"
+              autoComplete="postal-code"
               inputMode="numeric"
               value={form.postal}
               onChange={(e) => set("postal", e.target.value)}
@@ -525,6 +542,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         <div>
           <input
             placeholder="Country *"
+            autoComplete="country-name"
             value={form.country}
             onChange={(e) => {
               countryTouched.current = true;
