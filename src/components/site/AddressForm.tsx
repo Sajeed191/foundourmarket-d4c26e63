@@ -175,11 +175,18 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           setPinState("valid");
           setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
           setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
+        } else if (r.serviceable === false) {
+          // Confirmed unsupported destination — the ONLY case that blocks save
+          // & checkout. (A failed/unknown lookup keeps serviceable === true.)
+          setPinState("unsupported");
+          setResolvedPin(null);
+          trackAddr("unsupported_pincode_blocked", { pincode: pin });
         } else {
-          // Pincode not in lookup DB — soft, non-blocking. Admin-only signal.
+          // PIN couldn't be auto-verified (not in lookup DB or transient gap) —
+          // soft, NON-BLOCKING. Customer types city/state and continues.
           setPinState("unverified");
           setResolvedPin(null);
-          trackAddr("unknown_pin_entered", { pincode: pin, reason: "not_found" });
+          trackAddr("unknown_pin_entered", { pincode: pin, reason: r.reason ?? "not_found" });
         }
       } catch {
         // Network/API failure — also soft and non-blocking.
@@ -188,6 +195,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         setResolvedPin(null);
         trackAddr("serviceability_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
+
 
     })();
     return () => {
