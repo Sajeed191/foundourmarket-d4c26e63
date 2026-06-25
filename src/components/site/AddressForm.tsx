@@ -149,8 +149,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   }, [regionCountryName]);
 
 
-  // Auto city/state from Indian pincode (and remember resolved data for the
-  // PIN ↔ City ↔ State consistency check + area autocomplete).
+  // Auto city/state from Indian pincode (best-effort autofill + area
+  // autocomplete). A lookup miss or network/API failure NEVER blocks the
+  // customer — it only shows a soft, non-blocking notice and lets them type
+  // city/state manually.
   useEffect(() => {
     const pin = (form.postal ?? "").trim();
     if (form.country !== "India") return;
@@ -166,21 +168,32 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     let cancelled = false;
     setPinState("checking");
     (async () => {
-      const r = await validatePin({ data: { pincode: pin } });
-      if (cancelled) return;
-      if (r.valid) {
-        setPinState("valid");
-        setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
-        setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
-      } else {
-        setPinState("invalid");
+      try {
+        const r = await validatePin({ data: { pincode: pin } });
+        if (cancelled) return;
+        if (r.valid) {
+          setPinState("valid");
+          setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
+          setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
+        } else {
+          // Pincode not in lookup DB — soft, non-blocking. Admin-only signal.
+          setPinState("unverified");
+          setResolvedPin(null);
+          trackAddr("pincode_lookup_unverified", { pincode: pin, reason: "not_found" });
+        }
+      } catch {
+        // Network/API failure — also soft and non-blocking.
+        if (cancelled) return;
+        setPinState("unverified");
         setResolvedPin(null);
+        trackAddr("pincode_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [form.postal, form.country, validatePin]);
+
 
   // Phase 1 — full structured GPS fill: reverse-geocode coordinates into every
   // address field, detect the region, sync country, and store a confidence score.
