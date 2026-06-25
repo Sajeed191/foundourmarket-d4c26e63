@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2, ShieldAlert, Navigation } from "lucide-react";
+import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2, ShieldAlert } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
 import { type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
