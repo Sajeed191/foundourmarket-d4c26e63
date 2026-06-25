@@ -352,8 +352,20 @@ function RootComponent() {
     () => typeof window !== "undefined" && hasOAuthReturnParams(),
   );
 
+  const lowEnd = useLowEndDevice();
+
   useEffect(() => {
     registerServiceWorker();
+  }, []);
+  // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
+  // and start dev-only runtime performance monitoring (long tasks / FPS / heap).
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.lowEnd = lowEnd ? "true" : "false";
+    }
+  }, [lowEnd]);
+  useEffect(() => {
+    startPerfMonitoring();
   }, []);
   useEffect(() => {
     preloadCrisp();
