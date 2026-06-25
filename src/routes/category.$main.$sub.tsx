@@ -99,9 +99,13 @@ function SubcategoryPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-          {items.map((p) => (<ProductCard key={p.slug} product={p} />))}
-        </div>
+        <VirtualizedProductGrid
+          items={items}
+          cols={{ base: 2, sm: 3, lg: 4 }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
+          renderItem={(p: Product) => <ProductCard key={p.slug} product={p} />}
+        />
+
       )}
     </div>
   );
