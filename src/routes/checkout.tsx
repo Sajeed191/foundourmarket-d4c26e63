@@ -32,6 +32,7 @@ import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpa
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 import { usePaymentGateways } from "@/lib/use-payment-gateways";
 import { GlobalCheckoutBeta } from "@/components/site/GlobalCheckoutBeta";
+import { logCheckout, friendlyCheckoutError } from "@/lib/checkout-logger";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
