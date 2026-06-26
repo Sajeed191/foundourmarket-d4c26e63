@@ -784,10 +784,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       {/* City + State (Phase 5 — area/locality autocomplete from the PIN) */}
       <div className="grid grid-cols-2 gap-3">
         <div>
+          {/* Plain editable text input — no dropdown / select / arrow. */}
           <input
-            placeholder="City / Area *"
+            placeholder="City *"
             value={form.city}
-            list="pin-areas"
             autoComplete="address-level2"
             onChange={(e) => {
               set("city", e.target.value);
@@ -796,15 +796,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             onBlur={() => markTouched("city")}
             className={cls("city")}
           />
-          {resolvedPin && (resolvedPin.areas?.length ?? 0) > 0 && (
-            <datalist id="pin-areas">
-              {[resolvedPin.city, ...resolvedPin.areas]
-                .filter((v, i, arr): v is string => !!v && arr.indexOf(v) === i)
-                .map((area) => (
-                  <option key={area} value={area} />
-                ))}
-            </datalist>
-          )}
           <Err k="city" />
           {/* Non-blocking PIN ↔ City notice — customer can still save & checkout. */}
           {cityMismatch && !errors.city && (
