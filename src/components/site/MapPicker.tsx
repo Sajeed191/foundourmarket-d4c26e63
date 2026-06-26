@@ -323,8 +323,8 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
         )}
       </div>
 
-      {/* Map — fills remaining space */}
-      <div className="relative min-h-0 flex-1">
+      {/* Region: map fills the area; the draggable sheet overlays the bottom */}
+      <div ref={regionRef} className="relative min-h-0 flex-1 overflow-hidden">
         <div ref={mapEl} className="absolute inset-0" />
         {/* Fixed centre pin */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1000] -translate-x-1/2 -translate-y-full">
@@ -332,83 +332,110 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
             className={`size-9 fill-accent/20 text-accent ${lowEnd ? "" : "drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"}`}
           />
         </div>
+        {/* Locate-me — floats just above the sheet */}
         <button
           type="button"
           onClick={locateMe}
           aria-label="Use my current location"
-          className="absolute bottom-4 right-4 z-[1000] grid size-12 place-items-center rounded-full border border-accent/40 bg-card text-accent shadow-lg"
+          className="absolute right-4 z-[1200] grid size-12 place-items-center rounded-full border border-accent/40 bg-card text-accent shadow-lg"
+          style={{
+            bottom: `calc(${snap}% + 1rem)`,
+            transition: dragging ? "none" : "bottom 0.2s ease",
+          }}
         >
           <Crosshair className="size-5" />
         </button>
-      </div>
 
-      {/* Bottom sheet — live preview + sticky confirm */}
-      <div
-        className={`relative z-[1100] -mt-4 shrink-0 space-y-3 rounded-t-3xl border-t border-border bg-card px-4 pt-4 ${lowEnd ? "" : "backdrop-blur shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.5)]"}`}
-        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-      >
-        <div className="mx-auto h-1 w-10 rounded-full bg-border" aria-hidden />
+        {/* Draggable bottom sheet */}
+        <div
+          className={`absolute inset-x-0 bottom-0 z-[1300] flex flex-col rounded-t-3xl border-t border-border bg-card ${lowEnd ? "" : "backdrop-blur shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.5)]"}`}
+          style={{
+            height: `${snap}%`,
+            transition: dragging ? "none" : "height 0.2s ease",
+          }}
+        >
+          {/* Drag handle */}
+          <div
+            className="shrink-0 cursor-grab touch-none px-4 pb-1 pt-3 active:cursor-grabbing"
+            onPointerDown={onHandleDown}
+            onPointerMove={onHandleMove}
+            onPointerUp={onHandleUp}
+            onPointerCancel={onHandleUp}
+            role="separator"
+            aria-label="Drag to resize"
+          >
+            <div className="mx-auto h-1.5 w-12 rounded-full bg-border" aria-hidden />
+          </div>
 
-        {/* Selected address preview */}
-        <div className="rounded-2xl border border-border bg-background/60 p-3">
-          <div className="flex items-start gap-2">
-            <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
-            <div className="min-w-0 flex-1">
-              <p className="mb-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                Selected address
-              </p>
-              {previewLoading ? (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" /> Finding address…
-                </p>
-              ) : previewError ? (
-                <p className="flex items-start gap-1.5 text-xs text-amber-500/90">
-                  <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-                  Unable to fetch address. You can still confirm this location.
-                </p>
-              ) : previewLines.length > 0 ? (
-                <>
-                  <p className="line-clamp-2 text-xs leading-relaxed text-foreground">
-                    {previewLines.join(", ")}
+          {/* Scrollable content */}
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-3">
+            <div className="rounded-2xl border border-border bg-background/60 p-3">
+              <div className="flex items-start gap-2">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-accent" />
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Selected address
                   </p>
-                  {(previewMeta.city || previewMeta.state || previewMeta.pin) && (
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {previewMeta.city && (
-                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
-                          {previewMeta.city}
-                        </span>
+                  {previewLoading ? (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="size-3 animate-spin" /> Finding address…
+                    </p>
+                  ) : previewError ? (
+                    <p className="flex items-start gap-1.5 text-xs text-amber-500/90">
+                      <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                      Unable to fetch address. You can still confirm this location.
+                    </p>
+                  ) : previewLines.length > 0 ? (
+                    <>
+                      <p className="text-xs leading-relaxed text-foreground">
+                        {previewLines.join(", ")}
+                      </p>
+                      {(previewMeta.city || previewMeta.state || previewMeta.pin) && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {previewMeta.city && (
+                            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
+                              {previewMeta.city}
+                            </span>
+                          )}
+                          {previewMeta.state && (
+                            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
+                              {previewMeta.state}
+                            </span>
+                          )}
+                          {previewMeta.pin && (
+                            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
+                              PIN {previewMeta.pin}
+                            </span>
+                          )}
+                        </div>
                       )}
-                      {previewMeta.state && (
-                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
-                          {previewMeta.state}
-                        </span>
-                      )}
-                      {previewMeta.pin && (
-                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
-                          PIN {previewMeta.pin}
-                        </span>
-                      )}
-                    </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Move the map to position the pin on your exact location.
+                    </p>
                   )}
-                </>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Move the map to position the pin on your exact location.
-                </p>
-              )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={confirm}
-          disabled={confirming}
-          className={`inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-[12px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 disabled:opacity-60 ${lowEnd ? "" : "shadow-[0_0_30px_-8px_var(--color-accent)]"}`}
-        >
-          {confirming ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-          Confirm this location
-        </button>
+          {/* Sticky footer — Confirm always visible, clears nav + safe area */}
+          <div
+            className="shrink-0 border-t border-border bg-card px-4 pt-3"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
+          >
+            <button
+              type="button"
+              onClick={confirm}
+              disabled={confirming}
+              className={`inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-accent text-[12px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 disabled:opacity-60 ${lowEnd ? "" : "shadow-[0_0_30px_-8px_var(--color-accent)]"}`}
+            >
+              {confirming ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+              Confirm this location
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
