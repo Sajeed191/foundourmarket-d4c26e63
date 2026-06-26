@@ -163,18 +163,24 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         if (r.valid) {
           setPinState("valid");
           setResolvedPin({ city: r.city, state: r.state, areas: r.areas ?? [] });
-          setForm((p) => ({ ...p, city: p.city || r.city || "", state: p.state || r.state || "" }));
+          setForm((p) => ({
+            ...p,
+            city: p.city || r.city || "",
+            state: p.state || r.state || "",
+          }));
         } else if (r.serviceable === false) {
           // Confirmed unsupported destination — the ONLY case that blocks save
           // & checkout. (A failed/unknown lookup keeps serviceable === true.)
           setPinState("unsupported");
           setResolvedPin(null);
+          trackAddr("unsupported_pin", { pincode: pin });
           trackAddr("unsupported_pincode_blocked", { pincode: pin });
         } else {
           // PIN couldn't be auto-verified (not in lookup DB or transient gap) —
           // soft, NON-BLOCKING. Customer types city/state and continues.
           setPinState("unverified");
           setResolvedPin(null);
+          trackAddr("unknown_pin", { pincode: pin, reason: r.reason ?? "not_found" });
           trackAddr("unknown_pin_entered", { pincode: pin, reason: r.reason ?? "not_found" });
         }
       } catch {
@@ -182,6 +188,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         if (cancelled) return;
         setPinState("unverified");
         setResolvedPin(null);
+        trackAddr("gps_lookup_failed", { pincode: pin, reason: "lookup_error" });
         trackAddr("serviceability_lookup_failed", { pincode: pin, reason: "lookup_error" });
       }
 
