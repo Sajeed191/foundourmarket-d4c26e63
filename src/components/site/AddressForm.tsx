@@ -1,11 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2 } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Loader2, Home, Briefcase, MapPin, CheckCircle2, AlertCircle, Clock,
+  Building2, Map as MapIcon, Navigation, Pencil, Zap,
+} from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
 import { type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
+import { useLowEndDevice } from "@/lib/use-low-end-device";
+import type { MapPickResult } from "@/components/site/MapPicker";
+
+// Leaflet + its CSS only download when the customer opens "Select on Map".
+const MapPicker = lazy(() => import("@/components/site/MapPicker"));
 
 /** Friendly country name from an ISO code, with a safe fallback. */
 const REGION_NAMES =
@@ -111,6 +119,12 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
   const [phoneValid, setPhoneValid] = useState<boolean>(!!initial?.phone);
   const [pinState, setPinState] = useState<"idle" | "checking" | "valid" | "unverified" | "unsupported">("idle");
   const [geoBusy, setGeoBusy] = useState(false);
+  const lowEnd = useLowEndDevice();
+  // Which premium mode the customer last used to fill the address.
+  const [mode, setMode] = useState<"gps" | "map" | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  // Compact "selected address" preview shown after GPS / map autofill.
+  const [geoStatus, setGeoStatus] = useState<"ok" | "fail" | null>(null);
   // City/state/areas the postal service resolved for the current PIN.
   const [resolvedPin, setResolvedPin] = useState<{
     city: string | null;
@@ -242,29 +256,84 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
 
 
 
-  // Phase 1 — full structured GPS fill: reverse-geocode coordinates into every
-  // address field, detect the region, sync country, and store a confidence score.
+  // Shared structured autofill used by BOTH "Current location" (GPS) and
+  // "Select on map". Reverse-geocoded fields enrich (never overwrite) what the
+  // customer already typed; the India Post PIN lookup is the primary signal.
+  const applyGeoAddress = async (
+    latitude: number,
+    longitude: number,
+    a: Record<string, string>,
+  ) => {
+    set("latitude", latitude);
+    set("longitude", longitude);
+
+    const line1 = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(" ");
+    const area = a.neighbourhood || a.suburb || a.quarter || a.hamlet || "";
+    const locality = a.suburb || a.city_district || a.residential || "";
+    let city = a.city || a.town || a.village || a.municipality || a.county || "";
+    let district = a.state_district || a.county || "";
+    let state = a.state || "";
+    const postal = a.postcode || "";
+    const country = a.country || "";
+
+    if (country) countryTouched.current = true;
+
+    if (/^\d{6}$/.test(postal) && (country === "" || /india/i.test(country))) {
+      try {
+        const v = await validatePin({ data: { pincode: postal } });
+        if (v.valid) {
+          trackAddr("gps_lookup_success", { pincode: postal });
+          state = v.state || state;
+          district = v.district || district;
+          city = v.city || city;
+        } else {
+          trackAddr(v.reason === "service_down" ? "gps_lookup_failed" : "unknown_pin", {
+            pincode: postal,
+            reason: v.reason ?? "not_found",
+          });
+        }
+      } catch {
+        trackAddr("gps_lookup_failed", { pincode: postal, reason: "lookup_error" });
+      }
+    } else if (postal || city || state) {
+      trackAddr("gps_lookup_success", { pincode: postal || null, non_india: true });
+    }
+
+    setForm((p) => ({
+      ...p,
+      line1: p.line1 || line1,
+      line2: p.line2 || [locality, area, district].filter(Boolean).join(", "),
+      landmark: p.landmark || (area && area !== locality ? area : p.landmark),
+      city: city || p.city,
+      state: state || p.state,
+      postal: postal || p.postal,
+      // India market is country-locked — geocoded country is ignored.
+      country: isIndia ? "India" : country || p.country,
+    }));
+    setGeoStatus(city || postal || state ? "ok" : "fail");
+  };
+
+  // 📍 Current Location — GPS detect + reverse geocode. Never blocks checkout.
   const useCurrentLocation = async () => {
     if (!navigator.geolocation) {
       setError("Location is not supported on this device.");
+      setGeoStatus("fail");
       return;
     }
+    setMode("gps");
     setGeoBusy(true);
     setError(null);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        set("latitude", latitude);
-        set("longitude", longitude);
         try {
-          // Hard timeout on reverse geocode so GPS never hangs the form.
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), 8000);
           let j: any = null;
           try {
             const res = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${latitude}&lon=${longitude}`,
-              { headers: { Accept: "application/json" }, signal: controller.signal }
+              { headers: { Accept: "application/json" }, signal: controller.signal },
             );
             j = await res.json();
           } catch {
@@ -272,72 +341,33 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
           } finally {
             clearTimeout(timer);
           }
-          const a = j?.address ?? {};
-
-          const line1 = [a.house_number, a.road || a.pedestrian || a.footway]
-            .filter(Boolean)
-            .join(" ");
-          const area = a.neighbourhood || a.suburb || a.quarter || a.hamlet || "";
-          const locality = a.suburb || a.city_district || a.residential || "";
-          let city = a.city || a.town || a.village || a.municipality || a.county || "";
-          let district = a.state_district || a.county || "";
-          let state = a.state || "";
-          const postal = a.postcode || "";
-          const country = a.country || "";
-
-          if (country) countryTouched.current = true;
-
-          // PIN code is the PRIMARY signal. When the reverse geocoder returns a
-          // 6-digit Indian PIN, verify it against India Post and PREFER the
-          // official state/district/city over the geocoder's wording (which is
-          // often a village/locality/post-office name, not the India Post city).
-          // A mismatch or failed verification NEVER blocks — it only enriches.
-          if (/^\d{6}$/.test(postal) && (country === "" || /india/i.test(country))) {
-            try {
-              const v = await validatePin({ data: { pincode: postal } });
-              if (v.valid) {
-                trackAddr("gps_lookup_success", { pincode: postal });
-                state = v.state || state;
-                district = v.district || district;
-                city = v.city || city;
-              } else {
-                trackAddr(v.reason === "service_down" ? "gps_lookup_failed" : "unknown_pin", {
-                  pincode: postal,
-                  reason: v.reason ?? "not_found",
-                });
-              }
-            } catch {
-              trackAddr("gps_lookup_failed", { pincode: postal, reason: "lookup_error" });
-            }
-          } else if (postal || city || state) {
-            trackAddr("gps_lookup_success", { pincode: postal || null, non_india: true });
-          }
-
-          setForm((p) => ({
-            ...p,
-            line1: p.line1 || line1,
-            line2: p.line2 || [locality, area, district].filter(Boolean).join(", "),
-            landmark: p.landmark || (area && area !== locality ? area : p.landmark),
-            city: city || p.city,
-            state: state || p.state,
-            postal: postal || p.postal,
-            // India market is country-locked — current location always resolves
-            // to an Indian address; never overwrite with a geocoded country.
-            country: isIndia ? "India" : country || p.country,
-          }));
+          await applyGeoAddress(latitude, longitude, j?.address ?? {});
         } catch {
-          // Coordinates are still saved even if reverse geocode fails.
+          set("latitude", latitude);
+          set("longitude", longitude);
+          setGeoStatus("ok");
           trackAddr("gps_lookup_failed", { reason: "geocode_error" });
         }
         setGeoBusy(false);
       },
       () => {
-        setError("Couldn't access your location. You can enter the address manually.");
+        setError("Unable to detect location. Please enter your address manually.");
+        setGeoStatus("fail");
         trackAddr("gps_lookup_failed", { reason: "permission_denied" });
         setGeoBusy(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
+  };
+
+  // 🗺 Select on Map — confirm handler from the fullscreen Leaflet picker.
+  const onMapConfirm = async (r: MapPickResult) => {
+    setMapOpen(false);
+    setMode("map");
+    setGeoBusy(true);
+    trackAddr("map_location_selected", { lat: r.lat, lng: r.lng });
+    await applyGeoAddress(r.lat, r.lng, r.address);
+    setGeoBusy(false);
   };
 
   const fieldError = (k: string, f = form): string | undefined => {
@@ -472,18 +502,108 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={useCurrentLocation}
-        disabled={geoBusy}
-        className="w-full inline-flex items-center justify-center gap-2 border border-accent/40 text-accent rounded-2xl py-2.5 text-[11px] uppercase tracking-widest font-mono hover:bg-accent/10 transition-all disabled:opacity-60"
-      >
-        {geoBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Locate className="size-3.5" />}
-        Use current location
-      </button>
+      {/* Premium address modes — Flipkart-style cards. Only one active. */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <button
+          type="button"
+          onClick={useCurrentLocation}
+          disabled={geoBusy}
+          aria-pressed={mode === "gps"}
+          className={`relative overflow-hidden text-left rounded-[20px] border p-3.5 min-h-[88px] transition-all duration-200 disabled:opacity-70 ${
+            mode === "gps"
+              ? "border-accent bg-accent/10 shadow-[0_0_28px_-8px_var(--color-accent)]"
+              : "border-border bg-background/50 hover:border-accent/40"
+          }`}
+        >
+          <span
+            className={`grid place-items-center size-9 rounded-xl mb-2 ${
+              mode === "gps" ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent"
+            }`}
+          >
+            {geoBusy && mode === "gps" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Navigation className="size-4" />
+            )}
+          </span>
+          <span className="block text-[13px] font-semibold">Current Location</span>
+          <span className="block text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+            <Zap className="size-3" /> Detect using GPS · Fastest
+          </span>
+        </button>
 
-      {/* Geo detection runs silently in the background — no confidence scores,
-          detection methods, or region diagnostics are ever shown to customers. */}
+        <button
+          type="button"
+          onClick={() => setMapOpen(true)}
+          aria-pressed={mode === "map"}
+          className={`relative overflow-hidden text-left rounded-[20px] border p-3.5 min-h-[88px] transition-all duration-200 ${
+            mode === "map"
+              ? "border-accent bg-accent/10 shadow-[0_0_28px_-8px_var(--color-accent)]"
+              : "border-border bg-background/50 hover:border-accent/40"
+          }`}
+        >
+          <span
+            className={`grid place-items-center size-9 rounded-xl mb-2 ${
+              mode === "map" ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent"
+            }`}
+          >
+            <MapIcon className="size-4" />
+          </span>
+          <span className="block text-[13px] font-semibold">Select on Map</span>
+          <span className="block text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+            <MapPin className="size-3" /> Choose exact location
+          </span>
+        </button>
+      </div>
+
+      {/* Selected-address preview after GPS / map autofill */}
+      {geoStatus === "ok" && (form.city || form.postal || form.state) && (
+        <div className="rounded-[18px] border border-accent/30 bg-accent/[0.06] p-3.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <MapPin className="size-3" /> Selected address
+              </p>
+              <p className="text-sm mt-1.5 leading-relaxed">
+                {[form.line1, form.line2, form.city, form.state, form.postal, form.country]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+              <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1">
+                <CheckCircle2 className="size-3" /> Verified location
+              </p>
+            </div>
+            <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1 shrink-0">
+              <Pencil className="size-3" /> Edit below
+            </span>
+          </div>
+        </div>
+      )}
+
+      {geoStatus === "fail" && (
+        <p className="text-[11px] text-amber-400/90 flex items-center gap-1.5">
+          <AlertCircle className="size-3.5 shrink-0" />
+          Unable to detect location. Please enter your address manually.
+        </p>
+      )}
+
+      {/* Fullscreen map picker — Leaflet loads lazily only when opened. */}
+      {mapOpen && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[2100] grid place-items-center bg-background/90">
+              <Loader2 className="size-6 animate-spin text-accent" />
+            </div>
+          }
+        >
+          <MapPicker
+            initial={{ lat: form.latitude, lng: form.longitude }}
+            lowEnd={lowEnd}
+            onConfirm={onMapConfirm}
+            onCancel={() => setMapOpen(false)}
+          />
+        </Suspense>
+      )}
 
 
 
@@ -664,10 +784,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       {/* City + State (Phase 5 — area/locality autocomplete from the PIN) */}
       <div className="grid grid-cols-2 gap-3">
         <div>
+          {/* Plain editable text input — no dropdown / select / arrow. */}
           <input
-            placeholder="City / Area *"
+            placeholder="City *"
             value={form.city}
-            list="pin-areas"
             autoComplete="address-level2"
             onChange={(e) => {
               set("city", e.target.value);
@@ -676,15 +796,6 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             onBlur={() => markTouched("city")}
             className={cls("city")}
           />
-          {resolvedPin && (resolvedPin.areas?.length ?? 0) > 0 && (
-            <datalist id="pin-areas">
-              {[resolvedPin.city, ...resolvedPin.areas]
-                .filter((v, i, arr): v is string => !!v && arr.indexOf(v) === i)
-                .map((area) => (
-                  <option key={area} value={area} />
-                ))}
-            </datalist>
-          )}
           <Err k="city" />
           {/* Non-blocking PIN ↔ City notice — customer can still save & checkout. */}
           {cityMismatch && !errors.city && (
