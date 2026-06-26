@@ -148,6 +148,14 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
     setForm((p) => (p.country === regionCountryName ? p : { ...p, country: regionCountryName }));
   }, [regionCountryName]);
 
+  // India market is country-locked — the stored country is always "India",
+  // regardless of any previously saved value or geocoder result.
+  useEffect(() => {
+    if (!isIndia) return;
+    setForm((p) => (p.country === "India" ? p : { ...p, country: "India" }));
+  }, [isIndia]);
+
+
 
   // Auto city/state from Indian pincode (best-effort autofill + area
   // autocomplete). A lookup miss or network/API failure NEVER blocks the
