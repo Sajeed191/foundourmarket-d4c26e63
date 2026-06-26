@@ -1194,3 +1194,38 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   transition: background-color 0.15s ease;
 }
 .qa-btn:hover { background: color-mix(in oklab, var(--foreground) 6%, transparent); }
+
+/* ── Premium Back Button (black + orange glass) ───────────────────────────
+   CSS-only transitions; respects the global low-end mode below. */
+@keyframes back-btn-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.premium-back-btn {
+  min-height: 44px;
+  background: color-mix(in oklab, #121212 92%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: transform 200ms ease, background-color 200ms ease,
+    border-color 200ms ease, box-shadow 200ms ease;
+  animation: back-btn-in 180ms ease both;
+  text-decoration: none;
+}
+.premium-back-btn:hover {
+  transform: translateX(-2px);
+  background: color-mix(in oklab, #1a1a1a 92%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 22px -6px color-mix(in oklab, var(--accent) 60%, transparent);
+}
+.premium-back-btn:active { transform: scale(0.98); }
+.premium-back-btn:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 80%, transparent);
+  outline-offset: 2px;
+}
+html[data-low-end="true"] .premium-back-btn {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }

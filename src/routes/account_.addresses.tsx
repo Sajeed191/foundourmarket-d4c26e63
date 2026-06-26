@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useAddresses, type Address, type AddressType } from "@/lib/use-addresses";
 import { AddressForm } from "@/components/site/AddressForm";
+import { BackButton } from "@/components/site/BackButton";
 
 export const Route = createFileRoute("/account_/addresses")({
   head: () => ({ meta: [{ title: "Manage Addresses — FoundOurMarket™" }] }),
@@ -141,9 +142,8 @@ function AddressesPage() {
               Save delivery locations for one-tap checkout with realtime sync across devices.
             </p>
           </div>
-          <Link to="/account" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-accent">
-            ← Back to account
-          </Link>
+          <BackButton to="/account" label="Account" showAccountIcon />
+
         </div>
       </motion.div>
 
