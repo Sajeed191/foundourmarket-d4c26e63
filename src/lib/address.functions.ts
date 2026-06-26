@@ -20,8 +20,10 @@ export const validateIndianPincode = createServerFn({ method: "GET" })
         serviceable: true as boolean,
         reason: "available" as const,
         city: res.city,
+        district: res.district,
         state: res.state,
         areas: res.areas,
+        source: res.source,
       };
     }
     // A valid 6-digit PIN that we couldn't resolve (postal API gap, new
