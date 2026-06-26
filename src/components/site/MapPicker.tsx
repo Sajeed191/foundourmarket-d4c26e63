@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Loader2, Search, MapPin, X, Check, Crosshair } from "lucide-react";
+import { Loader2, Search, MapPin, X, Check, Crosshair, AlertCircle } from "lucide-react";
 
 export type MapPickResult = {
   lat: number;
@@ -18,27 +18,44 @@ type Props = {
 
 const DEFAULT_CENTER: [number, number] = [20.5937, 78.9629]; // India centroid
 
-async function reverseGeocode(lat: number, lng: number): Promise<Record<string, string>> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 6000);
+async function reverseGeocode(
+  lat: number,
+  lng: number,
+  signal?: AbortSignal,
+): Promise<Record<string, string> | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${lat}&lon=${lng}`,
-      { headers: { Accept: "application/json" }, signal: controller.signal },
+      { headers: { Accept: "application/json" }, signal },
     );
     const j = await res.json();
     return (j?.address ?? {}) as Record<string, string>;
   } catch {
-    return {};
-  } finally {
-    clearTimeout(timer);
+    return null;
   }
+}
+
+/** Build a human-readable, Flipkart-style preview from OSM address parts. */
+function formatPreview(a: Record<string, string>): string[] {
+  const line1 = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(" ");
+  const area = a.neighbourhood || a.suburb || a.quarter || a.hamlet || "";
+  const village = a.village || a.town || "";
+  const city = a.city || a.municipality || a.county || "";
+  const district = a.state_district || a.county || "";
+  const state = a.state || "";
+  const postal = a.postcode || "";
+  const country = a.country || "";
+  return [line1, area, village, city, district, state, postal, country].filter(
+    (v, i, arr) => v && arr.indexOf(v) === i,
+  );
 }
 
 /**
  * Fullscreen OpenStreetMap location picker (Leaflet). Lazy-loaded — Leaflet and
  * its CSS only download when the customer opens "Select on Map". Drag the map to
- * move the centre pin, search a place, or use GPS, then Confirm.
+ * move the centre pin, search a place, or use GPS. A live reverse-geocoded
+ * address preview updates as the pin moves, then Confirm hands the final
+ * coordinates + address parts back to the form.
  */
 export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Props) {
   const mapEl = useRef<HTMLDivElement | null>(null);
@@ -52,6 +69,39 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     initial?.lng ?? DEFAULT_CENTER[1],
   ]);
 
+  // Live preview state.
+  const [previewLines, setPreviewLines] = useState<string[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+  const previewAbort = useRef<AbortController | null>(null);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAddress = useRef<Record<string, string>>({});
+
+  // Debounced live reverse geocode whenever the pin (map centre) settles.
+  const refreshPreview = useCallback((lat: number, lng: number) => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(async () => {
+      previewAbort.current?.abort();
+      const controller = new AbortController();
+      previewAbort.current = controller;
+      const timer = setTimeout(() => controller.abort(), 6000);
+      setPreviewLoading(true);
+      setPreviewError(false);
+      const a = await reverseGeocode(lat, lng, controller.signal);
+      clearTimeout(timer);
+      if (controller.signal.aborted) return;
+      setPreviewLoading(false);
+      if (a === null) {
+        setPreviewError(true);
+        setPreviewLines([]);
+        lastAddress.current = {};
+        return;
+      }
+      lastAddress.current = a;
+      setPreviewLines(formatPreview(a));
+    }, 600);
+  }, []);
+
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
     const hasInitial = typeof initial?.lat === "number" && typeof initial?.lng === "number";
@@ -63,6 +113,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
       fadeAnimation: !lowEnd,
       zoomAnimation: !lowEnd,
       markerZoomAnimation: !lowEnd,
+      inertia: !lowEnd,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -72,10 +123,19 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
       const c = map.getCenter();
       setCenter([c.lat, c.lng]);
     });
+    // Reverse geocode only once movement stops (cheaper + avoids rate limits).
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      refreshPreview(c.lat, c.lng);
+    });
     mapRef.current = map;
-    // Ensure correct sizing after the overlay paints.
     setTimeout(() => map.invalidateSize(), 80);
+    // Initial preview for the starting position.
+    if (hasInitial) refreshPreview(center[0], center[1]);
     return () => {
+      // Destroy the map + cancel in-flight work — no memory leaks.
+      previewAbort.current?.abort();
+      if (previewTimer.current) clearTimeout(previewTimer.current);
       map.remove();
       mapRef.current = null;
     };
@@ -84,6 +144,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
 
   const flyTo = (lat: number, lng: number) => {
     mapRef.current?.setView([lat, lng], 16, { animate: !lowEnd });
+    refreshPreview(lat, lng);
   };
 
   const runSearch = async (e?: React.FormEvent) => {
@@ -119,7 +180,12 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
   const confirm = async () => {
     setConfirming(true);
     const [lat, lng] = center;
-    const address = await reverseGeocode(lat, lng);
+    // Use the freshest cached preview address if present; otherwise fetch once.
+    let address = lastAddress.current;
+    if (!address || Object.keys(address).length === 0) {
+      const a = await reverseGeocode(lat, lng);
+      address = a ?? {};
+    }
     onConfirm({ lat, lng, address });
   };
 
@@ -141,9 +207,12 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search area, street, landmark…"
-              className="w-full h-11 pl-10 pr-4 rounded-2xl bg-background border border-border text-sm outline-none focus:border-accent"
+              placeholder="Search city, village, street, landmark, PIN…"
+              className="w-full h-11 pl-10 pr-10 rounded-2xl bg-background border border-border text-sm outline-none focus:border-accent"
             />
+            {searching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
+            )}
           </form>
         </div>
         {results.length > 0 && (
@@ -173,7 +242,9 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
         <div ref={mapEl} className="absolute inset-0" />
         {/* Fixed centre pin */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full z-[1000]">
-          <MapPin className="size-9 text-accent drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] fill-accent/20" />
+          <MapPin
+            className={`size-9 text-accent fill-accent/20 ${lowEnd ? "" : "drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"}`}
+          />
         </div>
         <button
           type="button"
@@ -185,11 +256,40 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
         </button>
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-border bg-card/95 backdrop-blur space-y-2">
-        <p className="text-[11px] text-muted-foreground text-center">
-          Move the map to position the pin on your exact location
-        </p>
+      {/* Footer — bottom sheet with live preview + confirm */}
+      <div
+        className={`p-4 border-t border-border bg-card rounded-t-3xl -mt-4 relative z-[1100] space-y-3 ${lowEnd ? "" : "backdrop-blur shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.5)]"}`}
+      >
+        {/* Selected address preview */}
+        <div className="rounded-2xl border border-border bg-background/60 p-3 min-h-[64px]">
+          <div className="flex items-start gap-2">
+            <MapPin className="size-4 mt-0.5 text-accent shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">
+                Selected address
+              </p>
+              {previewLoading ? (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Loader2 className="size-3 animate-spin" /> Finding address…
+                </p>
+              ) : previewError ? (
+                <p className="text-xs text-amber-500/90 flex items-start gap-1.5">
+                  <AlertCircle className="size-3.5 mt-0.5 shrink-0" />
+                  Unable to fetch address. You can still confirm this location.
+                </p>
+              ) : previewLines.length > 0 ? (
+                <p className="text-xs leading-relaxed text-foreground line-clamp-3">
+                  {previewLines.join(", ")}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Move the map to position the pin on your exact location.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <button
             type="button"
@@ -202,7 +302,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
             type="button"
             onClick={confirm}
             disabled={confirming}
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold h-12 rounded-2xl text-[11px] uppercase tracking-widest hover:brightness-110 disabled:opacity-60 shadow-[0_0_30px_-8px_var(--color-accent)]"
+            className={`flex-1 inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold h-12 rounded-2xl text-[11px] uppercase tracking-widest hover:brightness-110 disabled:opacity-60 ${lowEnd ? "" : "shadow-[0_0_30px_-8px_var(--color-accent)]"}`}
           >
             {confirming ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Confirm location
