@@ -735,14 +735,9 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             </span>
           </div>
           <Err k="postal" />
-          {/* Soft, non-blocking notice when the PIN couldn't be auto-verified.
-              The customer can still type city/state and continue to payment. */}
-          {pinState === "unverified" && !errors.postal && (
-            <p className="text-[11px] text-amber-400/90 mt-1 flex items-center gap-1">
-              <AlertCircle className="size-3 shrink-0" />
-              We could not verify this PIN right now. Please confirm your address details.
-            </p>
-          )}
+          {/* PIN auto-verification failures are handled silently — the customer
+              continues normally without any mismatch/lookup warning. Only a
+              confirmed unsupported destination (below) is surfaced. */}
           {/* Hard block — confirmed unsupported destination only. */}
           {pinState === "unsupported" && !errors.postal && (
             <p className="text-[11px] text-destructive mt-1 flex items-start gap-1">
@@ -797,13 +792,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             className={cls("city")}
           />
           <Err k="city" />
-          {/* Non-blocking PIN ↔ City notice — customer can still save & checkout. */}
-          {cityMismatch && !errors.city && (
-            <p className="text-[11px] text-amber-400/90 mt-1 flex items-start gap-1">
-              <AlertCircle className="size-3 shrink-0 mt-0.5" />
-              The city entered does not exactly match postal records. Please verify your address.
-            </p>
-          )}
+          {/* PIN ↔ City mismatch is tracked silently for admin analytics only —
+              never surfaced to customers (premium Flipkart/Amazon-level UX). */}
         </div>
         <input
           placeholder="State / Region"
