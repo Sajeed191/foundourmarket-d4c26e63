@@ -56,6 +56,7 @@ export function ProductImage({
         />
       )}
       <img
+        key={src}
         ref={imgRef}
         src={src}
         srcSet={responsive?.srcset}
