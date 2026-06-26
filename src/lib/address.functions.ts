@@ -36,7 +36,9 @@ export const validateIndianPincode = createServerFn({ method: "GET" })
       serviceable: true as boolean,
       reason: res.reason as "not_found" | "service_down" | "invalid",
       city: null,
+      district: null,
       state: null,
       areas: [] as string[],
+      source: null,
     };
   });
