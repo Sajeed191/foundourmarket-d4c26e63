@@ -313,7 +313,9 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
             city: city || p.city,
             state: state || p.state,
             postal: postal || p.postal,
-            country: country || p.country,
+            // India market is country-locked — current location always resolves
+            // to an Indian address; never overwrite with a geocoded country.
+            country: isIndia ? "India" : country || p.country,
           }));
         } catch {
           // Coordinates are still saved even if reverse geocode fails.
