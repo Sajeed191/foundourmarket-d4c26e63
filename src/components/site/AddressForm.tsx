@@ -1,11 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock, Building2 } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Loader2, Home, Briefcase, MapPin, Locate, CheckCircle2, AlertCircle, Clock,
+  Building2, Map as MapIcon, Navigation, Pencil, Zap,
+} from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import type { CountryCode } from "libphonenumber-js";
 import { type Address, type AddressInput, type AddressType } from "@/lib/use-addresses";
 import { validateIndianPincode } from "@/lib/address.functions";
 import { PhoneInput } from "@/components/site/PhoneInput";
 import { useRegion } from "@/lib/region";
+import { useLowEndDevice } from "@/lib/use-low-end-device";
+import type { MapPickResult } from "@/components/site/MapPicker";
+
+// Leaflet + its CSS only download when the customer opens "Select on Map".
+const MapPicker = lazy(() => import("@/components/site/MapPicker"));
 
 /** Friendly country name from an ISO code, with a safe fallback. */
 const REGION_NAMES =
