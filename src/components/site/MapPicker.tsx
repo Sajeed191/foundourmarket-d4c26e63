@@ -153,16 +153,18 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Lock body scroll + close on Escape while the fullscreen picker is open.
+  // Lock body scroll, hide website chrome, and close on Escape while open.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.setAttribute("data-map-picker-open", "");
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
+      document.body.removeAttribute("data-map-picker-open");
       window.removeEventListener("keydown", onKey);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -215,8 +217,8 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     onConfirm({ lat, lng, address });
   };
 
-  // ---- Draggable bottom sheet with snap points (25% / 50% / 90%) ----
-  const SNAPS = [25, 50, 90] as const;
+  // ---- Draggable bottom sheet with snap points (20% / 45% / 90%) ----
+  const SNAPS = [20, 45, 90] as const;
   const regionRef = useRef<HTMLDivElement | null>(null);
   const [snap, setSnap] = useState<number>(45); // current sheet height as % of region
   const [dragging, setDragging] = useState(false);
@@ -252,7 +254,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     const ds = dragState.current;
     if (!ds) return;
     const deltaPct = ((ds.startY - e.clientY) / ds.regionH) * 100;
-    const next = Math.min(90, Math.max(25, ds.startPct + deltaPct));
+    const next = Math.min(90, Math.max(20, ds.startPct + deltaPct));
     setSnap(next);
   };
   const onHandleUp = (e: React.PointerEvent) => {
