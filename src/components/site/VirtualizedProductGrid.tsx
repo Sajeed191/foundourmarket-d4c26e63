@@ -54,13 +54,26 @@ export function VirtualizedProductGrid<T>({
 }: Props<T>) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  // Track the container's distance from the document top as LIVE state. The
+  // window virtualizer needs this as `scrollMargin` to place rows correctly.
+  // Reading `parentRef.current.offsetTop` only at render time goes stale when
+  // content above the grid reflows (lazy images decoding, async banners) — on
+  // Android that stale offset mis-positions rows so they overlap previously
+  // painted rows, which reads as duplicated / ghosted cards.
+  const [offsetTop, setOffsetTop] = useState(0);
 
   useEffect(() => {
     const el = parentRef.current;
     if (!el) return;
-    setWidth(el.clientWidth);
-    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    const measure = () => {
+      setWidth(el.clientWidth);
+      const rect = el.getBoundingClientRect();
+      setOffsetTop(rect.top + window.scrollY);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
+    ro.observe(document.body);
     return () => ro.disconnect();
   }, []);
 
@@ -73,7 +86,7 @@ export function VirtualizedProductGrid<T>({
     count: shouldVirtualize ? rowCount : 0,
     estimateSize: () => estimateRowHeight + gap,
     overscan,
-    scrollMargin: parentRef.current?.offsetTop ?? 0,
+    scrollMargin: offsetTop,
   });
 
   // Fallback: plain responsive grid (also the SSR / first-paint output).
@@ -86,13 +99,26 @@ export function VirtualizedProductGrid<T>({
   }
 
   return (
-    <div ref={parentRef} style={{ position: "relative", height: rowVirtualizer.getTotalSize() }}>
+    <div
+      ref={parentRef}
+      style={{
+        position: "relative",
+        height: rowVirtualizer.getTotalSize(),
+        // Isolate paint/layout for the scroll body so the compositor only
+        // repaints the rows that actually change.
+        contain: "layout paint style",
+      }}
+    >
       {rowVirtualizer.getVirtualItems().map((vRow) => {
         const start = vRow.index * colCount;
         const rowItems = items.slice(start, start + colCount);
+        // Stable key derived from the row's actual content (not the virtual
+        // index) so React never reuses a row's DOM node for a different set of
+        // products — preventing recycled nodes from showing stale cards.
+        const rowKey = (rowItems[0] as { id?: string | number; slug?: string } | undefined);
         return (
           <div
-            key={vRow.key}
+            key={rowKey?.id ?? rowKey?.slug ?? vRow.key}
             data-index={vRow.index}
             ref={rowVirtualizer.measureElement}
             style={{
@@ -106,6 +132,13 @@ export function VirtualizedProductGrid<T>({
               gap,
               paddingBottom: gap,
               alignItems: "stretch",
+              // Per-row paint containment + an explicit compositor layer. This
+              // is the key fix for Android Chrome/WebView "ghost row" artifacts:
+              // without it, the GPU fails to invalidate the old tile when a row
+              // is repositioned during fast scroll, leaving duplicated cards.
+              contain: "layout paint style",
+              willChange: "transform",
+              backfaceVisibility: "hidden",
             }}
           >
             {rowItems.map((item, i) => renderItem(item, start + i))}

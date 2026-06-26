@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 
 type Props = {
@@ -30,6 +30,13 @@ export function ProductImage({
   const responsive = getResponsiveImage(src);
   const [loaded, setLoaded] = useState(false);
 
+  // When the src changes on a recycled/reused element (e.g. a virtualized grid
+  // row pointing at a new product), reset the loaded flag so the new image
+  // fades in cleanly instead of briefly showing the previous product's photo.
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
+
   // Callback ref: if the image is already complete by the time it mounts
   // (cached / decoded before React attached onLoad), reveal it immediately.
   // Without this the onLoad event can be missed on fast scroll, leaving the
@@ -49,6 +56,7 @@ export function ProductImage({
         />
       )}
       <img
+        key={src}
         ref={imgRef}
         src={src}
         srcSet={responsive?.srcset}
