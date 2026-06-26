@@ -167,6 +167,8 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const flyTo = (lat: number, lng: number) => {
     mapRef.current?.setView([lat, lng], 16, { animate: !lowEnd });
     refreshPreview(lat, lng);
   };
