@@ -531,7 +531,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = "Save a
       </div>
 
       <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-        <div class="min-w-0">
+        <div className="min-w-0">
           <PhoneInput
             value={form.phone ?? ""}
             defaultCountry={regionCountry}
