@@ -1359,6 +1359,21 @@ html[data-android="true"] .product-rating-text {
   position: static !important;
 }
 
+/* TEXT ROOT CAUSE — drop the legacy -webkit-box clamp path on Android.
+   Tailwind's line-clamp-2 sets display:-webkit-box; -webkit-line-clamp:2.
+   On Android Chrome/WebView the -webkit-box line box is not invalidated on
+   scroll repaint, so the title's clamped glyph run bleeds over itself
+   (overlap/duplicate) and the labels beneath inherit the residue. Images are
+   separate media tiles, so they stay clean. Force normal block flow and clamp
+   by fixed height instead — h-[2.6em] already equals 2 lines at leading 1.3. */
+html[data-android="true"] .product-title-text {
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: horizontal !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+}
+
 html[data-android="true"] [data-product-badge] {
   transform: none !important;
   will-change: auto !important;
