@@ -1081,7 +1081,13 @@ html[data-android="true"] [role="region"][aria-label="Announcements"] {
 }
 
 html[data-android="true"] [data-app-bottom-nav] {
-  position: static !important;
+  /* Must stay pinned to the viewport. A previous GPU-corruption mitigation set
+     this to position:static, which dropped the bar into normal document flow so
+     it scrolled with the page and only appeared at the very bottom. A single
+     small fixed bar is a safe, necessary compositing layer. */
+  position: fixed !important;
+  inset-inline: 0 !important;
+  bottom: 0 !important;
   padding-top: 0.75rem !important;
   padding-bottom: calc(var(--mobile-safe-bottom) + 0.75rem) !important;
 }
