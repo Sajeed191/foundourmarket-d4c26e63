@@ -57,17 +57,17 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
 
   const allBadges = !forceBadge && assigned.length > 0 ? assigned : labels;
-  const visibleBadges = allBadges.slice(0, 3);
-  const extraBadges = Math.max(0, allBadges.length - 3);
+  const visibleBadges = allBadges.slice(0, 2);
+  const extraBadges = Math.max(0, allBadges.length - 2);
 
   const androidStaticCard = (
       <article
         data-product-card
         data-android-static-card
-        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card"
+        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card"
       >
-        <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-          <div data-product-media className="android-static-product-media relative aspect-square w-full bg-muted">
+        <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3">
+          <div data-product-media className="android-static-product-media relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
             <img
               data-product-image
               src={product.image}
@@ -76,7 +76,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               height={800}
               loading="lazy"
               decoding="sync"
-              className="block h-full w-full object-cover"
+              className="block h-full w-full object-contain"
             />
             {visibleBadges.length > 0 && (
               <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
@@ -84,14 +84,14 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                   <span
                     key={("assignmentId" in b ? b.assignmentId : undefined) ?? ("key" in b ? b.key : b.id)}
                     data-product-badge
-                    className="inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide text-accent"
                   >
                     {b.emoji && <span aria-hidden>{b.emoji}</span>}
                     {b.label}
                   </span>
                 ))}
                 {extraBadges > 0 && (
-                  <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">
+                  <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">
                     +{extraBadges}
                   </span>
                 )}
@@ -100,7 +100,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           </div>
         </Link>
 
-        <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-2.5">
+        <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-1">
           <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
             <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] text-foreground">
               {product.name}
@@ -213,12 +213,12 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       <ProductCardAdminControlsGate product={product} />
 
       {/* IMAGE */}
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-        <div data-product-media className="relative aspect-square overflow-hidden rounded-t-[22px] bg-black/40">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3 pb-1">
+        <div data-product-media className="relative aspect-square overflow-hidden rounded-2xl bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
-            className="relative h-full w-full object-cover transition-opacity duration-500"
+            className="relative h-full w-full object-contain transition-opacity duration-500"
           />
 
           {/* Premium fade overlay */}
@@ -229,11 +229,11 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               priority, else auto badges. Compact horizontal pills, max 3 + overflow. */}
           {!forceBadge && assigned.length > 0 ? (
             <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {assigned.slice(0, 3).map((b) => (
+              {assigned.slice(0, 2).map((b) => (
                 <span
                   key={b.assignmentId ?? b.id}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
                   style={{
                     backgroundColor: b.backgroundColor || b.color,
                     color: b.textColor,
@@ -244,24 +244,24 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                   {b.label}
                 </span>
               ))}
-              {assigned.length > 3 && (
-                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{assigned.length - 3}</span>
+              {assigned.length > 2 && (
+                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{assigned.length - 2}</span>
               )}
             </div>
           ) : labels.length > 0 ? (
             <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {labels.slice(0, 3).map((b) => (
+              {labels.slice(0, 2).map((b) => (
                 <span
                   key={b.key}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
                   <span aria-hidden>{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
-              {labels.length > 3 && (
-                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{labels.length - 3}</span>
+              {labels.length > 2 && (
+                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{labels.length - 2}</span>
               )}
             </div>
           ) : null}
