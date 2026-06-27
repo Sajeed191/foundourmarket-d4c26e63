@@ -1453,8 +1453,8 @@ html[data-android="true"] .glow-border:active {
   background-attachment: fixed;
 }
 
-html[data-android="true"] [data-theme="light"] body,
-html[data-android="true"] [data-theme="grey"] body {
+html[data-android="true"][data-theme="light"] body,
+html[data-android="true"][data-theme="grey"] body {
   background-attachment: scroll !important;
 }
 
