@@ -1312,3 +1312,11 @@ html[data-low-end="true"] .premium-back-btn {
   animation: none;
 }
 html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
+
+/* Continue Shopping: shorter product image on mobile to reduce card height */
+@media (max-width: 639px) {
+  .cs-compact [data-product-media] {
+    aspect-ratio: auto;
+    height: 120px;
+  }
+}
