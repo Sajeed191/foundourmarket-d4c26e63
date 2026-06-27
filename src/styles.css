@@ -924,6 +924,16 @@ html[data-android="true"] * {
   transform-style: flat !important;
 }
 
+html[data-android="true"] *::before,
+html[data-android="true"] *::after {
+  will-change: auto !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
 html[data-android="true"] *,
 html[data-android="true"] *::before,
 html[data-android="true"] *::after {
@@ -961,6 +971,18 @@ html[data-android="true"] .animate-ambient,
 html[data-android="true"] .animate-sheen,
 html[data-android="true"] .animate-flame-pulse,
 html[data-android="true"] .animate-scale-in,
+html[data-android="true"] .animate-cart-pulse,
+html[data-android="true"] .animate-data-pulse,
+html[data-android="true"] .animate-scanline,
+html[data-android="true"] .animate-mesh,
+html[data-android="true"] .animate-signal,
+html[data-android="true"] .badge-anim-pulse,
+html[data-android="true"] .badge-anim-bounce,
+html[data-android="true"] .badge-anim-glow,
+html[data-android="true"] .badge-anim-float,
+html[data-android="true"] .badge-anim-slide,
+html[data-android="true"] .badge-anim-flash,
+html[data-android="true"] .badge-anim-shine::after,
 html[data-android="true"] .deep-link-flash,
 html[data-android="true"] .chat-typing-dot,
 html[data-android="true"] .animate-chat-slide-up,
