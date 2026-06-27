@@ -1252,18 +1252,23 @@ html[data-android="true"] .product-card-shell {
   overflow-anchor: none;
 }
 
-/* SUSPECT #1 TEST — bound off-screen paint without promoting a layer.
-   Evidence: on Android the catalog renders unvirtualized and every card paints
-   into one tall, flattened root raster surface. Android Chrome cannot keep that
-   whole surface rasterized within its GPU tile budget on fast fling, so it
-   serves stale / dropped tiles (white bands, ghost text, stale images,
-   apparent duplicate cards). content-visibility:auto lets Chrome SKIP PAINTING
-   off-screen cards, capping raster area — no transform, no composited layer,
-   content stays in the DOM (SEO-safe). Fixed contain-intrinsic-size prevents
-   scroll-position jump. */
+/* SUSPECT #1 (REVISED) — cap off-screen raster on the IMAGE ONLY, never on text.
+   Evidence: with content-visibility:auto on the whole card root, Android Chrome
+   skip-paints the entire card subtree (text included) and, on fast-fling
+   re-entry, re-composites cached GLYPH tiles at the contain-intrinsic-size
+   placeholder offset before relayout settles → title/price/shipping/stock
+   overlap & duplicate. Images never ghost because each <img> is its own decoded
+   media tile re-uploaded fresh on repaint. So the glyph layer must stay in
+   normal painted flow. We move the raster cap to [data-product-media] (the
+   actual GPU-tile cost is the image bitmap, not the text), leaving the card root
+   and all text always painted. No transform, no composited layer, SEO-safe. */
 html[data-android="true"] [data-product-card] {
+  content-visibility: visible !important;
+}
+
+html[data-android="true"] [data-product-media] {
   content-visibility: auto !important;
-  contain-intrinsic-size: auto 340px !important;
+  contain-intrinsic-size: auto 220px !important;
 }
 
 html[data-android="true"] [data-product-grid] > *,
