@@ -274,48 +274,8 @@ function AdminPage() {
           </div>
         </div>
 
-        <div className="relative mt-7 pt-6 border-t border-border/40">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-2.5">
-            {[
-              { to: "/admin-live", icon: Activity, label: "Live" },
-              { to: "/admin-analytics", icon: BarChart3, label: "Analytics" },
-              { to: "/admin-financial", icon: Wallet, label: "Financial" },
-              { to: "/admin-traffic", icon: Globe, label: "Traffic" },
-              { to: "/admin-shipments", icon: Truck, label: "Shipments" },
-              { to: "/admin-returns", icon: RotateCcw, label: "Returns" },
-              { to: "/admin-inventory", icon: Boxes, label: "Inventory" },
-              { to: "/admin-inventory-intelligence", icon: Cpu, label: "Inv Intel" },
-              { to: "/admin-customers", icon: Users, label: "Customers" },
-              { to: "/admin-customer-intelligence", icon: Gem, label: "Cust Intel" },
-              { to: "/admin-marketing", icon: Megaphone, label: "Marketing" },
-              { to: "/admin-search", icon: Search, label: "Search" },
-              { to: "/admin-cms", icon: Pencil, label: "CMS" },
-              { to: "/admin-reports", icon: FileText, label: "Reports" },
-              { to: "/admin-activity", icon: Activity, label: "Activity" },
-            ].map(({ to, icon: Icon, label }, i) => (
-              <motion.div
-                key={to}
-                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.15 + i * 0.03, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -4, scale: 1.04 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to={to}
-                  className="group relative flex flex-col items-center justify-center gap-2 glass glass-reflect rounded-2xl aspect-square overflow-hidden text-muted-foreground hover:text-accent transition-colors"
-                >
-                  <span aria-hidden className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: "radial-gradient(circle at 50% 120%, oklch(0.74 0.19 49 / 0.25), transparent 70%)" }} />
-                  <span className="relative grid place-items-center size-9 rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/10 group-hover:ring-accent/40 transition-all">
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="relative text-[9px] sm:text-[10px] font-mono uppercase tracking-wider">{label}</span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
       </motion.div>
+
 
 
       <div className="sticky top-2 z-30 mb-8">
