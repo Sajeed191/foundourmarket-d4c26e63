@@ -40,13 +40,13 @@ export function MobileBottomNav() {
     <nav
       data-app-bottom-nav
       aria-label="Primary mobile navigation"
-      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] bg-background px-[max(0.75rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
+      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
       <ul
         className={
           frosted
-            ? "bottom-nav-light pointer-events-auto relative max-w-7xl mx-auto grid h-[var(--mobile-nav-surface-height)] grid-cols-5 rounded-[26px] px-1.5 py-2"
-            : "pointer-events-auto relative max-w-7xl mx-auto grid h-[var(--mobile-nav-surface-height)] grid-cols-5 rounded-2xl border border-white/10 bg-card shadow-[0_8px_28px_-12px_oklch(0_0_0/0.6)] px-1.5 py-2"
+            ? "bottom-nav-light pointer-events-auto relative mx-auto grid h-[var(--mobile-nav-surface-height)] max-w-md grid-cols-5 rounded-[30px] px-2 py-2"
+            : "nav-glass pointer-events-auto relative mx-auto grid h-[var(--mobile-nav-surface-height)] max-w-md grid-cols-5 rounded-[30px] px-2 py-2"
         }
       >
         {items.map(({ to, label, icon: Icon, match, badge }) => {
@@ -55,35 +55,36 @@ export function MobileBottomNav() {
             <li key={label} className="min-w-0">
               <Link
                 to={to}
-                className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl text-[10px] font-medium transition-colors duration-200"
+                aria-current={active ? "page" : undefined}
+                className="group flex h-full min-h-12 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium"
               >
-                <span className="relative grid place-items-center size-8 rounded-full transition-all duration-300 ease-out active:scale-90">
-                  {/* Small premium capsule behind icon only */}
+                <span className="relative grid place-items-center size-9 rounded-2xl transition-transform duration-200 ease-out active:scale-90">
+                  {/* Premium capsule behind the active icon only */}
                   <span
                     aria-hidden
-                    className={
-                      frosted
-                        ? `absolute inset-0 rounded-full bg-accent/12 ring-1 ring-accent/25 shadow-[0_4px_12px_-4px_oklch(0.66_0.205_47/0.4)] transition-all duration-300 ${active ? "opacity-100 scale-100" : "opacity-0 scale-75"}`
-                        : `absolute inset-0 rounded-full bg-accent/15 ring-1 ring-accent/30 transition-opacity duration-200 ${active ? "opacity-100" : "opacity-0"}`
-                    }
+                    className={`absolute inset-0 rounded-2xl transition-all duration-300 ease-out ${
+                      active
+                        ? "scale-100 bg-accent/15 opacity-100 ring-1 ring-accent/35"
+                        : "scale-75 opacity-0"
+                    }`}
                   />
                   <span className="relative">
                     <Icon
-                      className={`size-[19px] transition-colors duration-200 ${
-                        active ? "text-accent" : frosted ? "text-muted-foreground" : "text-white/70"
+                      className={`size-[21px] transition-colors duration-200 ${
+                        active ? "text-accent" : frosted ? "text-muted-foreground" : "text-foreground/65"
                       }`}
-                      strokeWidth={active ? 2.4 : 2}
+                      strokeWidth={active ? 2.5 : 2}
                     />
                     {typeof badge === "number" && badge > 0 && (
-                      <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full text-[9px] font-bold grid place-items-center ring-2 ring-background bg-accent text-accent-foreground">
+                      <span className="absolute -top-1.5 -right-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-accent px-1 text-[9px] font-bold leading-none text-accent-foreground ring-2 ring-background">
                         {badge > 99 ? "99+" : badge}
                       </span>
                     )}
                   </span>
                 </span>
                 <span
-                  className={`truncate max-w-full leading-none transition-colors duration-200 ${
-                    active ? "text-accent font-semibold" : frosted ? "text-muted-foreground" : "text-white/60"
+                  className={`max-w-full truncate leading-none transition-colors duration-200 ${
+                    active ? "font-semibold text-accent" : frosted ? "text-muted-foreground" : "text-foreground/60"
                   }`}
                 >
                   {label}

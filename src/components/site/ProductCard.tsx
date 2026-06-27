@@ -56,52 +56,58 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   const isPremium = labels.some((b) => b.key === "premium");
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
 
-  const visibleBadges = !forceBadge && assigned.length > 0 ? assigned.slice(0, 1) : labels.slice(0, 1);
+  const allBadges = !forceBadge && assigned.length > 0 ? assigned : labels;
+  const visibleBadges = allBadges.slice(0, 3);
+  const extraBadges = Math.max(0, allBadges.length - 3);
 
   const androidStaticCard = (
       <article
         data-product-card
         data-android-static-card
-        className="android-static-product-card flex h-full flex-col rounded-xl border border-border bg-card"
+        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card"
       >
-        <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-          <div data-product-media className="android-static-product-media aspect-[4/3] w-full bg-muted">
+        <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
+          <div data-product-media className="android-static-product-media relative aspect-square w-full bg-muted">
             <img
               data-product-image
               src={product.image}
               alt={`${product.name} — ${product.tagline || product.category}`}
               width={800}
-              height={600}
+              height={800}
               loading="lazy"
               decoding="sync"
               className="block h-full w-full object-cover"
             />
+            {visibleBadges.length > 0 && (
+              <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
+                {visibleBadges.map((b) => (
+                  <span
+                    key={("assignmentId" in b ? b.assignmentId : undefined) ?? ("key" in b ? b.key : b.id)}
+                    data-product-badge
+                    className="inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide text-white"
+                  >
+                    {b.emoji && <span aria-hidden>{b.emoji}</span>}
+                    {b.label}
+                  </span>
+                ))}
+                {extraBadges > 0 && (
+                  <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">
+                    +{extraBadges}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </Link>
 
-        <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3 pb-3 pt-2">
-          {visibleBadges.length > 0 && (
-            <div className="mb-1.5 flex min-h-4 flex-wrap gap-1">
-              {visibleBadges.map((b) => (
-                <span
-                  key={("assignmentId" in b ? b.assignmentId : undefined) ?? ("key" in b ? b.key : b.id)}
-                  data-product-badge
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[8px] font-semibold uppercase leading-none text-foreground"
-                >
-                  {b.emoji && <span aria-hidden>{b.emoji}</span>}
-                  {b.label}
-                </span>
-              ))}
-            </div>
-          )}
-
+        <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-2.5">
           <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
             <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] text-foreground">
               {product.name}
             </h3>
           </Link>
 
-          <div className="mt-1 flex h-[16px] items-center gap-2">
+          <div className="mt-1.5 flex h-[16px] items-center gap-2">
             {product.reviews > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <Star className="size-3.5 fill-accent text-accent" />
@@ -116,19 +122,21 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
             )}
           </div>
 
-          <div className="mt-1.5 flex min-h-[34px] flex-col justify-center">
-            <Price value={price} className="block font-display text-[20px] font-bold leading-none tabular-nums text-foreground" />
+          <div className="mt-2 flex min-h-[34px] flex-col justify-center">
+            <div className="flex items-baseline gap-2">
+              <Price value={price} className="block font-display text-[21px] font-bold leading-none tabular-nums text-foreground" />
+              {originalPrice && discount ? (
+                <Price value={originalPrice} className="block font-mono text-[11px] tabular-nums text-muted-foreground line-through" />
+              ) : null}
+            </div>
             {originalPrice && discount ? (
-              <span className="mt-1 flex items-center gap-1.5 leading-none">
-                <Price value={originalPrice} className="block font-mono text-[10px] tabular-nums text-muted-foreground line-through" />
-                <span data-product-text className="product-typography product-price-text font-mono text-[10px] font-semibold text-accent">{discount}% OFF</span>
-              </span>
+              <span data-product-text className="product-typography mt-1 inline-flex w-fit items-center rounded-md bg-accent/12 px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none text-accent">{discount}% OFF</span>
             ) : (
               <span aria-hidden data-product-text className="product-typography mt-1 block text-[10px] leading-none invisible">.</span>
             )}
           </div>
 
-          <div className="mt-1.5 flex h-[16px] items-center justify-between gap-2">
+          <div className="mt-2 flex h-[16px] items-center justify-between gap-2">
             {freeShipping ? (
               <span data-product-text className="product-typography inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300">
                 <Check className="size-3" strokeWidth={2.5} /> Free Shipping
@@ -146,6 +154,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               <span data-product-text className="product-typography text-[10px] font-medium text-muted-foreground">In Stock</span>
             ) : null}
           </div>
+
 
           <div className="mt-2.5 flex items-center gap-2">
             <button
@@ -203,9 +212,9 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
     >
       <ProductCardAdminControlsGate product={product} />
 
-      {/* IMAGE — ~55% of card height */}
+      {/* IMAGE */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-        <div data-product-media className="relative aspect-[4/3] overflow-hidden rounded-t-[22px] bg-black/40">
+        <div data-product-media className="relative aspect-square overflow-hidden rounded-t-[22px] bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
@@ -217,39 +226,46 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
           {/* Top-left — inside a dedicated section (forceBadge) show ONLY that
               section's single badge; elsewhere admin-assigned custom badges take
-              priority, else auto badges (max 3). */}
+              priority, else auto badges. Compact horizontal pills, max 3 + overflow. */}
           {!forceBadge && assigned.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 md:gap-1 lg:gap-1.5">
+            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
               {assigned.slice(0, 3).map((b) => (
                 <span
                   key={b.assignmentId ?? b.id}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 md:gap-1 md:px-2 md:py-[3px] md:text-[8px] lg:gap-1.5 lg:px-3 lg:py-1 lg:text-sm ${badgeAnimationClass(b.animation)}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
                   style={{
                     backgroundColor: b.backgroundColor || b.color,
                     color: b.textColor,
                     border: b.borderColor ? `1px solid ${b.borderColor}` : undefined,
                   }}
                 >
-                  {b.emoji && <span aria-hidden className="text-[8px] md:text-[9px] lg:text-[15px]">{b.emoji}</span>}
+                  {b.emoji && <span aria-hidden>{b.emoji}</span>}
                   {b.label}
                 </span>
               ))}
+              {assigned.length > 3 && (
+                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{assigned.length - 3}</span>
+              )}
             </div>
           ) : labels.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 md:gap-1 lg:gap-1.5">
-              {labels.map((b) => (
+            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
+              {labels.slice(0, 3).map((b) => (
                 <span
                   key={b.key}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 md:gap-1 md:px-2 md:py-[3px] md:text-[8px] lg:gap-1.5 lg:px-3 lg:py-1 lg:text-sm ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
-                  <span aria-hidden className="text-[8px] md:text-[9px] lg:text-[15px]">{b.emoji}</span>
+                  <span aria-hidden>{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
+              {labels.length > 3 && (
+                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{labels.length - 3}</span>
+              )}
             </div>
           ) : null}
+
 
           {/* Wishlist — smaller, inset, glass */}
           <button
@@ -313,20 +329,23 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         </div>
 
         {/* Price */}
-        <div className="product-price-flow mt-1.5 flex min-h-[34px] flex-col justify-center">
-          <Price
-            value={price}
-            className="block font-display text-[20px] font-bold leading-none tabular-nums text-foreground"
-          />
+        <div className="product-price-flow mt-2 flex min-h-[34px] flex-col justify-center">
+          <div className="flex items-baseline gap-2">
+            <Price
+              value={price}
+              className="block font-display text-[21px] font-bold leading-none tabular-nums text-foreground"
+            />
+            {originalPrice && discount ? (
+              <Price value={originalPrice} className="block font-mono text-[11px] tabular-nums text-muted-foreground line-through" />
+            ) : null}
+          </div>
           {originalPrice && discount ? (
-            <span className="mt-1 flex items-center gap-1.5 leading-none">
-              <Price value={originalPrice} className="block font-mono text-[10px] tabular-nums text-muted-foreground line-through" />
-              <span data-product-text className="product-typography product-price-text font-mono text-[10px] font-semibold text-accent">{discount}% OFF</span>
-            </span>
+            <span data-product-text className="product-typography product-price-text mt-1 inline-flex w-fit items-center rounded-md bg-accent/12 px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none text-accent">{discount}% OFF</span>
           ) : (
             <span aria-hidden data-product-text className="product-typography mt-1 block text-[10px] leading-none invisible">.</span>
           )}
         </div>
+
 
         {/* Trust + stock — single line each, height reserved */}
         <div className="mt-1.5 flex h-[16px] items-center justify-between gap-2">

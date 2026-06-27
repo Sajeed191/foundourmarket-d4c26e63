@@ -828,6 +828,24 @@
   contain-intrinsic-size: auto 600px;
 }
 
+/* ===== Premium floating glass bottom-nav =====
+   Frosted glass pill for the floating bottom navigation. Standard property only
+   (Lightning CSS adds the -webkit- prefix). On Android the blur is dropped and a
+   solid surface is used instead, so there is no GPU compositing regression. */
+.nav-glass {
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  box-shadow: 0 10px 34px -16px oklch(0 0 0 / 0.7), 0 1px 0 0 color-mix(in oklab, var(--foreground) 8%, transparent) inset;
+}
+html[data-android="true"] .nav-glass {
+  background: var(--card) !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 8px 24px -14px oklch(0 0 0 / 0.6) !important;
+}
+
+
+
 /* ===== Low-end device mode =====
    Activated on <html data-low-end="true"> for devices reporting <=4GB RAM,
    <=4 cores, or prefers-reduced-motion (see use-low-end-device + __root).
