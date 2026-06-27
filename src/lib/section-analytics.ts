@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { includeSeedInAnalytics } from "@/lib/seed-filter";
+import { detectAndroid } from "@/lib/use-low-end-device";
 
 
 /**
@@ -13,6 +14,11 @@ export function useSectionImpression<T extends HTMLElement>(sectionKey: string) 
   const fired = useRef(false);
 
   useEffect(() => {
+    // Android Chrome/WebView has been showing compositor corruption during fast
+    // scrolls when multiple IntersectionObservers fire alongside product-grid
+    // rendering. Section impressions are non-visual analytics, so skip this IO
+    // path on Android to keep the rendering pipeline quiet.
+    if (detectAndroid()) return;
     const el = ref.current;
     if (!el || fired.current) return;
     const io = new IntersectionObserver(

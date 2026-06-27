@@ -34,7 +34,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ShareDialog } from "@/components/site/ShareDialog";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
-import { useLowEndDevice, useIsAndroid } from "@/lib/use-low-end-device";
+import { detectAndroidWebView, useLowEndDevice, useIsAndroid } from "@/lib/use-low-end-device";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
@@ -225,7 +225,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         // Android before CSS paints so product text never spends one frame inside
         // transform/will-change layers during hydration.
         children:
-          "(function(){try{var d=document.documentElement;var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');d.setAttribute('data-android',/Android/i.test(navigator.userAgent)?'true':'false');}catch(x){document.documentElement.setAttribute('data-theme','dark');document.documentElement.classList.add('dark');}})();",
+          "(function(){try{var d=document.documentElement;var ua=navigator.userAgent||'';var a=/Android/i.test(ua);var wv=a&&(/; wv\\)/i.test(ua)||/\\bwv\\b/i.test(ua));var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');d.setAttribute('data-android',a?'true':'false');d.setAttribute('data-android-webview',wv?'true':'false');d.setAttribute('data-android-chrome',(a&&!wv&&/Chrome/i.test(ua))?'true':'false');}catch(x){document.documentElement.setAttribute('data-theme','dark');document.documentElement.classList.add('dark');}})();",
       },
       {
         type: "application/ld+json",
@@ -289,6 +289,7 @@ function DeferredShell({
   hideLiveChat?: boolean;
 }) {
   const [ready, setReady] = useState(false);
+  const isAndroid = useIsAndroid();
   useEffect(() => {
     const ric = (
       window as unknown as {
@@ -308,6 +309,14 @@ function DeferredShell({
   }, []);
 
   if (!ready) return null;
+
+  if (isAndroid) {
+    return (
+      <Suspense fallback={null}>
+        <RegionSelectModal />
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={null}>
@@ -394,6 +403,10 @@ function RootComponent() {
       document.documentElement.dataset.lowEnd = lowEnd ? "true" : "false";
       // Android Chrome/WebView/Samsung Internet compositor mitigation flag.
       document.documentElement.dataset.android = isAndroid ? "true" : "false";
+      const ua = navigator.userAgent || "";
+      const androidWebView = detectAndroidWebView();
+      document.documentElement.dataset.androidWebview = androidWebView ? "true" : "false";
+      document.documentElement.dataset.androidChrome = isAndroid && !androidWebView && /Chrome/i.test(ua) ? "true" : "false";
     }
   }, [lowEnd, isAndroid]);
   useEffect(() => {

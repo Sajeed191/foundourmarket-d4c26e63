@@ -104,7 +104,7 @@ function CategoryPage() {
       </nav>
 
       {/* Hero banner */}
-      <header className="relative mb-10 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
+      <header data-product-card-frame className="relative mb-10 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
         <div aria-hidden className="absolute -right-16 -top-16 size-64 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-ember)" }} />
         {cat?.banner_image && (
           <img src={cat.banner_image} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-25" />
@@ -136,6 +136,7 @@ function CategoryPage() {
               return (
                 <Link
                   key={s.slug}
+                  data-product-card-frame
                   to="/category/$main/$sub"
                   params={{ main: slug, sub: s.slug }}
                   className="group product-card-glass relative flex flex-col overflow-hidden rounded-3xl p-0 transition-[transform,box-shadow] duration-300 will-change-transform hover:scale-[1.02] hover:shadow-[0_18px_50px_-12px_color-mix(in_oklab,var(--accent)_55%,transparent)]"

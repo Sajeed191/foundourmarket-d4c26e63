@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
+import { detectAndroid } from "@/lib/use-low-end-device";
 
 type Props = {
   src: string;
@@ -28,15 +29,21 @@ export function ProductImage({
   height = 600,
 }: Props) {
   const responsive = getResponsiveImage(src);
-  const [loaded, setLoaded] = useState(false);
+  const initialAndroid = detectAndroid();
+  const [android, setAndroid] = useState(initialAndroid);
+  const [loaded, setLoaded] = useState(initialAndroid);
+  const [canShowPlaceholder, setCanShowPlaceholder] = useState(!initialAndroid);
 
   // When the src changes on a recycled/reused element (e.g. a virtualized grid
   // row pointing at a new product), reset the loaded flag so the new image
   // fades in cleanly instead of briefly showing the previous product's photo.
-  // Combined with key={src} on the <img>, the previous DOM node is destroyed
-  // and a fresh one created — no stale pixels can survive on Android fast scroll.
+  // Android skips the fade/placeholder path completely so no stale GPU texture
+  // upload can overlap a fast fling scroll.
   useEffect(() => {
-    setLoaded(false);
+    const nextAndroid = detectAndroid();
+    setAndroid(nextAndroid);
+    setLoaded(nextAndroid);
+    setCanShowPlaceholder(!nextAndroid);
   }, [src]);
 
   // Callback ref: cancel any decode tied to a stale node and, if the new image
@@ -46,6 +53,10 @@ export function ProductImage({
   // underneath — which reads as a duplicated/ghosted image on low-end devices.
   const imgRef = useCallback((node: HTMLImageElement | null) => {
     if (!node) return;
+    if (detectAndroid()) {
+      setLoaded(true);
+      return;
+    }
     if (node.complete && node.naturalWidth > 0) {
       setLoaded(true);
       return;
@@ -67,7 +78,7 @@ export function ProductImage({
 
   return (
     <>
-      {!loaded && (
+      {canShowPlaceholder && !loaded && (
         <div
           aria-hidden
           data-product-image-placeholder
@@ -76,7 +87,6 @@ export function ProductImage({
         />
       )}
       <img
-        key={src}
         ref={imgRef}
         src={src}
         srcSet={responsive?.srcset}
@@ -86,10 +96,10 @@ export function ProductImage({
         height={height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "low"}
-        decoding="async"
+        decoding={android ? "sync" : "async"}
         onLoad={() => setLoaded(true)}
         data-product-image
-        className={`${className} ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`${className} ${android ? "!opacity-100 !transition-none" : !canShowPlaceholder || loaded ? "opacity-100" : "opacity-0"}`}
       />
     </>
   );

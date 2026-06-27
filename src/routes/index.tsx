@@ -694,6 +694,7 @@ function Home() {
               <Reveal key={cat.slug} delay={i} className="h-full">
                 <div className="relative h-full">
                   <Link
+                    data-product-card-frame
                     to="/category/$slug"
                     params={{ slug: cat.slug }}
                     onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
@@ -745,6 +746,7 @@ function Home() {
           {!isProductAdmin && (
             <Reveal delay={homeCategories.length} className="h-full">
               <Link
+                data-product-card-frame
                 to="/categories"
                 className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-accent/50 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent shadow-[0_0_40px_-12px_oklch(0.74_0.19_49/0.7)] hover:-translate-y-1 hover:border-accent/70 hover:shadow-[0_0_50px_-10px_oklch(0.74_0.19_49/0.85)] active:scale-[0.97] transition-all duration-300"
               >

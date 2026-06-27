@@ -78,7 +78,7 @@ function SubcategoryPage() {
         <span className="text-foreground">{cat?.name ?? titleizeSlug(sub)}</span>
       </nav>
 
-      <header className="relative mb-8 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
+      <header data-product-card-frame className="relative mb-8 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
         <div aria-hidden className="absolute -right-16 -top-16 size-64 rounded-full blur-3xl opacity-40" style={{ background: "var(--gradient-ember)" }} />
         {cat?.banner_image && (
           <img src={cat.banner_image} alt="" loading="lazy" className="absolute inset-0 size-full object-cover opacity-25" />

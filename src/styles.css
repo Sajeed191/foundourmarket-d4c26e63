@@ -741,8 +741,8 @@
 
 /* Drifting ambient mesh for backgrounds */
 @keyframes mesh-drift {
-  0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.5; }
-  50% { transform: translate3d(20px,-18px,0) scale(1.08); opacity: 0.75; }
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(20px, -18px) scale(1.08); opacity: 0.75; }
 }
 .animate-mesh { animation: mesh-drift 18s ease-in-out infinite; }
 
@@ -838,7 +838,6 @@ html[data-low-end="true"] *,
 html[data-low-end="true"] *::before,
 html[data-low-end="true"] *::after {
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 html[data-low-end="true"] .glass,
 html[data-low-end="true"] .glass-strong,
@@ -885,13 +884,7 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   .product-card-glass,
   .card-outline {
     backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-  /* Re-enable blur ONLY for the sticky header nav */
-  [data-app-header] .glass-strong {
-    backdrop-filter: blur(20px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
-  }
+    }
   /* Replace heavy multi-layer shadows/glows with one optimized token */
   .product-card-glass,
   .card-premium,
@@ -924,8 +917,188 @@ html[data-android="true"] * {
   /* Never let app code force-promote a layer that the compositor then fails to
      repaint on Android fast scroll. */
   will-change: auto !important;
+  filter: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+html[data-android="true"] *::before,
+html[data-android="true"] *::after {
+  will-change: auto !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+html[data-android="true"] *,
+html[data-android="true"] *::before,
+html[data-android="true"] *::after {
+  content-visibility: visible !important;
+}
+
+html[data-android="true"] body,
+html[data-android="true"] [data-app-shell],
+html[data-android="true"] [data-app-content] {
+  overflow-x: visible !important;
+  background-attachment: scroll !important;
+  isolation: auto !important;
+  contain: none !important;
+}
+
+html[data-android="true"] .animate-mesh,
+html[data-low-end="true"] .animate-mesh {
+  animation: none !important;
+}
+
+html[data-android="true"] .cv-auto {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
+}
+
+html[data-android="true"] .noise-layer::before,
+html[data-android="true"] .glass-reflect::after {
+  display: none !important;
+  mix-blend-mode: normal !important;
+  background-image: none !important;
+}
+
+html[data-android="true"] .hero-rise,
+html[data-android="true"] .hero-rise-h1,
+html[data-android="true"] .animate-fade-up,
+html[data-android="true"] .animate-float,
+html[data-android="true"] .animate-float-soft,
+html[data-android="true"] .animate-glow,
+html[data-android="true"] .animate-orb,
+html[data-android="true"] .animate-ambient,
+html[data-android="true"] .animate-sheen,
+html[data-android="true"] .animate-flame-pulse,
+html[data-android="true"] .animate-scale-in,
+html[data-android="true"] .animate-cart-pulse,
+html[data-android="true"] .animate-data-pulse,
+html[data-android="true"] .animate-scanline,
+html[data-android="true"] .animate-mesh,
+html[data-android="true"] .animate-signal,
+html[data-android="true"] .badge-anim-pulse,
+html[data-android="true"] .badge-anim-bounce,
+html[data-android="true"] .badge-anim-glow,
+html[data-android="true"] .badge-anim-float,
+html[data-android="true"] .badge-anim-slide,
+html[data-android="true"] .badge-anim-flash,
+html[data-android="true"] .badge-anim-shine::after,
+html[data-android="true"] .deep-link-flash,
+html[data-android="true"] .animate-orb-breathe,
+html[data-android="true"] .cta-sweep::after,
+html[data-android="true"] .chat-typing-dot,
+html[data-android="true"] .animate-chat-slide-up,
+html[data-android="true"] .animate-chat-bubble-in {
+  animation: none !important;
+}
+
+html[data-android="true"] .animate-orb {
+  display: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+html[data-android="true"] .orb-hidden {
+  transform: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html[data-android="true"] .border-glow::before,
+html[data-low-end="true"] .border-glow::before {
+  animation: none !important;
+  background: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+}
+
+html[data-android="true"] .badge-anim-glow,
+html[data-low-end="true"] .badge-anim-glow {
+  animation: none !important;
+  filter: none !important;
+}
+
+html[data-android="true"] .noise-layer::before,
+html[data-low-end="true"] .noise-layer::before {
+  display: none !important;
+}
+
+html[data-android="true"] .glass,
+html[data-android="true"] .glass-strong,
+html[data-android="true"] [class*="backdrop-blur"],
+html[data-android="true"] [class*="blur-"],
+html[data-android="true"] [class*="mix-blend"],
+html[data-android="true"] [style*="mask"],
+html[data-android="true"] [style*="filter"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  mask-image: none !important;
+}
+
+html[data-android="true"] [data-app-header] {
+  position: static !important;
+  transform: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  contain: none !important;
+  isolation: auto !important;
+}
+
+html[data-android="true"] [data-app-header] nav,
+html[data-android="true"] [data-app-header] *,
+html[data-android="true"] [data-app-bottom-nav],
+html[data-android="true"] [data-app-bottom-nav] *,
+html[data-android="true"] [role="region"][aria-label="Announcements"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  transform-style: flat !important;
+  will-change: auto !important;
+  contain: none !important;
+  isolation: auto !important;
+  transition-property: color, background-color, border-color, opacity !important;
+}
+
+html[data-android="true"] [data-app-bottom-nav] {
+  position: static !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: calc(var(--mobile-safe-bottom) + 0.75rem) !important;
+}
+
+html[data-android="true"] [data-app-bottom-nav] ul,
+html[data-android="true"] [data-app-bottom-nav] li,
+html[data-android="true"] [data-app-bottom-nav] a,
+html[data-android="true"] [data-app-bottom-nav] span,
+html[data-android="true"] [data-app-bottom-nav] svg {
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  transition-property: color, background-color, border-color, opacity !important;
+  box-shadow: none !important;
+}
+
+html[data-android="true"] [data-app-header],
+html[data-android="true"] [data-app-header] *,
+html[data-android="true"] [data-app-bottom-nav],
+html[data-android="true"] [data-app-bottom-nav] * {
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+}
+
+html[data-android="true"] [data-search-sticky] {
+  display: none !important;
 }
 /* Drop hover/active scale flourishes that thrash compositing during scroll. */
 html[data-android="true"] .group:hover .group-hover\:scale-\[1\.08\],
@@ -964,6 +1137,7 @@ html[data-android="true"] .group {
   contain: none !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
+  will-change: auto !important;
 }
 
 /* Product media may use blur/opacity while loading, but it must not promote the
@@ -972,14 +1146,33 @@ html[data-android="true"] .group {
 html[data-android="true"] [data-product-media] {
   contain: none !important;
   isolation: auto !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  mask-image: none !important;
   transform: initial !important;
   translate: none !important;
   scale: none !important;
   rotate: none !important;
   filter: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   will-change: auto !important;
+}
+
+html[data-android="true"] [data-product-media] a,
+html[data-android="true"] [data-product-media] button,
+html[data-android="true"] [data-product-media] span,
+html[data-android="true"] [data-product-media] svg,
+html[data-android="true"] [data-product-media] [data-product-badge] {
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  will-change: auto !important;
+  animation: none !important;
+  transition-property: color, background-color, border-color, opacity !important;
 }
 
 html[data-android="true"] [data-product-image-placeholder] {
@@ -994,13 +1187,28 @@ html[data-android="true"] [data-product-image-placeholder] {
 }
 
 html[data-android="true"] [data-product-image] {
+  border-radius: 0 !important;
+  clip-path: none !important;
+  mask-image: none !important;
   transform: initial !important;
   translate: none !important;
   scale: none !important;
   rotate: none !important;
   filter: none !important;
   will-change: auto !important;
-  transition-property: opacity !important;
+  transition-property: none !important;
+  transition-duration: 0s !important;
+  opacity: 1 !important;
+}
+
+html[data-android="true"] [data-product-media] > .absolute,
+html[data-android="true"] [data-product-media] [class*="gradient"],
+html[data-android="true"] [data-product-media] [class*="shadow"],
+html[data-android="true"] [data-product-media] [class*="blur"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  transform: initial !important;
+  transition-property: none !important;
 }
 
 /* Product-card text pipeline hardening for Android Chrome/WebView/Samsung.
@@ -1048,6 +1256,30 @@ html[data-android="true"] .product-card-shell {
   overflow: visible !important;
   content-visibility: visible !important;
   overflow-anchor: none;
+}
+
+html[data-android="true"] [data-product-grid] > *,
+html[data-android="true"] [data-virtual-grid],
+html[data-android="true"] [data-virtual-row],
+html[data-android="true"] [data-product-card-frame],
+html[data-android="true"] [data-product-card-frame] > *,
+html[data-android="true"] [data-product-card-frame] img {
+  contain: none !important;
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+  isolation: auto !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-android="true"] [data-product-card-frame] {
+  overflow: visible !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  mask-image: none !important;
 }
 
 /* Framer Motion / Reveal wrappers were the remaining root cause: product cards
@@ -1112,7 +1344,6 @@ html[data-android="true"] .product-rating-text {
   isolation: auto !important;
   filter: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   mix-blend-mode: normal !important;
   animation: none !important;
   transition-property: none !important;
@@ -1141,7 +1372,6 @@ html[data-android="true"] [data-product-badge] {
   contain: none !important;
   filter: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   mix-blend-mode: normal !important;
   animation: none !important;
   transition-property: color, background-color, border-color !important;
@@ -1163,6 +1393,12 @@ html[data-android="true"] .glow-border:active {
   translate: none !important;
   scale: none !important;
   rotate: none !important;
+}
+
+html[data-android="true"][data-theme="light"] .bottom-nav-light,
+html[data-android="true"][data-theme="grey"] .bottom-nav-light {
+  backdrop-filter: none !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 
 /* =====================================================================
@@ -1382,6 +1618,11 @@ html[data-android="true"] .glow-border:active {
   background-attachment: fixed;
 }
 
+html[data-android="true"][data-theme="light"] body,
+html[data-android="true"][data-theme="grey"] body {
+  background-attachment: scroll !important;
+}
+
 /* Stronger, softer card elevation for real depth on light surfaces */
 [data-theme="light"] .card-premium,
 [data-theme="light"] .card-elevated {
@@ -1469,7 +1710,6 @@ html[data-android="true"] .glow-border:active {
   min-height: 44px;
   background: color-mix(in oklab, #121212 92%, transparent);
   border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
-  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transition: transform 200ms ease, background-color 200ms ease,
     border-color 200ms ease, box-shadow 200ms ease;
@@ -1488,7 +1728,6 @@ html[data-android="true"] .glow-border:active {
   outline-offset: 2px;
 }
 html[data-low-end="true"] .premium-back-btn {
-  -webkit-backdrop-filter: none;
   backdrop-filter: none;
   animation: none;
 }

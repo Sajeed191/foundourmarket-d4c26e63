@@ -10,6 +10,7 @@ const AnnouncementAdminSheet = lazy(() =>
   import("@/components/admin/AnnouncementAdminSheet").then((m) => ({ default: m.AnnouncementAdminSheet })),
 );
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
+import { useIsAndroid } from "@/lib/use-low-end-device";
 
 async function setAnnouncementActive(id: string, next: boolean) {
   const { error } = await supabase.from("announcements").update({ active: next }).eq("id", id);
@@ -70,6 +71,7 @@ function useCountdown(target: string | null) {
  */
 export function AnnouncementBar({ page = "home" }: { page?: string }) {
   const { canEdit } = useAdminEditing();
+  const isAndroid = useIsAndroid();
   const [items, setItems] = useState<Announcement[]>(FALLBACK);
   const [loaded, setLoaded] = useState(false);
   const [i, setI] = useState(0);
@@ -133,9 +135,13 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
       >
         <div aria-hidden className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: gradient }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 flex items-center justify-center">
-          <Suspense fallback={<StaticAnnouncement current={current} countdown={countdown} />}>
-            <MotionAnnouncement current={current} countdown={countdown} />
-          </Suspense>
+          {isAndroid ? (
+            <StaticAnnouncement current={current} countdown={countdown} />
+          ) : (
+            <Suspense fallback={<StaticAnnouncement current={current} countdown={countdown} />}>
+              <MotionAnnouncement current={current} countdown={countdown} />
+            </Suspense>
+          )}
         </div>
 
         {canEdit && (
