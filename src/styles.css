@@ -1326,4 +1326,9 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
   .cs-compact .product-card-shell {
     height: auto;
   }
+  /* Match the off-screen placeholder estimate to the compact height so the
+     scroll row doesn't reserve the full 430px and leave empty space below. */
+  .cs-compact[data-product-card-frame] {
+    contain-intrinsic-size: auto 310px;
+  }
 }
