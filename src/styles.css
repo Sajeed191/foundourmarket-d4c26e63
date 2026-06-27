@@ -975,9 +975,6 @@ html[data-android="true"] .product-copy,
 html[data-android="true"] .product-meta-flow,
 html[data-android="true"] .product-price-flow {
   transform: none !important;
-  translate: none !important;
-  rotate: none !important;
-  scale: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;
@@ -994,9 +991,6 @@ html[data-android="true"] .product-rating-text,
 html[data-android="true"] [data-product-badge] {
   position: static;
   transform: none !important;
-  translate: none !important;
-  rotate: none !important;
-  scale: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;
