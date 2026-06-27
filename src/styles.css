@@ -1259,6 +1259,8 @@ html[data-android="true"] .product-card-shell {
 }
 
 html[data-android="true"] [data-product-grid] > *,
+html[data-android="true"] [data-virtual-grid],
+html[data-android="true"] [data-virtual-row],
 html[data-android="true"] [data-product-card-frame],
 html[data-android="true"] [data-product-card-frame] > *,
 html[data-android="true"] [data-product-card-frame] img {
