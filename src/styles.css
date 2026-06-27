@@ -912,6 +912,39 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   .animate-orb { animation: none !important; }
 }
 
+/* ===== Android compositor corruption mitigation =====
+   Activated on <html data-android="true"> (Chrome / WebView / Samsung Internet).
+   These browsers share a GPU bug where promoted compositor layers (will-change,
+   transform animations, paint containment) fail to invalidate during fast
+   scroll, leaving ghosted/duplicated cards and horizontal glitch lines. We
+   strip unnecessary layer promotion + heavy paints so scrolling stays clean.
+   Desktop and iOS are unaffected (attribute is only set on Android). */
+html[data-android="true"] * {
+  /* Never let app code force-promote a layer that the compositor then fails to
+     repaint on Android fast scroll. */
+  will-change: auto !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* Drop hover/active scale flourishes that thrash compositing during scroll. */
+html[data-android="true"] .group:hover .group-hover\:scale-\[1\.08\],
+html[data-android="true"] .sm\:hover\:scale-\[1\.02\]:hover,
+html[data-android="true"] .active\:scale-\[0\.99\]:active {
+  transform: none !important;
+}
+/* Lighter shadows = cheaper repaint, fewer stale-tile artifacts. */
+html[data-android="true"] .product-card-glass,
+html[data-android="true"] .card-premium,
+html[data-android="true"] .card-elevated,
+html[data-android="true"] .card-ambient {
+  box-shadow: var(--shadow-soft) !important;
+}
+/* Hide purely decorative floating glow/orb layers entirely on Android. */
+html[data-android="true"] [data-decorative],
+html[data-android="true"] .orb {
+  display: none !important;
+}
+
 /* =====================================================================
    THEME SYSTEM — System / Dark / Grey / Light
    Dark is the default (defined in :root above). The ThemeProvider sets
