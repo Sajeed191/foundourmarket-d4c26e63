@@ -314,7 +314,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         </div>
 
         {/* Button — pinned to bottom for equal heights. */}
-        <div className="mt-auto pt-2.5 sm:pt-4">
+        <div className="mt-auto pt-1.5 sm:pt-4">
 
           <AddToCartButton product={product} />
         </div>
