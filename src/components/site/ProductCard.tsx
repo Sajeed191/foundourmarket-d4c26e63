@@ -132,7 +132,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
         <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
           <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-            <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[16px] font-semibold leading-[1.3] text-foreground">
+            <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[17px] font-bold leading-[1.3] text-foreground">
               {product.name}
             </h3>
           </Link>
@@ -185,11 +185,11 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
           <div className="mt-3.5">
             {!product.inStock ? (
-              <span data-product-text className="product-typography inline-flex h-[52px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span data-product-text className="product-typography inline-flex h-[56px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Sold Out
               </span>
             ) : cartQty > 0 && !justAdded ? (
-              <div className="flex h-[52px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
+              <div className="flex h-[56px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
                 <button onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty - 1); }} aria-label="Decrease quantity" className="grid size-10 place-items-center rounded-full text-accent">
                   <Minus className="size-4" strokeWidth={2.5} />
                 </button>
@@ -202,7 +202,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               <button
                 onClick={handleAdd}
                 aria-label={`Add ${product.name} to cart`}
-                className={`product-typography inline-flex h-[52px] w-full items-center justify-center gap-1.5 rounded-full text-[15px] font-bold ${justAdded ? "bg-emerald-500 text-black" : "bg-accent text-accent-foreground"}`}
+                className={`product-typography inline-flex h-[56px] w-full items-center justify-center gap-1.5 rounded-full text-[15px] font-bold ${justAdded ? "bg-emerald-500 text-black" : "bg-[linear-gradient(180deg,var(--accent),color-mix(in_oklab,var(--accent)_80%,black))] text-accent-foreground"}`}
               >
                 {justAdded ? <><Check className="size-5" /> Added</> : <><Plus className="size-5" strokeWidth={2.75} /> Add to Cart</>}
               </button>
@@ -320,7 +320,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         <div data-product-copy className="product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
           {/* Title — max 2 lines */}
-          <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[16px] font-semibold leading-[1.3] text-foreground transition-colors group-hover:text-accent">
+          <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[17px] font-bold leading-[1.3] text-foreground transition-colors group-hover:text-accent">
             {product.name}
           </h3>
         </Link>
@@ -378,14 +378,14 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           ) : null}
         </div>
 
-        {/* Add to cart — 52px; switches to quantity selector once in cart */}
+        {/* Add to cart — 56px; switches to quantity selector once in cart */}
         <div className="mt-3.5">
           {!product.inStock ? (
-            <span data-product-text className="product-typography inline-flex h-[52px] w-full items-center justify-center rounded-full border border-white/10 bg-muted/40 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span data-product-text className="product-typography inline-flex h-[56px] w-full items-center justify-center rounded-full border border-white/10 bg-muted/40 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Sold Out
             </span>
           ) : cartQty > 0 && !justAdded ? (
-            <div className="flex h-[52px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
+            <div className="flex h-[56px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
               <button
                 onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty - 1); }}
                 aria-label="Decrease quantity"
@@ -406,10 +406,10 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`product-typography relative inline-flex h-[52px] w-full items-center justify-center gap-1.5 overflow-hidden rounded-full text-[15px] font-bold duration-200 ${
+              className={`product-typography relative inline-flex h-[56px] w-full items-center justify-center gap-1.5 overflow-hidden rounded-full text-[15px] font-bold duration-200 ${
                 justAdded
                   ? "bg-emerald-500 text-black"
-                  : "bg-accent text-accent-foreground hover:brightness-[1.05]"
+                  : "bg-[linear-gradient(180deg,var(--accent),color-mix(in_oklab,var(--accent)_80%,black))] text-accent-foreground hover:brightness-[1.05]"
               }`}
             >
               {justAdded ? (
