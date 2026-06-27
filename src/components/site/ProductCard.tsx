@@ -223,27 +223,24 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       <ProductCardAdminControlsGate product={product} />
 
       {/* IMAGE */}
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3 pb-1">
-        <div data-product-media className="relative aspect-square overflow-hidden rounded-2xl bg-black/40">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3">
+        <div data-product-media className="relative aspect-square overflow-hidden rounded-[18px] bg-white">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
             className="relative h-full w-full object-contain transition-opacity duration-500"
           />
 
-          {/* Premium fade overlay */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-80" />
-
           {/* Top-left — inside a dedicated section (forceBadge) show ONLY that
               section's single badge; elsewhere admin-assigned custom badges take
               priority, else auto badges. Compact horizontal pills, max 3 + overflow. */}
           {!forceBadge && assigned.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {assigned.slice(0, 2).map((b) => (
+            <div className="absolute left-2 top-2 flex flex-nowrap items-center gap-1">
+              {assigned.slice(0, 3).map((b) => (
                 <span
                   key={b.assignmentId ?? b.id}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
+                  className={`inline-flex h-[19px] animate-[fade-in_0.4s_ease-out] items-center gap-1 whitespace-nowrap rounded-full px-2 text-[10px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
                   style={{
                     backgroundColor: b.backgroundColor || b.color,
                     color: b.textColor,
@@ -254,30 +251,30 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                   {b.label}
                 </span>
               ))}
-              {assigned.length > 2 && (
-                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{assigned.length - 2}</span>
+              {assigned.length > 3 && (
+                <span data-product-badge className="inline-flex h-[19px] items-center whitespace-nowrap rounded-full bg-accent/15 px-2 text-[10px] font-bold leading-none text-accent">+{assigned.length - 3}</span>
               )}
             </div>
           ) : labels.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {labels.slice(0, 2).map((b) => (
+            <div className="absolute left-2 top-2 flex flex-nowrap items-center gap-1">
+              {labels.slice(0, 3).map((b) => (
                 <span
                   key={b.key}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
+                  className={`inline-flex h-[19px] animate-[fade-in_0.4s_ease-out] items-center gap-1 whitespace-nowrap rounded-full px-2 text-[10px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
                   <span aria-hidden>{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
-              {labels.length > 2 && (
-                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{labels.length - 2}</span>
+              {labels.length > 3 && (
+                <span data-product-badge className="inline-flex h-[19px] items-center whitespace-nowrap rounded-full bg-accent/15 px-2 text-[10px] font-bold leading-none text-accent">+{labels.length - 3}</span>
               )}
             </div>
           ) : null}
 
 
-          {/* Wishlist — smaller, inset, glass */}
+          {/* Wishlist — top-right, circular 40px */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -288,30 +285,31 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               }
             }}
             aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute right-3 top-3 grid size-7 place-items-center rounded-full border shadow-lg shadow-black/40 transition-colors duration-300 ${
+            className={`absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border shadow-lg shadow-black/30 transition-colors duration-300 ${
               justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""
             } ${
               saved
                 ? "border-accent bg-accent/25 text-accent"
-                : "border-white/25 bg-black/40 text-white hover:border-accent hover:bg-accent/25 hover:text-accent"
+                : "border-white/30 bg-black/45 text-white hover:border-accent hover:bg-accent/25 hover:text-accent"
             }`}
           >
-            <Heart className={`size-3.5 transition-colors duration-300 ${saved ? "fill-accent" : ""}`} />
+            <Heart className={`size-4 transition-colors duration-300 ${saved ? "fill-accent" : ""}`} />
           </button>
 
-          {/* Quick view — reveals on hover (desktop) / always tappable (mobile) */}
+          {/* Quick view — bottom-right, circular 40px */}
           <button
             onClick={(e) => {
               e.preventDefault();
               setQuickOpen(true);
             }}
             aria-label={`Quick view ${product.name}`}
-            className="absolute bottom-3 right-3 grid size-7 place-items-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg shadow-black/40 transition-colors duration-300 hover:border-accent hover:text-accent sm:opacity-0 sm:group-hover:opacity-100"
+            className="absolute bottom-2 right-2 grid h-10 w-10 place-items-center rounded-full border border-white/30 bg-black/55 text-white shadow-lg shadow-black/30 transition-colors duration-300 hover:border-accent hover:text-accent sm:opacity-0 sm:group-hover:opacity-100"
           >
-            <Eye className="size-3.5" />
+            <Eye className="size-4" />
           </button>
         </div>
       </Link>
+
 
       {/* INFO */}
         <div data-product-copy className="product-copy flex flex-1 flex-col px-3 pb-3 pt-2">
