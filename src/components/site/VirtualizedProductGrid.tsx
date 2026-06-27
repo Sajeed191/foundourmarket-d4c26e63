@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { detectAndroid } from "@/lib/use-low-end-device";
+import { shouldUseIncrementalRendering } from "@/lib/use-low-end-device";
 
 type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number };
 
@@ -112,13 +112,15 @@ export function VirtualizedProductGrid<T>({
 }: Props<T>) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const [isAndroid, setIsAndroid] = useState(false);
+  // Capability + browser-based decision (not RAM alone): Android browsers and
+  // very constrained devices fall back to the transform-free incremental grid.
+  const [useIncremental, setUseIncremental] = useState(false);
   // Track the container's distance from the document top as LIVE state. The
   // window virtualizer needs this as `scrollMargin` to place rows correctly.
   const [offsetTop, setOffsetTop] = useState(0);
 
   useEffect(() => {
-    setIsAndroid(detectAndroid());
+    setUseIncremental(shouldUseIncrementalRendering());
   }, []);
 
   useEffect(() => {
@@ -137,8 +139,8 @@ export function VirtualizedProductGrid<T>({
   }, []);
 
   const big = items.length > virtualizeThreshold;
-  // Only the desktop / non-Android path uses the transform-based virtualizer.
-  const shouldVirtualize = big && width > 0 && !isAndroid;
+  // Only the desktop / capable-browser path uses the transform-based virtualizer.
+  const shouldVirtualize = big && width > 0 && !useIncremental;
   const colCount = useMemo(() => colsForWidth(cols, width || 1280), [cols, width]);
   const gap = gapForWidth(width || 1280);
   const rowCount = Math.ceil(items.length / colCount);
@@ -150,16 +152,18 @@ export function VirtualizedProductGrid<T>({
     scrollMargin: offsetTop,
   });
 
-  // Android (or any non-virtualized large list): transform-free incremental grid.
-  if (isAndroid && big) {
+  // Android / constrained devices (or any non-virtualized large list):
+  // transform-free incremental grid in normal document flow.
+  if (useIncremental && big) {
     return (
       <div ref={parentRef}>
         <IncrementalGrid
           items={items}
           renderItem={renderItem}
           className={className}
-          // ~30 cards per batch keeps memory and paint cost low on 2–4GB phones.
-          batchSize={30}
+          // 16 cards per batch (initial + each load-more) keeps memory and paint
+          // cost low on 2–4GB Android phones while feeling like infinite scroll.
+          batchSize={16}
         />
       </div>
     );

@@ -33,17 +33,36 @@ export function ProductImage({
   // When the src changes on a recycled/reused element (e.g. a virtualized grid
   // row pointing at a new product), reset the loaded flag so the new image
   // fades in cleanly instead of briefly showing the previous product's photo.
+  // Combined with key={src} on the <img>, the previous DOM node is destroyed
+  // and a fresh one created — no stale pixels can survive on Android fast scroll.
   useEffect(() => {
     setLoaded(false);
   }, [src]);
 
-  // Callback ref: if the image is already complete by the time it mounts
-  // (cached / decoded before React attached onLoad), reveal it immediately.
-  // Without this the onLoad event can be missed on fast scroll, leaving the
-  // image at opacity-0 and the blurred LQIP placeholder visible underneath —
-  // which reads as a duplicated/ghosted image on low-end devices.
+  // Callback ref: cancel any decode tied to a stale node and, if the new image
+  // is already complete by mount (cached / decoded before React attached
+  // onLoad), reveal it immediately. Without this the onLoad event can be missed
+  // on fast scroll, leaving the image at opacity-0 and the blurred LQIP visible
+  // underneath — which reads as a duplicated/ghosted image on low-end devices.
   const imgRef = useCallback((node: HTMLImageElement | null) => {
-    if (node && node.complete && node.naturalWidth > 0) setLoaded(true);
+    if (!node) return;
+    if (node.complete && node.naturalWidth > 0) {
+      setLoaded(true);
+      return;
+    }
+    let cancelled = false;
+    node.decode?.().then(
+      () => {
+        if (!cancelled) setLoaded(true);
+      },
+      () => {
+        /* decode aborted (node replaced) or failed — onLoad/onError will handle */
+      },
+    );
+    // Stash a canceller so a later ref call (node swap) invalidates this decode.
+    (node as HTMLImageElement & { __cancelDecode?: () => void }).__cancelDecode = () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

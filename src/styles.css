@@ -944,6 +944,24 @@ html[data-android="true"] [data-decorative],
 html[data-android="true"] .orb {
   display: none !important;
 }
+/* Kill `transition: all` (forces full-property recomputation + repaint on every
+   scroll-driven style change). Keep only cheap opacity/color transitions. */
+html[data-android="true"] .transition-all,
+html[data-android="true"] [class*="transition-all"] {
+  transition-property: opacity, color, background-color, border-color !important;
+}
+/* Never let cards force-promote/contain a compositor layer on Android — the
+   source of stale-tile ghosting under fast fling scroll. (content-visibility
+   on `.cv-auto` is intentionally left intact: it's a paint-skipping win.) */
+html[data-android="true"] .product-card-glass,
+html[data-android="true"] .card-premium,
+html[data-android="true"] .card-elevated,
+html[data-android="true"] .card-ambient,
+html[data-android="true"] .group {
+  contain: none !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+}
 
 /* =====================================================================
    THEME SYSTEM — System / Dark / Grey / Light
