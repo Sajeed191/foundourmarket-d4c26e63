@@ -1393,7 +1393,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
           <div
             key={product.id ?? product.slug}
             data-product-card-frame
-            className="relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
+            className="cs-compact relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
           >
             <ProductCard product={product} />
           </div>
