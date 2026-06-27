@@ -20,8 +20,12 @@ export function LazyMount({
   id?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState(() => detectAndroid());
+  const [show, setShow] = useState(false);
   useEffect(() => {
+    if (detectAndroid()) {
+      setShow(true);
+      return;
+    }
     const el = ref.current;
     if (!el || show) return;
     const io = new IntersectionObserver(
