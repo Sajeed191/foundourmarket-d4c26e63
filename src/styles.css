@@ -1006,11 +1006,11 @@ html[data-android="true"] [data-product-badge] {
   mix-blend-mode: normal !important;
   animation: none !important;
   transition-property: color, background-color, border-color !important;
-  opacity: 1;
+  opacity: 1 !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
 }
 
 html[data-android="true"] [data-product-badge] {

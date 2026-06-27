@@ -148,7 +148,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         <div data-product-copy className="product-copy relative flex flex-1 flex-col px-3 pb-3 pt-2">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
           {/* Title — max 2 lines */}
-          <h3 className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] text-foreground/95 transition-colors group-hover:text-accent">
+          <h3 className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] text-foreground transition-colors group-hover:text-accent">
             {product.name}
           </h3>
         </Link>
@@ -159,13 +159,13 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
             <span className="inline-flex items-center gap-1">
               <Star className="size-3.5 fill-accent text-accent" />
               <span className="product-typography product-rating-text text-[12px] font-semibold tabular-nums text-foreground">{product.rating.toFixed(1)}</span>
-              <span className="product-typography product-rating-text font-mono text-[10px] text-muted-foreground/70">({product.reviews.toLocaleString()})</span>
+              <span className="product-typography product-rating-text font-mono text-[10px] text-muted-foreground">({product.reviews.toLocaleString()})</span>
             </span>
           ) : (
-            <span className="product-typography product-rating-text text-[11px] font-medium text-accent/90">New Product</span>
+            <span className="product-typography product-rating-text text-[11px] font-medium text-accent">New Product</span>
           )}
           {product.soldCount > 0 && (
-            <span className="product-typography product-rating-text text-[10px] font-medium text-muted-foreground/80">🔥 {formatSold(product.soldCount)} sold</span>
+            <span className="product-typography product-rating-text text-[10px] font-medium text-muted-foreground">🔥 {formatSold(product.soldCount)} sold</span>
           )}
         </div>
 
@@ -177,7 +177,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           />
           {originalPrice && discount ? (
             <span className="mt-1 flex items-center gap-1.5 leading-none">
-              <Price value={originalPrice} className="block font-mono text-[10px] tabular-nums text-muted-foreground/55 line-through" />
+              <Price value={originalPrice} className="block font-mono text-[10px] tabular-nums text-muted-foreground line-through" />
               <span className="product-typography product-price-text font-mono text-[10px] font-semibold text-accent">{discount}% OFF</span>
             </span>
           ) : (
@@ -188,11 +188,11 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         {/* Trust + stock — single line each, height reserved */}
         <div className="mt-1.5 flex h-[16px] items-center justify-between gap-2">
           {freeShipping ? (
-            <span className="product-typography inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+            <span className="product-typography inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300">
               <Check className="size-3" strokeWidth={2.5} /> Free Shipping
             </span>
           ) : product.returnEligible ? (
-            <span className="product-typography inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300/90">
+            <span className="product-typography inline-flex items-center gap-1 text-[10px] font-medium text-emerald-300">
               <Check className="size-3" strokeWidth={2.5} /> Easy Returns
             </span>
           ) : (
@@ -201,7 +201,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           {lowStock ? (
             <span className="product-typography text-[10px] font-semibold text-orange-300">⚠ Only {product.stockQuantity} left</span>
           ) : product.inStock ? (
-            <span className="product-typography text-[10px] font-medium text-muted-foreground/70">In Stock</span>
+            <span className="product-typography text-[10px] font-medium text-muted-foreground">In Stock</span>
           ) : null}
         </div>
 
