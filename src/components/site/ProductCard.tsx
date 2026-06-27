@@ -170,7 +170,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (!product.inStock) {
     return (
-      <span data-product-text className="product-typography inline-flex h-[54px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span data-product-text className="product-typography inline-flex h-[48px] sm:h-[54px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         Sold Out
       </span>
     );
@@ -178,7 +178,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (qty > 0 && !justAdded) {
     return (
-      <div className="flex h-[54px] w-full items-center justify-between rounded-full px-2" style={{ background: gradient, boxShadow: glow }}>
+      <div className="flex h-[48px] sm:h-[54px] w-full items-center justify-between rounded-full px-2" style={{ background: gradient, boxShadow: glow }}>
         <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className="grid size-11 place-items-center rounded-full text-black active:scale-95 transition-transform">
           <Minus className="size-5" strokeWidth={2.5} />
         </button>
@@ -195,7 +195,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
       onClick={onAdd}
       aria-label={`Add ${product.name} to cart`}
       style={justAdded ? undefined : { background: gradient, boxShadow: glow }}
-      className={`product-typography inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-full text-[18px] font-bold transition-[filter,transform] duration-150 hover:brightness-105 active:scale-[0.97] ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
+      className={`product-typography inline-flex h-[48px] sm:h-[54px] w-full items-center justify-center gap-2 rounded-full text-[18px] font-bold transition-[filter,transform] duration-150 hover:brightness-105 active:scale-[0.97] ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
     >
       {justAdded ? <><Check className="size-6" /> Added</> : <><Plus className="size-6" strokeWidth={2.75} /> Add to Cart</>}
     </button>
