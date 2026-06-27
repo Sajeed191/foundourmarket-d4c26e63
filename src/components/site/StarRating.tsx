@@ -27,7 +27,7 @@ function StarIcon({
     <svg
       viewBox="0 0 24 24"
       className={cn(
-        "shrink-0",
+        "product-typography product-rating-text shrink-0",
         filled ? "text-accent" : "text-muted-foreground/30",
         glow && filled && "drop-shadow-[0_0_6px_oklch(0.74_0.19_49/0.6)]",
         className,
@@ -90,7 +90,7 @@ export function StarRating({
 
   return (
     <div
-      className={cn("inline-flex items-center gap-1.5 whitespace-nowrap", className)}
+      className={cn("product-typography product-rating-text inline-flex items-center gap-1.5 whitespace-nowrap", className)}
       role="img"
       aria-label={
         noReviews
@@ -98,7 +98,7 @@ export function StarRating({
           : `Rating: ${value.toFixed(1)} out of 5${hasCount ? `, ${count} reviews` : ""}`
       }
     >
-      <span className="inline-flex items-center gap-0.5 shrink-0 leading-none">
+      <span className="product-typography product-rating-text inline-flex items-center gap-0.5 shrink-0 leading-none">
         {Array.from({ length: 5 }).map((_, i) => {
           // Exact fractional fill for this slot (0–1), converted to a percentage.
           const fill = noReviews ? 0 : Math.max(0, Math.min(1, value - i));
@@ -108,15 +108,15 @@ export function StarRating({
       </span>
 
       {noReviews ? (
-        <span className={cn("text-muted-foreground tabular-nums", textClassName)}>
+        <span className={cn("product-typography product-rating-text text-muted-foreground tabular-nums", textClassName)}>
           No reviews yet
         </span>
       ) : (
         (showValue || hasCount) && (
-          <span className={cn("text-foreground/80 tabular-nums", textClassName)}>
-            {showValue && <span className="font-semibold">{value.toFixed(1)}</span>}
+          <span className={cn("product-typography product-rating-text text-foreground/80 tabular-nums", textClassName)}>
+            {showValue && <span className="product-typography product-rating-text font-semibold">{value.toFixed(1)}</span>}
             {hasCount && (
-              <span className={cn("text-muted-foreground text-[0.9em]", showValue && "ml-1")}>
+              <span className={cn("product-typography product-rating-text text-muted-foreground text-[0.9em]", showValue && "ml-1")}>
                 ({count})
               </span>
             )}

@@ -88,7 +88,7 @@ export function ProductCollection({
           <p className="text-muted-foreground">No products available yet. Check back soon.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           {items.map((p) => (
             <ProductCard key={p.slug} product={p} compact forceBadge={forceBadge} />
           ))}

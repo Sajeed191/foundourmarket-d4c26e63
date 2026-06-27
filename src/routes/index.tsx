@@ -200,9 +200,9 @@ function ProductSection({
         </div>
       ) : (
         <LazyMount minHeight={minHeight}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {preview.map((p, i) => (
-              <Reveal key={p.slug} delay={i}><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
+              <Reveal key={p.slug} delay={i} className="h-full" data-product-card-frame><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
             ))}
           </div>
           <ViewAllButton to={viewAllTo} />
