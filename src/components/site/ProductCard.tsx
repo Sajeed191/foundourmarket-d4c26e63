@@ -52,7 +52,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   return (
     <div
       data-product-card
-      className={`group product-card-shell relative flex h-full flex-col overflow-hidden rounded-[22px] border bg-card transition-[box-shadow,border-color] duration-300 ${
+      className={`group product-card-shell relative flex h-full flex-col overflow-visible rounded-[22px] border bg-card transition-[box-shadow,border-color] duration-300 ${
         isPremium
           ? "border-accent/45 shadow-[0_8px_30px_-12px_oklch(0.72_0.18_55/0.45)] sm:group-hover:shadow-[0_16px_44px_-12px_oklch(0.72_0.18_55/0.6)]"
           : "border-accent/15 shadow-[0_4px_24px_-14px_oklch(0_0_0/0.7)] sm:group-hover:border-accent/35 sm:group-hover:shadow-[0_14px_40px_-14px_oklch(0.72_0.18_55/0.4)]"
@@ -62,7 +62,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
       {/* IMAGE — ~55% of card height */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
+        <div data-product-media className="relative aspect-[4/3] overflow-hidden rounded-t-[22px] bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
@@ -145,7 +145,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       </Link>
 
       {/* INFO */}
-        <div data-product-copy className="product-copy relative flex flex-1 flex-col px-3 pb-3 pt-2">
+        <div data-product-copy className="product-copy flex flex-1 flex-col px-3 pb-3 pt-2">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
           {/* Title — max 2 lines */}
           <h3 data-product-text className="product-typography product-title-text line-clamp-2 h-[2.6em] text-[15px] font-semibold leading-[1.3] text-foreground transition-colors group-hover:text-accent">
