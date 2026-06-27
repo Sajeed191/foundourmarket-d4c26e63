@@ -395,6 +395,7 @@ function RootComponent() {
   useEffect(() => {
     installChunkRecovery();
     registerServiceWorker();
+    logBuildVersion();
   }, []);
   // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
   // and start dev-only runtime performance monitoring (long tasks / FPS / heap).
