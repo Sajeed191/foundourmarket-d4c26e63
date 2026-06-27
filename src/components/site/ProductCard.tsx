@@ -13,6 +13,7 @@ import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { formatSold } from "@/lib/format-sold";
+import { detectAndroid } from "@/lib/use-low-end-device";
 
 
 function ProductCardImpl({ product, context = "default", forceBadge }: { product: Product; compact?: boolean; context?: BadgeContext; forceBadge?: BadgeKey | null }) {
@@ -27,7 +28,8 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
 
   useEffect(() => {
-    if (document.documentElement.getAttribute("data-android") !== "true") setRenderMode("rich");
+    const android = document.documentElement.getAttribute("data-android") === "true" || detectAndroid();
+    if (!android) setRenderMode("rich");
   }, []);
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -186,6 +188,8 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         </div>
       </article>
   );
+
+  if (renderMode === "static") return androidStaticCard;
 
   const richCard = (
       <div
@@ -392,7 +396,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       </div>
   );
 
-  return renderMode === "rich" ? richCard : androidStaticCard;
+  return richCard;
 }
 
 /**

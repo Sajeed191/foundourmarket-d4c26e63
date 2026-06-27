@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart, ShoppingCart, Check, Eye, TrendingDown } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
@@ -35,7 +35,7 @@ export function WishlistCard({
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items } = useCart();
   const { toggle } = useWishlist();
-  const [imgLoaded, setImgLoaded] = useState(() => detectAndroid());
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
 
@@ -77,6 +77,10 @@ export function WishlistCard({
     setJustAdded(true);
     window.setTimeout(() => setJustAdded(false), 900);
   };
+
+  useEffect(() => {
+    setImgLoaded(detectAndroid());
+  }, [product.image]);
 
   const cardClick = (e: React.MouseEvent) => {
     if (selectMode) {

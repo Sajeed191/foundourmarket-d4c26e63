@@ -1149,7 +1149,7 @@ html[data-android="true"] .group {
 html[data-android="true"] [data-product-media] {
   contain: none !important;
   isolation: auto !important;
-  overflow: clip !important;
+  overflow: hidden !important;
   border-radius: 0 !important;
   clip-path: none !important;
   mask-image: none !important;
@@ -1184,7 +1184,7 @@ html[data-android="true"] [data-product-image] {
   border-radius: 0 !important;
   clip-path: none !important;
   mask-image: none !important;
-  overflow: clip !important;
+  overflow: visible !important;
   transform: none !important;
   filter: none !important;
   will-change: auto !important;
@@ -1272,8 +1272,6 @@ html[data-android="true"] [data-product-card-frame] {
    could be visually in the right place while their title/rating/price glyphs
    were still rasterized inside a translated opacity layer. On Android, any
    direct wrapper around a product card must collapse back to normal flow. */
-html[data-android="true"] :where(div, section, article):has(> [data-product-card]),
-html[data-android="true"] :where(div, section, article):has(> .product-card-shell),
 html[data-android="true"] [data-product-card-frame],
 html[data-android="true"] [data-product-grid] {
   transform: none !important;
@@ -1400,7 +1398,7 @@ html[data-android="true"] [data-android-static-card] {
 
 html[data-android="true"] [data-android-static-card] [data-product-media] {
   display: block !important;
-  overflow: clip !important;
+  overflow: hidden !important;
   position: static !important;
 }
 
@@ -1409,7 +1407,7 @@ html[data-android="true"] [data-android-static-card] [data-product-image] {
   height: 100% !important;
   max-width: none !important;
   object-fit: cover !important;
-  overflow: clip !important;
+  overflow: visible !important;
   position: static !important;
   width: 100% !important;
 }

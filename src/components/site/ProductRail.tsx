@@ -26,7 +26,6 @@ export function ProductRail({
         style={{
           scrollPaddingLeft: "1rem",
           scrollPaddingRight: "1rem",
-          WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
         }}
       >

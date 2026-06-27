@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 import { detectAndroid } from "@/lib/use-low-end-device";
 
@@ -29,10 +29,10 @@ export function ProductImage({
   height = 600,
 }: Props) {
   const responsive = getResponsiveImage(src);
-  const initialAndroid = detectAndroid();
-  const [android, setAndroid] = useState(initialAndroid);
-  const [loaded, setLoaded] = useState(initialAndroid);
-  const [canShowPlaceholder, setCanShowPlaceholder] = useState(!initialAndroid);
+  const [android, setAndroid] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [canShowPlaceholder, setCanShowPlaceholder] = useState(false);
+  const nodeRef = useRef<HTMLImageElement | null>(null);
 
   // When the src changes on a recycled/reused element (e.g. a virtualized grid
   // row pointing at a new product), reset the loaded flag so the new image
@@ -42,8 +42,14 @@ export function ProductImage({
   useEffect(() => {
     const nextAndroid = detectAndroid();
     setAndroid(nextAndroid);
-    setLoaded(nextAndroid);
-    setCanShowPlaceholder(!nextAndroid);
+    if (nextAndroid) {
+      setLoaded(true);
+      setCanShowPlaceholder(false);
+      return;
+    }
+    setCanShowPlaceholder(true);
+    const node = nodeRef.current;
+    setLoaded(Boolean(node?.complete && node.naturalWidth > 0));
   }, [src]);
 
   // Callback ref: cancel any decode tied to a stale node and, if the new image
@@ -52,6 +58,7 @@ export function ProductImage({
   // on fast scroll, leaving the image at opacity-0 and the blurred LQIP visible
   // underneath — which reads as a duplicated/ghosted image on low-end devices.
   const imgRef = useCallback((node: HTMLImageElement | null) => {
+    nodeRef.current = node;
     if (!node) return;
     if (detectAndroid()) {
       setLoaded(true);

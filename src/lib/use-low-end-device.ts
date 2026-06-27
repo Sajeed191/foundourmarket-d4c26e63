@@ -80,7 +80,7 @@ export function shouldUseIncrementalRendering(): boolean {
 }
 
 export function useIsAndroid(): boolean {
-  const [android, setAndroid] = useState(() => detectAndroid());
+  const [android, setAndroid] = useState(false);
   useEffect(() => {
     setAndroid(detectAndroid());
   }, []);
