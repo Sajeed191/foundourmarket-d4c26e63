@@ -610,6 +610,12 @@
     height: var(--safe-bottom-space);
     pointer-events: none;
   }
+  .account-footer-gapless {
+    padding-bottom: 0 !important;
+  }
+  .account-footer-gapless::after {
+    display: none !important;
+  }
   [data-app-header] { z-index: var(--z-top-header) !important; }
   [data-app-bottom-nav] {
     z-index: var(--z-bottom-nav) !important;
