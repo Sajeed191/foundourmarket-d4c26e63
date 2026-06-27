@@ -63,7 +63,7 @@ function ComparePage() {
               <tr>
                 <th className="w-36 align-bottom text-left text-[10px] font-mono uppercase tracking-widest text-muted-foreground pb-3"></th>
                 {items.map((p) => (
-                  <th key={p.slug} className="align-bottom text-left pb-3 min-w-[200px]">
+                  <th key={p.id ?? p.slug} className="align-bottom text-left pb-3 min-w-[200px]">
                     <div className="relative bg-card border border-border rounded-2xl p-4">
                       <button
                         onClick={() => remove(p.slug)}
@@ -87,7 +87,7 @@ function ComparePage() {
             <tbody className="text-sm">
               <Row label="Price">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     {p.discount ? (
                       <div>
                         <span className="font-mono text-accent">${(p.price * (1 - p.discount / 100)).toFixed(2)}</span>
@@ -101,7 +101,7 @@ function ComparePage() {
               </Row>
               <Row label="Rating">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     <StarRating
                       rating={p.rating}
                       count={p.reviews}
@@ -114,7 +114,7 @@ function ComparePage() {
               </Row>
               <Row label="Stock">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     {p.inStock ? (
                       <span className="inline-flex items-center gap-1 text-accent text-xs font-mono uppercase tracking-widest">
                         <Check className="size-3" /> In stock
@@ -129,21 +129,21 @@ function ComparePage() {
               </Row>
               <Row label="Featured">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     {p.featured ? <Check className="size-4 text-accent" /> : <Minus className="size-4 text-muted-foreground" />}
                   </Cell>
                 ))}
               </Row>
               <Row label="Tagline">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     <p className="text-xs text-muted-foreground">{p.tagline || "—"}</p>
                   </Cell>
                 ))}
               </Row>
               <Row label="Description">
                 {items.map((p) => (
-                  <Cell key={p.slug}>
+                  <Cell key={p.id ?? p.slug}>
                     <p className="text-xs text-muted-foreground line-clamp-6">{p.description || "—"}</p>
                   </Cell>
                 ))}
@@ -151,7 +151,7 @@ function ComparePage() {
               <tr>
                 <td className="py-4 align-top text-[10px] font-mono uppercase tracking-widest text-muted-foreground"></td>
                 {items.map((p) => (
-                  <td key={p.slug} className="py-4 align-top">
+                  <td key={p.id ?? p.slug} className="py-4 align-top">
                     <button
                       onClick={() => p.inStock && add(p.slug, 1)}
                       disabled={!p.inStock}

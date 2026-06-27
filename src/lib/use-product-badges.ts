@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AutoRule = {
@@ -163,10 +163,17 @@ export function badgeScheduleState(b: BadgeType, now = Date.now()): "scheduled" 
 
 // ---- module-level cache + pub/sub so the whole grid shares one fetch ----
 type Snapshot = { types: BadgeType[]; map: Map<string, RenderBadge[]> };
+const EMPTY_BADGES: RenderBadge[] = [];
+const EMPTY_SNAPSHOT: Snapshot = { types: [], map: new Map() };
 let cache: Snapshot | null = null;
 let inflight: Promise<Snapshot> | null = null;
-const subscribers = new Set<(s: Snapshot) => void>();
+const subscribers = new Set<() => void>();
 let realtimeBound = false;
+
+function subscribeBadges(listener: () => void) {
+  subscribers.add(listener);
+  return () => subscribers.delete(listener);
+}
 
 function bindRealtime() {
   if (realtimeBound || typeof window === "undefined") return;
@@ -211,7 +218,7 @@ async function load(force = false): Promise<Snapshot> {
       const snap: Snapshot = { types, map };
       cache = snap;
       inflight = null;
-      subscribers.forEach((fn) => fn(snap));
+      subscribers.forEach((fn) => fn());
       return snap;
     })();
   }
@@ -220,46 +227,39 @@ async function load(force = false): Promise<Snapshot> {
 
 /** Returns live, scheduled-aware badges for a single product slug (storefront cards). */
 export function useProductBadges(slug: string): RenderBadge[] {
-  const [snap, setSnap] = useState<Snapshot | null>(cache);
   useEffect(() => {
     bindRealtime();
-    let active = true;
-    const sub = (s: Snapshot) => active && setSnap(s);
-    subscribers.add(sub);
-    load().then((s) => active && setSnap(s));
-    return () => {
-      active = false;
-      subscribers.delete(sub);
-    };
+    void load();
   }, []);
-  const list = snap?.map.get(slug) ?? [];
-  const now = Date.now();
-  return list.filter((b) => {
-    if (b.assignArchived) return false;
-    if (b.assignStartAt && new Date(b.assignStartAt).getTime() > now) return false;
-    if (b.assignEndAt && new Date(b.assignEndAt).getTime() < now) return false;
-    return isBadgeLive(b, now);
-  });
+  const list = useSyncExternalStore(
+    subscribeBadges,
+    () => cache?.map.get(slug) ?? EMPTY_BADGES,
+    () => EMPTY_BADGES,
+  );
+  return useMemo(() => {
+    const now = Date.now();
+    return list.filter((b) => {
+      if (b.assignArchived) return false;
+      if (b.assignStartAt && new Date(b.assignStartAt).getTime() > now) return false;
+      if (b.assignEndAt && new Date(b.assignEndAt).getTime() < now) return false;
+      return isBadgeLive(b, now);
+    });
+  }, [list]);
 }
 
 /** Full badge catalog + per-product assignment map (admin tooling). */
 export function useBadgeCatalog() {
-  const [snap, setSnap] = useState<Snapshot>(cache ?? { types: [], map: new Map() });
+  const snap = useSyncExternalStore(
+    subscribeBadges,
+    () => cache ?? EMPTY_SNAPSHOT,
+    () => EMPTY_SNAPSHOT,
+  );
   const [loading, setLoading] = useState(!cache);
   useEffect(() => {
     bindRealtime();
-    let active = true;
-    const sub = (s: Snapshot) => active && setSnap(s);
-    subscribers.add(sub);
-    load().then((s) => {
-      if (!active) return;
-      setSnap(s);
+    load().then(() => {
       setLoading(false);
     });
-    return () => {
-      active = false;
-      subscribers.delete(sub);
-    };
   }, []);
   return { ...snap, loading };
 }

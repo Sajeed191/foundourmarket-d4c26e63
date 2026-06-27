@@ -24,7 +24,7 @@ export function CompareTray() {
         </div>
         <ul className="flex gap-2 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
           {items.map((p) => (
-            <li key={p.slug} className="relative shrink-0 group">
+            <li key={p.id ?? p.slug} className="relative shrink-0 group">
               <div className="size-12 rounded-lg overflow-hidden bg-background border border-border">
                 {p.image && <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" />}
               </div>

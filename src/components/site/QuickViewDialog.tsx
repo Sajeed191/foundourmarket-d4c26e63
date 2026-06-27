@@ -1,11 +1,10 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Star, Plus, Check, Minus, ArrowRight } from "lucide-react";
+import { Heart, Star, Plus, Minus, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
-import { useCart } from "@/lib/cart";
-import { useWishlist } from "@/lib/wishlist";
+import { useCartActions, useCartQty } from "@/lib/cart";
+import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
 import { formatSold } from "@/lib/format-sold";
@@ -20,10 +19,10 @@ export function QuickViewDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const { priceOf, compareOf } = useRegion();
-  const { add, setQty, items } = useCart();
-  const { has, toggle } = useWishlist();
-  const saved = has(product.slug);
-  const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
+  const { add, setQty } = useCartActions();
+  const { toggle } = useWishlistActions();
+  const saved = useWishlistSaved(product.slug);
+  const cartQty = useCartQty(product.slug);
 
   const price = priceOf(product);
   const originalPrice =

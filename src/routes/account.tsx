@@ -1396,7 +1396,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
       >
         {shown.map(({ product, badge }) => (
           <div
-            key={product.slug}
+            key={product.id ?? product.slug}
             data-product-card-frame
             className="relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
           >

@@ -256,7 +256,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                   <div className="space-y-1">
                     {popular.map((p) => (
                       <Link
-                        key={p.slug}
+                        key={p.id ?? p.slug}
                         to="/products/$slug"
                         params={{ slug: p.slug }}
                         onClick={onClose}
@@ -345,7 +345,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                     const isActive = idx === active;
                     return (
                       <Link
-                        key={p.slug}
+                        key={p.id ?? p.slug}
                         to="/products/$slug"
                         params={{ slug: p.slug }}
                         onClick={() => { pushRecent(q); onClose(); }}

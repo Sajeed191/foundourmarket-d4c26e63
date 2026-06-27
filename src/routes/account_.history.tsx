@@ -444,7 +444,7 @@ function HistoryPage() {
             </div>
             <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {wishProducts.map((p) => (
-                <ProductCard key={p!.slug} product={p!} />
+                <ProductCard key={p!.id ?? p!.slug} product={p!} />
               ))}
             </div>
           </section>

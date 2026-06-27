@@ -109,7 +109,7 @@ export function FlashSaleStrip() {
             const salePrice = regionPrice * (1 - sale.discount_percent / 100);
             return (
               <AdminProductOverlay
-                key={p.slug}
+                key={p.id ?? p.slug}
                 product={p}
                 className="snap-start shrink-0 w-[42%] xs:w-[38%] sm:w-[26%] lg:w-[20%]"
               >

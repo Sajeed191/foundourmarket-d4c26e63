@@ -86,7 +86,7 @@ export function RelatedProducts({
       >
         {items.map((p) => (
           <div
-            key={p.slug}
+            key={p.id ?? p.slug}
             data-product-card-frame
             className="snap-start shrink-0 w-[58%] xs:w-[46%] sm:w-[30%] md:w-[22%] lg:w-[18%] last:mr-4 sm:last:mr-0 rounded-2xl glow-border"
           >

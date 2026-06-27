@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { type Product } from "./products";
 import { useProducts } from "./use-products";
@@ -32,6 +32,37 @@ type Ctx = {
 
 const CartContext = createContext<Ctx | null>(null);
 const LS_KEY = "cart";
+
+const cartQtyListeners = new Set<() => void>();
+let cartQtySnapshot = new Map<string, number>();
+let cartActionsSnapshot: Pick<Ctx, "add" | "setQty"> = {
+  add: async () => {},
+  setQty: async () => {},
+};
+
+function publishCartQty(items: CartItem[]) {
+  const next = new Map<string, number>();
+  for (const item of items) {
+    if (!item.savedForLater) next.set(item.slug, item.qty);
+  }
+  let changed = next.size !== cartQtySnapshot.size;
+  if (!changed) {
+    for (const [slug, qty] of next) {
+      if (cartQtySnapshot.get(slug) !== qty) {
+        changed = true;
+        break;
+      }
+    }
+  }
+  if (!changed) return;
+  cartQtySnapshot = next;
+  cartQtyListeners.forEach((listener) => listener());
+}
+
+function subscribeCartQty(listener: () => void) {
+  cartQtyListeners.add(listener);
+  return () => cartQtyListeners.delete(listener);
+}
 
 function readLS(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -339,6 +370,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const count = active.reduce((s, i) => s + i.qty, 0);
   const hydrated = loadedFor === (user?.id ?? null);
 
+  useEffect(() => {
+    publishCartQty(active);
+  }, [active]);
+
+  useEffect(() => {
+    cartActionsSnapshot = { add, setQty };
+  });
+
   return (
     <CartContext.Provider
       value={{
@@ -370,4 +409,22 @@ export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be inside CartProvider");
   return ctx;
+}
+
+export function useCartQty(slug: string) {
+  return useSyncExternalStore(
+    subscribeCartQty,
+    () => cartQtySnapshot.get(slug) ?? 0,
+    () => 0,
+  );
+}
+
+export function useCartActions() {
+  return useMemo(
+    () => ({
+      add: (slug: string, qty?: number) => cartActionsSnapshot.add(slug, qty),
+      setQty: (slug: string, qty: number) => cartActionsSnapshot.setQty(slug, qty),
+    }),
+    [],
+  );
 }

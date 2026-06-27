@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number };
 
 type Props<T> = {
   items: T[];
-  /** Render a single item. Must return a keyed React element. */
+  /** Render a single item. The grid owns stable keys; never key by index. */
   renderItem: (item: T, index: number) => React.ReactNode;
+  /** Permanent item identity. Product grids must pass product.id (slug fallback only for legacy rows). */
+  getKey?: (item: T) => string;
   /** Column counts per Tailwind breakpoint (kept for call-site compatibility). */
   cols: Cols;
   /** Responsive grid className (SSR-safe, normal document flow). */
@@ -44,16 +46,20 @@ type Props<T> = {
 function IncrementalGrid<T>({
   items,
   renderItem,
+  getKey,
   className,
   batchSize,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
+  getKey: (item: T) => string;
   className?: string;
   batchSize: number;
 }) {
   const [visible, setVisible] = useState(() => Math.min(items.length, batchSize));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
 
   // Reset the window when the dataset changes (filter/sort/navigation).
   useEffect(() => {
@@ -61,12 +67,11 @@ function IncrementalGrid<T>({
   }, [items, batchSize]);
 
   useEffect(() => {
-    if (visible >= items.length) return;
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (entries[0]?.isIntersecting && visibleRef.current < items.length) {
           setVisible((v) => Math.min(items.length, v + batchSize));
         }
       },
@@ -74,14 +79,18 @@ function IncrementalGrid<T>({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [visible, items.length, batchSize]);
+  }, [items.length, batchSize]);
 
   const shown = items.slice(0, visible);
 
   return (
     <>
       <div data-product-grid className={className}>
-        {shown.map((item, i) => renderItem(item, i))}
+        {shown.map((item, i) => (
+          <div key={getKey(item)} data-product-card-frame className="h-full min-w-0 [&>*]:h-full">
+            {renderItem(item, i)}
+          </div>
+        ))}
       </div>
       {visible < items.length && <div ref={sentinelRef} aria-hidden style={{ height: 1 }} />}
     </>
@@ -97,33 +106,43 @@ function IncrementalGrid<T>({
 export function VirtualizedProductGrid<T>({
   items,
   renderItem,
+  getKey,
   className,
   virtualizeThreshold = 32,
 }: Props<T>) {
   const big = items.length > virtualizeThreshold;
+  const stableKey = getKey ?? ((item: T) => {
+    const candidate = item as { id?: string | null; slug?: string | null };
+    const key = candidate.id || candidate.slug;
+    if (!key) throw new Error("VirtualizedProductGrid requires getKey for items without id/slug");
+    return key;
+  });
 
   // Large catalogs: bounded, incremental, transform-free rendering.
   if (big) {
     return (
-      <div data-product-grid>
-        <IncrementalGrid
-          items={items}
-          renderItem={renderItem}
-          className={className}
-          // 16 cards per batch keeps paint/memory cost low while feeling like
-          // infinite scroll on low-end phones.
-          batchSize={16}
-        />
-      </div>
+      <IncrementalGrid
+        items={items}
+        renderItem={renderItem}
+        getKey={stableKey}
+        className={className}
+        // 16 cards per batch keeps paint/memory cost low while feeling like
+        // infinite scroll on low-end phones.
+        batchSize={16}
+      />
     );
   }
 
   // Small lists: plain responsive grid (also the SSR / first-paint output).
   return (
     <div data-product-grid className={className}>
-      {items.map((item, i) => renderItem(item, i))}
+      {items.map((item, i) => (
+        <div key={stableKey(item)} data-product-card-frame className="h-full min-w-0 [&>*]:h-full">
+          {renderItem(item, i)}
+        </div>
+      ))}
     </div>
   );
 }
 
-export default VirtualizedProductGrid;
+export default memo(VirtualizedProductGrid) as typeof VirtualizedProductGrid;

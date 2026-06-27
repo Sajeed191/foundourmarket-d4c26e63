@@ -71,7 +71,7 @@ function FallbackSection({ featured }: { featured: Product[] }) {
             <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent mb-3">Featured Picks</p>
             <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {featured.map((p) => (
-                <Link key={p.slug} to="/products/$slug" params={{ slug: p.slug }} data-product-card data-android-static-card className="block group text-left">
+                <Link key={p.id ?? p.slug} to="/products/$slug" params={{ slug: p.slug }} data-product-card data-android-static-card className="block group text-left">
                   <div data-product-media className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40 ring-1 ring-white/10">
                     {p.image && (
                       <img data-product-image src={p.image} alt={p.name} loading="lazy" decoding="sync" className="w-full h-full object-cover" />
@@ -193,7 +193,7 @@ export function FlashDeals() {
             const dealBadge = singleBadge(p.flashDeal ? "flash_deal" : "hot_deal");
             return (
               <Link
-                key={p.slug}
+                key={p.id ?? p.slug}
                 to="/products/$slug"
                 params={{ slug: p.slug }}
                 data-product-card
