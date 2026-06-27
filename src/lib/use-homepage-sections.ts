@@ -14,7 +14,7 @@ const DEFAULTS: SectionMap = {
   flash_deals: { key: "flash_deals", eyebrow: "Limited-time prices", title: "Flash Deals", active: true },
   trending: { key: "trending", eyebrow: "", title: "Trending Products", active: true },
   new_arrivals: { key: "new_arrivals", eyebrow: "", title: "New Arrivals", active: true },
-  best_sellers: { key: "best_sellers", eyebrow: "Most Loved", title: "Best Sellers", active: true },
+  best_sellers: { key: "best_sellers", eyebrow: "", title: "Best Sellers", active: true },
   featured: { key: "featured", eyebrow: "Hand-Picked", title: "Featured Products", active: true },
   recommended: { key: "recommended", eyebrow: "Curated For You", title: "Recommended Products", active: true },
 };
