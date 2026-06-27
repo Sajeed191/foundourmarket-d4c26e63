@@ -933,7 +933,7 @@ html[data-android="true"] *::after {
 html[data-android="true"] body,
 html[data-android="true"] [data-app-shell],
 html[data-android="true"] [data-app-content] {
-  overflow-x: clip !important;
+  overflow-x: visible !important;
   isolation: auto !important;
   contain: none !important;
 }
