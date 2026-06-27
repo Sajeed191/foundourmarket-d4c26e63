@@ -289,6 +289,7 @@ function DeferredShell({
   hideLiveChat?: boolean;
 }) {
   const [ready, setReady] = useState(false);
+  const isAndroid = useIsAndroid();
   useEffect(() => {
     const ric = (
       window as unknown as {
@@ -308,6 +309,14 @@ function DeferredShell({
   }, []);
 
   if (!ready) return null;
+
+  if (isAndroid) {
+    return (
+      <Suspense fallback={null}>
+        <RegionSelectModal />
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={null}>
