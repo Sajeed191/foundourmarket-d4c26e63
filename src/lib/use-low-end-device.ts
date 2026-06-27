@@ -54,7 +54,7 @@ export function detectAndroidWebView(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   if (!/Android/i.test(ua)) return false;
-  return /; wv\)/i.test(ua) || (/Version\/\d+\.\d+/i.test(ua) && /Chrome/i.test(ua) && !/Chrome\/[.0-9]* Mobile/i.test(ua) === false && /; wv/i.test(ua));
+  return /; wv\)/i.test(ua) || /\bwv\b/i.test(ua);
 }
 
 /** Samsung Internet — its own compositor quirks under fast fling scroll. */
