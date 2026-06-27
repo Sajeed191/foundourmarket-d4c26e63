@@ -122,9 +122,9 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
       onClick={onClick}
       aria-label={saved ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
       style={{ backgroundColor: "rgba(70,70,70,0.65)", backdropFilter: "blur(10px)" }}
-      className={`absolute right-2.5 top-2.5 z-10 grid h-10 w-10 place-items-center rounded-full text-white shadow-md transition-colors ${saved ? "text-accent" : "hover:text-accent"} ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
+      className={`absolute right-2.5 top-2.5 z-10 grid h-9 w-9 place-items-center rounded-full text-white shadow-md transition-colors ${saved ? "text-accent" : "hover:text-accent"} ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
     >
-      <Heart className={`size-5 ${saved ? "fill-accent" : ""}`} />
+      <Heart className={`size-[18px] ${saved ? "fill-accent" : ""}`} />
     </button>
   );
 }
