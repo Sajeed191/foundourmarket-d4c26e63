@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { Heart, Plus, Check, Star, Minus, Eye } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
@@ -24,13 +24,18 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   const [justAdded, setJustAdded] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
-  const [renderMode, setRenderMode] = useState<"static" | "rich">("static");
+  // Decide the layout ONCE, synchronously, to avoid a post-mount swap that
+  // would remount every card's DOM subtree right after hydration (jank + image
+  // re-decode). On the server (no document) we render the rich card; on the
+  // client we read the SSR-set `data-android` attribute so non-Android devices
+  // never swap, and Android renders its lightweight static card from the start.
+  const [renderMode] = useState<"static" | "rich">(() => {
+    if (typeof document === "undefined") return "rich";
+    const android =
+      document.documentElement.getAttribute("data-android") === "true" || detectAndroid();
+    return android ? "static" : "rich";
+  });
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
-
-  useEffect(() => {
-    const android = document.documentElement.getAttribute("data-android") === "true" || detectAndroid();
-    if (!android) setRenderMode("rich");
-  }, []);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
