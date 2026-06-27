@@ -272,16 +272,16 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           )}
         </div>
 
-        {/* Price — 8px below rating */}
-        <div className="mt-2 product-price-flow flex min-w-0 flex-col overflow-hidden">
-          <Price value={price} className="block truncate font-display text-[36px] font-extrabold leading-none tabular-nums text-foreground" />
+        {/* Price — 6px below rating */}
+        <div className="mt-1.5 product-price-flow flex min-w-0 flex-col overflow-hidden">
+          <Price value={price} className="block truncate font-display text-[34px] font-extrabold leading-none tabular-nums text-foreground" />
           {originalPrice && discount ? (
-            <div className="mt-1.5 flex min-w-0 items-center gap-2 overflow-hidden">
+            <div className="mt-1 flex min-w-0 items-center gap-2 overflow-hidden">
               <Price value={originalPrice} className="block shrink-0 text-[13px] tabular-nums text-muted-foreground line-through" />
               <span data-product-text className="product-typography product-price-text truncate text-[13px] font-bold leading-none text-accent">{discount}% OFF</span>
             </div>
           ) : (
-            <span aria-hidden data-product-text className="product-typography mt-1.5 block text-[13px] leading-none invisible">.</span>
+            <span aria-hidden data-product-text className="product-typography mt-1 block text-[13px] leading-none invisible">.</span>
           )}
         </div>
 
