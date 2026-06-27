@@ -1040,23 +1040,23 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 
 /* ---------- GREY ---------- */
 [data-theme="grey"] {
-  --background: oklch(0.88 0.004 260);
-  --foreground: oklch(0.2 0.012 260);
+  --background: oklch(0.80 0.004 260);
+  --foreground: oklch(0.18 0.012 260);
 
-  --card: oklch(0.93 0.004 260);
-  --card-foreground: oklch(0.2 0.012 260);
+  --card: oklch(0.86 0.004 260);
+  --card-foreground: oklch(0.18 0.012 260);
 
-  --popover: oklch(0.94 0.004 260);
-  --popover-foreground: oklch(0.2 0.012 260);
+  --popover: oklch(0.87 0.004 260);
+  --popover-foreground: oklch(0.18 0.012 260);
 
   --primary: oklch(0.68 0.19 49);
   --primary-foreground: oklch(0.13 0 0);
 
-  --secondary: oklch(0.83 0.005 260);
-  --secondary-foreground: oklch(0.2 0.012 260);
+  --secondary: oklch(0.74 0.005 260);
+  --secondary-foreground: oklch(0.18 0.012 260);
 
-  --muted: oklch(0.83 0.005 260);
-  --muted-foreground: oklch(0.42 0.013 260);
+  --muted: oklch(0.74 0.005 260);
+  --muted-foreground: oklch(0.38 0.013 260);
 
   --accent: oklch(0.68 0.19 49);
   --accent-foreground: oklch(0.13 0 0);
@@ -1064,11 +1064,11 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   --destructive: oklch(0.56 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.2 0.012 260 / 14%);
-  --input: oklch(0.2 0.012 260 / 18%);
+  --border: oklch(0.2 0.012 260 / 16%);
+  --input: oklch(0.2 0.012 260 / 20%);
   --ring: oklch(0.68 0.19 49);
 
-  --gradient-hero: linear-gradient(180deg, oklch(0.88 0.004 260) 0%, oklch(0.83 0.005 260) 100%);
+  --gradient-hero: linear-gradient(180deg, oklch(0.80 0.004 260) 0%, oklch(0.74 0.005 260) 100%);
   --shadow-card: 0 8px 32px -12px oklch(0.2 0.02 260 / 0.22);
   --shadow-float: 0 30px 80px -30px oklch(0.2 0.02 260 / 0.26), 0 8px 24px -12px oklch(0.2 0.02 260 / 0.16);
   --shadow-soft: 0 6px 20px -10px oklch(0.2 0.02 260 / 0.22);
