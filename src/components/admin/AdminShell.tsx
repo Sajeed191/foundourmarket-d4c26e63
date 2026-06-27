@@ -15,9 +15,9 @@ import { ThemeMenu } from "@/components/site/ThemeMenu";
 import { useAdminSupportUnread } from "@/lib/use-support-unread";
 import { useCustomerIntelSummary } from "@/lib/use-customer-intel-summary";
 
-type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
+export type Role = "admin" | "super_admin" | "manager" | "support" | "fulfillment" | "warehouse_staff" | "editor";
 
-type NavItem = {
+export type NavItem = {
   to: string;
   search?: Record<string, string>;
   label: string;
