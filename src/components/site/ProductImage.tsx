@@ -36,9 +36,8 @@ export function ProductImage({
   // When the src changes on a recycled/reused element (e.g. a virtualized grid
   // row pointing at a new product), reset the loaded flag so the new image
   // fades in cleanly instead of briefly showing the previous product's photo.
-  // Combined with key={src} on the <img>, the previous DOM node is destroyed
-    // and Android skips the fade/placeholder path completely so no stale GPU
-    // texture upload can overlap a fast fling scroll.
+  // Android skips the fade/placeholder path completely so no stale GPU texture
+  // upload can overlap a fast fling scroll.
   useEffect(() => {
     const nextAndroid = detectAndroid();
     setAndroid(nextAndroid);
