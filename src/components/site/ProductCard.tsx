@@ -55,6 +55,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       <article
         data-product-card
         data-android-static-card
+        data-product-card-static-fallback
         className="android-static-product-card flex h-full flex-col rounded-xl border border-border bg-card"
       >
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
