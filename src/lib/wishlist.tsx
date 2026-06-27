@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
 
@@ -55,7 +55,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       });
   }, [user]);
 
-  const toggle = async (slug: string) => {
+  const toggle = useCallback(async (slug: string) => {
     if (!user) {
       window.location.href = "/auth";
       return;
@@ -71,7 +71,10 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
       import("@/lib/personalization").then((m) => m.recordEvent({ type: "wishlist", productSlug: slug })).catch(() => {});
     }
-  };
+  }, [slugs, user]);
+
+  const has = useCallback((s: string) => slugs.has(s), [slugs]);
+  const ctxValue = useMemo(() => ({ slugs, has, toggle, loading }), [slugs, has, toggle, loading]);
 
   useEffect(() => {
     publishWishlist(slugs);
@@ -82,7 +85,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   });
 
   return (
-    <WishlistContext.Provider value={{ slugs, has: (s) => slugs.has(s), toggle, loading }}>
+    <WishlistContext.Provider value={ctxValue}>
       {children}
     </WishlistContext.Provider>
   );

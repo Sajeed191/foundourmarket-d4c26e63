@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { ProductCard } from "@/components/site/ProductCard";
+import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { BadgeKey } from "@/lib/badges";
+import type { Product } from "@/lib/products";
 
 export type CollectionSort = "trending" | "newest" | "best_sellers";
 
@@ -54,6 +56,12 @@ export function ProductCollection({
     return seededShuffle([...base], rotationSeed + rotationNonce);
   }, [products, filterFlag, rotationSeed, rotationNonce]);
 
+  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  const renderProduct = useCallback(
+    (p: Product, i: number) => <ProductCard product={p} compact forceBadge={forceBadge} priority={i < 4} />,
+    [forceBadge],
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance md:pb-16">
       <Link
@@ -88,11 +96,13 @@ export function ProductCollection({
           <p className="text-muted-foreground">No products available yet. Check back soon.</p>
         </div>
       ) : (
-        <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-          {items.map((p) => (
-            <ProductCard key={p.id ?? p.slug} product={p} compact forceBadge={forceBadge} />
-          ))}
-        </div>
+        <VirtualizedProductGrid
+          items={items}
+          cols={{ base: 2, sm: 3, lg: 4 }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
+          getKey={getProductKey}
+          renderItem={renderProduct}
+        />
       )}
     </div>
   );
