@@ -155,6 +155,10 @@ export function Nav() {
   const lastY = useRef(0);
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
+    if (isAndroid) {
+      setHidden(false);
+      return;
+    }
     const onScroll = () => {
       const y = window.scrollY;
       const prev = lastY.current;
@@ -164,7 +168,7 @@ export function Nav() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isAndroid]);
 
   // Drive the drawer enter/exit transition without framer-motion.
   useEffect(() => {
