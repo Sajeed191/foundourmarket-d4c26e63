@@ -915,10 +915,11 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 /* ===== Android compositor corruption mitigation =====
    Activated on <html data-android="true"> (Chrome / WebView / Samsung Internet).
    These browsers share a GPU bug where promoted compositor layers (will-change,
-   transform animations, paint containment) fail to invalidate during fast
-   scroll, leaving ghosted/duplicated cards and horizontal glitch lines. We
-   strip unnecessary layer promotion + heavy paints so scrolling stays clean.
-   Desktop and iOS are unaffected (attribute is only set on Android). */
+   transform animations, paint containment, overflow clipping and filtered media)
+   fail to invalidate during fast scroll. Product images/cards can stay correctly
+   positioned while text glyph tiles (price/title/rating/stock) repaint in stale
+   scroll locations. We strip layer promotion from the entire product-card text
+   chain and keep typography in normal document flow. */
 html[data-android="true"] * {
   /* Never let app code force-promote a layer that the compositor then fails to
      repaint on Android fast scroll. */
@@ -954,8 +955,7 @@ html[data-android="true"] [class*="transition-all"] {
   transition-property: opacity, color, background-color, border-color !important;
 }
 /* Never let cards force-promote/contain a compositor layer on Android — the
-   source of stale-tile ghosting under fast fling scroll. (content-visibility
-   on `.cv-auto` is intentionally left intact: it's a paint-skipping win.) */
+   source of stale-tile ghosting under fast fling scroll. */
 html[data-android="true"] .product-card-glass,
 html[data-android="true"] .card-premium,
 html[data-android="true"] .card-elevated,
@@ -966,6 +966,43 @@ html[data-android="true"] .group {
   -webkit-backface-visibility: visible !important;
 }
 
+/* Product media may use blur/opacity while loading, but it must not promote the
+   sibling typography subtree. Keep all image effects local and remove filtered
+   placeholders on Android once they are no longer worth the compositor risk. */
+html[data-android="true"] [data-product-media] {
+  contain: none !important;
+  isolation: auto !important;
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+}
+
+html[data-android="true"] [data-product-image-placeholder] {
+  display: none !important;
+  animation: none !important;
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  filter: none !important;
+  opacity: 0 !important;
+}
+
+html[data-android="true"] [data-product-image] {
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  filter: none !important;
+  will-change: auto !important;
+  transition-property: opacity !important;
+}
+
 /* Product-card text pipeline hardening for Android Chrome/WebView/Samsung.
    The corruption screenshot showed normal card/image/button geometry but price
    glyphs repainting repeatedly downward, which points to text being rasterized
@@ -974,7 +1011,9 @@ html[data-android="true"] .group {
 html[data-android="true"] [data-product-card],
 html[data-android="true"] .product-card-shell,
 html[data-android="true"] [data-product-copy],
+html[data-android="true"] [data-product-copy] *,
 html[data-android="true"] .product-copy,
+html[data-android="true"] .product-copy *,
 html[data-android="true"] .product-meta-flow,
 html[data-android="true"] .product-price-flow {
   transform: initial !important;
@@ -991,6 +1030,24 @@ html[data-android="true"] .product-price-flow {
   transition-duration: 0s !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
+}
+
+html[data-android="true"] [data-product-copy] a,
+html[data-android="true"] [data-product-copy] span,
+html[data-android="true"] [data-product-copy] h1,
+html[data-android="true"] [data-product-copy] h2,
+html[data-android="true"] [data-product-copy] h3,
+html[data-android="true"] [data-product-copy] p {
+  position: static !important;
+  transition-property: none !important;
+  transition-duration: 0s !important;
+}
+
+html[data-android="true"] [data-product-card],
+html[data-android="true"] .product-card-shell {
+  overflow: visible !important;
+  content-visibility: visible !important;
+  overflow-anchor: none;
 }
 
 /* Framer Motion / Reveal wrappers were the remaining root cause: product cards
@@ -1065,6 +1122,8 @@ html[data-android="true"] .product-rating-text {
   -webkit-backface-visibility: visible !important;
   -webkit-font-smoothing: auto;
   text-rendering: auto;
+  content-visibility: visible !important;
+  overflow: visible !important;
 }
 
 html[data-android="true"] .product-price-text,

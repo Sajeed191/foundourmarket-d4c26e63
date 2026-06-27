@@ -70,6 +70,7 @@ export function ProductImage({
       {!loaded && (
         <div
           aria-hidden
+          data-product-image-placeholder
           className="absolute inset-0 bg-cover bg-center scale-110 blur-xl"
           style={responsive ? { backgroundImage: `url(${responsive.placeholder})` } : undefined}
         />
@@ -87,6 +88,7 @@ export function ProductImage({
         fetchPriority={priority ? "high" : "low"}
         decoding="async"
         onLoad={() => setLoaded(true)}
+        data-product-image
         className={`${className} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
     </>
