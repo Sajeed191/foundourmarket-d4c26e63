@@ -30,6 +30,9 @@ export function Reveal({
   delay?: number;
   productCardFrame?: boolean;
 }) {
+  const lowEnd = useLowEndDevice();
+  const android = useIsAndroid();
+
   // Product cards must never sit inside a transformed/opacity reveal layer. On
   // Android Chromium/WebView/Samsung this can leave stale glyph tiles while the
   // card, image and buttons remain correctly positioned. Keep card typography in
@@ -38,8 +41,6 @@ export function Reveal({
     return <div className={className} data-product-card-frame="">{children}</div>;
   }
 
-  const lowEnd = useLowEndDevice();
-  const android = useIsAndroid();
   // On Android and constrained devices (≤4GB RAM / few cores / reduced-motion) skip
   // framer-motion entirely: per-element motion layers are the main source of
   // GPU compositing artifacts (ghosted images, stacked cards, flicker) during
