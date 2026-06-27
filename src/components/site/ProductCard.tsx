@@ -142,9 +142,9 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
       onClick={onClick}
       aria-label={`Quick view ${name}`}
       style={{ backgroundColor: "rgba(70,70,70,0.65)", backdropFilter: "blur(10px)" }}
-      className="absolute bottom-2.5 right-2.5 z-10 grid h-10 w-10 place-items-center rounded-full text-white transition-colors hover:text-accent"
+      className="absolute bottom-2.5 right-2.5 z-10 grid h-9 w-9 place-items-center rounded-full text-white transition-colors hover:text-accent"
     >
-      <Eye className="size-5" />
+      <Eye className="size-[18px]" />
     </button>
   );
 }
