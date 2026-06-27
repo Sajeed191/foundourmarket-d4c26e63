@@ -212,9 +212,9 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
     >
       <ProductCardAdminControlsGate product={product} />
 
-      {/* IMAGE — ~55% of card height */}
+      {/* IMAGE */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-        <div data-product-media className="relative aspect-[4/3] overflow-hidden rounded-t-[22px] bg-black/40">
+        <div data-product-media className="relative aspect-square overflow-hidden rounded-t-[22px] bg-black/40">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
@@ -226,39 +226,46 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
 
           {/* Top-left — inside a dedicated section (forceBadge) show ONLY that
               section's single badge; elsewhere admin-assigned custom badges take
-              priority, else auto badges (max 3). */}
+              priority, else auto badges. Compact horizontal pills, max 3 + overflow. */}
           {!forceBadge && assigned.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 md:gap-1 lg:gap-1.5">
+            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
               {assigned.slice(0, 3).map((b) => (
                 <span
                   key={b.assignmentId ?? b.id}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 md:gap-1 md:px-2 md:py-[3px] md:text-[8px] lg:gap-1.5 lg:px-3 lg:py-1 lg:text-sm ${badgeAnimationClass(b.animation)}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
                   style={{
                     backgroundColor: b.backgroundColor || b.color,
                     color: b.textColor,
                     border: b.borderColor ? `1px solid ${b.borderColor}` : undefined,
                   }}
                 >
-                  {b.emoji && <span aria-hidden className="text-[8px] md:text-[9px] lg:text-[15px]">{b.emoji}</span>}
+                  {b.emoji && <span aria-hidden>{b.emoji}</span>}
                   {b.label}
                 </span>
               ))}
+              {assigned.length > 3 && (
+                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{assigned.length - 3}</span>
+              )}
             </div>
           ) : labels.length > 0 ? (
-            <div className="absolute left-2 top-2 flex flex-col items-start gap-0.5 md:gap-1 lg:gap-1.5">
-              {labels.map((b) => (
+            <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
+              {labels.slice(0, 3).map((b) => (
                 <span
                   key={b.key}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 md:gap-1 md:px-2 md:py-[3px] md:text-[8px] lg:gap-1.5 lg:px-3 lg:py-1 lg:text-sm ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
-                  <span aria-hidden className="text-[8px] md:text-[9px] lg:text-[15px]">{b.emoji}</span>
+                  <span aria-hidden>{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
+              {labels.length > 3 && (
+                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{labels.length - 3}</span>
+              )}
             </div>
           ) : null}
+
 
           {/* Wishlist — smaller, inset, glass */}
           <button
