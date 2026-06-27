@@ -36,7 +36,29 @@ export function productIdentity(product: Product): string {
 }
 
 const TITLE_CLASS =
-  "product-typography product-title-text block h-[2.7em] overflow-hidden break-words text-[18px] font-bold leading-[1.35] text-foreground";
+  "product-typography product-title-text block h-[2.5em] overflow-hidden break-words text-[18px] font-bold leading-[1.25] text-foreground";
+
+/**
+ * Reference-exact badge colors keyed by normalized label. Solid pills, white
+ * text (black on the light Bestseller pill). No gradients, transparency, glow.
+ */
+const BADGE_COLORS: Record<string, { bg: string; fg: string }> = {
+  TRENDING: { bg: "#FF8A00", fg: "#FFFFFF" },
+  "FLASH SALE": { bg: "#F44336", fg: "#FFFFFF" },
+  "FAST SELLING": { bg: "#C53DFF", fg: "#FFFFFF" },
+  PREMIUM: { bg: "#112D75", fg: "#FFFFFF" },
+  "HOT DEAL": { bg: "#FF5A3D", fg: "#FFFFFF" },
+  "LIMITED STOCK": { bg: "#F57C00", fg: "#FFFFFF" },
+  NEW: { bg: "#1ED760", fg: "#FFFFFF" },
+  BESTSELLER: { bg: "#FFD54F", fg: "#000000" },
+  "BEST SELLER": { bg: "#FFD54F", fg: "#000000" },
+};
+
+function badgeStyle(label: string, fallback?: CSSProperties): CSSProperties {
+  const c = BADGE_COLORS[label.trim().toUpperCase()];
+  if (c) return { backgroundColor: c.bg, color: c.fg, border: "none" };
+  return fallback ?? {};
+}
 
 function toAssignedBadge(b: RenderBadge): CardBadge {
   return {
@@ -47,11 +69,11 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
     // animations caused cross-browser paint invalidation while scrolling large
     // grids. Admin animation settings are preserved outside listing cards.
     className: "",
-    style: {
+    style: badgeStyle(b.label, {
       backgroundColor: b.backgroundColor || b.color,
       color: b.textColor,
       border: b.borderColor ? `1px solid ${b.borderColor}` : undefined,
-    },
+    }),
   };
 }
 
@@ -59,13 +81,13 @@ function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
   if (badges.length === 0) return null;
   const visible = badges.slice(0, 3);
   return (
-    <div className="absolute left-2 top-2 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1 overflow-hidden">
+    <div className="absolute left-3 top-3 flex max-w-[calc(100%-3.75rem)] flex-col items-start gap-1.5 overflow-hidden">
       {visible.map((b) => (
         <span
           key={b.id}
           data-product-badge
-          className={`inline-flex h-[22px] min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-accent/15 px-2.5 text-[10px] font-bold uppercase leading-none tracking-wide text-accent ${b.className ?? ""}`}
-          style={b.style}
+          className={`inline-flex h-[24px] min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-3 text-[12px] font-bold uppercase leading-none tracking-[0.3px] ${b.className ?? ""}`}
+          style={b.style ?? badgeStyle(b.label)}
         >
           {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
           <span className="truncate">{b.label}</span>
