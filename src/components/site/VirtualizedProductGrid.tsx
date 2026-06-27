@@ -132,6 +132,11 @@ export function VirtualizedProductGrid<T>({
   }, []);
 
   useEffect(() => {
+    // Android path never uses transform-based rows, so do not keep a body-level
+    // ResizeObserver running while the user flings through long product grids.
+    // Those callbacks add main-thread pressure exactly when Chrome/WebView is
+    // trying to invalidate raster tiles.
+    if (detectAndroid()) return;
     const el = parentRef.current;
     if (!el) return;
     const measure = () => {
