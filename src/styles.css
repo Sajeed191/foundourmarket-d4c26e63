@@ -1243,8 +1243,21 @@ html[data-android="true"] [data-product-copy] p {
 html[data-android="true"] [data-product-card],
 html[data-android="true"] .product-card-shell {
   overflow: visible !important;
-  content-visibility: visible !important;
   overflow-anchor: none;
+}
+
+/* SUSPECT #1 TEST — bound off-screen paint without promoting a layer.
+   Evidence: on Android the catalog renders unvirtualized and every card paints
+   into one tall, flattened root raster surface. Android Chrome cannot keep that
+   whole surface rasterized within its GPU tile budget on fast fling, so it
+   serves stale / dropped tiles (white bands, ghost text, stale images,
+   apparent duplicate cards). content-visibility:auto lets Chrome SKIP PAINTING
+   off-screen cards, capping raster area — no transform, no composited layer,
+   content stays in the DOM (SEO-safe). Fixed contain-intrinsic-size prevents
+   scroll-position jump. */
+html[data-android="true"] [data-product-card] {
+  content-visibility: auto !important;
+  contain-intrinsic-size: auto 340px !important;
 }
 
 html[data-android="true"] [data-product-grid] > *,
