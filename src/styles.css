@@ -1458,7 +1458,9 @@ html[data-android="true"] [data-product-grid] [data-product-card-frame] * {
   animation: none !important;
   backdrop-filter: none !important;
   contain: none !important;
-  content-visibility: visible !important;
+  /* content-visibility intentionally NOT forced here: the card root uses
+     content-visibility:auto (see SUSPECT #1 block above) to cap raster area.
+     Descendants stay visible via the universal Android reset. */
   filter: none !important;
   isolation: auto !important;
   mix-blend-mode: normal !important;
