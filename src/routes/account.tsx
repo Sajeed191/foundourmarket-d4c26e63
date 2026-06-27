@@ -1373,11 +1373,6 @@ function CompactSupportCard({
 
 type ContinueItem = { product: Product; badge: "cart" | "saved" | "viewed" };
 
-const CONTINUE_BADGE: Record<ContinueItem["badge"], { label: string; icon: string }> = {
-  cart: { label: "In Cart", icon: "🛒" },
-  saved: { label: "Saved", icon: "❤️" },
-  viewed: { label: "Recently Viewed", icon: "👀" },
-};
 
 function ContinueShopping({ items }: { items: ContinueItem[] }) {
   const shown = items.slice(0, 9);
