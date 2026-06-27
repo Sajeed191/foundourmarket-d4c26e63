@@ -222,19 +222,20 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
     <article
       data-product-card
       data-product-id={identity}
-      className="product-card-shell relative flex h-full min-h-[430px] flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_4px_20px_-12px_oklch(0_0_0/0.7)]"
+      style={{ backgroundColor: "#111216", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 12px 30px rgba(0,0,0,0.45)" }}
+      className="product-card-shell relative flex h-full min-h-[430px] flex-col overflow-hidden rounded-[24px]"
     >
       <ProductCardAdminControlsGate product={product} />
 
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3" aria-label={product.name}>
-        <div data-product-media className="relative aspect-square w-full overflow-hidden rounded-[18px] bg-white">
+      <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3.5" aria-label={product.name}>
+        <div data-product-media className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-white">
           <ProductImage
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
             width={800}
             height={800}
             priority={priority}
-            className="block h-full w-full object-contain"
+            className="block h-full w-full object-cover"
           />
           <ProductBadges badges={badges} />
           <WishlistButton slug={product.slug} name={product.name} />
@@ -242,35 +243,35 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         </div>
       </Link>
 
-      <div data-product-copy className="product-copy grid flex-1 grid-rows-[auto_16px_50px_16px_56px] gap-y-2 px-3.5 pb-3.5 pt-1">
+      <div data-product-copy className="product-copy grid flex-1 grid-rows-[auto_18px_44px_18px_62px] gap-y-2 px-3.5 pb-3.5 pt-1">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block min-w-0">
           <h3 data-product-text className={TITLE_CLASS}>{product.name}</h3>
         </Link>
 
-        <div className="product-meta-flow flex min-w-0 items-center gap-2 overflow-hidden">
+        <div className="product-meta-flow flex min-w-0 items-center gap-1.5 overflow-hidden">
           {product.reviews > 0 ? (
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <Star className="size-3.5 shrink-0 fill-accent text-accent" />
-              <span data-product-text className="product-typography product-rating-text text-[12px] font-semibold tabular-nums text-foreground">{product.rating.toFixed(1)}</span>
-              <span data-product-text className="product-typography product-rating-text truncate font-mono text-[11px] text-muted-foreground">({product.reviews.toLocaleString()})</span>
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              <Star className="size-4 shrink-0 fill-accent text-accent" />
+              <span data-product-text className="product-typography product-rating-text text-[16px] font-semibold tabular-nums text-foreground">{product.rating.toFixed(1)}</span>
+              <span data-product-text className="product-typography product-rating-text truncate text-[14px] text-muted-foreground">({product.reviews.toLocaleString()})</span>
             </span>
           ) : (
-            <span data-product-text className="product-typography product-rating-text text-[11px] font-medium text-accent">New Product</span>
+            <span data-product-text className="product-typography product-rating-text text-[14px] font-medium text-accent">New Product</span>
           )}
           {product.soldCount > 0 && (
-            <span data-product-text className="product-typography product-rating-text truncate text-[10px] font-medium text-muted-foreground">🔥 {formatSold(product.soldCount)} sold</span>
+            <span data-product-text className="product-typography product-rating-text truncate text-[11px] font-medium text-muted-foreground">🔥 {formatSold(product.soldCount)} sold</span>
           )}
         </div>
 
         <div className="product-price-flow flex min-w-0 flex-col justify-center overflow-hidden">
-          <Price value={price} className="block truncate font-display text-[32px] font-bold leading-none tabular-nums text-foreground" />
+          <Price value={price} className="block truncate font-display text-[36px] font-extrabold leading-none tabular-nums text-foreground" />
           {originalPrice && discount ? (
             <div className="mt-1.5 flex min-w-0 items-center gap-2 overflow-hidden">
-              <Price value={originalPrice} className="block shrink-0 font-mono text-[12px] tabular-nums text-muted-foreground line-through" />
-              <span data-product-text className="product-typography product-price-text truncate font-mono text-[12px] font-bold leading-none text-accent">{discount}% OFF</span>
+              <Price value={originalPrice} className="block shrink-0 text-[13px] tabular-nums text-muted-foreground line-through" />
+              <span data-product-text className="product-typography product-price-text truncate text-[13px] font-bold leading-none text-accent">{discount}% OFF</span>
             </div>
           ) : (
-            <span aria-hidden data-product-text className="product-typography mt-1.5 block text-[12px] leading-none invisible">.</span>
+            <span aria-hidden data-product-text className="product-typography mt-1.5 block text-[13px] leading-none invisible">.</span>
           )}
         </div>
 
