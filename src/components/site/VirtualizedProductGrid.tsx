@@ -152,16 +152,18 @@ export function VirtualizedProductGrid<T>({
     scrollMargin: offsetTop,
   });
 
-  // Android (or any non-virtualized large list): transform-free incremental grid.
-  if (isAndroid && big) {
+  // Android / constrained devices (or any non-virtualized large list):
+  // transform-free incremental grid in normal document flow.
+  if (useIncremental && big) {
     return (
       <div ref={parentRef}>
         <IncrementalGrid
           items={items}
           renderItem={renderItem}
           className={className}
-          // ~30 cards per batch keeps memory and paint cost low on 2–4GB phones.
-          batchSize={30}
+          // 16 cards per batch (initial + each load-more) keeps memory and paint
+          // cost low on 2–4GB Android phones while feeling like infinite scroll.
+          batchSize={16}
         />
       </div>
     );
