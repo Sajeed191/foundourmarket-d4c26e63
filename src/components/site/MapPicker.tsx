@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { toast } from "sonner";
 import { Loader2, Search, MapPin, ArrowLeft, Check, Crosshair, AlertCircle } from "lucide-react";
 
 export type MapPickResult = {
