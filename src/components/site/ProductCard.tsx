@@ -64,10 +64,10 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       <article
         data-product-card
         data-android-static-card
-        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card"
+        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card"
       >
-        <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block">
-          <div data-product-media className="android-static-product-media relative aspect-square w-full bg-muted">
+        <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3">
+          <div data-product-media className="android-static-product-media relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
             <img
               data-product-image
               src={product.image}
@@ -76,7 +76,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               height={800}
               loading="lazy"
               decoding="sync"
-              className="block h-full w-full object-cover"
+              className="block h-full w-full object-contain"
             />
             {visibleBadges.length > 0 && (
               <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
@@ -84,14 +84,14 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                   <span
                     key={("assignmentId" in b ? b.assignmentId : undefined) ?? ("key" in b ? b.key : b.id)}
                     data-product-badge
-                    className="inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide text-accent"
                   >
                     {b.emoji && <span aria-hidden>{b.emoji}</span>}
                     {b.label}
                   </span>
                 ))}
                 {extraBadges > 0 && (
-                  <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">
+                  <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">
                     +{extraBadges}
                   </span>
                 )}
