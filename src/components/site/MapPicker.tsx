@@ -443,15 +443,30 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
         <button
           type="button"
           onClick={locateMe}
+          disabled={locating}
           aria-label="Use my current location"
-          className="absolute right-4 z-[1200] grid size-12 place-items-center rounded-full border border-accent/40 bg-card text-accent shadow-lg"
+          aria-busy={locating}
+          className="absolute right-4 z-[1200] grid size-12 place-items-center rounded-full border border-accent/40 bg-card text-accent shadow-lg disabled:opacity-70"
           style={{
             bottom: `calc(${snap}% + 1rem)`,
             transition: dragging ? "none" : "bottom 0.2s ease",
           }}
         >
-          <Crosshair className="size-5" />
+          {locating ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <Crosshair className="size-5" />
+          )}
         </button>
+        {/* Detecting banner */}
+        {locating && (
+          <div className="pointer-events-none absolute left-1/2 top-4 z-[1200] -translate-x-1/2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur">
+              <Loader2 className="size-3.5 animate-spin text-accent" />
+              Detecting your location…
+            </span>
+          </div>
+        )}
 
         {/* Draggable bottom sheet */}
         <div
