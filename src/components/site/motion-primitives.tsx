@@ -1,5 +1,5 @@
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 /**
  * framer-motion implementations of the homepage reveal + counter animations.
@@ -21,12 +21,13 @@ export function MotionReveal({
   children,
   className,
   delay = 0,
-  ...props
+  productCardFrame = false,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
-} & Omit<HTMLAttributes<HTMLDivElement>, "children">) {
+  productCardFrame?: boolean;
+}) {
   return (
     <motion.div
       variants={fadeUp}
@@ -35,7 +36,7 @@ export function MotionReveal({
       viewport={{ once: true, margin: "-80px" }}
       custom={delay}
       className={className}
-      {...props}
+      data-product-card-frame={productCardFrame ? "" : undefined}
     >
       {children}
     </motion.div>
