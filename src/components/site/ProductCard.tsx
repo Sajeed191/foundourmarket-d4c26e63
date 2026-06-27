@@ -242,7 +242,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block" aria-label={product.name}>
         <div
           data-product-media
-          className="relative aspect-square w-full overflow-hidden rounded-t-[26px] bg-white"
+          className="relative aspect-square w-full overflow-hidden rounded-t-[26px] bg-white p-[0.5%]"
         >
           <ProductImage
             src={product.image}
