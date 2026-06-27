@@ -442,7 +442,7 @@ function HistoryPage() {
                 View all <ArrowRight className="size-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+            <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {wishProducts.map((p) => (
                 <ProductCard key={p!.slug} product={p!} />
               ))}

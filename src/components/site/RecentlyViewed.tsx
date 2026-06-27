@@ -29,17 +29,17 @@ function MiniCard({ product }: { product: Product }) {
   const inCart = items.some((i) => i.slug === product.slug);
 
   return (
-    <div className="group card-premium overflow-hidden p-2.5 flex flex-col">
+    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
         <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
           <img
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-[opacity] duration-500"
           />
         </div>
-        <h4 className="text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
+        <h4 className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
       </Link>
       <div className="mt-2 flex items-center justify-between gap-2">
         <Price value={priceOf(product)} className="font-display font-semibold text-sm tabular-nums leading-none" />
@@ -51,7 +51,7 @@ function MiniCard({ product }: { product: Product }) {
             window.setTimeout(() => setJustAdded(false), 900);
           }}
           aria-label={`Add ${product.name} to cart`}
-          className={`shrink-0 grid place-items-center size-8 rounded-full bg-accent text-accent-foreground transition-all hover:brightness-110 active:scale-90 shadow-[var(--shadow-ember)] ${justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
+          className={`shrink-0 grid place-items-center size-8 rounded-full bg-accent text-accent-foreground transition-colors hover:brightness-110 shadow-[var(--shadow-ember)] ${justAdded ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
         >
           {justAdded || inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
         </button>

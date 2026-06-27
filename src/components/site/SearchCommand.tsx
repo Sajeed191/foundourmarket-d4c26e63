@@ -264,8 +264,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                       >
                         <img src={p.image} alt="" loading="lazy" className="size-11 rounded-lg object-cover border border-border" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{p.name}</p>
-                          <p className="text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
+                          <p className="product-typography product-title-text text-sm font-medium truncate">{p.name}</p>
+                          <p className="product-typography text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
                         </div>
                         <Price value={priceOf(p)} className="font-mono text-sm text-accent" />
                       </Link>
@@ -358,8 +358,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                       >
                         <img src={p.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover border border-border" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{p.name}</p>
-                          <p className="text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
+                          <p className="product-typography product-title-text text-sm font-medium truncate">{p.name}</p>
+                          <p className="product-typography text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>
                         </div>
                         <Price value={p.price} className="font-mono text-sm text-accent" />
                       </Link>

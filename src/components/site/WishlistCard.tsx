@@ -86,6 +86,7 @@ export function WishlistCard({
 
   return (
     <div
+      data-product-card
       className={`group product-card-glass overflow-hidden relative flex flex-col h-full p-2 transition-all duration-300 ${
         selected ? "ring-2 ring-accent shadow-[var(--shadow-ember)]" : ""
       }`}
@@ -121,14 +122,14 @@ export function WishlistCard({
             width={800}
             height={1000}
             onLoad={() => setImgLoaded(true)}
-            className={`relative w-full h-full object-cover [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.16,1,0.3,1)] sm:group-hover:scale-[1.06] ${
+            className={`relative w-full h-full object-cover transition-opacity duration-500 ${
               imgLoaded ? "opacity-100" : "opacity-0"
             }`}
           />
 
           {/* Discount badge — top-left, orange pill, black text */}
           {discount ? (
-            <span className={`absolute top-2 inline-flex items-center rounded-full bg-accent text-black font-bold font-mono text-[10px] px-2 py-0.5 shadow-[var(--shadow-ember)] ${selectMode ? "left-10" : "left-2"}`}>
+            <span data-product-badge className={`absolute top-2 inline-flex items-center rounded-full bg-accent text-black font-bold font-mono text-[10px] px-2 py-0.5 shadow-[var(--shadow-ember)] ${selectMode ? "left-10" : "left-2"}`}>
               -{discount}%
             </span>
           ) : null}
@@ -142,6 +143,7 @@ export function WishlistCard({
             {badges.slice(0, 2).map((b) => (
               <span
                 key={b.key}
+                data-product-badge
                 className={`inline-flex items-center gap-1 text-[9px] font-bold font-mono px-1.5 min-h-[18px] leading-none rounded-md tracking-wider whitespace-nowrap shadow-sm md:gap-1 md:text-[10px] md:px-2 md:min-h-[20px] lg:gap-1.5 lg:text-sm lg:px-3 lg:min-h-[26px] ${
                   b.className ?? ""
                 } ${badgeAnimationClass(b.animation)}`}
@@ -178,7 +180,7 @@ export function WishlistCard({
                 toggle(product.slug);
               }}
               aria-label="Remove from wishlist"
-              className="size-8 grid place-items-center rounded-full bg-accent/25 border border-accent text-accent backdrop-blur-xl shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 hover:brightness-125"
+               className="size-8 grid place-items-center rounded-full bg-accent/25 border border-accent text-accent backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:brightness-125"
             >
               <Heart className="size-3 fill-accent" />
             </button>
@@ -188,7 +190,7 @@ export function WishlistCard({
                 onQuickView();
               }}
               aria-label="Quick view"
-              className="size-8 grid place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-xl shadow-lg shadow-black/30 transition-all duration-300 active:scale-90 hover:bg-accent/25 hover:border-accent hover:text-accent"
+              className="size-8 grid place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:bg-accent/25 hover:border-accent hover:text-accent"
             >
               <Eye className="size-3.5" />
             </button>
@@ -202,13 +204,13 @@ export function WishlistCard({
         onClick={cardClick}
         className="relative flex flex-1 flex-col px-1"
       >
-        <h4 className="font-medium line-clamp-2 group-hover:text-accent transition-colors text-sm leading-snug min-h-[2.5em]">
+          <h4 className="product-typography product-title-text font-medium line-clamp-2 group-hover:text-accent transition-colors text-sm leading-snug min-h-[2.5em]">
           {product.name}
         </h4>
         {product.tagline ? (
-          <p className="text-muted-foreground truncate text-[11px] mt-0.5">{product.tagline}</p>
+          <p className="product-typography text-muted-foreground truncate text-[11px] mt-0.5">{product.tagline}</p>
         ) : product.category ? (
-          <p className="text-muted-foreground/70 capitalize truncate text-[11px] mt-0.5">
+          <p className="product-typography text-muted-foreground/70 capitalize truncate text-[11px] mt-0.5">
             {product.category.replace(/-/g, " ")}
           </p>
         ) : null}
@@ -218,12 +220,12 @@ export function WishlistCard({
           {product.reviews > 0 ? (
             <>
               <StarRating rating={product.rating} showValue starClassName="size-3" textClassName="text-[10px]" />
-              <span className="font-mono text-muted-foreground/70 text-[9px] mt-0.5">
+              <span className="product-typography product-rating-text font-mono text-muted-foreground/70 text-[9px] mt-0.5">
                 {product.reviews.toLocaleString()} Reviews
               </span>
             </>
           ) : (
-            <span className="font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
+            <span className="product-typography product-rating-text font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
               New Product
             </span>
           )}
@@ -231,7 +233,7 @@ export function WishlistCard({
 
         {/* Variant summary */}
         {variantSummary ? (
-          <p className="mt-1 text-[10px] font-mono text-muted-foreground/80 truncate">
+          <p className="product-typography mt-1 text-[10px] font-mono text-muted-foreground/80 truncate">
             {variantSummary}
           </p>
         ) : null}
@@ -239,22 +241,22 @@ export function WishlistCard({
         {/* Stock + shipping row */}
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 min-h-[14px]">
           {shippingFee <= 0 && (
-            <span className="font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
+            <span className="product-typography font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
               Free Shipping
             </span>
           )}
           {product.inStock && lowStock && (
-            <span className="font-mono uppercase tracking-wider text-accent/90 text-[9px]">
+            <span className="product-typography font-mono uppercase tracking-wider text-accent/90 text-[9px]">
               Only {product.stockQuantity} left
             </span>
           )}
           {product.inStock && !lowStock && (
-            <span className="font-mono uppercase tracking-wider text-emerald-400/80 text-[9px]">
+            <span className="product-typography font-mono uppercase tracking-wider text-emerald-400/80 text-[9px]">
               In Stock
             </span>
           )}
           {!product.inStock && (
-            <span className="font-mono uppercase tracking-wider text-muted-foreground text-[9px]">
+            <span className="product-typography font-mono uppercase tracking-wider text-muted-foreground text-[9px]">
               Out of Stock
             </span>
           )}
@@ -262,7 +264,7 @@ export function WishlistCard({
 
         {/* Price drop indicator */}
         {priceDrop && priceDrop > 0 ? (
-          <span className="mt-1 inline-flex items-center gap-1 self-start rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold font-mono text-[9px] px-2 py-0.5">
+          <span className="product-typography product-price-text mt-1 inline-flex items-center gap-1 self-start rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold font-mono text-[9px] px-2 py-0.5">
             <TrendingDown className="size-2.5" /> Price dropped <Price value={priceDrop} skeletonClassName="h-[1em] w-8" />
           </span>
         ) : null}
@@ -279,11 +281,11 @@ export function WishlistCard({
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-all duration-300 hover:brightness-110 active:scale-90 ${justAdded ? "animate-cart-pulse" : ""}`}
+              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-colors duration-300 hover:brightness-110 ${justAdded ? "animate-cart-pulse" : ""}`}
             >
               {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
               {cartQty > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
+                  <span className="product-typography absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
                   {cartQty}
                 </span>
               )}
@@ -291,7 +293,7 @@ export function WishlistCard({
           ) : (
             <span
               onClick={(e) => e.preventDefault()}
-              className="shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-2 py-1 text-[9px]"
+              className="product-typography shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-2 py-1 text-[9px]"
             >
               Sold Out
             </span>

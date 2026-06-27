@@ -49,7 +49,7 @@ export function RecommendationStrip({ title, slugs, icon, subtitle }: Props) {
       ) : (
         <>
           <ProductRail products={products} compact />
-          <div className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+          <div data-product-grid className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
             {products.map((p) => <ProductCard key={p.slug} product={p} compact />)}
           </div>
         </>

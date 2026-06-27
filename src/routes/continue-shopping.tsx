@@ -76,34 +76,34 @@ function ActivityCard({ entry }: { entry: Entry }) {
   const Icon = meta.icon;
 
   return (
-    <div className="group card-premium overflow-hidden p-2.5 flex flex-col">
+    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
         <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
           <img
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-opacity duration-500"
           />
-          <span className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur ${meta.tone}`}>
+          <span className={`product-typography absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur ${meta.tone}`}>
             <Icon className="size-3" /> {meta.label}
           </span>
           {!product.inStock && (
-            <span className="absolute right-2 top-2 inline-flex items-center rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            <span className="product-typography absolute right-2 top-2 inline-flex items-center rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
               Out of stock
             </span>
           )}
         </div>
-        <h3 className="text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h3>
+        <h3 className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h3>
       </Link>
 
       <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
         <Clock className="size-3 shrink-0" />
-        <span className="truncate">{relTime(at)}</span>
+        <span className="product-typography truncate">{relTime(at)}</span>
         {product.inStock ? (
-          <span className="ml-auto text-emerald-400 font-medium">In stock</span>
+          <span className="product-typography ml-auto text-emerald-400 font-medium">In stock</span>
         ) : (
-          <span className="ml-auto text-muted-foreground">—</span>
+          <span className="product-typography ml-auto text-muted-foreground">—</span>
         )}
       </div>
 
@@ -114,9 +114,9 @@ function ActivityCard({ entry }: { entry: Entry }) {
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="mt-3 inline-flex h-11 sm:h-12 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 sm:px-5 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 active:scale-[0.97] shadow-[var(--shadow-ember)]"
+        className="mt-3 inline-flex h-11 sm:h-12 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 sm:px-5 text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-accent-foreground transition-colors hover:brightness-110 shadow-[var(--shadow-ember)]"
       >
-        <span className="truncate">Continue Shopping</span>
+        <span className="product-typography truncate">Continue Shopping</span>
         <ArrowRight className="size-3.5 shrink-0" />
       </Link>
     </div>
@@ -319,6 +319,7 @@ function ContinueShoppingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
+            data-product-grid
             className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
           >
             {visible.map((entry) => (

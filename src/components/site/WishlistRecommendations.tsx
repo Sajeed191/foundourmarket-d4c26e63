@@ -15,7 +15,7 @@ function MiniCard({ product }: { product: Product }) {
   const inCart = items.some((i) => i.slug === product.slug);
 
   return (
-    <div className="group card-premium overflow-hidden p-2 flex flex-col">
+    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
         <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
           <img
@@ -23,15 +23,15 @@ function MiniCard({ product }: { product: Product }) {
             alt={product.name}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-[opacity] duration-500"
           />
           {!product.inStock && (
-            <span className="absolute top-1.5 left-1.5 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+            <span className="product-typography absolute top-1.5 left-1.5 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
               Sold out
             </span>
           )}
         </div>
-        <h4 className="text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">
+        <h4 className="product-typography product-title-text text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">
           {product.name}
         </h4>
       </Link>
@@ -44,7 +44,7 @@ function MiniCard({ product }: { product: Product }) {
           }}
           disabled={!product.inStock}
           aria-label={`Add ${product.name} to cart`}
-          className="shrink-0 grid place-items-center size-7 rounded-full bg-accent text-accent-foreground transition-all hover:brightness-110 active:scale-90 shadow-[var(--shadow-ember)] disabled:opacity-40"
+          className="shrink-0 grid place-items-center size-7 rounded-full bg-accent text-accent-foreground transition-colors hover:brightness-110 shadow-[var(--shadow-ember)] disabled:opacity-40"
         >
           {inCart ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
         </button>

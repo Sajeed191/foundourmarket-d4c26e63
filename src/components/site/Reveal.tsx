@@ -23,10 +23,12 @@ export function Reveal({
   children,
   className,
   delay = 0,
+  productCardFrame = false,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
+  productCardFrame?: boolean;
 }) {
   const lowEnd = useLowEndDevice();
   const android = useIsAndroid();
@@ -36,11 +38,11 @@ export function Reveal({
   // fast scroll. Content still renders fully — only the entrance animation is
   // dropped on the devices that can't afford it.
   if (android || lowEnd) {
-    return <div className={className}>{children}</div>;
+    return <div className={className} data-product-card-frame={productCardFrame ? "" : undefined}>{children}</div>;
   }
   return (
-    <Suspense fallback={<div className={className}>{children}</div>}>
-      <MotionReveal className={className} delay={delay}>
+    <Suspense fallback={<div className={className} data-product-card-frame={productCardFrame ? "" : undefined}>{children}</div>}>
+      <MotionReveal className={className} delay={delay} productCardFrame={productCardFrame}>
         {children}
       </MotionReveal>
     </Suspense>

@@ -665,19 +665,15 @@ function StatusBadge({ status }: { status: string }) {
 function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
   return (
     <div className="-mx-4 sm:mx-0">
-      <div className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
-        {items.map((p, i) => (
-          <motion.div
+      <div data-product-grid className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
+        {items.map((p) => (
+          <div
             key={p.slug}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.4, ease, delay: Math.min(i * 0.05, 0.3) }}
+            data-product-card-frame
             className="snap-center shrink-0 w-[44%] xs:w-[40%] sm:w-[22%] lg:w-[20%] max-w-[150px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
           >
             <ProductCard product={p as never} compact />
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -730,17 +726,18 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   return (
-    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
+    <div data-product-grid className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
       {items.map((p) => {
         const saved = has(p.slug);
         return (
           <div
             key={p.slug}
+            data-product-card
             className="snap-start shrink-0 w-[150px] sm:w-[160px] group bg-card border border-border rounded-xl p-2 hover:border-accent/40 transition-colors"
           >
             <Link to="/products/$slug" params={{ slug: p.slug }} className="block relative">
               <div className="aspect-square rounded-lg overflow-hidden bg-black/40">
-                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-opacity duration-500" />
               </div>
               <button
                 onClick={(e) => { e.preventDefault(); toggle(p.slug); }}
@@ -751,9 +748,9 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
               </button>
             </Link>
             <div className="px-0.5 pt-2 pb-1">
-              <p className="text-[11.5px] font-medium truncate">{p.name}</p>
+              <p className="product-typography product-title-text text-[11.5px] font-medium truncate">{p.name}</p>
               <div className="mt-1 flex items-center justify-between gap-1">
-                <span className="font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
+                <span className="product-typography product-price-text font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
                 <button
                   onClick={() => add(p.slug)}
                   aria-label="Add to cart"
@@ -1387,6 +1384,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
   return (
     <div className="-mx-4 sm:mx-0">
       <div
+        data-product-grid
         className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-3 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         style={{
           scrollPaddingLeft: "1rem",
@@ -1398,9 +1396,10 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
         {shown.map(({ product, badge }) => (
           <div
             key={product.slug}
+            data-product-card-frame
             className="relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
           >
-            <span className="pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
+            <span className="product-typography pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
               <span aria-hidden>{CONTINUE_BADGE[badge].icon}</span>
               {CONTINUE_BADGE[badge].label}
             </span>

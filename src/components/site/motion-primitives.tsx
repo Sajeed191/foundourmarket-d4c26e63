@@ -21,10 +21,12 @@ export function MotionReveal({
   children,
   className,
   delay = 0,
+  productCardFrame = false,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
+  productCardFrame?: boolean;
 }) {
   return (
     <motion.div
@@ -34,6 +36,7 @@ export function MotionReveal({
       viewport={{ once: true, margin: "-80px" }}
       custom={delay}
       className={className}
+      data-product-card-frame={productCardFrame ? "" : undefined}
     >
       {children}
     </motion.div>
