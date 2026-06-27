@@ -944,6 +944,19 @@ html[data-android="true"] [data-decorative],
 html[data-android="true"] .orb {
   display: none !important;
 }
+/* Kill `transition: all` (forces full-property recomputation + repaint on every
+   scroll-driven style change). Keep only cheap opacity/color transitions. */
+html[data-android="true"] .transition-all,
+html[data-android="true"] [class*="transition-all"] {
+  transition-property: opacity, color, background-color, border-color !important;
+}
+/* Never promote/contain compositor layers on Android — the source of the
+   stale-tile ghosting under fast fling scroll. */
+html[data-android="true"] * {
+  contain: none !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+}
 
 /* =====================================================================
    THEME SYSTEM — System / Dark / Grey / Light
