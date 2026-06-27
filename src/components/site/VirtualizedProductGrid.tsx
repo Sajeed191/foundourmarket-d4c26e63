@@ -114,7 +114,10 @@ export function VirtualizedProductGrid<T>({
   const [width, setWidth] = useState(0);
   // Capability + browser-based decision (not RAM alone): Android browsers and
   // very constrained devices fall back to the transform-free incremental grid.
-  const [useIncremental, setUseIncremental] = useState(false);
+  const [useIncremental, setUseIncremental] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return shouldUseIncrementalRendering();
+  });
   // Track the container's distance from the document top as LIVE state. The
   // window virtualizer needs this as `scrollMargin` to place rows correctly.
   const [offsetTop, setOffsetTop] = useState(0);
