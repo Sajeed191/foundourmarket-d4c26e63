@@ -921,6 +921,7 @@ html[data-android="true"] * {
   backdrop-filter: none !important;
   mix-blend-mode: normal !important;
   perspective: none !important;
+  transform-style: flat !important;
 }
 
 html[data-android="true"] *,
@@ -940,6 +941,13 @@ html[data-android="true"] [data-app-content] {
 html[data-android="true"] .cv-auto {
   content-visibility: visible !important;
   contain-intrinsic-size: none !important;
+}
+
+html[data-android="true"] .noise-layer::before,
+html[data-android="true"] .glass-reflect::after {
+  display: none !important;
+  mix-blend-mode: normal !important;
+  background-image: none !important;
 }
 
 html[data-android="true"] .hero-rise,
@@ -997,6 +1005,16 @@ html[data-android="true"] [role="region"][aria-label="Announcements"] {
   transition-property: color, background-color, border-color, opacity !important;
 }
 
+html[data-android="true"] [data-app-header],
+html[data-android="true"] [data-app-header] *,
+html[data-android="true"] [data-app-bottom-nav],
+html[data-android="true"] [data-app-bottom-nav] * {
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+}
+
 html[data-android="true"] [data-search-sticky] {
   display: none !important;
 }
@@ -1037,6 +1055,7 @@ html[data-android="true"] .group {
   contain: none !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
+  will-change: auto !important;
 }
 
 /* Product media may use blur/opacity while loading, but it must not promote the
@@ -1045,6 +1064,10 @@ html[data-android="true"] .group {
 html[data-android="true"] [data-product-media] {
   contain: none !important;
   isolation: auto !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  mask-image: none !important;
   transform: initial !important;
   translate: none !important;
   scale: none !important;
@@ -1066,14 +1089,28 @@ html[data-android="true"] [data-product-image-placeholder] {
 }
 
 html[data-android="true"] [data-product-image] {
+  border-radius: 0 !important;
+  clip-path: none !important;
+  mask-image: none !important;
   transform: initial !important;
   translate: none !important;
   scale: none !important;
   rotate: none !important;
   filter: none !important;
   will-change: auto !important;
-  transition-property: opacity !important;
+  transition-property: none !important;
+  transition-duration: 0s !important;
   opacity: 1 !important;
+}
+
+html[data-android="true"] [data-product-media] > .absolute,
+html[data-android="true"] [data-product-media] [class*="gradient"],
+html[data-android="true"] [data-product-media] [class*="shadow"],
+html[data-android="true"] [data-product-media] [class*="blur"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  transform: initial !important;
+  transition-property: none !important;
 }
 
 /* Product-card text pipeline hardening for Android Chrome/WebView/Samsung.
@@ -1121,6 +1158,18 @@ html[data-android="true"] .product-card-shell {
   overflow: visible !important;
   content-visibility: visible !important;
   overflow-anchor: none;
+}
+
+html[data-android="true"] [data-product-grid] > *,
+html[data-android="true"] [data-product-card-frame],
+html[data-android="true"] [data-product-card-frame] > * {
+  contain: none !important;
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+  isolation: auto !important;
 }
 
 /* Framer Motion / Reveal wrappers were the remaining root cause: product cards
@@ -1234,6 +1283,12 @@ html[data-android="true"] .glow-border:active {
   translate: none !important;
   scale: none !important;
   rotate: none !important;
+}
+
+html[data-android="true"][data-theme="light"] .bottom-nav-light,
+html[data-android="true"][data-theme="grey"] .bottom-nav-light {
+  backdrop-filter: none !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 
 /* =====================================================================
