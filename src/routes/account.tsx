@@ -726,17 +726,18 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   return (
-    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
+    <div data-product-grid className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
       {items.map((p) => {
         const saved = has(p.slug);
         return (
           <div
             key={p.slug}
+            data-product-card
             className="snap-start shrink-0 w-[150px] sm:w-[160px] group bg-card border border-border rounded-xl p-2 hover:border-accent/40 transition-colors"
           >
             <Link to="/products/$slug" params={{ slug: p.slug }} className="block relative">
               <div className="aspect-square rounded-lg overflow-hidden bg-black/40">
-                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-opacity duration-500" />
               </div>
               <button
                 onClick={(e) => { e.preventDefault(); toggle(p.slug); }}
@@ -747,9 +748,9 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
               </button>
             </Link>
             <div className="px-0.5 pt-2 pb-1">
-              <p className="text-[11.5px] font-medium truncate">{p.name}</p>
+              <p className="product-typography product-title-text text-[11.5px] font-medium truncate">{p.name}</p>
               <div className="mt-1 flex items-center justify-between gap-1">
-                <span className="font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
+                <span className="product-typography product-price-text font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
                 <button
                   onClick={() => add(p.slug)}
                   aria-label="Add to cart"

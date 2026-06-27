@@ -299,7 +299,7 @@ function DealsPage() {
               items={visibleProducts}
               cols={{ base: 2, lg: 4 }}
               className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [grid-auto-rows:1fr]"
-              renderItem={(p: Product, i: number) => (
+              renderItem={(p: Product) => (
                 <div
                   key={p.slug}
                   data-product-card-frame
