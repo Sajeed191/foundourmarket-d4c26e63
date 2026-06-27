@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { Heart, Plus, Check, Star, Minus, Eye } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
