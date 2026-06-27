@@ -35,13 +35,8 @@ function gapForWidth(w: number): number {
   return 12;
 }
 
-/** Stable key for an item (id/slug) with an index fallback. */
-function keyFor(item: unknown, index: number): string | number {
-  const o = item as { id?: string | number; slug?: string } | undefined;
-  return o?.id ?? o?.slug ?? index;
-}
-
 /**
+
  * Android / low-end rendering path: NO virtualization, NO transform offsets,
  * NO promoted compositor layers. Items render in normal document flow inside a
  * plain CSS grid and are revealed incrementally in small batches via an
