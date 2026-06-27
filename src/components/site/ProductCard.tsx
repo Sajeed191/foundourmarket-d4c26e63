@@ -64,10 +64,10 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
       <article
         data-product-card
         data-android-static-card
-        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card"
+        className="android-static-product-card flex h-full flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_4px_20px_-12px_oklch(0_0_0/0.7)]"
       >
         <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block p-3">
-          <div data-product-media className="android-static-product-media relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
+          <div data-product-media className="android-static-product-media relative aspect-square w-full overflow-hidden rounded-[18px] bg-white">
             <img
               data-product-image
               src={product.image}
@@ -79,19 +79,19 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               className="block h-full w-full object-contain"
             />
             {visibleBadges.length > 0 && (
-              <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
+              <div className="absolute left-2 top-2 flex flex-nowrap items-center gap-1">
                 {visibleBadges.map((b) => (
                   <span
                     key={("assignmentId" in b ? b.assignmentId : undefined) ?? ("key" in b ? b.key : b.id)}
                     data-product-badge
-                    className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide text-accent"
+                    className="inline-flex h-[19px] items-center gap-1 whitespace-nowrap rounded-full bg-accent/15 px-2 text-[10px] font-bold uppercase leading-none tracking-wide text-accent"
                   >
                     {b.emoji && <span aria-hidden>{b.emoji}</span>}
                     {b.label}
                   </span>
                 ))}
                 {extraBadges > 0 && (
-                  <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">
+                  <span data-product-badge className="inline-flex h-[19px] items-center whitespace-nowrap rounded-full bg-accent/15 px-2 text-[10px] font-bold leading-none text-accent">
                     +{extraBadges}
                   </span>
                 )}
@@ -99,6 +99,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
             )}
           </div>
         </Link>
+
 
         <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-1">
           <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
