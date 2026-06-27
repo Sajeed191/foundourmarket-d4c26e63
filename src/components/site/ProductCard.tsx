@@ -56,7 +56,9 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
   const isPremium = labels.some((b) => b.key === "premium");
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
 
-  const visibleBadges = !forceBadge && assigned.length > 0 ? assigned.slice(0, 1) : labels.slice(0, 1);
+  const allBadges = !forceBadge && assigned.length > 0 ? assigned : labels;
+  const visibleBadges = allBadges.slice(0, 3);
+  const extraBadges = Math.max(0, allBadges.length - 3);
 
   const androidStaticCard = (
       <article
