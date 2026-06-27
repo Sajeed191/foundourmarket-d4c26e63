@@ -329,20 +329,23 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
         </div>
 
         {/* Price */}
-        <div className="product-price-flow mt-1.5 flex min-h-[34px] flex-col justify-center">
-          <Price
-            value={price}
-            className="block font-display text-[20px] font-bold leading-none tabular-nums text-foreground"
-          />
+        <div className="product-price-flow mt-2 flex min-h-[34px] flex-col justify-center">
+          <div className="flex items-baseline gap-2">
+            <Price
+              value={price}
+              className="block font-display text-[21px] font-bold leading-none tabular-nums text-foreground"
+            />
+            {originalPrice && discount ? (
+              <Price value={originalPrice} className="block font-mono text-[11px] tabular-nums text-muted-foreground line-through" />
+            ) : null}
+          </div>
           {originalPrice && discount ? (
-            <span className="mt-1 flex items-center gap-1.5 leading-none">
-              <Price value={originalPrice} className="block font-mono text-[10px] tabular-nums text-muted-foreground line-through" />
-              <span data-product-text className="product-typography product-price-text font-mono text-[10px] font-semibold text-accent">{discount}% OFF</span>
-            </span>
+            <span data-product-text className="product-typography product-price-text mt-1 inline-flex w-fit items-center rounded-md bg-accent/12 px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none text-accent">{discount}% OFF</span>
           ) : (
             <span aria-hidden data-product-text className="product-typography mt-1 block text-[10px] leading-none invisible">.</span>
           )}
         </div>
+
 
         {/* Trust + stock — single line each, height reserved */}
         <div className="mt-1.5 flex h-[16px] items-center justify-between gap-2">
