@@ -975,6 +975,9 @@ html[data-android="true"] .product-copy,
 html[data-android="true"] .product-meta-flow,
 html[data-android="true"] .product-price-flow {
   transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;
@@ -984,6 +987,42 @@ html[data-android="true"] .product-price-flow {
   -webkit-backface-visibility: visible !important;
 }
 
+/* Framer Motion / Reveal wrappers were the remaining root cause: product cards
+   could be visually in the right place while their title/rating/price glyphs
+   were still rasterized inside a translated opacity layer. On Android, any
+   direct wrapper around a product card must collapse back to normal flow. */
+html[data-android="true"] :where(div, section, article):has(> [data-product-card]),
+html[data-android="true"] :where(div, section, article):has(> .product-card-shell),
+html[data-android="true"] [data-product-card-frame],
+html[data-android="true"] [data-product-grid] {
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  opacity: 1 !important;
+  will-change: auto !important;
+  contain: none !important;
+  isolation: auto !important;
+  animation: none !important;
+  transition-property: color, background-color, border-color, box-shadow !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+}
+
+/* Disable transform utility classes inside product cards on Android. Image zooms,
+   active button scales and quick-view translations are decorative; keeping them
+   can promote the card subtree and cause stale text tiles while scrolling. */
+html[data-android="true"] [data-product-card] [class*="scale-"],
+html[data-android="true"] [data-product-card] [class*="translate-"],
+html[data-android="true"] [data-product-card] [class*="rotate-"],
+html[data-android="true"] [data-product-card] [class*="transform"] {
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+}
+
 html[data-android="true"] .product-typography,
 html[data-android="true"] .product-price-text,
 html[data-android="true"] .product-title-text,
@@ -991,6 +1030,9 @@ html[data-android="true"] .product-rating-text,
 html[data-android="true"] [data-product-badge] {
   position: static;
   transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;

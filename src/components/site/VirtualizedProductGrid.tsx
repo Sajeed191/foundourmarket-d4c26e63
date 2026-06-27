@@ -84,7 +84,7 @@ function IncrementalGrid<T>({
 
   return (
     <>
-      <div className={className}>{shown.map((item, i) => renderItem(item, i))}</div>
+      <div data-product-grid className={className}>{shown.map((item, i) => renderItem(item, i))}</div>
       {visible < items.length && (
         <div ref={sentinelRef} aria-hidden style={{ height: 1 }} />
       )}
@@ -156,7 +156,7 @@ export function VirtualizedProductGrid<T>({
   // transform-free incremental grid in normal document flow.
   if (useIncremental && big) {
     return (
-      <div ref={parentRef}>
+      <div ref={parentRef} data-product-grid>
         <IncrementalGrid
           items={items}
           renderItem={renderItem}
@@ -172,7 +172,7 @@ export function VirtualizedProductGrid<T>({
   // Fallback: plain responsive grid (also the SSR / first-paint output).
   if (!shouldVirtualize) {
     return (
-      <div ref={parentRef} className={className}>
+      <div ref={parentRef} data-product-grid className={className}>
         {items.map((item, i) => renderItem(item, i))}
       </div>
     );
@@ -181,6 +181,7 @@ export function VirtualizedProductGrid<T>({
   return (
     <div
       ref={parentRef}
+      data-product-grid
       style={{
         position: "relative",
         height: rowVirtualizer.getTotalSize(),
