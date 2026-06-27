@@ -550,11 +550,15 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
             <button
               type="button"
               onClick={confirm}
-              disabled={confirming}
+              disabled={confirming || locating}
               className={`inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-accent text-[12px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 disabled:opacity-60 ${lowEnd ? "" : "shadow-[0_0_30px_-8px_var(--color-accent)]"}`}
             >
-              {confirming ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-              Confirm this location
+              {confirming || locating ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
+              {locating ? "Detecting your location…" : "Confirm this location"}
             </button>
           </div>
         </div>
