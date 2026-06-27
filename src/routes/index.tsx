@@ -248,9 +248,11 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
   return (
     <Reveal className="flex justify-between items-end mb-4 sm:mb-6 gap-4">
       <div className="min-w-0">
-        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2 flex items-center gap-2">
-          {Icon && <Icon className="size-3" />} {eyebrow}
-        </p>
+        {eyebrow && (
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2 flex items-center gap-2">
+            {Icon && <Icon className="size-3" />} {eyebrow}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <h2 className={`${prominent ? "text-fluid-3xl" : "text-fluid-2xl"} font-display tracking-tight`}>{title}</h2>
           {editable && sectionKey && (
