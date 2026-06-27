@@ -1015,6 +1015,16 @@ html[data-android="true"] [data-product-grid] {
   -webkit-backface-visibility: visible !important;
 }
 
+html[data-android="true"] [data-app-shell] {
+  isolation: auto !important;
+  contain: none !important;
+  transform: initial !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+}
+
 /* Disable transform utility classes inside product cards on Android. Image zooms,
    active button scales and quick-view translations are decorative; keeping them
    can promote the card subtree and cause stale text tiles while scrolling. */
