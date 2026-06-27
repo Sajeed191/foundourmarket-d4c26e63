@@ -944,8 +944,14 @@ html[data-android="true"] body,
 html[data-android="true"] [data-app-shell],
 html[data-android="true"] [data-app-content] {
   overflow-x: visible !important;
+  background-attachment: scroll !important;
   isolation: auto !important;
   contain: none !important;
+}
+
+html[data-android="true"] .animate-mesh,
+html[data-low-end="true"] .animate-mesh {
+  animation: none !important;
 }
 
 html[data-android="true"] .cv-auto {
