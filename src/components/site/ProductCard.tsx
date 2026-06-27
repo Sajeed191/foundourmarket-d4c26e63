@@ -97,8 +97,32 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                 )}
               </div>
             )}
+
+            {/* Wishlist — top-right inside image */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                toggle(product.slug);
+                if (!saved) setJustSaved(true);
+                window.setTimeout(() => setJustSaved(false), 600);
+              }}
+              aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
+              className={`absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border bg-black/45 ${saved ? "border-accent text-accent" : "border-white/25 text-white"}`}
+            >
+              <Heart className={`size-4 ${saved ? "fill-accent text-accent" : ""}`} />
+            </button>
+
+            {/* Quick view — bottom-right inside image */}
+            <button
+              onClick={(e) => { e.preventDefault(); setQuickOpen(true); }}
+              aria-label={`Quick view ${product.name}`}
+              className="absolute bottom-2 right-2 grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/55 text-white"
+            >
+              <Eye className="size-4" />
+            </button>
           </div>
         </Link>
+
 
 
         <div data-product-copy className="android-static-product-copy flex flex-1 flex-col px-3.5 pb-3.5 pt-1">
