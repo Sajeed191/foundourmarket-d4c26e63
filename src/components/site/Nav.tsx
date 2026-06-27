@@ -48,19 +48,18 @@ function catFallbackIcon(slug: string, name: string) {
 }
 
 function AnimatedHamburger({ open }: { open: boolean }) {
+  // Lay the three bars out with flexbox so their base position never depends on
+  // CSS transforms. Android strips `transform` from header descendants (a
+  // compositor mitigation in styles.css); the previous transform-based offsets
+  // collapsed all three bars onto one point, leaving a single visible line.
+  // Transform is now used only for the open→X morph (cosmetic on Android).
   const line =
-    "absolute left-1/2 top-1/2 block h-[1.5px] w-5 -translate-x-1/2 rounded-full bg-current [transition:transform_0.4s_cubic-bezier(0.4,0,0.2,1),opacity_0.25s_ease]";
+    "block h-[1.5px] w-5 rounded-full bg-current origin-center [transition:transform_0.4s_cubic-bezier(0.4,0,0.2,1),opacity_0.25s_ease]";
   return (
-    <div className="relative size-5">
-      <span
-        className={`${line} ${open ? "[transform:translate(-50%,-50%)_rotate(45deg)]" : "[transform:translate(-50%,calc(-50%-5px))]"}`}
-      />
-      <span
-        className={`${line} ${open ? "opacity-0 [transform:translate(-50%,-50%)_scale(0.6)]" : "opacity-100 [transform:translate(-50%,-50%)]"}`}
-      />
-      <span
-        className={`${line} ${open ? "[transform:translate(-50%,-50%)_rotate(-45deg)]" : "[transform:translate(-50%,calc(-50%+5px))]"}`}
-      />
+    <div className="flex size-5 flex-col items-center justify-center gap-[4px]">
+      <span className={`${line} ${open ? "[transform:translateY(5.5px)_rotate(45deg)]" : ""}`} />
+      <span className={`${line} ${open ? "opacity-0" : "opacity-100"}`} />
+      <span className={`${line} ${open ? "[transform:translateY(-5.5px)_rotate(-45deg)]" : ""}`} />
     </div>
   );
 }
