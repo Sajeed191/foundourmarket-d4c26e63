@@ -229,11 +229,11 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
               priority, else auto badges. Compact horizontal pills, max 3 + overflow. */}
           {!forceBadge && assigned.length > 0 ? (
             <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {assigned.slice(0, 3).map((b) => (
+              {assigned.slice(0, 2).map((b) => (
                 <span
                   key={b.assignmentId ?? b.id}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${badgeAnimationClass(b.animation)}`}
                   style={{
                     backgroundColor: b.backgroundColor || b.color,
                     color: b.textColor,
@@ -244,24 +244,24 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
                   {b.label}
                 </span>
               ))}
-              {assigned.length > 3 && (
-                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{assigned.length - 3}</span>
+              {assigned.length > 2 && (
+                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{assigned.length - 2}</span>
               )}
             </div>
           ) : labels.length > 0 ? (
             <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1">
-              {labels.slice(0, 3).map((b) => (
+              {labels.slice(0, 2).map((b) => (
                 <span
                   key={b.key}
                   data-product-badge
-                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-md px-1.5 py-[3px] text-[8px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
+                  className={`inline-flex animate-[fade-in_0.4s_ease-out] items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${b.className}`}
                 >
                   <span aria-hidden>{b.emoji}</span>
                   {b.label}
                 </span>
               ))}
-              {labels.length > 3 && (
-                <span data-product-badge className="inline-flex items-center rounded-md bg-black/55 px-1.5 py-[3px] text-[8px] font-bold leading-none text-white">+{labels.length - 3}</span>
+              {labels.length > 2 && (
+                <span data-product-badge className="inline-flex items-center rounded-full bg-accent/15 px-2 py-1 text-[9px] font-bold leading-none text-accent">+{labels.length - 2}</span>
               )}
             </div>
           ) : null}
