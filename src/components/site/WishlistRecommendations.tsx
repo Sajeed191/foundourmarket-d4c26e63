@@ -15,14 +15,15 @@ function MiniCard({ product }: { product: Product }) {
   const inCart = items.some((i) => i.slug === product.slug);
 
   return (
-    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2 flex flex-col">
+    <div data-product-card data-android-static-card className="group card-premium product-card-shell overflow-hidden p-2 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
+        <div data-product-media className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
           <img
+            data-product-image
             src={product.image}
             alt={product.name}
             loading="lazy"
-            decoding="async"
+            decoding="sync"
             className="w-full h-full object-cover transition-[opacity] duration-500"
           />
           {!product.inStock && (
@@ -31,7 +32,7 @@ function MiniCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
-        <h4 className="product-typography product-title-text text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">
+        <h4 data-product-text className="product-typography product-title-text text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">
           {product.name}
         </h4>
       </Link>

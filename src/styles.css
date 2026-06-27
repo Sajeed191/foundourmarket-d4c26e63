@@ -867,7 +867,7 @@ html[data-low-end="true"] [data-decorative] {
 /* Disable hover scale / transform flourishes that thrash compositing. */
 html[data-low-end="true"] .group:hover .group-hover\:scale-\[1\.08\],
 html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
-  transform: initial !important;
+  transform: none !important;
 }
 
 
@@ -913,6 +913,18 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
    positioned while text glyph tiles (price/title/rating/stock) repaint in stale
    scroll locations. We strip layer promotion from the entire product-card text
    chain and keep typography in normal document flow. */
+[data-product-card-static-fallback] {
+  display: none !important;
+}
+
+html[data-android="true"] [data-product-card-static-fallback] {
+  display: flex !important;
+}
+
+html[data-android="true"] [data-android-rich-card] {
+  display: none !important;
+}
+
 html[data-android="true"] * {
   /* Never let app code force-promote a layer that the compositor then fails to
      repaint on Android fast scroll. */
@@ -1079,10 +1091,7 @@ html[data-android="true"] [data-app-bottom-nav] li,
 html[data-android="true"] [data-app-bottom-nav] a,
 html[data-android="true"] [data-app-bottom-nav] span,
 html[data-android="true"] [data-app-bottom-nav] svg {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   transition-property: color, background-color, border-color, opacity !important;
   box-shadow: none !important;
 }
@@ -1091,10 +1100,7 @@ html[data-android="true"] [data-app-header],
 html[data-android="true"] [data-app-header] *,
 html[data-android="true"] [data-app-bottom-nav],
 html[data-android="true"] [data-app-bottom-nav] * {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
 }
 
 html[data-android="true"] [data-search-sticky] {
@@ -1104,10 +1110,7 @@ html[data-android="true"] [data-search-sticky] {
 html[data-android="true"] .group:hover .group-hover\:scale-\[1\.08\],
 html[data-android="true"] .sm\:hover\:scale-\[1\.02\]:hover,
 html[data-android="true"] .active\:scale-\[0\.99\]:active {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
 }
 /* Lighter shadows = cheaper repaint, fewer stale-tile artifacts. */
 html[data-android="true"] .product-card-glass,
@@ -1150,10 +1153,7 @@ html[data-android="true"] [data-product-media] {
   border-radius: 0 !important;
   clip-path: none !important;
   mask-image: none !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   filter: none !important;
   backdrop-filter: none !important;
   will-change: auto !important;
@@ -1164,10 +1164,7 @@ html[data-android="true"] [data-product-media] button,
 html[data-android="true"] [data-product-media] span,
 html[data-android="true"] [data-product-media] svg,
 html[data-android="true"] [data-product-media] [data-product-badge] {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   filter: none !important;
   backdrop-filter: none !important;
   will-change: auto !important;
@@ -1178,10 +1175,7 @@ html[data-android="true"] [data-product-media] [data-product-badge] {
 html[data-android="true"] [data-product-image-placeholder] {
   display: none !important;
   animation: none !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   filter: none !important;
   opacity: 0 !important;
 }
@@ -1190,10 +1184,7 @@ html[data-android="true"] [data-product-image] {
   border-radius: 0 !important;
   clip-path: none !important;
   mask-image: none !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   filter: none !important;
   will-change: auto !important;
   transition-property: none !important;
@@ -1207,7 +1198,7 @@ html[data-android="true"] [data-product-media] [class*="shadow"],
 html[data-android="true"] [data-product-media] [class*="blur"] {
   filter: none !important;
   backdrop-filter: none !important;
-  transform: initial !important;
+  transform: none !important;
   transition-property: none !important;
 }
 
@@ -1224,10 +1215,7 @@ html[data-android="true"] .product-copy,
 html[data-android="true"] .product-copy *,
 html[data-android="true"] .product-meta-flow,
 html[data-android="true"] .product-price-flow {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;
@@ -1265,10 +1253,7 @@ html[data-android="true"] [data-product-card-frame],
 html[data-android="true"] [data-product-card-frame] > *,
 html[data-android="true"] [data-product-card-frame] img {
   contain: none !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
   isolation: auto !important;
   filter: none !important;
@@ -1290,10 +1275,7 @@ html[data-android="true"] :where(div, section, article):has(> [data-product-card
 html[data-android="true"] :where(div, section, article):has(> .product-card-shell),
 html[data-android="true"] [data-product-card-frame],
 html[data-android="true"] [data-product-grid] {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   opacity: 1 !important;
   will-change: auto !important;
   contain: none !important;
@@ -1307,10 +1289,7 @@ html[data-android="true"] [data-product-grid] {
 html[data-android="true"] [data-app-shell] {
   isolation: auto !important;
   contain: none !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
 }
 
@@ -1321,10 +1300,7 @@ html[data-android="true"] [data-product-card] [class*="scale-"],
 html[data-android="true"] [data-product-card] [class*="translate-"],
 html[data-android="true"] [data-product-card] [class*="rotate-"],
 html[data-android="true"] [data-product-card] [class*="transform"] {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
 }
 
@@ -1335,10 +1311,7 @@ html[data-android="true"] .product-price-text,
 html[data-android="true"] .product-title-text,
 html[data-android="true"] .product-rating-text {
   position: static !important;
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
   contain: none !important;
   isolation: auto !important;
@@ -1364,10 +1337,7 @@ html[data-android="true"] .product-rating-text {
 }
 
 html[data-android="true"] [data-product-badge] {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
   will-change: auto !important;
   contain: none !important;
   filter: none !important;
@@ -1389,10 +1359,112 @@ html[data-android="true"] .card-ambient:hover,
 html[data-android="true"] .card-ambient:active,
 html[data-android="true"] .glow-border:hover,
 html[data-android="true"] .glow-border:active {
-  transform: initial !important;
-  translate: none !important;
-  scale: none !important;
-  rotate: none !important;
+  transform: none !important;
+}
+
+/* Android static product renderer — final fallback after physical Redmi/Realme
+   testing still reproduced stale glyph/image tiles. This path deliberately
+   matches the rendering model used by large marketplace grids: one normal-flow
+   card, one normal-flow image, normal-flow text, no absolute overlays, no glass,
+   no transform/opacity animation, no containment, no filtered placeholders, and
+   no promoted parent layer. */
+html[data-android="true"] [data-android-static-card],
+html[data-android="true"] [data-android-static-card] *,
+html[data-android="true"] [data-android-static-card] *::before,
+html[data-android="true"] [data-android-static-card] *::after {
+  animation: none !important;
+  backface-visibility: visible !important;
+  backdrop-filter: none !important;
+  clip-path: none !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  filter: none !important;
+  isolation: auto !important;
+  mask-image: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+  perspective: none !important;
+  transform: none !important;
+  transform-style: flat !important;
+  transition: none !important;
+  will-change: auto !important;
+  -webkit-backface-visibility: visible !important;
+}
+
+html[data-android="true"] [data-android-static-card] {
+  box-shadow: none !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+html[data-android="true"] [data-android-static-card] [data-product-media] {
+  display: block !important;
+  overflow: visible !important;
+  position: static !important;
+}
+
+html[data-android="true"] [data-android-static-card] [data-product-image] {
+  display: block !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  overflow: visible !important;
+  position: static !important;
+  width: 100% !important;
+}
+
+html[data-android="true"] [data-android-static-card] [data-product-copy],
+html[data-android="true"] [data-android-static-card] [data-product-text],
+html[data-android="true"] [data-android-static-card] .product-typography,
+html[data-android="true"] [data-android-static-card] .product-price-text,
+html[data-android="true"] [data-android-static-card] .product-title-text,
+html[data-android="true"] [data-android-static-card] .product-rating-text {
+  background-clip: border-box !important;
+  box-shadow: none !important;
+  position: static !important;
+  text-rendering: auto !important;
+  -webkit-font-smoothing: auto !important;
+}
+
+html[data-android="true"] [data-product-grid],
+html[data-android="true"] [data-android-grid="normal-flow"] {
+  contain: none !important;
+  content-visibility: visible !important;
+  isolation: auto !important;
+  overflow: visible !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+html[data-android="true"] [data-product-card],
+html[data-android="true"] [data-product-card] *,
+html[data-android="true"] [data-product-card] *::before,
+html[data-android="true"] [data-product-card] *::after,
+html[data-android="true"] [data-product-grid] [data-product-card-frame],
+html[data-android="true"] [data-product-grid] [data-product-card-frame] * {
+  animation: none !important;
+  backdrop-filter: none !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  filter: none !important;
+  isolation: auto !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+  perspective: none !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+html[data-android="true"] [data-product-grid] > *,
+html[data-android="true"] [data-product-card-frame] {
+  contain: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
 }
 
 html[data-android="true"][data-theme="light"] .bottom-nav-light,

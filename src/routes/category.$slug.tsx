@@ -139,7 +139,7 @@ function CategoryPage() {
                   data-product-card-frame
                   to="/category/$main/$sub"
                   params={{ main: slug, sub: s.slug }}
-                  className="group product-card-glass relative flex flex-col overflow-hidden rounded-3xl p-0 transition-[transform,box-shadow] duration-300 will-change-transform hover:scale-[1.02] hover:shadow-[0_18px_50px_-12px_color-mix(in_oklab,var(--accent)_55%,transparent)]"
+                  className="group product-card-glass relative flex flex-col overflow-hidden rounded-3xl p-0 transition-[box-shadow,border-color] duration-300 hover:shadow-[0_18px_50px_-12px_color-mix(in_oklab,var(--accent)_55%,transparent)]"
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden">
                     {s.image || s.mobile_image ? (
@@ -147,7 +147,7 @@ function CategoryPage() {
                         src={s.mobile_image || s.image || ""}
                         alt={s.name}
                         loading="lazy"
-                        className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                        className="size-full object-cover"
                       />
                     ) : (
                       <div className="size-full bg-accent/10" />
@@ -159,7 +159,7 @@ function CategoryPage() {
                       <h3 className="truncate text-sm sm:text-base font-semibold tracking-tight group-hover:text-accent transition-colors">{s.name}</h3>
                       <p className="mt-0.5 text-xs text-muted-foreground">{count} Product{count === 1 ? "" : "s"}</p>
                     </div>
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-accent/30 bg-background/40 text-accent transition group-hover:bg-accent group-hover:text-accent-foreground group-hover:translate-x-0.5">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-accent/30 bg-background/40 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
                       <ArrowRight className="size-4" />
                     </span>
                   </div>

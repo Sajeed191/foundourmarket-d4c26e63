@@ -76,13 +76,15 @@ function ActivityCard({ entry }: { entry: Entry }) {
   const Icon = meta.icon;
 
   return (
-    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
+    <div data-product-card data-android-static-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
+        <div data-product-media className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
           <img
+            data-product-image
             src={product.image}
             alt={product.name}
             loading="lazy"
+            decoding="sync"
             className="w-full h-full object-cover transition-opacity duration-500"
           />
           <span className={`product-typography absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur ${meta.tone}`}>
@@ -94,7 +96,7 @@ function ActivityCard({ entry }: { entry: Entry }) {
             </span>
           )}
         </div>
-        <h3 className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h3>
+        <h3 data-product-text className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h3>
       </Link>
 
       <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">

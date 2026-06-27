@@ -6,11 +6,11 @@ export function ProductSkeletonGrid({
   className?: string;
 }) {
   return (
-    <div className={className}>
+    <div data-product-grid className={className}>
 
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="card-premium p-2.5 sm:p-3 overflow-hidden">
-          <div className="relative aspect-square mb-3 rounded-xl overflow-hidden bg-white/[0.04]">
+        <div key={i} data-product-card data-android-static-card className="card-premium p-2.5 sm:p-3 overflow-hidden">
+          <div data-product-media className="relative aspect-square mb-3 rounded-xl overflow-hidden bg-white/[0.04]">
             <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
           </div>
           <div className="px-1 space-y-2">

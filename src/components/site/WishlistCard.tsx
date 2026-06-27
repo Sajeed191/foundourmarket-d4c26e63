@@ -11,6 +11,7 @@ import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
 import { StarRating } from "@/components/site/StarRating";
 import { Checkbox } from "@/components/ui/checkbox";
+import { detectAndroid } from "@/lib/use-low-end-device";
 
 export type WishlistCardProps = {
   product: Product;
@@ -34,7 +35,7 @@ export function WishlistCard({
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const { add, items } = useCart();
   const { toggle } = useWishlist();
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(() => detectAndroid());
   const [justAdded, setJustAdded] = useState(false);
   const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
 
@@ -87,6 +88,7 @@ export function WishlistCard({
   return (
     <div
       data-product-card
+      data-android-static-card
       className={`group product-card-glass overflow-hidden relative flex flex-col h-full p-2 transition-all duration-300 ${
         selected ? "ring-2 ring-accent shadow-[var(--shadow-ember)]" : ""
       }`}
@@ -108,7 +110,7 @@ export function WishlistCard({
         onClick={cardClick}
         className="block relative"
       >
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40">
+        <div data-product-media className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40">
           {!imgLoaded && (
             <div
               aria-hidden
@@ -116,9 +118,11 @@ export function WishlistCard({
             />
           )}
           <img
+            data-product-image
             src={product.image}
             alt={`${product.name} — ${product.tagline || product.category}`}
             loading="lazy"
+            decoding="sync"
             width={800}
             height={1000}
             onLoad={() => setImgLoaded(true)}
@@ -204,13 +208,13 @@ export function WishlistCard({
         onClick={cardClick}
         className="relative flex flex-1 flex-col px-1"
       >
-          <h4 className="product-typography product-title-text font-medium line-clamp-2 group-hover:text-accent transition-colors text-sm leading-snug min-h-[2.5em]">
+          <h4 data-product-text className="product-typography product-title-text font-medium line-clamp-2 group-hover:text-accent transition-colors text-sm leading-snug min-h-[2.5em]">
           {product.name}
         </h4>
         {product.tagline ? (
-          <p className="product-typography text-muted-foreground truncate text-[11px] mt-0.5">{product.tagline}</p>
+          <p data-product-text className="product-typography text-muted-foreground truncate text-[11px] mt-0.5">{product.tagline}</p>
         ) : product.category ? (
-          <p className="product-typography text-muted-foreground/70 capitalize truncate text-[11px] mt-0.5">
+          <p data-product-text className="product-typography text-muted-foreground/70 capitalize truncate text-[11px] mt-0.5">
             {product.category.replace(/-/g, " ")}
           </p>
         ) : null}
@@ -220,12 +224,12 @@ export function WishlistCard({
           {product.reviews > 0 ? (
             <>
               <StarRating rating={product.rating} showValue starClassName="size-3" textClassName="text-[10px]" />
-              <span className="product-typography product-rating-text font-mono text-muted-foreground/70 text-[9px] mt-0.5">
+              <span data-product-text className="product-typography product-rating-text font-mono text-muted-foreground/70 text-[9px] mt-0.5">
                 {product.reviews.toLocaleString()} Reviews
               </span>
             </>
           ) : (
-            <span className="product-typography product-rating-text font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
+            <span data-product-text className="product-typography product-rating-text font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
               New Product
             </span>
           )}
@@ -233,7 +237,7 @@ export function WishlistCard({
 
         {/* Variant summary */}
         {variantSummary ? (
-          <p className="product-typography mt-1 text-[10px] font-mono text-muted-foreground/80 truncate">
+          <p data-product-text className="product-typography mt-1 text-[10px] font-mono text-muted-foreground/80 truncate">
             {variantSummary}
           </p>
         ) : null}
@@ -241,22 +245,22 @@ export function WishlistCard({
         {/* Stock + shipping row */}
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 min-h-[14px]">
           {shippingFee <= 0 && (
-            <span className="product-typography font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
+            <span data-product-text className="product-typography font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
               Free Shipping
             </span>
           )}
           {product.inStock && lowStock && (
-            <span className="product-typography font-mono uppercase tracking-wider text-accent/90 text-[9px]">
+            <span data-product-text className="product-typography font-mono uppercase tracking-wider text-accent/90 text-[9px]">
               Only {product.stockQuantity} left
             </span>
           )}
           {product.inStock && !lowStock && (
-            <span className="product-typography font-mono uppercase tracking-wider text-emerald-400/80 text-[9px]">
+            <span data-product-text className="product-typography font-mono uppercase tracking-wider text-emerald-400/80 text-[9px]">
               In Stock
             </span>
           )}
           {!product.inStock && (
-            <span className="product-typography font-mono uppercase tracking-wider text-muted-foreground text-[9px]">
+            <span data-product-text className="product-typography font-mono uppercase tracking-wider text-muted-foreground text-[9px]">
               Out of Stock
             </span>
           )}
@@ -285,7 +289,7 @@ export function WishlistCard({
             >
               {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
               {cartQty > 0 && (
-                  <span className="product-typography absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
+              <span data-product-text className="product-typography absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
                   {cartQty}
                 </span>
               )}
@@ -293,6 +297,7 @@ export function WishlistCard({
           ) : (
             <span
               onClick={(e) => e.preventDefault()}
+              data-product-text
               className="product-typography shrink-0 inline-flex items-center rounded-full bg-muted/40 border border-white/10 text-muted-foreground font-bold font-mono uppercase tracking-wider px-2 py-1 text-[9px]"
             >
               Sold Out

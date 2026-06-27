@@ -64,7 +64,7 @@ export function ProductCollection({
       </Link>
 
       {/* Banner */}
-      <header className="relative mb-8 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
+      <header data-product-card-frame className="relative mb-8 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">
         <div
           aria-hidden
           className="absolute -right-16 -top-16 size-64 rounded-full blur-3xl opacity-40"

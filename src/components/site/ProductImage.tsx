@@ -82,7 +82,7 @@ export function ProductImage({
         <div
           aria-hidden
           data-product-image-placeholder
-          className="absolute inset-0 bg-cover bg-center scale-110 blur-xl"
+          className="absolute inset-0 bg-cover bg-center"
           style={responsive ? { backgroundImage: `url(${responsive.placeholder})` } : undefined}
         />
       )}

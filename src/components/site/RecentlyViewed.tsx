@@ -29,17 +29,19 @@ function MiniCard({ product }: { product: Product }) {
   const inCart = items.some((i) => i.slug === product.slug);
 
   return (
-    <div data-product-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
+    <div data-product-card data-android-static-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
       <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
+        <div data-product-media className="relative aspect-square rounded-xl overflow-hidden bg-black/40 mb-2.5">
           <img
+            data-product-image
             src={product.image}
             alt={product.name}
             loading="lazy"
+            decoding="sync"
             className="w-full h-full object-cover transition-[opacity] duration-500"
           />
         </div>
-        <h4 className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
+        <h4 data-product-text className="product-typography product-title-text text-xs sm:text-sm font-medium line-clamp-1 group-hover:text-accent transition-colors">{product.name}</h4>
       </Link>
       <div className="mt-2 flex items-center justify-between gap-2">
         <Price value={priceOf(product)} className="font-display font-semibold text-sm tabular-nums leading-none" />

@@ -733,11 +733,12 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
           <div
             key={p.slug}
             data-product-card
+            data-android-static-card
             className="snap-start shrink-0 w-[150px] sm:w-[160px] group bg-card border border-border rounded-xl p-2 hover:border-accent/40 transition-colors"
           >
             <Link to="/products/$slug" params={{ slug: p.slug }} className="block relative">
-              <div className="aspect-square rounded-lg overflow-hidden bg-black/40">
-                <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-opacity duration-500" />
+              <div data-product-media className="aspect-square rounded-lg overflow-hidden bg-black/40">
+                <img data-product-image src={p.image} alt={p.name} loading="lazy" decoding="sync" className="w-full h-full object-cover transition-opacity duration-500" />
               </div>
               <button
                 onClick={(e) => { e.preventDefault(); toggle(p.slug); }}
@@ -748,7 +749,7 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
               </button>
             </Link>
             <div className="px-0.5 pt-2 pb-1">
-              <p className="product-typography product-title-text text-[11.5px] font-medium truncate">{p.name}</p>
+              <p data-product-text className="product-typography product-title-text text-[11.5px] font-medium truncate">{p.name}</p>
               <div className="mt-1 flex items-center justify-between gap-1">
                 <span className="product-typography product-price-text font-mono text-[11px] text-accent truncate">{format(p.price)}</span>
                 <button
