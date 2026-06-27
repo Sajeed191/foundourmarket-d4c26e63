@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number };
 
@@ -58,6 +58,8 @@ function IncrementalGrid<T>({
 }) {
   const [visible, setVisible] = useState(() => Math.min(items.length, batchSize));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
 
   // Reset the window when the dataset changes (filter/sort/navigation).
   useEffect(() => {
@@ -65,12 +67,11 @@ function IncrementalGrid<T>({
   }, [items, batchSize]);
 
   useEffect(() => {
-    if (visible >= items.length) return;
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (entries[0]?.isIntersecting && visibleRef.current < items.length) {
           setVisible((v) => Math.min(items.length, v + batchSize));
         }
       },
@@ -78,7 +79,7 @@ function IncrementalGrid<T>({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [visible, items.length, batchSize]);
+  }, [items.length, batchSize]);
 
   const shown = items.slice(0, visible);
 
@@ -120,17 +121,15 @@ export function VirtualizedProductGrid<T>({
   // Large catalogs: bounded, incremental, transform-free rendering.
   if (big) {
     return (
-      <div data-product-grid>
-        <IncrementalGrid
-          items={items}
-          renderItem={renderItem}
-          getKey={stableKey}
-          className={className}
-          // 16 cards per batch keeps paint/memory cost low while feeling like
-          // infinite scroll on low-end phones.
-          batchSize={16}
-        />
-      </div>
+      <IncrementalGrid
+        items={items}
+        renderItem={renderItem}
+        getKey={stableKey}
+        className={className}
+        // 16 cards per batch keeps paint/memory cost low while feeling like
+        // infinite scroll on low-end phones.
+        batchSize={16}
+      />
     );
   }
 
@@ -146,4 +145,4 @@ export function VirtualizedProductGrid<T>({
   );
 }
 
-export default VirtualizedProductGrid;
+export default memo(VirtualizedProductGrid) as typeof VirtualizedProductGrid;

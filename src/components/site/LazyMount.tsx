@@ -41,7 +41,7 @@ export function LazyMount({
     return () => io.disconnect();
   }, [show, rootMargin]);
   return (
-    <div ref={ref} id={id} className={className} style={show ? undefined : { minHeight }}>
+    <div ref={ref} id={id} className={className} style={{ minHeight }}>
       {show ? children : null}
     </div>
   );

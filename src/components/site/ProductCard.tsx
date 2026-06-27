@@ -20,6 +20,7 @@ type ProductCardProps = {
   compact?: boolean;
   context?: BadgeContext;
   forceBadge?: BadgeKey | null;
+  priority?: boolean;
 };
 
 type CardBadge = {
@@ -173,7 +174,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 }
 const AddToCartButton = memo(AddToCartButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
 
-function ProductCardImpl({ product, context = "default", forceBadge }: ProductCardProps) {
+function ProductCardImpl({ product, context = "default", forceBadge, priority = false }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const price = priceOf(product);
@@ -213,6 +214,7 @@ function ProductCardImpl({ product, context = "default", forceBadge }: ProductCa
             alt={`${product.name} — ${product.tagline || product.category}`}
             width={800}
             height={800}
+            priority={priority}
             className="block h-full w-full object-contain"
           />
           <ProductBadges badges={badges} />
@@ -288,6 +290,7 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.product === b.product &&
     a.context === b.context &&
     a.forceBadge === b.forceBadge &&
-    a.compact === b.compact
+    a.compact === b.compact &&
+    a.priority === b.priority
   );
 });
