@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
-import { detectAndroid } from "@/lib/use-low-end-device";
 
 type Props = {
   src: string;
@@ -29,41 +28,21 @@ export function ProductImage({
   height = 600,
 }: Props) {
   const responsive = getResponsiveImage(src);
-  const [android, setAndroid] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [canShowPlaceholder, setCanShowPlaceholder] = useState(false);
   const nodeRef = useRef<HTMLImageElement | null>(null);
 
-  // When the src changes on a recycled/reused element (e.g. a virtualized grid
-  // row pointing at a new product), reset the loaded flag so the new image
-  // fades in cleanly instead of briefly showing the previous product's photo.
-  // Android skips the fade/placeholder path completely so no stale GPU texture
-  // upload can overlap a fast fling scroll.
+  // When the src changes, reset only the opacity state. The <img> below is also
+  // keyed by src so React never reuses a decoded DOM image between products.
   useEffect(() => {
-    const nextAndroid = detectAndroid();
-    setAndroid(nextAndroid);
-    if (nextAndroid) {
-      setLoaded(true);
-      setCanShowPlaceholder(false);
-      return;
-    }
-    setCanShowPlaceholder(true);
     const node = nodeRef.current;
     setLoaded(Boolean(node?.complete && node.naturalWidth > 0));
   }, [src]);
 
-  // Callback ref: cancel any decode tied to a stale node and, if the new image
-  // is already complete by mount (cached / decoded before React attached
-  // onLoad), reveal it immediately. Without this the onLoad event can be missed
-  // on fast scroll, leaving the image at opacity-0 and the blurred LQIP visible
-  // underneath — which reads as a duplicated/ghosted image on low-end devices.
+  // Callback ref: if the new keyed image is already complete by mount (cached /
+  // decoded before React attached onLoad), reveal it immediately.
   const imgRef = useCallback((node: HTMLImageElement | null) => {
     nodeRef.current = node;
     if (!node) return;
-    if (detectAndroid()) {
-      setLoaded(true);
-      return;
-    }
     if (node.complete && node.naturalWidth > 0) {
       setLoaded(true);
       return;
@@ -85,7 +64,7 @@ export function ProductImage({
 
   return (
     <>
-      {canShowPlaceholder && !loaded && (
+      {!loaded && (
         <div
           aria-hidden
           data-product-image-placeholder
@@ -94,6 +73,7 @@ export function ProductImage({
         />
       )}
       <img
+        key={`${src}|${width}x${height}`}
         ref={imgRef}
         src={src}
         srcSet={responsive?.srcset}
@@ -103,10 +83,10 @@ export function ProductImage({
         height={height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "low"}
-        decoding={android ? "sync" : "async"}
+        decoding="async"
         onLoad={() => setLoaded(true)}
         data-product-image
-        className={`${className} ${android ? "!opacity-100 !transition-none" : !canShowPlaceholder || loaded ? "opacity-100" : "opacity-0"}`}
+        className={`${className} ${loaded ? "opacity-100" : "opacity-0"}`}
       />
     </>
   );

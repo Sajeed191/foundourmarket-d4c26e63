@@ -508,7 +508,7 @@ function WishlistPage() {
             >
               {filtered.map((p) => (
                 <WishlistCard
-                  key={p.slug}
+                  key={p.id ?? p.slug}
                   product={p}
                   variantSummary={variants[p.slug] ?? null}
                   priceDrop={drops[p.slug] ?? null}

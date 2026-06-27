@@ -90,7 +90,7 @@ export function ProductCollection({
       ) : (
         <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           {items.map((p) => (
-            <ProductCard key={p.slug} product={p} compact forceBadge={forceBadge} />
+            <ProductCard key={p.id ?? p.slug} product={p} compact forceBadge={forceBadge} />
           ))}
         </div>
       )}

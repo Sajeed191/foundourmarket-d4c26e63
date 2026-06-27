@@ -330,7 +330,7 @@ function LivePreview({ items, device, setDevice, sectionLabel }: {
             <p className="text-center text-xs text-muted-foreground py-10">Nothing to preview yet.</p>
           ) : (
             <div className={`grid gap-3 ${device === "mobile" ? "grid-cols-2" : "grid-cols-3"}`}>
-              {products.map((p) => <ProductCard key={p.slug} product={p} />)}
+              {products.map((p) => <ProductCard key={p.id ?? p.slug} product={p} />)}
             </div>
           )}
         </div>

@@ -4,8 +4,10 @@ type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number }
 
 type Props<T> = {
   items: T[];
-  /** Render a single item. Must return a keyed React element. */
+  /** Render a single item. The grid owns stable keys; never key by index. */
   renderItem: (item: T, index: number) => React.ReactNode;
+  /** Permanent item identity. Product grids must pass product.id (slug fallback only for legacy rows). */
+  getKey?: (item: T) => string;
   /** Column counts per Tailwind breakpoint (kept for call-site compatibility). */
   cols: Cols;
   /** Responsive grid className (SSR-safe, normal document flow). */
@@ -44,11 +46,13 @@ type Props<T> = {
 function IncrementalGrid<T>({
   items,
   renderItem,
+  getKey,
   className,
   batchSize,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
+  getKey: (item: T) => string;
   className?: string;
   batchSize: number;
 }) {
@@ -81,7 +85,11 @@ function IncrementalGrid<T>({
   return (
     <>
       <div data-product-grid className={className}>
-        {shown.map((item, i) => renderItem(item, i))}
+        {shown.map((item, i) => (
+          <div key={getKey(item)} data-product-card-frame className="h-full min-w-0 [&>*]:h-full">
+            {renderItem(item, i)}
+          </div>
+        ))}
       </div>
       {visible < items.length && <div ref={sentinelRef} aria-hidden style={{ height: 1 }} />}
     </>
@@ -97,10 +105,17 @@ function IncrementalGrid<T>({
 export function VirtualizedProductGrid<T>({
   items,
   renderItem,
+  getKey,
   className,
   virtualizeThreshold = 32,
 }: Props<T>) {
   const big = items.length > virtualizeThreshold;
+  const stableKey = getKey ?? ((item: T) => {
+    const candidate = item as { id?: string | null; slug?: string | null };
+    const key = candidate.id || candidate.slug;
+    if (!key) throw new Error("VirtualizedProductGrid requires getKey for items without id/slug");
+    return key;
+  });
 
   // Large catalogs: bounded, incremental, transform-free rendering.
   if (big) {
@@ -109,6 +124,7 @@ export function VirtualizedProductGrid<T>({
         <IncrementalGrid
           items={items}
           renderItem={renderItem}
+          getKey={stableKey}
           className={className}
           // 16 cards per batch keeps paint/memory cost low while feeling like
           // infinite scroll on low-end phones.
@@ -121,7 +137,11 @@ export function VirtualizedProductGrid<T>({
   // Small lists: plain responsive grid (also the SSR / first-paint output).
   return (
     <div data-product-grid className={className}>
-      {items.map((item, i) => renderItem(item, i))}
+      {items.map((item, i) => (
+        <div key={stableKey(item)} data-product-card-frame className="h-full min-w-0 [&>*]:h-full">
+          {renderItem(item, i)}
+        </div>
+      ))}
     </div>
   );
 }

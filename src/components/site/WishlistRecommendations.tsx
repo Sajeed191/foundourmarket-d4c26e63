@@ -110,7 +110,7 @@ function Rail({
       >
         {products.map((p) => (
           <div
-            key={p.slug}
+            key={p.id ?? p.slug}
             className="snap-start shrink-0 w-[38%] xs:w-[34%] sm:w-[24%] md:w-[18%] lg:w-[15%] last:mr-4 sm:last:mr-0"
           >
             <MiniCard product={p} />

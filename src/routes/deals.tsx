@@ -301,7 +301,7 @@ function DealsPage() {
               className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [grid-auto-rows:1fr]"
               renderItem={(p: Product) => (
                 <div
-                  key={p.slug}
+                  key={p.id ?? p.slug}
                   data-product-card-frame
                   className="h-full [&>*]:h-full"
                 >

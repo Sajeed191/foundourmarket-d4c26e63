@@ -668,7 +668,7 @@ function ProductScroller({ items }: { items: Array<{ slug: string }> }) {
       <div data-product-grid className="flex gap-2 sm:gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 px-4 sm:px-0 pb-2 [-webkit-overflow-scrolling:touch]">
         {items.map((p) => (
           <div
-            key={p.slug}
+            key={p.id ?? p.slug}
             data-product-card-frame
             className="snap-center shrink-0 w-[44%] xs:w-[40%] sm:w-[22%] lg:w-[20%] max-w-[150px] rounded-2xl transition-shadow duration-500 hover:shadow-[0_22px_60px_-22px_oklch(0.74_0.19_49/0.55)]"
           >
@@ -731,7 +731,7 @@ function MiniProductRow({ items, format }: { items: Array<{ slug: string; name: 
         const saved = has(p.slug);
         return (
           <div
-            key={p.slug}
+            key={p.id ?? p.slug}
             data-product-card
             data-android-static-card
             className="snap-start shrink-0 w-[150px] sm:w-[160px] group bg-card border border-border rounded-xl p-2 hover:border-accent/40 transition-colors"
@@ -1396,7 +1396,7 @@ function ContinueShopping({ items }: { items: ContinueItem[] }) {
       >
         {shown.map(({ product, badge }) => (
           <div
-            key={product.slug}
+            key={product.id ?? product.slug}
             data-product-card-frame
             className="relative snap-start shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[240px]"
           >
