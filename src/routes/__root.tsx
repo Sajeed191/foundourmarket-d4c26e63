@@ -498,7 +498,7 @@ function RootComponent() {
                               <Outlet />
                             </main>
                             {!hideSiteChrome && <Footer />}
-                            {!hideSiteChrome && <MobileBottomNav />}
+                            {!hideSiteChrome && !isCheckoutRoute && <MobileBottomNav />}
                             <DeferredShell
                               isAuthRoute={isAuthRoute}
                               isAdminRoute={isAdminRoute}
