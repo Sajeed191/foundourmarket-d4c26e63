@@ -65,6 +65,8 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<{ name: string; lat: number; lng: number }[]>([]);
   const [confirming, setConfirming] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const watchRef = useRef<number | null>(null);
   const [center, setCenter] = useState<[number, number]>([
     initial?.lat ?? DEFAULT_CENTER[0],
     initial?.lng ?? DEFAULT_CENTER[1],
