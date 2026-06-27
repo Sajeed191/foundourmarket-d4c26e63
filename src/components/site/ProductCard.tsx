@@ -166,7 +166,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (!product.inStock) {
     return (
-      <span data-product-text className="product-typography inline-flex h-[56px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span data-product-text className="product-typography inline-flex h-[50px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         Sold Out
       </span>
     );
