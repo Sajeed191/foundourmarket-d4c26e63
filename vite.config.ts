@@ -20,6 +20,14 @@ export default defineConfig({
   // @react-email's `render()` throw at runtime in the Cloudflare Worker — silently
   // breaking ALL transactional email rendering. See email troubleshooting guide.
   vite: {
+    // Unique build identifier injected at build time so every deployment has a
+    // distinct, verifiable version string (footer + console). Lets us confirm a
+    // device is actually running the newest deployment.
+    define: {
+      __BUILD_ID__: JSON.stringify(
+        new Date().toISOString().replace(/[-:T]/g, "").slice(0, 12),
+      ),
+    },
     plugins: [
       // Build-time responsive image generation (WebP + multiple widths).
       // Enabled for imports that opt in via the `?responsive` query flag.

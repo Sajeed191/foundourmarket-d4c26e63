@@ -24,6 +24,7 @@ import { AdminModeProvider } from "@/lib/admin-mode";
 import { CommandCenterProvider } from "@/lib/command-center";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
 import { registerServiceWorker } from "@/lib/pwa";
+import { logBuildVersion } from "@/lib/build-version";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
 import { loadProducts } from "@/lib/use-products";
@@ -395,6 +396,7 @@ function RootComponent() {
   useEffect(() => {
     installChunkRecovery();
     registerServiceWorker();
+    logBuildVersion();
   }, []);
   // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
   // and start dev-only runtime performance monitoring (long tasks / FPS / heap).
