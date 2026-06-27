@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, discountPercent, type Product } from "@/lib/products";
@@ -330,7 +330,11 @@ function SearchPage() {
   if (search.min) activeChips.push({ label: `Min ${fmtPrice(search.min)}`, clear: () => update({ min: undefined }) });
   if (search.max) activeChips.push({ label: `Max ${fmtPrice(search.max)}`, clear: () => update({ max: undefined }) });
 
-  
+  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  const renderProduct = useCallback(
+    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
+    [],
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance sm:pb-16">
@@ -501,8 +505,8 @@ function SearchPage() {
                 items={results}
                 cols={{ base: 2, md: 3, xl: 4 }}
                 className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
-                getKey={(p: Product) => p.id ?? p.slug}
-                renderItem={(p: Product) => <ProductCard product={p} />}
+                getKey={getProductKey}
+                renderItem={renderProduct}
               />
 
               {hasMore && (

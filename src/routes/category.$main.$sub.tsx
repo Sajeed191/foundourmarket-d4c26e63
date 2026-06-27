@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
@@ -62,6 +62,12 @@ function SubcategoryPage() {
     if (cat?.id) void supabase.rpc("track_category_event", { _id: cat.id, _event: "view" });
   }, [cat?.id]);
 
+  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  const renderProduct = useCallback(
+    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
+    [],
+  );
+
   // If the slug isn't actually a subcategory of `main`, send to the flat page so
   // the URL stays correct (no broken nested URLs, zero SEO loss).
   if (!catsLoading && cat && parent && cat.parent_id !== parent.id) {
@@ -105,8 +111,8 @@ function SubcategoryPage() {
           items={items}
           cols={{ base: 2, sm: 3, lg: 4 }}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
-          getKey={(p: Product) => p.id ?? p.slug}
-                renderItem={(p: Product) => <ProductCard product={p} />}
+          getKey={getProductKey}
+          renderItem={renderProduct}
         />
 
       )}

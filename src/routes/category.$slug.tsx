@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
@@ -89,6 +89,11 @@ function CategoryPage() {
   }, [cat?.id]);
 
   const parent = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
+  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  const renderProduct = useCallback(
+    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
+    [],
+  );
 
   // Old flat URL for a subcategory → redirect to the nested /category/main/sub.
   if (!catsLoading && cat && parent) {
@@ -173,8 +178,8 @@ function CategoryPage() {
           items={ownItems}
           cols={{ base: 2, sm: 3, lg: 4 }}
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"
-          getKey={(p: Product) => p.id ?? p.slug}
-                renderItem={(p: Product) => <ProductCard product={p} />}
+          getKey={getProductKey}
+          renderItem={renderProduct}
         />
 
       ) : (

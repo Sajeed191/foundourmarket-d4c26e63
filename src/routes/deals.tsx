@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Gift,
@@ -78,12 +78,6 @@ function DealsPage() {
     [items],
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    // eslint-disable-next-line no-console
-    console.info(`[OffersPage] Flash Deal products rendered: ${dealProducts.length}`, dealProducts.map((p) => p.slug));
-  }, [dealProducts]);
-
   const topDiscount = dealProducts.reduce((max, p) => Math.max(max, p.discount ?? 0), 0);
 
 
@@ -98,6 +92,12 @@ function DealsPage() {
   const visibleProducts = useMemo(
     () => (activeCat === "all" ? dealProducts : dealProducts.filter((p) => p.category === activeCat)),
     [dealProducts, activeCat]
+  );
+
+  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  const renderProduct = useCallback(
+    (p: Product, i: number) => <ProductCard product={p} forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"} priority={i < 4} />,
+    [],
   );
 
   if (loading) {
@@ -142,9 +142,9 @@ function DealsPage() {
               { l: "40%", t: "12%", s: 3, d: 0.6 },
               { l: "88%", t: "68%", s: 6, d: 1.8 },
               { l: "22%", t: "74%", s: 4, d: 0.9 },
-            ].map((p, i) => (
+            ].map((p) => (
               <motion.span
-                key={i}
+                key={`${p.l}-${p.t}`}
                 className="absolute rounded-full bg-accent"
                 style={{ left: p.l, top: p.t, width: p.s, height: p.s, boxShadow: "0 0 12px 2px var(--color-accent)" }}
                 animate={{ y: [0, -16, 0], opacity: [0.25, 0.9, 0.25] }}
@@ -212,7 +212,7 @@ function DealsPage() {
                       { v: pad(countdown.m), l: "MIN" },
                       { v: pad(countdown.s), l: "SEC" },
                     ].map((t, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
+                      <div key={t.l} className="flex items-center gap-1.5">
                         <div className="flex flex-col items-center">
                           <span className="grid place-items-center min-w-11 rounded-xl bg-black/50 ring-1 ring-accent/25 px-2 py-1.5 text-lg font-semibold text-accent">
                             {t.v}
@@ -262,8 +262,8 @@ function DealsPage() {
             { icon: Truck, t: "Fast delivery", s: "2–5 days" },
             { icon: ShieldCheck, t: "Buyer protection", s: "Secure pay" },
             { icon: Zap, t: "Live pricing", s: "Updated now" },
-          ].map((b, i) => (
-            <div key={i} className="glass rounded-2xl px-3 py-3 flex flex-col items-center text-center gap-1">
+          ].map((b) => (
+            <div key={b.t} className="glass rounded-2xl px-3 py-3 flex flex-col items-center text-center gap-1">
               <b.icon className="size-4 text-accent" />
               <p className="text-[11px] sm:text-xs font-medium leading-tight">{b.t}</p>
               <p className="text-[9px] sm:text-[10px] text-muted-foreground">{b.s}</p>
@@ -299,8 +299,8 @@ function DealsPage() {
               items={visibleProducts}
               cols={{ base: 2, lg: 4 }}
               className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [grid-auto-rows:1fr]"
-              getKey={(p: Product) => p.id ?? p.slug}
-              renderItem={(p: Product) => <ProductCard product={p} forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"} />}
+              getKey={getProductKey}
+              renderItem={renderProduct}
             />
           </section>
 
