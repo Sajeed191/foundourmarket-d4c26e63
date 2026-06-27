@@ -1389,7 +1389,12 @@ html[data-android="true"] [data-android-static-card] *::after {
   backdrop-filter: none !important;
   clip-path: none !important;
   contain: none !important;
-  content-visibility: visible !important;
+  /* content-visibility intentionally NOT forced visible here: the Android card
+     element carries both [data-android-static-card] and [data-product-card], so
+     forcing visible at this (equal-specificity, later) rule was overriding the
+     SUSPECT #1 content-visibility:auto rule and leaving the whole catalog in one
+     unbounded raster surface. Card root now resolves to auto; descendants stay
+     visible via the universal Android reset. */
   filter: none !important;
   isolation: auto !important;
   mask-image: none !important;
