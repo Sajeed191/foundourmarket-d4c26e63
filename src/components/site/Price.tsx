@@ -29,13 +29,14 @@ export function Price({
     return (
       <span
         aria-hidden
+        data-product-text
         className={cn(
-          "inline-block h-[1em] w-14 animate-pulse rounded bg-white/10 align-middle",
+          "product-price-skeleton inline-block h-[1em] w-14 animate-pulse rounded bg-white/10 align-middle",
           skeletonClassName,
         )}
       />
     );
   }
 
-  return <span className={cn("product-typography product-price-text", className)}>{format(value)}</span>;
+  return <span data-product-text className={cn("product-typography product-price-text", className)}>{format(value)}</span>;
 }

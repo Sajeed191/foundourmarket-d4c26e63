@@ -28,6 +28,10 @@ export function MotionReveal({
   delay?: number;
   productCardFrame?: boolean;
 }) {
+  if (productCardFrame) {
+    return <div className={className} data-product-card-frame="">{children}</div>;
+  }
+
   return (
     <motion.div
       variants={fadeUp}

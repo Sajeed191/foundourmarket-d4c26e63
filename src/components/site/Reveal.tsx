@@ -30,6 +30,14 @@ export function Reveal({
   delay?: number;
   productCardFrame?: boolean;
 }) {
+  // Product cards must never sit inside a transformed/opacity reveal layer. On
+  // Android Chromium/WebView/Samsung this can leave stale glyph tiles while the
+  // card, image and buttons remain correctly positioned. Keep card typography in
+  // normal document flow on every browser; non-card reveals still animate.
+  if (productCardFrame) {
+    return <div className={className} data-product-card-frame="">{children}</div>;
+  }
+
   const lowEnd = useLowEndDevice();
   const android = useIsAndroid();
   // On Android and constrained devices (≤4GB RAM / few cores / reduced-motion) skip
@@ -38,11 +46,11 @@ export function Reveal({
   // fast scroll. Content still renders fully — only the entrance animation is
   // dropped on the devices that can't afford it.
   if (android || lowEnd) {
-    return <div className={className} data-product-card-frame={productCardFrame ? "" : undefined}>{children}</div>;
+    return <div className={className}>{children}</div>;
   }
   return (
-    <Suspense fallback={<div className={className} data-product-card-frame={productCardFrame ? "" : undefined}>{children}</div>}>
-      <MotionReveal className={className} delay={delay} productCardFrame={productCardFrame}>
+    <Suspense fallback={<div className={className}>{children}</div>}>
+      <MotionReveal className={className} delay={delay}>
         {children}
       </MotionReveal>
     </Suspense>
