@@ -257,7 +257,7 @@ export function useBadgeCatalog() {
   const [loading, setLoading] = useState(!cache);
   useEffect(() => {
     bindRealtime();
-    load().then((s) => {
+    load().then(() => {
       setLoading(false);
     });
   }, []);
