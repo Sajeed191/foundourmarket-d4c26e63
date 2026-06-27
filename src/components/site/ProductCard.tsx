@@ -378,14 +378,14 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
           ) : null}
         </div>
 
-        {/* Add to cart — 52px; switches to quantity selector once in cart */}
+        {/* Add to cart — 56px; switches to quantity selector once in cart */}
         <div className="mt-3.5">
           {!product.inStock ? (
-            <span data-product-text className="product-typography inline-flex h-[52px] w-full items-center justify-center rounded-full border border-white/10 bg-muted/40 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span data-product-text className="product-typography inline-flex h-[56px] w-full items-center justify-center rounded-full border border-white/10 bg-muted/40 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Sold Out
             </span>
           ) : cartQty > 0 && !justAdded ? (
-            <div className="flex h-[52px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
+            <div className="flex h-[56px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
               <button
                 onClick={(e) => { e.preventDefault(); setQty(product.slug, cartQty - 1); }}
                 aria-label="Decrease quantity"
@@ -406,10 +406,10 @@ function ProductCardImpl({ product, context = "default", forceBadge }: { product
             <button
               onClick={handleAdd}
               aria-label={`Add ${product.name} to cart`}
-              className={`product-typography relative inline-flex h-[52px] w-full items-center justify-center gap-1.5 overflow-hidden rounded-full text-[15px] font-bold duration-200 ${
+              className={`product-typography relative inline-flex h-[56px] w-full items-center justify-center gap-1.5 overflow-hidden rounded-full text-[15px] font-bold duration-200 ${
                 justAdded
                   ? "bg-emerald-500 text-black"
-                  : "bg-accent text-accent-foreground hover:brightness-[1.05]"
+                  : "bg-[linear-gradient(180deg,var(--accent),color-mix(in_oklab,var(--accent)_80%,black))] text-accent-foreground hover:brightness-[1.05]"
               }`}
             >
               {justAdded ? (
