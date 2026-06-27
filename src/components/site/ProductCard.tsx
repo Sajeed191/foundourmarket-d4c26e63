@@ -160,7 +160,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (!product.inStock) {
     return (
-      <span data-product-text className="product-typography inline-flex h-[56px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span data-product-text className="product-typography inline-flex h-[62px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         Sold Out
       </span>
     );
@@ -168,13 +168,13 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (qty > 0 && !justAdded) {
     return (
-      <div className="flex h-[56px] w-full items-center justify-between rounded-full border border-accent/40 bg-accent/10 px-2">
-        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className="grid size-10 place-items-center rounded-full text-accent">
-          <Minus className="size-4" strokeWidth={2.5} />
+      <div className="flex h-[62px] w-full items-center justify-between rounded-full px-2" style={{ backgroundColor: "#FF8A00" }}>
+        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className="grid size-11 place-items-center rounded-full text-black">
+          <Minus className="size-5" strokeWidth={2.5} />
         </button>
-        <span data-product-text className="product-typography min-w-7 text-center text-base font-bold tabular-nums text-foreground">{qty}</span>
-        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty + 1); }} aria-label="Increase quantity" className="grid size-10 place-items-center rounded-full text-accent">
-          <Plus className="size-4" strokeWidth={2.5} />
+        <span data-product-text className="product-typography min-w-7 text-center text-lg font-bold tabular-nums text-black">{qty}</span>
+        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty + 1); }} aria-label="Increase quantity" className="grid size-11 place-items-center rounded-full text-black">
+          <Plus className="size-5" strokeWidth={2.5} />
         </button>
       </div>
     );
@@ -184,7 +184,8 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
     <button
       onClick={onAdd}
       aria-label={`Add ${product.name} to cart`}
-      className={`product-typography inline-flex h-[56px] w-full items-center justify-center gap-1.5 rounded-full text-[15px] font-bold transition-colors ${justAdded ? "bg-emerald-500 text-black" : "bg-[linear-gradient(180deg,var(--accent),color-mix(in_oklab,var(--accent)_80%,black))] text-accent-foreground"}`}
+      style={justAdded ? undefined : { backgroundColor: "#FF8A00" }}
+      className={`product-typography inline-flex h-[62px] w-full items-center justify-center gap-1.5 rounded-full text-[18px] font-bold transition-colors hover:brightness-105 ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
     >
       {justAdded ? <><Check className="size-5" /> Added</> : <><Plus className="size-5" strokeWidth={2.75} /> Add to Cart</>}
     </button>
