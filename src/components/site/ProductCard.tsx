@@ -36,7 +36,7 @@ export function productIdentity(product: Product): string {
 }
 
 const TITLE_CLASS =
-  "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[17px] font-bold leading-[1.3] text-foreground";
+  "product-typography product-title-text block h-[2.7em] overflow-hidden break-words text-[18px] font-bold leading-[1.35] text-foreground";
 
 function toAssignedBadge(b: RenderBadge): CardBadge {
   return {
