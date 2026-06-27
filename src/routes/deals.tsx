@@ -294,26 +294,22 @@ function DealsPage() {
 
         {/* Products grid */}
         {visibleProducts.length > 0 ? (
-          <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }} data-product-card-frame>
+          <section data-product-card-frame>
             <VirtualizedProductGrid
               items={visibleProducts}
               cols={{ base: 2, lg: 4 }}
               className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [grid-auto-rows:1fr]"
               renderItem={(p: Product, i: number) => (
-                <motion.div
+                <div
                   key={p.slug}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.4, ease, delay: Math.min(i * 0.04, 0.3) }}
                   data-product-card-frame
                   className="h-full [&>*]:h-full"
                 >
                   <ProductCard product={p} forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"} />
-                </motion.div>
+                </div>
               )}
             />
-          </motion.section>
+          </section>
 
         ) : (
           <EmptyDeals />

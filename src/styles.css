@@ -1026,8 +1026,7 @@ html[data-android="true"] [data-product-card] [class*="transform"] {
 html[data-android="true"] .product-typography,
 html[data-android="true"] .product-price-text,
 html[data-android="true"] .product-title-text,
-html[data-android="true"] .product-rating-text,
-html[data-android="true"] [data-product-badge] {
+html[data-android="true"] .product-rating-text {
   position: static;
   transform: none !important;
   translate: none !important;
@@ -1050,7 +1049,18 @@ html[data-android="true"] [data-product-badge] {
 }
 
 html[data-android="true"] [data-product-badge] {
-  position: relative;
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+  contain: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  animation: none !important;
+  transition-property: color, background-color, border-color !important;
 }
 
 html[data-android="true"] .product-card-shell:hover,
