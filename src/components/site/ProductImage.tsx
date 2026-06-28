@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   priority?: boolean;
   width?: number;
   height?: number;
+  style?: CSSProperties;
+  onLoad?: () => void;
 };
 
 /**
