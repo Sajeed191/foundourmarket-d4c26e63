@@ -1,15 +1,7 @@
-import { motion } from "framer-motion";
 import {
   Check, ShieldCheck, Lock, Truck, RotateCcw, Sparkles,
   Eye, ShoppingBag, Flame,
 } from "lucide-react";
-
-const reveal = {
-  initial: { opacity: 0, y: 16 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-60px" },
-  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
-};
 
 /** "Why customers love this" — checkmark highlight cards. */
 export function ProductHighlights({ highlights }: { highlights?: string[] }) {
@@ -24,7 +16,7 @@ export function ProductHighlights({ highlights }: { highlights?: string[] }) {
         "Loved by thousands worldwide",
       ];
   return (
-    <motion.section {...reveal} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
       <h2 className="text-xl sm:text-2xl font-display font-semibold tracking-tight mb-1">Why customers love this</h2>
       <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-5">The details that make it worth it</p>
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -37,7 +29,7 @@ export function ProductHighlights({ highlights }: { highlights?: string[] }) {
           </div>
         ))}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -73,7 +65,7 @@ export function TrustGuarantee() {
     { icon: RotateCcw, title: "Easy Returns", desc: "Hassle-free returns & replacements." },
   ];
   return (
-    <motion.section {...reveal} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16 mb-4">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16 mb-4">
       <div className="relative overflow-hidden rounded-3xl border border-white/10 p-6 sm:p-10" style={{ background: "linear-gradient(135deg, oklch(0.18 0.02 49 / 0.6), oklch(0.12 0.01 264 / 0.6))" }}>
         <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-80 rounded-full opacity-40" style={{ background: "var(--gradient-ember-soft)", filter: "blur(90px)" }} />
         <div className="relative">
@@ -94,6 +86,6 @@ export function TrustGuarantee() {
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }

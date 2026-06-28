@@ -1,5 +1,6 @@
 import { ProductCard } from "./ProductCard";
 import type { Product } from "@/lib/products";
+import { useLowEndDevice } from "@/lib/use-low-end-device";
 
 /**
  * Mobile-only horizontal snap rail for product cards.
@@ -17,6 +18,8 @@ export function ProductRail({
   className?: string;
   compact?: boolean;
 }) {
+  const lowEnd = useLowEndDevice();
+  const visibleProducts = lowEnd ? products.slice(0, 8) : products;
   if (!products.length) return null;
   return (
     <div className={`sm:hidden -mx-4 ${className}`}>
@@ -29,7 +32,7 @@ export function ProductRail({
           overscrollBehaviorX: "contain",
         }}
       >
-        {products.map((p) => (
+        {visibleProducts.map((p) => (
           <div
             key={p.id ?? p.slug}
             data-product-card-frame

@@ -10,7 +10,7 @@ const AnnouncementAdminSheet = lazy(() =>
   import("@/components/admin/AnnouncementAdminSheet").then((m) => ({ default: m.AnnouncementAdminSheet })),
 );
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
-import { useIsAndroid } from "@/lib/use-low-end-device";
+import { useIsAndroid, useLowEndDevice } from "@/lib/use-low-end-device";
 
 async function setAnnouncementActive(id: string, next: boolean) {
   const { error } = await supabase.from("announcements").update({ active: next }).eq("id", id);
@@ -46,13 +46,13 @@ const TYPE_GRADIENT: Record<string, string> = {
   urgent: "radial-gradient(circle at 50% 0%, oklch(0.65 0.24 20 / 0.5), transparent 70%)",
 };
 
-function useCountdown(target: string | null) {
+function useCountdown(target: string | null, disabled = false) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!target) return;
+    if (!target || disabled) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [target]);
+  }, [target, disabled]);
   if (!target) return null;
   const diff = new Date(target).getTime() - now;
   if (diff <= 0) return null;
@@ -72,6 +72,7 @@ function useCountdown(target: string | null) {
 export function AnnouncementBar({ page = "home" }: { page?: string }) {
   const { canEdit } = useAdminEditing();
   const isAndroid = useIsAndroid();
+  const lowEnd = useLowEndDevice();
   const [items, setItems] = useState<Announcement[]>(FALLBACK);
   const [loaded, setLoaded] = useState(false);
   const [i, setI] = useState(0);
@@ -110,14 +111,15 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
   }, [page, canEdit]);
 
   useEffect(() => {
+    if (isAndroid || lowEnd) return;
     if (items.length < 2) return;
     const t = setInterval(() => setI((p) => (p + 1) % items.length), 4500);
     return () => clearInterval(t);
-  }, [items.length]);
+  }, [items.length, isAndroid, lowEnd]);
 
   const safeIndex = items.length ? i % items.length : 0;
   const current = items[safeIndex];
-  const countdown = useCountdown(current?.countdown_to ?? null);
+  const countdown = useCountdown(current?.countdown_to ?? null, isAndroid || lowEnd);
 
   const gradient = useMemo(
     () => (current ? TYPE_GRADIENT[current.type] ?? TYPE_GRADIENT.info : TYPE_GRADIENT.info),
@@ -135,7 +137,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
       >
         <div aria-hidden className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: gradient }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 flex items-center justify-center">
-          {isAndroid ? (
+          {isAndroid || lowEnd ? (
             <StaticAnnouncement current={current} countdown={countdown} />
           ) : (
             <Suspense fallback={<StaticAnnouncement current={current} countdown={countdown} />}>

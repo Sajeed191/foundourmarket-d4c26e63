@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowRight, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useAdminEditing } from "@/lib/admin-overlay";
+import { useIsAndroid, useLowEndDevice } from "@/lib/use-low-end-device";
 // Heavy admin editor — lazy so shoppers never download it on the homepage.
 const BannerAdminSheet = lazy(() =>
   import("@/components/admin/BannerAdminSheet").then((m) => ({ default: m.BannerAdminSheet })),
@@ -47,6 +47,8 @@ export function PromoBannerCarousel({
 
   const { isAdmin } = useIsAdmin();
   const { canEdit } = useAdminEditing();
+  const isAndroid = useIsAndroid();
+  const lowEnd = useLowEndDevice();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -84,10 +86,11 @@ export function PromoBannerCarousel({
 
 
   useEffect(() => {
+    if (isAndroid || lowEnd) return;
     if (paused || banners.length < 2) return;
     const id = setInterval(() => setIdx((i) => (i + 1) % banners.length), 6000);
     return () => clearInterval(id);
-  }, [paused, banners.length]);
+  }, [paused, banners.length, isAndroid, lowEnd]);
 
   // Track an impression once per banner per mount (admins excluded).
   const seen = useRef<Set<string>>(new Set());
@@ -140,52 +143,46 @@ export function PromoBannerCarousel({
       >
 
 
-        <AnimatePresence mode="wait">
-          <motion.div
+        <div
             key={b.id}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-0"
+            className="absolute inset-0 motion-safe:animate-fade-in"
           >
             {b.image || b.mobile_image ? (
               <picture>
                 {b.mobile_image && <source media="(max-width: 640px)" srcSet={b.mobile_image} />}
-                <img src={b.image ?? b.mobile_image ?? ""} alt={b.title} className="w-full h-full object-cover" />
+                <img
+                  src={b.image ?? b.mobile_image ?? ""}
+                  alt={b.title}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={idx === 0 ? "low" : "low"}
+                  className="w-full h-full object-cover"
+                />
               </picture>
             ) : (
               <div className="absolute inset-0" style={{ background: "var(--gradient-ember)", opacity: 0.5 }} />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
             <div className="relative h-full flex flex-col justify-center max-w-xl p-6 sm:p-12 md:p-16">
-              <motion.h3
-                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15, duration: 0.6 }}
-                className="text-2xl sm:text-4xl md:text-5xl font-display tracking-tight mb-2 sm:mb-4"
-              >
+              <h3 className="text-2xl sm:text-4xl md:text-5xl font-display tracking-tight mb-2 sm:mb-4">
                 {b.title}
-              </motion.h3>
+              </h3>
               {b.subtitle && (
-                <motion.p
-                  initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25, duration: 0.6 }}
-                  className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6"
-                >
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                   {b.subtitle}
-                </motion.p>
+                </p>
               )}
               {b.link && (
-                <motion.a
+                <a
                   href={b.link}
                   onClick={() => trackClick(b.id)}
-                  initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35, duration: 0.6 }}
                   className="inline-flex items-center gap-2 self-start bg-accent text-accent-foreground px-5 py-2.5 rounded-full text-xs font-mono uppercase tracking-widest hover:gap-3 transition-all"
                 >
                   {b.cta_text || "Shop now"} <ArrowRight className="size-3.5" />
-                </motion.a>
+                </a>
               )}
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
 
         {banners.length > 1 && (
           <>

@@ -75,7 +75,7 @@ function ProductImageImpl({
       width={width}
       height={height}
       loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "low"}
+      fetchPriority={priority ? "high" : undefined}
       decoding="async"
       data-product-image
       style={style}

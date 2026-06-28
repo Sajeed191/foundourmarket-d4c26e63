@@ -4,6 +4,7 @@ import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
+import { useLowEndDevice } from "@/lib/use-low-end-device";
 
 /** Maximum products visibly promoted as Flash Deals at any one time. */
 const FLASH_VISIBLE_MAX = 10;
@@ -41,12 +42,13 @@ export function isFlashDealProduct(p: Product): boolean {
   return tokens.includes("flash-deal") || tokens.includes("flash-deals");
 }
 
-function useNow(intervalMs = 60_000) {
+function useNow(intervalMs = 60_000, enabled = true) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    if (!enabled) return;
     const id = setInterval(() => setNow(Date.now()), intervalMs);
     return () => clearInterval(id);
-  }, [intervalMs]);
+  }, [intervalMs, enabled]);
   return now;
 }
 
@@ -61,7 +63,8 @@ function useNow(intervalMs = 60_000) {
 export function useFlashDeals() {
   const { products, loading } = useProducts();
   const [deals, setDeals] = useState<DealRow[]>([]);
-  const now = useNow();
+  const lowEnd = useLowEndDevice();
+  const now = useNow(60_000, !lowEnd);
   const rotationNonce = useRotationNonce();
 
   function fetchDeals() {

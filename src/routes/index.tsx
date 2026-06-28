@@ -607,6 +607,7 @@ function Home() {
                           src={cat.mobile_image || cat.image || ""}
                           alt={cat.name}
                           loading="lazy"
+                          decoding="async"
                           className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
                         />
                       ) : (

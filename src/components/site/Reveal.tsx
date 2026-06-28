@@ -69,10 +69,13 @@ export function AnimatedCounter({
   duration?: number;
   decimals?: number;
 }) {
+  const lowEnd = useLowEndDevice();
+  const android = useIsAndroid();
   // Fixed en-US grouping so SSR (worker) and client render identical text
   // (avoids a hydration mismatch from locale-dependent toLocaleString()).
   const formatted =
     (decimals > 0 ? to.toFixed(decimals) : Math.round(to).toLocaleString("en-US")) + suffix;
+  if (android || lowEnd) return <span>{formatted}</span>;
   return (
     <Suspense fallback={<span>{formatted}</span>}>
       <MotionCounter to={to} suffix={suffix} duration={duration} decimals={decimals} />
