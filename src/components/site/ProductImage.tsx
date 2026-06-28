@@ -24,6 +24,29 @@ const TRANSPARENT_PIXEL =
 
 let safeDecodeChain: Promise<void> = Promise.resolve();
 
+// Diagnostic A/B: `?imgtest=static` makes ProductImage behave exactly like the
+// plain <img> tags on /gpu-test — final src assigned once, no placeholder, no
+// IntersectionObserver, no decode queue, no img.decode(), no post-mount src
+// mutation. Pure test to isolate runtime image-source mutation as a corruption
+// cause. Does not touch layout, styling, radius, overflow, grid, or nav.
+let imgTestStaticCached: boolean | null = null;
+function detectImgTestStatic(): boolean {
+  if (imgTestStaticCached !== null) return imgTestStaticCached;
+  if (typeof window === "undefined") return false;
+  let value = false;
+  try {
+    value = new URLSearchParams(window.location.search).get("imgtest") === "static";
+  } catch {
+    value = false;
+  }
+  imgTestStaticCached = value;
+  if (value && typeof console !== "undefined") {
+    // eslint-disable-next-line no-console
+    console.log("[imgtest] Static image mode enabled — no decode queue used.");
+  }
+  return value;
+}
+
 function enqueueSafeImageDecode(
   img: HTMLImageElement,
   src: string,
@@ -117,7 +140,29 @@ function ProductImageImpl({
     onLoad?.();
   }, [onLoad, resolvedSrc]);
 
+  const imgTestStatic = detectImgTestStatic();
+
+  const staticLoggedRef = useRef(false);
+  if (imgTestStatic && !staticLoggedRef.current && typeof console !== "undefined") {
+    staticLoggedRef.current = true;
+    // eslint-disable-next-line no-console
+    console.log(`[imgtest] Image src assigned once: ${resolvedSrc}`);
+  }
+
+  // Static diagnostic mode: never run the IntersectionObserver / decode-queue
+  // effect, and never run the post-mount src/srcset removal cleanup. The src is
+  // set once at render and never mutated afterward.
   useEffect(() => {
+    if (!imgTestStatic) return;
+    // eslint-disable-next-line no-console
+    console.log("[imgtest] No src mutations occurred after mount.");
+    return undefined;
+  }, [imgTestStatic]);
+
+
+
+  useEffect(() => {
+    if (imgTestStatic) return; // static diagnostic: never mutate src after mount
     activeSrcRef.current = resolvedSrc;
     return () => {
       activeSrcRef.current = "";
@@ -134,9 +179,10 @@ function ProductImageImpl({
       img.removeAttribute("srcset");
       img.removeAttribute("src");
     };
-  }, [resolvedSrc]);
+  }, [imgTestStatic, resolvedSrc]);
 
   useEffect(() => {
+    if (imgTestStatic) return; // static diagnostic: no IO / decode queue
     if (!androidGpuSafeMode) return;
     const img = imgRef.current;
     if (!img) return;
@@ -174,7 +220,7 @@ function ProductImageImpl({
       observer.disconnect();
       cancelDecode?.();
     };
-  }, [androidGpuSafeMode, decodingMode, handleLoad, loadingMode, resolvedSrc]);
+  }, [androidGpuSafeMode, decodingMode, handleLoad, imgTestStatic, loadingMode, resolvedSrc]);
 
   // Debug harness: render a flat placeholder instead of an <img> to rule the
   // product image element out as the corruption source.
@@ -184,6 +230,28 @@ function ProductImageImpl({
         data-product-image
         aria-label={alt}
         style={{ ...style, background: "#e5e7eb" }}
+        className={className}
+      />
+    );
+  }
+
+  if (imgTestStatic) {
+    // Behaves exactly like the plain <img> tags on /gpu-test: final src once,
+    // eager + sync, no srcset/sizes, no placeholder, no decode queue.
+    return (
+      <img
+        key={`${resolvedSrc}|${width}x${height}`}
+        ref={imgRef}
+        src={resolvedSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        loading="eager"
+        decoding="sync"
+        data-product-image
+        data-imgtest-static="true"
+        style={style}
+        onLoad={handleLoad}
         className={className}
       />
     );
