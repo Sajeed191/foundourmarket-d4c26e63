@@ -190,7 +190,13 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         <div
           ref={stageRef}
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
-          style={{ height: "calc(var(--card) + 72px)" }}
+          style={{
+            height: "calc(var(--card) + 72px)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+          }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
