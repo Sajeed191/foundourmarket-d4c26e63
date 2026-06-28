@@ -14,6 +14,7 @@ import { Price } from "@/components/site/Price";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { formatSold } from "@/lib/format-sold";
+import { useAndroidGpuSafeMode } from "@/lib/use-low-end-device";
 
 type ProductCardProps = {
   product: Product;
@@ -161,6 +162,7 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
   const saved = useWishlistSaved(slug);
   const { toggle } = useWishlistActions();
   const [justSaved, setJustSaved] = useState(false);
+  const androidGpuSafeMode = useAndroidGpuSafeMode();
 
   const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -176,8 +178,8 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
     <button
       onClick={onClick}
       aria-label={saved ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
-      style={{ backgroundColor: "rgba(120,120,120,0.75)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-      className={`absolute right-3 top-3 z-10 grid h-[36px] w-[36px] sm:h-[46px] sm:w-[46px] place-items-center rounded-full text-white transition-colors ${saved ? "text-accent" : "hover:text-accent"} ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
+      style={{ backgroundColor: "rgba(120,120,120,0.75)", backdropFilter: androidGpuSafeMode ? undefined : "blur(10px)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: androidGpuSafeMode ? undefined : "0 2px 8px rgba(0,0,0,0.25)" }}
+      className={`absolute right-3 top-3 z-10 grid h-[36px] w-[36px] sm:h-[46px] sm:w-[46px] place-items-center rounded-full text-white ${androidGpuSafeMode ? "" : "transition-colors"} ${saved ? "text-accent" : androidGpuSafeMode ? "" : "hover:text-accent"} ${justSaved && !androidGpuSafeMode ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
     >
       <Heart className={`size-4 sm:size-5 ${saved ? "fill-accent" : ""}`} />
     </button>
@@ -186,6 +188,7 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
 const WishlistButton = memo(WishlistButtonImpl);
 
 function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => void }) {
+  const androidGpuSafeMode = useAndroidGpuSafeMode();
   const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -196,8 +199,8 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
     <button
       onClick={onClick}
       aria-label={`Quick view ${name}`}
-      style={{ backgroundColor: "rgba(120,120,120,0.75)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-      className="absolute right-3 top-[52px] sm:top-[64px] z-10 grid h-[36px] w-[36px] sm:h-[46px] sm:w-[46px] place-items-center rounded-full text-white transition-colors hover:text-accent"
+      style={{ backgroundColor: "rgba(120,120,120,0.75)", backdropFilter: androidGpuSafeMode ? undefined : "blur(10px)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: androidGpuSafeMode ? undefined : "0 2px 8px rgba(0,0,0,0.25)" }}
+      className={`absolute right-3 top-[52px] sm:top-[64px] z-10 grid h-[36px] w-[36px] sm:h-[46px] sm:w-[46px] place-items-center rounded-full text-white ${androidGpuSafeMode ? "" : "transition-colors hover:text-accent"}`}
     >
       <Eye className="size-4 sm:size-[18px]" />
     </button>
@@ -209,6 +212,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
   const qty = useCartQty(product.slug);
   const { add, setQty } = useCartActions();
   const [justAdded, setJustAdded] = useState(false);
+  const androidGpuSafeMode = useAndroidGpuSafeMode();
 
   const onAdd = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -218,7 +222,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
   }, [add, product.slug]);
 
   const gradient = "linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%)";
-  const glow = "0 6px 18px -4px rgba(255,122,0,0.45)";
+  const glow = androidGpuSafeMode ? undefined : "0 6px 18px -4px rgba(255,122,0,0.45)";
 
   if (!product.inStock) {
     return (
@@ -231,11 +235,11 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
   if (qty > 0 && !justAdded) {
     return (
       <div className="flex h-[46px] sm:h-[52px] w-full items-center justify-between rounded-full px-2" style={{ background: gradient, boxShadow: glow }}>
-        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className="grid size-11 place-items-center rounded-full text-black active:scale-95 transition-transform">
+        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className={`grid size-11 place-items-center rounded-full text-black ${androidGpuSafeMode ? "" : "active:scale-95 transition-transform"}`}>
           <Minus className="size-5" strokeWidth={2.5} />
         </button>
         <span data-product-text className="product-typography min-w-7 text-center text-lg font-bold tabular-nums text-black">{qty}</span>
-        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty + 1); }} aria-label="Increase quantity" className="grid size-11 place-items-center rounded-full text-black active:scale-95 transition-transform">
+        <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty + 1); }} aria-label="Increase quantity" className={`grid size-11 place-items-center rounded-full text-black ${androidGpuSafeMode ? "" : "active:scale-95 transition-transform"}`}>
           <Plus className="size-5" strokeWidth={2.5} />
         </button>
       </div>
@@ -247,7 +251,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
       onClick={onAdd}
       aria-label={`Add ${product.name} to cart`}
       style={justAdded ? undefined : { background: gradient, boxShadow: glow }}
-      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.97] ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
+      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold ${androidGpuSafeMode ? "" : "transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.97]"} ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
     >
       {justAdded ? <><Check className="size-5 sm:size-6" /> Added</> : <><Plus className="size-5 sm:size-6" strokeWidth={2.75} /> Add to Cart</>}
     </button>
@@ -268,6 +272,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const engine = useBadgeEngine();
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
   const identity = productIdentity(product);
+  const androidGpuSafeMode = useAndroidGpuSafeMode();
 
   const badges = useMemo<CardBadge[]>(() => {
     if (!forceBadge && assigned.length > 0) {
@@ -301,7 +306,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       data-product-id={identity}
       data-render-token={identity}
       style={{ backgroundColor: "#111111", border: "1px solid rgba(255,138,0,0.18)" }}
-      className="product-card-shell group relative flex h-full flex-col overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_10px_32px_-6px_rgba(255,138,0,0.4)]"
+      className={`product-card-shell group relative flex h-full flex-col overflow-hidden rounded-[22px] ${androidGpuSafeMode ? "" : "shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_10px_32px_-6px_rgba(255,138,0,0.4)]"}`}
     >
       <ProductCardAdminControlsGate product={product} />
 
