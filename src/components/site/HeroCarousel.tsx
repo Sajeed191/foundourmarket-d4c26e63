@@ -166,25 +166,32 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
       <div aria-hidden className="pointer-events-none absolute top-0 bottom-0 left-1/2 w-screen -translate-x-1/2 -z-0 overflow-hidden">
-        {/* full-bleed blurred product backdrop fills the empty side areas */}
-        {current?.image && !lowEnd && (
-          <img
-            src={current.image}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
-            style={{ transition: "opacity 800ms ease" }}
-          />
+        {/* Heavy blurred backdrop + radial glows are GPU-expensive and, on
+            low-RAM Android, leave stale compositor tiles (ghosting). Render them
+            only on capable devices; low-end keeps just the cheap bottom fade. */}
+        {!lowEnd && (
+          <>
+            {/* full-bleed blurred product backdrop fills the empty side areas */}
+            {current?.image && (
+              <img
+                src={current.image}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
+                style={{ transition: "opacity 800ms ease" }}
+              />
+            )}
+            <div
+              className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
+              style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
+            />
+            <div
+              className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[60%] w-[120%]"
+              style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 65%)`, transition: "background 700ms ease" }}
+            />
+            <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
+          </>
         )}
-        <div
-          className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
-          style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
-        />
-        <div
-          className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[60%] w-[120%]"
-          style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 65%)`, transition: "background 700ms ease" }}
-        />
-        <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
 
@@ -206,7 +213,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         {/* ── premium queue-style 3D carousel ── */}
         <div
           ref={stageRef}
-          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
+          className={`hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none ${lowEnd ? "" : "[perspective:1600px]"}`}
           style={{
             height: "calc(var(--card) + 72px)",
             WebkitMaskImage:
@@ -227,14 +234,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           onMouseEnter={() => { pausedRef.current = true; }}
           onMouseLeave={() => { if (!drag.current.active) pausedRef.current = false; }}
         >
-          {/* soft halo behind the stage */}
-          <div
-            aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
-            style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
-          />
+          {/* soft halo behind the stage — skipped on low-end (blur layer ghosts) */}
+          {!lowEnd && (
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
+              style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
+            />
+          )}
           {/* subtle radial orange glow directly behind the active product */}
-          {perf.enableGlow && (
+          {perf.enableGlow && !lowEnd && (
             <div
               aria-hidden
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
@@ -257,6 +266,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const depth = Math.abs(rel);
               const isCenter = rel === 0;
               const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
+
+              // ── Low-end / low-RAM Android: render ONLY the centered card. ──
+              // Stacked, semi-transparent, transform-animated side cards are the
+              // root of the ghost/duplicate corruption on these GPUs. A single
+              // static card cannot leave stale compositor layers behind.
+              if (lowEnd && !isCenter) return null;
 
               const maxDepth = perf.maxDepth;
               const onStage = depth <= maxDepth;
@@ -307,16 +322,18 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     height: "var(--card)",
                     marginLeft: "calc(var(--card) / -2)",
                     marginTop: "calc(var(--card) / -2)",
-                    transform: `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
-                    opacity,
+                    transform: lowEnd
+                      ? "none"
+                      : `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
+                    opacity: lowEnd ? 1 : opacity,
                     filter: lowEnd
                       ? "none"
                       : `blur(${blur}px) grayscale(${gray}) brightness(${bright}) drop-shadow(0 ${isCenter ? 26 : 12}px ${isCenter ? 44 : 22}px oklch(0 0 0 / ${isCenter ? 0.5 : 0.34}))`,
                     zIndex: 10 - depth,
                     pointerEvents: isCenter ? "auto" : "none",
-                    visibility: visible ? "visible" : "hidden",
+                    visibility: lowEnd ? "visible" : visible ? "visible" : "hidden",
                     transition: lowEnd
-                      ? `opacity ${DUR}ms ease`
+                      ? "none"
                       : `transform ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
                     willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
@@ -327,7 +344,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                       background: isCenter
                         ? `linear-gradient(160deg, ${ambientSoft}, color-mix(in srgb, ${primary} 30%, transparent))`
                         : "color-mix(in srgb, oklch(0.2 0.01 262) 60%, transparent)",
-                      boxShadow: isCenter && perf.enableGlow
+                      boxShadow: isCenter && perf.enableGlow && !lowEnd
                         ? `0 0 0 1px oklch(1 0 0 / 0.06), 0 0 40px -6px oklch(0.74 0.19 49 / 0.55)`
                         : "0 0 0 1px oklch(1 0 0 / 0.04)",
                     }}
