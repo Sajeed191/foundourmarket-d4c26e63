@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
 
@@ -21,7 +21,9 @@ type Props = {
  */
 function AdaptiveProductMediaImpl({ src, alt, priority = false, children }: Props) {
   const { palette, ready } = useImagePalette(src);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  useEffect(() => setLoadedSrc(null), [src]);
+  const imgLoaded = loadedSrc === src;
   const revealed = ready && imgLoaded;
 
   return (
@@ -48,7 +50,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, children }: Prop
         width={800}
         height={800}
         priority={priority}
-        onLoad={() => setImgLoaded(true)}
+        onLoad={() => setLoadedSrc(src)}
         className="relative z-[1] block h-full w-full rounded-[14px] object-contain object-center transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03]"
         style={{ opacity: revealed ? 1 : 0 }}
       />

@@ -981,6 +981,8 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   min-width: 0;
   content-visibility: auto;
   contain-intrinsic-size: auto 430px;
+  contain: layout paint style;
+  isolation: isolate;
 }
 
 .product-card-shell {
@@ -1018,6 +1020,7 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 [data-product-image] {
   transition: opacity 160ms ease;
   backface-visibility: visible;
+  contain: paint;
 }
 
 /* ===== Android / low-end ghost-text & artifact mitigation =====
@@ -1057,6 +1060,19 @@ html[data-android="true"] [data-product-card-frame],
 html[data-low-end="true"] [data-product-card-frame] {
   contain: layout paint style;
   isolation: isolate;
+}
+
+html[data-android="true"] [data-product-card],
+html[data-low-end="true"] [data-product-card] {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+html[data-android="true"] [data-product-image],
+html[data-low-end="true"] [data-product-image] {
+  transform: none !important;
+  will-change: auto !important;
+  transition: opacity 160ms ease !important;
 }
 
 
@@ -1439,7 +1455,6 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
     background-position 350ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1);
   animation: search-cta-pulse 3.4s ease-in-out infinite;
-  will-change: transform;
 }
 .search-cta:hover {
   background-position: 100% 0%;
@@ -1515,7 +1530,6 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
     0 0 0 1px oklch(1 0 0 / 0.04) inset,
     0 1px 0 oklch(1 0 0 / 0.1) inset;
   animation: vp-breathe 4.5s ease-in-out infinite;
-  will-change: transform, box-shadow;
 }
 .view-product-cta:hover {
   border-color: oklch(0.74 0.19 49 / 0.75);
@@ -1558,7 +1572,6 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
     transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 300ms ease,
     box-shadow 300ms ease;
-  will-change: transform;
 }
 .feature-card:hover {
   transform: translateY(-6px) scale(1.03);

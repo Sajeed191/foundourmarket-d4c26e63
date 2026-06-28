@@ -296,8 +296,10 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
   return (
     <article
+      key={identity}
       data-product-card
       data-product-id={identity}
+      data-render-token={identity}
       style={{ backgroundColor: "#111111", border: "1px solid rgba(255,138,0,0.18)" }}
       className="product-card-shell group relative flex h-full flex-col overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_10px_32px_-6px_rgba(255,138,0,0.4)]"
     >
@@ -307,6 +309,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           the product's own dominant colors, soft color glow, contain fit. */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block" aria-label={product.name}>
         <AdaptiveProductMedia
+          key={`${identity}:media:${product.image}`}
           src={product.image}
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
