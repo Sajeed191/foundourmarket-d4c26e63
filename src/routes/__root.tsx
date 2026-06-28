@@ -35,7 +35,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { ShareDialog } from "@/components/site/ShareDialog";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
-import { detectAndroidWebView, detectRenderSafe, useLowEndDevice, useIsAndroid, useUltraLowEndAndroid, useAndroidGpuSafeMode } from "@/lib/use-low-end-device";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { startCapabilityGovernor } from "@/lib/runtime-capability";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
@@ -351,8 +350,6 @@ function DeferredShell({
   hideLiveChat?: boolean;
 }) {
   const [ready, setReady] = useState(false);
-  const isAndroid = useIsAndroid();
-  const ultraLowEndAndroid = useUltraLowEndAndroid();
   useEffect(() => {
     const ric = (
       window as unknown as {
@@ -371,15 +368,7 @@ function DeferredShell({
     return () => clearTimeout(t);
   }, []);
 
-  if (!ready || ultraLowEndAndroid) return null;
-
-  if (isAndroid) {
-    return (
-      <Suspense fallback={null}>
-        <RegionSelectModal />
-      </Suspense>
-    );
-  }
+  if (!ready) return null;
 
   return (
     <Suspense fallback={null}>
@@ -453,20 +442,13 @@ function RootComponent() {
     () => typeof window !== "undefined" && hasOAuthReturnParams(),
   );
 
-  const lowEnd = useLowEndDevice();
-  const isAndroid = useIsAndroid();
-  const ultraLowEndAndroid = useUltraLowEndAndroid();
-  const androidGpuSafeMode = useAndroidGpuSafeMode();
-
   useEffect(() => {
     initDebugFlags();
-    if (isDebugEnabled() || !androidGpuSafeMode) {
-      installDebugDiagnostics();
-      patchImageDecode();
-    }
+    installDebugDiagnostics();
+    patchImageDecode();
     installStartupDiagnostics();
     installChunkRecovery();
-    if (!detectRenderSafe() && !androidGpuSafeMode && getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
+    if (getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
     logBuildVersion();
     // React mounted successfully. Clear the persistent boot-attempt counter a
     // few seconds after a stable render so the auto-reload cap only ever counts
@@ -475,43 +457,18 @@ function RootComponent() {
       (window as unknown as { __fomBootOk?: () => void }).__fomBootOk?.();
     }, 6000);
     return () => window.clearTimeout(t);
-  }, [androidGpuSafeMode]);
-  // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
-  // and start dev-only runtime performance monitoring (long tasks / FPS / heap).
+  }, []);
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.dataset.lowEnd = lowEnd ? "true" : "false";
-      // Android Chrome/WebView/Samsung Internet compositor mitigation flag.
-      document.documentElement.dataset.android = isAndroid ? "true" : "false";
-      const ua = navigator.userAgent || "";
-      const androidWebView = detectAndroidWebView();
-      document.documentElement.dataset.androidWebview = androidWebView ? "true" : "false";
-      document.documentElement.dataset.androidChrome = isAndroid && !androidWebView && /Chrome/i.test(ua) ? "true" : "false";
-      document.documentElement.dataset.ultraLowEnd = ultraLowEndAndroid ? "true" : "false";
-      document.documentElement.dataset.androidGpuSafeMode = androidGpuSafeMode ? "true" : "false";
-      logDiagnostic("device-flags", {
-        lowEnd,
-        isAndroid,
-        ultraLowEndAndroid,
-        androidGpuSafeMode,
-        androidWebView,
-        androidChrome: isAndroid && !androidWebView && /Chrome/i.test(ua),
-      });
-    }
-  }, [lowEnd, isAndroid, ultraLowEndAndroid, androidGpuSafeMode]);
-  useEffect(() => {
-    if (androidGpuSafeMode) return;
     startPerfMonitoring();
     // Live capability governor: measures real FPS / long tasks and trims only
     // expensive effects (blur/shadow/3D/particles) if the device can't sustain
     // smooth rendering — never hides images or hero animations. Runs on every
     // capable device (incl. 4–6GB Android) so degradation is performance-driven.
     startCapabilityGovernor();
-  }, [androidGpuSafeMode]);
+  }, []);
   useEffect(() => {
-    if (lowEnd || isAndroid || androidGpuSafeMode) return;
     preloadCrisp();
-  }, [lowEnd, isAndroid, androidGpuSafeMode]);
+  }, []);
   // Bootstrap Google Analytics off the critical path (on idle / after paint) so
   // gtag.js never competes with hydration on the main thread during load.
   useEffect(() => {
