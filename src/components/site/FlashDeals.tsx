@@ -76,7 +76,7 @@ function FallbackSection({ featured }: { featured: Product[] }) {
                 <Link key={p.id ?? p.slug} to="/products/$slug" params={{ slug: p.slug }} data-product-card data-android-static-card className="block group text-left">
                   <div data-product-media className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-black/40 ring-1 ring-white/10">
                     {p.image && (
-                      <img data-product-image src={p.image} alt={p.name} loading="lazy" decoding="sync" className="w-full h-full object-cover" />
+                      <img data-product-image src={p.image} alt={p.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     )}
                   </div>
                   <p data-product-text className="product-typography product-title-text mt-1.5 text-[11px] font-medium truncate">{p.name}</p>

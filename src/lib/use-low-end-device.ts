@@ -10,21 +10,35 @@ import { useEffect, useState } from "react";
  * requested reduced motion. SSR-safe: assumes capable until mounted so the
  * server render and first paint stay rich.
  */
+function domFlag(name: string): boolean | null {
+  if (typeof document === "undefined") return null;
+  const value = document.documentElement.dataset[name];
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
+}
+
 function detect(): boolean {
   if (typeof navigator === "undefined") return false;
+  const flagged = domFlag("lowEnd");
+  if (flagged !== null) return flagged;
   const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   const cores = navigator.hardwareConcurrency;
+  const android = detectAndroid();
   const reduced =
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   if (reduced) return true;
   if (typeof mem === "number" && mem > 0 && mem <= 4) return true;
   if (typeof cores === "number" && cores > 0 && cores <= 4) return true;
+  // Some Android Chrome builds hide deviceMemory. On those devices, start in
+  // safe mode instead of briefly mounting blur/3D layers before hooks update.
+  if (android && typeof mem !== "number") return true;
   return false;
 }
 
 export function useLowEndDevice(): boolean {
-  const [low, setLow] = useState(false);
+  const [low, setLow] = useState(detect);
   useEffect(() => {
     setLow(detect());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -80,7 +94,7 @@ export function shouldUseIncrementalRendering(): boolean {
 }
 
 export function useIsAndroid(): boolean {
-  const [android, setAndroid] = useState(false);
+  const [android, setAndroid] = useState(() => domFlag("android") ?? detectAndroid());
   useEffect(() => {
     setAndroid(detectAndroid());
   }, []);
@@ -89,7 +103,7 @@ export function useIsAndroid(): boolean {
 
 /** Live flag: should the product grid use incremental (non-virtualized) rendering? */
 export function useIncrementalRendering(): boolean {
-  const [incremental, setIncremental] = useState(false);
+  const [incremental, setIncremental] = useState(shouldUseIncrementalRendering);
   useEffect(() => {
     setIncremental(shouldUseIncrementalRendering());
   }, []);
@@ -113,6 +127,7 @@ export type DeviceTier = "high" | "mid" | "low";
  */
 function detectTier(): DeviceTier {
   if (typeof navigator === "undefined") return "high";
+  if (detect()) return "low";
   const reduced =
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -130,7 +145,7 @@ function detectTier(): DeviceTier {
 }
 
 export function useDeviceTier(): DeviceTier {
-  const [tier, setTier] = useState<DeviceTier>("high");
+  const [tier, setTier] = useState<DeviceTier>(detectTier);
   useEffect(() => {
     setTier(detectTier());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
