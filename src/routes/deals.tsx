@@ -298,7 +298,7 @@ function DealsPage() {
             <VirtualizedProductGrid
               items={visibleProducts}
               cols={{ base: 2, lg: 4 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [grid-auto-rows:1fr]"
+              className="grid grid-cols-2 lg:grid-cols-4 items-start gap-3 sm:gap-4"
               getKey={getProductKey}
               renderItem={renderProduct}
             />
