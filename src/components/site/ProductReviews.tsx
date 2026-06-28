@@ -423,7 +423,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const visible = sorted.slice(0, visibleCount);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 border-t border-border/60">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-14 sm:pb-20 border-t border-border/60">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
