@@ -220,7 +220,7 @@ function ProductImageImpl({
       observer.disconnect();
       cancelDecode?.();
     };
-  }, [androidGpuSafeMode, decodingMode, handleLoad, loadingMode, resolvedSrc]);
+  }, [androidGpuSafeMode, decodingMode, handleLoad, imgTestStatic, loadingMode, resolvedSrc]);
 
   // Debug harness: render a flat placeholder instead of an <img> to rule the
   // product image element out as the corruption source.
