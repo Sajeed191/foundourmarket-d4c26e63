@@ -20,14 +20,6 @@ const ROTATE_MS = 3000;
 // Apple/Stripe-style premium easing for the showcase crossfade.
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
-// Side (prev/next) slots: large blurred neighbor products peeking from the
-// left and right edges, scaled back and pushed behind the centered card.
-// `x` is expressed as a fraction of the fluid card size so the depth layer
-// scales proportionally on every screen instead of overflowing narrow phones.
-const SIDE_SLOTS = [
-  { key: "prev", dir: -1, xFactor: -0.62, rot: -6 },
-  { key: "next", dir: 1, xFactor: 0.62, rot: 6 },
-] as const;
 
 /**
  * Premium rotating hero showcase. Picks real products (Featured → Trending →
@@ -68,14 +60,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const current = items[index];
   const { palette } = useImagePalette(current?.image);
 
-  // Preload the next image for a seamless transition.
+  // Preload the next and previous images for a seamless, jump-free transition.
   useEffect(() => {
     if (items.length <= 1) return;
-    const next = items[(index + 1) % items.length];
-    if (next?.image) {
-      const img = new Image();
-      img.src = next.image;
-    }
+    const n = items.length;
+    [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
+      if (p?.image) {
+        const img = new Image();
+        img.src = p.image;
+      }
+    });
   }, [index, items]);
 
   const primary = palette.primary || "#ffffff";
@@ -83,9 +77,19 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const ambientSoft = `color-mix(in srgb, ${primary} 18%, transparent)`;
 
   return (
-    <div className="relative mx-auto max-w-[1100px]">
+    <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+        {/* full-bleed blurred product backdrop fills the empty side areas */}
+        {current?.image && !lowEnd && (
+          <img
+            src={current.image}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
+            style={{ transition: "opacity 800ms ease" }}
+          />
+        )}
         <div
           className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
           style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
@@ -96,8 +100,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         />
         {/* warm orange anchor glow so the brand accent always reads */}
         <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
+        {/* dark gradient overlays for a premium, immersive frame */}
+        <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background/90 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background/90 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
+
 
       <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
         {/* badge */}
@@ -114,13 +122,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           Trusted products from verified sellers worldwide.
         </p>
 
-        {/* ── premium floating glass showcase with blurred depth layer ── */}
-        {/* `--card` drives every element in the stage so the image scales
-            fluidly (≈78% of viewport) and stays centered from 320px → desktop,
-            never cropping, overflowing, or shifting layout. */}
+        {/* ── premium infinite product carousel: prev / active / next ── */}
+        {/* `--card` drives every element so the stage scales fluidly and stays
+            centered from 320px → 4K, never cropping, overflowing, or shifting. */}
         <div
-          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-[480px] sm:max-w-[600px] select-none overflow-hidden [perspective:1200px]"
-          style={{ ["--card" as string]: "clamp(150px, 62vw, 310px)", height: "calc(var(--card) + 50px)" }}
+          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-[560px] sm:max-w-[760px] select-none overflow-hidden [perspective:1400px]"
+          style={{ ["--card" as string]: "clamp(132px, 52vw, 258px)", height: "calc(var(--card) + 56px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -130,48 +137,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           {/* soft halo behind the stage */}
           <div
             aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[120%] rounded-full blur-3xl opacity-70"
-            style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 800ms ease" }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
+            style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
+          />
+          {/* subtle radial orange glow directly behind the active product */}
+          <div
+            aria-hidden
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
+            style={{ width: "calc(var(--card) * 1.2)", height: "calc(var(--card) * 1.2)", background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.42), transparent 70%)" }}
           />
 
-          {/* ── BACKGROUND: prev/next blurred neighbor products (depth) ── */}
-          {!lowEnd && items.length > 1 && (
-            <div aria-hidden className="pointer-events-none absolute inset-0 z-[1]">
-              {SIDE_SLOTS.map((slot) => {
-                const offset = (index + slot.dir + items.length) % items.length;
-                const bg = items[offset];
-                if (!bg?.image || bg.id === current?.id) return null;
-                return (
-                  <div
-                    key={`${slot.key}-${bg.id}`}
-                    className="absolute left-1/2 top-1/2 overflow-hidden rounded-[26px] glass-strong ring-1 ring-white/10"
-                    style={{
-                      width: "calc(var(--card) * 0.92)",
-                      height: "calc(var(--card) * 0.92)",
-                      marginLeft: "calc(var(--card) * -0.46)",
-                      marginTop: "calc(var(--card) * -0.46)",
-                      transform: `translate3d(calc(var(--card) * ${slot.xFactor}), 0, 0) scale(0.78) rotate(${slot.rot}deg)`,
-                      opacity: 0.85,
-                      filter: "blur(4px)",
-                      transition: `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
-                      willChange: "transform, opacity, filter",
-                    }}
-                  >
-                    <ProductImage
-                      src={bg.image}
-                      alt=""
-                      width={300}
-                      height={300}
-                      sizes="(min-width: 640px) 290px, 72vw"
-                      className="block size-full object-contain object-center p-[12%]"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ── FOREGROUND: main floating glass product card ── */}
           {items.length === 0 ? (
             <div
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[28px] glass-strong ring-1 ring-white/12 animate-pulse"
@@ -179,7 +154,21 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             />
           ) : (
             items.map((p, i) => {
-              const isCenter = i === index;
+              const n = items.length;
+              // Shortest signed ring distance → smooth, jump-free looping.
+              let rel = i - index;
+              if (rel > n / 2) rel -= n;
+              if (rel < -n / 2) rel += n;
+              const isCenter = rel === 0;
+              const isSide = rel === -1 || rel === 1;
+              const visible = isCenter || isSide;
+              const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
+              // Side cards peek ~30% from each edge; far cards park just offscreen.
+              const xFactor = isCenter ? 0 : sign * (isSide ? 0.6 : 1.05);
+              const scale = isCenter ? 1 : isSide ? 0.83 : 0.72;
+              const opacity = isCenter ? 1 : isSide ? 0.4 : 0;
+              const blur = isCenter || lowEnd ? 0 : isSide ? 14 : 18;
+              const rot = isCenter ? 0 : sign * -5;
               return (
                 <Link
                   key={p.id}
@@ -187,18 +176,18 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   params={{ slug: p.slug }}
                   aria-hidden={!isCenter}
                   tabIndex={isCenter ? 0 : -1}
-                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : ""} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
                     width: "var(--card)",
                     height: "var(--card)",
                     marginLeft: "calc(var(--card) / -2)",
                     marginTop: "calc(var(--card) / -2)",
-                    transform: isCenter ? "translateY(0) scale(1)" : "translateY(10px) scale(0.96)",
-                    opacity: isCenter ? 1 : 0,
-                    filter: isCenter || lowEnd ? "blur(0px)" : "blur(6px)",
-                    zIndex: isCenter ? 5 : 0,
+                    transform: `translate3d(calc(var(--card) * ${xFactor}), 0, 0) scale(${scale}) rotate(${rot}deg)`,
+                    opacity,
+                    filter: blur ? `blur(${blur}px)` : "blur(0px)",
+                    zIndex: isCenter ? 5 : isSide ? 2 : 0,
                     pointerEvents: isCenter ? "auto" : "none",
-                    visibility: isCenter ? "visible" : "hidden",
+                    visibility: visible ? "visible" : "hidden",
                     background: palette.background,
                     transition: lowEnd
                       ? "opacity 300ms ease"
@@ -216,11 +205,11 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   )}
                   <ProductImage
                     src={p.image}
-                    alt={p.name}
+                    alt={isCenter ? p.name : ""}
                     width={560}
                     height={560}
                     priority={i === 0}
-                    sizes="(min-width: 640px) 310px, 78vw"
+                    sizes="(min-width: 640px) 258px, 52vw"
                     className="relative z-[1] block size-full object-contain object-center p-[7%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
@@ -228,6 +217,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             })
           )}
         </div>
+
 
         {/* product name + CTA */}
         {current && (

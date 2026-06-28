@@ -29,7 +29,7 @@ import { HeroCarousel } from "@/components/site/HeroCarousel";
 import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { AnnouncementBar } from "@/components/site/AnnouncementBar";
+
 import { FlashDeals } from "@/components/site/FlashDeals";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
@@ -447,8 +447,8 @@ function Home() {
 
   return (
     <>
-      {/* Sticky announcement bar — homepage only */}
-      <AnnouncementBar />
+      {/* Hero starts immediately below the main navigation (announcement bar removed). */}
+
 
       {/* 2 · Premium rotating product showcase hero */}
       <section className="relative px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
