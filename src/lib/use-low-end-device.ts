@@ -96,3 +96,48 @@ export function useIncrementalRendering(): boolean {
   return incremental;
 }
 
+
+export type DeviceTier = "high" | "mid" | "low";
+
+/**
+ * Three-tier device-capability classifier for adaptively scaling expensive
+ * visual effects (visible card count, blur strength, glow, shadows, animation).
+ *
+ *   low  — ≤4GB RAM, ≤4 cores, OR prefers-reduced-motion. Minimal blur, no
+ *          heavy glow, simplest animations.
+ *   high — ≥8GB RAM AND ≥8 cores (and no reduced-motion). Full effects.
+ *   mid  — everything in between. Medium blur, reduced shadows.
+ *
+ * SSR-safe: assumes "high" until mounted so SSR + first paint stay rich, then
+ * downgrades on the client once real capabilities are known.
+ */
+function detectTier(): DeviceTier {
+  if (typeof navigator === "undefined") return "high";
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return "low";
+  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const cores = navigator.hardwareConcurrency;
+  if ((typeof mem === "number" && mem > 0 && mem <= 4) ||
+      (typeof cores === "number" && cores > 0 && cores <= 4)) {
+    return "low";
+  }
+  const memHigh = typeof mem !== "number" || mem === 0 || mem >= 8;
+  const coresHigh = typeof cores !== "number" || cores === 0 || cores >= 8;
+  if (memHigh && coresHigh) return "high";
+  return "mid";
+}
+
+export function useDeviceTier(): DeviceTier {
+  const [tier, setTier] = useState<DeviceTier>("high");
+  useEffect(() => {
+    setTier(detectTier());
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    const onChange = () => setTier(detectTier());
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return tier;
+}

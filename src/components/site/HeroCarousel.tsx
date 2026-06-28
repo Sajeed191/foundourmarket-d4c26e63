@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
-import { useLowEndDevice } from "@/lib/use-low-end-device";
+import { useLowEndDevice, useDeviceTier } from "@/lib/use-low-end-device";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
 
@@ -31,6 +31,7 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 export function HeroCarousel({ featured, trending, bestSellers, newArrivals, children }: Props) {
   const lowEnd = useLowEndDevice();
   const isMobile = useIsMobile();
+  const tier = useDeviceTier();
 
   const items = useMemo(() => {
     const pool =
@@ -62,23 +63,45 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const current = items[index];
   const { palette } = useImagePalette(current?.image);
 
-  // Preload adjacent images (both directions, several deep) for seamless looping.
+  // Preload only the immediate next + previous images (per spec). Off-screen
+  // cards beyond these are lazy-loaded by the browser via <ProductImage>.
   useEffect(() => {
     if (items.length <= 1) return;
     const n = items.length;
-    for (let d = 1; d <= 5; d++) {
-      [items[(index + d) % n], items[(index - d + n) % n]].forEach((p) => {
-        if (p?.image) {
-          const img = new Image();
-          img.src = p.image;
-        }
-      });
-    }
+    [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
+      if (p?.image) {
+        const img = new Image();
+        img.src = p.image;
+      }
+    });
   }, [index, items]);
 
   const primary = palette.primary || "#ffffff";
   const ambient = `color-mix(in srgb, ${primary} 38%, transparent)`;
   const ambientSoft = `color-mix(in srgb, ${primary} 18%, transparent)`;
+
+  // ── Adaptive performance profile (highest priority) ──
+  // Visible products + effect strength scale with the device tier so low-end
+  // Android phones stay at 60 FPS while high-end devices get the full show.
+  const perf = useMemo(() => {
+    // Cards per side: high 4/3, mid 3/2, low 2/1 (desktop/mobile).
+    const sideByTier: Record<string, [number, number]> = {
+      high: [4, 3],
+      mid: [3, 2],
+      low: [2, 1],
+    };
+    const maxDepth = sideByTier[tier][isMobile ? 1 : 0];
+    // Blur strength per depth index, attenuated for weaker devices.
+    const blurScale = tier === "high" ? 1 : tier === "mid" ? 0.6 : 0.25;
+    return {
+      maxDepth,
+      blurScale,
+      // Heavy glow only on high-end; reduced shadows on mid; none on low.
+      enableGlow: tier === "high",
+      shadowFloat: tier === "low",
+    };
+  }, [tier, isMobile]);
+
 
   return (
     <div className="relative mx-auto max-w-[1280px]">
@@ -142,12 +165,15 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
             style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
           />
-          {/* subtle radial orange glow directly behind the active product */}
-          <div
-            aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
-            style={{ width: "calc(var(--card) * 1.2)", height: "calc(var(--card) * 1.2)", background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.42), transparent 70%)" }}
-          />
+          {/* subtle radial orange glow directly behind the active product
+              (heavy glow on high-end devices only) */}
+          {perf.enableGlow && (
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
+              style={{ width: "calc(var(--card) * 1.2)", height: "calc(var(--card) * 1.2)", background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.42), transparent 70%)" }}
+            />
+          )}
 
           {items.length === 0 ? (
             <div
@@ -165,8 +191,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const isCenter = rel === 0;
               const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
 
-              // 3 cards per side on mobile, 4 on tablet/desktop.
-              const maxDepth = isMobile ? 3 : 4;
+              // Cards per side scale with device tier (see `perf`).
+              const maxDepth = perf.maxDepth;
 
               // Progressive depth tables (index 0 == first side card).
               const POS = [0.0, 0.62, 1.12, 1.55, 1.92];
@@ -183,7 +209,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const xFactor = isCenter ? 0 : sign * (parked ? 2.3 : POS[di]);
               const scale = parked ? SCALE[Math.min(maxDepth, 4)] : SCALE[di];
               const opacity = onStage ? OPACITY[di] : 0;
-              const blur = isCenter || lowEnd ? 0 : onStage ? BLUR[di] : BLUR[Math.min(maxDepth, 4)];
+              const rawBlur = onStage ? BLUR[di] : BLUR[Math.min(maxDepth, 4)];
+              const blur = isCenter || lowEnd ? 0 : Math.round(rawBlur * perf.blurScale);
               const rot = isCenter ? 0 : sign * -(di * 4);
               const darken = isCenter ? 0 : Math.min(0.12 * di, 0.5);
               const visible = onStage || parked;
@@ -194,7 +221,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   params={{ slug: p.slug }}
                   aria-hidden={!isCenter}
                   tabIndex={isCenter ? 0 : -1}
-                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? (perf.enableGlow ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]") : ""} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
                     width: "var(--card)",
                     height: "var(--card)",
@@ -210,7 +237,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     transition: lowEnd
                       ? "opacity 300ms ease"
                       : `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
-                    willChange: "transform, opacity, filter",
+                    willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
                 >
                   {isCenter && (
