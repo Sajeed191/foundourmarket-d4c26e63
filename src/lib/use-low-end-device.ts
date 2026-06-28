@@ -128,17 +128,23 @@ export function useLowEndDevice(): boolean {
 
 /**
  * Decides whether to render the LIGHTWEIGHT (old) homepage instead of the
- * premium animated one. This is intentionally broader than the premium-effect
- * gates: per product requirement it also honors the coarse RAM/cores signals so
- * any constrained Android phone gets the fast, static fallback. It does NOT
- * affect the premium-effect detection used elsewhere — it only swaps the
- * homepage presentation. SSR-safe (returns false until mounted).
+ * premium animated one. SSR-safe (returns false until mounted).
  *
- * Triggers when ANY of these is true:
- *   - low-end device, Android GPU Safe Mode, Ultra Low-End Android, render=safe
- *   - reduced-motion / save-data
- *   - deviceMemory ≤ 4 GB
- *   - hardwareConcurrency ≤ 4 cores
+ * IMPORTANT: this no longer uses the coarse `deviceMemory`/`cores ≤ 4` gates.
+ * `navigator.deviceMemory` is rounded to a power of two AND capped by the
+ * browser, so many genuinely capable 8GB+ Android phones (e.g. iQOO Z10R)
+ * report `deviceMemory === 4` and were wrongly demoted to the lightweight home.
+ * Likewise, 4+ CPU cores is normal for mid-range/flagship phones and is NOT a
+ * low-end signal. Real performance problems are handled at runtime by the
+ * capability governor (data-degrade-effects), which trims effects WITHOUT
+ * switching to the lightweight homepage after load.
+ *
+ * Triggers ONLY when ANY of these genuine constraints is true:
+ *   - explicit DOM override (data-light-home)
+ *   - low-end device / Android GPU Safe Mode / Ultra Low-End Android / render=safe
+ *     (all RAM-free: reduced-motion, save-data, ≤2 cores, or known-weak GPU)
+ *   - Save-Data enabled
+ *   - prefers-reduced-motion
  */
 export function detectLightweightHome(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -152,18 +158,70 @@ export function detectLightweightHome(): boolean {
   ) {
     return true;
   }
-  const { mem, cores, saveData, reduced } = constrainedSignals();
+  const { saveData, reduced } = constrainedSignals();
   if (saveData || reduced) return true;
-  if (typeof mem === "number" && mem > 0 && mem <= 4) return true;
-  if (typeof cores === "number" && cores > 0 && cores <= 4) return true;
   return false;
 }
+
+/**
+ * Detailed one-shot diagnostic of the device-detection flow. Logs every signal
+ * and the final homepage decision with the deciding reason. Runs once per page
+ * load. Always logged so it can be inspected on real hardware without a flag.
+ */
+let deviceDetectionLogged = false;
+export function logDeviceDetection(): void {
+  if (deviceDetectionLogged || typeof navigator === "undefined") return;
+  deviceDetectionLogged = true;
+
+  const { mem, cores, saveData, reduced } = constrainedSignals();
+  const renderer = getWebGLRenderer();
+  const weakGpu = isWeakGpu(renderer);
+  const lowEnd = detectLowEndDevice();
+  const androidSafe = detectAndroidGpuSafeMode();
+  const ultraLow = detectUltraLowEndAndroid();
+  const renderSafe = detectRenderSafe();
+  const lightweight = detectLightweightHome();
+  const degraded =
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.degradeEffects === "true";
+
+  let reason = "Premium (no constraint signals)";
+  if (domFlag("lightHome") === true) reason = "Lightweight: data-light-home override";
+  else if (domFlag("lightHome") === false) reason = "Premium: data-light-home override";
+  else if (reduced) reason = "Lightweight: prefers-reduced-motion";
+  else if (saveData) reason = "Lightweight: Save-Data enabled";
+  else if (typeof cores === "number" && cores > 0 && cores <= 2)
+    reason = "Lightweight: ≤2 CPU cores";
+  else if (weakGpu) reason = `Lightweight: weak GPU (${renderer ?? "unknown"})`;
+  else if (renderSafe) reason = "Lightweight: ?render=safe diagnostic";
+
+  /* eslint-disable no-console */
+  console.log("%c[device-detection]", "color:#ff8a00;font-weight:bold", {
+    "detectLightweightHome()": lightweight,
+    "detectLowEndDevice()": lowEnd,
+    "navigator.deviceMemory": mem,
+    "navigator.hardwareConcurrency": cores,
+    "connection.saveData": saveData,
+    "prefers-reduced-motion": reduced,
+    "GPU renderer": renderer,
+    "weak GPU": weakGpu,
+    "Android GPU Safe Mode": androidSafe,
+    "Ultra Low-End Android": ultraLow,
+    "render=safe": renderSafe,
+    "runtime degraded (data-degrade-effects)": degraded,
+    "FINAL homepage": lightweight ? "Lightweight" : "Premium",
+    reason,
+  });
+  /* eslint-enable no-console */
+}
+
 
 export function useLightweightHome(): boolean {
   // SSR-consistent baseline; detection applied post-mount to avoid hydration
   // mismatch (see useLowEndDevice).
   const [light, setLight] = useState(false);
   useEffect(() => {
+    logDeviceDetection();
     setLight(detectLightweightHome());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (!mq) return;
