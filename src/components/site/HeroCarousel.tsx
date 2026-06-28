@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
-import { useAndroidGpuSafeMode, useLowEndDevice, useDeviceTier, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
+import { useAndroidGpuSafeMode, useDeviceTier, useUltraLowEndAndroid, detectLowEndDevice, detectUltraLowEndAndroid, detectAndroidGpuSafeMode } from "@/lib/use-low-end-device";
 import { useFlag } from "@/lib/use-debug-flag";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
@@ -39,7 +39,23 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     bestSellers: bestSellers.length,
     newArrivals: newArrivals.length,
   });
-  const lowEnd = useLowEndDevice();
+  // Render the SAFE/static hero on SSR + the first client render, then upgrade
+  // to the enhanced hero only AFTER hydration confirms a capable device. This
+  // guarantees low-end (e.g. Mali-G52) devices never paint the heavy
+  // compositor path — not even for a single frame.
+  const [enhanced, setEnhanced] = useState(false);
+  useEffect(() => {
+    console.log("Hero initial: safe");
+    const capable =
+      !detectLowEndDevice() && !detectUltraLowEndAndroid() && !detectAndroidGpuSafeMode();
+    if (capable) {
+      setEnhanced(true);
+      console.log("Hero upgraded: enhanced");
+    } else {
+      console.log("Hero kept: safe");
+    }
+  }, []);
+  const lowEnd = !enhanced;
   const ultraLowEndAndroid = useUltraLowEndAndroid();
   const androidGpuSafeMode = useAndroidGpuSafeMode();
   const ffJsAnimations = useFlag("jsAnimations");
