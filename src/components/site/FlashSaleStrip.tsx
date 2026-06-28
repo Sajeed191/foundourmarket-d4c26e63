@@ -122,7 +122,6 @@ export function FlashSaleStrip() {
                     <ProductImage
                       src={p.image}
                       alt={p.name}
-                      loading={undefined as never}
                       sizes="(min-width: 1024px) 20vw, (min-width: 640px) 26vw, 42vw"
                       className="w-full h-full object-cover"
                     />
