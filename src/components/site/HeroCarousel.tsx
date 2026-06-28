@@ -64,15 +64,32 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     [items.length],
   );
 
+  // Pause autoplay whenever the carousel is scrolled off-screen so it never
+  // burns CPU/battery animating frames the user can't see.
+  const offscreenRef = useRef(false);
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        offscreenRef.current = !entry.isIntersecting;
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // Auto-rotate.
   useEffect(() => {
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
-      if (pausedRef.current) return;
+      if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
   }, [items.length]);
+
 
   const current = items[index];
   const { palette } = useImagePalette(current?.image);
