@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive } from "@/lib/storage-image";
-import { detectAndroidGpuSafeMode, detectUltraLowEndAndroid } from "@/lib/use-low-end-device";
+import { detectAndroidGpuSafeMode, detectRenderSafe, detectUltraLowEndAndroid } from "@/lib/use-low-end-device";
 import { useActiveBisectTest, useBisectOverrideEnabled, useFlag } from "@/lib/use-debug-flag";
 
 type Props = {
