@@ -498,6 +498,7 @@ function Home() {
           <p>A premium independent marketplace, sourcing top-quality products from across the world.</p>
         </div>
 
+        {ffHero && (
         <HeroCarousel
 
           featured={featured}
