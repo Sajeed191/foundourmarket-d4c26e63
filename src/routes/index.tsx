@@ -692,7 +692,7 @@ function Home() {
 
 
       {/* 4-6 · Trending / New Arrivals / Best Sellers — separate lazy rails */}
-      {productsLoading ? (
+      {ffProductGrid && (productsLoading ? (
         <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
