@@ -63,7 +63,12 @@ function detect(): boolean {
 }
 
 export function useLowEndDevice(): boolean {
-  const [low, setLow] = useState(detect);
+  // SSR-consistent: the server has no navigator/DOM flag and renders the
+  // "capable" baseline, so the first client render MUST match it. Detection is
+  // applied in the effect below after mount. Reading detect() in the initializer
+  // produces a hydration mismatch on flagged Android devices, which forces React
+  // to regenerate the whole tree (the black-flash / reload corruption).
+  const [low, setLow] = useState(false);
   useEffect(() => {
     setLow(detect());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
