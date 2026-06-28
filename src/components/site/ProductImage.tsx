@@ -135,6 +135,11 @@ function ProductImageImpl({
   const imgRef = useRef<HTMLImageElement | null>(null);
   const activeSrcRef = useRef(resolvedSrc);
 
+  const handleLoad = useCallback(() => {
+    if (activeSrcRef.current !== resolvedSrc) return;
+    onLoad?.();
+  }, [onLoad, resolvedSrc]);
+
   const imgTestStatic = detectImgTestStatic();
 
   const staticLoggedRef = useRef(false);
