@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
 import { useLowEndDevice, useDeviceTier, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
+import { useFlag } from "@/lib/use-debug-flag";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
