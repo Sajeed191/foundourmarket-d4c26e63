@@ -196,7 +196,7 @@ export function useAndroidGpuSafeMode(): boolean {
 
 /** Live flag: should the product grid use incremental (non-virtualized) rendering? */
 export function useIncrementalRendering(): boolean {
-  const [incremental, setIncremental] = useState(shouldUseIncrementalRendering);
+  const [incremental, setIncremental] = useState(false);
   useEffect(() => {
     setIncremental(shouldUseIncrementalRendering());
   }, []);
