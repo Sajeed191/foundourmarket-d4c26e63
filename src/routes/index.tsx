@@ -421,6 +421,16 @@ function Home() {
     [products, rotationSeed, rotationNonce]
   );
 
+  const featured = useMemo(
+    () =>
+      seededShuffle(
+        products.filter((p) => p.featured || p.homepageHero),
+        rotationSeed + rotationNonce + 2,
+      ).slice(0, 8),
+    [products, rotationSeed, rotationNonce]
+  );
+
+
   const { items: testimonials } = useTestimonials();
 
   const categoryLimit = useCategoryLimit();
