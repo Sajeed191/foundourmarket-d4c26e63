@@ -175,7 +175,7 @@ function ProductSection({
   return (
     <SectionTracker
       sectionKey={sectionKey}
-      className={`px-4 sm:px-6 ${prominent ? "py-5 sm:py-8" : "py-4 sm:py-7"} max-w-7xl mx-auto scroll-mt-24 block`}
+      className={`px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block`}
     >
       <SectionHeader
         eyebrow={eyebrow}
@@ -437,7 +437,7 @@ function Home() {
       <AnnouncementBar />
 
       {/* 2 · Cinematic Hero */}
-      <section className="relative pt-5 sm:pt-10 md:pt-14 lg:pt-20 pb-5 sm:pb-9 md:pb-11 lg:pb-20 px-4 sm:px-6 lg:px-10 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+      <section className="relative pt-3 sm:pt-7 md:pt-9 lg:pt-12 pb-3 sm:pb-6 md:pb-8 lg:pb-12 px-4 sm:px-6 lg:px-10 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         {/* Layered ambient mesh + orbs */}
         <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
           <div className="orb animate-orb" style={{ width: 520, height: 520, top: "8%", left: "55%", background: "var(--gradient-ember)" }} />
@@ -676,7 +676,7 @@ function Home() {
       <TrustBadgesStrip />
 
       {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-5 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
         <div className="relative">
           <SectionHeader eyebrow="Browse" title="Main Categories" href="/categories" />
           {isProductAdmin && (
@@ -783,7 +783,7 @@ function Home() {
 
       {/* 4-6 · Trending / New Arrivals / Best Sellers — separate lazy rails */}
       {productsLoading ? (
-        <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
+        <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
       ) : (
@@ -826,7 +826,7 @@ function Home() {
       <CinematicDivider />
 
       {/* 7 · Social Proof — verified customer reviews */}
-      <section className="px-4 sm:px-6 py-4 sm:py-7 max-w-7xl mx-auto">
+      <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
         <Reveal className="text-center mb-4 sm:mb-6">
           <h2 className="text-fluid-2xl font-display tracking-tight">What our customers say</h2>
         </Reveal>

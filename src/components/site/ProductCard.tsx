@@ -40,7 +40,7 @@ export function productIdentity(product: Product): string {
    Android-safe clamp (the global .product-title-text rule disables
    -webkit-line-clamp). */
 const TITLE_CLASS =
-  "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[15px] font-bold leading-[1.3] text-white sm:text-[19px]";
+  "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[14px] font-bold leading-[1.3] text-white sm:text-[16px]";
 
 /**
  * Premium badge styles keyed by normalized label. Subtle gradients, soft
@@ -88,12 +88,12 @@ function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
   if (badges.length === 0) return null;
   const visible = badges.slice(0, 3);
   return (
-    <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1 overflow-hidden">
+    <div className="absolute left-2.5 top-2.5 z-10 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1.5 overflow-hidden">
       {visible.map((b) => (
         <span
           key={b.id}
           data-product-badge
-          className={`inline-flex h-4 sm:h-5 w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-2.5 text-[9px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] ${b.className ?? ""}`}
+          className={`inline-flex h-[22px] sm:h-[28px] w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2.5 sm:px-3 text-[9px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] ${b.className ?? ""}`}
           style={b.style ?? badgeStyle(b.label)}
         >
           {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
@@ -145,7 +145,7 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
       onClick={onClick}
       aria-label={`Quick view ${name}`}
       style={{ backgroundColor: "rgba(120,120,120,0.75)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-      className="absolute bottom-3 right-3 z-10 grid h-[32px] w-[32px] sm:h-[42px] sm:w-[42px] place-items-center rounded-full text-white transition-colors hover:text-accent"
+      className="absolute bottom-3 right-3 z-10 grid h-[36px] w-[36px] sm:h-[46px] sm:w-[46px] place-items-center rounded-full text-white transition-colors hover:text-accent"
     >
       <Eye className="size-4 sm:size-[18px]" />
     </button>
@@ -166,11 +166,11 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
   }, [add, product.slug]);
 
   const gradient = "linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%)";
-  const glow = "0 2px 6px rgba(255,122,0,0.08)";
+  const glow = "0 6px 18px -4px rgba(255,122,0,0.45)";
 
   if (!product.inStock) {
     return (
-      <span data-product-text className="product-typography inline-flex h-[48px] sm:h-[54px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span data-product-text className="product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         Sold Out
       </span>
     );
@@ -178,7 +178,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
 
   if (qty > 0 && !justAdded) {
     return (
-      <div className="flex h-[48px] sm:h-[54px] w-full items-center justify-between rounded-full px-2" style={{ background: gradient, boxShadow: glow }}>
+      <div className="flex h-[46px] sm:h-[52px] w-full items-center justify-between rounded-full px-2" style={{ background: gradient, boxShadow: glow }}>
         <button onClick={(e) => { e.preventDefault(); void setQty(product.slug, qty - 1); }} aria-label="Decrease quantity" className="grid size-11 place-items-center rounded-full text-black active:scale-95 transition-transform">
           <Minus className="size-5" strokeWidth={2.5} />
         </button>
@@ -195,7 +195,7 @@ function AddToCartButtonImpl({ product }: { product: Product }) {
       onClick={onAdd}
       aria-label={`Add ${product.name} to cart`}
       style={justAdded ? undefined : { background: gradient, boxShadow: glow }}
-      className={`product-typography inline-flex h-[40px] sm:h-[54px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[18px] font-bold transition-[filter,transform] duration-150 hover:brightness-105 active:scale-[0.97] ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
+      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.97] ${justAdded ? "bg-emerald-500 text-black" : "text-black"}`}
     >
       {justAdded ? <><Check className="size-5 sm:size-6" /> Added</> : <><Plus className="size-5 sm:size-6" strokeWidth={2.75} /> Add to Cart</>}
     </button>
@@ -232,17 +232,17 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
     <article
       data-product-card
       data-product-id={identity}
-      style={{ backgroundColor: "#111111", border: "1px solid rgba(255,138,0,0.35)", boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}
-      className="product-card-shell relative flex h-full flex-col overflow-hidden rounded-[26px]"
+      style={{ backgroundColor: "#111111", border: "1px solid rgba(255,138,0,0.18)" }}
+      className="product-card-shell group relative flex h-full flex-col overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_10px_32px_-6px_rgba(255,138,0,0.4)]"
     >
       <ProductCardAdminControlsGate product={product} />
 
-      {/* Image IS the top section. White bg, 1:1, contain, 14px padding,
+      {/* Image IS the top section. White bg, 1:1, contain, 12px padding,
           rounded only on the top corners to blend into the card. */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block" aria-label={product.name}>
         <div
           data-product-media
-          className="relative aspect-square w-full overflow-hidden rounded-t-[26px] bg-white p-[0.5%]"
+          className="relative aspect-square w-full overflow-hidden rounded-t-[22px] bg-white p-3"
         >
           <ProductImage
             src={product.image}
@@ -250,7 +250,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
             width={800}
             height={800}
             priority={priority}
-            className="block h-full w-full object-cover object-center"
+            className="block h-full w-full object-contain object-center transition-transform duration-200 group-hover:scale-[1.03]"
           />
           <ProductBadges badges={badges} />
           <WishlistButton slug={product.slug} name={product.name} />
@@ -259,7 +259,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       </Link>
 
       {/* Details — flex column, 16px padding, 8px gap. */}
-      <div data-product-copy className="product-copy flex flex-1 flex-col gap-0.5 p-2 sm:gap-2 sm:p-4">
+      <div data-product-copy className="product-copy flex flex-1 flex-col gap-1 p-3 sm:gap-2 sm:p-4">
         <Link to="/products/$slug" params={{ slug: product.slug }} className="block min-w-0">
           <h3 data-product-text className={TITLE_CLASS}>{product.name}</h3>
         </Link>
@@ -282,7 +282,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
         {/* Price — current price on top, compare price + discount below. */}
         <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
-          <Price value={price} className="shrink-0 font-display text-[20px] font-extrabold leading-none tabular-nums text-white sm:text-[34px]" />
+          <Price value={price} className="shrink-0 font-display text-[22px] font-extrabold leading-none tabular-nums text-white sm:text-[30px]" />
           {originalPrice && discount ? (
             <div className="flex min-w-0 items-baseline gap-2 overflow-hidden">
               <Price value={originalPrice} className="shrink-0 text-[12px] tabular-nums text-muted-foreground line-through sm:text-[15px]" />
