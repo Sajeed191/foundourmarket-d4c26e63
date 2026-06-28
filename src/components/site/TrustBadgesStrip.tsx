@@ -24,13 +24,16 @@ export function TrustBadgesStrip() {
   return (
     <section className="px-4 sm:px-6 lg:px-10 pt-1 lg:pt-4 pb-4 lg:pb-8 max-w-7xl lg:max-w-[1480px] mx-auto">
       {/* Mobile / tablet — unchanged */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-3 lg:hidden">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:hidden">
         {ITEMS.map(({ icon: Icon, label }) => (
           <div
             key={label}
-            className="group flex flex-col items-center gap-1.5 rounded-xl glass px-1.5 py-2.5 ring-1 ring-white/5 text-center transition-all duration-300 hover:-translate-y-0.5 hover:ring-accent/30 hover:shadow-[0_0_18px_-6px_oklch(0.74_0.19_49/0.45)]"
+            className="feature-card group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1.5 py-3 text-center"
           >
-            <Icon className="size-4 text-accent shrink-0 transition-transform duration-300 group-hover:scale-110" strokeWidth={2} />
+            <Icon
+              className="size-[18px] text-accent shrink-0 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[8deg] group-hover:scale-110"
+              strokeWidth={2}
+            />
             <span className="text-[9px] sm:text-[11px] font-medium leading-tight text-white/90">
               {label}
             </span>
