@@ -126,6 +126,9 @@ export function LiveChat() {
   const { orders, lastUpdate, clearUpdate } = useChatOrders(user?.id);
 
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const openRef = useRef(false);
+  useEffect(() => { openRef.current = open; if (open) setUnread(0); }, [open]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [operatorTyping, setOperatorTyping] = useState(false);
