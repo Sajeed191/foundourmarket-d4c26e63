@@ -349,55 +349,61 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           )}
         </div>
 
-        {/* product name + CTA */}
-        {current && (
-          <div className="mt-5 min-h-[2.5rem] animate-fade-in" key={current.id}>
-            <p className="text-sm font-medium text-foreground line-clamp-2 max-w-[280px] mx-auto leading-snug">{current.name}</p>
-            <Link
-              to="/products/$slug"
-              params={{ slug: current.slug }}
-              className="view-product-cta group relative mt-3 inline-flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full px-6 text-[12px] font-semibold tracking-wide text-foreground outline-none transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              <span aria-hidden className="view-product-cta__shine pointer-events-none absolute inset-0 rounded-full" />
-              <span className="relative z-[1]">View Product</span>
-              <ArrowRight className="relative z-[1] size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-          </div>
-        )}
+        {/* Reserved-height container: name + CTA + dots render here AFTER
+            products load. Pre-reserving the height prevents the search box and
+            sections below from shifting down when content appears (CLS fix). */}
+        <div className="min-h-[8.75rem]">
+          {/* product name + CTA */}
+          {current && (
+            <div className="mt-5 min-h-[2.5rem] animate-fade-in" key={current.id}>
+              <p className="text-sm font-medium text-foreground line-clamp-2 max-w-[280px] mx-auto leading-snug">{current.name}</p>
+              <Link
+                to="/products/$slug"
+                params={{ slug: current.slug }}
+                className="view-product-cta group relative mt-3 inline-flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full px-6 text-[12px] font-semibold tracking-wide text-foreground outline-none transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:scale-[0.98]"
+              >
+                <span aria-hidden className="view-product-cta__shine pointer-events-none absolute inset-0 rounded-full" />
+                <span className="relative z-[1]">View Product</span>
+                <ArrowRight className="relative z-[1] size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+          )}
 
-        {/* dots — active dot fills with a liquid-style progress */}
-        {items.length > 1 && (
-          <div className="mt-3 flex items-center justify-center gap-1.5" role="tablist" aria-label="Product slides">
-            {items.map((p, i) => {
-              const isActive = i === index;
-              return (
-                <button
-                  key={p.id}
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-label={`Show product ${i + 1}`}
-                  onClick={() => setIndex(i)}
-                  className={`relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300 ${isActive ? "w-6 bg-white/20" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
-                >
-                  {isActive && !lowEnd && (
-                    <span
-                      key={index}
-                      aria-hidden
-                      className="absolute inset-y-0 left-0 rounded-full bg-accent"
-                      style={{
-                        animation: `dot-fill ${ROTATE_MS}ms linear forwards`,
-                        boxShadow: "0 0 10px -2px oklch(0.74 0.19 49 / 0.8)",
-                      }}
-                    />
-                  )}
-                  {isActive && lowEnd && (
-                    <span aria-hidden className="absolute inset-0 rounded-full bg-accent" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
+          {/* dots — active dot fills with a liquid-style progress */}
+          {items.length > 1 && (
+            <div className="mt-3 flex items-center justify-center gap-1.5" role="tablist" aria-label="Product slides">
+              {items.map((p, i) => {
+                const isActive = i === index;
+                return (
+                  <button
+                    key={p.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-label={`Show product ${i + 1}`}
+                    onClick={() => setIndex(i)}
+                    className={`relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300 ${isActive ? "w-6 bg-white/20" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
+                  >
+                    {isActive && !lowEnd && (
+                      <span
+                        key={index}
+                        aria-hidden
+                        className="absolute inset-y-0 left-0 rounded-full bg-accent"
+                        style={{
+                          animation: `dot-fill ${ROTATE_MS}ms linear forwards`,
+                          boxShadow: "0 0 10px -2px oklch(0.74 0.19 49 / 0.8)",
+                        }}
+                      />
+                    )}
+                    {isActive && lowEnd && (
+                      <span aria-hidden className="absolute inset-0 rounded-full bg-accent" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* search + chips slot */}
