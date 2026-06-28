@@ -234,6 +234,7 @@ function defaults(): FlagState {
 
 let state: FlagState = defaults();
 let activeBisectTest: string | null = null;
+let bisectOverrideEnabled = false;
 let bisectLog: BisectObservation[] = [];
 const listeners = new Set<() => void>();
 
@@ -250,12 +251,13 @@ function applyDom() {
   const el = document.documentElement;
   el.dataset.debugHarness = enabled ? "on" : "off";
   el.dataset.bisectTest = activeBisectTest ?? "none";
+  el.dataset.bisectOverride = bisectOverrideEnabled ? "on" : "off";
   for (const f of DEBUG_FLAGS) {
     el.dataset[`ff${f.charAt(0).toUpperCase()}${f.slice(1)}`] = state[f] ? "on" : "off";
   }
   let style = document.getElementById(BISECT_STYLE_ID) as HTMLStyleElement | null;
   const test = activeBisectTest ? BISECT_TESTS.find((t) => t.id === activeBisectTest) : null;
-  if (!test) {
+  if (!test || !bisectOverrideEnabled) {
     style?.remove();
     return;
   }
@@ -274,7 +276,7 @@ function applyDom() {
 function persist() {
   if (typeof localStorage === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ enabled, state, activeBisectTest }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ enabled, state, activeBisectTest, bisectOverrideEnabled }));
     localStorage.setItem(BISECT_LOG_KEY, JSON.stringify(bisectLog));
   } catch {
     /* ignore */
@@ -311,10 +313,11 @@ export function initDebugFlags() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { enabled?: boolean; state?: Partial<FlagState> };
+      const parsed = JSON.parse(raw) as { enabled?: boolean; state?: Partial<FlagState>; activeBisectTest?: string | null; bisectOverrideEnabled?: boolean };
       if (parsed.enabled) enabled = true;
       if (parsed.state) state = { ...defaults(), ...parsed.state };
-      activeBisectTest = (parsed as { activeBisectTest?: string | null }).activeBisectTest ?? null;
+      activeBisectTest = parsed.activeBisectTest ?? null;
+      bisectOverrideEnabled = parsed.bisectOverrideEnabled === true;
     }
     const logRaw = localStorage.getItem(BISECT_LOG_KEY);
     if (logRaw) bisectLog = JSON.parse(logRaw) as BisectObservation[];
@@ -356,6 +359,7 @@ export function resetFlags() {
   state = defaults();
   enabled = false;
   activeBisectTest = null;
+  bisectOverrideEnabled = false;
   applyDom();
   if (typeof localStorage !== "undefined") {
     try {
@@ -371,9 +375,22 @@ export function getActiveBisectTest(): string | null {
   return activeBisectTest;
 }
 
+export function getBisectOverrideEnabled(): boolean {
+  return bisectOverrideEnabled;
+}
+
 export function setActiveBisectTest(id: string | null) {
   enabled = true;
   activeBisectTest = id && BISECT_TESTS.some((t) => t.id === id) ? id : null;
+  bisectOverrideEnabled = false;
+  applyDom();
+  persist();
+  notify();
+}
+
+export function setBisectOverrideEnabled(value: boolean) {
+  enabled = true;
+  bisectOverrideEnabled = value;
   applyDom();
   persist();
   notify();
