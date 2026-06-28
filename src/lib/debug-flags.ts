@@ -286,7 +286,7 @@ function applyDom() {
     document.head.appendChild(style);
   }
   const value = bisectOverrideEnabled ? test.disabledValue : test.enabledValue;
-  style.textContent = `${test.selector}{${test.property}:${value} !important;}`;
+  style.textContent = `html[data-debug-harness="on"][data-bisect-test="${test.id}"] ${test.selector}{${test.property}:${value} !important;}`;
 }
 
 function persist() {
