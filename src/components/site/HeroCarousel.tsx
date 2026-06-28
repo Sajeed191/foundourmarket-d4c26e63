@@ -152,7 +152,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             centered from 320px → 4K, never cropping, overflowing, or shifting. */}
         <div
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden [perspective:1600px]"
-          style={{ ["--card" as string]: "clamp(116px, 44vw, 244px)", height: "calc(var(--card) + 56px)" }}
+          style={{ ["--card" as string]: "clamp(100px, 38vw, 240px)", height: "calc(var(--card) + 56px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -195,7 +195,10 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const maxDepth = perf.maxDepth;
 
               // Progressive depth tables (index 0 == first side card).
-              const POS = [0.0, 0.62, 1.12, 1.55, 1.92];
+              // POS = horizontal offset in card-widths. Spaced so each card
+              // overlaps its neighbour by only ~15-20% and stays clearly
+              // visible — never fully hidden behind the center card.
+              const POS = [0.0, 0.8, 1.46, 2.04, 2.54];
               const SCALE = [1, 0.9, 0.82, 0.74, 0.66];
               const OPACITY = [1, 0.7, 0.55, 0.4, 0.25];
               const BLUR = [0, 4, 8, 12, 16];
@@ -206,7 +209,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               // slide in seamlessly (no flicker / jump on loop).
               const parked = depth === maxDepth + 1;
 
-              const xFactor = isCenter ? 0 : sign * (parked ? 2.3 : POS[di]);
+              const parkedX = POS[Math.min(maxDepth, 4)] + 0.6;
+              const xFactor = isCenter ? 0 : sign * (parked ? parkedX : POS[di]);
               const scale = parked ? SCALE[Math.min(maxDepth, 4)] : SCALE[di];
               const opacity = onStage ? OPACITY[di] : 0;
               const rawBlur = onStage ? BLUR[di] : BLUR[Math.min(maxDepth, 4)];
