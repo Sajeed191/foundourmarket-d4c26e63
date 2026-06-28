@@ -111,6 +111,9 @@ export function DebugPanel() {
             padding: 12,
           }}
         >
+          <GuidedRunner runner={runner} diag={diag} />
+
+
           <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
             <button type="button" onClick={() => setAll(true)} style={btn}>
               All ON
