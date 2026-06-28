@@ -695,3 +695,222 @@ export function downloadBisectReport(diagnostics: unknown) {
   }, 0);
 }
 
+// ============================================================================
+// GUIDED RUNNER — drives the existing bisect tests in highest-probability
+// order, one feature at a time, ON -> OFF -> ON, auto-advancing on A/B/A
+// failure and stopping immediately on the first confirmed culprit. Falls back
+// to TWO-feature combinations only after every single feature fails A/B/A.
+// No new instrumentation: it only orchestrates switches that already exist.
+// ============================================================================
+
+export type RunnerFeatureRef =
+  | { kind: "bisect"; id: string }
+  | { kind: "flag"; flag: DebugFlag };
+
+export type RunnerStep = {
+  id: string;
+  label: string;
+  combo: boolean;
+  features: RunnerFeatureRef[];
+};
+
+const b = (id: string): RunnerFeatureRef => ({ kind: "bisect", id });
+const f = (flag: DebugFlag): RunnerFeatureRef => ({ kind: "flag", flag });
+
+/** Highest-probability Android rendering causes first, exactly as prioritised. */
+export const RUNNER_SINGLES: RunnerStep[] = [
+  { id: "s-gpu-transform", label: "1. GPU transform (translateZ)", combo: false, features: [b("product-card-transform")] },
+  { id: "s-backdrop", label: "2. Backdrop filter", combo: false, features: [b("card-backdrop-filter")] },
+  { id: "s-filter", label: "3. CSS filter", combo: false, features: [b("product-card-filter")] },
+  { id: "s-blur", label: "4. Blur", combo: false, features: [b("card-blur")] },
+  { id: "s-overflow", label: "5. Overflow clipping", combo: false, features: [b("product-card-overflow")] },
+  { id: "s-contain", label: "6. Contain", combo: false, features: [b("card-frame-contain")] },
+  { id: "s-cv", label: "7. Content-visibility", combo: false, features: [b("card-frame-content-visibility")] },
+  { id: "s-isolation", label: "8. Isolation", combo: false, features: [b("card-frame-isolation")] },
+  { id: "s-willchange", label: "9. Will-change", combo: false, features: [b("product-card-will-change")] },
+  { id: "s-perspective", label: "10. Perspective", combo: false, features: [b("product-grid-perspective")] },
+  { id: "s-translate3d", label: "11. Translate3d", combo: false, features: [b("product-card-translate3d")] },
+  { id: "s-decoding", label: "12. Image decoding", combo: false, features: [b("product-image-decoding-async")] },
+  { id: "s-cib", label: "13. createImageBitmap", combo: false, features: [b("product-image-create-image-bitmap")] },
+  { id: "s-imgdecode", label: "14. Image.decode()", combo: false, features: [b("product-image-image-decode")] },
+  { id: "s-srcset", label: "15. Srcset / responsive transforms", combo: false, features: [b("product-image-srcset")] },
+  { id: "s-lazy", label: "16. Lazy loading", combo: false, features: [b("product-image-lazy-loading")] },
+  { id: "s-virtualization", label: "17. Virtualization", combo: false, features: [f("virtualization")] },
+  { id: "s-infinite", label: "18. Infinite scrolling", combo: false, features: [f("infiniteScroll")] },
+  { id: "s-sw", label: "19. Service Worker", combo: false, features: [f("serviceWorker")] },
+];
+
+/** Two-feature fallback — only reached if every single feature fails A/B/A. */
+export const RUNNER_COMBOS: RunnerStep[] = [
+  { id: "c-transform-overflow", label: "transform + overflow", combo: true, features: [b("product-card-transform"), b("product-card-overflow")] },
+  { id: "c-transform-contain", label: "transform + contain", combo: true, features: [b("product-card-transform"), b("card-frame-contain")] },
+  { id: "c-transform-cv", label: "transform + content-visibility", combo: true, features: [b("product-card-transform"), b("card-frame-content-visibility")] },
+  { id: "c-backdrop-blur", label: "backdrop-filter + blur", combo: true, features: [b("card-backdrop-filter"), b("card-blur")] },
+  { id: "c-contain-cv", label: "contain + content-visibility", combo: true, features: [b("card-frame-contain"), b("card-frame-content-visibility")] },
+  { id: "c-willchange-transform", label: "will-change + transform", combo: true, features: [b("product-card-will-change"), b("product-card-transform")] },
+  { id: "c-decoding-srcset", label: "image decoding + srcset", combo: true, features: [b("product-image-decoding-async"), b("product-image-srcset")] },
+  { id: "c-virtualization-lazy", label: "virtualization + lazy loading", combo: true, features: [f("virtualization"), b("product-image-lazy-loading")] },
+];
+
+export const RUNNER_STEPS: RunnerStep[] = [...RUNNER_SINGLES, ...RUNNER_COMBOS];
+
+const RUNNER_KEY = "fom_bisect_runner";
+
+export type RunnerState = {
+  active: boolean;
+  index: number;
+  phase: BisectPhase;
+  step: RunnerStep | null;
+  confirmed: RunnerStep | null;
+  finished: boolean;
+};
+
+function currentStep(): RunnerStep | null {
+  return RUNNER_STEPS[runnerIndex] ?? null;
+}
+
+let runnerConfirmed: RunnerStep | null = null;
+let runnerFinished = false;
+
+export function getRunnerState(): RunnerState {
+  return {
+    active: runnerActive,
+    index: runnerIndex,
+    phase: runnerPhase,
+    step: currentStep(),
+    confirmed: runnerConfirmed,
+    finished: runnerFinished,
+  };
+}
+
+/** Apply every feature of the current step at the value for the current phase. */
+function applyRunnerFeatures() {
+  const step = currentStep();
+  runnerOverrides = [];
+  // Reset flags to production baseline first, then disable as needed.
+  for (const fl of DEBUG_FLAGS) state[fl] = true;
+  activeBisectTest = null;
+  bisectOverrideEnabled = false;
+  if (!step) {
+    applyDom();
+    return;
+  }
+  const off = runnerPhase === "feature-off-after";
+  for (const feat of step.features) {
+    if (feat.kind === "flag") {
+      state[feat.flag] = off ? false : true;
+    } else {
+      const t = BISECT_TESTS.find((x) => x.id === feat.id);
+      if (!t) continue;
+      if (t.selector === "ProductImage prop") {
+        // Prop-based tests are read by ProductImage via the single-slot fields.
+        activeBisectTest = feat.id;
+        bisectOverrideEnabled = off;
+      } else {
+        runnerOverrides.push({ id: feat.id, off });
+      }
+    }
+  }
+  applyDom();
+}
+
+function persistRunner() {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(
+      RUNNER_KEY,
+      JSON.stringify({ runnerActive, runnerIndex, runnerPhase, runnerConfirmed, runnerFinished }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+export function startRunner() {
+  enabled = true;
+  runnerActive = true;
+  runnerIndex = 0;
+  runnerPhase = "feature-on-before";
+  runnerConfirmed = null;
+  runnerFinished = false;
+  applyRunnerFeatures();
+  persist();
+  persistRunner();
+  notify();
+}
+
+export function stopRunner() {
+  runnerActive = false;
+  runnerOverrides = [];
+  for (const fl of DEBUG_FLAGS) state[fl] = true;
+  activeBisectTest = null;
+  bisectOverrideEnabled = false;
+  applyDom();
+  persist();
+  persistRunner();
+  notify();
+}
+
+function advanceStep() {
+  runnerIndex += 1;
+  runnerPhase = "feature-on-before";
+  if (runnerIndex >= RUNNER_STEPS.length) {
+    runnerFinished = true;
+    runnerActive = false;
+    runnerOverrides = [];
+    for (const fl of DEBUG_FLAGS) state[fl] = true;
+    activeBisectTest = null;
+    bisectOverrideEnabled = false;
+    applyDom();
+  } else {
+    applyRunnerFeatures();
+  }
+}
+
+/**
+ * Record corruption (YES/NO) for the current phase and advance automatically:
+ *  - ON  (phase 1): NO  => feature not the cause, skip to next step.
+ *                   YES => continue to OFF phase.
+ *  - OFF (phase 2): NO  => good, continue to ON-again phase.
+ *                   YES => disabling didn't help, skip to next step.
+ *  - ON  (phase 3): YES => CONFIRMED culprit, stop immediately.
+ *                   NO  => not reproducible, skip to next step.
+ */
+export function recordRunnerResult(corruption: boolean) {
+  const step = currentStep();
+  if (!step || !runnerActive) return;
+  // Log each phase against the step's primary feature for the report.
+  const primary = step.features[0];
+  if (primary.kind === "bisect") {
+    recordBisectObservation(primary.id, runnerPhase, corruption);
+  }
+
+  if (runnerPhase === "feature-on-before") {
+    if (corruption) {
+      runnerPhase = "feature-off-after";
+      applyRunnerFeatures();
+    } else {
+      advanceStep();
+    }
+  } else if (runnerPhase === "feature-off-after") {
+    if (!corruption) {
+      runnerPhase = "feature-on-return";
+      applyRunnerFeatures();
+    } else {
+      advanceStep();
+    }
+  } else {
+    if (corruption) {
+      runnerConfirmed = step;
+      runnerActive = false; // STOP immediately on confirmed culprit.
+      applyDom();
+    } else {
+      advanceStep();
+    }
+  }
+  persist();
+  persistRunner();
+  notify();
+}
+
+
