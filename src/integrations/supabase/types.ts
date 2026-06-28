@@ -3155,6 +3155,7 @@ export type Database = {
           reviews: number
           scheduled_expiry_at: string | null
           scheduled_publish_at: string | null
+          search_text: string | null
           search_vector: unknown
           seo_description: string | null
           seo_title: string | null
@@ -3263,6 +3264,7 @@ export type Database = {
           reviews?: number
           scheduled_expiry_at?: string | null
           scheduled_publish_at?: string | null
+          search_text?: string | null
           search_vector?: unknown
           seo_description?: string | null
           seo_title?: string | null
@@ -3371,6 +3373,7 @@ export type Database = {
           reviews?: number
           scheduled_expiry_at?: string | null
           scheduled_publish_at?: string | null
+          search_text?: string | null
           search_vector?: unknown
           seo_description?: string | null
           seo_title?: string | null
@@ -6698,6 +6701,7 @@ export type Database = {
           reviews: number
           scheduled_expiry_at: string | null
           scheduled_publish_at: string | null
+          search_text: string | null
           search_vector: unknown
           seo_description: string | null
           seo_title: string | null
@@ -6781,6 +6785,7 @@ export type Database = {
         }
         Returns: string
       }
+      suggest_search_term: { Args: { q: string }; Returns: string }
       support_admin_unread_count: { Args: never; Returns: number }
       support_availability: { Args: never; Returns: Json }
       support_unread_count: { Args: never; Returns: number }
