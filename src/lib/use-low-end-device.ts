@@ -44,6 +44,21 @@ function constrainedSignals(): { mem?: number; cores?: number; saveData: boolean
   };
 }
 
+/**
+ * Capability gate (RAM-free). A device is treated as "reduced" ONLY for genuine,
+ * non-coarse signals: explicit Save-Data / Reduced-Motion intent, a very weak
+ * CPU (≤2 cores), or a known weak GPU. RAM is deliberately NOT consulted — it is
+ * bucketed/undefined on Android and wrongly demotes capable 4–6GB phones. Real
+ * performance problems are handled at runtime by the capability governor
+ * (data-degrade-effects), not by guessing from RAM.
+ */
+function reducedByCapability(): boolean {
+  const { cores, saveData, reduced } = constrainedSignals();
+  if (reduced || saveData) return true;
+  if (typeof cores === "number" && cores > 0 && cores <= 2) return true;
+  return false;
+}
+
 export function detectLowEndDevice(): boolean {
   return detect();
 }
