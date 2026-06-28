@@ -7,6 +7,8 @@ type Props = {
   src: string;
   alt: string;
   priority?: boolean;
+  /** layouttest=simple: plain rectangle, no overflow/radius/isolation. */
+  plain?: boolean;
   children?: React.ReactNode;
 };
 
