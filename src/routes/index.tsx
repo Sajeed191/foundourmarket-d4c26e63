@@ -30,7 +30,8 @@ import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { useAndroidGpuSafeMode } from "@/lib/use-low-end-device";
+import { useAndroidGpuSafeMode, useLightweightHome } from "@/lib/use-low-end-device";
+import { LightHome } from "@/components/site/LightHome";
 
 import { FlashDeals } from "@/components/site/FlashDeals";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
