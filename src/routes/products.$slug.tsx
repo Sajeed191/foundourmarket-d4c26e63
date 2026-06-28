@@ -844,25 +844,27 @@ function ProductPage() {
       {/* Recommendations — deferred until they near the viewport so the core
           product info paints first and below-the-fold work is progressive. */}
       <ProductLayoutDiagnostics phase="final" />
-      <LazyMount minHeight={320} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div data-product-recommendations>
-          {fbtSlugs.length > 0 && (
-            <RecommendationStrip
-              title="Frequently bought together"
-              subtitle="Customers commonly purchase these in the same order"
-              icon={<ShoppingBagIcon className="size-3" />}
-              slugs={fbtSlugs}
-            />
-          )}
-          {alsoViewed.length > 0 && (
-            <RecommendationStrip
-              title="Customers also viewed"
-              icon={<Users className="size-3" />}
-              slugs={alsoViewed}
-            />
-          )}
-        </div>
-      </LazyMount>
+      {(fbtSlugs.length > 0 || alsoViewed.length > 0) && (
+        <LazyMount minHeight={0} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-product-recommendations>
+            {fbtSlugs.length > 0 && (
+              <RecommendationStrip
+                title="Frequently bought together"
+                subtitle="Customers commonly purchase these in the same order"
+                icon={<ShoppingBagIcon className="size-3" />}
+                slugs={fbtSlugs}
+              />
+            )}
+            {alsoViewed.length > 0 && (
+              <RecommendationStrip
+                title="Customers also viewed"
+                icon={<Users className="size-3" />}
+                slugs={alsoViewed}
+              />
+            )}
+          </div>
+        </LazyMount>
+      )}
 
       <LazyMount minHeight={352} className="scroll-mt-24" id="reviews">
         <div data-product-reviews>
