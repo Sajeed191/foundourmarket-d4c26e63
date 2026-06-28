@@ -234,14 +234,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           onMouseEnter={() => { pausedRef.current = true; }}
           onMouseLeave={() => { if (!drag.current.active) pausedRef.current = false; }}
         >
-          {/* soft halo behind the stage */}
-          <div
-            aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
-            style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
-          />
+          {/* soft halo behind the stage — skipped on low-end (blur layer ghosts) */}
+          {!lowEnd && (
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
+              style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
+            />
+          )}
           {/* subtle radial orange glow directly behind the active product */}
-          {perf.enableGlow && (
+          {perf.enableGlow && !lowEnd && (
             <div
               aria-hidden
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
