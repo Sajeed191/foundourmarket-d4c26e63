@@ -382,6 +382,7 @@ function Home() {
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
   const categoryCounts = useMemo(
