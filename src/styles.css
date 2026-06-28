@@ -950,13 +950,20 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 html[data-low-end="true"] *,
 html[data-low-end="true"] *::before,
 html[data-low-end="true"] *::after {
+  background-attachment: scroll !important;
+  scroll-behavior: auto !important;
   filter: none !important;
   -webkit-filter: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   mix-blend-mode: normal !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  mask: none !important;
+  -webkit-mask: none !important;
   -webkit-mask-image: none !important;
   mask-image: none !important;
+  box-shadow: none !important;
   text-shadow: none !important;
 }
 
@@ -965,6 +972,7 @@ html[data-low-end="true"] *::after {
 html[data-low-end="true"] *,
 html[data-low-end="true"] *::before,
 html[data-low-end="true"] *::after {
+  transform: none !important;
   perspective: none !important;
   -webkit-perspective: none !important;
   transform-style: flat !important;
@@ -972,6 +980,10 @@ html[data-low-end="true"] *::after {
   will-change: auto !important;
   backface-visibility: visible !important;
   -webkit-backface-visibility: visible !important;
+  content-visibility: visible !important;
+  contain: none !important;
+  isolation: auto !important;
+  scroll-snap-type: none !important;
 }
 
 /* 3. Stop every continuous animation and ongoing transition. One-shot
@@ -1159,6 +1171,8 @@ html[data-low-end="true"] [data-product-image] {
    and low-end and let normal painting (no extra layers) take over. */
 html[data-android="true"] [data-product-media],
 html[data-low-end="true"] [data-product-media],
+html[data-android="true"] [data-product-card-frame],
+html[data-low-end="true"] [data-product-card-frame],
 html[data-android="true"] .product-card-shell,
 html[data-low-end="true"] .product-card-shell,
 html[data-android="true"] [data-product-image],

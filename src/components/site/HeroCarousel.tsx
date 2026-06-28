@@ -75,6 +75,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   // burns CPU/battery animating frames the user can't see.
   const offscreenRef = useRef(false);
   useEffect(() => {
+    if (lowEnd) return;
     const el = stageRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
@@ -85,17 +86,18 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [lowEnd]);
 
   // Auto-rotate.
   useEffect(() => {
+    if (lowEnd) return;
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [items.length]);
+  }, [items.length, lowEnd]);
 
 
   const current = items[index];
@@ -104,6 +106,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   // Preload only the immediate next + previous images (per spec). Off-screen
   // cards beyond these are lazy-loaded by the browser via <ProductImage>.
   useEffect(() => {
+    if (lowEnd) return;
     if (items.length <= 1) return;
     const n = items.length;
     [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
@@ -112,7 +115,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         img.src = p.image;
       }
     });
-  }, [index, items]);
+  }, [index, items, lowEnd]);
 
   const primary = palette.primary || "#ffffff";
   const ambient = `color-mix(in srgb, ${primary} 38%, transparent)`;
@@ -223,10 +226,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           className={`hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none ${lowEnd ? "" : "[perspective:1600px]"}`}
           style={{
             height: "calc(var(--card) + 72px)",
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+            WebkitMaskImage: lowEnd
+              ? undefined
+              : "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+            maskImage: lowEnd
+              ? undefined
+              : "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
           }}
           role="group"
           aria-roledescription="carousel"
