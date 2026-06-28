@@ -115,8 +115,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         </p>
 
         {/* ── premium floating glass showcase with blurred depth layer ── */}
+        {/* `--card` drives every element in the stage so the image scales
+            fluidly (≈78% of viewport) and stays centered from 320px → desktop,
+            never cropping, overflowing, or shifting layout. */}
         <div
-          className="relative mt-6 sm:mt-8 w-full max-w-[480px] sm:max-w-[600px] h-[300px] sm:h-[360px] select-none overflow-hidden [perspective:1200px]"
+          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-[480px] sm:max-w-[600px] select-none overflow-hidden [perspective:1200px]"
+          style={{ ["--card" as string]: "clamp(190px, 78vw, 310px)", height: "calc(var(--card) + 50px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
