@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
@@ -17,16 +17,18 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const ROTATE_MS = 3000;
-// Apple/Stripe-style premium easing for the showcase crossfade.
+const ROTATE_MS = 4500;
+// Apple/Stripe-style premium easing for the showcase transitions.
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-
+const DUR = 600;
 
 /**
- * Premium rotating hero showcase. Picks real products (Featured → Trending →
- * Best Sellers → New Arrivals), rotates every 4s with a cinematic fade/zoom/
- * blur transition, and derives the ambient background from each product image's
- * dominant color. UI only — no data fetching, no routing changes.
+ * Premium queue-style 3D product carousel. Picks real products
+ * (Featured → Trending → Best Sellers → New Arrivals) and lays them out as a
+ * horizontal queue: the active card is centered, largest, sharp; neighbours
+ * recede on both sides with progressive scale, blur, grayscale, dimming and a
+ * subtle rotateY toward center for cinematic depth. Supports autoplay, drag,
+ * swipe and keyboard navigation. UI only — no data fetching, no routing changes.
  */
 export function HeroCarousel({ featured, trending, bestSellers, newArrivals, children }: Props) {
   const lowEnd = useLowEndDevice();
@@ -44,11 +46,23 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
   const [index, setIndex] = useState(0);
   const pausedRef = useRef(false);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   // Reset when the pool changes.
   useEffect(() => {
     setIndex(0);
   }, [items.length]);
+
+  const go = useCallback(
+    (dir: number) => {
+      setIndex((i) => {
+        const n = items.length;
+        if (n <= 1) return i;
+        return (i + dir + n) % n;
+      });
+    },
+    [items.length],
+  );
 
   // Auto-rotate.
   useEffect(() => {
@@ -91,23 +105,53 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
       low: [2, 1],
     };
     const maxDepth = sideByTier[tier][isMobile ? 1 : 0];
-    // Blur strength per depth index, attenuated for weaker devices.
     const blurScale = tier === "high" ? 1 : tier === "mid" ? 0.6 : 0.25;
     return {
       maxDepth,
       blurScale,
-      // Heavy glow only on high-end; reduced shadows on mid; none on low.
       enableGlow: tier === "high",
-      shadowFloat: tier === "low",
     };
   }, [tier, isMobile]);
 
+  // ── Pointer / touch drag + swipe ──
+  const drag = useRef<{ active: boolean; startX: number; moved: boolean }>({
+    active: false,
+    startX: 0,
+    moved: false,
+  });
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (items.length <= 1) return;
+    drag.current = { active: true, startX: e.clientX, moved: false };
+    pausedRef.current = true;
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!drag.current.active) return;
+    const dx = e.clientX - drag.current.startX;
+    if (Math.abs(dx) > 50 && !drag.current.moved) {
+      drag.current.moved = true;
+      go(dx < 0 ? 1 : -1);
+    }
+  };
+  const endDrag = () => {
+    if (drag.current.active) drag.current.active = false;
+    pausedRef.current = false;
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      go(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      go(1);
+    }
+  };
 
   return (
     <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-        {/* full-bleed blurred product backdrop fills the empty side areas */}
         {current?.image && !lowEnd && (
           <img
             src={current.image}
@@ -125,12 +169,9 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[60%] w-[120%]"
           style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 65%)`, transition: "background 700ms ease" }}
         />
-        {/* warm orange anchor glow so the brand accent always reads */}
         <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
-        {/* subtle bottom fade only — sides stay uniform with the page background */}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
-
 
       <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
         {/* badge */}
@@ -147,17 +188,23 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           Trusted products from verified sellers worldwide.
         </p>
 
-        {/* ── premium infinite product carousel: prev / active / next ── */}
-        {/* `--card` drives every element so the stage scales fluidly and stays
-            centered from 320px → 4K, never cropping, overflowing, or shifting. */}
+        {/* ── premium queue-style 3D carousel ── */}
         <div
-          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden [perspective:1600px]"
-          style={{ ["--card" as string]: "clamp(100px, 38vw, 240px)", height: "calc(var(--card) + 56px)" }}
+          ref={stageRef}
+          className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
+          style={{ ["--card" as string]: "clamp(104px, 40vw, 248px)", height: "calc(var(--card) + 56px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
+          tabIndex={0}
+          onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerLeave={endDrag}
           onMouseEnter={() => { pausedRef.current = true; }}
-          onMouseLeave={() => { pausedRef.current = false; }}
+          onMouseLeave={() => { if (!drag.current.active) pausedRef.current = false; }}
         >
           {/* soft halo behind the stage */}
           <div
@@ -165,8 +212,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
             style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
           />
-          {/* subtle radial orange glow directly behind the active product
-              (heavy glow on high-end devices only) */}
+          {/* subtle radial orange glow directly behind the active product */}
           {perf.enableGlow && (
             <div
               aria-hidden
@@ -191,33 +237,26 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const isCenter = rel === 0;
               const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
 
-              // Cards per side scale with device tier (see `perf`).
               const maxDepth = perf.maxDepth;
-
-              // Progressive depth tables (index 0 == first side card).
-              // POS = horizontal offset in card-widths. Spaced so each card
-              // overlaps its neighbour by only ~15-20% and stays clearly
-              // visible — never fully hidden behind the center card.
-              const POS = [0.0, 0.8, 1.46, 2.04, 2.54];
-              const SCALE = [1, 0.9, 0.82, 0.74, 0.66];
-              const OPACITY = [1, 0.7, 0.55, 0.4, 0.25];
-              const BLUR = [0, 4, 8, 12, 16];
-
               const onStage = depth <= maxDepth;
-              const di = Math.min(depth, 4);
-              // Cards just past the visible range park offscreen so they can
-              // slide in seamlessly (no flicker / jump on loop).
               const parked = depth === maxDepth + 1;
-
-              const parkedX = POS[Math.min(maxDepth, 4)] + 0.6;
-              const xFactor = isCenter ? 0 : sign * (parked ? parkedX : POS[di]);
-              const scale = parked ? SCALE[Math.min(maxDepth, 4)] : SCALE[di];
-              const opacity = onStage ? OPACITY[di] : 0;
-              const rawBlur = onStage ? BLUR[di] : BLUR[Math.min(maxDepth, 4)];
-              const blur = isCenter || lowEnd ? 0 : Math.round(rawBlur * perf.blurScale);
-              const rot = isCenter ? 0 : sign * -(di * 4);
-              const darken = isCenter ? 0 : Math.min(0.12 * di, 0.5);
               const visible = onStage || parked;
+              const di = Math.min(depth, 5);
+
+              // Equal-spacing queue: each step is a fixed fraction of card width
+              // so cards form an evenly-spaced line, not a stack.
+              const STEP = 0.62;
+              const xUnits = sign * di * STEP;
+
+              // Progressive depth falloff.
+              const scale = Math.max(0.62, 1 - di * 0.1);
+              const opacity = onStage ? Math.max(0.25, 1 - di * 0.2) : 0;
+              const rawBlur = isCenter ? 0 : Math.min(4 + (di - 1) * 5, 24);
+              const blur = isCenter || lowEnd ? 0 : Math.round(rawBlur * perf.blurScale);
+              const gray = isCenter ? 0 : Math.min(0.15 + di * 0.12, 0.5);
+              const bright = isCenter ? 1 : Math.max(0.6, 1 - di * 0.1);
+              const rotateY = isCenter ? 0 : sign * -22;
+
               return (
                 <Link
                   key={p.id}
@@ -225,40 +264,34 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   params={{ slug: p.slug }}
                   aria-hidden={!isCenter}
                   tabIndex={isCenter ? 0 : -1}
-                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? (perf.enableGlow ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]") : ""} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  draggable={false}
+                  onClick={(e) => { if (drag.current.moved) e.preventDefault(); }}
+                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? (perf.enableGlow ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]") : "shadow-[0_12px_40px_-12px_oklch(0_0_0/0.6)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
                     width: "var(--card)",
                     height: "var(--card)",
                     marginLeft: "calc(var(--card) / -2)",
                     marginTop: "calc(var(--card) / -2)",
-                    transform: `translate3d(calc(var(--card) * ${xFactor}), 0, 0) scale(${scale}) rotate(${rot}deg)`,
+                    transform: `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
                     opacity,
-                    filter: blur ? `blur(${blur}px)` : "blur(0px)",
+                    filter: lowEnd
+                      ? "none"
+                      : `blur(${blur}px) grayscale(${gray}) brightness(${bright})`,
                     zIndex: 10 - depth,
                     pointerEvents: isCenter ? "auto" : "none",
                     visibility: visible ? "visible" : "hidden",
                     background: palette.background,
                     transition: lowEnd
-                      ? "opacity 300ms ease"
-                      : `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
+                      ? `opacity ${DUR}ms ease`
+                      : `transform ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
                     willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
                 >
                   {isCenter && (
                     <>
-                      {/* glossy top sheen */}
                       <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                      {/* gentle reflection at the base */}
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-white/5 to-transparent" />
                     </>
-                  )}
-                  {/* progressive darkening on side cards for depth */}
-                  {darken > 0 && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 z-[2] rounded-[28px]"
-                      style={{ background: `oklch(0.12 0.02 270 / ${darken})` }}
-                    />
                   )}
                   <ProductImage
                     src={p.image}
@@ -266,7 +299,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     width={560}
                     height={560}
                     priority={i === 0}
-                    sizes="(min-width: 640px) 244px, 44vw"
+                    sizes="(min-width: 640px) 248px, 40vw"
                     className="relative z-[1] block size-full object-contain object-center p-[7%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
@@ -274,7 +307,6 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             })
           )}
         </div>
-
 
         {/* product name + CTA */}
         {current && (
@@ -285,7 +317,6 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               params={{ slug: current.slug }}
               className="view-product-cta group relative mt-3 inline-flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full px-6 text-[12px] font-semibold tracking-wide text-foreground outline-none transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              {/* periodic shine sweep */}
               <span aria-hidden className="view-product-cta__shine pointer-events-none absolute inset-0 rounded-full" />
               <span className="relative z-[1]">View Product</span>
               <ArrowRight className="relative z-[1] size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -326,7 +357,6 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             })}
           </div>
         )}
-
       </div>
 
       {/* search + chips slot */}
