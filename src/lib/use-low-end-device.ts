@@ -181,7 +181,9 @@ export function useUltraLowEndAndroid(): boolean {
 }
 
 export function useAndroidGpuSafeMode(): boolean {
-  const [safe, setSafe] = useState(detectAndroidGpuSafeMode);
+  // SSR-consistent baseline; detection applied post-mount to avoid the
+  // hydration mismatch that regenerated the whole tree on Android.
+  const [safe, setSafe] = useState(false);
   useEffect(() => {
     setSafe(detectAndroidGpuSafeMode());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
