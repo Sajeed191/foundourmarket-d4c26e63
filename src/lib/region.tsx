@@ -145,13 +145,14 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   const userId = user?.id ?? null;
 
   // For guests / pre-selection we keep a suggested region so prices render.
-  // Lazily seed from any previously-stored choice so returning shoppers paint
-  // their correct currency on the very first frame instead of flashing USD.
-  const [market, setMarket] = useState<MarketRegion>(
-    () => getPreviousChoice() ?? "international",
-  );
+  // IMPORTANT: the initial value must be identical on the server and on the
+  // first client render, otherwise the currency symbol ($ vs ₹) mismatches and
+  // React throws a hydration error. We default to "international" here and
+  // apply any previously-stored choice in a post-mount effect below.
+  const [market, setMarket] = useState<MarketRegion>("international");
   // True when we already had a trustworthy region cached before any async work.
-  const hadCachedChoice = useRef(getPreviousChoice() !== null);
+  // Set client-side only — it feeds currencyReady, never rendered HTML.
+  const hadCachedChoice = useRef(false);
   // Avoid SSR/client hydration mismatches: only trust the client region post-mount.
   const [mounted, setMounted] = useState(false);
   const [locked, setLocked] = useState(false);
