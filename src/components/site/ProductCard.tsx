@@ -300,6 +300,78 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
   const openQuickView = useCallback(() => setQuickOpen(true), []);
 
+  const layoutTest = detectLayoutTestSimple();
+
+  if (layoutTest) {
+    // Plain rectangular card: no overflow clipping, radius, clip-path, masks,
+    // isolation, stacking context, overlays, or shadows. Same data/images/text.
+    return (
+      <article
+        data-product-card
+        data-product-id={identity}
+        data-layouttest="simple"
+        style={{
+          backgroundColor: "#111111",
+          border: "1px solid rgba(255,138,0,0.18)",
+          overflow: "visible",
+          borderRadius: 0,
+          clipPath: "none",
+          WebkitMask: "none",
+          mask: "none",
+          isolation: "auto",
+          contain: "none",
+          boxShadow: "none",
+          filter: "none",
+          position: "static",
+          zIndex: "auto",
+        }}
+        className="flex h-full flex-col"
+      >
+        <Link to="/products/$slug" params={{ slug: product.slug }} className="block" aria-label={product.name}>
+          <AdaptiveProductMedia
+            key={`${identity}:media:${product.image}`}
+            src={product.image}
+            alt={`${product.name} — ${product.tagline || product.category}`}
+            priority={priority}
+            plain
+          />
+        </Link>
+
+        <div data-product-copy className="product-copy flex flex-1 flex-col gap-1 p-3 sm:gap-2 sm:p-4">
+          <Link to="/products/$slug" params={{ slug: product.slug }} className="block min-w-0">
+            <h3 data-product-text className={TITLE_CLASS}><HighlightText text={product.name} query={highlight} /></h3>
+          </Link>
+          <div className="flex min-w-0 items-center gap-1.5">
+            {product.reviews > 0 ? (
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <Star className="size-[14px] sm:size-[18px] shrink-0 fill-accent text-accent" />
+                <span data-product-text className="product-typography product-rating-text text-[13px] sm:text-[17px] font-semibold tabular-nums text-white">{product.rating.toFixed(1)}</span>
+                <span data-product-text className="product-typography product-rating-text truncate text-[11px] sm:text-[14px] text-muted-foreground">({product.reviews.toLocaleString()})</span>
+              </span>
+            ) : (
+              <span data-product-text className="product-typography product-rating-text text-[11px] sm:text-[14px] font-medium text-accent">New Product</span>
+            )}
+            {product.soldCount > 0 && (
+              <span data-product-text className="product-typography product-rating-text truncate text-[10px] sm:text-[12px] font-medium text-muted-foreground">🔥 {formatSold(product.soldCount)} sold</span>
+            )}
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <Price value={price} className="shrink-0 font-display text-[22px] font-extrabold leading-none tabular-nums text-white sm:text-[30px]" />
+            {originalPrice && discount ? (
+              <div className="flex min-w-0 items-baseline gap-2">
+                <Price value={originalPrice} className="shrink-0 text-[12px] tabular-nums text-muted-foreground line-through sm:text-[15px]" />
+                <span data-product-text className="product-typography product-price-text truncate text-[12px] font-bold leading-none text-accent sm:text-[15px]">{discount}% OFF</span>
+              </div>
+            ) : null}
+          </div>
+          <div className="pt-1.5 sm:pt-4">
+            <AddToCartButton product={product} />
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <article
       key={identity}
