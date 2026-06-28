@@ -8,7 +8,7 @@ import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { RecentlyViewed } from "@/components/site/RecentlyViewed";
+
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Slider } from "@/components/ui/slider";
 import { useIsAndroid } from "@/lib/use-low-end-device";
@@ -542,11 +542,6 @@ function SearchPage() {
         </div>
       </div>
 
-
-      {/* Recently viewed — real per-user history, hides itself when empty */}
-      <div className="-mx-4 sm:-mx-6">
-        <RecentlyViewed />
-      </div>
     </div>
   );
 }
