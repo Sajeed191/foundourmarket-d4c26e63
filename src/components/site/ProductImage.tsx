@@ -39,8 +39,10 @@ function ProductImageImpl({
 }: Props) {
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
-  const responsive = getResponsiveImage(src) ?? getStorageResponsive(src);
-  const resolvedSrc = responsive?.src ?? src;
+  const bundled = getResponsiveImage(src);
+  const storage = bundled ? null : getStorageResponsive(src);
+  const srcset = bundled?.srcset ?? storage?.srcset;
+  const resolvedSrc = storage?.src ?? src;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const activeSrcRef = useRef(resolvedSrc);
 
