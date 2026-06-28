@@ -189,7 +189,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         <div
           ref={stageRef}
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
-          style={{ ["--card" as string]: "clamp(104px, 40vw, 248px)", height: "calc(var(--card) + 56px)" }}
+          style={{ ["--card" as string]: "clamp(88px, 32vw, 232px)", height: "calc(var(--card) + 56px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
