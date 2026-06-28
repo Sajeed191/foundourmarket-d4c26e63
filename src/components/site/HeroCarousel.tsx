@@ -128,39 +128,33 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 800ms ease" }}
           />
 
-          {/* ── BACKGROUND: blurred real product images for depth ── */}
+          {/* ── BACKGROUND: prev/next blurred neighbor products (depth) ── */}
           {!lowEnd && items.length > 1 && (
             <div aria-hidden className="pointer-events-none absolute inset-0 z-[1]">
-              {BG_SLOTS.map((slot, s) => {
-                // Pick a real product that isn't the current center, cycling with index.
-                const offset = ((index + s + 1) % items.length);
+              {SIDE_SLOTS.map((slot) => {
+                const offset = (index + slot.dir + items.length) % items.length;
                 const bg = items[offset];
                 if (!bg?.image || bg.id === current?.id) return null;
                 return (
                   <div
                     key={`${slot.key}-${bg.id}`}
-                    className="absolute left-1/2 top-1/2 overflow-hidden rounded-[22px] animate-fade-in"
+                    className="absolute left-1/2 top-1/2 size-[230px] sm:size-[290px] overflow-hidden rounded-[26px] glass-strong ring-1 ring-white/10"
                     style={{
-                      width: slot.size,
-                      height: slot.size,
-                      marginLeft: slot.x,
-                      marginTop: slot.y,
-                      transform: `rotate(${slot.rot}deg)`,
-                      opacity: slot.opacity,
-                      filter: `blur(${slot.blur}px)`,
+                      marginLeft: -115,
+                      marginTop: -115,
+                      transform: `translate3d(${slot.x}px, 0, 0) scale(0.78) rotate(${slot.rot}deg)`,
+                      opacity: 0.3,
+                      filter: "blur(12px)",
                       transition: `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
                       willChange: "transform, opacity, filter",
                     }}
                   >
-                    {slot.glow && (
-                      <div className="absolute inset-0 rounded-[22px]" style={{ background: "radial-gradient(circle at 50% 40%, oklch(0.74 0.19 49 / 0.35), transparent 70%)" }} />
-                    )}
                     <ProductImage
                       src={bg.image}
                       alt=""
                       width={300}
                       height={300}
-                      className="block size-full object-contain object-center p-[10%]"
+                      className="block size-full object-contain object-center p-[12%]"
                     />
                   </div>
                 );
