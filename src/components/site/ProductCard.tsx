@@ -40,7 +40,7 @@ export function productIdentity(product: Product): string {
    Android-safe clamp (the global .product-title-text rule disables
    -webkit-line-clamp). */
 const TITLE_CLASS =
-  "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[15px] font-bold leading-[1.3] text-white sm:text-[19px]";
+  "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[14px] font-bold leading-[1.3] text-white sm:text-[16px]";
 
 /**
  * Premium badge styles keyed by normalized label. Subtle gradients, soft
