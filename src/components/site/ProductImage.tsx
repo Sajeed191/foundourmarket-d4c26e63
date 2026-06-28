@@ -28,6 +28,7 @@ function enqueueSafeImageDecode(
   img: HTMLImageElement,
   src: string,
   onDone?: () => void,
+  options?: { loading?: "eager" | "lazy"; decoding?: "async" | "sync" },
 ) {
   let cancelled = false;
   let started = false;
@@ -37,8 +38,8 @@ function enqueueSafeImageDecode(
     .then(async () => {
       if (cancelled || !img.isConnected) return;
       started = true;
-      img.loading = "lazy";
-      img.decoding = "async";
+      img.loading = options?.loading ?? "lazy";
+      img.decoding = options?.decoding ?? "async";
       img.fetchPriority = "low";
       img.src = src;
       try {
@@ -90,6 +91,8 @@ function ProductImageImpl({
   const bisectAsyncDecoding = activeBisectTest === "product-image-decoding-async";
   const forceSrcsetOn = bisectSrcset && !bisectOverrideEnabled;
   const forceSrcsetOff = bisectSrcset && bisectOverrideEnabled;
+  const loadingMode = bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : androidGpuSafeMode ? "lazy" : (!ffLazyLoading || priority ? "eager" : "lazy");
+  const decodingMode = bisectAsyncDecoding ? (bisectOverrideEnabled ? "sync" : "async") : androidGpuSafeMode ? "async" : ffImageDecoding ? "async" : "sync";
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
   const bundled = getResponsiveImage(src);
@@ -141,7 +144,10 @@ function ProductImageImpl({
     const queue = () => {
       if (queued || activeSrcRef.current !== resolvedSrc) return;
       queued = true;
-      cancelDecode = enqueueSafeImageDecode(img, resolvedSrc, handleLoad);
+      cancelDecode = enqueueSafeImageDecode(img, resolvedSrc, handleLoad, {
+        loading: loadingMode,
+        decoding: decodingMode,
+      });
     };
 
     if (typeof IntersectionObserver === "undefined") {
@@ -166,7 +172,7 @@ function ProductImageImpl({
       observer.disconnect();
       cancelDecode?.();
     };
-  }, [androidGpuSafeMode, handleLoad, resolvedSrc]);
+  }, [androidGpuSafeMode, decodingMode, handleLoad, loadingMode, resolvedSrc]);
 
   // Debug harness: render a flat placeholder instead of an <img> to rule the
   // product image element out as the corruption source.
@@ -191,9 +197,9 @@ function ProductImageImpl({
       alt={alt}
       width={width}
       height={height}
-      loading={bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : androidGpuSafeMode ? "lazy" : (!ffLazyLoading || priority ? "eager" : "lazy")}
+      loading={loadingMode}
       fetchPriority={androidGpuSafeMode ? "low" : priority ? "high" : "low"}
-      decoding={bisectAsyncDecoding ? (bisectOverrideEnabled ? "sync" : "async") : androidGpuSafeMode ? "async" : ffImageDecoding ? "async" : "sync"}
+      decoding={decodingMode}
       data-product-image
       data-android-static-image={androidGpuSafeMode ? "true" : undefined}
       suppressHydrationWarning
