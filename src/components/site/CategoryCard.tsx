@@ -75,6 +75,9 @@ export function CategoryCard({
 }) {
   const Icon = iconForCategory(category.slug, category.name);
   const img = category.mobile_image || category.image || "";
+  // Serve a small resized variant instead of the full original (CLS-safe via
+  // the fixed aspect-square container).
+  const responsive = img ? getStorageResponsive(img, [200, 320, 480]) : null;
 
   return (
     <Link
@@ -87,9 +90,12 @@ export function CategoryCard({
       <div className="relative aspect-square w-full overflow-hidden bg-muted/60">
         {img ? (
           <img
-            src={img}
+            src={responsive?.src ?? img}
+            srcSet={responsive?.srcset}
+            sizes="(max-width: 640px) 45vw, 200px"
             alt={category.name}
             loading="lazy"
+            decoding="async"
             className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
           />
         ) : (
