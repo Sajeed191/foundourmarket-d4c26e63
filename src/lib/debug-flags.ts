@@ -394,6 +394,13 @@ let bisectOverrideEnabled = false;
 let bisectLog: BisectObservation[] = [];
 const listeners = new Set<() => void>();
 
+// ---- Guided runner state ----
+let runnerActive = false;
+let runnerIndex = 0;
+let runnerPhase: BisectPhase = "feature-on-before";
+// CSS overrides currently injected by the runner (one entry per css feature).
+let runnerOverrides: Array<{ id: string; off: boolean }> = [];
+
 /** True only when the harness has been explicitly enabled — keeps production
  *  builds free of any debug behavior unless ?debug=1 or a saved flag set. */
 let enabled = false;
@@ -402,22 +409,45 @@ export function isDebugEnabled(): boolean {
   return enabled;
 }
 
+function buildBisectRule(test: BisectTest, off: boolean): string {
+  if (test.selector === "ProductImage prop") return "";
+  const value = off ? test.disabledValue : test.enabledValue;
+  return `${test.selector}{${test.property}:${value} !important;}`;
+}
+
 function applyDom() {
   if (typeof document === "undefined") return;
   const el = document.documentElement;
   el.dataset.debugHarness = enabled ? "on" : "off";
   el.dataset.bisectTest = activeBisectTest ?? "none";
   el.dataset.bisectOverride = bisectOverrideEnabled ? "on" : "off";
+  el.dataset.bisectRunner = runnerActive ? "on" : "off";
   for (const f of DEBUG_FLAGS) {
     el.dataset[`ff${f.charAt(0).toUpperCase()}${f.slice(1)}`] = state[f] ? "on" : "off";
   }
+
   let style = document.getElementById(BISECT_STYLE_ID) as HTMLStyleElement | null;
-  const test = activeBisectTest ? BISECT_TESTS.find((t) => t.id === activeBisectTest) : null;
-  if (!test) {
-    style?.remove();
-    return;
+  const rules: string[] = [];
+
+  if (runnerActive) {
+    for (const ov of runnerOverrides) {
+      const t = BISECT_TESTS.find((x) => x.id === ov.id);
+      if (t) {
+        const rule = buildBisectRule(t, ov.off);
+        if (rule) rules.push(`html[data-bisect-runner="on"] ${rule}`);
+      }
+    }
+  } else {
+    const test = activeBisectTest ? BISECT_TESTS.find((t) => t.id === activeBisectTest) : null;
+    if (test) {
+      const rule = buildBisectRule(test, bisectOverrideEnabled);
+      if (rule) {
+        rules.push(`html[data-debug-harness="on"][data-bisect-test="${test.id}"] ${rule}`);
+      }
+    }
   }
-  if (test.selector === "ProductImage prop") {
+
+  if (rules.length === 0) {
     style?.remove();
     return;
   }
@@ -426,9 +456,9 @@ function applyDom() {
     style.id = BISECT_STYLE_ID;
     document.head.appendChild(style);
   }
-  const value = bisectOverrideEnabled ? test.disabledValue : test.enabledValue;
-  style.textContent = `html[data-debug-harness="on"][data-bisect-test="${test.id}"] ${test.selector}{${test.property}:${value} !important;}`;
+  style.textContent = rules.join("\n");
 }
+
 
 function persist() {
   if (typeof localStorage === "undefined") return;
