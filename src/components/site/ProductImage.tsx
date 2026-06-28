@@ -94,6 +94,7 @@ function ProductImageImpl({
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
   const bundled = getResponsiveImage(src);
+  const renderSafe = detectRenderSafe();
   const ultraLowEndAndroid = detectUltraLowEndAndroid();
   const androidGpuSafeMode = detectAndroidGpuSafeMode() && !renderSafe;
   // Diagnostic render=safe: eager load, sync decode, no srcset/sizes, only `src`.
