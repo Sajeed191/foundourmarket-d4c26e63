@@ -161,16 +161,32 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               let rel = i - index;
               if (rel > n / 2) rel -= n;
               if (rel < -n / 2) rel += n;
+              const depth = Math.abs(rel);
               const isCenter = rel === 0;
-              const isSide = rel === -1 || rel === 1;
-              const visible = isCenter || isSide;
               const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
-              // Side cards peek ~30% from each edge; far cards park just offscreen.
-              const xFactor = isCenter ? 0 : sign * (isSide ? 0.6 : 1.05);
-              const scale = isCenter ? 1 : isSide ? 0.83 : 0.72;
-              const opacity = isCenter ? 1 : isSide ? 0.4 : 0;
-              const blur = isCenter || lowEnd ? 0 : isSide ? 14 : 18;
-              const rot = isCenter ? 0 : sign * -5;
+
+              // 3 cards per side on mobile, 4 on tablet/desktop.
+              const maxDepth = isMobile ? 3 : 4;
+
+              // Progressive depth tables (index 0 == first side card).
+              const POS = [0.0, 0.62, 1.12, 1.55, 1.92];
+              const SCALE = [1, 0.9, 0.82, 0.74, 0.66];
+              const OPACITY = [1, 0.7, 0.55, 0.4, 0.25];
+              const BLUR = [0, 4, 8, 12, 16];
+
+              const onStage = depth <= maxDepth;
+              const di = Math.min(depth, 4);
+              // Cards just past the visible range park offscreen so they can
+              // slide in seamlessly (no flicker / jump on loop).
+              const parked = depth === maxDepth + 1;
+
+              const xFactor = isCenter ? 0 : sign * (parked ? 2.3 : POS[di]);
+              const scale = parked ? SCALE[Math.min(maxDepth, 4)] : SCALE[di];
+              const opacity = onStage ? OPACITY[di] : 0;
+              const blur = isCenter || lowEnd ? 0 : onStage ? BLUR[di] : BLUR[Math.min(maxDepth, 4)];
+              const rot = isCenter ? 0 : sign * -(di * 4);
+              const darken = isCenter ? 0 : Math.min(0.12 * di, 0.5);
+              const visible = onStage || parked;
               return (
                 <Link
                   key={p.id}
@@ -187,7 +203,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     transform: `translate3d(calc(var(--card) * ${xFactor}), 0, 0) scale(${scale}) rotate(${rot}deg)`,
                     opacity,
                     filter: blur ? `blur(${blur}px)` : "blur(0px)",
-                    zIndex: isCenter ? 5 : isSide ? 2 : 0,
+                    zIndex: 10 - depth,
                     pointerEvents: isCenter ? "auto" : "none",
                     visibility: visible ? "visible" : "hidden",
                     background: palette.background,
@@ -205,13 +221,21 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-white/5 to-transparent" />
                     </>
                   )}
+                  {/* progressive darkening on side cards for depth */}
+                  {darken > 0 && (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 z-[2] rounded-[28px]"
+                      style={{ background: `oklch(0.12 0.02 270 / ${darken})` }}
+                    />
+                  )}
                   <ProductImage
                     src={p.image}
                     alt={isCenter ? p.name : ""}
                     width={560}
                     height={560}
                     priority={i === 0}
-                    sizes="(min-width: 640px) 258px, 52vw"
+                    sizes="(min-width: 640px) 244px, 44vw"
                     className="relative z-[1] block size-full object-contain object-center p-[7%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
