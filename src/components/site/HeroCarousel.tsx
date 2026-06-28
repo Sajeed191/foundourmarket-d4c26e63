@@ -178,10 +178,14 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     pointerEvents: isCenter ? "auto" : "none",
                     visibility: visible ? "visible" : "hidden",
                     background: palette.background,
+                    // Animate ONLY GPU-cheap transform + opacity. `filter: blur`
+                    // is never transitioned — animating it thrashes the CPU and
+                    // causes the "gut"/lag feel on budget devices. Blur stays static.
                     transition: lowEnd
-                      ? "opacity 300ms ease"
-                      : `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
-                    willChange: "transform, opacity, filter",
+                      ? `transform 600ms ${EASE}, opacity 600ms ${EASE}`
+                      : `transform 800ms ${EASE}, opacity 800ms ${EASE}`,
+                    willChange: visible ? "transform, opacity" : "auto",
+                    backfaceVisibility: "hidden",
                   }}
                 >
                   {isCenter && (
