@@ -267,6 +267,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const isCenter = rel === 0;
               const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
 
+              // ── Low-end / low-RAM Android: render ONLY the centered card. ──
+              // Stacked, semi-transparent, transform-animated side cards are the
+              // root of the ghost/duplicate corruption on these GPUs. A single
+              // static card cannot leave stale compositor layers behind.
+              if (lowEnd && !isCenter) return null;
+
               const maxDepth = perf.maxDepth;
               const onStage = depth <= maxDepth;
               const parked = depth === maxDepth + 1;
