@@ -148,7 +148,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   return (
     <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute top-0 bottom-0 left-1/2 w-screen -translate-x-1/2 -z-0 overflow-hidden">
+        {/* full-bleed blurred product backdrop fills the empty side areas */}
         {current?.image && !lowEnd && (
           <img
             src={current.image}

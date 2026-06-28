@@ -452,6 +452,14 @@ function Home() {
 
       {/* 2 · Premium rotating product showcase hero */}
       <section className="relative px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+        {/* full-bleed ambient layer — seamless navbar blend + soft orange glow,
+            stretches edge-to-edge so there are never black side gaps */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-0">
+          {/* softens the top so the hero flows under the navbar with no hard line */}
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background/70 to-transparent" />
+          {/* warm ambient orange lighting matching the accent */}
+          <div className="absolute left-1/2 -top-[6%] -translate-x-1/2 h-[420px] w-[140%] opacity-70" style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.74 0.19 49 / 0.16), transparent 60%)" }} />
+        </div>
         <div className="sr-only">
           <h1>FoundOurMarket™ — Global Marketplace, Whatever You Need, All In One Place.</h1>
           <p>A premium independent marketplace, sourcing top-quality products from across the world.</p>
