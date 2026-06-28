@@ -269,6 +269,33 @@ function RecordButton({ id, phase, corruption, label }: { id: string; phase: Bis
   );
 }
 
+function Verdict({ log }: { log: BisectObservation[] }) {
+  // Re-evaluate against the live log so the verdict updates as you record.
+  void log;
+  const confirmed = evaluateBisect().filter((e) => e.confirmedRootCause);
+  if (confirmed.length === 0) {
+    return (
+      <div style={{ marginTop: 8, fontSize: 11, color: "#aaa" }}>
+        Root cause: not yet proven. Need ON=corrupt → OFF=clean → ON=corrupt for exactly one property.
+      </div>
+    );
+  }
+  if (confirmed.length > 1) {
+    return (
+      <div style={{ marginTop: 8, fontSize: 11, color: "#ffcf8a" }}>
+        {confirmed.length} candidates pass A/B/A — re-test one at a time; only one may be the cause.
+      </div>
+    );
+  }
+  const c = confirmed[0];
+  return (
+    <div style={{ marginTop: 8, fontSize: 11, color: "#8affb1", border: "1px solid #2a5", borderRadius: 6, padding: 6 }}>
+      ✅ CONFIRMED ROOT CAUSE: {c.property} on {c.component} ({c.file}:{c.line})
+    </div>
+  );
+}
+
+
 const btn: React.CSSProperties = {
   flex: 1,
   background: "#1a1a1a",
