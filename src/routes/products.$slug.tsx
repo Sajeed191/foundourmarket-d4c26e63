@@ -866,26 +866,26 @@ function ProductPage() {
         </LazyMount>
       )}
 
-      <LazyMount minHeight={352} className="scroll-mt-24" id="reviews">
+      <LazyMount minHeight={120} className="scroll-mt-24" id="reviews">
         <div data-product-reviews>
           <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={192} className="scroll-mt-24" id="questions">
+      <LazyMount minHeight={120} className="scroll-mt-24" id="questions">
         <div data-product-questions>
           <ProductQA productSlug={product.slug} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={384}>
+      <LazyMount minHeight={160}>
         <div data-product-related>
           <RelatedProducts product={product} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={320}>
+      <LazyMount minHeight={160}>
         <ProductComparison product={product} />
       </LazyMount>
 
-      <LazyMount minHeight={260}>
+      <LazyMount minHeight={120}>
         <TrustGuarantee />
       </LazyMount>
       <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
