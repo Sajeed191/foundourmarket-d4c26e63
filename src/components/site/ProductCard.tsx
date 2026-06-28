@@ -237,25 +237,18 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
     >
       <ProductCardAdminControlsGate product={product} />
 
-      {/* Image IS the top section. White bg, 1:1, contain, 12px padding,
-          rounded only on the top corners to blend into the card. */}
+      {/* Image IS the top section. Adaptive premium background generated from
+          the product's own dominant colors, soft color glow, contain fit. */}
       <Link to="/products/$slug" params={{ slug: product.slug }} className="relative block" aria-label={product.name}>
-        <div
-          data-product-media
-          className="relative aspect-square w-full overflow-hidden rounded-t-[22px] bg-white p-3 sm:p-4"
+        <AdaptiveProductMedia
+          src={product.image}
+          alt={`${product.name} — ${product.tagline || product.category}`}
+          priority={priority}
         >
-          <ProductImage
-            src={product.image}
-            alt={`${product.name} — ${product.tagline || product.category}`}
-            width={800}
-            height={800}
-            priority={priority}
-            className="block h-full w-full object-contain object-center transition-transform duration-200 group-hover:scale-[1.03]"
-          />
           <ProductBadges badges={badges} />
           <WishlistButton slug={product.slug} name={product.name} />
           <QuickViewButton name={product.name} onOpen={openQuickView} />
-        </div>
+        </AdaptiveProductMedia>
       </Link>
 
       {/* Details — flex column, 16px padding, 8px gap. */}
