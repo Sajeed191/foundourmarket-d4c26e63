@@ -346,8 +346,8 @@ function SearchPage() {
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
-    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
-    [],
+    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} highlight={search.q} />,
+    [search.q],
   );
 
   return (
