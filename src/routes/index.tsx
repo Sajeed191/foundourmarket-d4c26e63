@@ -29,7 +29,7 @@ import { HeroCarousel } from "@/components/site/HeroCarousel";
 import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { AnnouncementBar } from "@/components/site/AnnouncementBar";
+
 import { FlashDeals } from "@/components/site/FlashDeals";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
