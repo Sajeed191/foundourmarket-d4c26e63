@@ -80,23 +80,14 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-        {/* full-bleed blurred product backdrop fills the empty side areas */}
-        {current?.image && !lowEnd && (
-          <img
-            src={current.image}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
-            style={{ transition: "opacity 800ms ease" }}
-          />
-        )}
+        {/* centered ambient glow only — kept narrow so the side edges stay the plain page background */}
         <div
-          className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
+          className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[360px] sm:size-[520px] rounded-full blur-[120px]"
           style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
         />
         <div
-          className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[60%] w-[120%]"
-          style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 65%)`, transition: "background 700ms ease" }}
+          className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[55%] w-[80%]"
+          style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 60%)`, transition: "background 700ms ease" }}
         />
         {/* warm orange anchor glow so the brand accent always reads */}
         <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
