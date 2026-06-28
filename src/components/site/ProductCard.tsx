@@ -68,6 +68,19 @@ function badgeStyle(label: string, fallback?: CSSProperties): CSSProperties {
   return { ...base, ...(fallback ?? {}) };
 }
 
+/** Detects whether an admin-assigned badge is a Flash Deal / Hot Deal promo. */
+function assignedFlashKey(b: RenderBadge): "flash_deal" | "hot_deal" | null {
+  const key = (b.badgeKey || "").toLowerCase();
+  const label = (b.label || "").trim().toUpperCase();
+  if (key.includes("flash") || label === "FLASH SALE" || label === "FLASH DEAL") return "flash_deal";
+  if (key.includes("hot") || label === "HOT DEAL") return "hot_deal";
+  return null;
+}
+
+function isAssignedFlashBadge(b: RenderBadge): boolean {
+  return assignedFlashKey(b) !== null;
+}
+
 function toAssignedBadge(b: RenderBadge): CardBadge {
   return {
     id: b.assignmentId ?? b.id,
