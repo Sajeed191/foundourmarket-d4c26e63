@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
+import { HeroCarousel } from "@/components/site/HeroCarousel";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
@@ -421,6 +422,16 @@ function Home() {
     [products, rotationSeed, rotationNonce]
   );
 
+  const featured = useMemo(
+    () =>
+      seededShuffle(
+        products.filter((p) => p.featured || p.homepageHero),
+        rotationSeed + rotationNonce + 2,
+      ).slice(0, 8),
+    [products, rotationSeed, rotationNonce]
+  );
+
+
   const { items: testimonials } = useTestimonials();
 
   const categoryLimit = useCategoryLimit();
@@ -437,7 +448,7 @@ function Home() {
       {/* Sticky announcement bar — homepage only */}
       <AnnouncementBar />
 
-      {/* 2 · Minimal premium header */}
+      {/* 2 · Premium rotating product showcase hero */}
       <section className="relative px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         <div className="sr-only">
           <h1>FoundOurMarket™ — Global Marketplace, Whatever You Need, All In One Place.</h1>
@@ -450,43 +461,18 @@ function Home() {
             { label: "Secure Payments" },
             { label: "Easy Returns" },
             { label: "Trusted Sellers" },
+            { label: "24/7 Support" },
           ];
           return (
-        <div className="relative mx-auto max-w-[1100px]">
-          {/* ── subtle orange ambient lighting only ── */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-            <div className="absolute left-1/2 -top-[40%] -translate-x-1/2 size-[440px] sm:size-[560px] rounded-full blur-[100px] opacity-50" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.22), transparent 70%)" }} />
-          </div>
-
-          <div className="relative z-10 flex flex-col items-center text-center pt-6 pb-1 sm:pt-9">
-            {/* small premium title */}
-            <h2 className="font-display font-semibold tracking-tight text-balance text-[clamp(1.5rem,5.5vw,2rem)] leading-[1.1]">
-              Discover Premium Products
-            </h2>
-            <p className="mt-2.5 max-w-md text-sm sm:text-base text-muted-foreground text-balance">
-              Trusted sellers from around the world.
-            </p>
-
-            {/* compact CTAs */}
-            <div className="mt-5 flex items-center justify-center gap-2.5">
-              <Link
-                to="/categories"
-                className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-accent text-accent-foreground text-[12px] font-semibold tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-              >
-                Shop Now <ArrowRight className="size-3.5" />
-              </Link>
-              <Link
-                to="/categories"
-                className="inline-flex items-center justify-center h-11 px-6 rounded-full glass text-[12px] font-medium tracking-wide text-muted-foreground ring-1 ring-white/10 transition-all duration-200 hover:text-foreground active:scale-[0.98]"
-              >
-                Browse Categories
-              </Link>
-            </div>
-          </div>
-
+        <HeroCarousel
+          featured={featured}
+          trending={trending}
+          bestSellers={bestSellers}
+          newArrivals={newArrivals}
+        >
           {/* ── search bar ── */}
           <form
-            className="relative mx-auto mt-7 sm:mt-8 max-w-2xl"
+            className="relative z-10 mx-auto mt-7 sm:mt-8 max-w-2xl"
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
           >
             <div className={`relative glass-strong rounded-full ring-1 transition-all duration-200 ${searchFocused ? "ring-accent/35 shadow-[0_0_0_3px_oklch(0.74_0.19_49/0.08),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
@@ -508,17 +494,18 @@ function Home() {
           </form>
 
           {/* ── feature chips ── */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <div className="relative z-10 mt-4 flex flex-wrap items-center justify-center gap-2 animate-fade-in">
             {chips.map((c) => (
               <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full glass px-3.5 py-2 text-[11px] font-medium text-muted-foreground ring-1 ring-white/10">
                 <Check className="size-3.5 text-accent" /> {c.label}
               </span>
             ))}
           </div>
-        </div>
+        </HeroCarousel>
           );
         })()}
       </section>
+
 
       {/* Trust strip — compact, between hero and categories */}
       <TrustBadgesStrip />
