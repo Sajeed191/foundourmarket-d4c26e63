@@ -408,9 +408,11 @@ function Home() {
   const ffFlashDeals = useFlag("flashDeals");
   const ffProductGrid = useFlag("productGrid");
   const ffCarousels = useFlag("carousels");
-  const androidGpuSafeMode = useAndroidGpuSafeMode();
-  const lightweight = useLightweightHome();
-  const safeModeScrolled = useScrolledOnce(androidGpuSafeMode);
+  // Single responsive homepage for every device — no capability detection,
+  // no homepage swapping. These constants keep the (now always-on) premium
+  // path live; the dead branches that referenced GPU safe mode tree-shake away.
+  const androidGpuSafeMode = false;
+  const safeModeScrolled = true;
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
