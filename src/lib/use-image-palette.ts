@@ -21,6 +21,8 @@ import {
 function isConstrainedDevice(): boolean {
   if (typeof document === "undefined") return false;
   const d = document.documentElement;
+  // Debug harness: treat palette extraction as off when its flag is disabled.
+  if (d.dataset.ffPaletteExtraction === "off") return true;
   return d.getAttribute("data-ultra-low-end") === "true";
 }
 
