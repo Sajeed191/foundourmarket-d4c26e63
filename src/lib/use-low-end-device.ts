@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getWebGLRenderer, isWeakGpu } from "@/lib/runtime-capability";
 
 /**
  * Detects constrained devices so expensive effects (per-element motion layers,
