@@ -85,7 +85,12 @@ function ProductImageImpl({
   const ultraLowEndAndroid = detectUltraLowEndAndroid();
   const androidGpuSafeMode = detectAndroidGpuSafeMode() && !renderSafe;
   // Diagnostic render=safe: eager load, sync decode, no srcset/sizes, only `src`.
-  const loadingMode = renderSafe ? "eager" : bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : androidGpuSafeMode ? "lazy" : (!ffLazyLoading || priority ? "eager" : "lazy");
+  // CRITICAL: the LCP/above-the-fold image (`priority`) must ALWAYS load eagerly,
+  // even in Android GPU Safe Mode. Forcing the hero image to lazy + low priority
+  // on memory-constrained phones means it is queued behind everything and, under
+  // memory pressure, frequently never decodes/paints → the "blank hero on
+  // low-RAM Android" bug. Only NON-priority images stay lazy in safe mode.
+  const loadingMode = renderSafe ? "eager" : bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : priority ? "eager" : androidGpuSafeMode ? "lazy" : (!ffLazyLoading ? "eager" : "lazy");
   const decodingMode = renderSafe ? "sync" : bisectAsyncDecoding ? (bisectOverrideEnabled ? "sync" : "async") : androidGpuSafeMode ? "async" : ffImageDecoding ? "async" : "sync";
   const storage = bundled || renderSafe
     ? null
