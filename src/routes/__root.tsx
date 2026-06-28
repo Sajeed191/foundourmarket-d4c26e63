@@ -40,6 +40,9 @@ import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, logDiagnostic, useRenderDiagnostics } from "@/lib/startup-diagnostics";
+import { initDebugFlags, getFlag } from "@/lib/debug-flags";
+import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
+import { DebugPanel } from "@/components/site/DebugPanel";
 
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
