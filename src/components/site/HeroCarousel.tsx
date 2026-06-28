@@ -199,7 +199,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     zIndex: isCenter ? 5 : 0,
                     pointerEvents: isCenter ? "auto" : "none",
                     visibility: isCenter ? "visible" : "hidden",
-                    background: `color-mix(in srgb, ${palette.background} 20%, transparent)`,
+                    background: palette.background,
                     transition: lowEnd
                       ? "opacity 300ms ease"
                       : `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
