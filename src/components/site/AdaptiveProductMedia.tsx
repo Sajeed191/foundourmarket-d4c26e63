@@ -22,7 +22,7 @@ type Props = {
  * photo is never modified; it's centered with object-contain and even padding.
  * Falls back to white when extraction is unavailable (SSR / CORS / failure).
  */
-function AdaptiveProductMediaImpl({ src, alt, priority = false, children }: Props) {
+function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, children }: Props) {
   const ultraLowEndAndroid = useUltraLowEndAndroid();
   const androidGpuSafeMode = useAndroidGpuSafeMode();
   const { palette, ready } = useImagePalette(src);
@@ -30,7 +30,40 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, children }: Prop
   useEffect(() => setLoadedSrc(null), [src]);
   const imgLoaded = loadedSrc === src;
   const safeStatic = ultraLowEndAndroid || androidGpuSafeMode;
-  const revealed = safeStatic || (ready && imgLoaded);
+  const revealed = plain || safeStatic || (ready && imgLoaded);
+
+  if (plain) {
+    // layouttest=simple: plain rectangle — no overflow clip, radius, mask, or
+    // isolation. Same image, same data, no overlays.
+    return (
+      <div
+        data-product-media
+        data-layouttest="simple"
+        className="relative aspect-square w-full p-[1.5%]"
+        style={{
+          background: "#ffffff",
+          overflow: "visible",
+          borderRadius: 0,
+          clipPath: "none",
+          WebkitMask: "none",
+          mask: "none",
+          isolation: "auto",
+          contain: "none",
+          position: "static",
+          zIndex: "auto",
+        }}
+      >
+        <ProductImage
+          src={src}
+          alt={alt}
+          width={800}
+          height={800}
+          priority={priority}
+          className="block h-full w-full object-contain object-center"
+        />
+      </div>
+    );
+  }
 
   return (
     <div
