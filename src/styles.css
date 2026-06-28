@@ -1810,3 +1810,50 @@ html[data-ultra-low-end="true"] [data-product-media],
 html[data-ultra-low-end="true"] [data-product-image] {
   background: #ffffff !important;
 }
+
+/* =====================================================================
+   TEMPORARY DEBUG HARNESS — feature-flag CSS kill-switches.
+   Driven by <html data-ff-*="off"> set by src/lib/debug-flags.ts.
+   Only active when a flag is explicitly OFF, so production is untouched.
+   Remove this block together with debug-flags / DebugPanel.
+   ===================================================================== */
+html[data-ff-animations="off"] *,
+html[data-ff-animations="off"] *::before,
+html[data-ff-animations="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-ff-gpu-transforms="off"] *,
+html[data-ff-gpu-transforms="off"] *::before,
+html[data-ff-gpu-transforms="off"] *::after {
+  transform: none !important;
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+  backface-visibility: visible !important;
+  will-change: auto !important;
+}
+
+html[data-ff-css-filters="off"] *,
+html[data-ff-css-filters="off"] *::before,
+html[data-ff-css-filters="off"] *::after {
+  filter: none !important;
+}
+
+html[data-ff-backdrop-filters="off"] *,
+html[data-ff-backdrop-filters="off"] *::before,
+html[data-ff-backdrop-filters="off"] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-ff-blur-effects="off"] *,
+html[data-ff-blur-effects="off"] *::before,
+html[data-ff-blur-effects="off"] *::after {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
