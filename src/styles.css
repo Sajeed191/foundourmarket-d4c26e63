@@ -1149,6 +1149,31 @@ html[data-low-end="true"] [data-product-image] {
   transition: opacity 160ms ease !important;
 }
 
+/* ===== Compositor-corruption fix for weak Mali / Adreno GPUs =====
+   On low-end Android, `contain: paint` and `isolation: isolate` promote each
+   product media box / card shell / image to its own backing store. Those GPUs
+   frequently fail to paint the freshly-allocated texture before compositing it,
+   leaving the "colored/noisy rectangles" behind cards reported on 4GB phones.
+   The card shell already clips children with overflow:hidden, so paint
+   containment is not needed for visual correctness here — we drop it on Android
+   and low-end and let normal painting (no extra layers) take over. */
+html[data-android="true"] [data-product-media],
+html[data-low-end="true"] [data-product-media],
+html[data-android="true"] .product-card-shell,
+html[data-low-end="true"] .product-card-shell,
+html[data-android="true"] [data-product-image],
+html[data-low-end="true"] [data-product-image] {
+  contain: none !important;
+  content-visibility: visible !important;
+  isolation: auto !important;
+  will-change: auto !important;
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+
+
 
 
 
