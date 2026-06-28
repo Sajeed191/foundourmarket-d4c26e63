@@ -44,6 +44,10 @@ function constrainedSignals(): { mem?: number; cores?: number; saveData: boolean
   };
 }
 
+export function detectLowEndDevice(): boolean {
+  return detect();
+}
+
 function detect(): boolean {
   if (typeof navigator === "undefined") return false;
   const flagged = domFlag("lowEnd");
