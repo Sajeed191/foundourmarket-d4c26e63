@@ -79,7 +79,7 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
     // as empty after reporting diagnostics.
     console.error("[chunk-recovery] dynamic import failed permanently", lastErr);
     reportChunkFailure(lastErr);
-    return { default: (() => null) as T };
+    return { default: (() => null) as unknown as T };
   });
 }
 

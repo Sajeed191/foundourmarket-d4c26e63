@@ -168,7 +168,10 @@ export function installStartupDiagnostics(): void {
   logDiagnostic("navigation-start", {
     type: nav?.type ?? "unknown",
     redirectCount: nav?.redirectCount ?? 0,
-    activationStart: Math.round(nav?.activationStart ?? 0),
+    activationStart: Math.round(
+      ((nav as (PerformanceNavigationTiming & { activationStart?: number }) | undefined)
+        ?.activationStart) ?? 0,
+    ),
   });
 
   patchFetch();

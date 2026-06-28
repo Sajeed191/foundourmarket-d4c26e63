@@ -39,6 +39,7 @@ import { detectAndroidWebView, useLowEndDevice, useIsAndroid } from "@/lib/use-l
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
+import { installStartupDiagnostics, logDiagnostic, useRenderDiagnostics } from "@/lib/startup-diagnostics";
 
 // Non-critical client-only shell: deferred out of the entry bundle so the
 // homepage/product/search first paint never pays for admin tooling, the live
@@ -222,7 +223,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         children:
-          "(function(){if(typeof window==='undefined')return;var KEY='fom_boot_attempts';var WIN=60000;var MAX=2;function isEntryFailure(x){var m='';try{m=typeof x==='string'?x:(x&&(x.message||x.reason&&x.reason.message||x.type||''))||'';}catch(e){}return /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module/i.test(String(m));}function read(){try{var v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&Date.now()-v.t<WIN)return {n:v.n,t:v.t};}catch(e){}return {n:0,t:Date.now()};}function showFatal(){try{document.documentElement.classList.remove('dark');document.body.innerHTML='<div style=\"min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif\"><div style=\"max-width:22rem;text-align:center\"><div style=\"margin:0 auto 1rem;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);font-size:1.5rem\">&#127757;</div><h1 style=\"font-size:1.15rem;font-weight:600;margin:0 0 .5rem\">FoundOurMarket couldn\\u2019t finish loading.</h1><p style=\"font-size:.9rem;color:#a3a3a3;margin:0 0 1.5rem\">Please check your connection and try again.</p><button id=\"fom-retry\" style=\"appearance:none;border:none;cursor:pointer;border-radius:9999px;padding:.75rem 1.75rem;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;background:#f59e0b\">Reload</button></div></div>';var b=document.getElementById('fom-retry');if(b)b.onclick=function(){try{localStorage.removeItem(KEY);}catch(e){}location.replace(location.pathname);};}catch(e){}}function recover(){var s=read();s.n++;s.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}if(s.n>MAX){showFatal();return;}try{if('serviceWorker'in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister().catch(function(){});});}).catch(function(){});}catch(e){}try{if('caches'in window)caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));}).catch(function(){});}catch(e){}var u=new URL(location.href);u.searchParams.set('_entry',Date.now().toString(36));location.replace(u.toString());}window.__fomRecover=recover;window.__fomBootOk=function(){try{localStorage.removeItem(KEY);}catch(e){}};window.addEventListener('vite:preloadError',function(e){try{e.preventDefault();}catch(x){}recover();});window.addEventListener('unhandledrejection',function(e){if(isEntryFailure(e.reason)){try{e.preventDefault();}catch(x){}recover();}});window.addEventListener('error',function(e){var t=e&&e.target;var src=t&&(t.src||t.href)||'';if(isEntryFailure(e&&e.message)||isEntryFailure(src)){recover();}},true);})();",
+          "(function(){if(typeof window==='undefined')return;function txt(x){try{return typeof x==='string'?x:(x&&(x.message||x.reason&&x.reason.message||x.type||''))||'';}catch(e){return ''}}function isEntryFailure(x){return /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module/i.test(String(txt(x)));}function log(name,payload){try{var item={event:name,at:new Date().toISOString(),path:location.pathname,payload:payload||{}};var arr=JSON.parse(localStorage.getItem('fom_startup_diagnostics')||'[]');if(!Array.isArray(arr))arr=[];arr.push(item);localStorage.setItem('fom_startup_diagnostics',JSON.stringify(arr.slice(-80)));}catch(e){}try{console.warn('[startup-diagnostics]',name,payload||{});}catch(e){}}function showFatal(reason){try{log('startup-fallback-shown',{reason:txt(reason)});document.documentElement.classList.remove('dark');document.body.innerHTML='<div style=\"min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif\"><div style=\"max-width:22rem;text-align:center\"><div style=\"margin:0 auto 1rem;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);font-size:1.5rem\">&#127757;</div><h1 style=\"font-size:1.15rem;font-weight:600;margin:0 0 .5rem\">FoundOurMarket couldn\\u2019t finish loading.</h1><p style=\"font-size:.9rem;color:#a3a3a3;margin:0 0 1.5rem\">A required file was blocked or failed. The page will not auto-reload.</p><button id=\"fom-retry\" style=\"appearance:none;border:none;cursor:pointer;border-radius:9999px;padding:.75rem 1.75rem;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;background:#f59e0b\">Reload</button></div></div>';var b=document.getElementById('fom-retry');if(b)b.onclick=function(){location.reload();};}catch(e){}}window.__fomRecover=function(reason){log('auto-reload-blocked',{reason:txt(reason)});showFatal(reason);};window.__fomShowStartupError=showFatal;window.__fomBootOk=function(){log('boot-ok');};window.addEventListener('vite:preloadError',function(e){try{e.preventDefault();}catch(x){}window.__fomRecover(e&&e.payload||e);});window.addEventListener('unhandledrejection',function(e){if(isEntryFailure(e.reason)){try{e.preventDefault();}catch(x){}window.__fomRecover(e.reason);}});window.addEventListener('error',function(e){var t=e&&e.target;var src=t&&(t.src||t.href)||'';if(isEntryFailure(e&&e.message)||isEntryFailure(src)){window.__fomRecover(e&&e.message||src);}},true);})();",
       },
       {
         // No-FOUC theme init: resolve the stored theme preference (default
@@ -388,6 +389,7 @@ function OAuthReturnScreen() {
 }
 
 function RootComponent() {
+  useRenderDiagnostics("RootComponent");
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [oauthReturnPending, setOauthReturnPending] = useState(
@@ -398,6 +400,7 @@ function RootComponent() {
   const isAndroid = useIsAndroid();
 
   useEffect(() => {
+    installStartupDiagnostics();
     installChunkRecovery();
     registerServiceWorker();
     logBuildVersion();
@@ -420,6 +423,12 @@ function RootComponent() {
       const androidWebView = detectAndroidWebView();
       document.documentElement.dataset.androidWebview = androidWebView ? "true" : "false";
       document.documentElement.dataset.androidChrome = isAndroid && !androidWebView && /Chrome/i.test(ua) ? "true" : "false";
+      logDiagnostic("device-flags", {
+        lowEnd,
+        isAndroid,
+        androidWebView,
+        androidChrome: isAndroid && !androidWebView && /Chrome/i.test(ua),
+      });
     }
   }, [lowEnd, isAndroid]);
   useEffect(() => {
