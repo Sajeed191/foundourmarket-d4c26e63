@@ -888,7 +888,6 @@ function ProductPage() {
       <LazyMount minHeight={120}>
         <TrustGuarantee />
       </LazyMount>
-      <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
       
 
       {/* Sticky mobile purchase dock — only mounts once the page is fully
