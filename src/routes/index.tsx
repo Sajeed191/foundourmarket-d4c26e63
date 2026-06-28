@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
+import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
