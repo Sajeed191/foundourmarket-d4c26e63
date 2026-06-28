@@ -91,7 +91,7 @@ function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
   const pillBase =
     "inline-flex h-[22px] sm:h-[28px] w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px]";
   return (
-    <div className="absolute left-2.5 top-2.5 z-10 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1.5 overflow-hidden">
+    <div className="absolute left-2.5 top-2.5 z-10 flex max-w-[calc(100%-3.25rem)] flex-row flex-nowrap items-start gap-1.5 overflow-hidden sm:max-w-[calc(100%-3.5rem)] sm:flex-col">
       {visible.map((b, i) => (
         <span
           key={b.id}
@@ -107,7 +107,7 @@ function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
         <span
           data-product-badge
           aria-label={`${mobileExtra} more badge${mobileExtra > 1 ? "s" : ""}`}
-          className={`${pillBase} sm:hidden bg-accent text-accent-foreground`}
+          className={`${pillBase} shrink-0 sm:hidden bg-accent text-accent-foreground`}
         >
           +{mobileExtra}
         </span>
