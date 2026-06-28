@@ -190,7 +190,13 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         <div
           ref={stageRef}
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
-          style={{ height: "calc(var(--card) + 72px)" }}
+          style={{
+            height: "calc(var(--card) + 72px)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
+          }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -278,7 +284,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   tabIndex={isCenter ? 0 : -1}
                   draggable={false}
                   onClick={(e) => { if (drag.current.moved) e.preventDefault(); }}
-                  className={`group absolute left-1/2 top-1/2 overflow-hidden rounded-[28px] glass-strong ring-1 ring-white/15 ${isCenter ? (perf.enableGlow ? "shadow-[var(--shadow-float),0_0_80px_-16px_oklch(0.74_0.19_49/0.55)]" : "shadow-[var(--shadow-float)]") : "shadow-[0_12px_40px_-12px_oklch(0_0_0/0.6)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  className={`group absolute left-1/2 top-1/2 ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
                     width: "var(--card)",
                     height: "var(--card)",
@@ -288,23 +294,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     opacity,
                     filter: lowEnd
                       ? "none"
-                      : `blur(${blur}px) grayscale(${gray}) brightness(${bright})`,
+                      : `blur(${blur}px) grayscale(${gray}) brightness(${bright}) drop-shadow(0 ${isCenter ? 26 : 12}px ${isCenter ? 44 : 22}px oklch(0 0 0 / ${isCenter ? 0.5 : 0.34}))`,
                     zIndex: 10 - depth,
                     pointerEvents: isCenter ? "auto" : "none",
                     visibility: visible ? "visible" : "hidden",
-                    background: palette.background,
                     transition: lowEnd
                       ? `opacity ${DUR}ms ease`
                       : `transform ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
                     willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
                 >
-                  {isCenter && (
-                    <>
-                      <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-white/5 to-transparent" />
-                    </>
-                  )}
                   <ProductImage
                     src={p.image}
                     alt={isCenter ? p.name : ""}
@@ -312,9 +311,10 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     height={640}
                     priority={i === 0}
                     sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 60vw"
-                    className="relative z-[1] block size-full object-contain object-center p-[7%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                    className="relative z-[1] block size-full rounded-[24px] object-contain object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
+
               );
             })
           )}
