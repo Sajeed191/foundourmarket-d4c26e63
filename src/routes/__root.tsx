@@ -469,6 +469,7 @@ function RootComponent() {
   const isAdminRoute = pathname.startsWith("/admin");
   const isCheckoutRoute = pathname.startsWith("/checkout");
   const isAccountHomeRoute = pathname === "/account";
+  const isSearchRoute = pathname === "/search";
   // Dedicated full-page support conversation owns the entire screen (its own
   // header + composer with safe-area handling). Suppress all site chrome.
   const isTicketRoute = /^\/account\/support\/(ticket\/|new)/.test(pathname);
