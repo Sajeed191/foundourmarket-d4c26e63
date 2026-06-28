@@ -318,7 +318,7 @@ function EditProfilePage() {
         <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 lg:pt-16 pb-32 sm:pb-12 lg:pb-16">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 lg:pt-16 pb-8 sm:pb-12 lg:pb-16">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
           <Link to="/account" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground hover:text-accent mb-6 transition-colors">
             <ArrowLeft className="size-3.5" /> Back to account
