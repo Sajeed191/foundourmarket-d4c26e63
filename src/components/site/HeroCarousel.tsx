@@ -83,9 +83,19 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const ambientSoft = `color-mix(in srgb, ${primary} 18%, transparent)`;
 
   return (
-    <div className="relative mx-auto max-w-[1100px]">
+    <div className="relative mx-auto max-w-[1280px]">
       {/* ── Dynamic ambient background derived from the product image ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+        {/* full-bleed blurred product backdrop fills the empty side areas */}
+        {current?.image && !lowEnd && (
+          <img
+            src={current.image}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
+            style={{ transition: "opacity 800ms ease" }}
+          />
+        )}
         <div
           className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
           style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
@@ -96,8 +106,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         />
         {/* warm orange anchor glow so the brand accent always reads */}
         <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
+        {/* dark gradient overlays for a premium, immersive frame */}
+        <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background/90 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background/90 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
+
 
       <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
         {/* badge */}
