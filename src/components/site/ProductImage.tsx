@@ -24,6 +24,29 @@ const TRANSPARENT_PIXEL =
 
 let safeDecodeChain: Promise<void> = Promise.resolve();
 
+// Diagnostic A/B: `?imgtest=static` makes ProductImage behave exactly like the
+// plain <img> tags on /gpu-test — final src assigned once, no placeholder, no
+// IntersectionObserver, no decode queue, no img.decode(), no post-mount src
+// mutation. Pure test to isolate runtime image-source mutation as a corruption
+// cause. Does not touch layout, styling, radius, overflow, grid, or nav.
+let imgTestStaticCached: boolean | null = null;
+function detectImgTestStatic(): boolean {
+  if (imgTestStaticCached !== null) return imgTestStaticCached;
+  if (typeof window === "undefined") return false;
+  let value = false;
+  try {
+    value = new URLSearchParams(window.location.search).get("imgtest") === "static";
+  } catch {
+    value = false;
+  }
+  imgTestStaticCached = value;
+  if (value && typeof console !== "undefined") {
+    // eslint-disable-next-line no-console
+    console.log("[imgtest] Static image mode enabled — no decode queue used.");
+  }
+  return value;
+}
+
 function enqueueSafeImageDecode(
   img: HTMLImageElement,
   src: string,
