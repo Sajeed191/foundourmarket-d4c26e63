@@ -120,7 +120,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             never cropping, overflowing, or shifting layout. */}
         <div
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-[480px] sm:max-w-[600px] select-none overflow-hidden [perspective:1200px]"
-          style={{ ["--card" as string]: "clamp(190px, 78vw, 310px)", height: "calc(var(--card) + 50px)" }}
+          style={{ ["--card" as string]: "clamp(150px, 62vw, 310px)", height: "calc(var(--card) + 50px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
