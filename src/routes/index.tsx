@@ -520,7 +520,45 @@ function Home() {
               <SearchButton loading={searching} />
 
             </div>
+
+            {searchFocused && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 origin-top animate-scale-in rounded-3xl glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float)] p-2.5 sm:p-3">
+                <div className="px-2.5 pb-1.5 pt-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {query.trim() ? (
+                    <>
+                      <Search className="size-3.5 text-accent" /> Suggestions
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="size-3.5 text-accent" /> Trending searches
+                    </>
+                  )}
+                </div>
+                <ul className="flex flex-col">
+                  {suggestions.slice(0, 6).map((s) => (
+                    <li key={s}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setQuery(s);
+                          goSearch(s);
+                        }}
+                        className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors duration-200 hover:bg-white/[0.06] active:bg-accent/10"
+                      >
+                        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/12 text-accent">
+                          <Flame className="size-3.5" />
+                        </span>
+                        <span className="flex-1 truncate text-sm font-medium text-foreground/90 group-hover:text-foreground">{s}</span>
+                        <ArrowRight className="size-4 shrink-0 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </form>
+
         </HeroCarousel>
 
       </section>
