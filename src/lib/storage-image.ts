@@ -37,6 +37,12 @@ const DEFAULT_WIDTHS = [200, 320, 480, 640, 960];
 
 export type StorageResponsive = { src: string; srcset: string };
 
+export type StorageResponsiveOptions = {
+  widths?: number[];
+  fallbackWidth?: number;
+  quality?: number;
+};
+
 /**
  * Builds a resized fallback `src` + `srcset` for a storage product image.
  * Returns null for non-storage URLs (bundled assets, external CDNs) so the
@@ -44,10 +50,13 @@ export type StorageResponsive = { src: string; srcset: string };
  */
 export function getStorageResponsive(
   url: string,
-  widths: number[] = DEFAULT_WIDTHS,
+  options: StorageResponsiveOptions | number[] = DEFAULT_WIDTHS,
 ): StorageResponsive | null {
   if (!isStorageObjectUrl(url)) return null;
-  const srcset = widths.map((w) => `${resizedStorageImage(url, w)} ${w}w`).join(", ");
+  const widths = Array.isArray(options) ? options : options.widths ?? DEFAULT_WIDTHS;
+  const fallbackWidth = Array.isArray(options) ? 480 : options.fallbackWidth ?? 480;
+  const quality = Array.isArray(options) ? 62 : options.quality ?? 62;
+  const srcset = widths.map((w) => `${resizedStorageImage(url, w, quality)} ${w}w`).join(", ");
   // Mid-size fallback for browsers that ignore srcset/sizes.
-  return { src: resizedStorageImage(url, 480), srcset };
+  return { src: resizedStorageImage(url, fallbackWidth, quality), srcset };
 }

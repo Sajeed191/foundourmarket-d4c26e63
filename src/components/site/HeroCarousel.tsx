@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
-import { useLowEndDevice, useDeviceTier } from "@/lib/use-low-end-device";
+import { useLowEndDevice, useDeviceTier, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
@@ -39,6 +39,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     newArrivals: newArrivals.length,
   });
   const lowEnd = useLowEndDevice();
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
   const isMobile = useIsMobile();
   const tier = useDeviceTier();
 
@@ -75,7 +76,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   // burns CPU/battery animating frames the user can't see.
   const offscreenRef = useRef(false);
   useEffect(() => {
-    if (lowEnd) return;
+    if (lowEnd || ultraLowEndAndroid) return;
     const el = stageRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
@@ -86,27 +87,27 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [lowEnd]);
+  }, [lowEnd, ultraLowEndAndroid]);
 
   // Auto-rotate.
   useEffect(() => {
-    if (lowEnd) return;
+    if (lowEnd || ultraLowEndAndroid) return;
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [items.length, lowEnd]);
+  }, [items.length, lowEnd, ultraLowEndAndroid]);
 
 
   const current = items[index];
-  const { palette } = useImagePalette(current?.image);
+  const { palette } = useImagePalette(ultraLowEndAndroid ? null : current?.image);
 
   // Preload only the immediate next + previous images (per spec). Off-screen
   // cards beyond these are lazy-loaded by the browser via <ProductImage>.
   useEffect(() => {
-    if (lowEnd) return;
+    if (lowEnd || ultraLowEndAndroid) return;
     if (items.length <= 1) return;
     const n = items.length;
     [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
@@ -115,7 +116,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         img.src = p.image;
       }
     });
-  }, [index, items, lowEnd]);
+  }, [index, items, lowEnd, ultraLowEndAndroid]);
 
   const primary = palette.primary || "#ffffff";
   const ambient = `color-mix(in srgb, ${primary} 38%, transparent)`;

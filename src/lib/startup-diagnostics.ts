@@ -11,6 +11,9 @@ declare global {
 
 let installed = false;
 let fetchPatched = false;
+let compositorDiagnosticsInstalled = false;
+const diagnosticBuffer: unknown[] = [];
+let persistScheduled = false;
 
 function cleanUrl(input: unknown): string {
   try {
@@ -48,12 +51,26 @@ export function logDiagnostic(event: string, payload: DiagnosticPayload = {}): v
     payload,
   };
 
-  try {
-    const existing = JSON.parse(localStorage.getItem("fom_startup_diagnostics") || "[]") as unknown[];
-    const next = [...(Array.isArray(existing) ? existing : []), record].slice(-80);
-    localStorage.setItem("fom_startup_diagnostics", JSON.stringify(next));
-  } catch {
-    /* storage may be blocked */
+  diagnosticBuffer.push(record);
+  if (diagnosticBuffer.length > 80) diagnosticBuffer.splice(0, diagnosticBuffer.length - 80);
+
+  if (!persistScheduled) {
+    persistScheduled = true;
+    const persist = () => {
+      persistScheduled = false;
+      try {
+        const existing = JSON.parse(localStorage.getItem("fom_startup_diagnostics") || "[]") as unknown[];
+        const next = [...(Array.isArray(existing) ? existing : []), ...diagnosticBuffer].slice(-80);
+        diagnosticBuffer.length = 0;
+        localStorage.setItem("fom_startup_diagnostics", JSON.stringify(next));
+      } catch {
+        diagnosticBuffer.length = 0;
+        /* storage may be blocked */
+      }
+    };
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(persist, { timeout: 1500 });
+    else window.setTimeout(persist, 250);
   }
 
   try {
@@ -152,6 +169,135 @@ function logServiceWorkerState(): void {
     .catch((error) => logDiagnostic("service-worker-read-failed", { error: reasonText(error) }));
 }
 
+function isUltraLowEndAndroid(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.dataset.ultraLowEnd === "true";
+}
+
+function installCompositorDiagnostics(): void {
+  if (compositorDiagnosticsInstalled || typeof window === "undefined" || typeof document === "undefined") return;
+  compositorDiagnosticsInstalled = true;
+
+  const snapshot = (label: string) => {
+    if (!isUltraLowEndAndroid()) return;
+    const selector = [
+      "[style*='transform']",
+      "[style*='filter']",
+      "[style*='backdrop']",
+      "[style*='will-change']",
+      "[class*='translate']",
+      "[class*='scale']",
+      "[class*='rotate']",
+      "[class*='blur']",
+      "[class*='backdrop-blur']",
+      "[class*='animate-']",
+      "[class*='shadow-']",
+    ].join(",");
+    logDiagnostic("compositor-snapshot", {
+      label,
+      candidates: document.querySelectorAll(selector).length,
+      productCards: document.querySelectorAll("[data-product-card]").length,
+      productImages: document.querySelectorAll("[data-product-image]").length,
+    });
+  };
+
+  const scheduleSnapshot = (label: string) => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(() => snapshot(label), { timeout: 2000 });
+    else window.setTimeout(() => snapshot(label), 750);
+  };
+
+  const isLayerCandidate = (element: Element): boolean => {
+    const value = `${element.getAttribute("class") ?? ""} ${element.getAttribute("style") ?? ""}`;
+    return /transform|translate|scale|rotate|blur|backdrop|filter|will-change|contain|isolation|animate-|shadow-|mask/i.test(value);
+  };
+
+  const installLayerMutationProbe = () => {
+    if (!isUltraLowEndAndroid() || typeof MutationObserver === "undefined") return;
+    let mutationCount = 0;
+    let candidateCount = 0;
+    let lastSample = "";
+    const flush = () => {
+      if (!mutationCount) return;
+      logDiagnostic("compositor-layer-mutations", {
+        mutations: mutationCount,
+        layerCandidateMutations: candidateCount,
+        sample: lastSample,
+      });
+      mutationCount = 0;
+      candidateCount = 0;
+      lastSample = "";
+    };
+    const timer = window.setInterval(flush, 3000);
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type !== "attributes") continue;
+        mutationCount += 1;
+        const target = mutation.target;
+        if (target instanceof Element && isLayerCandidate(target)) {
+          candidateCount += 1;
+          if (!lastSample) {
+            const tag = target.tagName.toLowerCase();
+            const id = target.id ? `#${target.id}` : "";
+            const cls = (target.getAttribute("class") ?? "").toString().slice(0, 120);
+            lastSample = `${tag}${id}${cls ? `.${cls.replace(/\s+/g, ".")}` : ""}`;
+          }
+        }
+      }
+    });
+    observer.observe(document.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
+    window.setTimeout(() => {
+      flush();
+      observer.disconnect();
+      window.clearInterval(timer);
+      logDiagnostic("compositor-layer-mutation-probe-stopped", { durationMs: 45_000 });
+    }, 45_000);
+    logDiagnostic("compositor-layer-mutation-probe-started", { durationMs: 45_000 });
+  };
+
+  document.addEventListener(
+    "webglcontextlost",
+    (event) => {
+      logDiagnostic("gpu-context-lost", {
+        target: (event.target as Element | null)?.tagName ?? "unknown",
+      });
+    },
+    true,
+  );
+  document.addEventListener(
+    "webglcontextrestored",
+    (event) => {
+      logDiagnostic("gpu-context-restored", {
+        target: (event.target as Element | null)?.tagName ?? "unknown",
+      });
+    },
+    true,
+  );
+
+  window.addEventListener("pageshow", () => scheduleSnapshot("pageshow"));
+  window.addEventListener("orientationchange", () => scheduleSnapshot("orientationchange"));
+  document.addEventListener(
+    "error",
+    (event) => {
+      const target = event.target as HTMLImageElement | null;
+      if (target?.matches?.("[data-product-image]")) {
+        logDiagnostic("product-image-error", {
+          src: cleanUrl(target.currentSrc || target.src),
+          naturalWidth: target.naturalWidth,
+          naturalHeight: target.naturalHeight,
+        });
+      }
+    },
+    true,
+  );
+  scheduleSnapshot("startup");
+  installLayerMutationProbe();
+}
+
 export function installStartupDiagnostics(): void {
   if (installed || typeof window === "undefined") return;
   installed = true;
@@ -176,6 +322,7 @@ export function installStartupDiagnostics(): void {
 
   patchFetch();
   logServiceWorkerState();
+  installCompositorDiagnostics();
   logMemory("startup");
 
   window.addEventListener("error", (event) => {

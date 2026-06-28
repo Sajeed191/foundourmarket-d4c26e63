@@ -35,7 +35,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ShareDialog } from "@/components/site/ShareDialog";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
-import { detectAndroidWebView, useLowEndDevice, useIsAndroid } from "@/lib/use-low-end-device";
+import { detectAndroidWebView, useLowEndDevice, useIsAndroid, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
@@ -287,6 +287,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "(function(){var d=document.documentElement;var ua='';var a=false;var wv=false;try{ua=navigator.userAgent||'';a=/Android/i.test(ua);wv=a&&(/; wv\\)/i.test(ua)||/\\bwv\\b/i.test(ua));var rawMem=navigator.deviceMemory;var m=Number(rawMem||0);var c=navigator.hardwareConcurrency||0;var r=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);var memKnown=typeof rawMem==='number'&&rawMem>0;var low=r||(memKnown&&m<=4)||(c>0&&c<=4)||(a&&!memKnown);d.setAttribute('data-android',a?'true':'false');d.setAttribute('data-android-webview',wv?'true':'false');d.setAttribute('data-android-chrome',(a&&!wv&&/Chrome/i.test(ua))?'true':'false');d.setAttribute('data-low-end',low?'true':'false');var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');}catch(x){try{ua=ua||(navigator.userAgent||'');a=/Android/i.test(ua);wv=a&&(/; wv\\)/i.test(ua)||/\\bwv\\b/i.test(ua));d.setAttribute('data-android',a?'true':'false');d.setAttribute('data-android-webview',wv?'true':'false');d.setAttribute('data-android-chrome',(a&&!wv&&/Chrome/i.test(ua))?'true':'false');d.setAttribute('data-low-end',a?'true':'false');}catch(y){}d.setAttribute('data-theme','dark');d.classList.add('dark');}})();",
       },
       {
+        // Ultra Low-End Android compositor kill-switch. Kept as a separate tiny
+        // script so it can run before CSS paint without changing the theme init.
+        children:
+          "(function(){try{var d=document.documentElement;var ua=navigator.userAgent||'';var a=/Android/i.test(ua);var rawMem=navigator.deviceMemory;var m=Number(rawMem||0);var c=navigator.hardwareConcurrency||0;var r=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);var memKnown=typeof rawMem==='number'&&rawMem>0;var low=r||(memKnown&&m<=4)||(c>0&&c<=4)||(a&&!memKnown);d.setAttribute('data-ultra-low-end',(a&&low)?'true':'false');}catch(e){try{document.documentElement.setAttribute('data-ultra-low-end',/Android/i.test(navigator.userAgent||'')?'true':'false');}catch(x){}}})();",
+      },
+      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
@@ -349,6 +355,7 @@ function DeferredShell({
 }) {
   const [ready, setReady] = useState(false);
   const isAndroid = useIsAndroid();
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
   useEffect(() => {
     const ric = (
       window as unknown as {
@@ -367,7 +374,7 @@ function DeferredShell({
     return () => clearTimeout(t);
   }, []);
 
-  if (!ready) return null;
+  if (!ready || ultraLowEndAndroid) return null;
 
   if (isAndroid) {
     return (
@@ -451,6 +458,7 @@ function RootComponent() {
 
   const lowEnd = useLowEndDevice();
   const isAndroid = useIsAndroid();
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
 
   useEffect(() => {
     installStartupDiagnostics();
@@ -476,14 +484,16 @@ function RootComponent() {
       const androidWebView = detectAndroidWebView();
       document.documentElement.dataset.androidWebview = androidWebView ? "true" : "false";
       document.documentElement.dataset.androidChrome = isAndroid && !androidWebView && /Chrome/i.test(ua) ? "true" : "false";
+      document.documentElement.dataset.ultraLowEnd = ultraLowEndAndroid ? "true" : "false";
       logDiagnostic("device-flags", {
         lowEnd,
         isAndroid,
+        ultraLowEndAndroid,
         androidWebView,
         androidChrome: isAndroid && !androidWebView && /Chrome/i.test(ua),
       });
     }
-  }, [lowEnd, isAndroid]);
+  }, [lowEnd, isAndroid, ultraLowEndAndroid]);
   useEffect(() => {
     startPerfMonitoring();
   }, []);

@@ -12,7 +12,7 @@ import {
  * `ready` flips true when a real (non-fallback) palette is available so callers
  * can animate the background/product in.
  *
- * Low-end / Android short-circuit: palette extraction loads each product image
+ * Ultra Low-End Android short-circuit: palette extraction loads each product image
  * a SECOND time into a canvas (extra decode + canvas/GPU memory per card). On
  * constrained Android GPUs this contributes to texture-memory pressure and the
  * compositor corruption seen on 4GB devices, so we skip it and render the
@@ -21,7 +21,7 @@ import {
 function isConstrainedDevice(): boolean {
   if (typeof document === "undefined") return false;
   const d = document.documentElement;
-  return d.getAttribute("data-low-end") === "true" || d.getAttribute("data-android") === "true";
+  return d.getAttribute("data-ultra-low-end") === "true";
 }
 
 export function useImagePalette(src: string | null | undefined) {

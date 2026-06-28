@@ -4,7 +4,7 @@ import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
-import { useLowEndDevice } from "@/lib/use-low-end-device";
+import { useLowEndDevice, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
 
 /** Maximum products visibly promoted as Flash Deals at any one time. */
 const FLASH_VISIBLE_MAX = 10;
@@ -64,7 +64,8 @@ export function useFlashDeals() {
   const { products, loading } = useProducts();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const lowEnd = useLowEndDevice();
-  const now = useNow(60_000, !lowEnd);
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
+  const now = useNow(60_000, !lowEnd && !ultraLowEndAndroid);
   const rotationNonce = useRotationNonce();
 
   function fetchDeals() {

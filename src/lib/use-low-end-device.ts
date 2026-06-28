@@ -62,6 +62,20 @@ export function detectAndroid(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
 
+/**
+ * Ultra Low-End Android = Android plus the constrained-device signal that is
+ * known to trigger Chrome compositor / GPU texture corruption on 4GB devices.
+ * This is intentionally narrower than `low-end`: desktop/iOS reduced-motion
+ * users keep the normal visual design, while weak Android gets a fully flat DOM.
+ */
+export function detectUltraLowEndAndroid(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const flagged = domFlag("ultraLowEnd");
+  if (flagged !== null) return flagged;
+  if (!detectAndroid()) return false;
+  return detect();
+}
+
 /** Android WebView (in-app browsers: Instagram, FB, etc.) — the worst offender
  *  for compositor corruption. UA contains "; wv" or lacks a real browser token. */
 export function detectAndroidWebView(): boolean {
@@ -99,6 +113,19 @@ export function useIsAndroid(): boolean {
     setAndroid(detectAndroid());
   }, []);
   return android;
+}
+
+export function useUltraLowEndAndroid(): boolean {
+  const [ultra, setUltra] = useState(detectUltraLowEndAndroid);
+  useEffect(() => {
+    setUltra(detectUltraLowEndAndroid());
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    const onChange = () => setUltra(detectUltraLowEndAndroid());
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return ultra;
 }
 
 /** Live flag: should the product grid use incremental (non-virtualized) rendering? */
