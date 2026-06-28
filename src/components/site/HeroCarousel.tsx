@@ -30,6 +30,7 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
  */
 export function HeroCarousel({ featured, trending, bestSellers, newArrivals, children }: Props) {
   const lowEnd = useLowEndDevice();
+  const isMobile = useIsMobile();
 
   const items = useMemo(() => {
     const pool =
@@ -37,7 +38,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
       (trending.length && trending) ||
       (bestSellers.length && bestSellers) ||
       newArrivals;
-    return (pool || []).filter((p) => !!p?.image).slice(0, 6);
+    return (pool || []).filter((p) => !!p?.image).slice(0, 12);
   }, [featured, trending, bestSellers, newArrivals]);
 
   const [index, setIndex] = useState(0);
