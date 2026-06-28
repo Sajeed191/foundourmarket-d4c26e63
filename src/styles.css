@@ -145,7 +145,7 @@
   --gradient-ember: radial-gradient(ellipse at center, oklch(0.74 0.19 49 / 0.28), transparent 70%);
   --gradient-ember-soft: radial-gradient(circle at 30% 30%, oklch(0.74 0.19 49 / 0.20), transparent 60%);
   --gradient-violet: radial-gradient(circle at 70% 70%, oklch(0.55 0.18 290 / 0.22), transparent 65%);
-  --gradient-hero: linear-gradient(180deg, oklch(0.115 0.008 260) 0%, oklch(0.09 0.008 260) 100%);
+  --gradient-hero: radial-gradient(120% 80% at 50% 0%, oklch(0.165 0.01 262) 0%, oklch(0.13 0.009 261) 42%, oklch(0.10 0.008 260) 100%);
   --gradient-mesh: conic-gradient(from 180deg at 50% 50%, oklch(0.74 0.19 49 / 0.18), oklch(0.55 0.18 290 / 0.14), oklch(0.74 0.19 49 / 0.18));
   --gradient-border: linear-gradient(135deg, oklch(1 0 0 / 0.18), oklch(1 0 0 / 0.02) 40%, oklch(0.74 0.19 49 / 0.28));
   --shadow-ember: 0 10px 60px -10px oklch(0.74 0.19 49 / 0.45);
