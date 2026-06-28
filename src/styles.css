@@ -1533,13 +1533,13 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
    so spacing/overlap ratios are preserved at every breakpoint. */
 .hero-stage {
   /* Mobile (<=767px): center ~55-65% of carousel width */
-  --card: clamp(190px, 60vw, 320px);
+  --card: clamp(168px, 53vw, 286px);
 }
 @media (min-width: 768px) {
   /* Tablet (768-1024px): center ~45-55% of carousel width */
-  .hero-stage { --card: clamp(300px, 50vw, 430px); }
+  .hero-stage { --card: clamp(264px, 44vw, 384px); }
 }
 @media (min-width: 1025px) {
   /* Desktop (>=1025px): center ~35-45% of carousel width, all sides visible */
-  .hero-stage { --card: clamp(360px, 38vw, 480px); }
+  .hero-stage { --card: clamp(320px, 34vw, 432px); }
 }
