@@ -127,6 +127,54 @@ export function useLowEndDevice(): boolean {
 }
 
 /**
+ * Decides whether to render the LIGHTWEIGHT (old) homepage instead of the
+ * premium animated one. This is intentionally broader than the premium-effect
+ * gates: per product requirement it also honors the coarse RAM/cores signals so
+ * any constrained Android phone gets the fast, static fallback. It does NOT
+ * affect the premium-effect detection used elsewhere — it only swaps the
+ * homepage presentation. SSR-safe (returns false until mounted).
+ *
+ * Triggers when ANY of these is true:
+ *   - low-end device, Android GPU Safe Mode, Ultra Low-End Android, render=safe
+ *   - reduced-motion / save-data
+ *   - deviceMemory ≤ 4 GB
+ *   - hardwareConcurrency ≤ 4 cores
+ */
+export function detectLightweightHome(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const flagged = domFlag("lightHome");
+  if (flagged !== null) return flagged;
+  if (
+    detectLowEndDevice() ||
+    detectAndroidGpuSafeMode() ||
+    detectUltraLowEndAndroid() ||
+    detectRenderSafe()
+  ) {
+    return true;
+  }
+  const { mem, cores, saveData, reduced } = constrainedSignals();
+  if (saveData || reduced) return true;
+  if (typeof mem === "number" && mem > 0 && mem <= 4) return true;
+  if (typeof cores === "number" && cores > 0 && cores <= 4) return true;
+  return false;
+}
+
+export function useLightweightHome(): boolean {
+  // SSR-consistent baseline; detection applied post-mount to avoid hydration
+  // mismatch (see useLowEndDevice).
+  const [light, setLight] = useState(false);
+  useEffect(() => {
+    setLight(detectLightweightHome());
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    const onChange = () => setLight(detectLightweightHome());
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return light;
+}
+
+/**
  * Detects Android Chrome / WebView / Samsung Internet. These browsers share a
  * compositor bug where many promoted layers (transform + will-change + contain:
  * paint) fail to invalidate during fast scroll, producing ghosted/duplicated
