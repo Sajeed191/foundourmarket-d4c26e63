@@ -467,7 +467,7 @@ function Home() {
             className="relative z-10 mx-auto mt-7 sm:mt-8 max-w-2xl"
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
           >
-            <div className={`relative glass-strong rounded-full ring-1 transition-all duration-300 ${searchFocused ? "ring-accent/40 shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.10),0_0_28px_-6px_oklch(0.74_0.19_49/0.45),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
+            <div className={`relative glass-strong rounded-full ring-1 transition-all duration-300 ${searchFocused ? "ring-accent/50 shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.10),0_0_32px_-6px_oklch(0.74_0.19_49/0.50),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
               <Search className={`absolute left-5 top-1/2 -translate-y-1/2 size-5 transition-colors duration-300 ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
               <input
                 type="text"
@@ -477,16 +477,16 @@ function Home() {
                 onBlur={() => setSearchFocused(false)}
                 placeholder={rotatingPlaceholder}
                 aria-label="Search products"
-                className="w-full min-h-[54px] bg-transparent rounded-full pl-12 pr-16 py-4 text-base focus:outline-none placeholder:text-muted-foreground/60"
+                className="w-full min-h-[56px] bg-transparent rounded-full pl-12 pr-[104px] py-4 text-base tracking-[-0.01em] focus:outline-none placeholder:text-muted-foreground/55 placeholder:tracking-[-0.01em]"
               />
-              {/* Embedded circular gradient search icon button */}
+              {/* Glowing pill search button — single icon lives on the left of the input */}
               <button
                 type="submit"
                 aria-label="Search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center size-11 rounded-full text-accent-foreground transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95 shadow-[var(--shadow-ember)]"
+                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-10 px-5 rounded-full text-accent-foreground text-[13px] font-semibold tracking-wide transition-all duration-200 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-[var(--shadow-ember)]"
                 style={{ background: "var(--gradient-ember)" }}
               >
-                <Search className="size-5" strokeWidth={2.4} />
+                Search
               </button>
             </div>
           </form>
