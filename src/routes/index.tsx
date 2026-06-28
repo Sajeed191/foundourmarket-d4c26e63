@@ -672,7 +672,9 @@ function Home() {
 
       <CinematicDivider />
 
-      <FlashDeals />
+      <LazyMount minHeight={360}>
+        <FlashDeals />
+      </LazyMount>
 
 
 
