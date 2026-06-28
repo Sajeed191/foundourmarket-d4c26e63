@@ -479,7 +479,7 @@ function RootComponent() {
     }
     installStartupDiagnostics();
     installChunkRecovery();
-    if (!androidGpuSafeMode && getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
+    if (!detectRenderSafe() && !androidGpuSafeMode && getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
     logBuildVersion();
     // React mounted successfully. Clear the persistent boot-attempt counter a
     // few seconds after a stable render so the auto-reload cap only ever counts
