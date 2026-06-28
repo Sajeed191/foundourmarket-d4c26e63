@@ -235,6 +235,28 @@ function ProductImageImpl({
     );
   }
 
+  if (imgTestStatic) {
+    // Behaves exactly like the plain <img> tags on /gpu-test: final src once,
+    // eager + sync, no srcset/sizes, no placeholder, no decode queue.
+    return (
+      <img
+        key={`${resolvedSrc}|${width}x${height}`}
+        ref={imgRef}
+        src={resolvedSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        loading="eager"
+        decoding="sync"
+        data-product-image
+        data-imgtest-static="true"
+        style={style}
+        onLoad={handleLoad}
+        className={className}
+      />
+    );
+  }
+
   return (
     <img
       key={`${resolvedSrc}|${width}x${height}`}
