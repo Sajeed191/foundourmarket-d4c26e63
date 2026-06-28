@@ -105,10 +105,9 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           Trusted products from verified sellers worldwide.
         </p>
 
-        {/* ── layered product showcase ── */}
+        {/* ── clean single-product showcase ── */}
         <div
-          className="relative mt-6 sm:mt-8 w-full max-w-[440px] sm:max-w-[560px] h-[260px] sm:h-[320px] select-none overflow-hidden"
-          style={{ perspective: "1200px" }}
+          className="relative mt-6 sm:mt-8 w-full max-w-[440px] sm:max-w-[560px] h-[280px] sm:h-[340px] select-none overflow-hidden"
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -123,45 +122,10 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           />
 
           {items.length === 0 ? (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[220px] sm:size-[300px] rounded-[24px] glass-strong ring-1 ring-white/12 animate-pulse" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[240px] sm:size-[300px] rounded-[24px] glass-strong ring-1 ring-white/12 animate-pulse" />
           ) : (
             items.map((p, i) => {
-              const len = items.length;
-              // relative position: 0 = center, 1 = right, len-1 = left, else hidden
-              const offset = (i - index + len) % len;
-              const isCenter = offset === 0;
-              const isRight = offset === 1 && len > 1;
-              const isLeft = offset === len - 1 && len > 2;
-              const visible = isCenter || isRight || isLeft;
-
-              // depth transform per role — all anchored at left:50%/top:50% then
-              // nudged sideways in px so side cards stay clipped inside the stage
-              // (no horizontal page overflow on small screens).
-              let transform = "translate(-50%, -50%) scale(0.6)";
-              let opacity = 0;
-              let blur = "blur(16px)";
-              let z = 0;
-              if (isCenter) {
-                transform = "translate(-50%, -50%) scale(1) rotate(0deg)";
-                opacity = 1;
-                blur = "blur(0px)";
-                z = 3;
-              } else if (isRight) {
-                transform = lowEnd
-                  ? "translate(calc(-50% + 92px), -50%) scale(0.8)"
-                  : "translate(calc(-50% + 116px), -50%) scale(0.8) rotate(8deg)";
-                opacity = lowEnd ? 0.2 : 0.25;
-                blur = lowEnd ? "blur(0px)" : "blur(14px)";
-                z = 1;
-              } else if (isLeft) {
-                transform = lowEnd
-                  ? "translate(calc(-50% - 92px), -50%) scale(0.8)"
-                  : "translate(calc(-50% - 116px), -50%) scale(0.8) rotate(-8deg)";
-                opacity = lowEnd ? 0.2 : 0.25;
-                blur = lowEnd ? "blur(0px)" : "blur(14px)";
-                z = 1;
-              }
-
+              const isCenter = i === index;
 
               return (
                 <Link
@@ -170,16 +134,20 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   params={{ slug: p.slug }}
                   aria-hidden={!isCenter}
                   tabIndex={isCenter ? 0 : -1}
-                  className={`group absolute left-1/2 top-1/2 size-[240px] sm:size-[300px] overflow-hidden rounded-[24px] glass-strong ring-1 ${isCenter ? "ring-white/15 shadow-[var(--shadow-float),0_0_70px_-16px_oklch(0.74_0.19_49/0.6)]" : "ring-white/8 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.8),0_0_50px_-20px_oklch(0.74_0.19_49/0.5)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  className={`group absolute left-1/2 top-1/2 size-[240px] sm:size-[300px] overflow-hidden rounded-[24px] glass-strong ring-1 ring-white/15 shadow-[var(--shadow-float),0_0_70px_-16px_oklch(0.74_0.19_49/0.6)] ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
-                    transform,
-                    opacity,
-                    filter: blur,
-                    zIndex: z,
+                    transform: isCenter
+                      ? "translate(-50%, -50%) scale(1)"
+                      : "translate(-50%, -50%) scale(0.92)",
+                    opacity: isCenter ? 1 : 0,
+                    filter: isCenter || lowEnd ? "blur(0px)" : "blur(8px)",
+                    zIndex: isCenter ? 2 : 1,
                     pointerEvents: isCenter ? "auto" : "none",
-                    visibility: visible ? "visible" : "hidden",
-                    background: isCenter ? palette.background : undefined,
-                    transition: `transform 850ms ${EASE}, opacity 850ms ${EASE}, filter 850ms ${EASE}`,
+                    visibility: isCenter ? "visible" : "hidden",
+                    background: palette.background,
+                    transition: lowEnd
+                      ? "opacity 300ms ease"
+                      : `transform 700ms ${EASE}, opacity 700ms ${EASE}, filter 700ms ${EASE}`,
                     willChange: "transform, opacity, filter",
                   }}
                 >
@@ -192,7 +160,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     width={520}
                     height={520}
                     priority={i === 0}
-                    className="relative z-[1] block size-full object-contain object-center p-[6%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                    className="relative z-[1] block size-full object-contain object-center p-[8%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
               );
