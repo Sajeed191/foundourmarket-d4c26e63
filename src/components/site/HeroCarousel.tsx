@@ -304,15 +304,27 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
                 >
-                  <ProductImage
-                    src={p.image}
-                    alt={isCenter ? p.name : ""}
-                    width={640}
-                    height={640}
-                    priority={i === 0}
-                    sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 60vw"
-                    className="relative z-[1] block size-full rounded-[24px] object-contain object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-                  />
+                  <div
+                    className="relative z-[1] size-full overflow-hidden rounded-[26px]"
+                    style={{
+                      background: isCenter
+                        ? `linear-gradient(160deg, ${ambientSoft}, color-mix(in srgb, ${primary} 30%, transparent))`
+                        : "color-mix(in srgb, oklch(0.2 0.01 262) 60%, transparent)",
+                      boxShadow: isCenter && perf.enableGlow
+                        ? `0 0 0 1px oklch(1 0 0 / 0.06), 0 0 40px -6px oklch(0.74 0.19 49 / 0.55)`
+                        : "0 0 0 1px oklch(1 0 0 / 0.04)",
+                    }}
+                  >
+                    <ProductImage
+                      src={p.image}
+                      alt={isCenter ? p.name : ""}
+                      width={640}
+                      height={640}
+                      priority={i === 0}
+                      sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 60vw"
+                      className="block size-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                    />
+                  </div>
                 </Link>
 
               );
