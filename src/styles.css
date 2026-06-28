@@ -217,6 +217,13 @@
 }
 .animate-scale-in { animation: scale-in 0.18s var(--ease-out-expo) both; }
 
+/* Search overlay panel — premium slide-down from the top */
+@keyframes search-drop {
+  from { opacity: 0; transform: translate(-50%, -18px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+.animate-search-drop { animation: search-drop 0.28s var(--ease-out-expo) both; }
+
 /* Flash-deal flame: gentle infinite pulse (CSS replacement for framer-motion
    so the homepage initial bundle no longer ships the animation runtime). */
 @keyframes flame-pulse {
