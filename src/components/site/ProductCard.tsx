@@ -99,36 +99,37 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
 
 function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
   if (badges.length === 0) return null;
-  const visible = badges.slice(0, 3);
-  const mobileExtra = badges.length - 2;
+  const visible = badges.slice(0, 2);
+  const extra = badges.length - visible.length;
   const pillBase =
-    "inline-flex h-[22px] sm:h-[28px] w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px]";
+    "inline-flex h-[22px] sm:h-[28px] w-full max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] shadow-[0_2px_8px_rgba(0,0,0,0.3)]";
   return (
-    <div className="absolute left-2.5 top-2.5 z-10 flex max-w-[calc(100%-3.25rem)] flex-row flex-nowrap items-start gap-1.5 overflow-hidden sm:max-w-[calc(100%-3.5rem)] sm:flex-col">
-      {visible.map((b, i) => (
+    <div className="absolute left-2.5 top-2.5 z-10 flex w-[42%] max-w-[calc(100%-3.5rem)] flex-col items-start gap-1.5">
+      {visible.map((b) => (
         <span
           key={b.id}
           data-product-badge
-          className={`${pillBase} ${i >= 2 ? "hidden sm:inline-flex" : ""} ${b.className ?? ""}`}
+          className={`${pillBase} ${b.className ?? ""}`}
           style={b.style ?? badgeStyle(b.label)}
         >
           {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
           <span className="truncate">{b.label}</span>
         </span>
       ))}
-      {mobileExtra > 0 && (
+      {extra > 0 && (
         <span
           data-product-badge
-          aria-label={`${mobileExtra} more badge${mobileExtra > 1 ? "s" : ""}`}
-          className={`${pillBase} shrink-0 sm:hidden bg-accent text-accent-foreground`}
+          aria-label={`${extra} more badge${extra > 1 ? "s" : ""}`}
+          className={`${pillBase} justify-center bg-accent text-accent-foreground`}
         >
-          +{mobileExtra}
+          +{extra}
         </span>
       )}
     </div>
   );
 }
 const ProductBadges = memo(ProductBadgesImpl);
+
 
 function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
   const saved = useWishlistSaved(slug);
