@@ -2035,3 +2035,86 @@ html[data-render-safe="true"] [style*="backdrop-filter"] {
 }
 
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   GPU-COMPOSITOR SAFE MODE — data-gpu-unsafe="true"
+   ────────────────────────────────────────────────────────────────────────
+   ROOT CAUSE: Chrome on Mali GPUs (and software/very-old renderers) corrupts
+   compositor tiles when many backdrop-filter + large blur() + mix-blend-mode
+   layers stack — producing black flashes, vanished hero, red/white stripes and
+   flicker. Adreno GPUs (e.g. Realme 5 Pro) composite the same tree correctly,
+   which is exactly why only certain devices fail.
+
+   This block is gated purely on the detected GPU (see boot script). It REPLACES
+   the GPU-heavy effects with visually-equivalent CPU-friendly ones: frosted
+   glass becomes a solid translucent fill (no backdrop-filter), large decorative
+   blur orbs become soft radial gradients, mix-blend/3D/will-change are dropped,
+   and oversized multi-layer glow shadows are trimmed. Images, lazy loading,
+   image quality, layout and 2D transitions are all preserved. */
+
+/* 1. Frosted glass surfaces → solid translucent fills (no backdrop blur). */
+html[data-gpu-unsafe="true"] .glass,
+html[data-gpu-unsafe="true"] .glass-strong,
+html[data-gpu-unsafe="true"] .product-card-glass,
+html[data-gpu-unsafe="true"] .card-outline,
+html[data-gpu-unsafe="true"] .bottom-nav-light,
+html[data-gpu-unsafe="true"] .premium-back-btn,
+html[data-gpu-unsafe="true"] [class*="backdrop-blur"],
+html[data-gpu-unsafe="true"] [style*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-gpu-unsafe="true"] .glass {
+  background: oklch(0.2 0.012 260 / 0.86) !important;
+}
+html[data-gpu-unsafe="true"] .glass-strong {
+  background: oklch(0.2 0.012 260 / 0.9) !important;
+}
+html[data-gpu-unsafe="true"] .product-card-glass {
+  background: linear-gradient(180deg, oklch(0.2 0.012 260 / 0.96), oklch(0.145 0.009 260 / 0.98)) !important;
+}
+html[data-gpu-unsafe="true"] .card-outline {
+  background: oklch(0.18 0.011 260 / 0.92) !important;
+}
+
+/* 2. Kill GPU-pathological compositing triggers across the tree, but KEEP 2D
+      transforms + animations (those composite fine on Mali). We only strip the
+      properties that force extra tiled GPU buffers / blend passes. */
+html[data-gpu-unsafe="true"] *,
+html[data-gpu-unsafe="true"] *::before,
+html[data-gpu-unsafe="true"] *::after {
+  mix-blend-mode: normal !important;
+  will-change: auto !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+/* 3. Flatten 3D rendering contexts (perspective/preserve-3d trigger Mali tile
+      corruption); 2D transforms used by the carousel still work. */
+html[data-gpu-unsafe="true"] [style*="perspective"],
+html[data-gpu-unsafe="true"] [class*="perspective"],
+html[data-gpu-unsafe="true"] [style*="preserve-3d"] {
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+/* 4. Large decorative blur orbs → cheap soft radial gradients (no filter:blur).
+      filter:blur(80px) on a full-bleed element is the single most expensive GPU
+      layer on these devices. */
+html[data-gpu-unsafe="true"] .orb {
+  filter: none !important;
+  opacity: 0.22 !important;
+  background: radial-gradient(circle at center, currentColor 0%, transparent 70%) !important;
+}
+
+/* 5. Trim oversized multi-layer glow shadows that force big offscreen GPU
+      buffers — keep a single tight shadow for depth. */
+html[data-gpu-unsafe="true"] .product-card-glass,
+html[data-gpu-unsafe="true"] .product-card-glass:hover,
+html[data-gpu-unsafe="true"] .product-card-glass:active,
+html[data-gpu-unsafe="true"] .card-premium:hover,
+html[data-gpu-unsafe="true"] .card-elevated:hover {
+  box-shadow: 0 8px 24px -12px oklch(0 0 0 / 0.6) !important;
+}
