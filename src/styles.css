@@ -1016,6 +1016,48 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
   backface-visibility: visible;
 }
 
+/* ===== Android / low-end ghost-text & artifact mitigation =====
+   Android Chrome / WebView / Samsung Internet share a compositor bug where
+   `content-visibility: auto` (and promoted `will-change` layers) fail to
+   invalidate during fast fling-scroll, leaving duplicated/ghosted product
+   titles, prices and badges. On these devices the product grid already mounts
+   only a limited set of cards (incremental rendering), so content-visibility is
+   redundant here — disabling it removes the ghosting with no perf loss and no
+   visual change. We also release persistent compositor layers and force each
+   card onto its own clean, painted layer so text can never smear across cards. */
+html[data-android="true"] [data-product-card-frame],
+html[data-android="true"] .cv-auto,
+html[data-low-end="true"] [data-product-card-frame],
+html[data-low-end="true"] .cv-auto {
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+}
+
+/* Release always-on compositor layers that hold stale paint on low-end GPUs. */
+html[data-low-end="true"] [style*="will-change"],
+html[data-low-end="true"] .search-cta,
+html[data-low-end="true"] .view-product-cta,
+html[data-low-end="true"] .feature-card,
+html[data-android="true"] .search-cta,
+html[data-android="true"] .view-product-cta,
+html[data-android="true"] .feature-card {
+  will-change: auto !important;
+}
+
+/* Give every product card a self-contained paint context so neighbouring cards
+   can never paint over one another (the root of overlapping/ghosted text).
+   Paint containment clips each card to its own box WITHOUT promoting it to a
+   GPU layer — avoiding the Android layer-invalidation bug that translateZ would
+   reintroduce. */
+html[data-android="true"] [data-product-card-frame],
+html[data-low-end="true"] [data-product-card-frame] {
+  contain: layout paint style;
+  isolation: isolate;
+}
+
+
+
+
 @media (prefers-reduced-motion: reduce) {
   [data-product-image],
   [data-product-card] *,
