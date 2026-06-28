@@ -512,7 +512,7 @@ function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 120)}
                 placeholder={rotatingPlaceholder}
                 aria-label="Search products"
                 className="w-full h-14 sm:h-16 bg-transparent rounded-full pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-base sm:text-[17px] font-medium tracking-[-0.01em] focus:outline-none placeholder:font-medium placeholder:text-muted-foreground/65 placeholder:tracking-[-0.01em]"
