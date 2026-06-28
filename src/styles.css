@@ -1032,7 +1032,51 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 }
 
 
-/* Floating support orb hide/show on scroll direction */
+/* ===== Runtime graceful degradation =====
+   Activated on <html data-degrade-effects="true"> by the live capability
+   governor (src/lib/runtime-capability.ts) ONLY when measured FPS stays below
+   ~45 or long tasks pile up. Unlike low-end Safe Mode, this is performance-
+   driven and intentionally MINIMAL: it drops the most expensive GPU effects
+   (blur / backdrop-filter, multi-layer glow shadows, decorative particles, and
+   heavy 3D perspective) while KEEPING images, hero animations and normal
+   transitions fully visible. This lets capable 4–6GB Android phones start with
+   the full premium experience and only shed cost if real jank is detected. */
+html[data-degrade-effects="true"] *,
+html[data-degrade-effects="true"] *::before,
+html[data-degrade-effects="true"] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* Heavy blur filters → cheap or none (keep simple non-blur filters intact). */
+html[data-degrade-effects="true"] [class*="backdrop-blur"],
+html[data-degrade-effects="true"] [style*="backdrop-filter"],
+html[data-degrade-effects="true"] [style*="backdropFilter"] {
+  background-color: color-mix(in srgb, var(--color-background) 92%, black) !important;
+}
+/* Collapse multi-layer glow shadows to one cheap soft shadow. */
+html[data-degrade-effects="true"] .glass,
+html[data-degrade-effects="true"] .glass-strong,
+html[data-degrade-effects="true"] .product-card-glass,
+html[data-degrade-effects="true"] .card-premium,
+html[data-degrade-effects="true"] .card-elevated,
+html[data-degrade-effects="true"] .card-ambient,
+html[data-degrade-effects="true"] .card-outline {
+  box-shadow: var(--shadow-soft) !important;
+}
+/* Hide purely decorative floating glow / orb / particle layers. */
+html[data-degrade-effects="true"] [data-decorative],
+html[data-degrade-effects="true"] .orb,
+html[data-degrade-effects="true"] [data-parallax] {
+  display: none !important;
+}
+/* Flatten heavy 3D perspective contexts (keep 2D transforms/animations). */
+html[data-degrade-effects="true"] [style*="perspective"],
+html[data-degrade-effects="true"] [class*="perspective"] {
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+
 .orb-hidden { animation: none !important; transform: translateY(160%); opacity: 0; pointer-events: none; }
 
 /* ===== Mobile performance overrides =====
