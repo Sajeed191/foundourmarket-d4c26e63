@@ -470,6 +470,7 @@ function RootComponent() {
   const isCheckoutRoute = pathname.startsWith("/checkout");
   const isAccountHomeRoute = pathname === "/account";
   const isSearchRoute = pathname === "/search";
+  const isHomeRoute = pathname === "/";
   // Dedicated full-page support conversation owns the entire screen (its own
   // header + composer with safe-area handling). Suppress all site chrome.
   const isTicketRoute = /^\/account\/support\/(ticket\/|new)/.test(pathname);
@@ -498,7 +499,7 @@ function RootComponent() {
                               className={
                                 hideSiteChrome
                                   ? "flex-1"
-                                  : isAccountHomeRoute || isSearchRoute
+                                  : isAccountHomeRoute || isSearchRoute || isHomeRoute
                                     ? "flex-1 account-footer-gapless md:pb-0"
                                     : "flex-1 mobile-page-clearance md:pb-0"
                               }
