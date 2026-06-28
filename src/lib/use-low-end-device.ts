@@ -166,7 +166,9 @@ export function useIsAndroid(): boolean {
 }
 
 export function useUltraLowEndAndroid(): boolean {
-  const [ultra, setUltra] = useState(detectUltraLowEndAndroid);
+  // SSR-consistent baseline; see useLowEndDevice for why the initializer must
+  // not read detection (hydration mismatch -> full client regeneration).
+  const [ultra, setUltra] = useState(false);
   useEffect(() => {
     setUltra(detectUltraLowEndAndroid());
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
