@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { detectAndroidGpuSafeMode } from "@/lib/use-low-end-device";
+import { detectAndroidGpuSafeMode, detectRenderSafe } from "@/lib/use-low-end-device";
 
 /**
  * Defers mounting of its children until the placeholder scrolls near the
