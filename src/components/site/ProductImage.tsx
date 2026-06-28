@@ -309,7 +309,7 @@ function ProductImageImpl({
     <img
       key={`${resolvedSrc}|${width}x${height}`}
       ref={imgRef}
-      src={androidGpuSafeMode ? TRANSPARENT_PIXEL : resolvedSrc}
+      src={resolvedSrc}
       srcSet={srcset}
       sizes={srcset ? sizes : undefined}
       alt={alt}
