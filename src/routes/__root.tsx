@@ -291,6 +291,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "(function(){var d=document.documentElement;var ua='';var a=false;var wv=false;try{ua=navigator.userAgent||'';a=/Android/i.test(ua);wv=a&&(/; wv\\)/i.test(ua)||/\\bwv\\b/i.test(ua));var c=navigator.hardwareConcurrency||0;var conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;var s=!!(conn&&conn.saveData);var r=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);var low=r||s||(c>0&&c<=2);var gpuSafe=a&&(s||r||(c>0&&c<=2));d.setAttribute('data-android',a?'true':'false');d.setAttribute('data-android-webview',wv?'true':'false');d.setAttribute('data-android-chrome',(a&&!wv&&/Chrome/i.test(ua))?'true':'false');d.setAttribute('data-low-end',low?'true':'false');d.setAttribute('data-android-gpu-safe-mode',gpuSafe?'true':'false');var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');}catch(x){try{ua=ua||(navigator.userAgent||'');a=/Android/i.test(ua);wv=a&&(/; wv\\)/i.test(ua)||/\\bwv\\b/i.test(ua));d.setAttribute('data-android',a?'true':'false');d.setAttribute('data-android-webview',wv?'true':'false');d.setAttribute('data-android-chrome',(a&&!wv&&/Chrome/i.test(ua))?'true':'false');d.setAttribute('data-low-end','false');d.setAttribute('data-android-gpu-safe-mode','false');}catch(y){}d.setAttribute('data-theme','dark');d.classList.add('dark');}})();",
       },
       {
+        // GPU-compositor safety gate (root cause of the Android corruption).
+        // Reads the unmasked WebGL renderer synchronously before first paint and
+        // flags GPUs whose Chrome drivers corrupt compositor tiles when many
+        // backdrop-filter / large blur / mix-blend layers stack: Mali (Redmi
+        // 14C / Oppo F9 / Narzo 20 all fail), plus software/very-old renderers.
+        // Adreno (e.g. Realme 5 Pro = Adreno 616) stays full-fat. This is
+        // feature/GPU detection — NOT RAM-based. CSS keyed on data-gpu-unsafe
+        // swaps GPU-heavy effects for CPU-friendly equivalents while keeping
+        // images, lazy loading and the premium dark look intact.
+        children:
+          "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}try{var r=rd();var rl=r.toLowerCase();var unsafe=/mali/.test(rl)||/swiftshader|software|llvmpipe/.test(rl)||/powervr sgx/.test(rl)||/videocore/.test(rl);d.setAttribute('data-gpu-renderer',r||'unknown');d.setAttribute('data-gpu-unsafe',unsafe?'true':'false');}catch(y){d.setAttribute('data-gpu-unsafe','false');}})();",
+      },
+      {
+        // ?gpudebug=1 — console rendering diagnostics. Logs GPU renderer, approx
+        // compositor layer count, active CSS/backdrop filters, mix-blend count,
+        // FPS, long tasks, paint count and layout shifts. Zero cost otherwise.
+        children:
+          "(function(){try{if(new URLSearchParams(location.search).get('gpudebug')!=='1')return;var d=document.documentElement;var st={fps:0,longTasks:0,longTaskMax:0,paints:0,shifts:0};try{new PerformanceObserver(function(l){for(var e of l.getEntries()){st.longTasks++;if(e.duration>st.longTaskMax)st.longTaskMax=Math.round(e.duration);}}).observe({entryTypes:['longtask']});}catch(e){}try{new PerformanceObserver(function(l){st.paints+=l.getEntries().length;}).observe({entryTypes:['paint']});}catch(e){}try{new PerformanceObserver(function(l){st.shifts+=l.getEntries().length;}).observe({entryTypes:['layout-shift']});}catch(e){}var f=0,last=performance.now();(function tick(){f++;var n=performance.now();if(n-last>=1000){st.fps=Math.round(f*1000/(n-last));f=0;last=n;}requestAnimationFrame(tick);})();function scan(){var els=document.querySelectorAll('*');var lim=Math.min(els.length,4000);var layers=0,filters=0,backdrops=0,blends=0;for(var i=0;i<lim;i++){var cs;try{cs=getComputedStyle(els[i]);}catch(e){continue;}var fl=cs.filter,bf=cs.backdropFilter||cs.webkitBackdropFilter,tf=cs.transform,wc=cs.willChange,mb=cs.mixBlendMode;if(fl&&fl!=='none')filters++;if(bf&&bf!=='none')backdrops++;if(mb&&mb!=='normal')blends++;if((fl&&fl!=='none')||(bf&&bf!=='none')||(tf&&tf!=='none')||(wc&&wc!=='auto')||(mb&&mb!=='normal'))layers++;}return{gpuRenderer:d.getAttribute('data-gpu-renderer'),gpuUnsafe:d.getAttribute('data-gpu-unsafe'),compositorLayers:layers,cssFilters:filters,backdropFilters:backdrops,mixBlend:blends,fps:st.fps,longTasks:st.longTasks,longTaskMaxMs:st.longTaskMax,paints:st.paints,layoutShifts:st.shifts};}function log(){console.log('%c[gpudebug]','color:#f80;font-weight:bold',scan());}setTimeout(log,1200);setInterval(log,3000);window.__gpudebug=scan;}catch(e){}})();",
+      },
+      {
         // Diagnostic render=safe kill-switch: set data-render-safe before CSS
         // paint when ?render=safe is present so the global CSS strips every
         // compositor-triggering feature on the very first frame.
