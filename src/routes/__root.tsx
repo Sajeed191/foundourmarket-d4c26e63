@@ -355,6 +355,7 @@ function DeferredShell({
 }) {
   const [ready, setReady] = useState(false);
   const isAndroid = useIsAndroid();
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
   useEffect(() => {
     const ric = (
       window as unknown as {
@@ -373,7 +374,7 @@ function DeferredShell({
     return () => clearTimeout(t);
   }, []);
 
-  if (!ready) return null;
+  if (!ready || ultraLowEndAndroid) return null;
 
   if (isAndroid) {
     return (
@@ -457,6 +458,7 @@ function RootComponent() {
 
   const lowEnd = useLowEndDevice();
   const isAndroid = useIsAndroid();
+  const ultraLowEndAndroid = useUltraLowEndAndroid();
 
   useEffect(() => {
     installStartupDiagnostics();
@@ -482,14 +484,16 @@ function RootComponent() {
       const androidWebView = detectAndroidWebView();
       document.documentElement.dataset.androidWebview = androidWebView ? "true" : "false";
       document.documentElement.dataset.androidChrome = isAndroid && !androidWebView && /Chrome/i.test(ua) ? "true" : "false";
+      document.documentElement.dataset.ultraLowEnd = ultraLowEndAndroid ? "true" : "false";
       logDiagnostic("device-flags", {
         lowEnd,
         isAndroid,
+        ultraLowEndAndroid,
         androidWebView,
         androidChrome: isAndroid && !androidWebView && /Chrome/i.test(ua),
       });
     }
-  }, [lowEnd, isAndroid]);
+  }, [lowEnd, isAndroid, ultraLowEndAndroid]);
   useEffect(() => {
     startPerfMonitoring();
   }, []);
