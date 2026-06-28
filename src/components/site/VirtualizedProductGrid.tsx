@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { detectRenderSafe } from "@/lib/use-low-end-device";
 
 type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number };
 
@@ -110,7 +111,8 @@ export function VirtualizedProductGrid<T>({
   className,
   virtualizeThreshold = 32,
 }: Props<T>) {
-  const big = items.length > virtualizeThreshold;
+  // Diagnostic render=safe: never virtualize — render every item in plain flow.
+  const big = !detectRenderSafe() && items.length > virtualizeThreshold;
   const stableKey = getKey ?? ((item: T) => {
     const candidate = item as { id?: string | null; slug?: string | null };
     const key = candidate.id || candidate.slug;

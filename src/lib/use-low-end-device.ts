@@ -48,6 +48,37 @@ export function detectLowEndDevice(): boolean {
   return detect();
 }
 
+/**
+ * Diagnostic "render=safe" mode.
+ *
+ * Activated by the `?render=safe` query parameter (or the `data-render-safe`
+ * attribute the inline boot script sets from it). It renders the simplest
+ * possible HTML + <img> page with NO compositor-triggering features at all:
+ * no animations/transforms/filters/backdrop-filters/transitions, no
+ * contain/content-visibility/will-change, no lazy loading, no virtualization,
+ * no service worker, no image-decode/createImageBitmap/canvas/WebGL paths,
+ * eager <img loading="eager" decoding="sync"> using only `src` (no srcset).
+ *
+ * If corruption still appears in this mode, the cause is outside the app
+ * (Chrome's compositor or the device GPU driver).
+ */
+let renderSafeCached: boolean | null = null;
+export function detectRenderSafe(): boolean {
+  if (renderSafeCached !== null) return renderSafeCached;
+  if (typeof window === "undefined") return false;
+  let value = false;
+  try {
+    value = new URLSearchParams(window.location.search).get("render") === "safe";
+  } catch {
+    value = false;
+  }
+  if (!value && typeof document !== "undefined") {
+    value = document.documentElement.getAttribute("data-render-safe") === "true";
+  }
+  renderSafeCached = value;
+  return value;
+}
+
 function detect(): boolean {
   if (typeof navigator === "undefined") return false;
   const flagged = domFlag("lowEnd");
