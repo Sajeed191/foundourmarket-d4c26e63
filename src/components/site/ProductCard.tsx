@@ -287,7 +287,6 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         >
           <ProductBadges badges={badges} />
           <WishlistButton slug={product.slug} name={product.name} />
-          <QuickViewButton name={product.name} onOpen={openQuickView} />
         </AdaptiveProductMedia>
       </Link>
 
