@@ -96,7 +96,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
       </div>
 
 
-      <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-0 pt-6 sm:pt-9">
         {/* badge */}
         <span
           className="inline-flex h-8 items-center gap-1.5 rounded-full glass-strong px-3.5 text-[10px] font-mono uppercase tracking-[0.22em] text-foreground ring-1 ring-accent/40 animate-fade-in"
