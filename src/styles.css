@@ -953,15 +953,10 @@ html[data-low-end="true"] *::after {
   background-attachment: scroll !important;
   scroll-behavior: auto !important;
   filter: none !important;
-  -webkit-filter: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   mix-blend-mode: normal !important;
   clip-path: none !important;
-  -webkit-clip-path: none !important;
   mask: none !important;
-  -webkit-mask: none !important;
-  -webkit-mask-image: none !important;
   mask-image: none !important;
   box-shadow: none !important;
   text-shadow: none !important;
@@ -974,12 +969,9 @@ html[data-low-end="true"] *::before,
 html[data-low-end="true"] *::after {
   transform: none !important;
   perspective: none !important;
-  -webkit-perspective: none !important;
   transform-style: flat !important;
-  -webkit-transform-style: flat !important;
   will-change: auto !important;
   backface-visibility: visible !important;
-  -webkit-backface-visibility: visible !important;
   content-visibility: visible !important;
   contain: none !important;
   isolation: auto !important;
@@ -1031,7 +1023,6 @@ html[data-low-end="true"] [style*="backdropFilter"],
 html[data-low-end="true"] [style*="backdrop-filter"] {
   background-color: color-mix(in srgb, var(--color-background) 94%, black) !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 /* 6. Neutralise hover/transform flourishes that thrash the compositor. */
@@ -1742,4 +1733,81 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
 @media (min-width: 1025px) {
   /* Desktop (>=1025px): center ~35-45% of carousel width, all sides visible */
   .hero-stage { --card: clamp(320px, 34vw, 432px); }
+}
+
+/* =====================================================================
+   ULTRA LOW-END ANDROID MODE — final compositor kill-switch
+   Activated only on Android devices that report <=4GB RAM, <=4 cores,
+   unknown memory on Android, or reduced motion. This block is intentionally
+   last so later component styles cannot reintroduce compositor layers.
+   Normal desktop/iOS/capable Android devices are untouched.
+   ===================================================================== */
+html[data-ultra-low-end="true"],
+html[data-ultra-low-end="true"] body {
+  background-attachment: scroll !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-ultra-low-end="true"] *,
+html[data-ultra-low-end="true"] *::before,
+html[data-ultra-low-end="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+  backface-visibility: visible !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+  clip-path: none !important;
+  mask: none !important;
+  mask-image: none !important;
+  will-change: auto !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  isolation: auto !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-ultra-low-end="true"] [data-decorative],
+html[data-ultra-low-end="true"] .orb,
+html[data-ultra-low-end="true"] [data-parallax],
+html[data-ultra-low-end="true"] [aria-hidden="true"][class*="blur-"],
+html[data-ultra-low-end="true"] [aria-hidden="true"][style*="blur("],
+html[data-ultra-low-end="true"] .search-cta__shimmer::after,
+html[data-ultra-low-end="true"] .search-cta__ripple,
+html[data-ultra-low-end="true"] .view-product-cta__shine::after,
+html[data-ultra-low-end="true"] .cta-sweep::after,
+html[data-ultra-low-end="true"] .border-glow::before {
+  display: none !important;
+}
+
+html[data-ultra-low-end="true"] .glass,
+html[data-ultra-low-end="true"] .glass-strong,
+html[data-ultra-low-end="true"] .product-card-glass,
+html[data-ultra-low-end="true"] .card-premium,
+html[data-ultra-low-end="true"] .card-elevated,
+html[data-ultra-low-end="true"] .card-ambient,
+html[data-ultra-low-end="true"] .card-outline,
+html[data-ultra-low-end="true"] .feature-card,
+html[data-ultra-low-end="true"] .search-cta,
+html[data-ultra-low-end="true"] .view-product-cta,
+html[data-ultra-low-end="true"] .bottom-nav-light,
+html[data-ultra-low-end="true"] .premium-back-btn,
+html[data-ultra-low-end="true"] [data-app-header] nav,
+html[data-ultra-low-end="true"] [data-product-card] {
+  background-image: none !important;
+  background-color: color-mix(in srgb, var(--color-background) 94%, black) !important;
+  border-color: color-mix(in srgb, var(--color-accent) 18%, transparent) !important;
+}
+
+html[data-ultra-low-end="true"] [data-product-media],
+html[data-ultra-low-end="true"] [data-product-image] {
+  background: #ffffff !important;
 }
