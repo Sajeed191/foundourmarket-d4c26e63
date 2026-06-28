@@ -155,16 +155,16 @@ export function BadgeEngineProvider({ children }: { children: ReactNode }) {
   const flashSeed = flashWindowSeed(now) + nonce;
   const daySeed = dayWindowSeed(now);
 
-  const activeFlashSlugs = useMemo(
-    () => selectActiveFlashSlugs(products, flashSeed),
-    [products, flashSeed],
-  );
+  const { activeFlashSlugs, flashBadgeBySlug } = useMemo(() => {
+    const sel = selectActiveFlash(products, flashSeed, settings);
+    return { activeFlashSlugs: sel.slugs, flashBadgeBySlug: sel.badgeBySlug };
+  }, [products, flashSeed, settings]);
 
   // Memoize by the stable inputs so the context identity only changes when a
   // rotation window actually crosses or admin rules change — not every minute.
   const value = useMemo<BadgeEngineValue>(
-    () => ({ activeFlashSlugs, daySeed, settings }),
-    [activeFlashSlugs, daySeed, settings],
+    () => ({ activeFlashSlugs, flashBadgeBySlug, daySeed, settings }),
+    [activeFlashSlugs, flashBadgeBySlug, daySeed, settings],
   );
 
   return <BadgeEngineContext.Provider value={value}>{children}</BadgeEngineContext.Provider>;
