@@ -254,7 +254,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
               // Equal-spacing queue: cumulative center-to-center distance based
               // on adjacent card sizes so gaps stay even as cards shrink.
-              const GAP = isMobile ? 0.56 : 0.66;
+              const GAP = isMobile ? 0.46 : 0.54;
               let units = 0;
               for (let k = 1; k <= di; k++) {
                 units += ((SCALE[Math.min(k - 1, last)] + SCALE[Math.min(k, last)]) / 2) * GAP;
