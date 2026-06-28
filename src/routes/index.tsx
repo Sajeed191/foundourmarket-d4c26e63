@@ -398,6 +398,18 @@ function Home() {
   const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
+  const goSearch = (q: string) => {
+    setSearching(true);
+    nav({ to: "/search", search: { q } });
+  };
+
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return POPULAR_SEARCHES;
+    return POPULAR_SEARCHES.filter((s) => s.toLowerCase().includes(q));
+  }, [query]);
+
+
   const categoryCounts = useMemo(
     () => products.reduce<Record<string, number>>((acc, p) => {
       acc[p.category] = (acc[p.category] ?? 0) + 1;
