@@ -34,7 +34,8 @@ export function SearchButton({ loading = false }: Props) {
       aria-busy={loading}
       disabled={loading}
       onPointerDown={spawnRipple}
-      className={`search-cta group absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-11 items-center justify-center gap-1.5 rounded-full text-[13px] font-semibold tracking-wide text-white outline-none transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.03] active:scale-[0.98] disabled:cursor-default ${loading ? "search-cta--loading w-11 px-0" : "min-w-[120px] px-5"}`}
+      className={`search-cta group absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 inline-flex h-10 sm:h-12 items-center justify-center gap-1.5 rounded-full text-[13px] sm:text-sm font-semibold tracking-wide text-white outline-none transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.03] active:scale-[0.97] disabled:cursor-default ${loading ? "search-cta--loading w-10 sm:w-12 px-0" : "min-w-[108px] sm:min-w-[124px] px-5 sm:px-6"}`}
+
     >
       {/* glossy top highlight */}
       <span aria-hidden className="search-cta__gloss pointer-events-none absolute inset-x-1 top-[2px] h-1/2 rounded-full" />
