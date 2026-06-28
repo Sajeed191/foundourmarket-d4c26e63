@@ -389,8 +389,10 @@ function GuidedRunner({ runner, diag }: { runner: RunnerState; diag: Diagnostics
 }
 
 
+function Verdict({ log }: { log: BisectObservation[] }) {
   // Re-evaluate against the live log so the verdict updates as you record.
   void log;
+
   const confirmed = evaluateBisect().filter((e) => e.confirmedRootCause);
   if (confirmed.length === 0) {
     return (
