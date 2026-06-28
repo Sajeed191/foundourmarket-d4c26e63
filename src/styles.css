@@ -984,7 +984,11 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
 }
 
 .product-card-shell {
-  contain: layout style;
+  /* Paint containment isolates each card's paint to its own box (the shell
+     already clips with overflow:hidden), so neighbouring cards can never bleed
+     or smear text into one another during fast scroll. Applied on every device
+     — it carries no GPU-layer cost and fixes the artifact at its source. */
+  contain: layout paint style;
   isolation: isolate;
 }
 
