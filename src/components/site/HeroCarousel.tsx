@@ -98,18 +98,15 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   // Visible products + effect strength scale with the device tier so low-end
   // Android phones stay at 60 FPS while high-end devices get the full show.
   const perf = useMemo(() => {
-    // Cards per side: high 4/3, mid 3/2, low 2/1 (desktop/mobile).
-    const sideByTier: Record<string, [number, number]> = {
-      high: [4, 3],
-      mid: [3, 2],
-      low: [2, 1],
-    };
-    const maxDepth = sideByTier[tier][isMobile ? 1 : 0];
-    const blurScale = tier === "high" ? 1 : tier === "mid" ? 0.6 : 0.25;
+    // Card COUNT is fixed per spec — always 7 on mobile (3/side) and 9 on
+    // desktop (4/side), regardless of device tier, so the queue never collapses
+    // to only 3 products. Tier only scales effect *intensity* for performance.
+    const maxDepth = isMobile ? 3 : 4;
+    const blurScale = tier === "high" ? 1 : tier === "mid" ? 0.7 : 0.4;
     return {
       maxDepth,
       blurScale,
-      enableGlow: tier === "high",
+      enableGlow: tier !== "low",
     };
   }, [tier, isMobile]);
 
@@ -192,7 +189,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         <div
           ref={stageRef}
           className="hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none [perspective:1600px]"
-          style={{ ["--card" as string]: "clamp(104px, 40vw, 248px)", height: "calc(var(--card) + 56px)" }}
+          style={{ ["--card" as string]: "clamp(88px, 32vw, 232px)", height: "calc(var(--card) + 56px)" }}
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -245,7 +242,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
               // Equal-spacing queue: each step is a fixed fraction of card width
               // so cards form an evenly-spaced line, not a stack.
-              const STEP = 0.62;
+              const STEP = isMobile ? 0.5 : 0.62;
               const xUnits = sign * di * STEP;
 
               // Progressive depth falloff.
@@ -299,7 +296,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     width={560}
                     height={560}
                     priority={i === 0}
-                    sizes="(min-width: 640px) 248px, 40vw"
+                    sizes="(min-width: 640px) 232px, 32vw"
                     className="relative z-[1] block size-full object-contain object-center p-[7%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                   />
                 </Link>
