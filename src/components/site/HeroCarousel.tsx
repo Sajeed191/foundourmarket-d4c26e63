@@ -220,19 +220,40 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           </div>
         )}
 
-        {/* dots */}
+        {/* dots — active dot fills with a liquid-style progress */}
         {items.length > 1 && (
-          <div className="mt-3 flex items-center justify-center gap-1.5">
-            {items.map((p, i) => (
-              <button
-                key={p.id}
-                aria-label={`Show product ${i + 1}`}
-                onClick={() => setIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-5 bg-accent shadow-[0_0_10px_-2px_oklch(0.74_0.19_49/0.8)]" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
-              />
-            ))}
+          <div className="mt-3 flex items-center justify-center gap-1.5" role="tablist" aria-label="Product slides">
+            {items.map((p, i) => {
+              const isActive = i === index;
+              return (
+                <button
+                  key={p.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Show product ${i + 1}`}
+                  onClick={() => setIndex(i)}
+                  className={`relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300 ${isActive ? "w-6 bg-white/20" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
+                >
+                  {isActive && !lowEnd && (
+                    <span
+                      key={index}
+                      aria-hidden
+                      className="absolute inset-y-0 left-0 rounded-full bg-accent"
+                      style={{
+                        animation: `dot-fill ${ROTATE_MS}ms linear forwards`,
+                        boxShadow: "0 0 10px -2px oklch(0.74 0.19 49 / 0.8)",
+                      }}
+                    />
+                  )}
+                  {isActive && lowEnd && (
+                    <span aria-hidden className="absolute inset-0 rounded-full bg-accent" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
+
       </div>
 
       {/* search + chips slot */}

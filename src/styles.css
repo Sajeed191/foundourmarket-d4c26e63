@@ -258,6 +258,14 @@
 }
 .animate-float-slow { animation: float-slow 9s ease-in-out infinite; }
 
+/* Liquid-style progress fill for the active showcase pagination dot */
+@keyframes dot-fill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+
+
 html[data-low-end="true"] .animate-glow-breathe,
 html[data-low-end="true"] .animate-float-slow { animation: none; }
 
