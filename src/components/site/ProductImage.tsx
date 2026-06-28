@@ -44,41 +44,7 @@ function detectImgTestStatic(): boolean {
   return value;
 }
 
-function enqueueSafeImageDecode(
-  img: HTMLImageElement,
-  src: string,
-  onDone?: () => void,
-  options?: { loading?: "eager" | "lazy"; decoding?: "async" | "sync" },
-) {
-  let cancelled = false;
-  let started = false;
 
-  safeDecodeChain = safeDecodeChain
-    .catch(() => undefined)
-    .then(async () => {
-      if (cancelled || !img.isConnected) return;
-      started = true;
-      img.loading = options?.loading ?? "lazy";
-      img.decoding = options?.decoding ?? "async";
-      img.fetchPriority = "low";
-      img.src = src;
-      try {
-        if (typeof img.decode === "function") await img.decode();
-      } catch {
-        // Decoding may reject when Chrome evicts/cancels the request. The image
-        // element remains valid and the browser can still paint it after load.
-      }
-      if (!cancelled && img.isConnected) onDone?.();
-    });
-
-  return () => {
-    cancelled = true;
-    // A queued-but-not-started image has no network/texture work yet. Once an
-    // image has begun decoding, avoid src churn because Mali/MediaTek Chrome is
-    // exactly where rapid texture teardown causes black/colored rectangles.
-    if (!started && img.isConnected) img.src = TRANSPARENT_PIXEL;
-  };
-}
 
 /**
  * Stable, keyed product image.
