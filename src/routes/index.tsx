@@ -3,7 +3,7 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import {
   Search, ArrowRight, Star, Sparkles, Award, Package, Globe2, Flame,
-  BadgeCheck, Pencil, Truck, ShieldCheck, TrendingUp,
+  BadgeCheck, Pencil, Truck, ShieldCheck, TrendingUp, Zap, Gift,
   Sofa, UtensilsCrossed, Gamepad2, Cpu, ToyBrick, PawPrint, Car, Shirt, Dumbbell,
   Watch, Headphones, Gem, Baby, Wrench, BookOpen,
 } from "lucide-react";
