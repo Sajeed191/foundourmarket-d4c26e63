@@ -1,12 +1,14 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { Flame, ArrowRight, Sparkles } from "lucide-react";
+import { Flame, ArrowRight, Sparkles, Heart, Eye } from "lucide-react";
 
 import { Price } from "@/components/site/Price";
+import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { trackFlashDealEvent } from "@/lib/flash-deal-analytics";
 import { useProductAdminEditing } from "@/lib/admin-overlay";
 import { useRegion } from "@/lib/region";
+import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { useHomepageSections, toggleHomepageSection } from "@/lib/use-homepage-sections";
 import type { Product } from "@/lib/products";
