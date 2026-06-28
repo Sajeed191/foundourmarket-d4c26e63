@@ -242,7 +242,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
               // Equal-spacing queue: each step is a fixed fraction of card width
               // so cards form an evenly-spaced line, not a stack.
-              const STEP = 0.62;
+              const STEP = isMobile ? 0.5 : 0.62;
               const xUnits = sign * di * STEP;
 
               // Progressive depth falloff.
