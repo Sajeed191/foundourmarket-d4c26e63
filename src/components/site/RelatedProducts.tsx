@@ -81,7 +81,7 @@ export function RelatedProducts({
       <div
         ref={scrollerRef}
         data-product-grid
-        className="flex gap-3 sm:gap-3.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
+        className="flex items-start gap-3 sm:gap-3.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
         style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
       >
         {items.map((p) => (
