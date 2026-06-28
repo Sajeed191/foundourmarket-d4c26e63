@@ -10,6 +10,7 @@ import {
   getAllFlags,
   getBisectOverrideEnabled,
   getBisectLog,
+  RUNNER_STEPS,
   getRunnerState,
   isDebugEnabled,
   recordBisectObservation,
@@ -355,7 +356,7 @@ function GuidedRunner({ runner, diag }: { runner: RunnerState; diag: Diagnostics
   return (
     <div style={{ marginBottom: 10, border: "1px solid #f97316", borderRadius: 8, padding: 10 }}>
       <div style={{ color: "#f97316", fontWeight: 800, marginBottom: 2 }}>
-        Guided runner · {index + 1}/{RUNNER_TOTAL}
+        Guided runner · {index + 1}/{RUNNER_STEPS.length}
       </div>
       <div style={{ color: "#fff", fontWeight: 700 }}>{step?.label}</div>
       {step?.combo && (
