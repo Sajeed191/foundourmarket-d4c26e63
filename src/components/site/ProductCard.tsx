@@ -87,19 +87,31 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
 function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
   if (badges.length === 0) return null;
   const visible = badges.slice(0, 3);
+  const mobileExtra = badges.length - 2;
+  const pillBase =
+    "inline-flex h-[22px] sm:h-[28px] w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px]";
   return (
     <div className="absolute left-2.5 top-2.5 z-10 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1.5 overflow-hidden">
-      {visible.map((b) => (
+      {visible.map((b, i) => (
         <span
           key={b.id}
           data-product-badge
-          className={`inline-flex h-[18px] sm:h-[28px] w-fit min-w-0 max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 text-[8px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] ${b.className ?? ""}`}
+          className={`${pillBase} ${i >= 2 ? "hidden sm:inline-flex" : ""} ${b.className ?? ""}`}
           style={b.style ?? badgeStyle(b.label)}
         >
           {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
           <span className="truncate">{b.label}</span>
         </span>
       ))}
+      {mobileExtra > 0 && (
+        <span
+          data-product-badge
+          aria-label={`${mobileExtra} more badge${mobileExtra > 1 ? "s" : ""}`}
+          className={`${pillBase} sm:hidden bg-accent text-accent-foreground`}
+        >
+          +{mobileExtra}
+        </span>
+      )}
     </div>
   );
 }
