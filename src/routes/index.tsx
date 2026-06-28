@@ -573,6 +573,8 @@ function Home() {
           </form>
 
         </HeroCarousel>
+        )}
+
 
       </section>
 
