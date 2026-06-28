@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
+import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
@@ -446,11 +447,10 @@ function Home() {
         {(() => {
           const collage = (trending.length ? trending : bestSellers).slice(0, 4);
           const chips = [
-            { icon: Truck, label: "Free Shipping" },
-            { icon: Zap, label: "Flash Deals" },
-            { icon: ShieldCheck, label: "Secure Payments" },
-            { icon: Star, label: "Trusted Sellers" },
-            { icon: Gift, label: "Daily Offers" },
+            { label: "Free Shipping" },
+            { label: "Secure Payments" },
+            { label: "Trusted Sellers" },
+            { label: "Easy Returns" },
           ];
           return (
         <div
@@ -460,7 +460,7 @@ function Home() {
           {/* ── Ambient lighting & atmosphere ── */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
             {/* premium upper-center orange ambient glow — heading focal point */}
-            <div className="absolute left-1/2 -top-[18%] -translate-x-1/2 size-[560px] lg:size-[680px] rounded-full blur-[90px] opacity-70" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.34), oklch(0.74 0.19 49 / 0.10) 45%, transparent 72%)" }} />
+            <div className="absolute left-1/2 -top-[18%] -translate-x-1/2 size-[560px] lg:size-[680px] rounded-full blur-[90px] opacity-70 animate-glow-breathe" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.34), oklch(0.74 0.19 49 / 0.10) 45%, transparent 72%)" }} />
             {/* soft radial gradient that fades into the background behind heading */}
             <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[60%] w-[120%] opacity-60" style={{ background: "radial-gradient(ellipse at 50% 8%, oklch(0.74 0.19 49 / 0.12), transparent 60%)" }} />
             {/* secondary corner glows (softened so top corners feel lighter) */}
@@ -494,7 +494,7 @@ function Home() {
           </div>
 
 
-          <div className="relative z-10 grid gap-6 px-5 pt-3 pb-5 sm:px-8 sm:pt-5 sm:pb-8 lg:grid-cols-2 lg:gap-10 lg:px-12 lg:pt-7 lg:pb-12">
+          <div className="relative z-10 grid gap-8 px-5 pt-8 pb-7 sm:px-8 sm:pt-9 sm:pb-9 lg:grid-cols-2 lg:gap-10 lg:px-12 lg:pt-10 lg:pb-12">
             {/* ── TEXT — headline + CTAs ── */}
             <div className="order-1 lg:col-start-1 lg:row-start-1 self-center text-center lg:text-left">
               <span
@@ -503,67 +503,58 @@ function Home() {
               >
                 <Sparkles className="size-3 text-accent" /> Global Marketplace
               </span>
-              <h2 className="mt-3 font-display font-semibold tracking-tight text-balance text-[clamp(1.85rem,7vw,2.6rem)] lg:text-[clamp(2.6rem,3vw,3.6rem)] leading-[1.04]">
-                Everything you love.
+              <h2 className="mt-5 font-display font-extrabold tracking-tight text-balance text-[clamp(2rem,8vw,2.8rem)] lg:text-[clamp(2.8rem,3.2vw,3.8rem)] leading-[1.03]">
+                Everything Worth Buying.
                 <br />
-                <span className="text-gradient-ember">One marketplace.</span>
+                <span className="text-gradient-ember">Curated</span> for You.
               </h2>
-              <p className="mx-auto lg:mx-0 mt-3 max-w-md text-sm sm:text-base text-muted-foreground text-balance">
-                Curated premium products from trusted sellers worldwide — delivered with cinematic precision.
+              <p className="mx-auto lg:mx-0 mt-[18px] max-w-md text-sm sm:text-base text-muted-foreground text-balance">
+                Premium products from verified sellers worldwide.
+                <br className="hidden sm:block" /> Fast delivery. Secure payments. Trusted quality.
               </p>
-              <div className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3">
                 <Link
                   to="/categories"
-                  className="inline-flex items-center justify-center gap-2 h-12 lg:h-14 px-7 lg:px-9 rounded-full bg-accent text-accent-foreground text-xs lg:text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-ember)] lg:shadow-[0_0_40px_-6px_oklch(0.74_0.19_49/0.6),var(--shadow-ember)]"
+                  className="inline-flex items-center justify-center gap-2 h-14 px-9 rounded-[28px] bg-accent text-accent-foreground text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] shadow-[0_0_44px_-6px_oklch(0.74_0.19_49/0.65),var(--shadow-ember)]"
                 >
                   Shop Now <ArrowRight className="size-4" />
                 </Link>
                 <Link
                   to="/categories"
-                  className="inline-flex items-center justify-center gap-2 h-12 lg:h-14 px-7 lg:px-9 rounded-full glass-strong ring-1 ring-white/15 text-xs lg:text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:ring-accent/40 hover:-translate-y-0.5 hover:text-foreground active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 h-14 px-9 rounded-[28px] glass-strong text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:-translate-y-0.5 hover:text-foreground active:scale-[0.98]"
                 >
-                  Explore Categories
+                  Explore
                 </Link>
               </div>
             </div>
 
-            {/* ── COLLAGE — floating featured products ── */}
-            <div aria-hidden className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 relative min-h-[200px] sm:min-h-[240px] lg:min-h-[400px]">
+            {/* ── SHOWCASE — one featured product, two blurred behind (depth) ── */}
+            <div aria-hidden className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 relative min-h-[230px] sm:min-h-[280px] lg:min-h-[420px] mt-2">
               {/* soft radial halo behind products */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[260px] lg:size-[360px] rounded-full blur-3xl opacity-60" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.22), transparent 70%)" }} />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[280px] lg:size-[400px] rounded-full blur-3xl opacity-70 animate-glow-breathe" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.26), transparent 70%)" }} />
               {collage.length > 0 ? (
-                <div className="relative mx-auto h-full w-full max-w-[420px]">
-                  {collage.map((p, i) => {
-                    const pos = [
-                      "left-[6%] top-[8%] w-[44%] rotate-[-5deg] animate-float-soft",
-                      "right-[4%] top-[2%] w-[40%] rotate-[4deg] animate-float",
-                      "left-[14%] bottom-[6%] w-[40%] rotate-[3deg] animate-float",
-                      "right-[8%] bottom-[10%] w-[46%] rotate-[-3deg] animate-float-soft",
-                    ][i];
-                    const delay = ["-0.5s", "-2.5s", "-1.5s", "-3.5s"][i];
-                    return (
-                      <div
-                        key={p.slug}
-                        className={`absolute ${pos} overflow-hidden rounded-2xl glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float),0_0_60px_-20px_oklch(0.74_0.19_49/0.6)]`}
-                        style={{ animationDelay: delay }}
-                      >
-                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                        <div className="aspect-square bg-white/95 p-0.5">
-                          <img
-                            src={p.image}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            className="size-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="relative mx-auto flex h-full w-full max-w-[420px] items-center justify-center">
+                  {/* back-left blurred card */}
+                  {collage[1] && (
+                    <div className="absolute left-[2%] top-1/2 w-[40%] -translate-y-1/2 -rotate-6 overflow-hidden rounded-[20px] glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] opacity-70 blur-[2px] animate-float-slow" style={{ animationDelay: "-1.5s" }}>
+                      <AdaptiveProductMedia src={collage[1].image} alt="" />
+                    </div>
+                  )}
+                  {/* back-right blurred card */}
+                  {collage[2] && (
+                    <div className="absolute right-[2%] top-1/2 w-[40%] -translate-y-1/2 rotate-6 overflow-hidden rounded-[20px] glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] opacity-70 blur-[2px] animate-float-slow" style={{ animationDelay: "-3.5s" }}>
+                      <AdaptiveProductMedia src={collage[2].image} alt="" />
+                    </div>
+                  )}
+                  {/* featured center card */}
+                  <div className="relative z-[2] w-[58%] overflow-hidden rounded-[22px] glass-strong ring-1 ring-white/15 shadow-[var(--shadow-float),0_0_70px_-18px_oklch(0.74_0.19_49/0.7)] animate-float-soft">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                    <AdaptiveProductMedia src={collage[0].image} alt="" priority />
+                  </div>
                 </div>
               ) : (
-                <div className="relative mx-auto h-full w-full max-w-[360px]">
-                  <div className="overflow-hidden rounded-[2rem] glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float)]">
+                <div className="relative mx-auto h-full w-full max-w-[300px]">
+                  <div className="overflow-hidden rounded-[22px] glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float)] animate-float-soft">
                     <img src={heroProductImg} alt="" loading="lazy" className="aspect-[4/5] size-full object-cover" />
                   </div>
                 </div>
@@ -571,7 +562,7 @@ function Home() {
             </div>
 
             {/* ── SEARCH + CHIPS ── */}
-            <div className="order-3 lg:col-start-1 lg:row-start-2 self-start">
+            <div className="order-3 lg:col-start-1 lg:row-start-2 self-start mt-2 lg:mt-0">
               <form
                 className="relative mx-auto lg:mx-0 max-w-2xl"
                 onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
@@ -593,11 +584,11 @@ function Home() {
                   </button>
                 </div>
               </form>
-              {/* Promotional chips */}
+              {/* Trust chips */}
               <div className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 {chips.map((c) => (
-                  <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full glass px-3 py-1.5 text-[11px] font-medium text-muted-foreground ring-1 ring-white/10">
-                    <c.icon className="size-3.5 text-accent" /> {c.label}
+                  <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full glass px-3.5 py-2 text-[11px] font-medium text-muted-foreground ring-1 ring-white/10">
+                    <Check className="size-3.5 text-accent" /> {c.label}
                   </span>
                 ))}
               </div>
