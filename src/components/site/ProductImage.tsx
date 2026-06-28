@@ -91,13 +91,13 @@ function ProductImageImpl({
   const bisectAsyncDecoding = activeBisectTest === "product-image-decoding-async";
   const forceSrcsetOn = bisectSrcset && !bisectOverrideEnabled;
   const forceSrcsetOff = bisectSrcset && bisectOverrideEnabled;
-  const loadingMode = bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : androidGpuSafeMode ? "lazy" : (!ffLazyLoading || priority ? "eager" : "lazy");
-  const decodingMode = bisectAsyncDecoding ? (bisectOverrideEnabled ? "sync" : "async") : androidGpuSafeMode ? "async" : ffImageDecoding ? "async" : "sync";
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
   const bundled = getResponsiveImage(src);
   const ultraLowEndAndroid = detectUltraLowEndAndroid();
   const androidGpuSafeMode = detectAndroidGpuSafeMode();
+  const loadingMode = bisectLazyLoading ? (bisectOverrideEnabled ? "eager" : "lazy") : androidGpuSafeMode ? "lazy" : (!ffLazyLoading || priority ? "eager" : "lazy");
+  const decodingMode = bisectAsyncDecoding ? (bisectOverrideEnabled ? "sync" : "async") : androidGpuSafeMode ? "async" : ffImageDecoding ? "async" : "sync";
   const storage = bundled
     ? null
     : androidGpuSafeMode
