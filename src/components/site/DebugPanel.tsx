@@ -4,6 +4,8 @@ import {
   DEBUG_FLAGS,
   FLAG_LABELS,
   clearBisectLog,
+  downloadBisectReport,
+  evaluateBisect,
   getActiveBisectTest,
   getAllFlags,
   getBisectOverrideEnabled,
@@ -20,6 +22,7 @@ import {
   type BisectPhase,
   type DebugFlag,
 } from "@/lib/debug-flags";
+
 import {
   getDiagnostics,
   subscribeDiagnostics,
@@ -164,10 +167,15 @@ export function DebugPanel() {
             {activeBisect && (
               <BisectRecorder activeId={activeBisect} overrideEnabled={bisectOverride} log={bisectLog} />
             )}
+            <Verdict log={bisectLog} />
+            <button type="button" onClick={() => downloadBisectReport(diag)} style={{ ...btn, width: "100%", marginTop: 6, background: "#f97316", color: "#111", fontWeight: 800 }}>
+              ⬇ Download JSON report
+            </button>
             <button type="button" onClick={() => clearBisectLog()} style={{ ...btn, width: "100%", marginTop: 6 }}>
               Clear bisect log
             </button>
           </div>
+
 
           <div
             style={{
@@ -177,6 +185,9 @@ export function DebugPanel() {
               lineHeight: 1.5,
             }}
           >
+            <Row k="Device model" v={diag.deviceModel} />
+            <Row k="Android" v={diag.androidVersion} />
+            <Row k="Chrome" v={diag.chromeVersion} />
             <Row k="GPU" v={diag.gpuRenderer} />
             <Row k="GPU vendor" v={diag.gpuVendor} />
             <Row k="WebGL" v={diag.webglSupported ? "yes" : "NO"} />
@@ -186,15 +197,23 @@ export function DebugPanel() {
               k="JS heap"
               v={diag.jsHeapUsedMb != null ? `${diag.jsHeapUsedMb}/${diag.jsHeapLimitMb}MB` : "n/a"}
             />
+            <Row k="DOM nodes" v={String(diag.domNodeCount)} />
+            <Row k="Product cards" v={String(diag.productCardCount)} />
+            <Row k="Images" v={`${diag.decodedImageCount}/${diag.imageCount} decoded`} />
             <Row k="Compositor layers" v={String(diag.compositorLayers)} />
+            <Row k="Paint entries" v={String(diag.paintCount)} />
+            <Row k="Layout shifts" v={String(diag.layoutShiftCount)} />
             <Row k="FPS" v={String(diag.fps)} />
             <Row k="Long tasks" v={`${diag.longTasks} (max ${Math.round(diag.longTaskMaxMs)}ms)`} />
             <Row k="Img decode fails" v={String(diag.imageDecodeFailures)} />
+            <Row k="createImageBitmap fails" v={String(diag.createImageBitmapFailures)} />
             <Row k="Canvas fails" v={String(diag.canvasFailures)} />
             <Row k="GL context lost" v={String(diag.glContextLost)} />
+            <Row k="GL context restored" v={String(diag.glContextRestored)} />
             <Row k="React remounts" v={String(diag.reactRemounts)} />
             <Row k="Unexpected rerenders" v={String(diag.unexpectedRerenders)} />
             <Row k="Hydration mismatch" v={String(diag.hydrationMismatches)} />
+
           </div>
         </div>
       )}
@@ -249,6 +268,33 @@ function RecordButton({ id, phase, corruption, label }: { id: string; phase: Bis
     </button>
   );
 }
+
+function Verdict({ log }: { log: BisectObservation[] }) {
+  // Re-evaluate against the live log so the verdict updates as you record.
+  void log;
+  const confirmed = evaluateBisect().filter((e) => e.confirmedRootCause);
+  if (confirmed.length === 0) {
+    return (
+      <div style={{ marginTop: 8, fontSize: 11, color: "#aaa" }}>
+        Root cause: not yet proven. Need ON=corrupt → OFF=clean → ON=corrupt for exactly one property.
+      </div>
+    );
+  }
+  if (confirmed.length > 1) {
+    return (
+      <div style={{ marginTop: 8, fontSize: 11, color: "#ffcf8a" }}>
+        {confirmed.length} candidates pass A/B/A — re-test one at a time; only one may be the cause.
+      </div>
+    );
+  }
+  const c = confirmed[0];
+  return (
+    <div style={{ marginTop: 8, fontSize: 11, color: "#8affb1", border: "1px solid #2a5", borderRadius: 6, padding: 6 }}>
+      ✅ CONFIRMED ROOT CAUSE: {c.property} on {c.component} ({c.file}:{c.line})
+    </div>
+  );
+}
+
 
 const btn: React.CSSProperties = {
   flex: 1,

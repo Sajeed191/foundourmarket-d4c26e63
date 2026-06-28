@@ -206,7 +206,148 @@ export const BISECT_TESTS: BisectTest[] = [
     file: "src/components/site/ProductImage.tsx",
     line: 194,
   },
+  {
+    id: "product-image-create-image-bitmap",
+    property: "createImageBitmap",
+    enabledValue: "on",
+    disabledValue: "off",
+    selector: "ProductImage prop",
+    component: "ProductImage decode path",
+    file: "src/components/site/ProductImage.tsx",
+    line: 191,
+  },
+  {
+    id: "product-image-image-decode",
+    property: "Image.decode()",
+    enabledValue: "on",
+    disabledValue: "off",
+    selector: "ProductImage prop",
+    component: "ProductImage decode path",
+    file: "src/components/site/ProductImage.tsx",
+    line: 196,
+  },
+  {
+    id: "card-frame-contain-intrinsic-size",
+    property: "contain-intrinsic-size",
+    enabledValue: "auto 320px",
+    disabledValue: "none",
+    selector: "[data-product-card-frame]",
+    component: "VirtualizedProductGrid card frame",
+    file: "src/styles.css",
+    line: 1081,
+  },
+  {
+    id: "card-frame-clip-path",
+    property: "clip-path",
+    enabledValue: "inset(0 round 18px)",
+    disabledValue: "none",
+    selector: "[data-product-card-frame]",
+    component: "VirtualizedProductGrid card frame",
+    file: "src/styles.css",
+    line: 1084,
+  },
+  {
+    id: "product-media-mask",
+    property: "-webkit-mask-image",
+    enabledValue: "linear-gradient(#000,#000)",
+    disabledValue: "none",
+    selector: "[data-product-media]",
+    component: "AdaptiveProductMedia",
+    file: "src/components/site/AdaptiveProductMedia.tsx",
+    line: 36,
+  },
+  {
+    id: "product-card-will-change",
+    property: "will-change",
+    enabledValue: "transform",
+    disabledValue: "auto",
+    selector: "[data-product-card]",
+    component: "ProductCard",
+    file: "src/components/site/ProductCard.tsx",
+    line: 309,
+  },
+  {
+    id: "product-card-transform",
+    property: "transform",
+    enabledValue: "translateZ(0)",
+    disabledValue: "none",
+    selector: "[data-product-card]",
+    component: "ProductCard",
+    file: "src/components/site/ProductCard.tsx",
+    line: 309,
+  },
+  {
+    id: "product-card-translate3d",
+    property: "transform",
+    enabledValue: "translate3d(0,0,0)",
+    disabledValue: "none",
+    selector: "[data-product-card]",
+    component: "ProductCard (translate3d GPU promotion)",
+    file: "src/components/site/ProductCard.tsx",
+    line: 309,
+  },
+  {
+    id: "product-grid-perspective",
+    property: "perspective",
+    enabledValue: "1000px",
+    disabledValue: "none",
+    selector: "[data-product-grid]",
+    component: "Product grid",
+    file: "src/components/site/ProductCard.tsx",
+    line: 309,
+  },
+  {
+    id: "product-image-opacity-anim",
+    property: "transition",
+    enabledValue: "opacity 300ms ease-out",
+    disabledValue: "none",
+    selector: "[data-product-image]",
+    component: "ProductImage opacity animation",
+    file: "src/components/site/AdaptiveProductMedia.tsx",
+    line: 61,
+  },
+  {
+    id: "product-card-filter",
+    property: "filter",
+    enabledValue: "brightness(1)",
+    disabledValue: "none",
+    selector: "[data-product-card]",
+    component: "ProductCard CSS filter",
+    file: "src/styles.css",
+    line: 1091,
+  },
+  {
+    id: "card-backdrop-filter",
+    property: "-webkit-backdrop-filter",
+    enabledValue: "blur(12px)",
+    disabledValue: "none",
+    selector: ".product-card-shell",
+    component: "ProductCard backdrop-filter",
+    file: "src/styles.css",
+    line: 1091,
+  },
+  {
+    id: "card-blur",
+    property: "filter",
+    enabledValue: "blur(2px)",
+    disabledValue: "none",
+    selector: ".product-card-shell",
+    component: "ProductCard blur",
+    file: "src/styles.css",
+    line: 1091,
+  },
+  {
+    id: "card-box-shadow",
+    property: "box-shadow",
+    enabledValue: "0 10px 40px rgba(0,0,0,0.4)",
+    disabledValue: "none",
+    selector: ".product-card-shell",
+    component: "ProductCard box-shadow",
+    file: "src/styles.css",
+    line: 1091,
+  },
 ];
+
 
 export const FLAG_LABELS: Record<DebugFlag, string> = {
   hero: "Hero",
@@ -447,3 +588,80 @@ export function subscribe(cb: () => void): () => void {
   listeners.add(cb);
   return () => listeners.delete(cb);
 }
+
+/** Group the A/B/A log per test and decide whether it satisfies the strict
+ *  reproduce → disable → reproduce-gone → re-enable → reproduce-returns proof. */
+export function evaluateBisect(): Array<{
+  id: string;
+  property: string;
+  component: string;
+  file: string;
+  line: number;
+  on1: boolean | null;
+  off2: boolean | null;
+  on3: boolean | null;
+  confirmedRootCause: boolean;
+}> {
+  return BISECT_TESTS.map((t) => {
+    const rows = bisectLog.filter((r) => r.id === t.id);
+    const last = (phase: BisectPhase): boolean | null => {
+      const found = rows.filter((r) => r.phase === phase).slice(-1)[0];
+      return found ? found.corruption : null;
+    };
+    const on1 = last("feature-on-before");
+    const off2 = last("feature-off-after");
+    const on3 = last("feature-on-return");
+    return {
+      id: t.id,
+      property: t.property,
+      component: t.component,
+      file: t.file,
+      line: t.line,
+      on1,
+      off2,
+      on3,
+      // Proven culprit: corrupt ON → clean OFF → corrupt again ON.
+      confirmedRootCause: on1 === true && off2 === false && on3 === true,
+    };
+  });
+}
+
+/** Build the full machine-readable report: device + runtime diagnostics +
+ *  every A/B/A observation + the confirmed root-cause verdict. */
+export function buildBisectReport(diagnostics: unknown) {
+  const evaluation = evaluateBisect();
+  const confirmed = evaluation.filter((e) => e.confirmedRootCause);
+  return {
+    generatedAt: new Date().toISOString(),
+    url: typeof window !== "undefined" ? window.location.href : "",
+    device: diagnostics,
+    flags: getAllFlags(),
+    activeBisectTest,
+    bisectOverrideEnabled,
+    tests: BISECT_TESTS,
+    observations: bisectLog,
+    evaluation,
+    confirmedRootCause: confirmed.length === 1 ? confirmed[0] : null,
+    confirmedRootCauseCandidates: confirmed,
+    protocol:
+      "A feature is the root cause only if: (1) ON=corrupt, (2) OFF=clean, (3) ON-again=corrupt. Toggle exactly one switch at a time on the physical Realme Narzo 20.",
+  };
+}
+
+export function downloadBisectReport(diagnostics: unknown) {
+  if (typeof document === "undefined") return;
+  const report = buildBisectReport(diagnostics);
+  const blob = new Blob([JSON.stringify(report, null, 2)], {
+    type: "application/json",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `android-bisect-report-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 0);
+}
+

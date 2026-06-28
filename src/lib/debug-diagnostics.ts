@@ -33,10 +33,21 @@ export type Diagnostics = {
   longTasks: number;
   longTaskMaxMs: number;
   glContextLost: number;
+  glContextRestored: number;
   reactRemounts: number;
   unexpectedRerenders: number;
   hydrationMismatches: number;
   userAgent: string;
+  androidVersion: string;
+  chromeVersion: string;
+  deviceModel: string;
+  domNodeCount: number;
+  productCardCount: number;
+  imageCount: number;
+  decodedImageCount: number;
+  paintCount: number;
+  layoutShiftCount: number;
+  createImageBitmapFailures: number;
 };
 
 const d: Diagnostics = {
@@ -54,11 +65,23 @@ const d: Diagnostics = {
   longTasks: 0,
   longTaskMaxMs: 0,
   glContextLost: 0,
+  glContextRestored: 0,
   reactRemounts: 0,
   unexpectedRerenders: 0,
   hydrationMismatches: 0,
   userAgent: "",
+  androidVersion: "n/a",
+  chromeVersion: "n/a",
+  deviceModel: "n/a",
+  domNodeCount: 0,
+  productCardCount: 0,
+  imageCount: 0,
+  decodedImageCount: 0,
+  paintCount: 0,
+  layoutShiftCount: 0,
+  createImageBitmapFailures: 0,
 };
+
 
 const listeners = new Set<() => void>();
 let installed = false;
@@ -107,9 +130,14 @@ function readGpu() {
       d.glContextLost += 1;
       notify();
     });
+    canvas.addEventListener("webglcontextrestored", () => {
+      d.glContextRestored += 1;
+      notify();
+    });
   } catch {
     d.canvasFailures += 1;
   }
+
 }
 
 const LAYER_PROPS = [
@@ -160,8 +188,34 @@ export function installDebugDiagnostics() {
   d.deviceMemoryGb =
     (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null;
   d.hardwareConcurrency = navigator.hardwareConcurrency ?? null;
+  parseUserAgent(navigator.userAgent);
 
   readGpu();
+  patchCreateImageBitmap();
+
+  // Cumulative Layout Shift counter (CLS-style entries).
+  try {
+    const lspo = new PerformanceObserver((list) => {
+      d.layoutShiftCount += list.getEntries().length;
+      notify();
+    });
+    lspo.observe({ entryTypes: ["layout-shift"] });
+  } catch {
+    /* layout-shift unsupported */
+  }
+
+  // Paint timing entries (first-paint / first-contentful-paint + any reported).
+  try {
+    const ppo = new PerformanceObserver((list) => {
+      d.paintCount += list.getEntries().length;
+      notify();
+    });
+    ppo.observe({ entryTypes: ["paint"] });
+  } catch {
+    /* paint unsupported */
+  }
+
+
 
   // Global image decode failure capture.
   window.addEventListener(
@@ -207,10 +261,19 @@ export function installDebugDiagnostics() {
   };
   requestAnimationFrame(tick);
 
-  // Periodic compositor layer + memory sampling (every 2s, idle-safe).
+  // Periodic compositor layer + memory + DOM census sampling (every 2s).
   const sample = () => {
     try {
       d.compositorLayers = countCompositorLayers();
+      d.domNodeCount = document.getElementsByTagName("*").length;
+      d.productCardCount = document.querySelectorAll("[data-product-card]").length;
+      const imgs = document.getElementsByTagName("img");
+      d.imageCount = imgs.length;
+      let decoded = 0;
+      for (let i = 0; i < imgs.length; i++) {
+        if (imgs[i].complete && imgs[i].naturalWidth > 0) decoded += 1;
+      }
+      d.decodedImageCount = decoded;
       readMemory();
       notify();
     } catch {
@@ -220,6 +283,33 @@ export function installDebugDiagnostics() {
   setInterval(sample, 2000);
   setTimeout(sample, 500);
 }
+
+/** Extract Android version, Chrome version and device model from the UA. */
+function parseUserAgent(ua: string) {
+  const android = ua.match(/Android\s+([\d.]+)/i);
+  if (android) d.androidVersion = android[1];
+  const chrome = ua.match(/Chrome\/([\d.]+)/i);
+  if (chrome) d.chromeVersion = chrome[1];
+  // Device model sits between the Android build token and ") AppleWebKit".
+  const model = ua.match(/;\s*([^;)]+)\s+Build\//i);
+  if (model) d.deviceModel = model[1].trim();
+}
+
+/** Wrap createImageBitmap to count failures (a known Mali corruption path). */
+function patchCreateImageBitmap() {
+  if (typeof window === "undefined" || typeof window.createImageBitmap !== "function") return;
+  const w = window as Window & { __cibPatched?: boolean };
+  if (w.__cibPatched) return;
+  w.__cibPatched = true;
+  const orig = window.createImageBitmap.bind(window);
+  window.createImageBitmap = ((...args: Parameters<typeof orig>) =>
+    orig(...args).catch((err: unknown) => {
+      d.createImageBitmapFailures += 1;
+      notify();
+      throw err;
+    })) as typeof window.createImageBitmap;
+}
+
 
 /** Wrap original Image.prototype.decode to count rejections. */
 export function patchImageDecode() {
