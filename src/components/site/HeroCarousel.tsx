@@ -22,9 +22,11 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 // Side (prev/next) slots: large blurred neighbor products peeking from the
 // left and right edges, scaled back and pushed behind the centered card.
+// `x` is expressed as a fraction of the fluid card size so the depth layer
+// scales proportionally on every screen instead of overflowing narrow phones.
 const SIDE_SLOTS = [
-  { key: "prev", dir: -1, x: -190, rot: -6 },
-  { key: "next", dir: 1, x: 190, rot: 6 },
+  { key: "prev", dir: -1, xFactor: -0.62, rot: -6 },
+  { key: "next", dir: 1, xFactor: 0.62, rot: 6 },
 ] as const;
 
 /**
