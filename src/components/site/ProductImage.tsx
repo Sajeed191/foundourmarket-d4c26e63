@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 
@@ -37,10 +37,32 @@ function ProductImageImpl({
   onLoad,
 }: Props) {
   const responsive = getResponsiveImage(src);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const activeSrcRef = useRef(src);
+
+  useEffect(() => {
+    activeSrcRef.current = src;
+    return () => {
+      activeSrcRef.current = "";
+      const img = imgRef.current;
+      if (!img || img.getAttribute("src") !== src) return;
+      img.onload = null;
+      img.onerror = null;
+      img.removeAttribute("srcset");
+      img.removeAttribute("src");
+      try { img.load(); } catch { /* ignore */ }
+    };
+  }, [src]);
+
+  const handleLoad = useCallback(() => {
+    if (activeSrcRef.current !== src) return;
+    onLoad?.();
+  }, [onLoad, src]);
 
   return (
     <img
       key={`${src}|${width}x${height}`}
+      ref={imgRef}
       src={src}
       srcSet={responsive?.srcset}
       sizes={responsive ? sizes : undefined}
@@ -52,7 +74,7 @@ function ProductImageImpl({
       decoding="async"
       data-product-image
       style={style}
-      onLoad={onLoad}
+      onLoad={handleLoad}
       className={className}
     />
   );
