@@ -752,8 +752,6 @@ function Home() {
                 active={sections.best_sellers.active}
                 viewAllTo="/products/best-sellers"
               />
-            </>
-          )}
         </>
       ))}
 
