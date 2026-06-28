@@ -437,162 +437,83 @@ function Home() {
       {/* Sticky announcement bar — homepage only */}
       <AnnouncementBar />
 
-      {/* 2 · Cinematic Hero */}
-      <section className="relative px-3 sm:px-6 lg:px-10 pt-3 sm:pt-6 lg:pt-8 pb-2 sm:pb-4 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+      {/* 2 · Minimal premium header */}
+      <section className="relative px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         <div className="sr-only">
           <h1>FoundOurMarket™ — Global Marketplace, Whatever You Need, All In One Place.</h1>
           <p>A premium independent marketplace, sourcing top-quality products from across the world.</p>
         </div>
 
         {(() => {
-          const collage = (trending.length ? trending : bestSellers).slice(0, 4);
           const chips = [
             { label: "Free Shipping" },
             { label: "Secure Payments" },
-            { label: "Trusted Sellers" },
             { label: "Easy Returns" },
+            { label: "Trusted Sellers" },
           ];
           return (
-        <div
-          className="hero-rise relative mx-auto max-w-[1480px] overflow-hidden rounded-[28px] ring-1 ring-white/10 min-h-[300px] sm:min-h-[340px] lg:min-h-[480px]"
-          style={{ background: "linear-gradient(135deg, oklch(0.16 0.01 60) 0%, oklch(0.11 0.008 50) 45%, oklch(0.08 0.005 40) 100%)" }}
-        >
-          {/* ── Ambient lighting & atmosphere ── */}
+        <div className="relative mx-auto max-w-[1100px]">
+          {/* ── subtle orange ambient lighting only ── */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-            {/* premium upper-center orange ambient glow — heading focal point */}
-            <div className="absolute left-1/2 -top-[18%] -translate-x-1/2 size-[560px] lg:size-[680px] rounded-full blur-[90px] opacity-70 animate-glow-breathe" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.34), oklch(0.74 0.19 49 / 0.10) 45%, transparent 72%)" }} />
-            {/* soft radial gradient that fades into the background behind heading */}
-            <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[60%] w-[120%] opacity-60" style={{ background: "radial-gradient(ellipse at 50% 8%, oklch(0.74 0.19 49 / 0.12), transparent 60%)" }} />
-            {/* secondary corner glows (softened so top corners feel lighter) */}
-            <div className="absolute -bottom-1/3 -left-[8%] size-[380px] rounded-full blur-3xl opacity-35" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.16), transparent 70%)" }} />
-            {/* near-invisible luxury texture grid */}
-            <div
-              className="absolute inset-0 opacity-[0.035]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(oklch(1 0 0 / 0.5) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.5) 1px, transparent 1px)",
-                backgroundSize: "72px 72px",
-                maskImage: "radial-gradient(ellipse at 50% 20%, black 5%, transparent 65%)",
-              }}
-            />
-            {/* top light reflection — soft glass highlight across the banner */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.07] to-transparent" />
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-            {/* bottom fade — blends hero into the next section */}
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/80 to-transparent" />
-            {/* floating particles — concentrated around the upper banner */}
-            {[
-              { top: "10%", left: "30%", d: "-0.5s" },
-              { top: "8%", left: "68%", d: "-2.2s" },
-              { top: "20%", left: "84%", d: "-3.4s" },
-              { top: "24%", left: "14%", d: "-1.4s" },
-              { top: "14%", left: "50%", d: "-4.1s" },
-              { top: "30%", left: "60%", d: "-1.9s" },
-            ].map((p, i) => (
-              <span key={i} className="absolute size-1 rounded-full bg-accent/35 blur-[1px] animate-float-soft" style={{ top: p.top, left: p.left, animationDelay: p.d }} />
-            ))}
+            <div className="absolute left-1/2 -top-[40%] -translate-x-1/2 size-[440px] sm:size-[560px] rounded-full blur-[100px] opacity-50" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.22), transparent 70%)" }} />
           </div>
 
+          <div className="relative z-10 flex flex-col items-center text-center pt-6 pb-1 sm:pt-9">
+            {/* small premium title */}
+            <h2 className="font-display font-semibold tracking-tight text-balance text-[clamp(1.5rem,5.5vw,2rem)] leading-[1.1]">
+              Discover Premium Products
+            </h2>
+            <p className="mt-2.5 max-w-md text-sm sm:text-base text-muted-foreground text-balance">
+              Trusted sellers from around the world.
+            </p>
 
-          <div className="relative z-10 grid gap-8 px-5 pt-8 pb-7 sm:px-8 sm:pt-9 sm:pb-9 lg:grid-cols-2 lg:gap-10 lg:px-12 lg:pt-10 lg:pb-12">
-            {/* ── TEXT — headline + CTAs ── */}
-            <div className="order-1 lg:col-start-1 lg:row-start-1 self-center text-center lg:text-left">
-              <span
-                className="inline-flex h-8 items-center gap-1.5 rounded-full glass-strong px-3.5 text-[10px] font-mono uppercase tracking-[0.22em] text-foreground ring-1 ring-accent/40"
-                style={{ boxShadow: "0 0 18px -4px oklch(0.74 0.19 49 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.08)" }}
+            {/* compact CTAs */}
+            <div className="mt-5 flex items-center justify-center gap-2.5">
+              <Link
+                to="/categories"
+                className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-accent text-accent-foreground text-[12px] font-semibold tracking-wide transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
               >
-                <Sparkles className="size-3 text-accent" /> Global Marketplace
+                Shop Now <ArrowRight className="size-3.5" />
+              </Link>
+              <Link
+                to="/categories"
+                className="inline-flex items-center justify-center h-11 px-6 rounded-full glass text-[12px] font-medium tracking-wide text-muted-foreground ring-1 ring-white/10 transition-all duration-200 hover:text-foreground active:scale-[0.98]"
+              >
+                Browse Categories
+              </Link>
+            </div>
+          </div>
+
+          {/* ── search bar ── */}
+          <form
+            className="relative mx-auto mt-7 sm:mt-8 max-w-2xl"
+            onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
+          >
+            <div className={`relative glass-strong rounded-full ring-1 transition-all duration-200 ${searchFocused ? "ring-accent/35 shadow-[0_0_0_3px_oklch(0.74_0.19_49/0.08),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
+              <Search className={`absolute left-5 top-1/2 -translate-y-1/2 size-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder={rotatingPlaceholder}
+                aria-label="Search products"
+                className="w-full min-h-[54px] bg-transparent rounded-full pl-12 pr-28 sm:pr-32 py-4 text-base focus:outline-none placeholder:text-muted-foreground/60"
+              />
+              <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 font-semibold px-5 sm:px-6 py-3 rounded-full text-xs uppercase tracking-widest text-accent-foreground transition-all duration-200 hover:brightness-110 shadow-[var(--shadow-ember)]" style={{ background: "var(--gradient-ember)" }}>
+                Search
+              </button>
+            </div>
+          </form>
+
+          {/* ── feature chips ── */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {chips.map((c) => (
+              <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full glass px-3.5 py-2 text-[11px] font-medium text-muted-foreground ring-1 ring-white/10">
+                <Check className="size-3.5 text-accent" /> {c.label}
               </span>
-              <h2 className="mt-5 font-display font-extrabold tracking-tight text-balance text-[clamp(2rem,8vw,2.8rem)] lg:text-[clamp(2.8rem,3.2vw,3.8rem)] leading-[1.03]">
-                Everything Worth Buying.
-                <br />
-                <span className="text-gradient-ember">Curated</span> for You.
-              </h2>
-              <p className="mx-auto lg:mx-0 mt-[18px] max-w-md text-sm sm:text-base text-muted-foreground text-balance">
-                Premium products from verified sellers worldwide.
-                <br className="hidden sm:block" /> Fast delivery. Secure payments. Trusted quality.
-              </p>
-              <div className="mt-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link
-                  to="/categories"
-                  className="inline-flex items-center justify-center gap-2 h-14 px-9 rounded-[28px] bg-accent text-accent-foreground text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] shadow-[0_0_44px_-6px_oklch(0.74_0.19_49/0.65),var(--shadow-ember)]"
-                >
-                  Shop Now <ArrowRight className="size-4" />
-                </Link>
-                <Link
-                  to="/categories"
-                  className="inline-flex items-center justify-center gap-2 h-14 px-9 rounded-[28px] glass-strong text-[13px] font-semibold uppercase tracking-widest transition-all duration-200 hover:-translate-y-0.5 hover:text-foreground active:scale-[0.98]"
-                >
-                  Explore
-                </Link>
-              </div>
-            </div>
-
-            {/* ── SHOWCASE — one featured product, two blurred behind (depth) ── */}
-            <div aria-hidden className="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 relative min-h-[230px] sm:min-h-[280px] lg:min-h-[420px] mt-2">
-              {/* soft radial halo behind products */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[280px] lg:size-[400px] rounded-full blur-3xl opacity-70 animate-glow-breathe" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.26), transparent 70%)" }} />
-              {collage.length > 0 ? (
-                <div className="relative mx-auto flex h-full w-full max-w-[420px] items-center justify-center">
-                  {/* back-left blurred card */}
-                  {collage[1] && (
-                    <div className="absolute left-[2%] top-1/2 w-[40%] -translate-y-1/2 -rotate-6 overflow-hidden rounded-[20px] glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] opacity-70 blur-[2px] animate-float-slow" style={{ animationDelay: "-1.5s" }}>
-                      <AdaptiveProductMedia src={collage[1].image} alt="" />
-                    </div>
-                  )}
-                  {/* back-right blurred card */}
-                  {collage[2] && (
-                    <div className="absolute right-[2%] top-1/2 w-[40%] -translate-y-1/2 rotate-6 overflow-hidden rounded-[20px] glass-strong ring-1 ring-white/10 shadow-[var(--shadow-float)] opacity-70 blur-[2px] animate-float-slow" style={{ animationDelay: "-3.5s" }}>
-                      <AdaptiveProductMedia src={collage[2].image} alt="" />
-                    </div>
-                  )}
-                  {/* featured center card */}
-                  <div className="relative z-[2] w-[58%] overflow-hidden rounded-[22px] glass-strong ring-1 ring-white/15 shadow-[var(--shadow-float),0_0_70px_-18px_oklch(0.74_0.19_49/0.7)] animate-float-soft">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                    <AdaptiveProductMedia src={collage[0].image} alt="" priority />
-                  </div>
-                </div>
-              ) : (
-                <div className="relative mx-auto h-full w-full max-w-[300px]">
-                  <div className="overflow-hidden rounded-[22px] glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float)] animate-float-soft">
-                    <img src={heroProductImg} alt="" loading="lazy" className="aspect-[4/5] size-full object-cover" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ── SEARCH + CHIPS ── */}
-            <div className="order-3 lg:col-start-1 lg:row-start-2 self-start mt-2 lg:mt-0">
-              <form
-                className="relative mx-auto lg:mx-0 max-w-2xl"
-                onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
-              >
-                <div className={`relative glass-strong rounded-full ring-1 transition-all duration-200 ${searchFocused ? "ring-accent/35 shadow-[0_0_0_3px_oklch(0.74_0.19_49/0.08),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
-                  <Search className={`absolute left-5 top-1/2 -translate-y-1/2 size-5 transition-colors ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    placeholder={rotatingPlaceholder}
-                    aria-label="Search products"
-                    className="w-full min-h-[56px] bg-transparent rounded-full pl-12 pr-28 sm:pr-32 py-4 text-base focus:outline-none placeholder:text-muted-foreground/60"
-                  />
-                  <button type="submit" className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 font-semibold px-5 sm:px-6 py-3 rounded-full text-xs uppercase tracking-widest text-accent-foreground transition-all duration-200 hover:brightness-110 shadow-[var(--shadow-ember)]" style={{ background: "var(--gradient-ember)" }}>
-                    Search
-                  </button>
-                </div>
-              </form>
-              {/* Trust chips */}
-              <div className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-2">
-                {chips.map((c) => (
-                  <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full glass px-3.5 py-2 text-[11px] font-medium text-muted-foreground ring-1 ring-white/10">
-                    <Check className="size-3.5 text-accent" /> {c.label}
-                  </span>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
           );
