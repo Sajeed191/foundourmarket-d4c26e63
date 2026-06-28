@@ -139,7 +139,9 @@ export function getImagePalette(src: string): Promise<ImagePalette> {
       }
     };
     img.onerror = () => finish(FALLBACK_PALETTE);
-    img.src = src;
+    // Sample a tiny resized variant (storage URLs only) so edge-color detection
+    // never downloads the full-resolution original just to draw a 32px canvas.
+    img.src = isStorageObjectUrl(src) ? resizedStorageImage(src, 64, 70) : src;
   });
 
   inflight.set(src, promise);
