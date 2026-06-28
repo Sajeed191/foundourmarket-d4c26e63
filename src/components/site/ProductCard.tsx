@@ -225,18 +225,32 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const freeShipping = shippingFee <= 0;
   const labels = useVisibleBadges(product, context, forceBadge);
   const assigned = useProductBadges(product.slug);
+  const engine = useBadgeEngine();
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
   const identity = productIdentity(product);
 
   const badges = useMemo<CardBadge[]>(() => {
-    if (!forceBadge && assigned.length > 0) return assigned.map(toAssignedBadge);
+    if (!forceBadge && assigned.length > 0) {
+      // Flash/Hot promotional badges are exclusive to the currently-selected
+      // Flash Deal rotation — hide them everywhere for non-selected products and
+      // show only the single balanced badge for selected ones.
+      const flashActive = engine.activeFlashSlugs.has(product.slug);
+      const chosenFlash = engine.flashBadgeBySlug.get(product.slug) ?? null;
+      const gated = assigned.filter((b) => {
+        if (!isAssignedFlashBadge(b)) return true;
+        if (!flashActive || !chosenFlash) return false;
+        return assignedFlashKey(b) === chosenFlash;
+      });
+      return gated.map(toAssignedBadge);
+    }
     return labels.map((b) => ({
       id: b.key,
       label: b.label,
       emoji: b.emoji,
       className: b.className,
     }));
-  }, [assigned, forceBadge, labels]);
+  }, [assigned, forceBadge, labels, engine, product.slug]);
+
 
   const openQuickView = useCallback(() => setQuickOpen(true), []);
 
