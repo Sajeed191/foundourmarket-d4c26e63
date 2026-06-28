@@ -548,7 +548,7 @@ function Home() {
                         style={{ animationDelay: delay }}
                       >
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                        <div className="aspect-square bg-white/95 p-1.5">
+                        <div className="aspect-square bg-white/95 p-0.5">
                           <img
                             src={p.image}
                             alt=""
