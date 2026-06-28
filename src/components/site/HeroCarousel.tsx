@@ -125,7 +125,14 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[240px] sm:size-[300px] rounded-[24px] glass-strong ring-1 ring-white/12 animate-pulse" />
           ) : (
             items.map((p, i) => {
-              const isCenter = i === index;
+              const n = items.length;
+              // Relative position: 0 = center, -1 = left, 1 = right, others hidden.
+              let rel = i - index;
+              if (rel > n / 2) rel -= n;
+              if (rel < -n / 2) rel += n;
+              const isCenter = rel === 0;
+              const isSide = rel === -1 || rel === 1;
+              const visible = isCenter || (isSide && !lowEnd);
 
               return (
                 <Link
@@ -134,14 +141,16 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                   params={{ slug: p.slug }}
                   aria-hidden={!isCenter}
                   tabIndex={isCenter ? 0 : -1}
-                  className={`group absolute left-1/2 top-1/2 -ml-[120px] -mt-[120px] sm:-ml-[150px] sm:-mt-[150px] size-[240px] sm:size-[300px] overflow-hidden rounded-[24px] glass-strong ring-1 ring-white/15 shadow-[var(--shadow-float),0_0_70px_-16px_oklch(0.74_0.19_49/0.6)] ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
+                  className={`group absolute left-1/2 top-1/2 -ml-[120px] -mt-[120px] sm:-ml-[150px] sm:-mt-[150px] size-[240px] sm:size-[300px] overflow-hidden rounded-[24px] glass-strong ring-1 ring-white/15 ${isCenter ? "shadow-[var(--shadow-float),0_0_70px_-16px_oklch(0.74_0.19_49/0.6)]" : "shadow-[var(--shadow-float)]"} ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
                   style={{
-                    transform: isCenter ? "scale(1)" : "scale(0.92)",
-                    opacity: isCenter ? 1 : 0,
-                    filter: isCenter || lowEnd ? "blur(0px)" : "blur(8px)",
-                    zIndex: isCenter ? 2 : 1,
+                    transform: isCenter
+                      ? "scale(1)"
+                      : `translateX(${rel * 130}px) scale(0.78) rotate(${rel * 6}deg)`,
+                    opacity: isCenter ? 1 : isSide ? 0.55 : 0,
+                    filter: isCenter || lowEnd ? "blur(0px)" : isSide ? "blur(14px)" : "blur(8px)",
+                    zIndex: isCenter ? 3 : isSide ? 1 : 0,
                     pointerEvents: isCenter ? "auto" : "none",
-                    visibility: isCenter ? "visible" : "hidden",
+                    visibility: visible ? "visible" : "hidden",
                     background: palette.background,
                     transition: lowEnd
                       ? "opacity 300ms ease"
