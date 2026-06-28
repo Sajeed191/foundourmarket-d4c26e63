@@ -322,16 +322,18 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     height: "var(--card)",
                     marginLeft: "calc(var(--card) / -2)",
                     marginTop: "calc(var(--card) / -2)",
-                    transform: `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
-                    opacity,
+                    transform: lowEnd
+                      ? "none"
+                      : `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
+                    opacity: lowEnd ? 1 : opacity,
                     filter: lowEnd
                       ? "none"
                       : `blur(${blur}px) grayscale(${gray}) brightness(${bright}) drop-shadow(0 ${isCenter ? 26 : 12}px ${isCenter ? 44 : 22}px oklch(0 0 0 / ${isCenter ? 0.5 : 0.34}))`,
                     zIndex: 10 - depth,
                     pointerEvents: isCenter ? "auto" : "none",
-                    visibility: visible ? "visible" : "hidden",
+                    visibility: lowEnd ? "visible" : visible ? "visible" : "hidden",
                     transition: lowEnd
-                      ? `opacity ${DUR}ms ease`
+                      ? "none"
                       : `transform ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
                     willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
                   }}
