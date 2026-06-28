@@ -337,7 +337,7 @@ function SearchPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 mobile-page-clearance sm:pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2 sm:py-12 mobile-page-clearance sm:pb-16">
       {/* Sticky mini search — appears on scroll for quick searching without scrolling back up */}
       <div
         data-search-sticky
