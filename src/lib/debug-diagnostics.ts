@@ -33,10 +33,21 @@ export type Diagnostics = {
   longTasks: number;
   longTaskMaxMs: number;
   glContextLost: number;
+  glContextRestored: number;
   reactRemounts: number;
   unexpectedRerenders: number;
   hydrationMismatches: number;
   userAgent: string;
+  androidVersion: string;
+  chromeVersion: string;
+  deviceModel: string;
+  domNodeCount: number;
+  productCardCount: number;
+  imageCount: number;
+  decodedImageCount: number;
+  paintCount: number;
+  layoutShiftCount: number;
+  createImageBitmapFailures: number;
 };
 
 const d: Diagnostics = {
@@ -54,11 +65,23 @@ const d: Diagnostics = {
   longTasks: 0,
   longTaskMaxMs: 0,
   glContextLost: 0,
+  glContextRestored: 0,
   reactRemounts: 0,
   unexpectedRerenders: 0,
   hydrationMismatches: 0,
   userAgent: "",
+  androidVersion: "n/a",
+  chromeVersion: "n/a",
+  deviceModel: "n/a",
+  domNodeCount: 0,
+  productCardCount: 0,
+  imageCount: 0,
+  decodedImageCount: 0,
+  paintCount: 0,
+  layoutShiftCount: 0,
+  createImageBitmapFailures: 0,
 };
+
 
 const listeners = new Set<() => void>();
 let installed = false;
