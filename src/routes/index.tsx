@@ -409,8 +409,6 @@ function Home() {
   // Single responsive homepage for every device — no capability detection,
   // no homepage swapping. These constants keep the (now always-on) premium
   // path live; the dead branches that referenced GPU safe mode tree-shake away.
-  const androidGpuSafeMode = false;
-  const safeModeScrolled = true;
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
@@ -425,7 +423,7 @@ function Home() {
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [searching, setSearching] = useState(false);
-  const rotatingPlaceholder = useRotatingPlaceholder(!androidGpuSafeMode && !searchFocused && !query);
+  const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
   const goSearch = (q: string) => {
     setSearching(true);
@@ -545,7 +543,7 @@ function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 120)}
-                placeholder={androidGpuSafeMode ? PLACEHOLDERS[0] : rotatingPlaceholder}
+                placeholder={rotatingPlaceholder}
                 aria-label="Search products"
                 className="w-full h-14 sm:h-16 bg-transparent rounded-full pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-base sm:text-[17px] font-medium tracking-[-0.01em] focus:outline-none placeholder:font-medium placeholder:text-muted-foreground/65 placeholder:tracking-[-0.01em]"
               />
@@ -707,7 +705,6 @@ function Home() {
 
       <CinematicDivider />
 
-      {(!androidGpuSafeMode || safeModeScrolled) && (
         <LazyMount minHeight={360}>
           {ffFlashDeals && <FlashDeals />}
         </LazyMount>
@@ -733,10 +730,9 @@ function Home() {
             viewAllTo="/products/trending"
             prominent
             minHeight={320}
-            limit={androidGpuSafeMode ? 4 : 4}
+            limit={4}
           />
-          {(!androidGpuSafeMode || safeModeScrolled) && (
-            <>
+                <>
               <ProductSection
                 sectionKey="new_arrivals"
                 eyebrow={sections.new_arrivals.eyebrow}
@@ -775,7 +771,7 @@ function Home() {
           <LazyMount minHeight={240}>
             <>
               {/* Mobile: compact swipeable carousel with dots + autorotate */}
-              {ffCarousels && !androidGpuSafeMode && <TestimonialsCarousel items={testimonials} />}
+              {ffCarousels && <TestimonialsCarousel items={testimonials} />}
 
               {/* Desktop: compact grid */}
               <div className="hidden md:grid grid-cols-3 gap-5">
