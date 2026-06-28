@@ -384,6 +384,12 @@ function useCategoryLimit() {
 
 function Home() {
   useRenderDiagnostics("Home");
+  // Debug harness flags — isolate which homepage subsystem corrupts rendering.
+  const ffHero = useFlag("hero");
+  const ffCategoryGrid = useFlag("categoryGrid");
+  const ffFlashDeals = useFlag("flashDeals");
+  const ffProductGrid = useFlag("productGrid");
+  const ffCarousels = useFlag("carousels");
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
