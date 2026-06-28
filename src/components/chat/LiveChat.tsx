@@ -287,10 +287,19 @@ export function LiveChat() {
           style={{ bottom: "calc(var(--floating-bottom-offset))" }}
         >
           <Headset className="h-6 w-6" />
-          <span
-            className={`absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${status.dot}`}
-            aria-hidden
-          />
+          {unread > 0 ? (
+            <span
+              className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border-2 border-background bg-red-500 px-1 text-[11px] font-bold leading-none text-white"
+              aria-label={`${unread} unread messages`}
+            >
+              {unread > 9 ? "9+" : unread}
+            </span>
+          ) : (
+            <span
+              className={`absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${status.dot}`}
+              aria-hidden
+            />
+          )}
         </button>
       )}
 
