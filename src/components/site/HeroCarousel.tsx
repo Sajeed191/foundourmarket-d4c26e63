@@ -93,7 +93,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
   // Auto-rotate.
   useEffect(() => {
-    if (lowEnd || ultraLowEndAndroid) return;
+    if (lowEnd || ultraLowEndAndroid || !ffJsAnimations) return;
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
