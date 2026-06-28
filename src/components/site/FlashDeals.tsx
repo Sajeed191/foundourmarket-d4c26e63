@@ -91,6 +91,122 @@ function FallbackSection({ featured }: { featured: Product[] }) {
   );
 }
 
+type FlashItem = {
+  product: Product;
+  dealId: string;
+  flashPrice?: number | null;
+  endAt?: string | null;
+};
+
+function FlashCard({ item, now }: { item: FlashItem; now: number }) {
+  const p = item.product;
+  const { priceOf } = useRegion();
+  const saved = useWishlistSaved(p.slug);
+  const { toggle } = useWishlistActions();
+  const [quickOpen, setQuickOpen] = useState(false);
+
+  const regularPrice = priceOf(p);
+  const hasFlash = item.flashPrice != null && item.flashPrice > 0;
+  const displayPrice = hasFlash ? (item.flashPrice as number) : regularPrice;
+  const off = hasFlash && regularPrice > 0
+    ? Math.round(((regularPrice - (item.flashPrice as number)) / regularPrice) * 100)
+    : 0;
+  const showOnlyLeft = p.stockQuantity > 0 && p.stockQuantity <= 15;
+  const dealBadge = singleBadge(p.flashDeal ? "flash_deal" : "hot_deal");
+
+  const onWishlist = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    void toggle(p.slug);
+  }, [toggle, p.slug]);
+
+  const onQuick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickOpen(true);
+  }, []);
+
+  const iconBtn = "grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full text-white/90 transition-colors hover:text-accent";
+  const iconStyle = { backgroundColor: "rgba(20,20,20,0.6)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)" } as const;
+
+  return (
+    <>
+      <Link
+        to="/products/$slug"
+        params={{ slug: p.slug }}
+        data-product-card
+        data-android-static-card
+        onClick={() => trackFlashDealEvent("click", item.dealId, p.slug)}
+        style={{ backgroundColor: "#111111", border: "1px solid rgba(255,138,0,0.18)" }}
+        className="group flex h-full flex-col overflow-hidden rounded-[22px] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-[transform,box-shadow,border-color] duration-200 will-change-transform motion-safe:lg:hover:-translate-y-1 lg:hover:border-accent/50 lg:hover:shadow-[0_14px_36px_-8px_rgba(255,138,0,0.45)]"
+      >
+        <div data-product-media className="relative aspect-[4/5] overflow-hidden bg-black/40">
+          {p.image && (
+            <img
+              data-product-image
+              src={p.image}
+              alt={p.name}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-300 motion-safe:lg:group-hover:scale-[1.04]"
+            />
+          )}
+          <span
+            data-product-badge
+            className={`absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 ${dealBadge.className}`}
+          >
+            <span aria-hidden>{dealBadge.emoji}</span>
+            {dealBadge.label}
+          </span>
+          {off > 0 && (
+            <span data-product-badge className="absolute right-2 top-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 font-mono text-[9px] font-bold text-black shadow-[var(--shadow-ember)]">
+              -{off}%
+            </span>
+          )}
+          <div className="absolute bottom-2 right-2 flex flex-col gap-1.5">
+            <button onClick={onWishlist} style={iconStyle} className={iconBtn} aria-label={saved ? `Remove ${p.name} from wishlist` : `Add ${p.name} to wishlist`}>
+              <Heart className={`size-4 ${saved ? "fill-accent text-accent" : ""}`} />
+            </button>
+            <button onClick={onQuick} style={iconStyle} className={iconBtn} aria-label={`Quick view ${p.name}`}>
+              <Eye className="size-4" />
+            </button>
+          </div>
+          {item.endAt && (
+            <div className="absolute bottom-2 left-2 right-12">
+              <Countdown end={item.endAt} now={now} />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-1 flex-col gap-1 p-2.5 sm:p-3">
+          <p
+            data-product-text
+            className="product-typography product-title-text text-[12px] sm:text-[13px] font-medium leading-snug"
+            style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: "2.4em" }}
+          >
+            {p.name}
+          </p>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <Price value={displayPrice} className="text-sm sm:text-base font-display font-bold text-accent tabular-nums" />
+            {hasFlash && (
+              <Price value={regularPrice} className="text-[10px] sm:text-[11px] font-mono line-through text-muted-foreground tabular-nums" />
+            )}
+          </div>
+          <p
+            data-product-text
+            className="product-typography mt-auto pt-0.5 text-[9px] font-mono uppercase tracking-wider text-accent/90"
+            style={{ minHeight: "1.1em" }}
+          >
+            {showOnlyLeft ? `Only ${p.stockQuantity} left` : ""}
+          </p>
+        </div>
+      </Link>
+      {quickOpen && <QuickViewDialog product={p} open={quickOpen} onOpenChange={setQuickOpen} />}
+    </>
+  );
+}
+
+
 export function FlashDeals() {
   const { items: allItems, loading, now, products } = useFlashDeals();
   const { priceOf } = useRegion();
