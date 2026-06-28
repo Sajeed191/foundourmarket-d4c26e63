@@ -427,6 +427,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                       width={640}
                       height={640}
                       priority={isCenter}
+                      debugId={isCenter ? `center#${index}` : undefined}
                       sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 60vw"
                       className="block size-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                     />
