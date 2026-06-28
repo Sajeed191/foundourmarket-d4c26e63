@@ -588,3 +588,80 @@ export function subscribe(cb: () => void): () => void {
   listeners.add(cb);
   return () => listeners.delete(cb);
 }
+
+/** Group the A/B/A log per test and decide whether it satisfies the strict
+ *  reproduce → disable → reproduce-gone → re-enable → reproduce-returns proof. */
+export function evaluateBisect(): Array<{
+  id: string;
+  property: string;
+  component: string;
+  file: string;
+  line: number;
+  on1: boolean | null;
+  off2: boolean | null;
+  on3: boolean | null;
+  confirmedRootCause: boolean;
+}> {
+  return BISECT_TESTS.map((t) => {
+    const rows = bisectLog.filter((r) => r.id === t.id);
+    const last = (phase: BisectPhase): boolean | null => {
+      const found = rows.filter((r) => r.phase === phase).slice(-1)[0];
+      return found ? found.corruption : null;
+    };
+    const on1 = last("feature-on-before");
+    const off2 = last("feature-off-after");
+    const on3 = last("feature-on-return");
+    return {
+      id: t.id,
+      property: t.property,
+      component: t.component,
+      file: t.file,
+      line: t.line,
+      on1,
+      off2,
+      on3,
+      // Proven culprit: corrupt ON → clean OFF → corrupt again ON.
+      confirmedRootCause: on1 === true && off2 === false && on3 === true,
+    };
+  });
+}
+
+/** Build the full machine-readable report: device + runtime diagnostics +
+ *  every A/B/A observation + the confirmed root-cause verdict. */
+export function buildBisectReport(diagnostics: unknown) {
+  const evaluation = evaluateBisect();
+  const confirmed = evaluation.filter((e) => e.confirmedRootCause);
+  return {
+    generatedAt: new Date().toISOString(),
+    url: typeof window !== "undefined" ? window.location.href : "",
+    device: diagnostics,
+    flags: getAllFlags(),
+    activeBisectTest,
+    bisectOverrideEnabled,
+    tests: BISECT_TESTS,
+    observations: bisectLog,
+    evaluation,
+    confirmedRootCause: confirmed.length === 1 ? confirmed[0] : null,
+    confirmedRootCauseCandidates: confirmed,
+    protocol:
+      "A feature is the root cause only if: (1) ON=corrupt, (2) OFF=clean, (3) ON-again=corrupt. Toggle exactly one switch at a time on the physical Realme Narzo 20.",
+  };
+}
+
+export function downloadBisectReport(diagnostics: unknown) {
+  if (typeof document === "undefined") return;
+  const report = buildBisectReport(diagnostics);
+  const blob = new Blob([JSON.stringify(report, null, 2)], {
+    type: "application/json",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `android-bisect-report-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 0);
+}
+
