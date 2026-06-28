@@ -508,13 +508,30 @@ export function initDebugFlags() {
     }
     const logRaw = localStorage.getItem(BISECT_LOG_KEY);
     if (logRaw) bisectLog = JSON.parse(logRaw) as BisectObservation[];
+    const runnerRaw = localStorage.getItem(RUNNER_KEY);
+    if (runnerRaw) {
+      const r = JSON.parse(runnerRaw) as {
+        runnerActive?: boolean;
+        runnerIndex?: number;
+        runnerPhase?: BisectPhase;
+        runnerConfirmed?: RunnerStep | null;
+        runnerFinished?: boolean;
+      };
+      runnerActive = r.runnerActive === true;
+      runnerIndex = typeof r.runnerIndex === "number" ? r.runnerIndex : 0;
+      runnerPhase = r.runnerPhase ?? "feature-on-before";
+      runnerConfirmed = r.runnerConfirmed ?? null;
+      runnerFinished = r.runnerFinished === true;
+    }
   } catch {
     /* ignore */
   }
   parseQuery(); // query overrides saved state
+  if (runnerActive) applyRunnerFeatures();
   applyDom();
   persist();
 }
+
 
 /** Read a flag. When the harness is disabled every flag reads ON (production). */
 export function getFlag(flag: DebugFlag): boolean {
