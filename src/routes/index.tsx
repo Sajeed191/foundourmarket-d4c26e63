@@ -475,7 +475,7 @@ function Home() {
 
 
       {/* 2 · Premium rotating product showcase hero */}
-      <section className="relative px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+      <section className="relative z-30 px-3 sm:px-6 lg:px-10 pt-4 sm:pt-7 pb-3 sm:pb-5 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         {/* full-bleed ambient layer — seamless navbar blend + soft orange glow,
             stretches edge-to-edge so there are never black side gaps */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-0">
