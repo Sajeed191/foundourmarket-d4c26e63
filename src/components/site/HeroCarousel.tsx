@@ -156,7 +156,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
         {/* ── single-card product showcase ── */}
         <div
           ref={stageRef}
-          className="relative mt-6 sm:mt-8 w-full select-none outline-none"
+          className="hero-stage relative mt-6 sm:mt-8 w-full select-none outline-none"
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
