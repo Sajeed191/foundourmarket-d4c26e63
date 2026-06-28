@@ -156,7 +156,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
               const xFactor = isCenter ? 0 : sign * (isSide ? 0.6 : 1.05);
               const scale = isCenter ? 1 : isSide ? 0.83 : 0.72;
               const opacity = isCenter ? 1 : isSide ? 0.4 : 0;
-              const blur = isCenter || lowEnd ? 0 : isSide ? 14 : 18;
+              const blur = isCenter || lowEnd ? 0 : isSide ? 10 : 14;
               const rot = isCenter ? 0 : sign * -5;
               return (
                 <Link
