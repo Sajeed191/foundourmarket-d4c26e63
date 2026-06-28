@@ -99,7 +99,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const productMatches = useMemo(() => {
     if (!term) return [];
     return products
-      .filter((p) => `${p.name} ${p.tagline ?? ""} ${p.category} ${p.description ?? ""}`.toLowerCase().includes(term))
+      .filter((p) => `${p.name} ${p.brand ?? ""} ${p.tagline ?? ""} ${p.category} ${p.description ?? ""}`.toLowerCase().includes(term))
       .slice(0, 18);
   }, [products, term]);
   const catMatches = useMemo(() => {
