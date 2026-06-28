@@ -11,7 +11,7 @@ import { useCartActions, useCartQty } from "@/lib/cart";
 import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { ProductCardAdminControlsGate } from "@/components/admin/ProductCardAdminControlsGate";
 import { Price } from "@/components/site/Price";
-import { ProductImage } from "@/components/site/ProductImage";
+import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { formatSold } from "@/lib/format-sold";
 
