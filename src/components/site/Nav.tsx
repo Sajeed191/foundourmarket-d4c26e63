@@ -260,7 +260,7 @@ export function Nav() {
                 <Link
                   to="/admin"
                   aria-label="Admin"
-                  className="hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 transition-all duration-200"
+                  className="hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-accent hover:bg-accent/10 hover:shadow-[0_0_18px_-6px_var(--color-accent)] active:bg-accent/15 active:text-accent active:scale-90 transition-all duration-200"
                   title="Admin"
                 >
                   <LayoutDashboard className="size-[18px]" />
