@@ -11,11 +11,24 @@ import {
  * cache first (no flash on revisits), then resolves the async extraction once.
  * `ready` flips true when a real (non-fallback) palette is available so callers
  * can animate the background/product in.
+ *
+ * Low-end / Android short-circuit: palette extraction loads each product image
+ * a SECOND time into a canvas (extra decode + canvas/GPU memory per card). On
+ * constrained Android GPUs this contributes to texture-memory pressure and the
+ * compositor corruption seen on 4GB devices, so we skip it and render the
+ * neutral fallback background immediately.
  */
+function isConstrainedDevice(): boolean {
+  if (typeof document === "undefined") return false;
+  const d = document.documentElement;
+  return d.getAttribute("data-low-end") === "true" || d.getAttribute("data-android") === "true";
+}
+
 export function useImagePalette(src: string | null | undefined) {
-  const initial = src ? getCachedPalette(src) : null;
+  const constrained = isConstrainedDevice();
+  const initial = src && !constrained ? getCachedPalette(src) : null;
   const [palette, setPalette] = useState<ImagePalette>(initial ?? FALLBACK_PALETTE);
-  const [ready, setReady] = useState<boolean>(initial != null);
+  const [ready, setReady] = useState<boolean>(constrained || initial != null);
 
   useEffect(() => {
     if (!src) {
