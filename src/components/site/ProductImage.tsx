@@ -179,9 +179,10 @@ function ProductImageImpl({
       img.removeAttribute("srcset");
       img.removeAttribute("src");
     };
-  }, [resolvedSrc]);
+  }, [imgTestStatic, resolvedSrc]);
 
   useEffect(() => {
+    if (imgTestStatic) return; // static diagnostic: no IO / decode queue
     if (!androidGpuSafeMode) return;
     const img = imgRef.current;
     if (!img) return;
