@@ -46,7 +46,11 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const [enhanced, setEnhanced] = useState(false);
   useEffect(() => {
     console.log("Hero initial: safe");
+    const gpuUnsafe =
+      typeof document !== "undefined" &&
+      document.documentElement.dataset.gpuUnsafe === "true";
     const capable =
+      !gpuUnsafe &&
       !detectLowEndDevice() && !detectUltraLowEndAndroid() && !detectAndroidGpuSafeMode();
     if (capable) {
       setEnhanced(true);
