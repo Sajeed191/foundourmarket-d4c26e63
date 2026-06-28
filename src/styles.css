@@ -237,6 +237,23 @@
 }
 .animate-float-soft { animation: float-soft 7s ease-in-out infinite; }
 
+/* Breathing orange ambient glow for the hero focal lighting */
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.85; transform: translateX(-50%) scale(1.08); }
+}
+.animate-glow-breathe { animation: glow-breathe 6s ease-in-out infinite; }
+
+/* Slow drift for the secondary blurred showcase products */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float-slow { animation: float-slow 9s ease-in-out infinite; }
+
+html[data-low-end="true"] .animate-glow-breathe,
+html[data-low-end="true"] .animate-float-slow { animation: none; }
+
 /* Live chat: breathing support orb */
 @keyframes orb-breathe {
   0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.45), var(--shadow-ember); }
