@@ -35,6 +35,7 @@ import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";
+import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
@@ -382,6 +383,7 @@ function useCategoryLimit() {
 }
 
 function Home() {
+  useRenderDiagnostics("Home");
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();

@@ -6,6 +6,7 @@ import { useImagePalette } from "@/lib/use-image-palette";
 import { useLowEndDevice, useDeviceTier } from "@/lib/use-low-end-device";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
+import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
 
 type Props = {
   /** Pre-prioritized product pools. First non-empty wins. */
@@ -31,6 +32,12 @@ const DUR = 600;
  * swipe and keyboard navigation. UI only — no data fetching, no routing changes.
  */
 export function HeroCarousel({ featured, trending, bestSellers, newArrivals, children }: Props) {
+  useRenderDiagnostics("HeroCarousel", {
+    featured: featured.length,
+    trending: trending.length,
+    bestSellers: bestSellers.length,
+    newArrivals: newArrivals.length,
+  });
   const lowEnd = useLowEndDevice();
   const isMobile = useIsMobile();
   const tier = useDeviceTier();
