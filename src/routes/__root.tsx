@@ -401,6 +401,13 @@ function RootComponent() {
     installChunkRecovery();
     registerServiceWorker();
     logBuildVersion();
+    // React mounted successfully. Clear the persistent boot-attempt counter a
+    // few seconds after a stable render so the auto-reload cap only ever counts
+    // genuine startup failures (chunk 404 / OOM crash), never healthy boots.
+    const t = window.setTimeout(() => {
+      (window as unknown as { __fomBootOk?: () => void }).__fomBootOk?.();
+    }, 6000);
+    return () => window.clearTimeout(t);
   }, []);
   // Flag low-end devices on <html> so global CSS can drop GPU-expensive effects,
   // and start dev-only runtime performance monitoring (long tasks / FPS / heap).
