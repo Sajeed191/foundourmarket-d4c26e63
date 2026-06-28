@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProduct, type Product } from "./products";
 import { supabase } from "@/integrations/supabase/client";
-import { detectAndroidGpuSafeMode } from "@/lib/use-low-end-device";
 
 let realtimeBound = false;
 let lastFreshAt = 0;
@@ -41,27 +40,10 @@ function bindRealtime() {
 
 
 let cache: Product[] | null = null;
-let safeCache: Product[] | null = null;
 let inflight: Promise<Product[]> | null = null;
-let safeInflight: Promise<Product[]> | null = null;
 const subscribers = new Set<(p: Product[]) => void>();
 
 export async function loadProducts(force = false): Promise<Product[]> {
-  if (detectAndroidGpuSafeMode()) {
-    if (safeCache && !force) return safeCache;
-    if (!safeInflight) {
-      // Android GPU Safe Mode: keep the first catalog request tiny so startup
-      // decodes at most the static hero + initial cards. Full catalog pages can
-      // still fetch their own data outside the homepage safe-mode path.
-      safeInflight = fetchProducts(6).then((p) => {
-        safeCache = p;
-        safeInflight = null;
-        subscribers.forEach((s) => s(p));
-        return p;
-      });
-    }
-    return safeInflight;
-  }
   if (cache && !force) return cache;
   if (!inflight) {
     inflight = fetchProducts().then((p) => {
@@ -76,17 +58,15 @@ export async function loadProducts(force = false): Promise<Product[]> {
 
 export function invalidateProducts() {
   cache = null;
-  safeCache = null;
   loadProducts(true);
 }
 
 export function useProducts() {
-  const safeMode = detectAndroidGpuSafeMode();
-  const initial = safeMode ? safeCache : cache;
+  const initial = cache;
   const [products, setProducts] = useState<Product[]>(initial ?? []);
   const [loading, setLoading] = useState(!initial);
   useEffect(() => {
-    if (!detectAndroidGpuSafeMode()) bindRealtime();
+    bindRealtime();
     let active = true;
     const sub = (p: Product[]) => { if (active) setProducts(p); };
     subscribers.add(sub);
