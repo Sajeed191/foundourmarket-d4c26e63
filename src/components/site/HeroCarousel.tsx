@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
-import { useImagePalette } from "@/lib/use-image-palette";
-import { useAndroidGpuSafeMode, useDeviceTier, useUltraLowEndAndroid, detectLowEndDevice, detectUltraLowEndAndroid, detectAndroidGpuSafeMode } from "@/lib/use-low-end-device";
 import { useFlag } from "@/lib/use-debug-flag";
-import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
 
@@ -20,17 +17,16 @@ type Props = {
 };
 
 const ROTATE_MS = 4500;
-// Apple/Stripe-style premium easing for the showcase transitions.
-const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const DUR = 600;
 
 /**
- * Premium queue-style 3D product carousel. Picks real products
- * (Featured → Trending → Best Sellers → New Arrivals) and lays them out as a
- * horizontal queue: the active card is centered, largest, sharp; neighbours
- * recede on both sides with progressive scale, blur, grayscale, dimming and a
- * subtle rotateY toward center for cinematic depth. Supports autoplay, drag,
- * swipe and keyboard navigation. UI only — no data fetching, no routing changes.
+ * Lightweight single-card product showcase.
+ *
+ * ONE responsive design used on every device — phones, tablets, laptops,
+ * desktops. No device-capability detection, no GPU/blur/backdrop-filter, no
+ * stacked 3D layers. A single centered product card crossfades between products
+ * using transform + opacity only, keeping scrolling at 60 FPS even on
+ * entry-level Android. Images are lazy-loaded (the active one is prioritized).
+ * Supports autoplay, swipe and keyboard navigation. UI only.
  */
 export function HeroCarousel({ featured, trending, bestSellers, newArrivals, children }: Props) {
   useRenderDiagnostics("HeroCarousel", {
@@ -39,32 +35,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     bestSellers: bestSellers.length,
     newArrivals: newArrivals.length,
   });
-  // Render the SAFE/static hero on SSR + the first client render, then upgrade
-  // to the enhanced hero only AFTER hydration confirms a capable device. This
-  // guarantees low-end (e.g. Mali-G52) devices never paint the heavy
-  // compositor path — not even for a single frame.
-  const [enhanced, setEnhanced] = useState(false);
-  useEffect(() => {
-    console.log("Hero initial: safe");
-    const gpuUnsafe =
-      typeof document !== "undefined" &&
-      document.documentElement.dataset.gpuUnsafe === "true";
-    const capable =
-      !gpuUnsafe &&
-      !detectLowEndDevice() && !detectUltraLowEndAndroid() && !detectAndroidGpuSafeMode();
-    if (capable) {
-      setEnhanced(true);
-      console.log("Hero upgraded: enhanced");
-    } else {
-      console.log("Hero kept: safe");
-    }
-  }, []);
-  const lowEnd = !enhanced;
-  const ultraLowEndAndroid = useUltraLowEndAndroid();
-  const androidGpuSafeMode = useAndroidGpuSafeMode();
+
   const ffJsAnimations = useFlag("jsAnimations");
-  const isMobile = useIsMobile();
-  const tier = useDeviceTier();
 
   const items = useMemo(() => {
     const pool =
@@ -72,11 +44,12 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
       (trending.length && trending) ||
       (bestSellers.length && bestSellers) ||
       newArrivals;
-    return (pool || []).filter((p) => !!p?.image).slice(0, 12);
+    return (pool || []).filter((p) => !!p?.image).slice(0, 8);
   }, [featured, trending, bestSellers, newArrivals]);
 
   const [index, setIndex] = useState(0);
   const pausedRef = useRef(false);
+  const offscreenRef = useRef(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
   // Reset when the pool changes.
@@ -95,11 +68,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     [items.length],
   );
 
-  // Pause autoplay whenever the carousel is scrolled off-screen so it never
-  // burns CPU/battery animating frames the user can't see.
-  const offscreenRef = useRef(false);
+  // Pause autoplay while off-screen so it never animates frames the user can't see.
   useEffect(() => {
-    if (androidGpuSafeMode || lowEnd || ultraLowEndAndroid) return;
     const el = stageRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
@@ -110,58 +80,31 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [androidGpuSafeMode, lowEnd, ultraLowEndAndroid]);
+  }, []);
 
   // Auto-rotate.
   useEffect(() => {
-    if (androidGpuSafeMode || lowEnd || ultraLowEndAndroid || !ffJsAnimations) return;
-    if (items.length <= 1) return;
+    if (!ffJsAnimations || items.length <= 1) return;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [items.length, androidGpuSafeMode, lowEnd, ultraLowEndAndroid, ffJsAnimations]);
+  }, [items.length, ffJsAnimations]);
 
+  // Preload the immediate next image so the crossfade is instant.
+  useEffect(() => {
+    if (items.length <= 1) return;
+    const next = items[(index + 1) % items.length];
+    if (next?.image) {
+      const img = new Image();
+      img.src = next.image;
+    }
+  }, [index, items]);
 
   const current = items[index];
-  const { palette } = useImagePalette((androidGpuSafeMode || ultraLowEndAndroid) ? null : current?.image);
 
-  // Preload only the immediate next + previous images (per spec). Off-screen
-  // cards beyond these are lazy-loaded by the browser via <ProductImage>.
-  useEffect(() => {
-    if (androidGpuSafeMode || lowEnd || ultraLowEndAndroid) return;
-    if (items.length <= 1) return;
-    const n = items.length;
-    [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
-      if (p?.image) {
-        const img = new Image();
-        img.src = p.image;
-      }
-    });
-  }, [index, items, androidGpuSafeMode, lowEnd, ultraLowEndAndroid]);
-
-  const primary = palette.primary || "#ffffff";
-  const ambient = `color-mix(in srgb, ${primary} 38%, transparent)`;
-  const ambientSoft = `color-mix(in srgb, ${primary} 18%, transparent)`;
-
-  // ── Adaptive performance profile (highest priority) ──
-  // Visible products + effect strength scale with the device tier so low-end
-  // Android phones stay at 60 FPS while high-end devices get the full show.
-  const perf = useMemo(() => {
-    // Card COUNT is fixed per spec — always 7 on mobile (3/side) and 9 on
-    // desktop (4/side), regardless of device tier, so the queue never collapses
-    // to only 3 products. Tier only scales effect *intensity* for performance.
-    const maxDepth = isMobile ? 3 : 4;
-    const blurScale = tier === "high" ? 1 : tier === "mid" ? 0.7 : 0.4;
-    return {
-      maxDepth,
-      blurScale,
-      enableGlow: tier !== "low",
-    };
-  }, [tier, isMobile]);
-
-  // ── Pointer / touch drag + swipe ──
+  // ── Pointer / touch swipe ──
   const drag = useRef<{ active: boolean; startX: number; moved: boolean }>({
     active: false,
     startX: 0,
@@ -196,85 +139,11 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     }
   };
 
-  if (androidGpuSafeMode) {
-    const p = items[0];
-    return (
-      <div className="relative mx-auto max-w-[1280px]" data-android-static-hero="true">
-        <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
-          <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-accent/35 bg-card px-3.5 text-[10px] font-mono uppercase tracking-[0.22em] text-foreground">
-            <Sparkles className="size-3 text-accent" /> Global Marketplace
-          </span>
-          <h2 className="mt-4 font-display font-semibold tracking-tight text-balance text-[clamp(1.5rem,5.5vw,2.1rem)] leading-[1.1]">
-            Discover Premium Products
-          </h2>
-          <p className="mt-2 max-w-md text-sm sm:text-base text-muted-foreground text-balance">
-            Trusted products from verified sellers worldwide.
-          </p>
-
-          {p && (
-            <Link
-              key={`${p.id ?? p.slug}:safe-hero`}
-              to="/products/$slug"
-              params={{ slug: p.slug }}
-              className="mt-6 block w-[min(68vw,260px)] rounded-3xl border border-accent/20 bg-card p-2"
-            >
-              <ProductImage
-                src={p.image}
-                alt={p.name}
-                width={288}
-                height={288}
-                priority
-                sizes="288px"
-                className="block aspect-square w-full rounded-2xl object-cover object-center"
-              />
-              <p className="mt-3 line-clamp-2 text-sm font-medium leading-snug text-foreground">{p.name}</p>
-            </Link>
-          )}
-        </div>
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div className="relative mx-auto max-w-[1280px]">
-      {/* ── Dynamic ambient background derived from the product image ── */}
-      <div aria-hidden className="pointer-events-none absolute top-0 bottom-0 left-1/2 w-screen -translate-x-1/2 -z-0 overflow-hidden">
-        {/* Heavy blurred backdrop + radial glows are GPU-expensive and, on
-            low-RAM Android, leave stale compositor tiles (ghosting). Render them
-            only on capable devices; low-end keeps just the cheap bottom fade. */}
-        {!lowEnd && (
-          <>
-            {/* full-bleed blurred product backdrop fills the empty side areas */}
-            {current?.image && (
-              <img
-                src={current.image}
-                alt=""
-                aria-hidden
-                className="absolute inset-0 size-full scale-125 object-cover opacity-[0.14] blur-[64px]"
-                style={{ transition: "opacity 800ms ease" }}
-              />
-            )}
-            <div
-              className="absolute left-1/2 -top-[20%] -translate-x-1/2 size-[460px] sm:size-[620px] rounded-full blur-[110px]"
-              style={{ background: `radial-gradient(circle, ${ambient}, transparent 70%)`, transition: "background 700ms ease", willChange: "background" }}
-            />
-            <div
-              className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[60%] w-[120%]"
-              style={{ background: `radial-gradient(ellipse at 50% 30%, ${ambientSoft}, transparent 65%)`, transition: "background 700ms ease" }}
-            />
-            <div className="absolute left-1/2 -top-[28%] -translate-x-1/2 size-[360px] sm:size-[460px] rounded-full blur-[100px] opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.30), transparent 70%)" }} />
-          </>
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 to-transparent" />
-      </div>
-
       <div className="relative z-10 flex flex-col items-center text-center pt-6 sm:pt-9">
         {/* badge */}
-        <span
-          className="inline-flex h-8 items-center gap-1.5 rounded-full glass-strong px-3.5 text-[10px] font-mono uppercase tracking-[0.22em] text-foreground ring-1 ring-accent/40 animate-fade-in"
-          style={{ boxShadow: "0 0 18px -4px oklch(0.74 0.19 49 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.08)" }}
-        >
+        <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-accent/35 bg-card px-3.5 text-[10px] font-mono uppercase tracking-[0.22em] text-foreground">
           <Sparkles className="size-3 text-accent" /> Global Marketplace
         </span>
         <h2 className="mt-4 font-display font-semibold tracking-tight text-balance text-[clamp(1.5rem,5.5vw,2.1rem)] leading-[1.1]">
@@ -284,19 +153,10 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           Trusted products from verified sellers worldwide.
         </p>
 
-        {/* ── premium queue-style 3D carousel ── */}
+        {/* ── single-card product showcase ── */}
         <div
           ref={stageRef}
-          className={`hero-stage relative mt-6 sm:mt-8 w-full max-w-none select-none overflow-hidden touch-pan-y outline-none ${lowEnd ? "" : "[perspective:1600px]"}`}
-          style={{
-            height: "calc(var(--card) + 72px)",
-            WebkitMaskImage: lowEnd
-              ? undefined
-              : "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
-            maskImage: lowEnd
-              ? undefined
-              : "linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%)",
-          }}
+          className="hero-stage relative mt-6 sm:mt-8 w-full select-none outline-none"
           role="group"
           aria-roledescription="carousel"
           aria-label="Featured products"
@@ -310,160 +170,78 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
           onMouseEnter={() => { pausedRef.current = true; }}
           onMouseLeave={() => { if (!drag.current.active) pausedRef.current = false; }}
         >
-          {/* soft halo behind the stage — skipped on low-end (blur layer ghosts) */}
-          {!lowEnd && (
-            <div
-              aria-hidden
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[130%] rounded-full blur-3xl opacity-70"
-              style={{ background: `radial-gradient(circle, ${ambient}, transparent 68%)`, transition: "background 800ms ease" }}
-            />
-          )}
-          {/* subtle radial orange glow directly behind the active product */}
-          {perf.enableGlow && !lowEnd && (
-            <div
-              aria-hidden
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] opacity-50"
-              style={{ width: "calc(var(--card) * 1.2)", height: "calc(var(--card) * 1.2)", background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.42), transparent 70%)" }}
-            />
-          )}
-
-          {items.length === 0 ? (
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[28px] glass-strong ring-1 ring-white/12 animate-pulse"
-              style={{ width: "var(--card)", height: "var(--card)" }}
-            />
-          ) : (
-            items.map((p, i) => {
-              const n = items.length;
-              // Shortest signed ring distance → smooth, jump-free looping.
-              let rel = i - index;
-              if (rel > n / 2) rel -= n;
-              if (rel < -n / 2) rel += n;
-              const depth = Math.abs(rel);
-              const isCenter = rel === 0;
-              const sign = rel === 0 ? 0 : rel < 0 ? -1 : 1;
-
-              // ── Low-end / low-RAM Android: render ONLY the centered card. ──
-              // Stacked, semi-transparent, transform-animated side cards are the
-              // root of the ghost/duplicate corruption on these GPUs. A single
-              // static card cannot leave stale compositor layers behind.
-              if (lowEnd && !isCenter) return null;
-
-              const maxDepth = perf.maxDepth;
-              const onStage = depth <= maxDepth;
-              const parked = depth === maxDepth + 1;
-              const visible = onStage || parked;
-              const di = Math.min(depth, 5);
-
-              // ── Cinematic size pattern ──
-              // Explicit per-position scale tables so products grow smoothly
-              // toward the center: S→M→L→XL(center)→L→M→S.
-              //   mobile  (3/side): XL, L,  M,  S
-              //   desktop (4/side): XL, L,  M,  MS, S
-              const SCALE = isMobile
-                ? [1.0, 0.8, 0.62, 0.48]
-                : [1.0, 0.85, 0.7, 0.58, 0.48];
-              const last = SCALE.length - 1;
-              const scale = SCALE[Math.min(di, last)];
-
-              // Equal-spacing queue: cumulative center-to-center distance based
-              // on adjacent card sizes so gaps stay even as cards shrink.
-              const GAP = isMobile ? 0.46 : 0.54;
-              let units = 0;
-              for (let k = 1; k <= di; k++) {
-                units += ((SCALE[Math.min(k - 1, last)] + SCALE[Math.min(k, last)]) / 2) * GAP;
-              }
-              const xUnits = sign * units;
-
-              // Progressive depth falloff (blur / opacity / brightness / rotateY).
-              const opacity = onStage ? Math.max(0.3, 1 - di * 0.18) : 0;
-              const rawBlur = isCenter ? 0 : Math.min(3 + (di - 1) * 4, 22);
-              const blur = isCenter || lowEnd ? 0 : Math.round(rawBlur * perf.blurScale);
-              const gray = isCenter ? 0 : Math.min(0.12 + di * 0.1, 0.45);
-              const bright = isCenter ? 1.05 : Math.max(0.62, 1 - di * 0.1);
-              const rotateY = isCenter ? 0 : sign * -24;
-
-              return (
+          <div
+            className="relative mx-auto touch-pan-y"
+            style={{ width: "var(--card)", height: "var(--card)" }}
+          >
+            {items.length === 0 ? (
+              <div
+                className="absolute inset-0 rounded-[26px] border border-white/10 bg-card animate-pulse"
+              />
+            ) : (
+              current && (
                 <Link
-                  key={p.id}
+                  key={current.id}
                   to="/products/$slug"
-                  params={{ slug: p.slug }}
-                  aria-hidden={!isCenter}
-                  tabIndex={isCenter ? 0 : -1}
+                  params={{ slug: current.slug }}
                   draggable={false}
                   onClick={(e) => { if (drag.current.moved) e.preventDefault(); }}
-                  className={`group absolute left-1/2 top-1/2 ${isCenter && !lowEnd ? "animate-float-soft" : ""}`}
-                  style={{
-                    width: "var(--card)",
-                    height: "var(--card)",
-                    marginLeft: "calc(var(--card) / -2)",
-                    marginTop: "calc(var(--card) / -2)",
-                    transform: lowEnd
-                      ? "none"
-                      : `translate3d(calc(var(--card) * ${xUnits}), 0, 0) scale(${scale}) rotateY(${rotateY}deg)`,
-                    opacity: lowEnd ? 1 : opacity,
-                    filter: lowEnd
-                      ? "none"
-                      : `blur(${blur}px) grayscale(${gray}) brightness(${bright}) drop-shadow(0 ${isCenter ? 26 : 12}px ${isCenter ? 44 : 22}px oklch(0 0 0 / ${isCenter ? 0.5 : 0.34}))`,
-                    zIndex: 10 - depth,
-                    pointerEvents: isCenter ? "auto" : "none",
-                    visibility: lowEnd ? "visible" : visible ? "visible" : "hidden",
-                    transition: lowEnd
-                      ? "none"
-                      : `transform ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
-                    willChange: visible && !lowEnd ? "transform, opacity, filter" : "auto",
-                  }}
+                  className="absolute inset-0 block overflow-hidden rounded-[26px] border border-white/10 bg-card shadow-md animate-fade-in"
                 >
-                  <div
-                    className="relative z-[1] size-full overflow-hidden rounded-[26px]"
-                    style={{
-                      background: isCenter
-                        ? `linear-gradient(160deg, ${ambientSoft}, color-mix(in srgb, ${primary} 30%, transparent))`
-                        : "color-mix(in srgb, oklch(0.2 0.01 262) 60%, transparent)",
-                      boxShadow: isCenter && perf.enableGlow && !lowEnd
-                        ? `0 0 0 1px oklch(1 0 0 / 0.06), 0 0 40px -6px oklch(0.74 0.19 49 / 0.55)`
-                        : "0 0 0 1px oklch(1 0 0 / 0.04)",
-                    }}
-                  >
-                    <ProductImage
-                      src={p.image}
-                      alt={isCenter ? p.name : ""}
-                      width={640}
-                      height={640}
-                      priority={isCenter}
-                      debugId={isCenter ? `center#${index}` : undefined}
-                      sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 60vw"
-                      className="block size-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-                    />
-                  </div>
+                  <ProductImage
+                    src={current.image}
+                    alt={current.name}
+                    width={640}
+                    height={640}
+                    priority
+                    debugId={`hero#${index}`}
+                    sizes="(min-width: 1025px) 480px, (min-width: 768px) 50vw, 72vw"
+                    className="block size-full object-cover object-center"
+                  />
                 </Link>
+              )
+            )}
+          </div>
 
-              );
-            })
+          {/* prev / next — desktop / pointer affordance, lightweight */}
+          {items.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous product"
+                onClick={() => go(-1)}
+                className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 hidden sm:grid size-10 place-items-center rounded-full border border-white/10 bg-card/90 text-foreground transition-colors hover:bg-card active:scale-95"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next product"
+                onClick={() => go(1)}
+                className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 hidden sm:grid size-10 place-items-center rounded-full border border-white/10 bg-card/90 text-foreground transition-colors hover:bg-card active:scale-95"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </>
           )}
         </div>
 
-        {/* Reserved-height container: name + CTA + dots render here AFTER
-            products load. Pre-reserving the height prevents the search box and
-            sections below from shifting down when content appears (CLS fix). */}
+        {/* Reserved-height container prevents layout shift when content loads. */}
         <div className="min-h-[8.75rem]">
-          {/* product name + CTA */}
           {current && (
             <div className="mt-5 min-h-[2.5rem] animate-fade-in" key={current.id}>
               <p className="text-sm font-medium text-foreground line-clamp-2 max-w-[280px] mx-auto leading-snug">{current.name}</p>
               <Link
                 to="/products/$slug"
                 params={{ slug: current.slug }}
-                className="view-product-cta group relative mt-3 inline-flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full px-6 text-[12px] font-semibold tracking-wide text-foreground outline-none transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:scale-[0.98]"
+                className="group mt-3 inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-6 text-[12px] font-semibold tracking-wide text-foreground transition-colors hover:bg-accent/15 active:scale-[0.98]"
               >
-                <span aria-hidden className="view-product-cta__shine pointer-events-none absolute inset-0 rounded-full" />
-                <span className="relative z-[1]">View Product</span>
-                <ArrowRight className="relative z-[1] size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                <span>View Product</span>
+                <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </div>
           )}
 
-          {/* dots — active dot fills with a liquid-style progress */}
           {items.length > 1 && (
             <div className="mt-3 flex items-center justify-center gap-1.5" role="tablist" aria-label="Product slides">
               {items.map((p, i) => {
@@ -475,29 +253,13 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                     aria-selected={isActive}
                     aria-label={`Show product ${i + 1}`}
                     onClick={() => setIndex(i)}
-                    className={`relative h-1.5 overflow-hidden rounded-full transition-[width,background-color] duration-300 ${isActive ? "w-6 bg-white/20" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
-                  >
-                    {isActive && !lowEnd && (
-                      <span
-                        key={index}
-                        aria-hidden
-                        className="absolute inset-y-0 left-0 rounded-full bg-accent"
-                        style={{
-                          animation: `dot-fill ${ROTATE_MS}ms linear forwards`,
-                          boxShadow: "0 0 10px -2px oklch(0.74 0.19 49 / 0.8)",
-                        }}
-                      />
-                    )}
-                    {isActive && lowEnd && (
-                      <span aria-hidden className="absolute inset-0 rounded-full bg-accent" />
-                    )}
-                  </button>
+                    className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${isActive ? "w-6 bg-accent" : "w-1.5 bg-white/25 hover:bg-white/40"}`}
+                  />
                 );
               })}
             </div>
           )}
         </div>
-
       </div>
 
       {/* search + chips slot */}

@@ -30,8 +30,6 @@ import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { useAndroidGpuSafeMode, useLightweightHome } from "@/lib/use-low-end-device";
-import { LightHome } from "@/components/site/LightHome";
 
 import { FlashDeals } from "@/components/site/FlashDeals";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
@@ -408,9 +406,11 @@ function Home() {
   const ffFlashDeals = useFlag("flashDeals");
   const ffProductGrid = useFlag("productGrid");
   const ffCarousels = useFlag("carousels");
-  const androidGpuSafeMode = useAndroidGpuSafeMode();
-  const lightweight = useLightweightHome();
-  const safeModeScrolled = useScrolledOnce(androidGpuSafeMode);
+  // Single responsive homepage for every device — no capability detection,
+  // no homepage swapping. These constants keep the (now always-on) premium
+  // path live; the dead branches that referenced GPU safe mode tree-shake away.
+  const androidGpuSafeMode = false;
+  const safeModeScrolled = true;
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
@@ -498,22 +498,7 @@ function Home() {
   const trendingChips = ["Wireless earbuds", "Smart watch", "Linen shirt", "Ceramic mug", "Air fryer"];
 
 
-  // Constrained devices get the lightweight static homepage. All data hooks
-  // above have already run, so this early return keeps hook order stable while
-  // swapping only the presentation. Business logic, search, cart and wishlist
-  // (via ProductCard) remain identical.
-  if (lightweight) {
-    return (
-      <LightHome
-        categories={homeCategories}
-        categoryCounts={categoryCounts}
-        trending={trending}
-        newArrivals={newArrivals}
-        bestSellers={bestSellers}
-        productsLoading={productsLoading}
-      />
-    );
-  }
+
 
   return (
     <>
