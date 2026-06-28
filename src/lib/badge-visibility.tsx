@@ -50,6 +50,13 @@ const isFlashKey = (k: BadgeKey) => FLASH_KEYS.includes(k);
 type BadgeEngineValue = {
   /** Slugs of the products currently selected for the live Flash Deal rotation. */
   activeFlashSlugs: Set<string>;
+  /**
+   * For each selected Flash Deal product, the single promotional badge it may
+   * display website-wide (`flash_deal` or `hot_deal`). Products with BOTH flags
+   * are assigned whichever badge is currently rarer among the selected 10, so
+   * the distribution stays balanced.
+   */
+  flashBadgeBySlug: Map<string, BadgeKey>;
   /** 24h-stable seed driving the rotating "third badge" selection. */
   daySeed: number;
   /** Live admin-configured badge rules (thresholds, enable flags, max badges). */
@@ -58,6 +65,7 @@ type BadgeEngineValue = {
 
 const BadgeEngineContext = createContext<BadgeEngineValue>({
   activeFlashSlugs: new Set(),
+  flashBadgeBySlug: new Map(),
   daySeed: 0,
   settings: DEFAULT_BADGE_SETTINGS,
 });
@@ -65,18 +73,65 @@ const BadgeEngineContext = createContext<BadgeEngineValue>({
 /** How many products may be visibly promoted as Flash Deals at any one time. */
 export const FLASH_VISIBLE_MAX = 10;
 
+export type FlashSelection = {
+  slugs: Set<string>;
+  badgeBySlug: Map<string, BadgeKey>;
+};
+
 /**
  * Selects the products currently allowed to display Flash/Hot badges and appear
- * in the Flash Deal section. Eligible = flagged Flash/Hot, published, in stock.
- * When more than {@link FLASH_VISIBLE_MAX} qualify, a deterministic random
- * subset is chosen per 6-hour window so the lineup rotates automatically.
+ * in the Flash Deal section, and decides which single promotional badge each one
+ * shows. Eligible = flagged Flash/Hot, published, in stock. When more than
+ * {@link FLASH_VISIBLE_MAX} qualify, the full eligible list is shuffled per
+ * 6-hour window (12AM/6AM/12PM/6PM IST) and the first 10 are picked — every
+ * product has an equal chance and selection never depends on id/date order.
+ *
+ * Badge balancing: a product carrying both Flash Deal and Hot Deal shows only
+ * one. It is given whichever badge is currently less frequent among the already
+ * selected products, keeping the two badge types evenly distributed.
  */
-export function selectActiveFlashSlugs(products: Product[], seed: number): Set<string> {
+export function selectActiveFlash(
+  products: Product[],
+  seed: number,
+  settings: BadgeSettings,
+): FlashSelection {
   const eligible = products.filter(
     (p) => isFlashDealProduct(p) && p.status === "published" && p.inStock && p.stockQuantity > 0,
   );
   const chosen = seededShuffle(eligible, seed).slice(0, FLASH_VISIBLE_MAX);
-  return new Set(chosen.map((p) => p.slug));
+  const slugs = new Set(chosen.map((p) => p.slug));
+  const badgeBySlug = new Map<string, BadgeKey>();
+  let flashCount = 0;
+  let hotCount = 0;
+  for (const p of chosen) {
+    const all = computeBadges(p, settings, 99);
+    const hasFlash = all.some((b) => b.key === "flash_deal");
+    const hasHot = all.some((b) => b.key === "hot_deal");
+    let key: BadgeKey | null = null;
+    if (hasFlash && hasHot) {
+      // Pick the rarer badge so far to balance the distribution (ties → Flash).
+      key = flashCount <= hotCount ? "flash_deal" : "hot_deal";
+    } else if (hasFlash) {
+      key = "flash_deal";
+    } else if (hasHot) {
+      key = "hot_deal";
+    }
+    if (key) {
+      badgeBySlug.set(p.slug, key);
+      if (key === "flash_deal") flashCount++;
+      else hotCount++;
+    }
+  }
+  return { slugs, badgeBySlug };
+}
+
+/** Back-compat helper: just the active Flash Deal slug set. */
+export function selectActiveFlashSlugs(
+  products: Product[],
+  seed: number,
+  settings: BadgeSettings = DEFAULT_BADGE_SETTINGS,
+): Set<string> {
+  return selectActiveFlash(products, seed, settings).slugs;
 }
 
 /**
