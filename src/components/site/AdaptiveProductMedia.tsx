@@ -27,7 +27,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, children }: Prop
   return (
     <div
       data-product-media
-      className="relative aspect-square w-full overflow-hidden rounded-t-[22px] p-4 sm:p-5"
+      className="relative aspect-square w-full overflow-hidden rounded-t-[22px] p-[1.5%]"
       style={{
         background: palette.background,
         transition: "background 300ms ease",
