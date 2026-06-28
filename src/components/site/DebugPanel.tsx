@@ -10,18 +10,24 @@ import {
   getAllFlags,
   getBisectOverrideEnabled,
   getBisectLog,
+  getRunnerState,
   isDebugEnabled,
   recordBisectObservation,
+  recordRunnerResult,
   resetFlags,
   setActiveBisectTest,
   setBisectOverrideEnabled,
   setAll,
   setFlag,
+  startRunner,
+  stopRunner,
   subscribe,
   type BisectObservation,
   type BisectPhase,
   type DebugFlag,
+  type RunnerState,
 } from "@/lib/debug-flags";
+
 
 import {
   getDiagnostics,
