@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
+import { getStorageResponsive } from "@/lib/storage-image";
 
 type Props = {
   src: string;
