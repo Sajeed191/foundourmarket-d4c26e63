@@ -40,6 +40,9 @@ import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, logDiagnostic, useRenderDiagnostics } from "@/lib/startup-diagnostics";
+import { initDebugFlags, getFlag } from "@/lib/debug-flags";
+import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
+import { DebugPanel } from "@/components/site/DebugPanel";
 
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
@@ -461,9 +464,12 @@ function RootComponent() {
   const ultraLowEndAndroid = useUltraLowEndAndroid();
 
   useEffect(() => {
+    initDebugFlags();
+    installDebugDiagnostics();
+    patchImageDecode();
     installStartupDiagnostics();
     installChunkRecovery();
-    registerServiceWorker();
+    if (getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
     logBuildVersion();
     // React mounted successfully. Clear the persistent boot-attempt counter a
     // few seconds after a stable render so the auto-reload cap only ever counts
@@ -599,6 +605,7 @@ function RootComponent() {
                             />
                             <Toaster position="bottom-center" richColors />
                             <ShareDialog />
+                            <DebugPanel />
                           </div>
                           </BadgeEngineProvider>
                         </LayoutMetricsProvider>

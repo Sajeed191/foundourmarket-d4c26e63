@@ -26,6 +26,7 @@ import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { HeroCarousel } from "@/components/site/HeroCarousel";
+import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
@@ -384,6 +385,12 @@ function useCategoryLimit() {
 
 function Home() {
   useRenderDiagnostics("Home");
+  // Debug harness flags — isolate which homepage subsystem corrupts rendering.
+  const ffHero = useFlag("hero");
+  const ffCategoryGrid = useFlag("categoryGrid");
+  const ffFlashDeals = useFlag("flashDeals");
+  const ffProductGrid = useFlag("productGrid");
+  const ffCarousels = useFlag("carousels");
   const { products, loading: productsLoading } = useProducts();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
@@ -491,6 +498,7 @@ function Home() {
           <p>A premium independent marketplace, sourcing top-quality products from across the world.</p>
         </div>
 
+        {ffHero && (
         <HeroCarousel
 
           featured={featured}
@@ -565,6 +573,8 @@ function Home() {
           </form>
 
         </HeroCarousel>
+        )}
+
 
       </section>
 
@@ -586,7 +596,7 @@ function Home() {
           )}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
-          {homeCategories.map((cat, i) => {
+          {ffCategoryGrid && homeCategories.map((cat, i) => {
             const Icon = iconForCategory(cat.slug, cat.name);
             const hasImage = !!(cat.image || cat.mobile_image);
             return (
@@ -676,13 +686,13 @@ function Home() {
       <CinematicDivider />
 
       <LazyMount minHeight={360}>
-        <FlashDeals />
+        {ffFlashDeals && <FlashDeals />}
       </LazyMount>
 
 
 
       {/* 4-6 · Trending / New Arrivals / Best Sellers — separate lazy rails */}
-      {productsLoading ? (
+      {ffProductGrid && (productsLoading ? (
         <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>
@@ -721,7 +731,7 @@ function Home() {
             viewAllTo="/products/best-sellers"
           />
         </>
-      )}
+      ))}
 
       <CinematicDivider />
 
@@ -736,7 +746,7 @@ function Home() {
           <LazyMount minHeight={240}>
             <>
               {/* Mobile: compact swipeable carousel with dots + autorotate */}
-              <TestimonialsCarousel items={testimonials} />
+              {ffCarousels && <TestimonialsCarousel items={testimonials} />}
 
               {/* Desktop: compact grid */}
               <div className="hidden md:grid grid-cols-3 gap-5">

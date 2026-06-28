@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive } from "@/lib/storage-image";
 import { detectUltraLowEndAndroid } from "@/lib/use-low-end-device";
+import { useFlag } from "@/lib/use-debug-flag";
 
 type Props = {
   src: string;
@@ -38,6 +39,10 @@ function ProductImageImpl({
   style,
   onLoad,
 }: Props) {
+  // Debug harness flags for image-subsystem isolation.
+  const ffProductImages = useFlag("productImages");
+  const ffLazyLoading = useFlag("lazyLoading");
+  const ffImageDecoding = useFlag("imageDecoding");
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
   const bundled = getResponsiveImage(src);
@@ -76,6 +81,19 @@ function ProductImageImpl({
     onLoad?.();
   }, [onLoad, resolvedSrc]);
 
+  // Debug harness: render a flat placeholder instead of an <img> to rule the
+  // product image element out as the corruption source.
+  if (!ffProductImages) {
+    return (
+      <div
+        data-product-image
+        aria-label={alt}
+        style={{ ...style, background: "#e5e7eb" }}
+        className={className}
+      />
+    );
+  }
+
   return (
     <img
       key={`${resolvedSrc}|${width}x${height}`}
@@ -86,9 +104,9 @@ function ProductImageImpl({
       alt={alt}
       width={width}
       height={height}
-      loading={priority ? "eager" : "lazy"}
+      loading={!ffLazyLoading || priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
-      decoding="async"
+      decoding={ffImageDecoding ? "async" : "sync"}
       data-product-image
       style={style}
       onLoad={handleLoad}

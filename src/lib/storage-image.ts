@@ -19,6 +19,14 @@ export function isStorageObjectUrl(url: string): boolean {
 /** Returns a resized variant of a storage object URL at the given width. */
 export function resizedStorageImage(url: string, width: number, quality = 62): string {
   if (!isStorageObjectUrl(url)) return url;
+  // Debug harness: when image transformations are disabled, serve the original
+  // object URL untouched so the resize/transform pipeline can be isolated.
+  if (
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.ffImageTransformations === "off"
+  ) {
+    return url;
+  }
   try {
     const u = new URL(url);
     u.pathname = u.pathname.replace(OBJECT_SEGMENT, RENDER_SEGMENT);

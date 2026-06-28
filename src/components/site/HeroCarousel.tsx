@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight } from "lucide-react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { useImagePalette } from "@/lib/use-image-palette";
 import { useLowEndDevice, useDeviceTier, useUltraLowEndAndroid } from "@/lib/use-low-end-device";
+import { useFlag } from "@/lib/use-debug-flag";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
@@ -40,6 +41,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   });
   const lowEnd = useLowEndDevice();
   const ultraLowEndAndroid = useUltraLowEndAndroid();
+  const ffJsAnimations = useFlag("jsAnimations");
   const isMobile = useIsMobile();
   const tier = useDeviceTier();
 
@@ -91,14 +93,14 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
 
   // Auto-rotate.
   useEffect(() => {
-    if (lowEnd || ultraLowEndAndroid) return;
+    if (lowEnd || ultraLowEndAndroid || !ffJsAnimations) return;
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [items.length, lowEnd, ultraLowEndAndroid]);
+  }, [items.length, lowEnd, ultraLowEndAndroid, ffJsAnimations]);
 
 
   const current = items[index];
