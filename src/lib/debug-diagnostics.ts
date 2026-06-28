@@ -16,6 +16,8 @@
  * are fed in via recordReactEvent().
  */
 
+import { isDebugEnabled } from "@/lib/debug-flags";
+
 export type Diagnostics = {
   gpuRenderer: string;
   gpuVendor: string;
@@ -36,8 +38,6 @@ export type Diagnostics = {
   hydrationMismatches: number;
   userAgent: string;
 };
-
-import { isDebugEnabled } from "@/lib/debug-flags";
 
 const d: Diagnostics = {
   gpuRenderer: "unknown",

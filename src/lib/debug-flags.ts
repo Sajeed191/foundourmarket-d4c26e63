@@ -164,6 +164,33 @@ export const BISECT_TESTS: BisectTest[] = [
     file: "src/components/site/AdaptiveProductMedia.tsx",
     line: 61,
   },
+  {
+    id: "product-image-srcset",
+    property: "srcSet",
+    disabledValue: "undefined",
+    selector: "ProductImage prop",
+    component: "ProductImage",
+    file: "src/components/site/ProductImage.tsx",
+    line: 186,
+  },
+  {
+    id: "product-image-lazy-loading",
+    property: "loading",
+    disabledValue: "eager",
+    selector: "ProductImage prop",
+    component: "ProductImage",
+    file: "src/components/site/ProductImage.tsx",
+    line: 191,
+  },
+  {
+    id: "product-image-decoding-async",
+    property: "decoding",
+    disabledValue: "sync",
+    selector: "ProductImage prop",
+    component: "ProductImage",
+    file: "src/components/site/ProductImage.tsx",
+    line: 193,
+  },
 ];
 
 export const FLAG_LABELS: Record<DebugFlag, string> = {
@@ -229,6 +256,10 @@ function applyDom() {
   let style = document.getElementById(BISECT_STYLE_ID) as HTMLStyleElement | null;
   const test = activeBisectTest ? BISECT_TESTS.find((t) => t.id === activeBisectTest) : null;
   if (!test) {
+    style?.remove();
+    return;
+  }
+  if (test.selector === "ProductImage prop") {
     style?.remove();
     return;
   }
