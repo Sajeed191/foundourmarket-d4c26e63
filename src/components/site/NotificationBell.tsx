@@ -19,16 +19,17 @@ export function NotificationBell() {
     <Link
       to={to}
       aria-label="Notifications"
-      className={`relative size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-white/5 active:bg-accent/10 active:text-accent active:scale-95 ${
-        isActive ? "bg-white/5 text-foreground" : ""
+      className={`relative size-10 sm:size-11 rounded-xl grid place-items-center text-muted-foreground transition-all duration-200 hover:text-accent hover:bg-accent/10 hover:shadow-[0_0_18px_-6px_var(--color-accent)] active:bg-accent/15 active:text-accent active:scale-90 ${
+        isActive ? "bg-accent/10 text-accent shadow-[0_0_18px_-6px_var(--color-accent)]" : ""
       }`}
     >
       <Bell className="size-[18px]" />
       {totalUnread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono grid place-items-center shadow-[0_0_10px_2px_oklch(0.74_0.19_49_/_0.6)]">
-          {totalUnread > 99 ? "99+" : totalUnread}
+        <span key={totalUnread} className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono leading-none ring-2 ring-background shadow-[0_2px_6px_-1px_oklch(0.74_0.19_49/0.7)] animate-scale-in">
+          {totalUnread > 9 ? "9+" : totalUnread}
         </span>
       )}
     </Link>
+
   );
 }
