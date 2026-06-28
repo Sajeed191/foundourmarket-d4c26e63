@@ -46,17 +46,38 @@ function isChunkLoadError(reason: unknown): boolean {
   );
 }
 
-/** One-time hard reload to recover from a stale-deploy chunk 404. */
+/**
+ * Guarded hard reload to recover from a stale-deploy chunk 404.
+ *
+ * Delegates to the pre-React recovery installed by the inline script in
+ * __root.tsx (`window.__fomRecover`) so a single persistent counter governs
+ * EVERY auto-reload path in the app — there is exactly one cap, no matter which
+ * mechanism triggers first. Falls back to a self-contained capped reload if the
+ * inline script is unavailable (e.g. SSR-less test harness).
+ */
 function attemptReloadRecovery(): void {
   if (typeof window === "undefined") return;
-  try {
-    const last = Number(sessionStorage.getItem(RELOAD_FLAG) ?? 0);
-    if (Date.now() - last < RELOAD_COOLDOWN_MS) return; // already tried recently
-    sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
-  } catch {
-    /* storage blocked (private mode / WebView) — fall through to reload once */
+
+  const shared = (window as unknown as { __fomRecover?: () => void }).__fomRecover;
+  if (typeof shared === "function") {
+    shared();
+    return;
   }
-  // Cache-bust the document so the CDN/SW returns the newest HTML + manifest.
+
+  // Fallback: persistent counter with hard cap (mirrors the inline script).
+  let count = 0;
+  try {
+    const raw = JSON.parse(localStorage.getItem(BOOT_KEY) || "null") as
+      | { n: number; t: number }
+      | null;
+    if (raw && Date.now() - raw.t < BOOT_WINDOW_MS) count = raw.n;
+    count += 1;
+    localStorage.setItem(BOOT_KEY, JSON.stringify({ n: count, t: Date.now() }));
+  } catch {
+    /* storage blocked — proceed with a single reload */
+  }
+  if (count > BOOT_MAX_RELOADS) return; // give up; show whatever UI is present
+
   const url = new URL(window.location.href);
   url.searchParams.set("_r", Date.now().toString(36));
   window.location.replace(url.toString());
