@@ -63,18 +63,17 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   const current = items[index];
   const { palette } = useImagePalette(current?.image);
 
-  // Preload adjacent images (both directions, several deep) for seamless looping.
+  // Preload only the immediate next + previous images (per spec). Off-screen
+  // cards beyond these are lazy-loaded by the browser via <ProductImage>.
   useEffect(() => {
     if (items.length <= 1) return;
     const n = items.length;
-    for (let d = 1; d <= 5; d++) {
-      [items[(index + d) % n], items[(index - d + n) % n]].forEach((p) => {
-        if (p?.image) {
-          const img = new Image();
-          img.src = p.image;
-        }
-      });
-    }
+    [items[(index + 1) % n], items[(index - 1 + n) % n]].forEach((p) => {
+      if (p?.image) {
+        const img = new Image();
+        img.src = p.image;
+      }
+    });
   }, [index, items]);
 
   const primary = palette.primary || "#ffffff";
