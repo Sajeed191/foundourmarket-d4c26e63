@@ -151,8 +151,8 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
                       marginLeft: "calc(var(--card) * -0.46)",
                       marginTop: "calc(var(--card) * -0.46)",
                       transform: `translate3d(calc(var(--card) * ${slot.xFactor}), 0, 0) scale(0.78) rotate(${slot.rot}deg)`,
-                      opacity: 0.3,
-                      filter: "blur(12px)",
+                      opacity: 0.6,
+                      filter: "blur(8px)",
                       transition: `transform 800ms ${EASE}, opacity 800ms ${EASE}, filter 800ms ${EASE}`,
                       willChange: "transform, opacity, filter",
                     }}
