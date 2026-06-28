@@ -1370,3 +1370,67 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
     contain-intrinsic-size: auto 310px;
   }
 }
+
+/* ── Premium Search CTA button ── */
+.search-cta {
+  position: absolute;
+  background: linear-gradient(135deg, #ff8a00 0%, #ff6a00 50%, #ff9f1a 100%);
+  background-size: 160% 160%;
+  border: 1px solid oklch(1 0 0 / 0.28);
+  box-shadow:
+    0 6px 18px -6px oklch(0.66 0.2 42 / 0.65),
+    0 0 22px -6px oklch(0.74 0.19 49 / 0.6),
+    inset 0 1px 0 oklch(1 0 0 / 0.3);
+  transition:
+    transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-position 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: search-cta-pulse 3.4s ease-in-out infinite;
+  will-change: transform;
+}
+.search-cta:hover {
+  background-position: 100% 0%;
+  box-shadow:
+    0 10px 26px -6px oklch(0.66 0.2 42 / 0.75),
+    0 0 34px -4px oklch(0.74 0.19 49 / 0.85),
+    inset 0 1px 0 oklch(1 0 0 / 0.35);
+}
+.search-cta:focus-visible {
+  box-shadow:
+    0 0 0 3px oklch(0.74 0.19 49 / 0.45),
+    0 8px 22px -6px oklch(0.66 0.2 42 / 0.7),
+    inset 0 1px 0 oklch(1 0 0 / 0.3);
+}
+.search-cta__gloss {
+  background: linear-gradient(to bottom, oklch(1 0 0 / 0.38), oklch(1 0 0 / 0));
+}
+.search-cta__shimmer {
+  overflow: hidden;
+}
+.search-cta__shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-130%);
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    oklch(1 0 0 / 0.45) 50%,
+    transparent 70%
+  );
+  animation: search-cta-shimmer 9s ease-in-out infinite;
+}
+
+@keyframes search-cta-pulse {
+  0%, 100% { box-shadow: 0 6px 18px -6px oklch(0.66 0.2 42 / 0.65), 0 0 18px -8px oklch(0.74 0.19 49 / 0.45), inset 0 1px 0 oklch(1 0 0 / 0.3); }
+  50% { box-shadow: 0 6px 18px -6px oklch(0.66 0.2 42 / 0.65), 0 0 30px -6px oklch(0.74 0.19 49 / 0.75), inset 0 1px 0 oklch(1 0 0 / 0.3); }
+}
+@keyframes search-cta-shimmer {
+  0%, 82% { transform: translateX(-130%); }
+  92%, 100% { transform: translateX(130%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-cta { animation: none; }
+  .search-cta__shimmer::after { animation: none; display: none; }
+}

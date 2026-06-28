@@ -26,6 +26,7 @@ import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { HeroCarousel } from "@/components/site/HeroCarousel";
+import { SearchButton } from "@/components/site/SearchButton";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
@@ -382,6 +383,7 @@ function Home() {
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
   const categoryCounts = useMemo(
@@ -465,7 +467,11 @@ function Home() {
           {/* ── premium glass search bar (iOS / Arc style) ── */}
           <form
             className="relative z-10 mx-auto mt-7 sm:mt-8 max-w-2xl"
-            onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q: query } }); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSearching(true);
+              nav({ to: "/search", search: { q: query } });
+            }}
           >
             <div className={`relative glass-strong rounded-full ring-1 transition-all duration-300 ${searchFocused ? "ring-accent/50 shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.10),0_0_32px_-6px_oklch(0.74_0.19_49/0.50),var(--shadow-float)]" : "ring-white/12 shadow-[var(--shadow-float)]"}`}>
               <Search className={`absolute left-5 top-1/2 -translate-y-1/2 size-5 transition-colors duration-300 ${searchFocused ? "text-accent" : "text-muted-foreground"}`} />
@@ -477,17 +483,9 @@ function Home() {
                 onBlur={() => setSearchFocused(false)}
                 placeholder={rotatingPlaceholder}
                 aria-label="Search products"
-                className="w-full min-h-[56px] bg-transparent rounded-full pl-12 pr-[104px] py-4 text-base tracking-[-0.01em] focus:outline-none placeholder:text-muted-foreground/55 placeholder:tracking-[-0.01em]"
+                className="w-full min-h-[56px] bg-transparent rounded-full pl-12 pr-[124px] py-4 text-base tracking-[-0.01em] focus:outline-none placeholder:text-muted-foreground/55 placeholder:tracking-[-0.01em]"
               />
-              {/* Glowing pill search button — single icon lives on the left of the input */}
-              <button
-                type="submit"
-                aria-label="Search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-10 px-5 rounded-full text-accent-foreground text-[13px] font-semibold tracking-wide transition-all duration-200 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-[var(--shadow-ember)]"
-                style={{ background: "var(--gradient-ember)" }}
-              >
-                <span style={{ WebkitTextStroke: "0.6px oklch(0.45 0.16 45)" }}>Search</span>
-              </button>
+              <SearchButton loading={searching} />
             </div>
           </form>
         </HeroCarousel>
