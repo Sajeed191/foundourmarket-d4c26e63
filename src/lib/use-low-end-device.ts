@@ -259,31 +259,23 @@ export type DeviceTier = "high" | "mid" | "low";
 /**
  * Three-tier device-capability classifier for adaptively scaling expensive
  * visual effects (visible card count, blur strength, glow, shadows, animation).
+ * RAM-free — based on CPU cores + GPU + explicit user intent only.
  *
- *   low  — ≤4GB RAM, ≤4 cores, OR prefers-reduced-motion. Minimal blur, no
- *          heavy glow, simplest animations.
- *   high — ≥8GB RAM AND ≥8 cores (and no reduced-motion). Full effects.
- *   mid  — everything in between. Medium blur, reduced shadows.
+ *   low  — genuine constraint: reduced-motion, save-data, ≤2 cores, weak GPU.
+ *          Minimal blur, no heavy glow, simplest animations.
+ *   high — ≥8 cores and no weak-GPU/constraint signal. Full effects.
+ *   mid  — everything in between (incl. typical 4–6GB phones). Medium blur.
  *
  * SSR-safe: assumes "high" until mounted so SSR + first paint stay rich, then
- * downgrades on the client once real capabilities are known.
+ * downgrades on the client once real capabilities are known. The runtime
+ * governor (data-degrade-effects) can further trim effects if measured FPS drops.
  */
 function detectTier(): DeviceTier {
   if (typeof navigator === "undefined") return "high";
   if (detect()) return "low";
-  const reduced =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if (reduced) return "low";
-  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   const cores = navigator.hardwareConcurrency;
-  if ((typeof mem === "number" && mem > 0 && mem <= 4) ||
-      (typeof cores === "number" && cores > 0 && cores <= 4)) {
-    return "low";
-  }
-  const memHigh = typeof mem !== "number" || mem === 0 || mem >= 8;
   const coresHigh = typeof cores !== "number" || cores === 0 || cores >= 8;
-  if (memHigh && coresHigh) return "high";
+  if (coresHigh) return "high";
   return "mid";
 }
 
