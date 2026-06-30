@@ -477,6 +477,9 @@ function RootComponent() {
     // smooth rendering — never hides images or hero animations. Runs on every
     // capable device (incl. 4–6GB Android) so degradation is performance-driven.
     startCapabilityGovernor();
+    // Anonymous render diagnostics (GPU/browser/FPS/mode) on window.__fomRender —
+    // helps surface newly problematic GPUs. No PII, no network transmission.
+    publishRenderDiagnostics();
   }, []);
   useEffect(() => {
     preloadCrisp();
