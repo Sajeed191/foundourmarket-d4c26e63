@@ -374,11 +374,13 @@ export function getRenderDiagnostics(): RenderDiagnostics {
   return {
     gpuRenderer: getWebGLRenderer() ?? "unknown",
     browser: detectBrowser(ua),
+    browserVersion: detectBrowserVersion(ua),
     androidVersion: detectAndroidVersion(ua),
     cores: readCores() ?? null,
     fps: liveMetrics.fps,
     longTaskMs: liveMetrics.longTaskMs,
     compatibilityMode: isGpuUnsafe(),
+    compatibilityReason: readCompatReason(),
     degraded: isDegraded(),
     saveData: readSaveData(),
     reducedMotion: readReducedMotion(),
