@@ -309,6 +309,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           "(function(){try{if(/[?&]ff-disable-backdrop(=1)?(&|$)/.test(window.location.search))document.documentElement.setAttribute('data-ff-backdrop-filters','off');}catch(e){}})();",
       },
+      {
+        // ISOLATION TEST FLAG (temporary). `?ff-disable-cv` sets
+        // data-ff-content-visibility="off" before first paint, which the CSS
+        // kill-switch (styles.css) uses to disable ONLY content-visibility:auto
+        // + its render-skip containment on product cards. Nothing else changes.
+        // Confirms whether content-visibility relevance-skipping is the
+        // Chromium tile-corruption root cause. Remove once verified.
+        children:
+          "(function(){try{if(/[?&]ff-disable-cv(=1)?(&|$)/.test(window.location.search))document.documentElement.setAttribute('data-ff-content-visibility','off');}catch(e){}})();",
+      },
 
       {
 
