@@ -82,8 +82,9 @@ export function isWeakGpu(renderer: string | null): boolean {
     /adreno \(tm\) 3\d\d/.test(r) || // Adreno 3xx
     /adreno \(tm\) 4[01]\d/.test(r) || // Adreno 40x/41x
     /powervr sgx/.test(r) ||
-    /videocore iv/.test(r) ||
-    /swiftshader|software/.test(r) // software rasterizer
+    /videocore/.test(r) ||
+    /vivante/.test(r) ||
+    /swiftshader|software|llvmpipe/.test(r) // software rasterizer
   );
 }
 
