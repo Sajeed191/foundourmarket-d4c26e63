@@ -131,13 +131,16 @@ export function subscribeDegraded(fn: (degraded: boolean) => void): () => void {
 }
 
 /**
- * Starts the live governor. Measures real FPS over a short window and watches
- * for long tasks. If the device cannot sustain smooth rendering, it flips
- * data-degrade-effects so CSS drops expensive effects only. It never touches
- * images or hero animation visibility.
+ * Starts the live, bidirectional governor. It continuously samples real FPS and
+ * long-task blocking time. On sustained poor performance it flips
+ * data-degrade-effects="true" so CSS drops only expensive effects (blur,
+ * backdrop-filter, multi-layer shadows, heavy 3D); on a sustained-smooth run it
+ * restores premium mode. Asymmetric hysteresis prevents flapping. It never
+ * reloads the page, recreates the React tree, or touches images/hero animations,
+ * and it never overrides the boot-time GPU gate (data-gpu-unsafe).
  *
- * Safe to call multiple times; runs once. No-op when reduced-motion/save-data
- * already requested degradation up front.
+ * Safe to call multiple times; runs once. Honors reduced-motion/save-data up
+ * front and never auto-recovers out of that explicit intent.
  */
 export function startCapabilityGovernor(): void {
   if (governorStarted || typeof window === "undefined") return;
