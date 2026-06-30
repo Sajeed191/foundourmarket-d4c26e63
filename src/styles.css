@@ -1781,12 +1781,16 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
 }
 
 /* =====================================================================
-   ANDROID GPU SAFE MODE — final compositor kill-switch
-   Activated on Android devices that report <=4GB RAM, deviceMemory <=4,
-   Save-Data, <=4 cores, unknown Android memory, or reduced motion. This block
-   is intentionally last so later component styles cannot reintroduce GPU
-   compositor layers. Capable devices are untouched.
+   LEGACY COMPOSITOR KILL-SWITCH (dormant)
+   These `data-ultra-low-end` / `data-android-gpu-safe-mode` hooks are no
+   longer set by any boot code — UI quality is never gated on RAM, device
+   model, or Android version. Capability-based gating now lives entirely in
+   the `data-gpu-unsafe` (pre-paint GPU gate) and runtime-governor rules.
+   Kept only so `use-image-palette` reads stay null-safe. Do not re-wire
+   these to real attributes; that would strip supported animations and
+   cause visual regressions against the single Premium design.
    ===================================================================== */
+
 html[data-ultra-low-end="true"],
 html[data-ultra-low-end="true"] body,
 html[data-android-gpu-safe-mode="true"],
