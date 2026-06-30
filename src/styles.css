@@ -2101,6 +2101,22 @@ html[data-ff-blur-effects="off"] *::after {
   backdrop-filter: none !important;
 }
 
+/* ISOLATION TEST FLAG (temporary). `?ff-disable-cv` sets
+   data-ff-content-visibility="off" before first paint. This neutralises ONLY
+   content-visibility: auto + its render-skip containment across the tree —
+   no filter, transform, animation, blur or layout is touched. Used to confirm
+   whether content-visibility's relevance-based skip/restore is the Chromium
+   tile-corruption trigger (duplicated cards, horizontal bands, solid blocks).
+   content-visibility shipped much later in Firefox and skips far more
+   conservatively, which is why Firefox never reproduces. */
+html[data-ff-content-visibility="off"] [data-product-card-frame],
+html[data-ff-content-visibility="off"] .cv-auto,
+html[data-ff-content-visibility="off"] [style*="content-visibility"] {
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+  contain: none !important;
+}
+
 /* =====================================================================
    DIAGNOSTIC: render=safe mode
    Activated by ?render=safe (sets html[data-render-safe="true"] before paint).
