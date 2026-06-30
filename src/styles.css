@@ -1263,6 +1263,90 @@ html[data-low-end="true"] [data-product-image] {
   backdrop-filter: none !important;
 }
 
+/* ============================================================
+   ANDROID COMPOSITOR STABILITY LAYER (consolidated)
+   ------------------------------------------------------------
+   A small minority of Android GPUs (notably Mali / older Adreno /
+   PowerVR) corrupt compositor tiles when many persistent backing
+   stores stack and continuously invalidate — producing horizontal
+   colored lines and duplicated/ghosted rendering. The product-grid
+   block above already neutralises contain / content-visibility /
+   isolation on cards. This block removes the REMAINING persistent
+   layer promoters across the rest of the customer-facing UI.
+
+   Every rule here is INVISIBLE on Android touch devices:
+   - hover lifts/scales never fire on touch (no hover state),
+   - infinite decorative ambience (glow/float/orb/shimmer) is a
+     subtle background effect whose removal does not change layout,
+     colors, typography, or image quality,
+   - one-shot entrance animations (fade-up, scale-in, slide-in,
+     search-drop, badge entrance) are deliberately KEPT — they are
+     short-lived and do not hold a permanent compositor layer.
+
+   Desktop and iOS are completely untouched (scoped to data-android).
+   ============================================================ */
+
+/* 1. Drop ALL persistent compositor-layer hints. `will-change` forces
+   a permanent backing store; stacking many is the primary Mali tile-
+   corruption trigger. Removing it lets the browser promote lazily and
+   recycle layers cleanly. No visual change. */
+html[data-android="true"] *,
+html[data-android="true"] *::before,
+html[data-android="true"] *::after {
+  will-change: auto !important;
+}
+
+/* 2. Pause continuously-running decorative animations that keep a layer
+   permanently invalidated (the second corruption trigger). These are
+   ambient-only; entrance animations are intentionally excluded. */
+html[data-android="true"] .animate-float,
+html[data-android="true"] .animate-glow,
+html[data-android="true"] .animate-orb,
+html[data-android="true"] .animate-float-soft,
+html[data-android="true"] .animate-glow-breathe,
+html[data-android="true"] .animate-float-slow,
+html[data-android="true"] .animate-orb-breathe {
+  animation: none !important;
+}
+
+/* 3. Badge ambience uses infinite transform/filter/opacity keyframes that
+   each promote the badge to its own animated layer. Freeze them to the
+   resting frame — the badge stays fully visible, just static. */
+html[data-android="true"] [class*="badge"][style*="animation"],
+html[data-android="true"] [class*="Badge"][style*="animation"] {
+  animation: none !important;
+}
+
+/* 4. Neutralise transform-based hover lifts/scales. They never trigger on
+   touch, but their presence makes Chrome pre-promote the element to a
+   compositor layer in anticipation. Removing the transform on Android
+   keeps those elements in normal paint. Hover color/border/shadow
+   transitions are preserved. */
+html[data-android="true"] .product-card-shell:hover,
+html[data-android="true"] [data-product-card]:hover,
+html[data-android="true"] .card-premium:hover,
+html[data-android="true"] .card-elevated:hover,
+html[data-android="true"] .card-ambient:hover {
+  transform: none !important;
+}
+
+/* 5. Large decorative blur orbs become continuously-composited, oversized
+   blurred textures — frequently larger than a single GPU tile, which is
+   exactly what overflows weak Mali tile memory. Keep them visible (same
+   color, lighter blur) but static and unpromoted. */
+html[data-android="true"] .orb {
+  filter: blur(48px) !important;
+  animation: none !important;
+}
+
+/* 6. Decorative aria-hidden blur/glow helpers (non-content) shed their
+   filter layer on Android. Content imagery is never aria-hidden, so image
+   quality is unaffected. */
+html[data-android="true"] [aria-hidden="true"][class*="blur-"],
+html[data-android="true"] [aria-hidden="true"][class*="drop-shadow"] {
+  filter: none !important;
+}
+
 
 
 
