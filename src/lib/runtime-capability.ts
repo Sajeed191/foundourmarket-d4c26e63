@@ -112,6 +112,10 @@ export function computeCapabilityScore(): { score: number; capability: Capabilit
 let governorStarted = false;
 const listeners = new Set<(degraded: boolean) => void>();
 
+// Live runtime metrics (updated once per second by the governor). Exposed for
+// anonymous telemetry only — never anything user-identifying.
+const liveMetrics = { fps: 0, longTaskMs: 0 };
+
 function setDegraded(value: boolean) {
   if (typeof document === "undefined") return;
   const current = document.documentElement.dataset.degradeEffects === "true";
@@ -125,10 +129,18 @@ export function isDegraded(): boolean {
   return document.documentElement.dataset.degradeEffects === "true";
 }
 
+/** True when the boot-time GPU gate put the page in Compatibility Mode. */
+export function isGpuUnsafe(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.dataset.gpuUnsafe === "true";
+}
+
 export function subscribeDegraded(fn: (degraded: boolean) => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
+
+
 
 /**
  * Starts the live, bidirectional governor. It continuously samples real FPS and
@@ -193,6 +205,8 @@ export function startCapabilityGovernor(): void {
     frames++;
     if (now - windowStart >= 1000) {
       const fps = (frames * 1000) / (now - windowStart);
+      liveMetrics.fps = Math.round(fps);
+      liveMetrics.longTaskMs = Math.round(longTaskBudget);
       const struggling = fps < DEGRADE_FPS || longTaskBudget > LONGTASK_DEGRADE_MS;
       const smooth = fps >= RECOVER_FPS && longTaskBudget < 50;
 
@@ -265,3 +279,105 @@ export function useDegradeEffects(): boolean {
   }, []);
   return degraded;
 }
+
+// ── Centralized render-mode API (single source of truth) ────────────────────
+// Components ask ONLY these three questions and nothing else. Compatibility
+// Mode = boot GPU gate (permanent for the session). Degraded = runtime governor
+// (transient, recoverable). Premium = neither active.
+export interface RenderMode {
+  /** Full premium rendering — all effects on. */
+  premium: boolean;
+  /** Boot-time GPU gate active (Mali/PowerVR/etc.) — effects swapped for fallbacks. */
+  compatibility: boolean;
+  /** Runtime governor temporarily dropped expensive effects due to low FPS. */
+  degraded: boolean;
+}
+
+export function getRenderMode(): RenderMode {
+  const compatibility = isGpuUnsafe();
+  const degraded = isDegraded();
+  return { premium: !compatibility && !degraded, compatibility, degraded };
+}
+
+/** Single hook every component uses to branch rendering. Live-updates on changes. */
+export function useRenderMode(): RenderMode {
+  const [mode, setMode] = useState<RenderMode>({
+    premium: true,
+    compatibility: false,
+    degraded: false,
+  });
+  useEffect(() => {
+    setMode(getRenderMode());
+    return subscribeDegraded(() => setMode(getRenderMode()));
+  }, []);
+  return mode;
+}
+
+// ── Anonymous telemetry ─────────────────────────────────────────────────────
+// Captures ONLY device-rendering signals to help spot newly problematic GPUs.
+// No cookies, no IDs, no personal data, no precise UA string storage server-side.
+export interface RenderDiagnostics {
+  gpuRenderer: string;
+  browser: string;
+  androidVersion: string | null;
+  cores: number | null;
+  fps: number;
+  longTaskMs: number;
+  compatibilityMode: boolean;
+  degraded: boolean;
+  saveData: boolean;
+  reducedMotion: boolean;
+}
+
+function detectBrowser(ua: string): string {
+  if (/SamsungBrowser/i.test(ua)) return "Samsung Internet";
+  if (/Edg\//i.test(ua)) return "Edge";
+  if (/Firefox\//i.test(ua)) return "Firefox";
+  if (/OPR\//i.test(ua)) return "Opera";
+  if (/CriOS/i.test(ua)) return "Chrome iOS";
+  if (/Chrome\//i.test(ua)) return /wv/i.test(ua) ? "Android WebView" : "Chrome";
+  if (/Safari\//i.test(ua)) return "Safari";
+  return "Unknown";
+}
+
+function detectAndroidVersion(ua: string): string | null {
+  const m = ua.match(/Android\s+([\d.]+)/i);
+  return m ? m[1] : null;
+}
+
+/** Snapshot of current rendering capability + live performance. Anonymous. */
+export function getRenderDiagnostics(): RenderDiagnostics {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  return {
+    gpuRenderer: getWebGLRenderer() ?? "unknown",
+    browser: detectBrowser(ua),
+    androidVersion: detectAndroidVersion(ua),
+    cores: readCores() ?? null,
+    fps: liveMetrics.fps,
+    longTaskMs: liveMetrics.longTaskMs,
+    compatibilityMode: isGpuUnsafe(),
+    degraded: isDegraded(),
+    saveData: readSaveData(),
+    reducedMotion: readReducedMotion(),
+  };
+}
+
+/**
+ * Exposes a one-shot anonymous diagnostics snapshot on `window.__fomRender`
+ * (after the governor has had a few seconds to measure FPS). Purely local — it
+ * does not transmit anywhere unless a host app chooses to read and forward it.
+ */
+export function publishRenderDiagnostics(): void {
+  if (typeof window === "undefined") return;
+  const publish = () => {
+    try {
+      (window as unknown as { __fomRender?: RenderDiagnostics }).__fomRender =
+        getRenderDiagnostics();
+    } catch {
+      /* ignore */
+    }
+  };
+  // Wait for the governor to gather a few FPS samples before snapshotting.
+  window.setTimeout(publish, 5000);
+}
+

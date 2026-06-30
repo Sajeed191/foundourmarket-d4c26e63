@@ -36,7 +36,7 @@ import { ShareDialog } from "@/components/site/ShareDialog";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
-import { startCapabilityGovernor } from "@/lib/runtime-capability";
+import { startCapabilityGovernor, publishRenderDiagnostics } from "@/lib/runtime-capability";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
@@ -477,6 +477,9 @@ function RootComponent() {
     // smooth rendering — never hides images or hero animations. Runs on every
     // capable device (incl. 4–6GB Android) so degradation is performance-driven.
     startCapabilityGovernor();
+    // Anonymous render diagnostics (GPU/browser/FPS/mode) on window.__fomRender —
+    // helps surface newly problematic GPUs. No PII, no network transmission.
+    publishRenderDiagnostics();
   }, []);
   useEffect(() => {
     preloadCrisp();
