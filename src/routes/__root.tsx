@@ -287,6 +287,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           "(function(){var d=document.documentElement;try{var p=localStorage.getItem('fom-theme')||'system';var e=p==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;d.setAttribute('data-theme',e);d.classList.toggle('dark',e==='dark');}catch(x){d.setAttribute('data-theme','dark');d.classList.add('dark');}})();",
       },
+      {
+        // GPU-compositor safety gate. Some Android GPUs (Mali, PowerVR, software
+        // renderers, very old Adreno) corrupt compositor tiles when many
+        // backdrop-filter + large blur() + mix-blend-mode + 3D layers stack —
+        // producing horizontal colored lines, duplicated text/cards, partially
+        // corrupted images and random artifacts. We detect the renderer via
+        // WebGL and set data-gpu-unsafe="true" so the dormant safe-mode CSS
+        // swaps those effects for visually-equivalent CPU-friendly fallbacks.
+        // Premium effects are untouched on healthy GPUs (Adreno/Apple/desktop).
+        children:
+          "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}try{var r=rd();var rl=r.toLowerCase();var unsafe=/mali/.test(rl)||/swiftshader|software|llvmpipe|microsoft basic/.test(rl)||/powervr/.test(rl)||/videocore/.test(rl)||/adreno\\s*(2|3)\\d\\d/.test(rl);d.setAttribute('data-gpu-renderer',r||'unknown');d.setAttribute('data-gpu-unsafe',unsafe?'true':'false');}catch(y){d.setAttribute('data-gpu-unsafe','false');}})();",
+      },
 
       {
         type: "application/ld+json",
