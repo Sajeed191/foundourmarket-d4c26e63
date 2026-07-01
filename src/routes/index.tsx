@@ -685,13 +685,16 @@ function Home() {
                 >
 
                   <div className="relative w-full aspect-square grid place-items-center overflow-hidden rounded-2xl border border-border bg-muted/60">
-                    <span className="grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
+                    <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
                       <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
                     </span>
                   </div>
                   <div className="w-full pb-0.5">
                     <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
+                    <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide mt-1">Browse everything</span>
                   </div>
+
                 </Link>
               </div>
             </Reveal>
