@@ -14,116 +14,205 @@ function resolveColsWidth(cols: Cols, width: number): number {
   return Math.max(1, c);
 }
 
+/** Default responsive `sizes` used by ProductImage — mirror it so the in-memory
+ * preloader warms the exact same srcset candidate the real grid will request. */
+const DEFAULT_SIZES = "(min-width: 1024px) 300px, (min-width: 640px) 45vw, 76vw";
+
 /**
- * Hydration gate — block the grid's first *visible* paint until the first
- * viewport batch of product images is fully decoded.
- *
- * WHY: on refresh the browser mounts cards and starts decoding images
- * asynchronously; the compositor was presenting the grid before the top rows
- * finished decoding, so users saw partial rows, a bottom flicker and a
- * "first-scroll correction". We manually compute the first visible batch
- * (visible rows × columns — never relying on IntersectionObserver, which is
- * unreliable right after a refresh), await `img.decode()` on exactly those
- * images, and only then reveal the grid in a single commit.
+ * Warm one image entirely in memory (HTTP + decode caches) using a detached
+ * HTMLImageElement — NO DOM insertion, so the browser allocates zero GPU
+ * compositor tiles for it during Phase 1. We mirror ProductImage's src/srcset/
+ * sizes resolution so the candidate the browser picks here is the same one the
+ * real <img> requests, guaranteeing a warm cache hit on the atomic swap.
  */
-function useHydrationGate(
-  containerRef: React.RefObject<HTMLElement | null>,
-  cols: Cols,
-  itemCount: number,
-): boolean {
-  const [hydrated, setHydrated] = useState(false);
+function warmImage(rawSrc: string): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (typeof window === "undefined" || !rawSrc) return resolve();
+    const bundled = getResponsiveImage(rawSrc);
+    const storage = bundled ? null : getStorageResponsive(rawSrc);
+    const srcset = bundled?.srcset ?? storage?.srcset;
+    const src = storage?.src ?? rawSrc;
 
-  useLayoutEffect(() => {
-    if (hydrated) return;
-    const container = containerRef.current;
-    if (!container || itemCount === 0 || typeof window === "undefined") {
-      setHydrated(true);
-      return;
+    const img = new Image();
+    img.decoding = "async";
+    if (srcset) {
+      img.sizes = DEFAULT_SIZES;
+      img.srcset = srcset;
     }
+    img.src = src;
 
-    let cancelled = false;
-    const reveal = () => {
-      if (!cancelled) setHydrated(true);
+    const finish = () => {
+      if (typeof img.decode === "function") {
+        img.decode().then(() => resolve()).catch(() => resolve());
+      } else {
+        resolve();
+      }
     };
+    if (img.complete && img.naturalWidth > 0) return finish();
+    img.addEventListener("load", finish, { once: true });
+    img.addEventListener("error", () => resolve(), { once: true });
+  });
+}
 
-    // K = first visible batch = visible rows × columns (+1 row of slack).
+/** Wait N animation frames — a "decode barrier flush" so the compositor and
+ * rasterizer are synced before we mount the real grid. */
+function nextFrames(n: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (typeof requestAnimationFrame !== "function") return resolve();
+    let left = n;
+    const tick = () => (--left <= 0 ? resolve() : requestAnimationFrame(tick));
+    requestAnimationFrame(tick);
+  });
+}
+
+/**
+ * Two-phase rendering engine — skeleton → atomic swap grid.
+ *
+ * Phase 1 (fast paint): render ONLY a `ProductSkeletonGrid`. In parallel, warm
+ * the first visible batch of images fully in memory via detached
+ * `HTMLImageElement`s (no DOM, no GPU tiles). Phase 2 (atomic commit): once the
+ * batch is decoded AND a two-frame barrier has flushed, unmount the skeleton and
+ * mount the real grid in a single commit — images paint instantly from cache.
+ *
+ * This splits the DOM into two trees (SkeletonGrid vs RealGrid) so there is zero
+ * hidden GPU work during Phase 1, and eliminates partial rows, bottom flicker
+ * and the first-scroll correction on refresh.
+ *
+ * When `preloadSrcs` is unavailable we fall back to the lighter opacity gate:
+ * the real grid mounts hidden and reveals after its own images decode.
+ */
+function TwoPhaseGrid({
+  cols,
+  itemCount,
+  preloadSrcs,
+  className,
+  children,
+}: {
+  cols: Cols;
+  itemCount: number;
+  preloadSrcs?: string[];
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [ready, setReady] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const canTwoPhase = !!preloadSrcs && preloadSrcs.length > 0;
+
+  // Compute the first visible batch size: visible rows × columns (+1 slack).
+  // Never relies on IntersectionObserver (unreliable right after a refresh).
+  const computeK = () => {
+    if (typeof window === "undefined") return Math.min(itemCount, 8);
     const colCount = resolveColsWidth(cols, window.innerWidth);
     const visibleRows = Math.max(1, Math.ceil(window.innerHeight / 320));
-    const k = Math.min(itemCount, colCount * (visibleRows + 1));
+    return Math.min(itemCount, colCount * (visibleRows + 1));
+  };
 
-    const imgs = Array.from(
-      container.querySelectorAll<HTMLImageElement>("img[data-product-image]"),
-    ).slice(0, k);
+  // Scroll stabilization lock — after the atomic swap, pin scrollY for a short
+  // window so any last-frame tile settling can't nudge layout / cause a jump.
+  const stabilizeScroll = () => {
+    if (typeof window === "undefined") return;
+    const y = window.scrollY;
+    const start = performance.now();
+    const hold = () => {
+      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
+      if (performance.now() - start < 220) requestAnimationFrame(hold);
+    };
+    requestAnimationFrame(hold);
+  };
 
-    if (imgs.length === 0) {
-      reveal();
+  // TWO-PHASE PATH: skeleton first, warm images off-DOM, atomic swap.
+  useLayoutEffect(() => {
+    if (!canTwoPhase || ready) return;
+    if (itemCount === 0 || typeof window === "undefined") {
+      setReady(true);
       return;
     }
+    let cancelled = false;
+    const k = computeK();
+    const srcs = (preloadSrcs ?? []).slice(0, k);
 
-    const settle = (img: HTMLImageElement): Promise<void> => {
-      const decode = () => {
-        if (typeof img.decode === "function") {
-          return img.decode().catch(() => undefined);
-        }
-        // Older WebViews without decode(): resolve on the next frame.
-        return new Promise<void>((res) => {
-          if (typeof requestAnimationFrame === "function") {
-            requestAnimationFrame(() => res());
-          } else {
-            setTimeout(res, 32);
-          }
-        });
-      };
-      if (img.complete && img.naturalWidth > 0) return decode();
-      return new Promise<void>((res) => {
-        const done = () => res();
-        img.addEventListener("load", () => decode().then(done), { once: true });
-        img.addEventListener("error", done, { once: true });
-      });
+    const commit = () => {
+      if (cancelled) return;
+      setReady(true);
+      stabilizeScroll();
     };
 
-    // Never leave the grid hidden forever — reveal after a hard safety cap.
+    // Hard safety cap so we never sit on the skeleton forever.
     const safety = new Promise<void>((res) => setTimeout(res, 3000));
-
-    Promise.race([Promise.all(imgs.map(settle)).then(() => undefined), safety]).then(
-      reveal,
-    );
+    Promise.race([
+      Promise.all(srcs.map(warmImage))
+        .then(() => nextFrames(2)) // decode barrier flush
+        .then(() => undefined),
+      safety,
+    ]).then(commit);
 
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, cols, itemCount, hydrated]);
+  }, [canTwoPhase, ready, itemCount, cols]);
 
-  return hydrated;
-}
+  // FALLBACK PATH (no preloadSrcs): opacity gate the real grid after its own
+  // in-DOM images decode.
+  useLayoutEffect(() => {
+    if (canTwoPhase || ready) return;
+    const container = ref.current;
+    if (!container || itemCount === 0 || typeof window === "undefined") {
+      setReady(true);
+      return;
+    }
+    let cancelled = false;
+    const reveal = () => !cancelled && setReady(true);
 
-/**
- * Wraps grid content and keeps it invisible (opacity 0) until the first visible
- * image batch decodes, then reveals the whole grid in one commit. Layout is
- * fully mounted underneath the entire time, so lazy images still start loading
- * and there is zero layout shift on reveal.
- */
-function HydrationGate({
-  cols,
-  itemCount,
-  children,
-}: {
-  cols: Cols;
-  itemCount: number;
-  children: React.ReactNode;
-}) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const hydrated = useHydrationGate(ref, cols, itemCount);
+    const k = computeK();
+    const imgs = Array.from(
+      container.querySelectorAll<HTMLImageElement>("img[data-product-image]"),
+    ).slice(0, k);
+    if (imgs.length === 0) {
+      reveal();
+      return;
+    }
+    const settle = (img: HTMLImageElement): Promise<void> => {
+      const decode = () =>
+        typeof img.decode === "function"
+          ? img.decode().catch(() => undefined)
+          : nextFrames(1);
+      if (img.complete && img.naturalWidth > 0) return decode();
+      return new Promise<void>((res) => {
+        img.addEventListener("load", () => decode().then(() => res()), { once: true });
+        img.addEventListener("error", () => res(), { once: true });
+      });
+    };
+    const safety = new Promise<void>((res) => setTimeout(res, 3000));
+    Promise.race([Promise.all(imgs.map(settle)).then(() => undefined), safety]).then(reveal);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canTwoPhase, ready, itemCount, cols]);
+
+  // Phase 1 for two-phase mode: render only the skeleton (separate DOM tree).
+  if (canTwoPhase && !ready) {
+    return (
+      <ProductSkeletonGrid
+        count={Math.max(4, Math.min(itemCount, computeK()))}
+        className={className ?? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"}
+      />
+    );
+  }
+
+  // Two-phase Phase 2: mount the real grid directly (atomic commit).
+  if (canTwoPhase) return <>{children}</>;
+
+  // Fallback: opacity gate.
   return (
     <div
       ref={ref}
-      data-grid-hydrated={hydrated ? "true" : "false"}
+      data-grid-hydrated={ready ? "true" : "false"}
       style={{
-        opacity: hydrated ? 1 : 0,
-        transition: hydrated ? "opacity 220ms ease-out" : undefined,
-        // Avoid interaction with a not-yet-revealed grid.
-        pointerEvents: hydrated ? undefined : "none",
+        opacity: ready ? 1 : 0,
+        transition: ready ? "opacity 220ms ease-out" : undefined,
+        pointerEvents: ready ? undefined : "none",
       }}
     >
       {children}
@@ -149,6 +238,12 @@ type Props<T> = {
   overscan?: number;
   /** Only grow incrementally once the list exceeds this size. */
   virtualizeThreshold?: number;
+  /**
+   * Optional: resolve an item's primary image URL. When provided, the grid uses
+   * the two-phase engine (skeleton → warm first batch off-DOM → atomic swap).
+   * Without it, the grid falls back to opacity-gated reveal.
+   */
+  getImageSrc?: (item: T) => string | null | undefined;
 };
 
 /**
