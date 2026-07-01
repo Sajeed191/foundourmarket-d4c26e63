@@ -36,6 +36,18 @@ import {
   type Diagnostics,
 } from "@/lib/debug-diagnostics";
 
+import {
+  clearRecording,
+  getRecordingCount,
+  isRecording,
+  markCorruption,
+  recordingToCsv,
+  recordingToJson,
+  startRecording,
+  stopRecording,
+  subscribeRecorder,
+} from "@/lib/debug-diagnostics";
+
 /**
  * TEMPORARY floating debug panel for binary isolation of the Android rendering
  * corruption. Visible only when the harness is enabled (?debug=1 once, then it
