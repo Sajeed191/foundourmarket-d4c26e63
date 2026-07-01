@@ -284,12 +284,24 @@ function TwoPhaseGrid({
       setTimeout(() => res("safety-timeout"), 3000),
     );
 
-    const decodeAll = mapWithConcurrency(srcs, decodeConcurrency(), (s, i) => {
+    // FIRST-FRAME CAP: decode only the very first row (one column's worth of
+    // images) with strict serial throttle so the initial paint uploads a minimal
+    // number of textures — this avoids the "refresh burst = full viewport +
+    // decode spike" that saturates the Chromium Android tile manager. Only after
+    // that safe first frame do we fall back to normal pooled concurrency for the
+    // rest of the viewport batch.
+    const firstFrameCap = Math.max(1, resolveColsWidth(cols, window.innerWidth));
+    const decodeOne = (s: string, i: number) => {
       const t0 = performance.now();
       return warmImage(s).then(() => {
         if (gridDebugEnabled()) gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
       });
-    })
+    };
+    const firstFrame = srcs.slice(0, firstFrameCap);
+    const rest = srcs.slice(firstFrameCap);
+    const decodeAll = mapWithConcurrency(firstFrame, 1, decodeOne)
+      .then(() => nextFrames(1)) // let the first row's textures commit alone
+      .then(() => mapWithConcurrency(rest, decodeConcurrency(), (s, i) => decodeOne(s, i + firstFrameCap)))
       .then(() => {
         publishGridTelemetry({ decodeBatchEnd: Math.round(performance.now()) });
       })
