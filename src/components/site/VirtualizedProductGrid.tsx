@@ -3,6 +3,10 @@ import { publishWindowMetrics, resetWindowMetrics } from "@/lib/window-metrics";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive } from "@/lib/storage-image";
+import { publishGridTelemetry, isScrollRestoring } from "@/lib/grid-telemetry";
+
+/** How gridReady was reached (mirrors telemetry `committedVia`). */
+type GridReadyReason = "decode-complete" | "safety-timeout" | "empty" | "instant";
 
 /** Resolve the active column count for the current viewport width. */
 function resolveColsWidth(cols: Cols, width: number): number {
