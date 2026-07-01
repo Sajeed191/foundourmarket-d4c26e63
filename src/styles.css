@@ -1111,14 +1111,18 @@ html[data-degrade-effects="true"] [style*="blur("] {
    keep only the sticky header glass for its premium look. Animations stay on
    transform/opacity only. */
 @media (max-width: 767px) {
-  /* Kill EVERY backdrop-filter readback layer on phones — not just the named
-     glass classes. Fixed/overlapping backdrop-filter layers (bottom nav,
-     footer badge, Tailwind backdrop-blur-* utilities) sample the framebuffer
-     behind them and produce transient horizontal readback bands on the first
-     commit after a hard refresh on Android Chrome. Suppressing them removes
-     that entire class of GPU raster-tile timing artifact with no redesign.
-     NOTE: must use `initial`, not `none` — Lightning CSS strips
-     `backdrop-filter: none !important` at build time (see render-safe block). */
+  /* Kill EVERY backdrop-filter READBACK layer on phones. A backdrop-filter
+     layer samples the framebuffer behind it; on the first commit after a hard
+     refresh that source isn't rasterized yet, producing a transient horizontal
+     band that clears on the next frame / on scroll (classic Android Chrome
+     raster-tile timing artifact).
+
+     CRITICAL: nulling the property does NOT work here. Lightning CSS strips
+     both `backdrop-filter: none !important` and `... initial !important` at
+     build time, leaving an empty rule body (verified in the served sheet).
+     The only reliable neutralisation — same as the render-safe block — is to
+     make the surface opaque so there is nothing to sample. Blur is already
+     visually dropped on phones by design, so this is not a redesign. */
   .glass,
   .glass-strong,
   .product-card-glass,
@@ -1127,6 +1131,7 @@ html[data-degrade-effects="true"] [style*="blur("] {
   [style*="backdrop-filter"] {
     backdrop-filter: initial !important;
     -webkit-backdrop-filter: initial !important;
+    background-color: color-mix(in srgb, var(--color-background) 88%, transparent) !important;
     }
   /* Replace heavy multi-layer shadows/glows with one optimized token */
   .product-card-glass,
