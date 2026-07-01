@@ -14,7 +14,7 @@ type Props = {
   width?: number;
   height?: number;
   style?: CSSProperties;
-  onLoad?: () => void;
+  onLoad?: (img: HTMLImageElement) => void;
   /** Kept for call-site compatibility; no longer emits diagnostics. */
   debugId?: string;
 };
