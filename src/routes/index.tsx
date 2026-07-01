@@ -691,9 +691,6 @@ function Home() {
                   </div>
                   <div className="w-full pb-0.5">
                     <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
-                    <span className="block text-[10px] sm:text-[11px] text-accent/70 font-medium tracking-wide mt-1">
-                      Explore the full marketplace
-                    </span>
                   </div>
                 </Link>
               </div>
