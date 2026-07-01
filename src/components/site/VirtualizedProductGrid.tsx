@@ -357,6 +357,7 @@ function WindowedGrid<T>({
   cols,
   estimateRowHeight = 340,
   overscanRows = 6,
+  preloadSrcs,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
@@ -365,6 +366,7 @@ function WindowedGrid<T>({
   cols: Cols;
   estimateRowHeight?: number;
   overscanRows?: number;
+  preloadSrcs?: string[];
 }) {
   const outerRef = useRef<HTMLDivElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
