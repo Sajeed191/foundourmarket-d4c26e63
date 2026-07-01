@@ -615,7 +615,7 @@ function Home() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 auto-rows-fr gap-3 sm:gap-4">
           {ffCategoryGrid && homeCategories.map((cat, i) => {
             const Icon = iconForCategory(cat.slug, cat.name);
             const hasImage = !!(cat.image || cat.mobile_image);
@@ -675,24 +675,26 @@ function Home() {
 
           {!isProductAdmin && (
             <Reveal delay={homeCategories.length} className="h-full">
-              <Link
-                data-product-card-frame
-                to="/categories"
-                className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-accent/50 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent shadow-[0_0_40px_-12px_oklch(0.74_0.19_49/0.7)] hover:-translate-y-1 hover:border-accent/70 hover:shadow-[0_0_50px_-10px_oklch(0.74_0.19_49/0.85)] active:scale-[0.97] transition-all duration-300"
-              >
-                <div className="relative w-full aspect-square grid place-items-center overflow-hidden rounded-2xl bg-accent/15 ring-1 ring-accent/40">
-                  <span aria-hidden className="pointer-events-none absolute inset-0 opacity-60 blur-2xl bg-[radial-gradient(circle_at_center,oklch(0.74_0.19_49/0.6),transparent_70%)] transition-opacity duration-300 group-hover:opacity-100" />
-                  <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent text-accent-foreground shadow-[0_0_36px_-4px_oklch(0.74_0.19_49/0.9)] transition-transform duration-300 group-hover:scale-110">
-                    <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
-                  </span>
-                </div>
-                <div className="mt-auto w-full pb-0.5">
-                  <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
-                  <span className="block text-[10px] sm:text-[11px] text-accent/70 font-medium tracking-wide mt-1">
-                    Explore the full marketplace
-                  </span>
-                </div>
-              </Link>
+              <div className="relative h-full">
+                <Link
+                  data-product-card-frame
+                  to="/categories"
+                  className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-accent/50 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent shadow-[0_0_40px_-12px_oklch(0.74_0.19_49/0.7)] hover:-translate-y-1 hover:border-accent/70 hover:shadow-[0_0_50px_-10px_oklch(0.74_0.19_49/0.85)] active:scale-[0.97] transition-all duration-300"
+                >
+                  <div className="relative w-full aspect-square grid place-items-center overflow-hidden rounded-2xl bg-accent/15 ring-1 ring-accent/40">
+                    <span aria-hidden className="pointer-events-none absolute inset-0 opacity-60 blur-2xl bg-[radial-gradient(circle_at_center,oklch(0.74_0.19_49/0.6),transparent_70%)] transition-opacity duration-300 group-hover:opacity-100" />
+                    <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent text-accent-foreground shadow-[0_0_36px_-4px_oklch(0.74_0.19_49/0.9)] transition-transform duration-300 group-hover:scale-110">
+                      <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
+                    </span>
+                  </div>
+                  <div className="mt-auto w-full pb-0.5">
+                    <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
+                    <span className="block text-[10px] sm:text-[11px] text-accent/70 font-medium tracking-wide mt-1">
+                      Explore the full marketplace
+                    </span>
+                  </div>
+                </Link>
+              </div>
             </Reveal>
           )}
         </div>
