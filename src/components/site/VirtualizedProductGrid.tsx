@@ -478,7 +478,7 @@ function WindowedGrid<T>({
   return (
     <div ref={outerRef}>
       {topSpacer > 0 && <div aria-hidden style={{ height: topSpacer }} />}
-      <HydrationGate cols={cols} itemCount={windowItems.length}>
+      <TwoPhaseGrid cols={cols} itemCount={windowItems.length} preloadSrcs={preloadSrcs} className={className}>
         <div ref={gridRef} data-product-grid data-windowed="on" className={className}>
           {windowItems.map((item, i) => {
             const index = startIndex + i;
@@ -489,7 +489,7 @@ function WindowedGrid<T>({
             );
           })}
         </div>
-      </HydrationGate>
+      </TwoPhaseGrid>
       {bottomSpacer > 0 && <div aria-hidden style={{ height: bottomSpacer }} />}
     </div>
   );
