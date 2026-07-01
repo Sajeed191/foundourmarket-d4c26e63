@@ -1,6 +1,13 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { ProductImage } from "@/components/site/ProductImage";
-import { useImagePalette } from "@/lib/use-image-palette";
+import { isConstrainedDevice } from "@/lib/use-image-palette";
+import {
+  getImagePalette,
+  getImagePaletteFromElement,
+  getCachedPalette,
+  FALLBACK_PALETTE,
+  type ImagePalette,
+} from "@/lib/image-palette";
 
 type Props = {
   src: string;
@@ -22,9 +29,54 @@ type Props = {
  * Falls back to white when extraction is unavailable (SSR / CORS / failure).
  */
 function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, children }: Props) {
-  const { palette, ready } = useImagePalette(src);
+  const [palette, setPalette] = useState<ImagePalette>(
+    () => (src ? getCachedPalette(src) : null) ?? FALLBACK_PALETTE,
+  );
+  const [ready, setReady] = useState<boolean>(() => (src ? getCachedPalette(src) != null : false));
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  useEffect(() => setLoadedSrc(null), [src]);
+
+  useEffect(() => {
+    setLoadedSrc(null);
+    const cached = src ? getCachedPalette(src) : null;
+    setPalette(cached ?? FALLBACK_PALETTE);
+    setReady(cached != null);
+  }, [src]);
+
+  // Reuse the already-decoded, on-screen bitmap for palette extraction — no
+  // second decode for same-origin (bundled) images. Only cross-origin storage
+  // images (which taint the canvas) fall back to a tiny async CORS decode.
+  const handleImageLoad = useCallback(
+    (img: HTMLImageElement) => {
+      setLoadedSrc(src);
+      if (getCachedPalette(src)) {
+        setPalette(getCachedPalette(src)!);
+        setReady(true);
+        return;
+      }
+      const sampled = getImagePaletteFromElement(src, img);
+      if (sampled) {
+        setPalette(sampled);
+        setReady(true);
+        return;
+      }
+      // Tainted canvas (CORS). Constrained devices skip the extra decode.
+      if (isConstrainedDevice()) {
+        setReady(true);
+        return;
+      }
+      let active = true;
+      void getImagePalette(src).then((p) => {
+        if (!active) return;
+        setPalette(p);
+        setReady(true);
+      });
+      return () => {
+        active = false;
+      };
+    },
+    [src],
+  );
+
   const imgLoaded = loadedSrc === src;
   const revealed = plain || (ready && imgLoaded);
 
@@ -71,7 +123,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         width={800}
         height={800}
         priority={priority}
-        onLoad={() => setLoadedSrc(src)}
+        onLoad={handleImageLoad}
         className="relative z-[1] block h-full w-full rounded-[14px] object-contain object-center transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03]"
         style={{ opacity: revealed ? 1 : 0 }}
       />

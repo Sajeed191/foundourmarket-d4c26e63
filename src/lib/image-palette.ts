@@ -161,6 +161,41 @@ export function getImagePalette(src: string): Promise<ImagePalette> {
   return promise;
 }
 
+/**
+ * Extract the palette from an already-decoded, on-screen <img> element instead
+ * of decoding a second copy. This reuses the exact bitmap the browser already
+ * holds for the displayed card image, so same-origin (bundled) product images
+ * incur zero extra decode / extra GPU-uploadable bitmap.
+ *
+ * Returns null when the canvas is tainted (cross-origin storage image without
+ * CORS) or extraction fails — callers should fall back to getImagePalette().
+ */
+export function getImagePaletteFromElement(
+  src: string,
+  img: HTMLImageElement,
+): ImagePalette | null {
+  const cached = cache.get(src);
+  if (cached) return cached;
+  if (typeof document === "undefined") return null;
+  if (!img.complete || img.naturalWidth === 0) return null;
+  try {
+    const size = 32;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, size, size);
+    const { data } = ctx.getImageData(0, 0, size, size);
+    const palette = buildPalette(extractEdgeColor(data, size));
+    cache.set(src, palette);
+    return palette;
+  } catch {
+    // Tainted canvas (CORS) or other failure — caller uses the async path.
+    return null;
+  }
+}
+
 /** Synchronous cache peek for SSR-safe first paint. */
 export function getCachedPalette(src: string): ImagePalette | null {
   return cache.get(src) ?? null;

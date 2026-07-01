@@ -18,7 +18,7 @@ import {
  * compositor corruption seen on 4GB devices, so we skip it and render the
  * neutral fallback background immediately.
  */
-function isConstrainedDevice(): boolean {
+export function isConstrainedDevice(): boolean {
   if (typeof document === "undefined") return false;
   const d = document.documentElement;
   // Debug harness: treat palette extraction as off when its flag is disabled.
