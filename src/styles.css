@@ -1124,19 +1124,11 @@ html[data-degrade-effects="true"] [style*="blur("] {
      band on hard refresh (a backdrop-filter layer samples the framebuffer
      behind it; before it is rasterized on the first commit the sample is
      garbage, which clears on the next frame / on scroll).
-
-     The .glass / .glass-strong blur is already removed at the source (it is
-     emitted only in a min-width:768px query, see the .glass definitions) so no
-     mobile override is needed for those. The remaining readback sources on
-     phones are Tailwind `backdrop-blur-*` utilities and inline backdrop-filter
-     styles. Nulling them does NOT work — Lightning CSS strips
-     `backdrop-filter: none|initial !important` at build time. The only reliable
-     neutralisation (same technique as the render-safe block) is an opaque
-     surface so the sampled result is fully painted over. */
-  [class*="backdrop-blur"],
-  [style*="backdrop-filter"] {
-    background-color: color-mix(in srgb, var(--color-background) 90%, transparent) !important;
-    }
+     Blur is removed at the SOURCE on mobile — .glass/.glass-strong emit blur
+     only in a min-width:768px query, and the sticky nav's backdrop-blur-2xl
+     utility is gated to md: in Nav.tsx — because Lightning CSS strips any
+     `backdrop-filter: none|initial !important` override at build time, so an
+     override here would be a no-op (verified: empty rule body in served CSS). */
   /* Replace heavy multi-layer shadows/glows with one optimized token */
   .product-card-glass,
   .card-premium,
