@@ -521,6 +521,7 @@ export function VirtualizedProductGrid<T>({
   className,
   cols,
   virtualizeThreshold = 32,
+  getImageSrc,
 }: Props<T>) {
   const windowExperiment = useWindowExperiment();
   const big = items.length > virtualizeThreshold;
@@ -530,6 +531,15 @@ export function VirtualizedProductGrid<T>({
     if (!key) throw new Error("VirtualizedProductGrid requires getKey for items without id/slug");
     return key;
   });
+
+  // Resolve the first ~60 image URLs for the two-phase warm-up (off-DOM decode).
+  // Only enabled when the caller provides getImageSrc.
+  const preloadSrcs = getImageSrc
+    ? items
+        .slice(0, 60)
+        .map((item) => getImageSrc(item) ?? "")
+        .filter((s): s is string => !!s)
+    : undefined;
 
   // Large catalogs: bounded, transform-free rendering.
   if (big) {
@@ -541,6 +551,7 @@ export function VirtualizedProductGrid<T>({
           getKey={stableKey}
           className={className}
           cols={cols}
+          preloadSrcs={preloadSrcs}
         />
       );
     }
@@ -551,6 +562,7 @@ export function VirtualizedProductGrid<T>({
         getKey={stableKey}
         className={className}
         cols={cols}
+        preloadSrcs={preloadSrcs}
         // 16 cards per batch keeps paint/memory cost low while feeling like
         // infinite scroll on low-end phones.
         batchSize={16}
@@ -560,7 +572,7 @@ export function VirtualizedProductGrid<T>({
 
   // Small lists: plain responsive grid (also the SSR / first-paint output).
   return (
-    <HydrationGate cols={cols} itemCount={items.length}>
+    <TwoPhaseGrid cols={cols} itemCount={items.length} preloadSrcs={preloadSrcs} className={className}>
       <div data-product-grid className={className}>
         {items.map((item, i) => (
           <div key={stableKey(item)} data-product-card-frame className="h-full min-w-0 [&>*]:h-full">
@@ -568,7 +580,7 @@ export function VirtualizedProductGrid<T>({
           </div>
         ))}
       </div>
-    </HydrationGate>
+    </TwoPhaseGrid>
   );
 }
 
