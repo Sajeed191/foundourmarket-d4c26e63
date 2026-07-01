@@ -1,4 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { publishWindowMetrics, resetWindowMetrics } from "@/lib/window-metrics";
 
 type Cols = { base: number; sm?: number; md?: number; lg?: number; xl?: number };
 
