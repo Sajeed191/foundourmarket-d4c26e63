@@ -53,7 +53,7 @@ function ProductImageImpl({
 
   const handleLoad = useCallback(() => {
     if (activeSrcRef.current !== resolvedSrc) return;
-    onLoad?.();
+    if (imgRef.current) onLoad?.(imgRef.current);
   }, [onLoad, resolvedSrc]);
 
   useEffect(() => {
