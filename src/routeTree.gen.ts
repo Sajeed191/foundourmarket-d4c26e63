@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WtestRouteImport } from './routes/wtest'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackRouteImport } from './routes/track'
@@ -155,6 +156,11 @@ import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/tra
 import { Route as ApiPublicSupportInboundEmailRouteImport } from './routes/api/public/support/inbound-email'
 import { Route as AccountSupportTicketTicketIdRouteImport } from './routes/account_.support_.ticket.$ticketId'
 
+const WtestRoute = WtestRouteImport.update({
+  id: '/wtest',
+  path: '/wtest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
@@ -994,6 +1000,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
+  '/wtest': typeof WtestRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/history': typeof AccountHistoryRoute
   '/account/notifications': typeof AccountNotificationsRoute
@@ -1141,6 +1148,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
+  '/wtest': typeof WtestRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/history': typeof AccountHistoryRoute
   '/account/notifications': typeof AccountNotificationsRoute
@@ -1288,6 +1296,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/wishlist': typeof WishlistRoute
+  '/wtest': typeof WtestRoute
   '/account_/addresses': typeof AccountAddressesRoute
   '/account_/history': typeof AccountHistoryRoute
   '/account_/notifications': typeof AccountNotificationsRoute
@@ -1437,6 +1446,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/wishlist'
+    | '/wtest'
     | '/account/addresses'
     | '/account/history'
     | '/account/notifications'
@@ -1584,6 +1594,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/wishlist'
+    | '/wtest'
     | '/account/addresses'
     | '/account/history'
     | '/account/notifications'
@@ -1730,6 +1741,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/wishlist'
+    | '/wtest'
     | '/account_/addresses'
     | '/account_/history'
     | '/account_/notifications'
@@ -1878,6 +1890,7 @@ export interface RootRouteChildren {
   TrackRoute: typeof TrackRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WishlistRoute: typeof WishlistRoute
+  WtestRoute: typeof WtestRoute
   AccountAddressesRoute: typeof AccountAddressesRoute
   AccountHistoryRoute: typeof AccountHistoryRoute
   AccountNotificationsRoute: typeof AccountNotificationsRoute
@@ -1918,6 +1931,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wtest': {
+      id: '/wtest'
+      path: '/wtest'
+      fullPath: '/wtest'
+      preLoaderRoute: typeof WtestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wishlist': {
       id: '/wishlist'
       path: '/wishlist'
@@ -3103,6 +3123,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRoute: TrackRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WishlistRoute: WishlistRoute,
+  WtestRoute: WtestRoute,
   AccountAddressesRoute: AccountAddressesRoute,
   AccountHistoryRoute: AccountHistoryRoute,
   AccountNotificationsRoute: AccountNotificationsRoute,
