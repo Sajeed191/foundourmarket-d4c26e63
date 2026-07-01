@@ -54,6 +54,25 @@ function warmImage(rawSrc: string): Promise<void> {
   });
 }
 
+/** Grid hydration debug logging — opt-in only.
+ * Enable via `?debug-grid` in the URL or `window.__DEBUG_GRID = true`.
+ * Zero cost in production when disabled. */
+function gridDebugEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      (window as unknown as { __DEBUG_GRID?: boolean }).__DEBUG_GRID === true ||
+      /[?&]debug-grid\b/.test(window.location.search)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function gridLog(...args: unknown[]): void {
+  if (gridDebugEnabled()) console.log("%c[ZeroFlickerGrid]", "color:#f59e0b", ...args);
+}
+
 /** Wait N animation frames — a "decode barrier flush" so the compositor and
  * rasterizer are synced before we mount the real grid. */
 function nextFrames(n: number): Promise<void> {
@@ -130,21 +149,42 @@ function TwoPhaseGrid({
     let cancelled = false;
     const k = computeK();
     const srcs = (preloadSrcs ?? []).slice(0, k);
+    const startedAt = performance.now();
+    gridLog("phase1 start →", {
+      viewportBatch: k,
+      itemCount,
+      cols: resolveColsWidth(cols, window.innerWidth),
+      viewport: { w: window.innerWidth, h: window.innerHeight },
+    });
 
-    const commit = () => {
+    const commit = (via: string) => {
       if (cancelled) return;
+      const ms = Math.round(performance.now() - startedAt);
+      gridLog(`atomic commit (${via}) → gridReady`, {
+        hydrationMs: ms,
+        gridReadyTs: Math.round(performance.now()),
+      });
       setReady(true);
       stabilizeScroll();
     };
 
     // Hard safety cap so we never sit on the skeleton forever.
-    const safety = new Promise<void>((res) => setTimeout(res, 3000));
+    const safety = new Promise<string>((res) => setTimeout(() => res("safety-timeout"), 3000));
     Promise.race([
-      Promise.all(srcs.map(warmImage))
+      Promise.all(
+        srcs.map((s, i) => {
+          const t0 = performance.now();
+          return warmImage(s).then(() => {
+            if (gridDebugEnabled())
+              gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
+          });
+        }),
+      )
         .then(() => nextFrames(2)) // decode barrier flush
-        .then(() => undefined),
+        .then(() => "decode-complete"),
       safety,
     ]).then(commit);
+
 
     return () => {
       cancelled = true;
