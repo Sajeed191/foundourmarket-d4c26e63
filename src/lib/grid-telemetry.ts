@@ -62,21 +62,19 @@ function estimateTier(): GridTelemetry["devicePerfTier"] {
 export function publishGridTelemetry(partial: Partial<GridTelemetry>): void {
   if (typeof window === "undefined") return;
   const w = window as unknown as { _GRID_DEBUG_?: GridTelemetry };
-  const prev = w._GRID_DEBUG_ ?? ({} as GridTelemetry);
-  w._GRID_DEBUG_ = {
+  const defaults: GridTelemetry = {
     hydrationStartTime: 0,
     decodeBatchStart: 0,
     decodeBatchEnd: 0,
     gridReadyTimestamp: 0,
     skeletonDurationMs: 0,
-    firstPaintTimestamp: prev.firstPaintTimestamp || firstPaint(),
+    firstPaintTimestamp: firstPaint(),
     scrollLockDurationMs: 0,
     viewportBatchSize: 0,
     committedVia: "instant",
-    devicePerfTier: prev.devicePerfTier || estimateTier(),
-    ...prev,
-    ...partial,
+    devicePerfTier: estimateTier(),
   };
+  w._GRID_DEBUG_ = { ...defaults, ...(w._GRID_DEBUG_ ?? {}), ...partial };
 }
 
 /** True when scroll is being restored (e.g. bfcache / refresh at offset). */
