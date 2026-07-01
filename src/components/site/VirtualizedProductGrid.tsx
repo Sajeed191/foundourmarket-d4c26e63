@@ -132,17 +132,20 @@ function TwoPhaseGrid({
     if (typeof window === "undefined") return;
     const y = window.scrollY;
     const start = performance.now();
+    const LOCK_MS = 220;
     const hold = () => {
       if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
-      if (performance.now() - start < 220) requestAnimationFrame(hold);
+      if (performance.now() - start < LOCK_MS) requestAnimationFrame(hold);
     };
     requestAnimationFrame(hold);
+    publishGridTelemetry({ scrollLockDurationMs: LOCK_MS });
   };
 
   // TWO-PHASE PATH: skeleton first, warm images off-DOM, atomic swap.
   useLayoutEffect(() => {
     if (!canTwoPhase || ready) return;
     if (itemCount === 0 || typeof window === "undefined") {
+      publishGridTelemetry({ committedVia: "empty" });
       setReady(true);
       return;
     }
@@ -150,6 +153,10 @@ function TwoPhaseGrid({
     const k = computeK();
     const srcs = (preloadSrcs ?? []).slice(0, k);
     const startedAt = performance.now();
+    publishGridTelemetry({
+      hydrationStartTime: Math.round(startedAt),
+      viewportBatchSize: k,
+    });
     gridLog("phase1 start →", {
       viewportBatch: k,
       itemCount,
@@ -157,34 +164,51 @@ function TwoPhaseGrid({
       viewport: { w: window.innerWidth, h: window.innerHeight },
     });
 
-    const commit = (via: string) => {
+    const commit = (via: GridReadyReason) => {
       if (cancelled) return;
-      const ms = Math.round(performance.now() - startedAt);
+      const now = performance.now();
+      const ms = Math.round(now - startedAt);
+      publishGridTelemetry({
+        gridReadyTimestamp: Math.round(now),
+        skeletonDurationMs: ms,
+        committedVia: via,
+      });
       gridLog(`atomic commit (${via}) → gridReady`, {
         hydrationMs: ms,
-        gridReadyTs: Math.round(performance.now()),
+        gridReadyTs: Math.round(now),
       });
       setReady(true);
       stabilizeScroll();
+      // Background: overlap the NEXT viewport batch decode while the current
+      // grid paints. Non-blocking, idle-scheduled, never gates the UI.
+      prewarmNextBatch(preloadSrcs, k);
     };
 
-    // Hard safety cap so we never sit on the skeleton forever.
-    const safety = new Promise<string>((res) => setTimeout(() => res("safety-timeout"), 3000));
-    Promise.race([
-      Promise.all(
-        srcs.map((s, i) => {
-          const t0 = performance.now();
-          return warmImage(s).then(() => {
-            if (gridDebugEnabled())
-              gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
-          });
-        }),
-      )
-        .then(() => nextFrames(2)) // decode barrier flush
-        .then(() => "decode-complete"),
-      safety,
-    ]).then(commit);
+    const decodeBatchStart = performance.now();
+    publishGridTelemetry({ decodeBatchStart: Math.round(decodeBatchStart) });
 
+    // Hard safety cap so we never sit on the skeleton forever (3s).
+    const safety = new Promise<GridReadyReason>((res) =>
+      setTimeout(() => res("safety-timeout"), 3000),
+    );
+
+    const decodeAll = Promise.all(
+      srcs.map((s, i) => {
+        const t0 = performance.now();
+        return warmImage(s).then(() => {
+          if (gridDebugEnabled()) gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
+        });
+      }),
+    )
+      .then(() => {
+        publishGridTelemetry({ decodeBatchEnd: Math.round(performance.now()) });
+      })
+      // Defer commit until scroll restoration is settled, then flush 2 frames.
+      .then(() => waitForScrollSettled())
+      .then(() => nextFrames(2)) // decode barrier flush
+      .then<GridReadyReason>(() => "decode-complete");
+
+    Promise.race([decodeAll, safety]).then(commit);
 
     return () => {
       cancelled = true;
