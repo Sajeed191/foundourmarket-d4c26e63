@@ -1288,6 +1288,48 @@ html[data-low-end="true"] [data-product-image] {
   backdrop-filter: none !important;
 }
 
+/* ===== Clip-boundary relocation (Android only) =====
+   ROOT TRIGGER: `overflow:hidden` + `border-radius` on the card shell, with
+   stacked children (badges, wishlist, overlays), forces Chromium to allocate a
+   masked clip layer + composited backing store PER CARD. Under scroll pressure
+   the tile pool recycles textures before raster completes → rainbow bands /
+   duplicated images / stale tiles on Mali / PowerVR / older Adreno GPUs.
+
+   FIX: move the rounded clip OFF the composited card boundary and onto the
+   image only. The shell keeps its rounded look via border-radius but stops
+   clipping (overflow: visible), so it folds into the root paint layer instead
+   of spawning one clip layer per card. Scoped strictly to Android — desktop,
+   Firefox and iOS keep the original shell clipping and are visually identical. */
+html[data-android="true"] .product-card-shell {
+  overflow: visible !important;
+  contain: layout paint !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* The image (top section) becomes the ONLY clipped element — one stable raster
+   per image, no shared tile reuse. */
+html[data-android="true"] [data-product-media],
+html[data-android="true"] [data-product-image] {
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
+}
+html[data-android="true"] [data-product-image] {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* The grid stays a single flat CPU-composited layer instead of promoting. */
+html[data-android="true"] [data-product-grid],
+html[data-android="true"] [data-product-card-frame] {
+  contain: layout paint;
+  transform: none !important;
+}
+
 /* ============================================================
    ANDROID COMPOSITOR STABILITY LAYER (consolidated)
    ------------------------------------------------------------
