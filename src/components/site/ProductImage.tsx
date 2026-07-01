@@ -74,7 +74,18 @@ function ProductImageImpl({
         // cases — fall back to the raw load so the image still appears.
         .catch(reveal);
     } else {
-      reveal();
+      // Older WebViews (and some legacy Android browsers) lack img.decode().
+      // Give the browser a beat to finish decoding, then reveal on the next
+      // animation frame so the paint still lands on a settled bitmap.
+      const t = setTimeout(() => {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(reveal);
+        } else {
+          reveal();
+        }
+      }, 32);
+      // Best-effort cleanup if the src changes before the timer fires.
+      return () => clearTimeout(t);
     }
   }, [onLoad, resolvedSrc]);
 
