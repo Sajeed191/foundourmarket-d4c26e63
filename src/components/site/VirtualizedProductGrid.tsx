@@ -89,6 +89,53 @@ function nextFrames(n: number): Promise<void> {
 }
 
 /**
+ * Wait until scroll restoration has settled before releasing the hydration gate.
+ * On refresh/back-forward the browser may restore a non-zero scroll offset a few
+ * frames after mount; committing before that lands can cause an early-render
+ * correction frame. We poll scrollY until it stops moving (or a short cap), so
+ * gridReady is delayed until scroll is stable. No-op when not restoring.
+ */
+function waitForScrollSettled(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (typeof window === "undefined" || !isScrollRestoring()) return resolve();
+    let last = window.scrollY;
+    let stableFrames = 0;
+    const start = performance.now();
+    const tick = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) <= 1) stableFrames += 1;
+      else stableFrames = 0;
+      last = y;
+      // Settled = 2 consecutive stable frames, or hard cap at 400ms.
+      if (stableFrames >= 2 || performance.now() - start > 400) return resolve();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+/**
+ * Perceived-load optimization: after the current batch commits, pre-warm the
+ * NEXT viewport batch in the background so a first scroll paints from cache.
+ * Idle-scheduled and non-blocking — never gates the UI and never touches the DOM.
+ */
+function prewarmNextBatch(preloadSrcs: string[] | undefined, currentK: number): void {
+  if (typeof window === "undefined" || !preloadSrcs) return;
+  const next = preloadSrcs.slice(currentK, currentK + currentK);
+  if (next.length === 0) return;
+  const run = () => {
+    // Sequential to avoid a decode burst competing with the just-painted grid.
+    next.reduce<Promise<void>>((chain, src) => chain.then(() => warmImage(src)), Promise.resolve());
+  };
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => void })
+    .requestIdleCallback;
+  if (typeof ric === "function") ric(run);
+  else setTimeout(run, 200);
+}
+
+
+
+/**
  * Two-phase rendering engine — skeleton → atomic swap grid.
  *
  * Phase 1 (fast paint): render ONLY a `ProductSkeletonGrid`. In parallel, warm
