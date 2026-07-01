@@ -149,21 +149,42 @@ function TwoPhaseGrid({
     let cancelled = false;
     const k = computeK();
     const srcs = (preloadSrcs ?? []).slice(0, k);
+    const startedAt = performance.now();
+    gridLog("phase1 start →", {
+      viewportBatch: k,
+      itemCount,
+      cols: resolveColsWidth(cols, window.innerWidth),
+      viewport: { w: window.innerWidth, h: window.innerHeight },
+    });
 
-    const commit = () => {
+    const commit = (via: string) => {
       if (cancelled) return;
+      const ms = Math.round(performance.now() - startedAt);
+      gridLog(`atomic commit (${via}) → gridReady`, {
+        hydrationMs: ms,
+        gridReadyTs: Math.round(performance.now()),
+      });
       setReady(true);
       stabilizeScroll();
     };
 
     // Hard safety cap so we never sit on the skeleton forever.
-    const safety = new Promise<void>((res) => setTimeout(res, 3000));
+    const safety = new Promise<string>((res) => setTimeout(() => res("safety-timeout"), 3000));
     Promise.race([
-      Promise.all(srcs.map(warmImage))
+      Promise.all(
+        srcs.map((s, i) => {
+          const t0 = performance.now();
+          return warmImage(s).then(() => {
+            if (gridDebugEnabled())
+              gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
+          });
+        }),
+      )
         .then(() => nextFrames(2)) // decode barrier flush
-        .then(() => undefined),
+        .then(() => "decode-complete"),
       safety,
     ]).then(commit);
+
 
     return () => {
       cancelled = true;
