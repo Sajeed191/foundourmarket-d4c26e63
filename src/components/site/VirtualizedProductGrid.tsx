@@ -58,6 +58,47 @@ function warmImage(rawSrc: string): Promise<void> {
   });
 }
 
+/**
+ * Run async tasks with a bounded concurrency pool instead of all-at-once.
+ *
+ * WHY: firing `Promise.all` over the whole first batch decodes every image in
+ * parallel, then the atomic swap uploads all their textures in a SINGLE commit
+ * frame. On Chromium Android that one-frame multi-texture upload overflows the
+ * GPU tile manager and produces rainbow banding / duplicated strips / partial
+ * bottom rows. Staggering decodes into a small pool spreads the texture uploads
+ * across a few frames so the tile budget is never saturated at once. Desktop and
+ * Firefox are unaffected (they just decode a hair less parallel).
+ *
+ * Rollback: `?ff-decode-all` restores the original unbounded parallel decode.
+ */
+function decodeConcurrency(): number {
+  if (typeof window !== "undefined") {
+    try {
+      if (/[?&]ff-decode-all\b/.test(window.location.search)) return Infinity;
+    } catch {
+      /* ignore */
+    }
+  }
+  return 3;
+}
+
+function mapWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  if (!Number.isFinite(limit) || limit >= items.length) {
+    return Promise.all(items.map((it, i) => task(it, i))).then(() => undefined);
+  }
+  let cursor = 0;
+  const worker = (): Promise<void> => {
+    const i = cursor++;
+    if (i >= items.length) return Promise.resolve();
+    return task(items[i], i).then(worker);
+  };
+  return Promise.all(Array.from({ length: limit }, worker)).then(() => undefined);
+}
+
 /** Grid hydration debug logging — opt-in only.
  * Enable via `?debug-grid` in the URL or `window.__DEBUG_GRID = true`.
  * Zero cost in production when disabled. */
@@ -243,14 +284,12 @@ function TwoPhaseGrid({
       setTimeout(() => res("safety-timeout"), 3000),
     );
 
-    const decodeAll = Promise.all(
-      srcs.map((s, i) => {
-        const t0 = performance.now();
-        return warmImage(s).then(() => {
-          if (gridDebugEnabled()) gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
-        });
-      }),
-    )
+    const decodeAll = mapWithConcurrency(srcs, decodeConcurrency(), (s, i) => {
+      const t0 = performance.now();
+      return warmImage(s).then(() => {
+        if (gridDebugEnabled()) gridLog(`decode[${i}] ${Math.round(performance.now() - t0)}ms`);
+      });
+    })
       .then(() => {
         publishGridTelemetry({ decodeBatchEnd: Math.round(performance.now()) });
       })
