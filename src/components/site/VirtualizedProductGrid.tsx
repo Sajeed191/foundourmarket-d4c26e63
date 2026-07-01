@@ -173,12 +173,14 @@ function IncrementalGrid<T>({
   renderItem,
   getKey,
   className,
+  cols,
   batchSize,
 }: {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
   getKey: (item: T) => string;
   className?: string;
+  cols: Cols;
   batchSize: number;
 }) {
   const [visible, setVisible] = useState(() => Math.min(items.length, batchSize));
