@@ -407,6 +407,7 @@ function DeferredShell({
 
   return (
     <Suspense fallback={null}>
+      <RenderExperiments />
       <RegionSelectModal />
       {!isAuthRoute && <AdminMobileBar />}
       {!isAuthRoute && <AdminFloatingToolbar />}
