@@ -188,7 +188,7 @@ export function Nav() {
         }}
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
-        <nav className="max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 ring-white/10 lg:ring-white/15 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] backdrop-blur-2xl transition-all">
+        <nav className="max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 ring-white/10 lg:ring-white/15 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-all">
           <div className="flex items-center justify-start px-2.5 sm:px-5 lg:px-7 py-2.5 sm:py-3 lg:py-4 gap-1 sm:gap-2 lg:gap-3">
 
             {/* Zone 1 — Hamburger (mobile only) */}
