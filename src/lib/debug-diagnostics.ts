@@ -17,6 +17,9 @@
  */
 
 import { isDebugEnabled } from "@/lib/debug-flags";
+import { getPaletteExtractionCount } from "@/lib/image-palette";
+
+
 
 export type Diagnostics = {
   gpuRenderer: string;
