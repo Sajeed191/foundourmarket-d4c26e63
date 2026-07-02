@@ -912,6 +912,39 @@ html[data-android="true"] .nav-glass {
   box-shadow: 0 8px 24px -14px oklch(0 0 0 / 0.6) !important;
 }
 
+/* ===== Premium nav + search micro-interactions =====
+   Transform/opacity only — safe on Chrome Android compositor. */
+@keyframes nav-rematerialize {
+  from { transform: translateY(-9px); opacity: 0.82; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-nav-rematerialize {
+  animation: nav-rematerialize 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes panel-reveal {
+  from { transform: translateY(-8px) scale(0.985); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);     opacity: 1; }
+}
+.animate-panel-reveal {
+  animation: panel-reveal 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes search-pulse {
+  0%   { box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.35); }
+  70%  { box-shadow: 0 0 0 7px oklch(0.74 0.19 49 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0); }
+}
+.animate-search-pulse {
+  animation: search-pulse 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-nav-rematerialize,
+  .animate-panel-reveal,
+  .animate-search-pulse { animation: none !important; }
+}
+
+
 
 
 /* ===== Low-end device mode =====

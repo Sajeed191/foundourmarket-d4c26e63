@@ -73,10 +73,10 @@ export function MobileBottomNav() {
           (frosted
             ? "bottom-nav-light pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2"
             : "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2") +
-          ` transition-[height,padding] duration-200 ease-out ${
+          ` transition-[height,padding,transform,box-shadow] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
             compact
-              ? "h-[calc(var(--mobile-nav-surface-height)-12px)] py-1"
-              : "h-[var(--mobile-nav-surface-height)] py-2"
+              ? "h-[calc(var(--mobile-nav-surface-height)-12px)] py-1 -translate-y-1.5 shadow-[0_18px_46px_-16px_oklch(0_0_0/0.75)]"
+              : "h-[var(--mobile-nav-surface-height)] py-2 translate-y-0"
           }`
         }
       >
@@ -90,13 +90,17 @@ export function MobileBottomNav() {
                 aria-current={active ? "page" : undefined}
                 className="group flex h-full min-h-12 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium"
               >
-                <span className="relative grid place-items-center size-9 rounded-2xl transition-transform duration-200 ease-out active:scale-90">
-                  {/* Premium capsule behind the active icon only */}
+                <span
+                  className={`relative grid place-items-center size-9 rounded-2xl transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-90 ${
+                    compact ? "scale-[1.08]" : "scale-100"
+                  }`}
+                >
+                  {/* Premium halo ring behind the active icon only */}
                   <span
                     aria-hidden
-                    className={`absolute inset-0 rounded-2xl transition-all duration-300 ease-out ${
+                    className={`absolute inset-0 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
                       active
-                        ? "scale-100 bg-accent/15 opacity-100 ring-1 ring-accent/40 shadow-[0_0_16px_-4px_var(--color-accent)]"
+                        ? "scale-100 bg-accent/12 opacity-100 ring-1 ring-accent/35 shadow-[0_0_20px_-6px_var(--color-accent)]"
                         : "scale-75 opacity-0"
                     }`}
                   />
@@ -115,6 +119,7 @@ export function MobileBottomNav() {
                     )}
                   </span>
                 </span>
+
                 <span
                   aria-hidden={compact}
                   className={`h-3 max-w-full truncate leading-none transition-[opacity,transform] duration-200 ease-out ${

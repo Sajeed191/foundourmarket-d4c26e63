@@ -196,21 +196,27 @@ export function Nav() {
         data-scroll-mode={scrollMode}
         style={{
           filter: "none",
-          transition: "transform 0.24s ease-out, opacity 0.24s ease-out",
+          transform: scrollMode === "up" ? "translateY(0)" : undefined,
+          transition: "transform 0.24s cubic-bezier(0.2,0.8,0.2,1), opacity 0.24s cubic-bezier(0.2,0.8,0.2,1)",
           willChange: "auto",
         }}
-        className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
+        className={`sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)] ${
+          scrollMode === "up" ? "animate-nav-rematerialize" : ""
+        }`}
       >
         <nav
-          className={`max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 ring-white/10 lg:ring-white/15 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-[background-color,box-shadow] duration-200 ${
-            compact ? "bg-black/55" : ""
+          className={`max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-[background-color,box-shadow] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+            compact
+              ? "bg-black/60 ring-accent/25 shadow-[0_14px_46px_-18px_oklch(0_0_0/0.8),0_0_28px_-10px_oklch(0.74_0.19_49/0.45)]"
+              : "ring-white/10 lg:ring-white/15"
           }`}
         >
           <div
-            className={`flex items-center justify-start px-2.5 sm:px-5 lg:px-7 gap-1 sm:gap-2 lg:gap-3 transition-[padding] duration-200 ease-out ${
+            className={`flex items-center justify-start px-2.5 sm:px-5 lg:px-7 gap-1 sm:gap-2 lg:gap-3 transition-[padding,gap] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
               compact ? "py-1.5 sm:py-2 lg:py-2.5" : "py-2.5 sm:py-3 lg:py-4"
             }`}
           >
+
 
 
             {/* Zone 1 — Hamburger (mobile only) */}
