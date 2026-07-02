@@ -562,21 +562,21 @@ function Home() {
 
             {searchFocused && suggestions.length > 0 && (
               <div
-                className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 origin-top animate-scale-in rounded-3xl glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float)] p-2 sm:p-3 max-h-[min(60vh,22rem)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] text-left"
-                style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+                className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 origin-top animate-fade-in rounded-3xl border border-white/10 shadow-[0_20px_50px_-24px_oklch(0_0_0/0.8)] p-2 sm:p-3 max-h-[min(60vh,22rem)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] text-left"
+                style={{ background: "oklch(0.16 0.008 60)", paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
               >
-                <div className="px-3 pb-2 pt-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <div className="px-2 pb-2 pt-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80 border-b border-white/8">
                   {query.trim() ? (
                     <>
-                      <Search className="size-3.5 text-accent" /> Suggestions
+                      <Search className="size-3.5 opacity-70" /> Suggestions
                     </>
                   ) : (
                     <>
-                      <TrendingUp className="size-3.5 text-accent" /> Trending searches
+                      <TrendingUp className="size-3.5 opacity-70" /> Trending searches
                     </>
                   )}
                 </div>
-                <ul className="flex flex-col gap-0.5">
+                <ul className="flex flex-col pt-1">
                   {suggestions.slice(0, 6).map((s) => (
                     <li key={s}>
                       <button
@@ -586,19 +586,17 @@ function Home() {
                           setQuery(s);
                           goSearch(s);
                         }}
-                        className="group flex min-h-[48px] w-full items-center gap-3 rounded-2xl px-3 py-3 sm:py-2.5 text-left transition-colors duration-200 hover:bg-white/[0.06] active:bg-accent/10"
+                        className="flex h-11 w-full items-center justify-between px-2 text-left text-[15px] text-foreground/85 transition-opacity duration-200 hover:opacity-70"
                       >
-                        <span className="grid size-8 sm:size-7 shrink-0 place-items-center rounded-full bg-accent/12 text-accent">
-                          <Flame className="size-4 sm:size-3.5" />
-                        </span>
-                        <span className="flex-1 truncate text-[15px] sm:text-sm font-medium text-foreground/90 group-hover:text-foreground">{s}</span>
-                        <ArrowRight className="size-4 shrink-0 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                        <span className="truncate">{s}</span>
+                        <ArrowRight className="size-4 shrink-0 text-muted-foreground/60" />
                       </button>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
+
           </form>
 
           {/* Primary actions */}
