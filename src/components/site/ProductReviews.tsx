@@ -690,9 +690,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               <ul className="grid gap-5 sm:grid-cols-2">
                 <AnimatePresence>
                   {visible.map((r) => {
-                    const prof = profiles[r.user_id];
-                    const name = prof?.full_name || "Customer";
-                    const isOwn = user?.id === r.user_id;
+                    // Admin: resolve author by UUID. Public: use denormalized fields.
+                    const prof = r.user_id ? profiles[r.user_id] : undefined;
+                    const name = (prof?.full_name ?? r.author_name) || "Customer";
+                    const avatarUrl = prof?.avatar_url ?? r.author_avatar_url ?? null;
+                    const isOwn = r.id === myReview?.id;
                     const editing = editingId === r.id;
                     return (
                       <motion.li
