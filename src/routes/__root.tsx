@@ -38,6 +38,7 @@ import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { startCapabilityGovernor, publishRenderDiagnostics } from "@/lib/runtime-capability";
+import { startMotionTier } from "@/lib/motion-tier";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
