@@ -249,6 +249,7 @@ export function Nav() {
 
   return (
     <>
+      {!searchOpen && (
       <div
         ref={topNavRef}
         data-app-header
