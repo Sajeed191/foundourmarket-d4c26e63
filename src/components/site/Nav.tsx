@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/lib/theme";
 import { LightMobileDrawer } from "@/components/site/LightMobileDrawer";
-import { scrollDampeningMs } from "@/lib/motion-tier";
+import { useMotionTier } from "@/lib/motion-tier";
 const logoSrc = "/logo.webp";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
@@ -151,14 +151,23 @@ export function Nav() {
   const initial = (displayName?.[0] ?? "F").toUpperCase();
 
   const lastY = useRef(0);
-  // Three-state scroll intelligence: "top" (full immersive), "down" (compact
-  // sticky bar) and "up" (fully expanded on intent to navigate). Transform +
-  // opacity only for the icons; a single padding transition per direction
-  // change keeps the bar height adaptive without per-frame reflow.
+  const motionTier = useMotionTier();
+  const lowEnd = motionTier === "low";
+  // Deterministic top-nav scroll machine. The header is NEVER hidden — only
+  // "top" (full immersive), "up" (full premium header) and "down" (compact:
+  // translateY(-8px)/opacity 0.92). Direction is committed per rAF frame with
+  // no scroll-stop timeout, so upward intent shows instantly and the bar can
+  // never get stranded hidden on low-end Android (Oppo A3s / Android 8).
   const [scrollMode, setScrollMode] = useState<"top" | "down" | "up">("top");
   useEffect(() => {
+    // Low-end safety guard: keep a stable, always-visible header — no compact
+    // state animation at all (opacity/translate stay at rest).
+    if (lowEnd) {
+      setScrollMode("top");
+      return;
+    }
+
     let ticking = false;
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const JITTER = 6; // ignore micro scroll noise (<6px)
 
     const update = () => {
@@ -171,34 +180,26 @@ export function Nav() {
         lastY.current = y;
         return;
       }
-      // Micro jitter — do not commit a direction change.
+      // Micro jitter — do not commit a direction change (keep last state).
       if (Math.abs(delta) < JITTER) return;
 
-      // Upward intent is the priority signal: reveal instantly, no wait.
+      // Upward intent is the priority signal: reveal instantly, per frame.
       if (delta < 0) setScrollMode("up");
       else if (y > 80) setScrollMode("down");
       lastY.current = y;
     };
 
     const onScroll = () => {
-      // Single rAF-throttled controller. Direction is committed per frame so
-      // upward intent shows immediately, even during momentum scroll.
+      // Single rAF-throttled controller. No scroll-stop timeout: idle keeps the
+      // last committed state, so the header is never toggled off in a timer.
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(update);
       }
-      // Settle lock: after scrolling stops, stabilize into the resting state.
-      if (settleTimer) clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => {
-        setScrollMode(window.scrollY < 30 ? "top" : "up");
-      }, scrollDampeningMs());
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (settleTimer) clearTimeout(settleTimer);
-    };
-  }, []);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lowEnd]);
   const compact = scrollMode === "down";
 
 
@@ -222,11 +223,13 @@ export function Nav() {
         style={{
           filter: "none",
           // Priority surface: fully present at top / on upward intent, subtle
-          // recede on downward intent only. Transform + opacity only.
-          transform: scrollMode === "down" ? "translateY(-8px)" : "translateY(0)",
-          opacity: scrollMode === "down" ? 0.92 : 1,
+          // recede on downward intent only. Transform + opacity only — never
+          // hidden. Low-end devices stay pinned to the resting state.
+          transform: !lowEnd && scrollMode === "down" ? "translateY(-8px) translateZ(0)" : "translateY(0) translateZ(0)",
+          opacity: !lowEnd && scrollMode === "down" ? 0.92 : 1,
           transition: "transform 0.19s cubic-bezier(0.2,0.8,0.2,1), opacity 0.19s cubic-bezier(0.2,0.8,0.2,1)",
           willChange: "transform, opacity",
+          backfaceVisibility: "hidden",
         }}
         className={`sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)] ${
           scrollMode === "up" ? "animate-nav-rematerialize" : ""
