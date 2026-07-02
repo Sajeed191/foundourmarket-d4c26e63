@@ -225,7 +225,7 @@ export function Nav() {
           // Priority surface: fully present at top / on upward intent, subtle
           // recede on downward intent only. Transform + opacity only — never
           // hidden. Low-end devices stay pinned to the resting state.
-          transform: !lowEnd && scrollMode === "down" ? "translateY(-8px) translateZ(0)" : "translateY(0) translateZ(0)",
+          transform: !lowEnd && scrollMode === "down" ? "translateY(-6px) translateZ(0)" : "translateY(0) translateZ(0)",
           opacity: !lowEnd && scrollMode === "down" ? 0.92 : 1,
           transition: "transform 0.19s cubic-bezier(0.2,0.8,0.2,1), opacity 0.19s cubic-bezier(0.2,0.8,0.2,1)",
           willChange: "transform, opacity",
