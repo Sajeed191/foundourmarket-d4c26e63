@@ -152,12 +152,19 @@ export function Nav() {
   const lastY = useRef(0);
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
-    const onScroll = () => {
+    let ticking = false;
+    const update = () => {
       const y = window.scrollY;
       const prev = lastY.current;
       if (y > prev && y > 80) setHidden(true);
       else if (y < prev - 4) setHidden(false);
       lastY.current = y;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
