@@ -8,7 +8,6 @@ import { iconForCategory } from "@/components/site/CategoryCard";
 import { Price } from "@/components/site/Price";
 import { useRegion } from "@/lib/region";
 
-const TRENDING = ["Wireless headphones", "Leather jacket", "Ceramic mug", "Smart watch", "Linen shirt"];
 const RECENT_KEY = "fom-recent-searches";
 const PRODUCT_PAGE = 6; // initial product results; lazy-load more on demand (keeps initial list small)
 
