@@ -1994,7 +1994,10 @@ html[data-android="true"] .feature-card {
   transform: none !important;
   will-change: auto !important;
   contain: layout !important;
-  background: oklch(0.16 0.01 60 / 0.92) !important;
+  /* padding-box clip prevents the border from rendering a frame after the
+     background on first composite (the faint 1-frame band on refresh). */
+  background: oklch(0.16 0.01 60 / 0.92) padding-box !important;
+  background-clip: padding-box !important;
   border: 1px solid oklch(1 0 0 / 0.06) !important;
   box-shadow: none !important;
 }
