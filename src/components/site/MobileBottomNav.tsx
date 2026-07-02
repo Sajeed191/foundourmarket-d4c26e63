@@ -333,8 +333,8 @@ export function MobileBottomNav() {
               ? "translate-y-[140%] opacity-0 pointer-events-none"
               : compact
                 ? lowEnd
-                  ? "-translate-y-1.5 opacity-100"
-                  : "-translate-y-1.5 opacity-100 shadow-[0_22px_54px_-16px_oklch(0_0_0/0.78)]"
+                  ? "translate-y-0.5 opacity-100"
+                  : "translate-y-0.5 opacity-100 shadow-[0_22px_54px_-16px_oklch(0_0_0/0.78)]"
                 : "translate-y-0 opacity-100"
           }`
         }
