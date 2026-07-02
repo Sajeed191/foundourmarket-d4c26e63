@@ -686,7 +686,7 @@ function SearchPage() {
 
       {/* Trending mode banner — "Top Trending Now" */}
       {isTrending && (
-        <div className="mb-6 sm:mb-8 flex items-center gap-3 rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/[0.12] to-transparent px-4 py-3.5 animate-fade-in">
+        <div className="mb-6 sm:mb-8 flex items-center gap-3 rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/[0.12] to-transparent px-4 py-3.5 animate-fade-up">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/20 text-accent">
             <TrendingUp className="size-5" strokeWidth={2.2} />
           </span>
@@ -710,7 +710,7 @@ function SearchPage() {
           </aside>
         )}
 
-        <div key={isTrending ? "trending" : "feed"} className="animate-fade-in">
+        <div key={isTrending ? "trending" : "feed"} className="animate-fade-up">
 
           {loading ? (
             <ProductSkeletonGrid count={9} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6" />
