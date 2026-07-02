@@ -151,14 +151,23 @@ export function Nav() {
   const initial = (displayName?.[0] ?? "F").toUpperCase();
 
   const lastY = useRef(0);
-  // Three-state scroll intelligence: "top" (full immersive), "down" (compact
-  // sticky bar) and "up" (fully expanded on intent to navigate). Transform +
-  // opacity only for the icons; a single padding transition per direction
-  // change keeps the bar height adaptive without per-frame reflow.
+  const motionTier = useMotionTier();
+  const lowEnd = motionTier === "low";
+  // Deterministic top-nav scroll machine. The header is NEVER hidden — only
+  // "top" (full immersive), "up" (full premium header) and "down" (compact:
+  // translateY(-8px)/opacity 0.92). Direction is committed per rAF frame with
+  // no scroll-stop timeout, so upward intent shows instantly and the bar can
+  // never get stranded hidden on low-end Android (Oppo A3s / Android 8).
   const [scrollMode, setScrollMode] = useState<"top" | "down" | "up">("top");
   useEffect(() => {
+    // Low-end safety guard: keep a stable, always-visible header — no compact
+    // state animation at all (opacity/translate stay at rest).
+    if (lowEnd) {
+      setScrollMode("top");
+      return;
+    }
+
     let ticking = false;
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const JITTER = 6; // ignore micro scroll noise (<6px)
 
     const update = () => {
@@ -171,34 +180,26 @@ export function Nav() {
         lastY.current = y;
         return;
       }
-      // Micro jitter — do not commit a direction change.
+      // Micro jitter — do not commit a direction change (keep last state).
       if (Math.abs(delta) < JITTER) return;
 
-      // Upward intent is the priority signal: reveal instantly, no wait.
+      // Upward intent is the priority signal: reveal instantly, per frame.
       if (delta < 0) setScrollMode("up");
       else if (y > 80) setScrollMode("down");
       lastY.current = y;
     };
 
     const onScroll = () => {
-      // Single rAF-throttled controller. Direction is committed per frame so
-      // upward intent shows immediately, even during momentum scroll.
+      // Single rAF-throttled controller. No scroll-stop timeout: idle keeps the
+      // last committed state, so the header is never toggled off in a timer.
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(update);
       }
-      // Settle lock: after scrolling stops, stabilize into the resting state.
-      if (settleTimer) clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => {
-        setScrollMode(window.scrollY < 30 ? "top" : "up");
-      }, scrollDampeningMs());
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (settleTimer) clearTimeout(settleTimer);
-    };
-  }, []);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lowEnd]);
   const compact = scrollMode === "down";
 
 
