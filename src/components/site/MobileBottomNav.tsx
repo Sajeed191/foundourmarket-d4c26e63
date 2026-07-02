@@ -39,7 +39,7 @@ export function MobileBottomNav() {
       // Intent dampening: dock relaxes back to its full state ~150ms after the
       // gesture ends, giving a soft inertial settle instead of snapping.
       if (settleTimer) clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => setCompact(false), 150);
+      settleTimer = setTimeout(() => setCompact(false), scrollDampeningMs());
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);
