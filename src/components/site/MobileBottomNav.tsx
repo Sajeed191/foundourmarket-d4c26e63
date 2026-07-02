@@ -19,6 +19,23 @@ export function MobileBottomNav() {
   const { count: supportUnread } = useSupportUnread();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  // Direction-aware compaction: scrolling down collapses labels for a cleaner
+  // reading area; scrolling up (or near the top) restores them. Transform/size
+  // only — no blur or filters, to stay stable on Chrome Android.
+  const [compact, setCompact] = useState(false);
+  const lastY = useRef(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const prev = lastY.current;
+      if (y > prev && y > 80) setCompact(true);
+      else if (y < prev - 4 || y < 40) setCompact(false);
+      lastY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // Hand the bottom dock over to the admin bar when a staff member is actively
   // managing the store, so the two navigations never stack.
   if (adminMode && isAdmin) return null;
