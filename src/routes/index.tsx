@@ -439,8 +439,9 @@ function Home() {
 
   const goProduct = (slug: string) => {
     setSearching(true);
-    nav({ to: "/product/$slug", params: { slug } });
+    nav({ to: "/products/$slug", params: { slug } });
   };
+
 
   // Real, backend-driven product matches only — ranked by relevance.
   const productMatches = useMemo(() => {
