@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 
 import {
@@ -17,6 +17,8 @@ import {
   Headphones,
 } from "lucide-react";
 import { BUILD_ID } from "@/lib/build-version";
+
+const EASE = "cubic-bezier(0.2,0.8,0.2,1)";
 
 type NavGroup = {
   title: string;
@@ -60,11 +62,11 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-const TRUST_BADGES = [
-  { icon: Truck, label: "Fast Global Delivery" },
-  { icon: ShieldCheck, label: "Secure Payments" },
-  { icon: RotateCcw, label: "Easy Returns" },
-  { icon: Globe, label: "Worldwide Sourcing" },
+const TRUST_PILLS = [
+  { emoji: "🚚", label: "Fast Delivery", icon: Truck },
+  { emoji: "🔒", label: "Secure Checkout", icon: ShieldCheck },
+  { emoji: "↩️", label: "Easy Returns", icon: RotateCcw },
+  { emoji: "🌍", label: "Global Sourcing", icon: Globe },
 ];
 
 const SOCIALS = [
@@ -74,11 +76,112 @@ const SOCIALS = [
   { icon: Youtube, label: "YouTube", href: "https://youtube.com/@foundourmarket?si=JsljIPlZFQtWIb1t", demo: false },
 ];
 
-/**
- * Accordion footer group — single-open behavior on mobile, always open on desktop.
- * Expand/collapse uses grid-template-rows (0fr → 1fr) + opacity: smooth, no blur,
- * no reflow jank. Chevron rotates with the shared easing curve.
- */
+/** Fade-in only on first viewport entry. */
+function useInViewOnce<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || seen) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [seen]);
+  return { ref, seen };
+}
+
+/** True while the user is scrolling down (for mobile social dock collapse). */
+function useScrollingDown() {
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let raf = 0;
+    let idle: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const y = window.scrollY;
+        if (y > lastY + 6) setDown(true);
+        else if (y < lastY - 6) setDown(false);
+        lastY = y;
+        clearTimeout(idle);
+        idle = setTimeout(() => setDown(false), 700);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+      clearTimeout(idle);
+    };
+  }, []);
+  return down;
+}
+
+/** Adaptive rotating trust pill layer — 3 visible, active pill glows softly. */
+function TrustLayer() {
+  const [active, setActive] = useState(0);
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    if (locked) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % TRUST_PILLS.length), 3600);
+    return () => clearInterval(id);
+  }, [locked]);
+
+  return (
+    <div
+      className="relative max-w-7xl mx-auto mt-5 flex flex-wrap items-center gap-2.5"
+      onMouseEnter={() => setLocked(true)}
+      onMouseLeave={() => setLocked(false)}
+    >
+      {TRUST_PILLS.map(({ emoji, label, icon: Icon }, i) => {
+        const isActive = i === active;
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => {
+              setActive(i);
+              setLocked(true);
+            }}
+            className="group inline-flex items-center gap-2 rounded-full border px-3.5 py-2 transition-all duration-200"
+            style={{
+              transitionTimingFunction: EASE,
+              opacity: isActive ? 1 : 0.6,
+              transform: isActive ? "scale(1)" : "scale(0.97)",
+              borderColor: isActive
+                ? "color-mix(in oklab, var(--color-accent) 40%, transparent)"
+                : "color-mix(in oklab, var(--color-border) 60%, transparent)",
+              background: isActive
+                ? "color-mix(in oklab, var(--color-accent) 10%, transparent)"
+                : "color-mix(in oklab, var(--color-card) 55%, transparent)",
+              boxShadow: isActive
+                ? "0 0 18px color-mix(in oklab, var(--color-accent) 22%, transparent)"
+                : "none",
+            }}
+          >
+            <span aria-hidden className="text-sm leading-none">{emoji}</span>
+            <Icon className="size-3.5 text-accent" aria-hidden />
+            <span className="text-[11px] sm:text-xs font-medium leading-none text-foreground/90 whitespace-nowrap">
+              {label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Accordion footer group — strict single-open on mobile, always open on desktop. */
 function FooterSection({
   group,
   isOpen,
@@ -89,34 +192,46 @@ function FooterSection({
   onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-border/40 md:border-0 pb-1.5 md:pb-0">
+    <div
+      className="relative border-b border-border/40 md:border-0 pb-1.5 md:pb-0 md:pl-0 pl-2.5"
+    >
+      {/* left accent glow bar — mobile, active only */}
+      <span
+        aria-hidden
+        className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full transition-all duration-200 md:hidden"
+        style={{
+          transitionTimingFunction: EASE,
+          opacity: isOpen ? 1 : 0,
+          background: "var(--color-accent)",
+          boxShadow: isOpen ? "0 0 10px color-mix(in oklab, var(--color-accent) 55%, transparent)" : "none",
+        }}
+      />
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="group flex w-full items-center justify-between py-1 md:py-0 md:pointer-events-none"
+        className="group flex w-full items-center justify-between py-1 md:py-0 md:pointer-events-none rounded-lg transition-colors duration-200"
+        style={{
+          transitionTimingFunction: EASE,
+          background: isOpen ? "color-mix(in oklab, var(--color-accent) 5%, transparent)" : "transparent",
+        }}
       >
-        <h5 className="relative text-[10px] font-mono uppercase tracking-[0.2em] text-accent">
+        <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">
           {group.title}
-          {/* active accent underline — mobile only */}
-          <span
-            aria-hidden
-            className={`absolute -bottom-1 left-0 h-px bg-accent transition-all duration-200 md:hidden ${
-              isOpen ? "w-full opacity-70" : "w-0 opacity-0"
-            }`}
-            style={{ transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
-          />
         </h5>
         <ChevronDown
-          className={`size-4 text-muted-foreground transition-transform duration-200 md:hidden ${isOpen ? "rotate-180" : ""}`}
-          style={{ transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
+          className="size-4 text-muted-foreground md:hidden"
+          style={{
+            transition: "transform 220ms cubic-bezier(0.34,1.56,0.64,1)",
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+          }}
         />
       </button>
       <div
         className={`grid transition-all duration-200 md:!grid-rows-[1fr] md:!opacity-100 ${
           isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         }`}
-        style={{ transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
+        style={{ transitionTimingFunction: EASE }}
       >
         <ul className="overflow-hidden text-xs space-y-2 text-muted-foreground pt-1.5 md:pt-2.5">
           {group.links.map((link) => (
@@ -143,10 +258,94 @@ function FooterSection({
   );
 }
 
+/** Contextual intelligence bar — copy adapts to the current route/intent. */
+function IntelligenceBar({ pathname }: { pathname: string }) {
+  let message = "Explore curated collections";
+  if (pathname.startsWith("/cart") || pathname.startsWith("/checkout")) {
+    message = "Secure checkout guaranteed";
+  } else if (pathname.startsWith("/product") || pathname.startsWith("/category") || pathname.startsWith("/shop")) {
+    message = "Need help choosing products?";
+  }
+
+  return (
+    <div className="relative max-w-7xl mx-auto mt-7">
+      <div
+        className="animate-cta-breathe flex flex-col sm:flex-row items-center justify-between gap-3 rounded-3xl border px-4 py-4 sm:px-6"
+        style={{
+          borderColor: "color-mix(in oklab, var(--color-accent) 28%, transparent)",
+          background:
+            "linear-gradient(100deg, color-mix(in oklab, var(--color-accent) 9%, transparent), color-mix(in oklab, var(--color-card) 55%, transparent))",
+          boxShadow: "inset 0 0 26px color-mix(in oklab, var(--color-accent) 10%, transparent)",
+        }}
+      >
+        <p className="text-sm font-semibold text-foreground text-center sm:text-left">{message}</p>
+        <Link
+          to="/contact"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-11 rounded-full px-6 text-sm font-semibold text-accent-foreground transition-transform duration-200 active:scale-[0.98]"
+          style={{
+            background: "linear-gradient(90deg, var(--color-accent), color-mix(in oklab, var(--color-accent) 60%, gold))",
+            transitionTimingFunction: EASE,
+          }}
+        >
+          <Headphones className="size-4" />
+          Get Assistance
+          <ArrowRight className="size-4" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** Floating capsule social dock — collapses to a single orb while scrolling down (mobile). */
+function SocialDock() {
+  const scrollingDown = useScrollingDown();
+  const [forceOpen, setForceOpen] = useState(false);
+  const collapsed = scrollingDown && !forceOpen;
+
+  return (
+    <div className="flex items-center">
+      <button
+        type="button"
+        aria-label="Toggle social links"
+        onClick={() => setForceOpen((o) => !o)}
+        className="sm:hidden size-9 grid place-items-center rounded-full bg-card/60 border border-border/50 text-accent transition-all duration-200"
+        style={{ transitionTimingFunction: EASE, boxShadow: "0 0 14px color-mix(in oklab, var(--color-accent) 22%, transparent)" }}
+      >
+        <MessageCircle className="size-4" />
+      </button>
+      <div
+        className="flex items-center gap-2.5 overflow-hidden transition-all duration-200 sm:!max-w-none sm:!opacity-100 sm:!ml-0"
+        style={{
+          transitionTimingFunction: EASE,
+          maxWidth: collapsed ? 0 : 260,
+          opacity: collapsed ? 0 : 1,
+          marginLeft: collapsed ? 0 : 10,
+        }}
+      >
+        {SOCIALS.map(({ icon: Icon, label, href, demo }) => (
+          <a
+            key={label}
+            href={href}
+            {...(demo
+              ? { onClick: (e: React.MouseEvent) => e.preventDefault() }
+              : { target: "_blank", rel: "noopener noreferrer" })}
+            aria-label={demo ? `${label} (demo)` : label}
+            className="size-9 grid place-items-center rounded-full bg-card/60 border border-border/50 text-muted-foreground transition-all duration-200 hover:text-accent hover:border-accent/40 hover:scale-[1.08] active:scale-95"
+            style={{ transitionTimingFunction: EASE }}
+          >
+            <Icon className="size-4" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Footer() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const compact = pathname.startsWith("/checkout");
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const { ref: brandRef, seen } = useInViewOnce<HTMLDivElement>();
 
   // Minimal, low-distraction footer during checkout to reduce abandonment.
   if (compact) {
@@ -167,45 +366,48 @@ export function Footer() {
   }
 
   return (
-    <footer className="relative px-4 sm:px-6 pt-6 mobile-page-clearance md:py-8 border-t border-border bg-background overflow-hidden">
+    <footer className="relative px-4 sm:px-6 pt-6 mobile-page-clearance md:py-8 border-t border-border overflow-hidden" style={{ background: "#0B0B0F" }}>
       {/* Ambient divider glow — opacity-based, no backdrop-filter */}
       <div aria-hidden className="pointer-events-none absolute -top-px left-1/2 -translate-x-1/2 w-[70%] h-px" style={{ background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)", opacity: 0.6 }} />
       <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[80%] h-40 opacity-40" style={{ background: "var(--gradient-ember-soft)" }} />
 
-      {/* ── 1. Brand identity block ── */}
-      <div className="relative max-w-7xl mx-auto">
-        <div className="max-w-[42ch] space-y-2.5">
-          <Link to="/" aria-label="FoundOurMarket home" className="inline-block text-xl sm:text-2xl font-display tracking-tighter font-semibold hover:opacity-90 transition-opacity">
-            FoundOurMarket<span className="text-accent">™</span>
-          </Link>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Curated global products with precision — a premium independent marketplace sourcing top-quality goods worldwide.
-          </p>
-        </div>
-        {/* gradient divider */}
-        <div aria-hidden className="mt-5 h-px w-full" style={{ background: "linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-accent) 35%, transparent), transparent)" }} />
+      {/* ── 1. Brand core strip ── */}
+      <div
+        ref={brandRef}
+        className="relative max-w-7xl mx-auto"
+        style={{
+          opacity: seen ? 1 : 0,
+          transform: seen ? "translateY(0)" : "translateY(10px)",
+          transition: "opacity 500ms cubic-bezier(0.2,0.8,0.2,1), transform 500ms cubic-bezier(0.2,0.8,0.2,1)",
+        }}
+      >
+        <Link
+          to="/"
+          aria-label="FoundOurMarket home"
+          className="inline-block text-xl sm:text-2xl font-display font-semibold hover:opacity-90 transition-opacity"
+          style={{ letterSpacing: seen ? "-0.01em" : "-0.03em", transition: "letter-spacing 700ms cubic-bezier(0.2,0.8,0.2,1)" }}
+        >
+          FoundOurMarket<span className="text-accent">™</span>
+        </Link>
+        <p className="mt-2 text-xs sm:text-sm text-muted-foreground tracking-wide">
+          Curated global products, delivered with precision.
+        </p>
+        {/* ultra-soft gradient underline */}
+        <div
+          aria-hidden
+          className="mt-4 h-px transition-all duration-500"
+          style={{
+            width: seen ? "100%" : "0%",
+            transitionTimingFunction: EASE,
+            background: "linear-gradient(90deg, color-mix(in oklab, var(--color-accent) 45%, transparent), transparent)",
+          }}
+        />
       </div>
 
-      {/* ── 2. Trust & value row ── */}
-      <div className="relative max-w-7xl mx-auto mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {TRUST_BADGES.map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="flex items-center gap-2.5 rounded-2xl bg-card/60 border border-border/50 px-3 py-2.5 transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
-            style={{ transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
-          >
-            <span
-              className="grid place-items-center size-8 shrink-0 rounded-full text-accent"
-              style={{ background: "color-mix(in oklab, var(--color-accent) 12%, transparent)", boxShadow: "inset 0 0 12px color-mix(in oklab, var(--color-accent) 18%, transparent)" }}
-            >
-              <Icon className="size-4" />
-            </span>
-            <span className="text-[11px] sm:text-xs font-medium leading-tight text-foreground/90">{label}</span>
-          </div>
-        ))}
-      </div>
+      {/* ── 2. Adaptive trust layer ── */}
+      <TrustLayer />
 
-      {/* ── 3 + 4. Contact / social  +  accordion navigation ── */}
+      {/* ── 3. Contact / social  +  accordion navigation ── */}
       <div className="relative max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-6 gap-x-6 gap-y-5">
         <div className="md:col-span-2 space-y-3.5">
           <ul className="text-xs space-y-2 text-muted-foreground">
@@ -222,22 +424,7 @@ export function Footer() {
               </a>
             </li>
           </ul>
-          <div className="flex items-center gap-2.5">
-            {SOCIALS.map(({ icon: Icon, label, href, demo }) => (
-              <a
-                key={label}
-                href={href}
-                {...(demo
-                  ? { onClick: (e: React.MouseEvent) => e.preventDefault() }
-                  : { target: "_blank", rel: "noopener noreferrer" })}
-                aria-label={demo ? `${label} (demo)` : label}
-                className="size-9 grid place-items-center rounded-full bg-card/60 border border-border/50 text-muted-foreground transition-all duration-200 hover:text-accent hover:border-accent/40 hover:scale-[1.08] active:scale-95"
-                style={{ transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
-              >
-                <Icon className="size-4" />
-              </a>
-            ))}
-          </div>
+          <SocialDock />
         </div>
 
         {NAV_GROUPS.map((group) => (
@@ -250,27 +437,10 @@ export function Footer() {
         ))}
       </div>
 
-      {/* ── 5. Smart footer CTA strip ── */}
-      <div className="relative max-w-7xl mx-auto mt-7">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-3xl border border-border/50 bg-card/50 px-4 py-4 sm:px-6">
-          <div className="text-center sm:text-left">
-            <p className="text-sm font-semibold text-foreground">Need help finding something?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Our team sources products worldwide, just for you.</p>
-          </div>
-          <Link
-            to="/contact"
-            className="relative isolate inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-11 rounded-full px-6 text-sm font-semibold text-accent-foreground overflow-hidden transition-transform duration-200 active:scale-[0.98]"
-            style={{ background: "linear-gradient(90deg, var(--color-accent), color-mix(in oklab, var(--color-accent) 60%, gold))", transitionTimingFunction: "cubic-bezier(0.2,0.8,0.2,1)" }}
-          >
-            <span aria-hidden className="animate-cta-breathe pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(circle at center, color-mix(in oklab, var(--color-accent) 55%, transparent), transparent 70%)" }} />
-            <Headphones className="size-4" />
-            Talk to Support
-            <ArrowRight className="size-4" />
-          </Link>
-        </div>
-      </div>
+      {/* ── 4. Contextual footer intelligence bar ── */}
+      <IntelligenceBar pathname={pathname} />
 
-      {/* ── 6. Copyright bar ── */}
+      {/* ── 5. Copyright bar ── */}
       <div className="relative max-w-7xl mx-auto mt-6 pt-4 border-t border-border/60 flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
         <p className="text-[10px] font-mono text-muted-foreground/80 uppercase tracking-widest">
           © 2026 FoundOurMarket. All rights reserved. <span className="opacity-60 normal-case">build {BUILD_ID}</span>
