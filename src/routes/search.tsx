@@ -64,20 +64,36 @@ const SORTS: { value: string; label: string; desc: string; icon: LucideIcon }[] 
   { value: "discount", label: "Biggest Discount", desc: "Best deals first", icon: Tag },
 ];
 
-// Sorts handled natively by the search_products RPC. Others are applied
-// client-side after fetching with a "relevance" base ordering.
-const RPC_SORTS = new Set(["relevance", "price_asc", "price_desc", "rating", "newest"]);
+// Sorts handled natively by the search_products RPC. Price sorts are handled
+// client-side because the DB `price` column is 0 for every product — real
+// prices live in region columns (price_inr / price_usd) resolved per-region,
+// so the RPC's ORDER BY p.price can never reorder anything.
+const RPC_SORTS = new Set(["relevance", "rating", "newest"]);
 
-function applyClientSort(rows: Product[], sort: string | undefined, discountOf: (p: Product) => number): Product[] {
+// Price sorts require the full result set (client-side region-aware ordering),
+// so they are fetched in one shot with pagination disabled — like trending.
+const PRICE_SORTS = new Set(["price_asc", "price_desc"]);
+
+function applyClientSort(
+  rows: Product[],
+  sort: string | undefined,
+  discountOf: (p: Product) => number,
+  priceOf: (p: Product) => number,
+): Product[] {
   switch (sort) {
     // "trending" is NOT a client sort — it is a fully separate, data-filtered
     // dataset fetched from the trending_products RPC (real-time top 10).
     case "best_selling":
       // Only products merchandised as Best Sellers, ordered by units sold.
-      return rows.filter((p) => Boolean(p.bestseller)).sort((a, b) => b.soldCount - a.soldCount);
+      return [...rows].filter((p) => Boolean(p.bestseller)).sort((a, b) => b.soldCount - a.soldCount);
     case "discount":
       // Only products that actually have a discount, ordered by biggest first.
-      return rows.filter((p) => discountOf(p) > 0).sort((a, b) => discountOf(b) - discountOf(a));
+      return [...rows].filter((p) => discountOf(p) > 0).sort((a, b) => discountOf(b) - discountOf(a));
+    case "price_asc":
+      // Region-aware ascending: parse the resolved numeric price, never the DB 0.
+      return [...rows].sort((a, b) => priceOf(a) - priceOf(b));
+    case "price_desc":
+      return [...rows].sort((a, b) => priceOf(b) - priceOf(a));
     default:
       return rows;
   }
@@ -294,7 +310,7 @@ function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
   const { categories } = useCategories();
-  const { shippingFeeOf, compareOf, market, symbol } = useRegion();
+  const { priceOf, shippingFeeOf, compareOf, market, symbol } = useRegion();
 
   const [query, setQuery] = useState(search.q ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -350,6 +366,7 @@ function SearchPage() {
 
   const sort = search.sort ?? "relevance";
   const isTrending = sort === "trending";
+  const isPriceSort = PRICE_SORTS.has(sort);
 
   // Reset and fetch the first page whenever the query / RPC-handled filters change.
   // Trending is a special mode: it ignores query/filters and shows ALL products
@@ -379,6 +396,9 @@ function SearchPage() {
     }
 
 
+    // Price sorts need the whole matching set so the client-side region-aware
+    // ordering is correct across the full catalog (pagination is disabled).
+    const fetchLimit = isPriceSort ? 1000 : PAGE_SIZE;
     (supabase.rpc as any)("search_products", {
       q: search.q ?? null,
       category_filter: search.cat ?? null,
@@ -386,12 +406,12 @@ function SearchPage() {
       max_price: search.max ?? null,
       min_rating: search.rating ?? null,
       sort_by: RPC_SORTS.has(sort) ? sort : "relevance",
-      page_limit: PAGE_SIZE,
+      page_limit: fetchLimit,
       page_offset: 0,
     }).then(({ data }: { data: any[] | null }) => {
       if (cancelled) return;
       const rows = (data ?? []).map((r: any) => rowToProduct(r));
-      setHasMore(rows.length === PAGE_SIZE);
+      setHasMore(!isPriceSort && rows.length === PAGE_SIZE);
       setRawRows(rows);
       setLoading(false);
     });
@@ -447,9 +467,14 @@ function SearchPage() {
     let rows = rawRows;
     if (search.stock === "in") rows = rows.filter((p) => p.inStock);
     if (search.free === "1") rows = rows.filter((p) => shippingFeeOf(p) <= 0);
-    if (search.disc === "1") rows = rows.filter((p) => discountPercent(p.price, compareOf(p)) != null);
-    return applyClientSort(rows, sort, (p) => discountPercent(p.price, compareOf(p)) ?? 0);
-  }, [rawRows, isTrending, search.stock, search.free, search.disc, sort, shippingFeeOf, compareOf]);
+    if (search.disc === "1") rows = rows.filter((p) => discountPercent(priceOf(p), compareOf(p)) != null);
+    return applyClientSort(
+      rows,
+      sort,
+      (p) => discountPercent(priceOf(p), compareOf(p)) ?? 0,
+      priceOf,
+    );
+  }, [rawRows, isTrending, search.stock, search.free, search.disc, sort, shippingFeeOf, compareOf, priceOf]);
 
 
 
