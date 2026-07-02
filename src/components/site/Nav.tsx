@@ -159,27 +159,39 @@ export function Nav() {
   useEffect(() => {
     let ticking = false;
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    const JITTER = 6; // ignore micro scroll noise (<6px)
+
     const update = () => {
-      const y = window.scrollY;
-      const prev = lastY.current;
-      if (y < 30) setScrollMode("top");
-      else if (y > prev && y > 80) setScrollMode("down");
-      else if (y < prev - 4) setScrollMode("up");
-      lastY.current = y;
       ticking = false;
+      const y = Math.max(window.scrollY, 0);
+      const delta = y - lastY.current;
+
+      if (y < 30) {
+        setScrollMode("top");
+        lastY.current = y;
+        return;
+      }
+      // Micro jitter — do not commit a direction change.
+      if (Math.abs(delta) < JITTER) return;
+
+      // Upward intent is the priority signal: reveal instantly, no wait.
+      if (delta < 0) setScrollMode("up");
+      else if (y > 80) setScrollMode("down");
+      lastY.current = y;
     };
+
     const onScroll = () => {
-      // Intent dampening: let the bar settle ~150ms AFTER scrolling stops so
-      // it never twitches mid-gesture — a subtle "luxury inertia" feel. When
-      // the user pauses (and isn't near the top), we relax into the expanded
-      // "up" state rather than leaving it stuck in compact.
+      // Single rAF-throttled controller. Direction is committed per frame so
+      // upward intent shows immediately, even during momentum scroll.
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+      // Settle lock: after scrolling stops, stabilize into the resting state.
       if (settleTimer) clearTimeout(settleTimer);
       settleTimer = setTimeout(() => {
         setScrollMode(window.scrollY < 30 ? "top" : "up");
       }, scrollDampeningMs());
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
