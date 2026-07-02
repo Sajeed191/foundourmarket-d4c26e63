@@ -143,6 +143,17 @@ export function MobileBottomNav() {
       lastT.current = now;
       lastVelAt = now;
 
+      // Direction debounce buffer: confirm intent for 120ms before honoring a
+      // flip. A genuine sustained gesture registers immediately (the prior
+      // direction is stale), but sub-120ms up↔down finger jitter is suppressed
+      // so the dock cannot re-enter COMPACT before the HIDDEN lock expires.
+      const sign = velocity > VELOCITY_BUFFER ? 1 : velocity < -VELOCITY_BUFFER ? -1 : 0;
+      if (sign !== 0 && sign !== dirSign) {
+        if (dirSign !== 0 && now - dirSince < DIRECTION_DEBOUNCE_MS) return;
+        dirSign = sign;
+        dirSince = now;
+      }
+
       const next = resolveNavState(navStateRef.current, y, velocity, pendingScrolling);
       commit(next, now);
     };
