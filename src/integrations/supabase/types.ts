@@ -5919,6 +5919,8 @@ export type Database = {
         Row: {
           admin_reply: string | null
           admin_reply_at: string | null
+          author_avatar_url: string | null
+          author_name: string | null
           body: string | null
           created_at: string | null
           featured: boolean | null
@@ -5932,46 +5934,7 @@ export type Database = {
           status: string | null
           title: string | null
           updated_at: string | null
-          user_id: string | null
           verified_purchase: boolean | null
-        }
-        Insert: {
-          admin_reply?: string | null
-          admin_reply_at?: string | null
-          body?: string | null
-          created_at?: string | null
-          featured?: boolean | null
-          helpful_count?: number | null
-          id?: string | null
-          media?: Json | null
-          not_helpful_count?: number | null
-          pinned?: boolean | null
-          product_slug?: string | null
-          rating?: number | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified_purchase?: boolean | null
-        }
-        Update: {
-          admin_reply?: string | null
-          admin_reply_at?: string | null
-          body?: string | null
-          created_at?: string | null
-          featured?: boolean | null
-          helpful_count?: number | null
-          id?: string | null
-          media?: Json | null
-          not_helpful_count?: number | null
-          pinned?: boolean | null
-          product_slug?: string | null
-          rating?: number | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          verified_purchase?: boolean | null
         }
         Relationships: []
       }
