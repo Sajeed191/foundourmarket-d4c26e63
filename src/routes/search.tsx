@@ -346,13 +346,33 @@ function SearchPage() {
   }, [search.q]);
 
   const sort = search.sort ?? "relevance";
+  const isTrending = sort === "trending";
+  const TRENDING_LIMIT = 10;
 
   // Reset and fetch the first page whenever the query / RPC-handled filters change.
+  // Trending is a special mode: it ignores query/filters and fetches the
+  // real-time top-10 trending dataset from a dedicated RPC (replaces the feed).
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setRawRows([]);
     setHasMore(false);
+
+    if (isTrending) {
+      (supabase.rpc as any)("trending_products", { page_limit: TRENDING_LIMIT })
+        .then(({ data }: { data: any[] | null }) => {
+          if (cancelled) return;
+          const rows = (data ?? []).map((r: any) => rowToProduct(r));
+          // Global dedupe by slug — never show duplicates in trending mode.
+          const seen = new Set<string>();
+          const deduped = rows.filter((p: Product) => (seen.has(p.slug) ? false : (seen.add(p.slug), true)));
+          setHasMore(false);
+          setRawRows(deduped.slice(0, TRENDING_LIMIT));
+          setLoading(false);
+        });
+      return () => { cancelled = true; };
+    }
+
     (supabase.rpc as any)("search_products", {
       q: search.q ?? null,
       category_filter: search.cat ?? null,
@@ -372,6 +392,7 @@ function SearchPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.q, search.cat, search.min, search.max, search.rating, sort]);
+
 
   // "Did you mean…?" — fetch the closest matching term when a query returns
   // no (or very few) results, so shoppers can recover from typos quickly.
