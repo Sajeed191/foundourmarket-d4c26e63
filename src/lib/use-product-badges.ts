@@ -405,6 +405,19 @@ export async function assignBadge(slug: string, badgeTypeId: string) {
   await load(true);
 }
 
+/**
+ * Auto-assign the built-in "New" badge to a freshly created product.
+ * No-op if the badge type is missing/disabled/archived or already assigned.
+ */
+export async function assignNewBadge(slug: string) {
+  const snap = await load();
+  const newType = snap.types.find((t) => t.badgeKey === "new" && t.enabled && !t.archived);
+  if (!newType) return;
+  const already = (snap.map.get(slug) ?? []).some((b) => b.id === newType.id);
+  if (already) return;
+  await assignBadge(slug, newType.id);
+}
+
 export async function unassignBadge(slug: string, badgeTypeId: string) {
   const { error } = await supabase
     .from("product_badges")
