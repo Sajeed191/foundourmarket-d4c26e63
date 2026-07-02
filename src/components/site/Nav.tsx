@@ -166,13 +166,11 @@ export function Nav() {
   // Keep the reserved header spacer exactly as tall as the pinned header in
   // every state (expanded/compact) so there is never an implicit gap or
   // overlap between the fixed top nav and page content.
+  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   useEffect(() => {
     const topNav = topNavRef.current;
-    const spacer = spacerRef.current;
-    if (!topNav || !spacer) return;
-    const sync = () => {
-      spacer.style.height = `${topNav.offsetHeight}px`;
-    };
+    if (!topNav) return;
+    const sync = () => setHeaderHeight(topNav.offsetHeight);
     sync();
     const ro = new ResizeObserver(sync);
     ro.observe(topNav);
@@ -184,6 +182,7 @@ export function Nav() {
       window.removeEventListener("orientationchange", sync);
     };
   }, []);
+
 
   // Deterministic top-nav scroll machine. The header is NEVER hidden — only
   // "visible" and "compact" are valid states. The fixed visibility layer is
