@@ -411,7 +411,14 @@ export function Nav() {
         aria-hidden="true"
         data-app-header-spacer
         className="shrink-0"
-        style={{ height: "calc(var(--mobile-safe-top) + 6.125rem)" }}
+        style={{
+          height: "calc(var(--mobile-safe-top) + 6.125rem)",
+          // Bridge the reserved header space from the page background into the
+          // hero's exact top tone so no darker "gap band" appears between the
+          // floating nav and the content — seamless on first paint (no flash).
+          background:
+            "linear-gradient(180deg, var(--background) 0%, var(--hero-top) 100%)",
+        }}
       />
 
 
