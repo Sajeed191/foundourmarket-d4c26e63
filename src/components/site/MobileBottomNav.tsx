@@ -95,15 +95,16 @@ export function MobileBottomNav() {
                     compact ? "scale-[1.08]" : "scale-100"
                   }`}
                 >
-                  {/* Premium halo ring behind the active icon only */}
+                  {/* Soft energy pulse sitting behind the active icon — no ring/border */}
                   <span
                     aria-hidden
-                    className={`absolute inset-0 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                    className={`absolute inset-0 rounded-full blur-[6px] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
                       active
-                        ? "scale-100 bg-accent/12 opacity-100 ring-1 ring-accent/35 shadow-[0_0_20px_-6px_var(--color-accent)]"
-                        : "scale-75 opacity-0"
+                        ? "scale-105 bg-accent/25 opacity-100"
+                        : "scale-50 opacity-0"
                     }`}
                   />
+
 
                   <span className="relative">
                     <Icon
