@@ -209,9 +209,12 @@ export function Nav() {
         data-scroll-mode={scrollMode}
         style={{
           filter: "none",
-          transform: scrollMode === "up" ? "translateY(0)" : undefined,
-          transition: "transform 0.24s cubic-bezier(0.2,0.8,0.2,1), opacity 0.24s cubic-bezier(0.2,0.8,0.2,1)",
-          willChange: "auto",
+          // Priority surface: fully present at top / on upward intent, subtle
+          // recede on downward intent only. Transform + opacity only.
+          transform: scrollMode === "down" ? "translateY(-8px)" : "translateY(0)",
+          opacity: scrollMode === "down" ? 0.92 : 1,
+          transition: "transform 0.19s cubic-bezier(0.2,0.8,0.2,1), opacity 0.19s cubic-bezier(0.2,0.8,0.2,1)",
+          willChange: "transform, opacity",
         }}
         className={`sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)] ${
           scrollMode === "up" ? "animate-nav-rematerialize" : ""
