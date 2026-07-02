@@ -106,7 +106,7 @@
   --floating-bottom-offset: calc(var(--app-bottom-nav-height) + 0.5rem);
   --z-page-content: 1;
   --z-floating-controls: 800;
-  --z-top-header: 900;
+  --z-top-header: 99999;
   --z-bottom-nav: 1000;
   --z-buy-now-bar: 1100;
   --z-modal-overlay: 2000;
@@ -618,7 +618,16 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
     touch-action: manipulation;
     overflow-x: hidden;
   }
-  #root, [data-app-shell] { min-height: 100dvh; max-width: 100%; overflow-x: hidden; }
+  #root { min-height: 100dvh; max-width: 100%; overflow-x: hidden; }
+  [data-app-shell] {
+    min-height: 100dvh;
+    max-width: 100%;
+    overflow: visible !important;
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
+    contain: none !important;
+  }
   /* Prevent layout breakage from oversize media */
   img, video, svg, canvas { max-width: 100%; height: auto; }
   /* Better touch targets on mobile */
@@ -659,7 +668,7 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 
 @media (max-width: 767px) {
   body { min-height: 100dvh; }
-  [data-app-shell] { isolation: isolate; }
+  [data-app-shell] { isolation: auto; }
   [data-app-content] {
     position: relative;
     z-index: var(--z-page-content);
@@ -678,7 +687,20 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   .account-footer-gapless::after {
     display: none !important;
   }
-  [data-app-header] { z-index: var(--z-top-header) !important; }
+  [data-app-header] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: var(--z-top-header) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    filter: none !important;
+    perspective: none !important;
+    contain: none !important;
+  }
   [data-app-bottom-nav] {
     z-index: var(--z-bottom-nav) !important;
     padding-bottom: calc(var(--mobile-safe-bottom) + var(--mobile-nav-edge-gap)) !important;
@@ -699,7 +721,6 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   }
   /* Fullscreen map picker: hide ALL website chrome so the map reads as a
      standalone fullscreen experience (Flipkart / Google Maps / Uber style). */
-  body[data-map-picker-open] [data-app-header],
   body[data-map-picker-open] [data-app-bottom-nav],
   body[data-map-picker-open] [data-floating-control],
   body[data-map-picker-open] [data-product-cta],

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import {
   ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
   Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
@@ -151,32 +151,35 @@ export function Nav() {
   const initial = (displayName?.[0] ?? "F").toUpperCase();
 
   const lastY = useRef(0);
+  const topNavRef = useRef<HTMLDivElement | null>(null);
   const motionTier = useMotionTier();
   const lowEnd = motionTier === "low";
+  const forceTopNavVisible = useCallback(() => {
+    const topNav = topNavRef.current;
+    if (!topNav) return;
+    topNav.style.display = "block";
+    topNav.style.opacity = "1";
+    topNav.style.visibility = "visible";
+    topNav.style.transform = "translateY(0)";
+  }, []);
   // Deterministic top-nav scroll machine. The header is NEVER hidden — only
-  // "top" (full immersive), "up" (full premium header) and "down" (compact:
-  // translateY(-8px)/opacity 0.92). Direction is committed per rAF frame with
-  // no scroll-stop timeout, so upward intent shows instantly and the bar can
-  // never get stranded hidden on low-end Android (Oppo A3s / Android 8).
-  const [scrollMode, setScrollMode] = useState<"top" | "down" | "up">("top");
+  // "visible" and "compact" are valid states. The fixed visibility layer is
+  // hard-restored on mount and during every scroll/touch update so Android
+  // momentum scrolling cannot strand the header in a clipped or transparent state.
+  const [scrollMode, setScrollMode] = useState<"visible" | "compact">("visible");
   useEffect(() => {
-    // Low-end safety guard: keep a stable, always-visible header — no compact
-    // state animation at all (opacity/translate stay at rest).
-    if (lowEnd) {
-      setScrollMode("top");
-      return;
-    }
-
     let ticking = false;
     const JITTER = 6; // ignore micro scroll noise (<6px)
+    forceTopNavVisible();
 
     const update = () => {
       ticking = false;
+      forceTopNavVisible();
       const y = Math.max(window.scrollY, 0);
       const delta = y - lastY.current;
 
-      if (y < 30) {
-        setScrollMode("top");
+      if (lowEnd || y < 30) {
+        setScrollMode("visible");
         lastY.current = y;
         return;
       }
@@ -184,12 +187,13 @@ export function Nav() {
       if (Math.abs(delta) < JITTER) return;
 
       // Upward intent is the priority signal: reveal instantly, per frame.
-      if (delta < 0) setScrollMode("up");
-      else if (y > 80) setScrollMode("down");
+      if (delta < 0) setScrollMode("visible");
+      else if (y > 80) setScrollMode("compact");
       lastY.current = y;
     };
 
     const onScroll = () => {
+      forceTopNavVisible();
       // Single rAF-throttled controller. No scroll-stop timeout: idle keeps the
       // last committed state, so the header is never toggled off in a timer.
       if (!ticking) {
@@ -197,10 +201,17 @@ export function Nav() {
         requestAnimationFrame(update);
       }
     };
+    const restore = () => forceTopNavVisible();
+    window.addEventListener("touchstart", restore, { passive: true });
+    window.addEventListener("wheel", restore, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [lowEnd]);
-  const compact = scrollMode === "down";
+    return () => {
+      window.removeEventListener("touchstart", restore);
+      window.removeEventListener("wheel", restore);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [forceTopNavVisible, lowEnd]);
+  const compact = !lowEnd && scrollMode === "compact";
 
 
   // Drive the drawer enter/exit transition without framer-motion.
@@ -218,22 +229,27 @@ export function Nav() {
   return (
     <>
       <div
+        ref={topNavRef}
         data-app-header
         data-scroll-mode={scrollMode}
         style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 99999,
+          display: "block",
           filter: "none",
-          // Priority surface: fully present at top / on upward intent, subtle
-          // recede on downward intent only. Transform + opacity only — never
-          // hidden. Low-end devices stay pinned to the resting state.
-          transform: !lowEnd && scrollMode === "down" ? "translateY(-6px) translateZ(0)" : "translateY(0) translateZ(0)",
-          opacity: !lowEnd && scrollMode === "down" ? 0.92 : 1,
-          transition: "transform 0.19s cubic-bezier(0.2,0.8,0.2,1), opacity 0.19s cubic-bezier(0.2,0.8,0.2,1)",
-          willChange: "transform, opacity",
-          backfaceVisibility: "hidden",
+          visibility: "visible",
+          transform: "translateY(0)",
+          opacity: 1,
+          transition: "none",
+          willChange: "auto",
+          backfaceVisibility: "visible",
+          contain: "none",
+          perspective: "none",
         }}
-        className={`sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)] ${
-          scrollMode === "up" ? "animate-nav-rematerialize" : ""
-        }`}
+        className="fixed inset-x-0 top-0 z-[99999] px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
         <nav
           className={`max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-[background-color,box-shadow] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
@@ -391,6 +407,12 @@ export function Nav() {
           </div>
         </nav>
       </div>
+      <div
+        aria-hidden="true"
+        data-app-header-spacer
+        className="shrink-0"
+        style={{ height: "calc(var(--mobile-safe-top) + 6.125rem)" }}
+      />
 
 
       {/* Mobile drawer — unified design for all themes (colors adapt per theme) */}
