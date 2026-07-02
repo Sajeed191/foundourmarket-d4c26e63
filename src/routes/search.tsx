@@ -681,7 +681,7 @@ function SearchPage() {
                 <span className="size-1.5 rounded-full bg-accent animate-pulse" /> Live
               </span>
             </p>
-            <p className="text-[11px] text-muted-foreground">Showing real-time top 10 trending products</p>
+            <p className="text-[11px] text-muted-foreground">Showing all trending products{results.length ? ` · ${results.length}` : ""}</p>
           </div>
         </div>
       )}
