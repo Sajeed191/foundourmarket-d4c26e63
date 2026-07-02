@@ -28,6 +28,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
+import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
