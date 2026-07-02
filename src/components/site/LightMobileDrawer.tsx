@@ -99,16 +99,27 @@ export function LightMobileDrawer({
             overlay tap. Profile card is the first visible element. */}
         <div
           className="flex-1 overflow-y-auto px-4 pb-5 space-y-5"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+          style={{
+            paddingTop:
+              "calc(env(safe-area-inset-top, 0px) + var(--app-header-height, 56px) + 14px)",
+          }}
         >
 
 
-          {/* 1. Premium user header */}
+
+          {/* 1. Premium user header — hero identity block, in normal flow below navbar */}
           <Link
             to={user ? "/account" : "/auth"}
             onClick={onClose}
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(8px)",
+              transition:
+                "opacity 200ms cubic-bezier(0.2,0.8,0.2,1), transform 200ms cubic-bezier(0.2,0.8,0.2,1)",
+            }}
             className="group relative flex items-center gap-4 rounded-3xl px-5 py-5 overflow-hidden bg-accent/10 ring-1 ring-accent/20 shadow-[var(--shadow-card)] active:scale-[0.985] transition-transform"
           >
+
             <span className="relative shrink-0">
               <span className="relative grid place-items-center size-13 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-lg ring-2 ring-background shadow-[0_6px_18px_-6px_oklch(0.55_0.16_55/0.7)] overflow-hidden">
                 {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : initial}
