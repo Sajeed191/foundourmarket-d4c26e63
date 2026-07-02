@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { Flame, ArrowRight, Sparkles, Heart, Eye } from "lucide-react";
+import { Flame, ArrowRight, Sparkles, Heart } from "lucide-react";
 
 import { Price } from "@/components/site/Price";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
