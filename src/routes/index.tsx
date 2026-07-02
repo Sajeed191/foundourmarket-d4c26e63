@@ -529,6 +529,7 @@ function Home() {
 
   return (
     <>
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} query={query} onQueryChange={setQuery} />
       {/* Hero starts immediately below the main navigation (announcement bar removed). */}
 
 
