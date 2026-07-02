@@ -28,13 +28,17 @@ export function TrustBadgesStrip() {
         {ITEMS.map(({ icon: Icon, label }) => (
           <div
             key={label}
-            className="feature-card group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1.5 py-3 text-center"
+            className="feature-card group flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1.5 py-3 text-center"
           >
-            <Icon
-              className="size-[18px] text-accent shrink-0 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[8deg] group-hover:scale-110"
-              strokeWidth={2}
-            />
-            <span className="text-[9px] sm:text-[11px] font-medium leading-tight text-white/90">
+            <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+              <Icon
+                width={18}
+                height={18}
+                className="text-accent transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[8deg] group-hover:scale-110"
+                strokeWidth={2}
+              />
+            </span>
+            <span className="flex h-[26px] items-center justify-center text-[9px] sm:text-[11px] font-medium leading-[1.15] text-white/90">
               {label}
             </span>
           </div>

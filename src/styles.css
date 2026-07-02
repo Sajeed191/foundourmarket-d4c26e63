@@ -1933,6 +1933,7 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
 
 /* ── Premium feature cards (Fast Delivery, Secure Checkout, …) ── */
 .feature-card {
+  contain: layout style;
   background: linear-gradient(160deg, oklch(0.22 0.01 60 / 0.55), oklch(0.15 0.01 60 / 0.45));
   border: 1px solid oklch(1 0 0 / 0.07);
   box-shadow:
