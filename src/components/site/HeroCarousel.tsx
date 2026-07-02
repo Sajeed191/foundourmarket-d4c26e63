@@ -5,6 +5,7 @@ import { ProductImage } from "@/components/site/ProductImage";
 import { useFlag } from "@/lib/use-debug-flag";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
+import { useMotionTier } from "@/lib/motion-tier";
 
 type Props = {
   /** Pre-prioritized product pools. First non-empty wins. */
@@ -37,6 +38,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   });
 
   const ffJsAnimations = useFlag("jsAnimations");
+  const motionTier = useMotionTier();
 
   const items = useMemo(() => {
     const pool =
@@ -82,15 +84,19 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
     return () => io.disconnect();
   }, []);
 
-  // Auto-rotate.
+  // Auto-rotate — tier-aware motion budget only (UX unchanged: swipe/keys still work).
+  // low  → no autoplay (zero continuous GPU pressure; user drives it).
+  // mid  → slower cadence to reduce compositor work.
+  // high → full cadence.
   useEffect(() => {
-    if (!ffJsAnimations || items.length <= 1) return;
+    if (!ffJsAnimations || items.length <= 1 || motionTier === "low") return;
+    const interval = motionTier === "mid" ? ROTATE_MS * 1.6 : ROTATE_MS;
     const id = window.setInterval(() => {
       if (pausedRef.current || offscreenRef.current) return;
       setIndex((i) => (i + 1) % items.length);
-    }, ROTATE_MS);
+    }, interval);
     return () => window.clearInterval(id);
-  }, [items.length, ffJsAnimations]);
+  }, [items.length, ffJsAnimations, motionTier]);
 
   // Preload the immediate next image so the crossfade is instant.
   useEffect(() => {
