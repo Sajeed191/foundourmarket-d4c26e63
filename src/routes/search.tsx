@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe, Check, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe, Check, ArrowUpDown, Sparkles, TrendingUp, Flame, Clock, ArrowDownWideNarrow, ArrowUpWideNarrow, Tag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, discountPercent, type Product } from "@/lib/products";
 import { useCategories } from "@/lib/use-categories";
@@ -53,15 +53,15 @@ export const Route = createFileRoute("/search")({
   component: SearchPage,
 });
 
-const SORTS = [
-  { value: "relevance", label: "Relevance" },
-  { value: "trending", label: "Trending" },
-  { value: "best_selling", label: "Best Selling" },
-  { value: "rating", label: "Highest Rated" },
-  { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price: Low → High" },
-  { value: "price_desc", label: "Price: High → Low" },
-  { value: "discount", label: "Biggest Discount" },
+const SORTS: { value: string; label: string; desc: string; icon: LucideIcon }[] = [
+  { value: "relevance", label: "Relevance", desc: "Best match for your search", icon: Sparkles },
+  { value: "trending", label: "Trending", desc: "Rising in views & sales", icon: TrendingUp },
+  { value: "best_selling", label: "Best Selling", desc: "Most orders overall", icon: Flame },
+  { value: "rating", label: "Highest Rated", desc: "Top review scores first", icon: Star },
+  { value: "newest", label: "Newest", desc: "Latest arrivals", icon: Clock },
+  { value: "price_asc", label: "Price: Low → High", desc: "Cheapest first", icon: ArrowDownWideNarrow },
+  { value: "price_desc", label: "Price: High → Low", desc: "Premium first", icon: ArrowUpWideNarrow },
+  { value: "discount", label: "Biggest Discount", desc: "Best deals first", icon: Tag },
 ];
 
 // Sorts handled natively by the search_products RPC. Others are applied
@@ -551,19 +551,33 @@ function SearchPage() {
               </button>
             </DrawerTrigger>
             <DrawerContent className="border-white/10 bg-background/80 backdrop-blur-2xl">
-              <div className="mx-auto w-full max-w-md px-4 pb-6">
-                <h2 className="px-2 pt-1 pb-3 text-sm font-semibold text-muted-foreground">Sort by</h2>
-                <div className="space-y-1">
+              <div className="mx-auto w-full max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                <div className="flex items-center gap-2 px-2 pt-1 pb-4">
+                  <ArrowUpDown className="size-4 text-accent" />
+                  <h2 className="text-base font-semibold text-foreground">Sort by</h2>
+                </div>
+                <div className="space-y-2">
                   {SORTS.map((s) => {
                     const active = (search.sort ?? "relevance") === s.value;
+                    const Icon = s.icon;
                     return (
                       <button
                         key={s.value}
                         onClick={() => { update({ sort: s.value }); setSortOpen(false); }}
-                        className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all active:scale-[0.98] ${active ? "bg-accent/15 text-accent font-semibold ring-1 ring-accent/30" : "font-medium text-foreground hover:bg-white/[0.06]"}`}
+                        className={`group flex w-full items-center gap-3.5 rounded-2xl px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.98] ${active ? "bg-accent/[0.12] ring-1 ring-accent/40 shadow-[0_8px_28px_-12px_var(--accent)]" : "ring-1 ring-white/[0.06] hover:bg-white/[0.05]"}`}
                       >
-                        {s.label}
-                        {active && <Check className="size-4 shrink-0" strokeWidth={2.5} />}
+                        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors ${active ? "bg-accent/20 text-accent" : "bg-white/[0.05] text-muted-foreground group-hover:text-foreground"}`}>
+                          <Icon className="size-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-sm font-semibold ${active ? "text-accent" : "text-foreground"}`}>{s.label}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">{s.desc}</span>
+                        </span>
+                        {active && (
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground animate-scale-in">
+                            <Check className="size-3.5" strokeWidth={3} />
+                          </span>
+                        )}
                       </button>
                     );
                   })}
