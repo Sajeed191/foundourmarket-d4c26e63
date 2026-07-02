@@ -9,6 +9,7 @@ import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme, type EffectiveTheme } from "@/lib/theme";
 import { useSupportUnread } from "@/lib/use-support-unread";
 import { useMotionTier } from "@/lib/motion-tier";
+import { useSearchUI } from "@/lib/search-ui";
 
 /**
  * Single-authority scroll state machine. State commits happen only on an rAF
