@@ -266,8 +266,11 @@ export function MobileBottomNav() {
 
 
 
-  const isLight = effectiveTheme === "light";
-  const isGrey = effectiveTheme === "grey";
+  // Prefer the pre-paint theme resolved from <html data-theme> to avoid the
+  // stale "dark" default flashing a dark surface for light/grey users.
+  const resolvedTheme = domTheme ?? effectiveTheme;
+  const isLight = resolvedTheme === "light";
+  const isGrey = resolvedTheme === "grey";
   const frosted = isLight || isGrey;
 
   const compact = navState !== "visible_full";
