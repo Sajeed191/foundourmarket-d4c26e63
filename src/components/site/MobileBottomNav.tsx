@@ -317,7 +317,7 @@ export function MobileBottomNav() {
           // Low-end (Android 8 / Oppo A3s): no backdrop blur — flat opaque
           // surface, opacity + translateY only.
           (lowEnd
-            ? "pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2 bg-background border border-border/60"
+            ? "bottom-nav-solid pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2 border border-border/60"
             : frosted
               ? "bottom-nav-light pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2"
               : "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2") +
