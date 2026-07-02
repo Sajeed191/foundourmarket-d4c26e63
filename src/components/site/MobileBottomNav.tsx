@@ -71,8 +71,10 @@ export function MobileBottomNav() {
 
   const [navState, setNavState] = useState<BottomNavState>("visible_full");
   const navStateRef = useRef<BottomNavState>("visible_full");
-  // Staged reveal: container + icons appear first, labels commit after a short
-  // settle so they never jump in mid-transition (opacity/transform only).
+  // Staged reveal pipeline: container → icons → labels. Each stage is a pure
+  // opacity/transform commit (no layout shift), gated by short timers so the
+  // three phases never render simultaneously.
+  const [iconsReady, setIconsReady] = useState(true);
   const [labelsReady, setLabelsReady] = useState(true);
   const lastY = useRef(0);
   const lastT = useRef(0);
@@ -172,16 +174,29 @@ export function MobileBottomNav() {
     };
   }, []);
 
-  // Staged label reveal: only surface labels ~140ms after the dock settles into
-  // its fully expanded state. Any other phase hides them immediately.
+  // Staged reveal orchestration. hidden → everything off. Any visible phase →
+  // icons fade in first (~120ms); labels only commit once fully expanded, a
+  // stage after the icons, so container → icons → labels never overlap.
   useEffect(() => {
-    if (navState !== "visible_full") {
+    if (navState === "hidden") {
+      setIconsReady(false);
       setLabelsReady(false);
       return;
     }
-    const t = setTimeout(() => setLabelsReady(true), 140);
-    return () => clearTimeout(t);
+    // Container is already on screen — reveal icons next frame window.
+    const iconTimer = setTimeout(() => setIconsReady(true), 120);
+    let labelTimer: ReturnType<typeof setTimeout> | undefined;
+    if (navState === "visible_full") {
+      labelTimer = setTimeout(() => setLabelsReady(true), 260);
+    } else {
+      setLabelsReady(false);
+    }
+    return () => {
+      clearTimeout(iconTimer);
+      if (labelTimer) clearTimeout(labelTimer);
+    };
   }, [navState]);
+
 
   // Hand the bottom dock over to the admin bar when a staff member is actively
   // managing the store, so the two navigations never stack.
@@ -245,10 +260,14 @@ export function MobileBottomNav() {
                 className="group flex h-full min-h-12 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium"
               >
                 <span
-                  className={`relative grid place-items-center size-9 rounded-2xl transition-transform duration-[160ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-90 ${
+                  style={stagger ? { transitionDelay: `${i * 30}ms` } : undefined}
+                  className={`relative grid place-items-center size-9 rounded-2xl transition-[transform,opacity] duration-[160ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-90 ${
+                    iconsReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                  } ${
                     lowEnd ? "scale-100" : compact ? "scale-[1.08]" : "scale-100"
                   }`}
                 >
+
                   {/* Soft radial energy field behind the active icon — a breathing
                       bloom (not a ring/border). Disabled entirely on low-end. */}
                   {!lowEnd && (
