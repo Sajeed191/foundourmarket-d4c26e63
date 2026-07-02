@@ -189,42 +189,45 @@ export function MobileBottomNav() {
   }, []);
 
   // Staged reveal orchestration — STRICT sequence: container → icons → labels.
-  // The container (nav surface) is committed by navState. Icons reveal one stage
-  // later, and labels are chained to fire ONLY after the icon stage resolves, so
-  // the three phases can never render simultaneously and labels never precede
-  // icons. Low-end (Android 8) collapses the delays but keeps the ordering.
+  // One-shot per reveal: the sequence runs ONLY on the hidden → visible edge, so
+  // micro compact↔full flips during a gesture can never reset the pipeline back
+  // to phase 1 (the bug that left the dock stuck icon-only with no labels).
+  const wasHidden = useRef(true);
   useEffect(() => {
     const low = motionTier === "low";
-    // hidden → wipe everything so the next reveal always restarts at phase 1.
+
+    // Hidden → wipe everything and arm the next reveal to restart at phase 1.
     if (navState === "hidden") {
+      wasHidden.current = true;
       setIconsReady(false);
       setLabelsReady(false);
       return;
     }
 
-    // Phase 1 already on screen (container). Reset downstream phases so a
-    // scroll-up always replays container → icons → labels in order.
+    // Already revealed (compact ↔ full flip): do NOT reset — keep icons + labels
+    // on screen. This kills the reset loop on micro scroll updates.
+    if (!wasHidden.current) return;
+
+    // hidden → visible edge: play the one-shot staged reveal exactly once.
+    wasHidden.current = false;
     setIconsReady(false);
     setLabelsReady(false);
 
     // Phase 2 — icons fade + rise (~120ms, ~60ms on low-end).
     const iconDelay = low ? 60 : 120;
-    let labelTimer: ReturnType<typeof setTimeout> | undefined;
-    const iconTimer = setTimeout(() => {
-      setIconsReady(true);
-      // Phase 3 — labels only after icons are committed & stable, and only in the
-      // fully-expanded state. Compact never shows labels.
-      if (navState === "visible_full") {
-        const labelGap = low ? 80 : 140;
-        labelTimer = setTimeout(() => setLabelsReady(true), labelGap);
-      }
-    }, iconDelay);
+    // Phase 3 — labels ALWAYS follow icons on any visible state (compact or
+    // full), ~220ms from container visibility. Fired once; the compact↔full
+    // guard above prevents any restart, so labels never get stranded.
+    const labelDelay = low ? 140 : 220;
+    const iconTimer = setTimeout(() => setIconsReady(true), iconDelay);
+    const labelTimer = setTimeout(() => setLabelsReady(true), labelDelay);
 
     return () => {
       clearTimeout(iconTimer);
-      if (labelTimer) clearTimeout(labelTimer);
+      clearTimeout(labelTimer);
     };
   }, [navState, motionTier]);
+
 
 
   // Hand the bottom dock over to the admin bar when a staff member is actively
