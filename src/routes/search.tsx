@@ -87,12 +87,25 @@ const RATINGS = [4, 3, 2];
 
 type Filters = Pick<SearchParams, "cat" | "min" | "max" | "stock" | "rating" | "free" | "disc">;
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+      {children}
+    </h3>
+  );
+}
+
 function FilterPanel({
   value,
   onChange,
+  sort,
+  onSortChange,
 }: {
   value: Filters;
   onChange: (next: Filters) => void;
+  /** When provided, an inline Sort section is rendered (mobile drawer). */
+  sort?: string;
+  onSortChange?: (sort: string) => void;
 }) {
   const { categories } = useCategories();
   const { market, symbol } = useRegion();
@@ -107,23 +120,39 @@ function FilterPanel({
   const set = (patch: Partial<Filters>) => onChange({ ...value, ...patch });
   const priceRange: [number, number] = [value.min ?? 0, value.max ?? PRICE_MAX];
 
+  // Quick price presets (in base USD). Displayed values are localised via fmt.
+  const pricePresets: { label: string; min?: number; max?: number }[] = [
+    { label: `Under ${fmt(50)}`, min: undefined, max: 50 },
+    { label: `${fmt(50)}–${fmt(200)}`, min: 50, max: 200 },
+    { label: `${fmt(200)}–${fmt(500)}`, min: 200, max: 500 },
+    { label: `${fmt(500)}+`, min: 500, max: undefined },
+  ];
+  const isPresetActive = (p: { min?: number; max?: number }) =>
+    (value.min ?? undefined) === p.min && (value.max ?? undefined) === p.max;
+
+  const toggles: { key: "stock" | "free" | "disc"; on: string; label: string; desc: string }[] = [
+    { key: "stock", on: "in", label: "In stock only", desc: "Hide sold-out items" },
+    { key: "free", on: "1", label: "Free shipping", desc: "No delivery charges" },
+    { key: "disc", on: "1", label: "On sale", desc: "Discounted products only" },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Category chips */}
       <div>
-        <h3 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">Category</h3>
+        <SectionLabel>Category</SectionLabel>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => set({ cat: undefined })}
-            className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${!value.cat ? "border-accent bg-accent/15 text-accent" : "border-border text-foreground hover:border-accent/60"}`}
+            className={`rounded-full px-4 py-2 text-xs font-medium transition-all active:scale-95 ${!value.cat ? "bg-accent text-accent-foreground ring-1 ring-accent shadow-[0_4px_16px_-6px_var(--accent)]" : "bg-white/[0.05] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.08]"}`}
           >
             All
           </button>
           {categories.map((c) => (
             <button
               key={c.slug}
-              onClick={() => set({ cat: c.slug })}
-              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${value.cat === c.slug ? "border-accent bg-accent/15 text-accent" : "border-border text-foreground hover:border-accent/60"}`}
+              onClick={() => set({ cat: value.cat === c.slug ? undefined : c.slug })}
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-all active:scale-95 ${value.cat === c.slug ? "bg-accent text-accent-foreground ring-1 ring-accent shadow-[0_4px_16px_-6px_var(--accent)]" : "bg-white/[0.05] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.08]"}`}
             >
               {c.name}
             </button>
@@ -131,56 +160,95 @@ function FilterPanel({
         </div>
       </div>
 
-      {/* Price range slider */}
+      {/* Price range slider + presets */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Price</h3>
-          <span className="text-[11px] font-mono tabular-nums text-foreground">
+          <SectionLabel>Price</SectionLabel>
+          <span className="text-xs font-semibold tabular-nums text-accent">
             {fmt(priceRange[0])} – {fmt(priceRange[1])}{priceRange[1] >= PRICE_MAX ? "+" : ""}
           </span>
         </div>
-        <Slider
-          min={0}
-          max={PRICE_MAX}
-          step={10}
-          value={priceRange}
-          onValueChange={(v) => set({ min: v[0] > 0 ? v[0] : undefined, max: v[1] < PRICE_MAX ? v[1] : undefined })}
-        />
-      </div>
-
-
-      {/* Rating filter */}
-      <div>
-        <h3 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">Rating</h3>
-        <div className="flex flex-wrap gap-2">
-          {RATINGS.map((r) => (
+        <div className="px-1">
+          <Slider
+            min={0}
+            max={PRICE_MAX}
+            step={10}
+            value={priceRange}
+            onValueChange={(v) => set({ min: v[0] > 0 ? v[0] : undefined, max: v[1] < PRICE_MAX ? v[1] : undefined })}
+          />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {pricePresets.map((p) => (
             <button
-              key={r}
-              onClick={() => set({ rating: value.rating === r ? undefined : r })}
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors ${value.rating === r ? "border-accent bg-accent/15 text-accent" : "border-border text-foreground hover:border-accent/60"}`}
+              key={p.label}
+              onClick={() => set(isPresetActive(p) ? { min: undefined, max: undefined } : { min: p.min, max: p.max })}
+              className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all active:scale-95 ${isPresetActive(p) ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.07]"}`}
             >
-              <Star className="size-3 fill-current" /> {r}★ & up
+              {p.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Toggles */}
-      <div className="space-y-3">
-        <h3 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Options</h3>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" checked={value.stock === "in"} onChange={(e) => set({ stock: e.target.checked ? "in" : undefined })} className="accent-[var(--accent)]" />
-          In stock only
-        </label>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" checked={value.free === "1"} onChange={(e) => set({ free: e.target.checked ? "1" : undefined })} className="accent-[var(--accent)]" />
-          Free shipping
-        </label>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" checked={value.disc === "1"} onChange={(e) => set({ disc: e.target.checked ? "1" : undefined })} className="accent-[var(--accent)]" />
-          On sale / discounted
-        </label>
+      {/* Rating filter — segmented cards */}
+      <div>
+        <SectionLabel>Rating</SectionLabel>
+        <div className="grid grid-cols-3 gap-2">
+          {RATINGS.map((r) => (
+            <button
+              key={r}
+              onClick={() => set({ rating: value.rating === r ? undefined : r })}
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl py-3 text-xs font-semibold transition-all active:scale-95 ${value.rating === r ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.07]"}`}
+            >
+              <span className="inline-flex items-center gap-0.5">
+                <Star className="size-3.5 fill-current" /> {r}
+              </span>
+              <span className="text-[10px] font-medium opacity-80">& up</span>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Availability & offers — iOS toggles */}
+      <div>
+        <SectionLabel>Availability & Offers</SectionLabel>
+        <div className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 divide-y divide-white/5">
+          {toggles.map((t) => (
+            <label key={t.key} className="flex items-center justify-between gap-3 px-4 py-3.5 cursor-pointer">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">{t.label}</span>
+                <span className="block text-[11px] text-muted-foreground">{t.desc}</span>
+              </span>
+              <Switch
+                checked={value[t.key] === t.on}
+                onCheckedChange={(c) => set({ [t.key]: c ? t.on : undefined } as Partial<Filters>)}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Optional inline Sort (mobile drawer) */}
+      {sort != null && onSortChange && (
+        <div>
+          <SectionLabel>Sort by</SectionLabel>
+          <div className="grid grid-cols-2 gap-2">
+            {SORTS.map((s) => {
+              const active = sort === s.value;
+              return (
+                <button
+                  key={s.value}
+                  onClick={() => onSortChange(s.value)}
+                  className={`flex items-center justify-between gap-1.5 rounded-xl px-3 py-2.5 text-xs font-medium text-left transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.07]"}`}
+                >
+                  <span className="truncate">{s.label}</span>
+                  {active && <Check className="size-3.5 shrink-0" strokeWidth={2.5} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
