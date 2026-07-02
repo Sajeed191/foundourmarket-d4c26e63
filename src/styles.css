@@ -990,11 +990,21 @@ html[data-android="true"] .nav-glass {
 .animate-cta-breathe {
   animation: cta-breathe 3.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }
+/* Footer brand line: slow horizontal drift of a soft gradient (transform only) */
+@keyframes footer-line-drift {
+  0%, 100% { transform: translateX(-12%); }
+  50%      { transform: translateX(12%); }
+}
+.animate-footer-line {
+  animation: footer-line-drift 9s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  will-change: transform;
+}
 @media (prefers-reduced-motion: reduce) {
   .animate-nav-rematerialize,
   .animate-panel-reveal,
   .animate-search-pulse,
   .animate-cta-breathe,
+  .animate-footer-line,
   .animate-energy-breathe { animation: none !important; }
 }
 
@@ -1024,6 +1034,7 @@ html[data-scrolling="true"] .animate-float-slow,
 html[data-scrolling="true"] .animate-orb,
 html[data-scrolling="true"] .animate-orb-breathe,
 html[data-scrolling="true"] .animate-cta-breathe,
+html[data-scrolling="true"] .animate-footer-line,
 html[data-scrolling="true"] .animate-search-pulse {
   animation-play-state: paused !important;
 }
