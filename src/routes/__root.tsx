@@ -38,6 +38,7 @@ import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
 import { startCapabilityGovernor, publishRenderDiagnostics } from "@/lib/runtime-capability";
+import { startMotionTier } from "@/lib/motion-tier";
 import { lazyWithRetry, installChunkRecovery } from "@/lib/chunk-recovery";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
@@ -512,6 +513,10 @@ function RootComponent() {
     // smooth rendering — never hides images or hero animations. Runs on every
     // capable device (incl. 4–6GB Android) so degradation is performance-driven.
     startCapabilityGovernor();
+    // Motion-tier + scroll-activity system: classifies the device (high/mid/low),
+    // freezes secondary/continuous animation during active scroll, and tightens
+    // motion scheduling on constrained hardware. See src/lib/motion-tier.ts.
+    startMotionTier();
     // Anonymous render diagnostics (GPU/browser/FPS/mode) on window.__fomRender —
     // helps surface newly problematic GPUs. No PII, no network transmission.
     publishRenderDiagnostics();

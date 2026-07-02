@@ -8,6 +8,7 @@ import { useAdminMode } from "@/lib/admin-mode";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme } from "@/lib/theme";
 import { useSupportUnread } from "@/lib/use-support-unread";
+import { scrollDampeningMs } from "@/lib/motion-tier";
 
 export function MobileBottomNav() {
   const { count } = useCart();
@@ -39,7 +40,7 @@ export function MobileBottomNav() {
       // Intent dampening: dock relaxes back to its full state ~150ms after the
       // gesture ends, giving a soft inertial settle instead of snapping.
       if (settleTimer) clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => setCompact(false), 150);
+      settleTimer = setTimeout(() => setCompact(false), scrollDampeningMs());
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);

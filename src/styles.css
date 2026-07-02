@@ -953,6 +953,85 @@ html[data-android="true"] .nav-glass {
   .animate-energy-breathe { animation: none !important; }
 }
 
+/* =====================================================================
+   ⚡ MOTION-TIER + SCROLL-ACTIVITY CONSTRAINT SYSTEM
+   Driven by src/lib/motion-tier.ts:
+     <html data-motion-tier="high|mid|low">  — stable device tier
+     <html data-scrolling="true">            — set while actively scrolling
+   Principle: reduce CONCURRENT motion, not motion quality. Keep the navbar
+   transform smooth; freeze secondary/continuous motion during scroll so the
+   frame pipeline stays deterministic on constrained Android GPUs.
+   (data-low-end Safe Mode already nukes all animation; these rules govern the
+   capable-but-constrained "mid" tier and the scroll window on every device.)
+   ===================================================================== */
+
+/* ── Freeze secondary + continuous motion during active scroll ──────────────
+   The active-tab pulse and decorative floats must NEVER animate while scrolling
+   (spec §9, §10). Navbar transforms are transitions, not these animations, so
+   they keep running. Resumes ~200ms after scroll ends (JS clears data-scrolling). */
+html[data-scrolling="true"] .animate-energy-breathe,
+html[data-scrolling="true"] .animate-glow,
+html[data-scrolling="true"] .animate-glow-breathe,
+html[data-scrolling="true"] .animate-ambient,
+html[data-scrolling="true"] .animate-float,
+html[data-scrolling="true"] .animate-float-soft,
+html[data-scrolling="true"] .animate-float-slow,
+html[data-scrolling="true"] .animate-orb,
+html[data-scrolling="true"] .animate-orb-breathe,
+html[data-scrolling="true"] .animate-search-pulse {
+  animation-play-state: paused !important;
+}
+
+/* ── MID tier: reduce overlaps, keep quality ───────────────────────────────
+   Drop micro-stagger delays (chip chains, nav re-materialize) to a single step,
+   and slow the one continuous rhythm so it costs less per frame. */
+html[data-motion-tier="mid"] [style*="animation-delay"],
+html[data-motion-tier="mid"] [style*="animationDelay"] {
+  animation-delay: 0ms !important;
+}
+html[data-motion-tier="mid"] [style*="transition-delay"],
+html[data-motion-tier="mid"] [style*="transitionDelay"] {
+  transition-delay: 0ms !important;
+}
+html[data-motion-tier="mid"] .animate-energy-breathe {
+  animation-duration: 4.6s !important;
+}
+
+/* ── LOW tier: strict constraints ──────────────────────────────────────────
+   Static active-tab highlight (no breathing pulse), no continuous decorative
+   motion, no stagger chains, no scroll-linked flourishes. One-shot reveals snap
+   to their final state. (data-low-end handles the most constrained hardware even
+   more aggressively; this covers reduced-motion/save-data/FPS-demoted devices.) */
+html[data-motion-tier="low"] .animate-energy-breathe {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+html[data-motion-tier="low"] .animate-glow,
+html[data-motion-tier="low"] .animate-glow-breathe,
+html[data-motion-tier="low"] .animate-ambient,
+html[data-motion-tier="low"] .animate-float,
+html[data-motion-tier="low"] .animate-float-soft,
+html[data-motion-tier="low"] .animate-float-slow,
+html[data-motion-tier="low"] .animate-orb,
+html[data-motion-tier="low"] .animate-orb-breathe {
+  animation: none !important;
+}
+html[data-motion-tier="low"] .animate-nav-rematerialize,
+html[data-motion-tier="low"] .animate-panel-reveal,
+html[data-motion-tier="low"] .animate-search-pulse {
+  animation: none !important;
+}
+html[data-motion-tier="low"] [style*="animation-delay"],
+html[data-motion-tier="low"] [style*="animationDelay"],
+html[data-motion-tier="low"] [style*="transition-delay"],
+html[data-motion-tier="low"] [style*="transitionDelay"] {
+  animation-delay: 0ms !important;
+  transition-delay: 0ms !important;
+}
+
+
+
 
 
 

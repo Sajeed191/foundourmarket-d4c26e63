@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/lib/theme";
 import { LightMobileDrawer } from "@/components/site/LightMobileDrawer";
+import { scrollDampeningMs } from "@/lib/motion-tier";
 const logoSrc = "/logo.webp";
 
 const ADMIN_ROLES = ["admin","super_admin","manager","support","fulfillment","warehouse_staff","editor"];
@@ -175,7 +176,7 @@ export function Nav() {
       if (settleTimer) clearTimeout(settleTimer);
       settleTimer = setTimeout(() => {
         setScrollMode(window.scrollY < 30 ? "top" : "up");
-      }, 150);
+      }, scrollDampeningMs());
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);
