@@ -8,7 +8,12 @@ export type Sentiment = "positive" | "neutral" | "negative" | "mixed";
 export type Review = {
   id: string;
   product_slug: string;
-  user_id: string;
+  // Present only on admin reads (product_reviews) and the current user's own
+  // review. The public view no longer exposes reviewer UUIDs to visitors.
+  user_id?: string | null;
+  // Denormalized author display fields, surfaced by the public view.
+  author_name?: string | null;
+  author_avatar_url?: string | null;
   rating: number;
   title: string | null;
   body: string | null;
