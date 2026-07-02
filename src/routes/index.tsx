@@ -586,11 +586,17 @@ function Home() {
                           setQuery(s);
                           goSearch(s);
                         }}
-                        className="flex h-11 w-full items-center justify-between px-2 text-left text-[15px] text-foreground/85 transition-opacity duration-200 hover:opacity-70"
+                        className="flex h-11 w-full items-center gap-2.5 rounded-xl px-2 text-left text-[15px] text-foreground/85 transition-colors duration-200 hover:bg-accent/10"
                       >
-                        <span className="truncate">{s}</span>
-                        <ArrowRight className="size-4 shrink-0 text-muted-foreground/60" />
+                        {query.trim() ? (
+                          <Search className="size-4 shrink-0 text-muted-foreground/55" />
+                        ) : (
+                          <TrendingUp className="size-4 shrink-0 text-accent/80" />
+                        )}
+                        <span className="flex-1 truncate">{s}</span>
+                        <ArrowRight className="size-4 shrink-0 text-muted-foreground/50" />
                       </button>
+
                     </li>
                   ))}
                 </ul>
