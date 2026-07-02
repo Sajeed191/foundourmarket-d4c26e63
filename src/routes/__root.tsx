@@ -133,7 +133,7 @@ const LiveChat = lazyWithRetry(() =>
 );
 const SearchCommand = lazyWithRetry(() =>
   import("@/components/site/SearchCommand").then((m) => ({ default: m.SearchCommand })),
-);
+) as unknown as React.ComponentType<{ open: boolean; onClose: () => void }>;
 
 /** The single, app-wide immersive search surface. Rendered once here and driven
  *  by SearchUIContext, so both the top-nav icon and the bottom-nav tab open the
