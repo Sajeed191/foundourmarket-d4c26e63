@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
+  ShoppingBag, Heart, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
   Sparkles, TrendingUp, Zap, Grid3x3, Crown, Home as HomeIcon, Clock,
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
@@ -80,7 +80,7 @@ export function LightMobileDrawer({
     label === "Wishlist" ? wishCount : label === "Cart" ? cartCount : 0;
 
   return (
-    <div className="fixed inset-0 z-[var(--z-modal-overlay)] md:hidden">
+    <div className="fixed inset-0 z-[9999] md:hidden">
       {/* Soft blurred backdrop */}
       <div
         style={{ opacity: visible ? 1 : 0, transition: "opacity 0.3s ease" }}
@@ -91,24 +91,17 @@ export function LightMobileDrawer({
         style={{
           transform: visible ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)",
+          maxHeight: "100dvh",
         }}
-        className="absolute left-0 top-0 bottom-0 w-[92%] max-w-[420px] flex flex-col overflow-hidden border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
+        className="absolute left-0 top-0 bottom-0 w-[92%] max-w-[420px] flex flex-col border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
       >
-        {/* No header — silent control panel. Only a minimal floating close
-            affordance (functional, not branding) sits over the content. */}
-        <button
-          onClick={onClose}
-          aria-label="Close menu"
-          style={{
-            opacity: visible ? 1 : 0,
-            transition: "opacity 220ms cubic-bezier(0.2,0.8,0.2,1)",
-          }}
-          className="absolute right-4 top-4 z-10 size-9 rounded-full grid place-items-center bg-card/90 text-muted-foreground ring-1 ring-border shadow-sm hover:text-foreground active:scale-95 transition"
+        {/* No header, no close button — closing is handled by the backdrop
+            overlay tap. Profile card is the first visible element. */}
+        <div
+          className="flex-1 overflow-y-auto px-4 pb-5 space-y-5"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
         >
-          <X className="size-4.5" />
-        </button>
 
-        <div className="flex-1 overflow-y-auto px-4 pt-5 pb-5 space-y-5">
 
           {/* 1. Premium user header */}
           <Link
