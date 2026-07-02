@@ -28,7 +28,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
-import { SearchOverlay } from "@/components/site/SearchOverlay";
+import { useSearchUI } from "@/lib/search-ui";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
@@ -413,7 +413,7 @@ function Home() {
   const { formatProduct } = useRegion();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const { openSearch } = useSearchUI();
   const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
@@ -529,7 +529,7 @@ function Home() {
 
   return (
     <>
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} query={query} onQueryChange={setQuery} />
+      
       {/* Hero starts immediately below the main navigation (announcement bar removed). */}
 
 
@@ -569,7 +569,7 @@ function Home() {
           <div className="relative z-10 mx-auto mt-8 max-w-2xl">
             <button
               type="button"
-              onClick={() => setSearchOpen(true)}
+              onClick={() => openSearch()}
               aria-label="Open search"
               className="group relative w-full rounded-full border border-white/10 shadow-[0_16px_40px_-20px_oklch(0_0_0/0.7)] transition-[border-color,box-shadow,transform] duration-300 hover:border-accent/40 active:scale-[0.995]"
               style={{ background: "oklch(0.19 0.008 60)" }}
