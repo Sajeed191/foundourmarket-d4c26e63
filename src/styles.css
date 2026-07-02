@@ -930,6 +930,42 @@ html[data-android="true"] .nav-glass {
   animation: panel-reveal 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* ── Search destination surface: transform + opacity only, no layout shift ── */
+@keyframes search-surface-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-search-surface-in {
+  animation: search-surface-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes search-surface-out {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(12px); opacity: 0; }
+}
+.animate-search-surface-out {
+  animation: search-surface-out 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes search-dim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-search-dim-in {
+  animation: search-dim-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes search-chip-in {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+.animate-search-chip-in {
+  animation: search-chip-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-search-surface-in,
+  .animate-search-surface-out,
+  .animate-search-dim-in,
+  .animate-search-chip-in { animation: none !important; }
+}
+
 @keyframes search-pulse {
   0%   { box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0.35); }
   70%  { box-shadow: 0 0 0 7px oklch(0.74 0.19 49 / 0); }

@@ -28,6 +28,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { useFlag } from "@/lib/use-debug-flag";
 import { SearchButton } from "@/components/site/SearchButton";
+import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
@@ -412,6 +413,7 @@ function Home() {
   const { formatProduct } = useRegion();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
 
@@ -527,6 +529,7 @@ function Home() {
 
   return (
     <>
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} query={query} onQueryChange={setQuery} />
       {/* Hero starts immediately below the main navigation (announcement bar removed). */}
 
 
@@ -553,153 +556,28 @@ function Home() {
             across the world — delivered with cinematic precision.
           </p>
 
-          {/* ── premium glass search bar (iOS / Arc style) ── */}
-          <form
-            className="relative z-10 mx-auto mt-8 max-w-2xl"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (query.trim()) goSearch(query.trim());
-            }}
-
-          >
-            <div
-              className={`relative rounded-full border transition-[border-color,box-shadow] duration-300 ${
-                searchFocused
-                  ? "border-accent/55 shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.10),0_0_34px_-6px_oklch(0.74_0.19_49/0.5),0_16px_40px_-18px_oklch(0_0_0/0.7)]"
-                  : "border-white/10 shadow-[0_16px_40px_-20px_oklch(0_0_0/0.7)]"
-              }`}
+          {/* ── search trigger — opens the full search destination ── */}
+          <div className="relative z-10 mx-auto mt-8 max-w-2xl">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Open search"
+              className="group relative w-full rounded-full border border-white/10 shadow-[0_16px_40px_-20px_oklch(0_0_0/0.7)] transition-[border-color,box-shadow,transform] duration-300 hover:border-accent/40 active:scale-[0.995]"
               style={{ background: "oklch(0.19 0.008 60)" }}
             >
-              <span
-                className={`absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full transition-colors duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-                  searchFocused ? "bg-accent/15 text-accent animate-search-pulse" : "bg-white/[0.05] text-muted-foreground"
-                }`}
-              >
+              <span className="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full bg-white/[0.05] text-muted-foreground transition-colors duration-300 group-hover:bg-accent/15 group-hover:text-accent">
                 <Search className="size-[19px] sm:size-[21px]" />
               </span>
-
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setTimeout(() => setSearchFocused(false), 120)}
-                placeholder={rotatingPlaceholder}
-                aria-label="Search products"
-                className="w-full h-14 sm:h-16 bg-transparent rounded-full pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-base sm:text-[17px] font-medium tracking-[-0.01em] focus:outline-none placeholder:font-medium placeholder:text-muted-foreground/65 placeholder:tracking-[-0.01em] placeholder:transition-opacity placeholder:duration-300"
-              />
-              <SearchButton loading={searching} focused={searchFocused} />
-            </div>
-
-            {searchFocused && (
-              <div
-                className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50 origin-top animate-panel-reveal rounded-3xl border border-white/[0.08] shadow-[0_24px_60px_-26px_oklch(0_0_0/0.85),0_0_40px_-20px_oklch(0.74_0.19_49/0.25)] overflow-hidden text-left"
-                style={{ background: "oklch(0.16 0.008 60)" }}
-              >
-
-                <div
-                  className="max-h-[min(70dvh,28rem)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-2 sm:p-2.5"
-                  style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
-                >
-                  {/* Empty state — no query yet: context-aware category chips */}
-                  {debouncedQuery === "" && !searchPending && (
-                    <div className="px-2 py-3">
-                      <p className="px-1 pb-2.5 text-[12px] font-medium text-muted-foreground/70">
-                        Search products, brands or categories
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {categories
-                          .filter((c) => !c.parent_id)
-                          .slice(0, 5)
-                          .map((c, i) => (
-                            <button
-                              key={c.slug}
-                              type="button"
-                              style={{ animationDelay: `${i * 55}ms` }}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                nav({ to: "/category/$slug", params: { slug: c.slug } });
-                              }}
-                              className="animate-panel-reveal rounded-full border border-white/[0.07] bg-white/[0.04] px-3.5 py-2 text-[13px] font-medium text-foreground/85 transition-colors duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
-                            >
-                              {c.name}
-                            </button>
-                          ))}
-                      </div>
-
-                    </div>
-                  )}
+              <span className="flex h-14 sm:h-16 w-full items-center pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-left text-base sm:text-[17px] font-medium tracking-[-0.01em] text-muted-foreground/65">
+                {query.trim() || rotatingPlaceholder}
+              </span>
+              <span className="pointer-events-none absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 inline-flex h-11 sm:h-12 items-center gap-1.5 rounded-full bg-accent px-5 sm:px-6 text-sm font-semibold uppercase tracking-[0.06em] text-accent-foreground shadow-[0_8px_24px_-8px_oklch(0.74_0.19_49/0.7)]">
+                Search
+              </span>
+            </button>
+          </div>
 
 
-                  {/* Loading — skeleton rows while debounce settles */}
-                  {searchPending && (
-                    <ul className="flex flex-col gap-1">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <li key={i} className="flex items-center gap-3 px-2 py-2">
-                          <div className="size-11 shrink-0 rounded-lg bg-white/[0.06]" />
-                          <div className="flex-1 space-y-1.5">
-                            <div className="h-3 w-3/5 rounded bg-white/[0.06]" />
-                            <div className="h-2.5 w-2/5 rounded bg-white/[0.04]" />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {/* No results */}
-                  {!searchPending && debouncedQuery !== "" && productMatches.length === 0 && (
-                    <div className="px-3 py-8 text-center">
-                      <p className="text-[14px] text-foreground/80">No products found</p>
-                      <p className="mt-1 text-[12px] text-muted-foreground/60">
-                        Try a different keyword or check the spelling.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Real product results */}
-                  {!searchPending && productMatches.length > 0 && (
-                    <ul className="flex flex-col">
-                      {productMatches.map((p) => (
-                        <li key={p.slug}>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              goProduct(p.slug);
-                            }}
-                            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors duration-200 hover:bg-accent/10"
-                          >
-                            <span className="size-11 shrink-0 overflow-hidden rounded-lg bg-white/[0.05]">
-                              <img
-                                src={p.image}
-                                alt=""
-                                loading="lazy"
-                                decoding="async"
-                                className="h-full w-full object-cover"
-                              />
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-[15px] font-medium text-foreground/90">
-                                {p.name}
-                              </span>
-                              <span className="block truncate text-[12px] text-muted-foreground/60">
-                                {p.category}
-                              </span>
-                            </span>
-                            <span className="shrink-0 text-[14px] font-semibold text-foreground/85">
-                              {formatProduct(p)}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            )}
-
-
-          </form>
 
           {/* Primary actions */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
