@@ -99,8 +99,12 @@ export function LightMobileDrawer({
             overlay tap. Profile card is the first visible element. */}
         <div
           className="flex-1 overflow-y-auto px-4 pb-5 space-y-5"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+          style={{
+            paddingTop:
+              "calc(env(safe-area-inset-top, 0px) + var(--app-header-height, 56px) + 14px)",
+          }}
         >
+
 
 
           {/* 1. Premium user header */}
