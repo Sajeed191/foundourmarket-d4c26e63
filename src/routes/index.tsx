@@ -571,12 +571,13 @@ function Home() {
               style={{ background: "oklch(0.19 0.008 60)" }}
             >
               <span
-                className={`absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full transition-colors duration-300 ${
-                  searchFocused ? "bg-accent/15 text-accent" : "bg-white/[0.05] text-muted-foreground"
+                className={`absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full transition-colors duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                  searchFocused ? "bg-accent/15 text-accent animate-search-pulse" : "bg-white/[0.05] text-muted-foreground"
                 }`}
               >
                 <Search className="size-[19px] sm:size-[21px]" />
               </span>
+
               <input
                 type="text"
                 value={query}
