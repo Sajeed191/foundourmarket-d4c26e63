@@ -494,29 +494,45 @@ function SearchPage() {
                   <SlidersHorizontal className="size-4" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </button>
               </DrawerTrigger>
-              <DrawerContent className="max-h-[85vh]">
-                <div className="flex items-center justify-between px-4 pb-3 pt-1">
-                  <h2 className="text-sm font-semibold">Filters</h2>
-                  <button onClick={() => setDrawerOpen(false)} aria-label="Close filters" className="grid place-items-center size-8 rounded-full hover:bg-white/5">
-                    <X className="size-4" />
-                  </button>
-                </div>
-                <div className="overflow-y-auto px-4 pb-4">
-                  {drawerOpen && <FilterPanel value={draft} onChange={setDraft} />}
-                </div>
-                <div className="flex items-center gap-3 border-t border-border p-4">
-                  <button
-                    onClick={() => { clearAll(); setDrawerOpen(false); }}
-                    className="flex-1 rounded-full border border-border py-3 text-xs font-medium hover:bg-white/5"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={() => { applyFilters(draft); setDrawerOpen(false); }}
-                    className="flex-1 rounded-full bg-accent text-accent-foreground py-3 text-xs font-semibold hover:brightness-110"
-                  >
-                    Apply Filters
-                  </button>
+              <DrawerContent className="h-[92vh] max-h-[92vh] border-white/10 bg-background/85 backdrop-blur-2xl">
+                <div className="mx-auto flex h-full w-full max-w-md flex-col">
+                  {/* Sticky header */}
+                  <div className="flex items-center justify-between gap-2 px-5 pt-1 pb-4">
+                    <button
+                      onClick={() => { setDraft({}); setDraftSort("relevance"); }}
+                      className="text-xs font-medium text-muted-foreground hover:text-accent transition-colors disabled:opacity-40"
+                      disabled={activeDraftCount === 0 && draftSort === "relevance"}
+                    >
+                      Reset all
+                    </button>
+                    <h2 className="text-base font-semibold">Filters</h2>
+                    <button onClick={() => setDrawerOpen(false)} aria-label="Close filters" className="grid place-items-center size-9 rounded-full bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all">
+                      <X className="size-4" />
+                    </button>
+                  </div>
+
+                  {/* Scrollable body */}
+                  <div className="flex-1 overflow-y-auto px-5 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {drawerOpen && (
+                      <FilterPanel value={draft} onChange={setDraft} sort={draftSort} onSortChange={setDraftSort} />
+                    )}
+                  </div>
+
+                  {/* Sticky action bar (safe-area aware) */}
+                  <div className="flex items-center gap-3 border-t border-white/10 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                    <button
+                      onClick={() => { setDraft({}); setDraftSort("relevance"); }}
+                      className="rounded-full px-6 py-3.5 text-sm font-medium bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => { applyFilters(draft); update({ sort: draftSort }); setDrawerOpen(false); }}
+                      className="flex-1 rounded-full bg-accent text-accent-foreground py-3.5 text-sm font-semibold shadow-[0_8px_24px_-8px_var(--accent)] hover:brightness-110 active:scale-[0.98] transition-all"
+                    >
+                      Apply Filters{activeDraftCount > 0 ? ` · ${activeDraftCount}` : ""}
+                    </button>
+                  </div>
                 </div>
               </DrawerContent>
             </Drawer>
