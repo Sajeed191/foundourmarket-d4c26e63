@@ -2685,3 +2685,22 @@ html .feature-row .feature-card * {
   will-change: auto !important;
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   BOTTOM NAV — SINGLE FIXED COLOR GUARANTEE
+   The dock must render ONE consistent glass color in every theme, state and
+   device/safe-mode. Appended last so it always wins over the generic GPU /
+   render-safe overrides above (which target glass utilities broadly). */
+html .nav-glass {
+  background: rgba(20, 20, 20, 0.75) !important;
+}
+html[data-android="true"] .nav-glass,
+html[data-gpu-unsafe="true"] .nav-glass,
+html[data-render-safe="true"] .nav-glass,
+html[data-android-gpu-safe-mode="true"] .nav-glass,
+html[data-ultra-low-end="true"] .nav-glass {
+  /* No blur available → same color, opaque, so tone never shifts. */
+  background: rgb(24, 24, 24) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
