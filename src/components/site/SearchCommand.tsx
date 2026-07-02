@@ -337,30 +337,38 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
               </section>
 
               {/* Popular products — horizontal scroll */}
-              {popular.length > 0 && (
+              {(loading || popular.length > 0) && (
                 <section className="border-t border-white/8 pt-6">
                   <h4 className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/80"><Flame className="size-4 text-accent" /> Popular Products</h4>
                   <div className="-mx-4 sm:-mx-6 flex gap-3 overflow-x-auto px-4 sm:px-6 pb-2 overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {popular.map((p) => (
-                      <Link
-                        key={p.id ?? p.slug}
-                        to="/products/$slug"
-                        params={{ slug: p.slug }}
-                        onClick={onClose}
-                        className="group w-[150px] shrink-0 rounded-[18px] border border-white/10 bg-white/[0.03] p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40"
-                      >
-                        <img src={p.image} alt="" loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
-                        <p className="product-typography product-title-text mt-2 line-clamp-2 text-[13px] font-medium leading-snug">{p.name}</p>
-                        <div className="mt-1.5 flex items-center justify-between">
-                          <Price value={priceOf(p)} className="font-mono text-sm font-semibold text-accent" />
-                          {p.rating > 0 && (
-                            <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                              <Star className="size-3 fill-accent text-accent" /> {p.rating.toFixed(1)}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
+                    {loading && popular.length === 0
+                      ? Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="w-[150px] shrink-0 rounded-[18px] border border-white/10 bg-white/[0.03] p-2.5">
+                            <span className="block aspect-square w-full animate-pulse rounded-xl bg-white/[0.05]" />
+                            <span className="mt-2 block h-3.5 w-4/5 animate-pulse rounded bg-white/[0.05]" />
+                            <span className="mt-1.5 block h-3 w-1/2 animate-pulse rounded bg-white/[0.05]" />
+                          </div>
+                        ))
+                      : popular.map((p) => (
+                          <Link
+                            key={p.id ?? p.slug}
+                            to="/products/$slug"
+                            params={{ slug: p.slug }}
+                            onClick={onClose}
+                            className="group w-[150px] shrink-0 rounded-[18px] border border-white/10 bg-white/[0.03] p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40"
+                          >
+                            <img src={p.image} alt="" loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
+                            <p className="product-typography product-title-text mt-2 line-clamp-2 text-[13px] font-medium leading-snug">{p.name}</p>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <Price value={priceOf(p)} className="font-mono text-sm font-semibold text-accent" />
+                              {p.rating > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                                  <Star className="size-3 fill-accent text-accent" /> {p.rating.toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
                   </div>
                 </section>
               )}
