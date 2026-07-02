@@ -111,14 +111,18 @@ export function MobileBottomNav() {
     >
       <ul
         data-compact={compact ? "" : undefined}
+        style={{ willChange: "transform" }}
         className={
           (frosted
             ? "bottom-nav-light pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2"
             : "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2") +
-          ` transition-[height,padding,transform,box-shadow] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-            compact
-              ? "h-[calc(var(--mobile-nav-surface-height)-12px)] py-1 -translate-y-1.5 shadow-[0_18px_46px_-16px_oklch(0_0_0/0.75)]"
-              : "h-[var(--mobile-nav-surface-height)] py-2 translate-y-0"
+          // Transform ONLY on state switch — no height/padding animation (those
+          // reflow and cause the settle-phase vibration on Chrome Android). The
+          // dimensions stay fixed; compaction is expressed purely via transform
+          // (dock lift) plus the children's opacity/scale. transform-gpu keeps a
+          // single stable compositor layer so the settle never flickers.
+          ` h-[var(--mobile-nav-surface-height)] py-2 transform-gpu transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[0_16px_42px_-18px_oklch(0_0_0/0.7)] ${
+            compact ? "-translate-y-1.5" : "translate-y-0"
           }`
         }
       >
