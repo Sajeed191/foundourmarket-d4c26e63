@@ -233,7 +233,6 @@ export function SearchOverlay({ open, onClose, query, onQueryChange }: Props) {
                     <button
                       key={s}
                       type="button"
-                      style={{ animationDelay: `${i * 60}ms` }}
                       onClick={() => {
                         onQueryChange(s);
                         setDebounced(s);
