@@ -8,26 +8,41 @@ import { useAdminMode } from "@/lib/admin-mode";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme } from "@/lib/theme";
 import { useSupportUnread } from "@/lib/use-support-unread";
-import { scrollDampeningMs, getMotionTier } from "@/lib/motion-tier";
+import { useMotionTier } from "@/lib/motion-tier";
 
 /**
- * Three-phase scroll-adaptive bottom navigation.
- *
- *   PHASE 1 "expanded" — full dock: icons + labels, resting height.
- *   PHASE 2 "compact"  — dock mode: labels fade out, icons scale up + dock lift,
- *                        active tab shows a breathing radial energy field.
- *   PHASE 3 "hidden"   — focus mode: whole dock translates down + fades. No layout
- *                        shift (transform/opacity only). Returns on upward intent.
- *
- * Return order (spec): dock reappears in the compact icon-only state FIRST, then
- * — once scrolling settles near the top — labels stagger back in.
- *
- * Intent detection: per-frame velocity chooses aggressiveness. A fast downward
- * flick jumps straight to hidden; slow scrolling only compacts. Sub-6px micro
- * deltas are ignored (jitter filter). A settle lock freezes state briefly after
- * scrolling stops to kill Android Chrome oscillation.
+ * Single-authority scroll state machine. State commits happen only on an rAF
+ * boundary and only once per arbitration window, so Android inertia cannot make
+ * competing listeners vibrate the dock between visual phases.
  */
-type Phase = "expanded" | "compact" | "hidden";
+type BottomNavState = "visible_full" | "visible_compact" | "hidden";
+
+const TRANSITION_LOCK_MS = 180;
+const SETTLE_LOCK_MS = 190;
+const DEEP_SCROLL_Y = 280;
+const FULL_RESTORE_Y = 56;
+const FAST_DOWN_VELOCITY = 1.25; // px/ms
+const VELOCITY_BUFFER = 0.035; // signed px/ms hysteresis around rest
+
+function resolveNavState(
+  scrollY: number,
+  velocity: number,
+  isScrolling: boolean,
+  timeSinceStop: number,
+): BottomNavState {
+  if (isScrolling) {
+    if (velocity < -VELOCITY_BUFFER) return "visible_compact";
+    if (velocity > FAST_DOWN_VELOCITY && scrollY > DEEP_SCROLL_Y) return "hidden";
+    if (velocity > VELOCITY_BUFFER) return "visible_compact";
+    return scrollY <= FULL_RESTORE_Y ? "visible_full" : "visible_compact";
+  }
+
+  if (timeSinceStop < SETTLE_LOCK_MS) {
+    return scrollY <= FULL_RESTORE_Y ? "visible_full" : "visible_compact";
+  }
+
+  return scrollY <= FULL_RESTORE_Y ? "visible_full" : "visible_compact";
+}
 
 export function MobileBottomNav() {
   const { count } = useCart();
@@ -37,90 +52,80 @@ export function MobileBottomNav() {
   const { isAdmin } = useIsAdmin();
   const { effectiveTheme } = useTheme();
   const { count: supportUnread } = useSupportUnread();
+  const motionTier = useMotionTier();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const [phase, setPhase] = useState<Phase>("expanded");
-  const phaseRef = useRef<Phase>("expanded");
+  const [navState, setNavState] = useState<BottomNavState>("visible_full");
+  const navStateRef = useRef<BottomNavState>("visible_full");
   const lastY = useRef(0);
   const lastT = useRef(0);
+  const lastScrollAt = useRef(0);
+  const lastCommit = useRef(0);
 
   useEffect(() => {
-    const JITTER = 6; // ignore micro scroll < 6px (spec)
-    const FAST = 1.4; // px/ms → aggressive flick threshold
-    const DEEP = 320; // px depth required before focus-mode hide is allowed
     let rafId = 0;
-    let ticking = false;
-    let locked = false;
-    let idleTimer: ReturnType<typeof setTimeout> | undefined;
-    let lockTimer: ReturnType<typeof setTimeout> | undefined;
+    let pendingScrolling = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const commit = (next: Phase) => {
-      if (next === phaseRef.current) return;
-      phaseRef.current = next;
-      setPhase(next);
+    const canUpdate = (now: number) => now - lastCommit.current > TRANSITION_LOCK_MS;
+
+    const commit = (next: BottomNavState, now: number) => {
+      if (next === navStateRef.current) return;
+      if (!canUpdate(now)) {
+        if (!pendingScrolling) {
+          if (settleTimer) clearTimeout(settleTimer);
+          settleTimer = setTimeout(
+            () => schedule(false),
+            Math.max(16, TRANSITION_LOCK_MS - (now - lastCommit.current) + 16),
+          );
+        }
+        return;
+      }
+      navStateRef.current = next;
+      lastCommit.current = now;
+      setNavState(next);
     };
 
     const evaluate = () => {
-      ticking = false;
-      if (locked) return;
-      const y = window.scrollY;
+      rafId = 0;
       const now = performance.now();
+      const y = Math.max(window.scrollY, 0);
       const delta = y - lastY.current;
-      if (Math.abs(delta) < JITTER) return; // jitter filter
       const dt = Math.max(now - lastT.current, 1);
-      const velocity = Math.abs(delta) / dt; // px per ms
+      const velocity = delta / dt;
+      const timeSinceStop = now - lastScrollAt.current;
+      const next = resolveNavState(y, velocity, pendingScrolling, timeSinceStop);
 
-      if (y < 40) {
-        commit("expanded");
-      } else if (delta > 0) {
-        // scrolling DOWN — collapse in layers, deeper/faster = more hidden
-        if (y > DEEP && (velocity > FAST || phaseRef.current === "compact")) {
-          commit("hidden");
-        } else {
-          commit("compact");
-        }
-      } else {
-        // scrolling UP — reveal dock first as icon-only (compact), never jump
-        // straight to expanded mid-gesture; expansion happens on settle.
-        commit(y < 80 ? "expanded" : "compact");
-      }
+      commit(next, now);
       lastY.current = y;
       lastT.current = now;
     };
 
-    const onScroll = () => {
-      // Scroll-stop settle: relax into the resting phase for the current depth,
-      // then lock briefly so residual inertia can't flap the state.
-      if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        locked = true;
-        requestAnimationFrame(() => {
-          const y = window.scrollY;
-          // On settle: near top → fully expand; otherwise relax hidden → compact
-          // so the dock is always reachable when the user pauses.
-          if (y < 40) commit("expanded");
-          else if (phaseRef.current === "hidden") commit("compact");
-        });
-        if (lockTimer) clearTimeout(lockTimer);
-        lockTimer = setTimeout(() => {
-          locked = false;
-          lastY.current = window.scrollY;
-          lastT.current = performance.now();
-        }, scrollDampeningMs() + 120);
-      }, 110);
-
-      if (ticking || locked) return;
-      ticking = true;
+    const schedule = (isScrolling: boolean) => {
+      pendingScrolling = isScrolling;
+      if (rafId) return;
       rafId = requestAnimationFrame(evaluate);
     };
 
-    lastT.current = performance.now();
+    const onScroll = () => {
+      lastScrollAt.current = performance.now();
+      if (settleTimer) clearTimeout(settleTimer);
+      schedule(true);
+
+      // One settle lock only: after the inertia tail is quiet, schedule a final
+      // rAF commit. No React state updates happen inside this timeout.
+      settleTimer = setTimeout(() => schedule(false), SETTLE_LOCK_MS);
+    };
+
+    const now = performance.now();
+    lastY.current = Math.max(window.scrollY, 0);
+    lastT.current = now;
+    lastScrollAt.current = now;
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(rafId);
-      if (idleTimer) clearTimeout(idleTimer);
-      if (lockTimer) clearTimeout(lockTimer);
+      if (settleTimer) clearTimeout(settleTimer);
     };
   }, []);
 
@@ -132,10 +137,10 @@ export function MobileBottomNav() {
   const isGrey = effectiveTheme === "grey";
   const frosted = isLight || isGrey;
 
-  const compact = phase !== "expanded";
-  const hidden = phase === "hidden";
+  const compact = navState !== "visible_full";
+  const hidden = navState === "hidden";
   // Low tier: skip the staggered label reveal (one animation layer rule).
-  const stagger = getMotionTier() !== "low";
+  const stagger = motionTier !== "low";
 
   const items: { to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
@@ -148,7 +153,7 @@ export function MobileBottomNav() {
   return (
     <nav
       data-app-bottom-nav
-      data-phase={phase}
+      data-phase={navState}
       aria-label="Primary mobile navigation"
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
@@ -159,10 +164,9 @@ export function MobileBottomNav() {
           (frosted
             ? "bottom-nav-light pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2"
             : "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2") +
-          // Transform + opacity ONLY across all three phases (no height/padding
-          // animation — those reflow and cause settle vibration on Chrome Android).
-          // Phase 2 lifts the dock; Phase 3 slides it fully off-screen and fades.
-          ` h-[var(--mobile-nav-surface-height)] py-2 transform-gpu transition-[transform,opacity] duration-[200ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[0_16px_42px_-18px_oklch(0_0_0/0.7)] ${
+          // Transform + opacity only. Micro-collapse is visual, not a separate
+          // state, so compact is the only visible scroll-safe mode.
+          ` h-[var(--mobile-nav-surface-height)] py-2 transform-gpu transition-[transform,opacity] duration-[180ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[0_16px_42px_-18px_oklch(0_0_0/0.7)] ${
             hidden
               ? "translate-y-[140%] opacity-0 pointer-events-none"
               : compact
