@@ -67,15 +67,6 @@ function CategoryPage() {
     [products, slug, childSlugs],
   );
 
-  // Per-subcategory product counts (counts each category a product belongs to).
-  const countBySlug = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const p of products) {
-      const all = (p.categories ?? []).length ? p.categories : [p.category];
-      for (const c of all) m[c] = (m[c] ?? 0) + 1;
-    }
-    return m;
-  }, [products]);
 
   // Direct products of this main category (only used as a fallback when there
   // are no subcategories — never lose products).
