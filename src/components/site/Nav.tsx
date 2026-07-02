@@ -412,7 +412,7 @@ export function Nav() {
         data-app-header-spacer
         className="shrink-0"
         style={{
-          height: "calc(var(--mobile-safe-top) + 6.125rem)",
+          height: "calc(var(--mobile-safe-top) + 4.75rem)",
           // Reserved header space carries the page background so it stays
           // continuous with the content below — no darker/blank band on refresh.
           background: "var(--background)",
