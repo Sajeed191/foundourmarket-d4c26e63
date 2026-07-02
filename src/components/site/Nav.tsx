@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ShoppingBag, Search, User, Heart, Menu, X, LayoutDashboard,
   Smartphone, Shirt, Home as HomeIcon, Store, Package, Truck, Clock,
