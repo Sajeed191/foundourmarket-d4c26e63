@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X, TrendingUp, History, Tag, ArrowRight, Loader2, CornerDownLeft, ArrowUp, ArrowDown, Flame, Store, Star } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
@@ -192,10 +193,14 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   const hasMore = productMatches.length > shownProducts.length;
   const stale = q.trim() !== term; // deferred filter is catching up
 
-  return (
-    <div className="fixed inset-0 z-[80]">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="absolute left-1/2 top-[6vh] -translate-x-1/2 w-[94%] sm:w-[90%] max-w-2xl glass-strong border border-accent/20 rounded-[24px] shadow-[0_30px_90px_-20px_oklch(0.74_0.19_49/0.35),var(--shadow-float)] overflow-hidden animate-search-drop flex flex-col max-h-[88vh]">
+  // Portal to <body> so the overlay escapes the sticky/transformed header
+  // (a transformed ancestor becomes the containing block for position:fixed,
+  // which previously mispositioned this overlay and leaked the page behind it).
+  return createPortal(
+    <div className="fixed inset-0 z-[var(--z-modal-overlay)]">
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-xl animate-fade-in" onClick={onClose} />
+      <div className="absolute inset-0 flex flex-col overflow-hidden bg-background animate-search-rise sm:animate-search-drop sm:inset-x-auto sm:left-1/2 sm:top-[6vh] sm:bottom-auto sm:max-h-[88vh] sm:w-[90%] sm:max-w-2xl sm:-translate-x-1/2 sm:rounded-[24px] sm:border sm:border-accent/20 sm:bg-transparent sm:glass-strong sm:shadow-[0_30px_90px_-20px_oklch(0.74_0.19_49/0.35),var(--shadow-float)]">
+        {/* Full-screen immersive surface on mobile; floating command panel on larger screens */}
         {/* Sticky premium search bar */}
         <form
           onSubmit={(e) => { e.preventDefault(); if (items[active]) activate(items[active]); else if (q.trim()) go(q); }}
@@ -459,6 +464,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
           <span>Esc to close</span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

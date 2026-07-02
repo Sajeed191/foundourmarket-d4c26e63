@@ -224,6 +224,14 @@
 }
 .animate-search-drop { animation: search-drop 0.28s var(--ease-out-expo) both; }
 
+/* Mobile full-screen surface: rise + fade with NO x-translate (the panel is
+   edge-to-edge, so it must not inherit the desktop -50% centering offset). */
+@keyframes search-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.animate-search-rise { animation: search-rise 0.2s var(--ease-out-expo) both; }
+
 /* Flash-deal flame: gentle infinite pulse (CSS replacement for framer-motion
    so the homepage initial bundle no longer ships the animation runtime). */
 @keyframes flame-pulse {
