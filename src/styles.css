@@ -1004,6 +1004,7 @@ html[data-android="true"] .nav-glass {
   .animate-panel-reveal,
   .animate-search-pulse,
   .animate-cta-breathe,
+  .animate-footer-line,
   .animate-energy-breathe { animation: none !important; }
 }
 
