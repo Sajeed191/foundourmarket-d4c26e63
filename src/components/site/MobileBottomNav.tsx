@@ -8,6 +8,7 @@ import { useAdminMode } from "@/lib/admin-mode";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme } from "@/lib/theme";
 import { useSupportUnread } from "@/lib/use-support-unread";
+import { scrollDampeningMs } from "@/lib/motion-tier";
 
 export function MobileBottomNav() {
   const { count } = useCart();
