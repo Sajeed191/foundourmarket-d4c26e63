@@ -5,6 +5,7 @@ import { ProductImage } from "@/components/site/ProductImage";
 import { useFlag } from "@/lib/use-debug-flag";
 import type { Product } from "@/lib/products";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
+import { useMotionTier } from "@/lib/motion-tier";
 
 type Props = {
   /** Pre-prioritized product pools. First non-empty wins. */
