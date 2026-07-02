@@ -101,7 +101,9 @@ export function MobileBottomNav() {
                   </span>
                 </span>
                 <span
-                  className={`max-w-full truncate leading-none transition-colors duration-200 ${
+                  className={`max-w-full truncate leading-none transition-all duration-200 ${
+                    compact ? "mt-0 h-0 scale-90 opacity-0" : "mt-0 h-3 opacity-100"
+                  } ${
                     active ? "font-semibold text-accent" : frosted ? "text-muted-foreground" : "text-foreground/60"
                   }`}
                 >
