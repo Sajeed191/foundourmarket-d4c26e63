@@ -66,7 +66,7 @@ export function MobileBottomNav() {
   const { slugs } = useWishlist();
   const { adminMode } = useAdminMode();
   const { isAdmin } = useIsAdmin();
-  const { effectiveTheme } = useTheme();
+  
   const { count: supportUnread } = useSupportUnread();
   const motionTier = useMotionTier();
   const { openSearch } = useSearchUI();
