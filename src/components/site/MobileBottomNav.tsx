@@ -315,11 +315,11 @@ export function MobileBottomNav() {
 
       <ul
         data-compact={compact ? "" : undefined}
-        style={
-          lowEnd
-            ? { willChange: "transform, opacity", backdropFilter: "none", WebkitBackdropFilter: "none" }
-            : { willChange: "transform, opacity" }
-        }
+        // NOTE: never set an inline `backdrop-filter` here — global safe-mode
+        // selectors ([style*="backdrop-filter"]) would then recolor the dock to
+        // a theme background. Blur is removed via the .nav-glass CSS class only,
+        // keeping ONE fixed color across every device/state.
+        style={{ willChange: "transform, opacity" }}
         className={
           // SINGLE unified surface for every theme + state. No theme-conditional
           // colors, so there is no hydration flash or color switching.
