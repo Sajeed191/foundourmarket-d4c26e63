@@ -82,10 +82,19 @@ export function MobileBottomNav() {
   // eliminates the black/dark surface flash on hard refresh where the nav would
   // otherwise paint a solid fallback before the theme + fade-in are ready.
   const [mounted, setMounted] = useState(false);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
+    // Frame 1: element enters the DOM in its transparent initial state.
+    setMounted(true);
+    // Frame 2: theme tokens + layout are resolved — reveal with a fade.
+    const id = requestAnimationFrame(() => {
+      const id2 = requestAnimationFrame(() => setReady(true));
+      cleanup = () => cancelAnimationFrame(id2);
+    });
+    let cleanup = () => cancelAnimationFrame(id);
+    return () => cleanup();
   }, []);
+
   const lastY = useRef(0);
   const lastT = useRef(0);
   const lastScrollAt = useRef(0);
