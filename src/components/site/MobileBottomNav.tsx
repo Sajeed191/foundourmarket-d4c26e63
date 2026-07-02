@@ -77,6 +77,15 @@ export function MobileBottomNav() {
   // three phases never render simultaneously.
   const [iconsReady, setIconsReady] = useState(true);
   const [labelsReady, setLabelsReady] = useState(true);
+  // Hydration gate: the dock stays fully transparent (no surface, no glass, no
+  // shadow) until the client has mounted and theme tokens are resolved. This
+  // eliminates the black/dark surface flash on hard refresh where the nav would
+  // otherwise paint a solid fallback before the theme + fade-in are ready.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   const lastY = useRef(0);
   const lastT = useRef(0);
   const lastScrollAt = useRef(0);
@@ -258,9 +267,16 @@ export function MobileBottomNav() {
     <nav
       data-app-bottom-nav
       data-phase={navState}
+      data-ready={mounted ? "" : undefined}
       aria-label="Primary mobile navigation"
+      style={{
+        opacity: mounted ? 1 : 0,
+        visibility: mounted ? "visible" : "hidden",
+        transition: "opacity 200ms cubic-bezier(0.2,0.8,0.2,1)",
+      }}
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
+
       <ul
         data-compact={compact ? "" : undefined}
         style={
