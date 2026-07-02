@@ -10,7 +10,7 @@ import {
   Headphones,
   ArrowRight,
 } from "lucide-react";
-import { BUILD_ID } from "@/lib/build-version";
+
 
 const EASE = "cubic-bezier(0.2,0.8,0.2,1)";
 
