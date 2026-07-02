@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ShoppingBag, Heart, LayoutDashboard, Package, Truck, ChevronRight,
@@ -76,6 +77,35 @@ export function LightMobileDrawer({
 }: Props) {
   const { theme, setTheme } = useTheme();
 
+  // Swipe-left-to-close gesture
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    setDragging(true);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    // Only track horizontal left swipes
+    if (Math.abs(dx) > Math.abs(dy)) {
+      setDragX(Math.min(0, dx));
+    }
+  };
+  const onTouchEnd = () => {
+    setDragging(false);
+    if (dragX < -80) {
+      onClose();
+    }
+    setDragX(0);
+    touchStart.current = null;
+  };
+
   const badgeFor = (label: string) =>
     label === "Wishlist" ? wishCount : label === "Cart" ? cartCount : 0;
 
@@ -88,9 +118,14 @@ export function LightMobileDrawer({
         onClick={onClose}
       />
       <aside
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         style={{
-          transform: visible ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.42s cubic-bezier(0.22,1,0.36,1)",
+          transform: visible ? `translateX(${dragX}px)` : "translateX(-100%)",
+          transition: dragging
+            ? "none"
+            : "transform 0.42s cubic-bezier(0.22,1,0.36,1)",
           maxHeight: "100dvh",
         }}
         className="absolute left-0 top-0 bottom-0 w-[92%] max-w-[420px] flex flex-col border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
