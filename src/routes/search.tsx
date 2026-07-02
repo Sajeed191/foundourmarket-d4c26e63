@@ -719,8 +719,8 @@ function SearchPage() {
               <div className="size-16 mx-auto mb-5 grid place-items-center rounded-full border border-border bg-card/40">
                 <Search className="size-6 text-muted-foreground" />
               </div>
-              <p className="text-base font-medium">No products match your filters</p>
-              <p className="text-sm text-muted-foreground mt-1.5">Try adjusting or clearing your filters to see more results.</p>
+              <p className="text-base font-medium">{isTrending ? "No trending products right now" : "No products match your filters"}</p>
+              <p className="text-sm text-muted-foreground mt-1.5">{isTrending ? "Check back soon — trending updates in real time as shoppers browse and buy." : "Try adjusting or clearing your filters to see more results."}</p>
               <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
                 {activeFilterCount > 0 && (
                   <button onClick={clearAll}
