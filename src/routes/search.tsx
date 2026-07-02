@@ -684,13 +684,34 @@ function SearchPage() {
 
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-6 lg:gap-8">
-        {/* Desktop sidebar — applies instantly */}
-        <aside className="hidden lg:block">
-          <FilterPanel value={currentFilters} onChange={applyFilters} />
-        </aside>
+      {/* Trending mode banner — "Top Trending Now" */}
+      {isTrending && (
+        <div className="mb-6 sm:mb-8 flex items-center gap-3 rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/[0.12] to-transparent px-4 py-3.5 animate-fade-in">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/20 text-accent">
+            <TrendingUp className="size-5" strokeWidth={2.2} />
+          </span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              Top Trending Now
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent">
+                <span className="size-1.5 rounded-full bg-accent animate-pulse" /> Live
+              </span>
+            </p>
+            <p className="text-[11px] text-muted-foreground">Showing real-time top 10 trending products</p>
+          </div>
+        </div>
+      )}
 
-        <div>
+      <div className={isTrending ? "" : "grid grid-cols-1 lg:grid-cols-[240px,1fr] gap-6 lg:gap-8"}>
+        {/* Desktop sidebar — hidden in Trending mode */}
+        {!isTrending && (
+          <aside className="hidden lg:block">
+            <FilterPanel value={currentFilters} onChange={applyFilters} />
+          </aside>
+        )}
+
+        <div key={isTrending ? "trending" : "feed"} className="animate-fade-in">
+
           {loading ? (
             <ProductSkeletonGrid count={9} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6" />
           ) : results.length === 0 ? (
