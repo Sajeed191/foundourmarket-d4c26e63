@@ -13,7 +13,7 @@ type Props = {
  * - Loading state morphs into a circular spinner without changing size.
  * - Press triggers a lightweight ripple.
  */
-export function SearchButton({ loading = false }: Props) {
+export function SearchButton({ loading = false, focused = false }: Props) {
   const rippleRef = useRef<HTMLSpanElement>(null);
 
   function spawnRipple(e: React.PointerEvent<HTMLButtonElement>) {
