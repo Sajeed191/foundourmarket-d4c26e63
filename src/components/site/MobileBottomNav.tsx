@@ -78,6 +78,7 @@ export function MobileBottomNav() {
     let rafId = 0;
     let pendingScrolling = false;
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    let hiddenLockUntil = 0; // hard lock window after entering hidden
 
     const canUpdate = (now: number) => now - lastCommit.current > TRANSITION_LOCK_MS;
 
@@ -95,6 +96,9 @@ export function MobileBottomNav() {
       }
       navStateRef.current = next;
       lastCommit.current = now;
+      // Entering hidden: freeze all further transitions for HIDDEN_LOCK_MS so the
+      // final translateY(140%)/opacity:0 commit renders once, without flicker.
+      if (next === "hidden") hiddenLockUntil = now + HIDDEN_LOCK_MS;
       setNavState(next);
     };
 
@@ -105,12 +109,17 @@ export function MobileBottomNav() {
       const delta = y - lastY.current;
       const dt = Math.max(now - lastT.current, 1);
       const velocity = delta / dt;
-      const timeSinceStop = now - lastScrollAt.current;
-      const next = resolveNavState(y, velocity, pendingScrolling, timeSinceStop);
-
-      commit(next, now);
       lastY.current = y;
       lastT.current = now;
+
+      // Hard hidden lock: ignore everything except an explicit scroll back to the
+      // very top, which must never leave the dock stranded off-screen.
+      if (now < hiddenLockUntil && navStateRef.current === "hidden") {
+        if (y > FULL_RESTORE_Y) return;
+      }
+
+      const next = resolveNavState(navStateRef.current, y, velocity, pendingScrolling);
+      commit(next, now);
     };
 
     const schedule = (isScrolling: boolean) => {
@@ -128,6 +137,7 @@ export function MobileBottomNav() {
       // rAF commit. No React state updates happen inside this timeout.
       settleTimer = setTimeout(() => schedule(false), SETTLE_LOCK_MS);
     };
+
 
     const now = performance.now();
     lastY.current = Math.max(window.scrollY, 0);
