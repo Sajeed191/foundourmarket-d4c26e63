@@ -80,7 +80,7 @@ export function LightMobileDrawer({
     label === "Wishlist" ? wishCount : label === "Cart" ? cartCount : 0;
 
   return (
-    <div className="fixed inset-0 z-[9999] md:hidden">
+    <div className="fixed inset-0 z-[100000] md:hidden">
       {/* Soft blurred backdrop */}
       <div
         style={{ opacity: visible ? 1 : 0, transition: "opacity 0.3s ease" }}
@@ -95,13 +95,13 @@ export function LightMobileDrawer({
         }}
         className="absolute left-0 top-0 bottom-0 w-[92%] max-w-[420px] flex flex-col border-r border-border bg-background shadow-[0_0_60px_-10px_oklch(0.4_0.02_260/0.25)] will-change-transform"
       >
-        {/* No header, no close button — closing is handled by the backdrop
-            overlay tap. Profile card is the first visible element. */}
+        {/* Clean side overlay — the top navbar is NOT rendered here. The drawer
+            sits above the navbar (z-index) so it is a self-contained overlay.
+            Profile card is the first visible element. */}
         <div
           className="flex-1 overflow-y-auto px-4 pb-5 space-y-5"
           style={{
-            paddingTop:
-              "calc(env(safe-area-inset-top, 0px) + var(--app-header-height, 56px) + 14px)",
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
           }}
         >
 
