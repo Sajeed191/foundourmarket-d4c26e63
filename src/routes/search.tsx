@@ -353,8 +353,8 @@ function SearchPage() {
   const TRENDING_LIMIT = 10;
 
   // Reset and fetch the first page whenever the query / RPC-handled filters change.
-  // Trending is a special mode: it ignores query/filters and fetches the
-  // real-time top-10 trending dataset from a dedicated RPC (replaces the feed).
+  // Trending is a special mode: it ignores query/filters and shows ALL products
+  // that carry the "trending" badge (not a capped top-N ranking).
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -362,7 +362,10 @@ function SearchPage() {
     setHasMore(false);
 
     if (isTrending) {
-      (supabase.rpc as any)("trending_products", { page_limit: TRENDING_LIMIT })
+      (supabase as any)
+        .from("products_public")
+        .select(PRODUCT_COLS)
+        .eq("trending", true)
         .then(({ data }: { data: any[] | null }) => {
           if (cancelled) return;
           const rows = (data ?? []).map((r: any) => rowToProduct(r));
@@ -370,11 +373,12 @@ function SearchPage() {
           const seen = new Set<string>();
           const deduped = rows.filter((p: Product) => (seen.has(p.slug) ? false : (seen.add(p.slug), true)));
           setHasMore(false);
-          setRawRows(deduped.slice(0, TRENDING_LIMIT));
+          setRawRows(deduped);
           setLoading(false);
         });
       return () => { cancelled = true; };
     }
+
 
     (supabase.rpc as any)("search_products", {
       q: search.q ?? null,
