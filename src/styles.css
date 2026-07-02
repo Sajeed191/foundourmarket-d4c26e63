@@ -751,7 +751,7 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 @media (max-width: 399px) {
   :root {
     --mobile-nav-surface-height: 4.25rem;
-    --mobile-nav-edge-gap: 0.625rem;
+    --mobile-nav-edge-gap: 0.3rem;
   }
 }
 
