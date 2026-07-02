@@ -40,9 +40,10 @@ type ReviewSort = "newest" | "helpful" | "highest" | "lowest";
 // Full column set incl. moderation/sentiment/fraud internals — admin moderation only.
 const REVIEW_COLS =
   "id, product_slug, user_id, rating, title, body, media, status, pinned, featured, verified_purchase, helpful_count, not_helpful_count, report_count, is_flagged, admin_reply, admin_reply_at, admin_reply_by, sentiment, sentiment_score, sentiment_summary, fake_score, fake_reasons, created_at";
-// Safe public columns — granted to anonymous visitors (no internal scoring exposed).
+// Safe public columns — granted to anonymous visitors. No reviewer UUIDs are
+// exposed; author display name/avatar are denormalized into the view instead.
 const REVIEW_COLS_PUBLIC =
-  "id, product_slug, user_id, rating, title, body, media, status, pinned, featured, verified_purchase, helpful_count, not_helpful_count, admin_reply, admin_reply_at, created_at";
+  "id, product_slug, author_name, author_avatar_url, rating, title, body, media, status, pinned, featured, verified_purchase, helpful_count, not_helpful_count, admin_reply, admin_reply_at, created_at";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
