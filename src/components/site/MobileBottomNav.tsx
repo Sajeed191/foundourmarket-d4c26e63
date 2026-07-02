@@ -154,9 +154,21 @@ export function MobileBottomNav() {
     };
   }, []);
 
+  // Staged label reveal: only surface labels ~140ms after the dock settles into
+  // its fully expanded state. Any other phase hides them immediately.
+  useEffect(() => {
+    if (navState !== "visible_full") {
+      setLabelsReady(false);
+      return;
+    }
+    const t = setTimeout(() => setLabelsReady(true), 140);
+    return () => clearTimeout(t);
+  }, [navState]);
+
   // Hand the bottom dock over to the admin bar when a staff member is actively
   // managing the store, so the two navigations never stack.
   if (adminMode && isAdmin) return null;
+
 
   const isLight = effectiveTheme === "light";
   const isGrey = effectiveTheme === "grey";
