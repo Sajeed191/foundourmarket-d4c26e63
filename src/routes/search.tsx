@@ -652,8 +652,8 @@ function SearchPage() {
 
 
 
-      {/* Active filter chips — removable */}
-      {activeChips.length > 0 && (
+      {/* Active filter chips — removable (not shown in Trending mode) */}
+      {!isTrending && activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8">
           {activeChips.map((chip) => (
             <button
