@@ -599,12 +599,33 @@ function Home() {
                   className="max-h-[min(70dvh,28rem)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-2 sm:p-2.5"
                   style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
                 >
-                  {/* Empty state — no query yet */}
+                  {/* Empty state — no query yet: context-aware category chips */}
                   {debouncedQuery === "" && !searchPending && (
-                    <div className="px-3 py-8 text-center text-[14px] text-muted-foreground/70">
-                      Start typing to see products
+                    <div className="px-2 py-3">
+                      <p className="px-1 pb-2.5 text-[12px] font-medium text-muted-foreground/70">
+                        Search products, brands or categories
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {categories
+                          .filter((c) => !c.parent_id)
+                          .slice(0, 6)
+                          .map((c) => (
+                            <button
+                              key={c.slug}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                nav({ to: "/category/$slug", params: { slug: c.slug } });
+                              }}
+                              className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-medium text-foreground/85 transition-colors duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+                            >
+                              {c.name}
+                            </button>
+                          ))}
+                      </div>
                     </div>
                   )}
+
 
                   {/* Loading — skeleton rows while debounce settles */}
                   {searchPending && (
