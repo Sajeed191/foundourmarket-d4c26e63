@@ -644,7 +644,9 @@ function RootComponent() {
                             <ShareDialog />
                             <DebugPanel />
                             <WindowMetricsPanel />
+                            <GlobalSearchMount />
                           </div>
+                          </SearchUIProvider>
                           </BadgeEngineProvider>
                         </LayoutMetricsProvider>
                       </CommandCenterProvider>
