@@ -27,6 +27,7 @@ const FAST_DOWN_VELOCITY = 1.25; // px/ms — flick = skip compact, hide instant
 const VELOCITY_BUFFER = 0.035; // signed px/ms hysteresis around rest
 const VELOCITY_THROTTLE_MS = 60; // clamp: max one velocity measurement / 60ms
 const MICRO_DELTA_PX = 8; // ignore sub-8px jitter mid-gesture
+const DIRECTION_DEBOUNCE_MS = 120; // confirm scroll intent before honoring a flip
 
 /**
  * Deterministic resolver. `current` is fed back in so the hidden phase is
