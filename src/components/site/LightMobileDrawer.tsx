@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ShoppingBag, Heart, X, LayoutDashboard, Package, Truck, ChevronRight,
+  ShoppingBag, Heart, LayoutDashboard, Package, Truck, ChevronRight,
   LifeBuoy, Mail, MessageCircle, HelpCircle,
   Sparkles, TrendingUp, Zap, Grid3x3, Crown, Home as HomeIcon, Clock,
   Monitor, Moon, Palette, Sun, Check, ShieldCheck,
