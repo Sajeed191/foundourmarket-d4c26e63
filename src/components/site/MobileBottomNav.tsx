@@ -70,7 +70,17 @@ export function MobileBottomNav() {
     const canUpdate = (now: number) => now - lastCommit.current > TRANSITION_LOCK_MS;
 
     const commit = (next: BottomNavState, now: number) => {
-      if (next === navStateRef.current || !canUpdate(now)) return;
+      if (next === navStateRef.current) return;
+      if (!canUpdate(now)) {
+        if (!pendingScrolling) {
+          if (settleTimer) clearTimeout(settleTimer);
+          settleTimer = setTimeout(
+            () => schedule(false),
+            Math.max(16, TRANSITION_LOCK_MS - (now - lastCommit.current) + 16),
+          );
+        }
+        return;
+      }
       navStateRef.current = next;
       lastCommit.current = now;
       setNavState(next);
