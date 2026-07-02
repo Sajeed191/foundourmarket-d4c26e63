@@ -294,7 +294,7 @@ function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
   const { categories } = useCategories();
-  const { shippingFeeOf, compareOf, market, symbol } = useRegion();
+  const { priceOf, shippingFeeOf, compareOf, market, symbol } = useRegion();
 
   const [query, setQuery] = useState(search.q ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
