@@ -69,6 +69,7 @@ export function MobileBottomNav() {
   const { effectiveTheme } = useTheme();
   const { count: supportUnread } = useSupportUnread();
   const motionTier = useMotionTier();
+  const { openSearch } = useSearchUI();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const [navState, setNavState] = useState<BottomNavState>("visible_full");
