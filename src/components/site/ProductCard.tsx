@@ -270,6 +270,18 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const identity = productIdentity(product);
 
   const badges = useMemo<CardBadge[]>(() => {
+    // Discount badge always leads when the product is discounted.
+    const discountBadge: CardBadge | null = discount
+      ? {
+          id: "discount",
+          label: `${discount}% OFF`,
+          style: {
+            background: "linear-gradient(135deg,#FF5A52 0%,#E11D1D 100%)",
+            color: "#FFFFFF",
+          },
+        }
+      : null;
+
     const computed: CardBadge[] = labels.map((b) => ({
       id: b.key,
       label: b.label,
@@ -277,7 +289,9 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       className: b.className,
     }));
 
-    if (forceBadge || assigned.length === 0) return computed;
+    if (forceBadge || assigned.length === 0) {
+      return discountBadge ? [discountBadge, ...computed] : computed;
+    }
 
     // Flash/Hot promotional badges are exclusive to the currently-selected
     // Flash Deal rotation — hide them for non-selected products. Every OTHER
@@ -292,7 +306,8 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
     // Merge assigned badges with computed ones so all valid badges surface,
     // deduping by normalized label. ProductBadges caps display at 2.
-    const merged: CardBadge[] = gated.map(toAssignedBadge);
+    const merged: CardBadge[] = discountBadge ? [discountBadge] : [];
+    merged.push(...gated.map(toAssignedBadge));
     const seen = new Set(merged.map((b) => b.label.trim().toUpperCase()));
     for (const c of computed) {
       const key = c.label.trim().toUpperCase();
@@ -301,7 +316,8 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       merged.push(c);
     }
     return merged;
-  }, [assigned, forceBadge, labels, engine, product.slug]);
+  }, [assigned, forceBadge, labels, engine, product.slug, discount]);
+
 
 
 
