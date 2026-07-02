@@ -1932,6 +1932,14 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
 }
 
 /* ── Premium feature cards (Fast Delivery, Secure Checkout, …) ── */
+/* Promote the entire mobile feature row to ONE GPU surface so Chrome rasters
+   it as a single composited layer instead of per-card tiles that upload
+   out-of-sync on cold refresh (the source of the transient banding). */
+.feature-row {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 .feature-card {
   /* `contain: layout` isolates sibling reflow WITHOUT the `paint` clip.
      `contain: paint` promotes each card to a paint-contained region with its
