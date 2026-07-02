@@ -251,6 +251,10 @@ export function MobileBottomNav() {
   // Hand the bottom dock over to the admin bar when a staff member is actively
   // managing the store, so the two navigations never stack.
   if (adminMode && isAdmin) return null;
+  // Hard hydration gate: never render the dock (not even a hidden shell) until
+  // the client has mounted. This guarantees no surface paints on first frame.
+  if (!mounted) return null;
+
 
 
   const isLight = effectiveTheme === "light";
