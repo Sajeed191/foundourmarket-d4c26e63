@@ -157,7 +157,7 @@ function FlashCard({ item, now }: { item: FlashItem; now: number }) {
             {dealBadge.label}
           </span>
           {off > 0 && (
-            <span data-product-badge className="absolute right-2 top-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 font-mono text-[9px] font-bold text-black shadow-[var(--shadow-ember)]">
+            <span data-product-badge className="absolute right-2 bottom-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 font-mono text-[9px] font-bold text-black shadow-[var(--shadow-ember)]">
               -{off}%
             </span>
           )}
