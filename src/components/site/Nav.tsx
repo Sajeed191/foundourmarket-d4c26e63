@@ -157,6 +157,7 @@ export function Nav() {
   const [scrollMode, setScrollMode] = useState<"top" | "down" | "up">("top");
   useEffect(() => {
     let ticking = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const update = () => {
       const y = window.scrollY;
       const prev = lastY.current;
@@ -167,12 +168,23 @@ export function Nav() {
       ticking = false;
     };
     const onScroll = () => {
+      // Intent dampening: let the bar settle ~150ms AFTER scrolling stops so
+      // it never twitches mid-gesture — a subtle "luxury inertia" feel. When
+      // the user pauses (and isn't near the top), we relax into the expanded
+      // "up" state rather than leaving it stuck in compact.
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        setScrollMode(window.scrollY < 30 ? "top" : "up");
+      }, 150);
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (settleTimer) clearTimeout(settleTimer);
+    };
   }, []);
   const compact = scrollMode === "down";
 

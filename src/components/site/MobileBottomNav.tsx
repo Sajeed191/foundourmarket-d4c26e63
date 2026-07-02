@@ -26,6 +26,7 @@ export function MobileBottomNav() {
   const lastY = useRef(0);
   useEffect(() => {
     let ticking = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const update = () => {
       const y = window.scrollY;
       const prev = lastY.current;
@@ -35,12 +36,19 @@ export function MobileBottomNav() {
       ticking = false;
     };
     const onScroll = () => {
+      // Intent dampening: dock relaxes back to its full state ~150ms after the
+      // gesture ends, giving a soft inertial settle instead of snapping.
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => setCompact(false), 150);
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (settleTimer) clearTimeout(settleTimer);
+    };
   }, []);
 
   // Hand the bottom dock over to the admin bar when a staff member is actively
