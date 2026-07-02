@@ -69,6 +69,9 @@ export function MobileBottomNav() {
 
   const [navState, setNavState] = useState<BottomNavState>("visible_full");
   const navStateRef = useRef<BottomNavState>("visible_full");
+  // Staged reveal: container + icons appear first, labels commit after a short
+  // settle so they never jump in mid-transition (opacity/transform only).
+  const [labelsReady, setLabelsReady] = useState(true);
   const lastY = useRef(0);
   const lastT = useRef(0);
   const lastScrollAt = useRef(0);
