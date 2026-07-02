@@ -132,7 +132,9 @@ const LiveChat = lazyWithRetry(() =>
   import("@/components/chat/LiveChat").then((m) => ({ default: m.LiveChat })),
 );
 const SearchCommand = lazyWithRetry(() =>
-  import("@/components/site/SearchCommand").then((m) => ({ default: m.SearchCommand })),
+  import("@/components/site/SearchCommand").then((m) => ({
+    default: m.SearchCommand as unknown as React.ComponentType<unknown>,
+  })),
 ) as unknown as React.ComponentType<{ open: boolean; onClose: () => void }>;
 
 /** The single, app-wide immersive search surface. Rendered once here and driven
