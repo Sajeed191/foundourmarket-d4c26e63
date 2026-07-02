@@ -68,12 +68,19 @@ export function MobileBottomNav() {
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
     >
       <ul
+        data-compact={compact ? "" : undefined}
         className={
-          frosted
-            ? "bottom-nav-light pointer-events-auto relative mx-auto grid h-[var(--mobile-nav-surface-height)] max-w-md grid-cols-5 rounded-[30px] px-2 py-2"
-            : "nav-glass pointer-events-auto relative mx-auto grid h-[var(--mobile-nav-surface-height)] max-w-md grid-cols-5 rounded-[30px] px-2 py-2"
+          (frosted
+            ? "bottom-nav-light pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2"
+            : "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2") +
+          ` transition-[height,padding] duration-200 ease-out ${
+            compact
+              ? "h-[calc(var(--mobile-nav-surface-height)-12px)] py-1"
+              : "h-[var(--mobile-nav-surface-height)] py-2"
+          }`
         }
       >
+
         {items.map(({ to, label, icon: Icon, match, badge }) => {
           const active = match(pathname);
           return (
@@ -89,10 +96,11 @@ export function MobileBottomNav() {
                     aria-hidden
                     className={`absolute inset-0 rounded-2xl transition-all duration-300 ease-out ${
                       active
-                        ? "scale-100 bg-accent/15 opacity-100 ring-1 ring-accent/35"
+                        ? "scale-100 bg-accent/15 opacity-100 ring-1 ring-accent/40 shadow-[0_0_16px_-4px_var(--color-accent)]"
                         : "scale-75 opacity-0"
                     }`}
                   />
+
                   <span className="relative">
                     <Icon
                       className={`size-[21px] transition-colors duration-200 ${

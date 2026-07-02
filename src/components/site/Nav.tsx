@@ -150,14 +150,19 @@ export function Nav() {
   const initial = (displayName?.[0] ?? "F").toUpperCase();
 
   const lastY = useRef(0);
-  const [hidden, setHidden] = useState(false);
+  // Three-state scroll intelligence: "top" (full immersive), "down" (compact
+  // sticky bar) and "up" (fully expanded on intent to navigate). Transform +
+  // opacity only for the icons; a single padding transition per direction
+  // change keeps the bar height adaptive without per-frame reflow.
+  const [scrollMode, setScrollMode] = useState<"top" | "down" | "up">("top");
   useEffect(() => {
     let ticking = false;
     const update = () => {
       const y = window.scrollY;
       const prev = lastY.current;
-      if (y > prev && y > 80) setHidden(true);
-      else if (y < prev - 4) setHidden(false);
+      if (y < 30) setScrollMode("top");
+      else if (y > prev && y > 80) setScrollMode("down");
+      else if (y < prev - 4) setScrollMode("up");
       lastY.current = y;
       ticking = false;
     };
@@ -169,6 +174,8 @@ export function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  const compact = scrollMode === "down";
+
 
   // Drive the drawer enter/exit transition without framer-motion.
   useEffect(() => {
@@ -186,17 +193,25 @@ export function Nav() {
     <>
       <div
         data-app-header
+        data-scroll-mode={scrollMode}
         style={{
-          transform: hidden ? "translateY(-120px)" : "translateY(0)",
-          opacity: hidden ? 0 : 1,
           filter: "none",
-          transition: "transform 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease",
+          transition: "transform 0.24s ease-out, opacity 0.24s ease-out",
           willChange: "auto",
         }}
         className="sticky top-0 z-50 px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.75rem)] sm:pt-[calc(var(--mobile-safe-top)+1rem)]"
       >
-        <nav className="max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 ring-white/10 lg:ring-white/15 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-all">
-          <div className="flex items-center justify-start px-2.5 sm:px-5 lg:px-7 py-2.5 sm:py-3 lg:py-4 gap-1 sm:gap-2 lg:gap-3">
+        <nav
+          className={`max-w-7xl lg:max-w-[1480px] mx-auto rounded-[26px] glass-strong bg-gradient-to-b from-white/[0.06] to-black/30 shadow-[0_10px_40px_-18px_oklch(0_0_0/0.7)] ring-1 ring-white/10 lg:ring-white/15 lg:shadow-[0_16px_60px_-22px_oklch(0_0_0/0.75),0_0_50px_-22px_oklch(0.74_0.19_49/0.4)] md:backdrop-blur-2xl transition-[background-color,box-shadow] duration-200 ${
+            compact ? "bg-black/55" : ""
+          }`}
+        >
+          <div
+            className={`flex items-center justify-start px-2.5 sm:px-5 lg:px-7 gap-1 sm:gap-2 lg:gap-3 transition-[padding] duration-200 ease-out ${
+              compact ? "py-1.5 sm:py-2 lg:py-2.5" : "py-2.5 sm:py-3 lg:py-4"
+            }`}
+          >
+
 
             {/* Zone 1 — Hamburger (mobile only) */}
             <button
@@ -212,7 +227,11 @@ export function Nav() {
               to="/"
               className="min-w-0 flex-1 md:flex-none flex items-center gap-2 sm:gap-2.5 -ml-0.5 md:ml-0 font-display tracking-tight font-semibold"
             >
-              <span className="shrink-0 relative inline-grid place-items-center size-9 sm:size-11 lg:size-12 rounded-2xl bg-black/40 ring-1 ring-accent/40 overflow-hidden shadow-[0_0_24px_-4px_var(--color-accent),inset_0_1px_0_oklch(1_0_0/0.1)] transition-shadow duration-300 hover:shadow-[0_0_34px_-2px_var(--color-accent)]">
+              <span
+                className={`shrink-0 relative inline-grid place-items-center rounded-2xl bg-black/40 ring-1 ring-accent/40 overflow-hidden shadow-[0_0_24px_-4px_var(--color-accent),inset_0_1px_0_oklch(1_0_0/0.1)] transition-[width,height,box-shadow] duration-200 ease-out hover:shadow-[0_0_34px_-2px_var(--color-accent)] ${
+                  compact ? "size-8 sm:size-9 lg:size-10" : "size-9 sm:size-11 lg:size-12"
+                }`}
+              >
                 <span aria-hidden className="pointer-events-none absolute -inset-1 rounded-2xl bg-accent/25 blur-md -z-[1]" />
                 <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
@@ -220,11 +239,16 @@ export function Nav() {
                 <span className="truncate text-[15px] sm:text-xl lg:text-[22px] font-semibold tracking-tight">
                   FoundOurMarket<span className="text-accent">™</span>
                 </span>
-                <span className="mt-0.5 text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-accent/80 truncate">
+                <span
+                  className={`overflow-hidden font-mono uppercase tracking-[0.2em] text-accent/80 truncate transition-[max-height,opacity,margin] duration-200 ease-out text-[8px] sm:text-[10px] ${
+                    compact ? "max-h-0 opacity-0 mt-0" : "max-h-4 opacity-100 mt-0.5"
+                  }`}
+                >
                   Global Marketplace
                 </span>
               </span>
             </Link>
+
 
             {/* Desktop nav links — premium mega menu (centered) */}
             <MegaMenu />
