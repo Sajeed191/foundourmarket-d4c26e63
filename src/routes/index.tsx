@@ -615,29 +615,8 @@ function Home() {
               Browse Categories
             </a>
           </div>
-
-          {/* ── Trending searches — flat, matte discovery strip (no cards/glow) ── */}
-          <div className="mx-auto mt-8 max-w-md text-left">
-            <div className="flex items-center gap-1.5 px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
-              <TrendingUp className="size-3.5 opacity-70" />
-              Trending searches
-            </div>
-            <div className="border-t border-white/8">
-              {["Wireless headphones", "Smart watch", "Ceramic mug", "Running shoes"].map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => goSearch(term)}
-                  className="flex h-11 w-full items-center justify-between px-1 text-left text-[15px] text-foreground/85 transition-opacity duration-200 hover:opacity-70"
-                >
-                  <span className="truncate">{term}</span>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground/60" />
-                </button>
-              ))}
-            </div>
-          </div>
-
         </div>
+
 
 
 
