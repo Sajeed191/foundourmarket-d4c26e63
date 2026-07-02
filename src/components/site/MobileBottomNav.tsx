@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
 import { useAdminMode } from "@/lib/admin-mode";
 import { useIsAdmin } from "@/lib/use-admin";
-import { useTheme, type EffectiveTheme } from "@/lib/theme";
+
 import { useSupportUnread } from "@/lib/use-support-unread";
 import { useMotionTier } from "@/lib/motion-tier";
 import { useSearchUI } from "@/lib/search-ui";
