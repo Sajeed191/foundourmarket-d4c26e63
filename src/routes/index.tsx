@@ -681,23 +681,19 @@ function Home() {
                 <Link
                   data-product-card-frame
                   to="/categories"
-                  className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
+                  className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
                 >
-
-                  <div className="relative w-full aspect-[1/0.86] sm:aspect-[1/0.92] grid place-items-center overflow-hidden rounded-2xl border border-border bg-muted/60">
+                  <div className="relative aspect-square w-full grid place-items-center overflow-hidden bg-muted/60">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
                     <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
                       <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
                     </span>
                   </div>
 
-                  <div className="w-full pb-0.5">
-                    <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
-                    <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide mt-1">Browse everything</span>
+                  <div className="flex flex-1 flex-col items-center justify-start gap-0.5 px-2.5 pt-1.5 pb-2 text-center">
+                    <h3 className="line-clamp-1 text-[13px] font-semibold leading-snug tracking-tight text-accent transition-colors group-hover:text-accent sm:text-[15px]">Shop All Departments</h3>
+                    <span className="block text-[10px] font-medium tracking-wide text-muted-foreground sm:text-[11px]">Browse everything</span>
                   </div>
-
-
-
                 </Link>
 
               </div>
