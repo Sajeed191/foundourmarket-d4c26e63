@@ -684,12 +684,13 @@ function Home() {
                   className="group relative flex h-full flex-col overflow-hidden text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
                 >
 
-                  <div className="relative mx-2 mt-2 aspect-square grid place-items-center overflow-hidden rounded-xl bg-muted/60">
+                  <div className="relative mx-4 mt-4 aspect-square grid place-items-center overflow-hidden rounded-xl bg-muted/60">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
-                    <span className="relative grid size-12 sm:size-14 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
-                      <ArrowRight className="size-5 sm:size-6 transition-transform duration-300 group-hover:translate-x-1" />
+                    <span className="relative grid size-10 sm:size-12 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
+                      <ArrowRight className="size-4 sm:size-5 transition-transform duration-300 group-hover:translate-x-1" />
                     </span>
                   </div>
+
                   <div className="flex flex-col items-center justify-start gap-0.5 px-2.5 pt-1.5 pb-2">
                     <h3 className="text-[13px] sm:text-[15px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
                     <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide">Browse everything</span>
