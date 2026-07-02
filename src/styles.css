@@ -1933,7 +1933,14 @@ html[data-low-end="true"] .premium-back-btn:hover { box-shadow: none; }
 
 /* ── Premium feature cards (Fast Delivery, Secure Checkout, …) ── */
 .feature-card {
-  contain: layout paint;
+  /* `contain: layout` isolates sibling reflow WITHOUT the `paint` clip.
+     `contain: paint` promotes each card to a paint-contained region with its
+     own clip/stacking context; on a Chrome cold refresh those regions raster
+     on the GPU a frame before their tiles are fully uploaded, and with a
+     fractional devicePixelRatio the clip edges round per-tile — producing the
+     transient horizontal banding across the row. Layout containment keeps the
+     stabilization we need and removes the compositor artifact. */
+  contain: layout;
   background: linear-gradient(160deg, oklch(0.22 0.01 60 / 0.55), oklch(0.15 0.01 60 / 0.45));
   border: 1px solid oklch(1 0 0 / 0.07);
   box-shadow:
