@@ -419,21 +419,58 @@ function Home() {
   const [editCats, setEditCats] = useState(false);
 
   const nav = useNavigate();
+  const { formatProduct } = useRegion();
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [searching, setSearching] = useState(false);
   const rotatingPlaceholder = useRotatingPlaceholder(!searchFocused && !query);
+
+  // Debounced query drives the live product results (150–250ms per spec).
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 200);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const goSearch = (q: string) => {
     setSearching(true);
     nav({ to: "/search", search: { q } });
   };
 
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return POPULAR_SEARCHES;
-    return POPULAR_SEARCHES.filter((s) => s.toLowerCase().includes(q));
-  }, [query]);
+  const goProduct = (slug: string) => {
+    setSearching(true);
+    nav({ to: "/product/$slug", params: { slug } });
+  };
+
+  // Real, backend-driven product matches only — ranked by relevance.
+  const productMatches = useMemo(() => {
+    const q = debouncedQuery.toLowerCase();
+    if (!q) return [] as typeof products;
+    const terms = q.split(/\s+/).filter(Boolean);
+    const scored = products
+      .filter((p) => !p.hideFromSearch && p.inStock !== false)
+      .map((p) => {
+        const name = p.name.toLowerCase();
+        const hay = `${name} ${p.brand ?? ""} ${p.category} ${p.tagline ?? ""}`.toLowerCase();
+        let score = 0;
+        for (const t of terms) {
+          if (!hay.includes(t)) return { p, score: -1 };
+          if (name.startsWith(t)) score += 4;
+          else if (name.includes(t)) score += 3;
+          else score += 1;
+        }
+        return { p, score };
+      })
+      .filter((x) => x.score >= 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((x) => x.p);
+    return scored;
+  }, [debouncedQuery, products]);
+
+  // Loading = user typed but the debounced query hasn't caught up yet.
+  const searchPending = query.trim() !== "" && query.trim() !== debouncedQuery;
+
 
 
   const categoryCounts = useMemo(
