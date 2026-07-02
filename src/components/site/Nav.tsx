@@ -413,11 +413,9 @@ export function Nav() {
         className="shrink-0"
         style={{
           height: "calc(var(--mobile-safe-top) + 6.125rem)",
-          // Bridge the reserved header space from the page background into the
-          // hero's exact top tone so no darker "gap band" appears between the
-          // floating nav and the content — seamless on first paint (no flash).
-          background:
-            "linear-gradient(180deg, var(--background) 0%, var(--hero-top) 100%)",
+          // Reserved header space carries the page background so it stays
+          // continuous with the content below — no darker/blank band on refresh.
+          background: "var(--background)",
         }}
       />
 
