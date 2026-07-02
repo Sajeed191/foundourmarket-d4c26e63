@@ -38,6 +38,7 @@ export function HeroCarousel({ featured, trending, bestSellers, newArrivals, chi
   });
 
   const ffJsAnimations = useFlag("jsAnimations");
+  const motionTier = useMotionTier();
 
   const items = useMemo(() => {
     const pool =
