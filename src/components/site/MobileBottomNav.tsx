@@ -289,7 +289,7 @@ export function MobileBottomNav() {
 
   const items: { to?: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number; onClick?: () => void }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
-    { label: "Browse", icon: Search, match: (p) => p === "/search" || p.startsWith("/category"), onClick: openSearch },
+    { to: "/search", label: "Browse", icon: Search, match: (p) => p === "/search" || p.startsWith("/category") },
     { to: "/wishlist", label: "Saved", icon: Heart, match: (p) => p === "/wishlist", badge: slugs.size },
     { to: "/cart", label: "Cart", icon: ShoppingBag, match: (p) => p === "/cart", badge: count },
     { to: user ? "/account" : "/auth", label: "Account", icon: User, match: (p) => p === "/account" || p === "/auth", badge: user ? supportUnread : 0 },
