@@ -545,7 +545,7 @@ function Home() {
           {/* warm ambient orange lighting matching the accent */}
           <div className="absolute left-1/2 -top-[6%] -translate-x-1/2 h-[420px] w-[140%] opacity-70" style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.74 0.19 49 / 0.16), transparent 60%)" }} />
         </div>
-        <div className="relative z-10 mx-auto max-w-3xl px-1 pt-6 sm:pt-10 pb-2 text-center">
+        <div className="relative z-10 mx-auto max-w-3xl px-1 pt-1 sm:pt-4 pb-2 text-center">
           <h1 className="font-display font-semibold tracking-[-0.02em] leading-[1.02] text-[clamp(2.6rem,11vw,4.5rem)]">
             <span className="block text-foreground">Whatever you need.</span>
             <span className="block bg-gradient-to-r from-foreground via-accent to-accent bg-clip-text text-transparent">
