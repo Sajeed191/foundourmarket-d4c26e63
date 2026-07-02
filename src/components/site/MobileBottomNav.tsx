@@ -95,15 +95,15 @@ export function MobileBottomNav() {
                     compact ? "scale-[1.08]" : "scale-100"
                   }`}
                 >
-                  {/* Soft energy pulse sitting behind the active icon — no ring/border */}
+                  {/* Energy pulse field behind the active icon — soft radial bloom, breathing */}
                   <span
                     aria-hidden
-                    className={`absolute inset-0 rounded-full blur-[6px] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-                      active
-                        ? "scale-105 bg-accent/25 opacity-100"
-                        : "scale-50 opacity-0"
+                    className={`absolute inset-0 rounded-full blur-[7px] transition-opacity duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] [background:radial-gradient(circle,color-mix(in_oklab,var(--color-accent)_55%,transparent)_0%,transparent_70%)] ${
+                      active ? "opacity-100 animate-energy-breathe" : "opacity-0"
                     }`}
+
                   />
+
 
 
                   <span className="relative">

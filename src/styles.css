@@ -938,11 +938,21 @@ html[data-android="true"] .nav-glass {
 .animate-search-pulse {
   animation: search-pulse 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 1;
 }
+/* Slow, subtle "breathing" bloom for the active dock tab — opacity/scale only. */
+@keyframes energy-breathe {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+.animate-energy-breathe {
+  animation: energy-breathe 3.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .animate-nav-rematerialize,
   .animate-panel-reveal,
-  .animate-search-pulse { animation: none !important; }
+  .animate-search-pulse,
+  .animate-energy-breathe { animation: none !important; }
 }
+
 
 
 
