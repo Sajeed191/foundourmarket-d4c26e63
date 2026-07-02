@@ -254,6 +254,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "/fonts/space-grotesk-latin-600-normal.woff2",
         crossOrigin: "anonymous",
       },
+      // Preload the body weight used by above-the-fold labels (feature/trust
+      // cards render in DM Sans 500). Without this, Chrome paints them in the
+      // fallback font on cold refresh, then swaps once DM Sans loads — the
+      // width change reflows the centered labels into a first-paint flicker.
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: "/fonts/dm-sans-latin-500-normal.woff2",
+        crossOrigin: "anonymous",
+      },
       // Warm up the data API connection (DNS + TLS) on every page so the very
       // first products/categories query — which happens on most routes — skips
       // the cold-connection handshake and returns faster.
