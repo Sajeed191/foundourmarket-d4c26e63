@@ -175,7 +175,7 @@ export function Nav() {
       if (settleTimer) clearTimeout(settleTimer);
       settleTimer = setTimeout(() => {
         setScrollMode(window.scrollY < 30 ? "top" : "up");
-      }, 150);
+      }, scrollDampeningMs());
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(update);
