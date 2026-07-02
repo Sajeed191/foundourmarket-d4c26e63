@@ -684,7 +684,7 @@ function Home() {
                   className="group relative flex h-full flex-col overflow-hidden text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
                 >
 
-                  <div className="relative mx-2 mt-2 mb-1 aspect-square grid place-items-center overflow-hidden rounded-xl bg-muted/60">
+                  <div className="relative mx-2 mt-2 mb-3 aspect-square grid place-items-center overflow-hidden rounded-xl bg-muted/60">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
                     <span className="relative grid size-10 sm:size-12 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
                       <ArrowRight className="size-4 sm:size-5 transition-transform duration-300 group-hover:translate-x-1" />
