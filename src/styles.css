@@ -932,37 +932,24 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
    (Lightning CSS adds the -webkit- prefix). On Android the blur is dropped and a
    solid surface is used instead, so there is no GPU compositing regression. */
 .nav-glass {
-  /* Elevated floating-dock surface. Uses an explicitly lighter tone than the
-     page background (--card is only marginally above --background in dark, which
-     made the dock read as a flat black block on refresh). Building the surface
-     from an elevated oklch tone with real translucency keeps it clearly floating
-     above the page and never collapses to pure black. */
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, oklch(0.235 0.012 260) 88%, transparent),
-    color-mix(in oklab, oklch(0.2 0.011 260) 90%, transparent)
-  );
-  border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  /* SINGLE unified bottom-nav surface. One fixed color for every theme and
+     every state (idle, scroll, compact, refresh) so the dock never switches
+     tone or flashes on hydration. Constant rgba(20,20,20,0.75) + blur. */
+  background: rgba(20, 20, 20, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--foreground) 10%, transparent),
-    0 10px 34px -16px oklch(0 0 0 / 0.7);
-}
-/* Blur is emitted for NON-Android only, as a positive rule. Relying on the old
-   `html[data-android="true"] .nav-glass { backdrop-filter: none !important }`
-   override was unsafe: Lightning CSS strips `backdrop-filter: none !important`
-   at build time, so on real Android the base blur survived and created a
-   framebuffer-READBACK compositor layer over the bottom of the first viewport
-   (a transient-banding source on hard refresh). Adding the value in a scoped
-   selector is preserved by the minifier and is simply absent on Android. */
-html:not([data-android="true"]) .nav-glass {
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    0 10px 34px -16px rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(18px) saturate(140%);
 }
 html[data-android="true"] .nav-glass {
-  /* Android drops backdrop blur, so use a solid elevated surface (still clearly
-     lighter than the page background — never near-black). */
-  background: oklch(0.225 0.012 260) !important;
-  box-shadow: 0 8px 24px -14px oklch(0 0 0 / 0.6) !important;
+  /* Android drops backdrop blur — keep the SAME color, just make it opaque so
+     there is no readback layer and no visual difference in tone. */
+  background: rgb(24, 24, 24) !important;
+  backdrop-filter: none;
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.6);
 }
+
 
 /* ===== Premium nav + search micro-interactions =====
    Transform/opacity only — safe on Chrome Android compositor. */
