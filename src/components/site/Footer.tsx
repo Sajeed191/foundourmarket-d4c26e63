@@ -112,7 +112,7 @@ export function Footer() {
             aria-label="FoundOurMarket home"
             className="inline-block text-lg font-display font-medium tracking-tight text-foreground/90 hover:opacity-80 transition-opacity duration-200"
           >
-            FoundOurMarket
+            <BrandName />
           </Link>
           <p className="mt-2 text-[13px] text-muted-foreground/45 font-light">
             Built for precision global commerce.
