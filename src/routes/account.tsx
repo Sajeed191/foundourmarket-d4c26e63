@@ -378,7 +378,7 @@ function AccountPage() {
               }}
             />
           </div>
-          <div className="relative p-3.5 sm:p-4 lg:p-5">
+          <div className="relative p-4 sm:p-5">
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar with online status */}
               <div className="relative shrink-0 animate-float-soft">
@@ -403,7 +403,7 @@ function AccountPage() {
                 <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {greeting().text} {greeting().emoji}
                 </p>
-                <h1 className="mt-0.5 text-xl leading-tight sm:text-2xl lg:text-3xl font-display font-semibold tracking-tight truncate">
+                <h1 className="mt-0.5 text-2xl leading-tight sm:text-3xl font-display font-semibold tracking-tight truncate">
                   Welcome back, <span className="text-gradient-ember">{firstName}</span>
                 </h1>
                 <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">{user?.email}</p>
@@ -441,7 +441,7 @@ function AccountPage() {
         {/* 2 — OVERVIEW */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
           <SectionHeader title="Overview" eyebrow="Your account at a glance" />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[320px]:grid-cols-2 gap-3 sm:gap-4">
             <OverviewCard icon={Package} label="Total Orders" value={stats.count} loading={!orders} to="/account/orders" tone="amber" />
             <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} to="/wishlist" tone="rose" />
             <OverviewCard icon={ShoppingBag} label="Cart Items" value={cartCount} to="/cart" tone="blue" />
@@ -452,7 +452,7 @@ function AccountPage() {
         {/* 3 — QUICK ACTIONS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }}>
           <SectionHeader title="Quick actions" eyebrow="Jump to" />
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             <ActionCard to="/account/orders" icon={Package} title="Orders" subtitle="Track & invoices" badge={stats.active} />
             <ActionCard to="/wishlist" icon={Heart} title="Wishlist" subtitle="Saved items" badge={wishSlugs.size} />
             <ActionCard to="/account/addresses" icon={MapPin} title="Addresses" subtitle="Shipping & billing" />
@@ -475,7 +475,7 @@ function AccountPage() {
 
         {/* 5 — FOOTER ACTIONS */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }} className="pt-1">
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <FooterAction icon={HelpCircle} label="Support" to="/account/support" />
             <FooterAction icon={LifeBuoy} label="FAQ" to="/help" />
             <FooterAction icon={MessageCircle} label="Contact" onClick={() => openCrispChat()} />
@@ -538,7 +538,7 @@ function OverviewCard({
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.25, ease }}
-      className={`group h-full w-full relative overflow-hidden rounded-2xl p-3.5 sm:p-5 card-premium transition-all ${
+      className={`group h-full w-full relative overflow-hidden rounded-2xl p-4 sm:p-5 card-premium transition-all ${
         accent ? "shadow-[var(--shadow-glow)]" : "hover:shadow-[var(--shadow-soft)]"
       }`}
     >
@@ -559,7 +559,7 @@ function OverviewCard({
         <AnimatedNumber
           value={value}
           formatter={formatter}
-          className="relative block text-xl sm:text-3xl font-display font-semibold tabular-nums text-foreground"
+          className="relative block text-2xl sm:text-3xl font-display font-semibold tabular-nums text-foreground"
         />
       )}
       <p className="relative text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mt-1.5 truncate">{label}</p>
