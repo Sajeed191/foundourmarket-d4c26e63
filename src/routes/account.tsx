@@ -367,12 +367,12 @@ function AccountPage() {
         <div className="relative z-30">
 
           <motion.header
-            {...(lowMotion ? { initial: false as const } : fadeUp)}
+            initial={false}
             className="border-glow noise-layer glass-reflect relative overflow-hidden rounded-[28px] sm:rounded-3xl glass-strong"
           >
           <div aria-hidden className="absolute inset-0 -z-10">
-            <div className={`absolute -top-32 -right-20 size-[420px] rounded-full opacity-70 ${lowMotion ? "" : "animate-ambient"}`} style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
-            <div className={`absolute -bottom-32 -left-24 size-[360px] rounded-full opacity-60 ${lowMotion ? "" : "animate-glow"}`} style={{ background: "var(--gradient-violet)", filter: "blur(90px)" }} />
+            <div className="absolute -top-32 -right-20 size-[420px] rounded-full opacity-70" style={{ background: "var(--gradient-ember)", filter: "blur(80px)" }} />
+            <div className="absolute -bottom-32 -left-24 size-[360px] rounded-full opacity-60" style={{ background: "var(--gradient-violet)", filter: "blur(90px)" }} />
             <div
               className="absolute inset-0 opacity-[0.05]"
               style={{
@@ -386,16 +386,9 @@ function AccountPage() {
           <div className="relative p-4 sm:p-5">
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar with online status */}
-              <div className={`relative shrink-0 ${lowMotion ? "" : "animate-float-soft"}`}>
+              <div className="relative shrink-0">
                 <motion.div
-                  {...(lowMotion
-                    ? { initial: false as const }
-                    : {
-                        initial: { scale: 0.85, opacity: 0 },
-                        animate: { scale: 1, opacity: 1 },
-                        whileHover: { scale: 1.05 },
-                        transition: { duration: 0.5, ease },
-                      })}
+                  initial={false}
                   className="size-12 sm:size-14 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shadow-[var(--shadow-float)] ring-1 ring-accent/30"
                 >
                   {avatarUrl ? (
@@ -404,7 +397,7 @@ function AccountPage() {
                     <img src={logoSrc} alt="FoundOurMarket logo" className="w-full h-full object-cover" />
                   )}
                 </motion.div>
-                <span aria-hidden className={`pointer-events-none absolute inset-0 -z-10 rounded-2xl blur-xl opacity-60 ${lowMotion ? "" : "animate-glow"}`} style={{ background: "var(--gradient-ember)" }} />
+                <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl blur-xl opacity-60" style={{ background: "var(--gradient-ember)" }} />
                 <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 border-2 border-card shadow-[0_0_10px_oklch(0.7_0.18_150)]" />
               </div>
 
