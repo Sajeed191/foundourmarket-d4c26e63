@@ -90,7 +90,7 @@ export function Footer() {
     return (
       <footer className="relative px-4 sm:px-6 py-4 mobile-page-clearance lg:pb-4 border-t border-white/[0.05] bg-background">
         <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
-          <p className="text-[11px] text-muted-foreground/60 tracking-wide">© 2026 FoundOurMarket</p>
+          <p className="text-[11px] text-muted-foreground/60 tracking-wide">© 2026 <BrandName /></p>
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground/60">
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
