@@ -9,6 +9,8 @@ import {
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
+  BookOpen, Bell,
+
 } from "lucide-react";
 import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
 import { toast } from "sonner";
@@ -706,42 +708,84 @@ const HELP_ARTICLE_COUNT = 14;
 
 /* ---------- account utilities (support + session) ---------- */
 function UtilityCard({
-  icon: Icon, title, desc, badge, badgeTone = "neutral", glow, onClick, lowMotion,
+  icon: Icon, title, desc, badge, badgeTone = "neutral", glow, accent, hint, chips, onClick, lowMotion,
 }: {
   icon: typeof Package; title: string; desc: string;
   badge?: string; badgeTone?: "online" | "offline" | "neutral" | "accent";
-  glow: string; onClick: () => void; lowMotion: boolean;
+  glow: string; accent: string; hint: string; chips?: string[];
+  onClick: () => void; lowMotion: boolean;
 }) {
   const dot = badgeTone === "online" ? "bg-emerald-500" : badgeTone === "offline" ? "bg-amber-500" : badgeTone === "accent" ? "bg-accent" : "bg-muted-foreground";
+  const [ripple, setRipple] = useState<{ x: number; y: number; k: number } | null>(null);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!lowMotion) {
+      const r = e.currentTarget.getBoundingClientRect();
+      setRipple({ x: e.clientX - r.left, y: e.clientY - r.top, k: Date.now() });
+    }
+    onClick();
+  };
+
   return (
     <motion.button
       type="button"
-      onClick={onClick}
-      whileTap={lowMotion ? undefined : { scale: 0.98 }}
-      className="group relative h-full min-h-[132px] flex flex-col text-left card-premium rounded-2xl p-4 sm:p-5 overflow-hidden hover:shadow-[var(--shadow-soft)] transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      onClick={handleClick}
+      whileHover={lowMotion ? undefined : { y: -2 }}
+      whileTap={lowMotion ? undefined : { scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className="group relative h-full min-h-[150px] flex flex-col text-left rounded-[20px] p-4 sm:p-[18px] overflow-hidden bg-white/[0.03] border border-accent/15 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.5)] transition-colors duration-200 hover:border-accent/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
     >
-      <span aria-hidden className="pointer-events-none absolute -top-8 -left-6 size-28 rounded-full blur-2xl opacity-40" style={{ background: glow }} />
-      <div className="relative flex items-start justify-between">
-        <span className="size-11 rounded-xl grid place-items-center bg-accent/10 text-accent ring-1 ring-accent/20 shadow-[0_0_20px_-8px_var(--color-accent)]">
-          <Icon className="size-5" />
+      {/* radial glow behind icon */}
+      <span aria-hidden className="pointer-events-none absolute -top-6 -left-4 size-24 rounded-full blur-2xl opacity-50 transition-opacity duration-200 group-hover:opacity-70" style={{ background: glow }} />
+
+      {/* ripple */}
+      {ripple && (
+        <motion.span
+          key={ripple.k} aria-hidden
+          initial={{ scale: 0, opacity: 0.35 }}
+          animate={{ scale: 4, opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          onAnimationComplete={() => setRipple(null)}
+          className="pointer-events-none absolute size-16 rounded-full -ml-8 -mt-8"
+          style={{ left: ripple.x, top: ripple.y, background: accent }}
+        />
+      )}
+
+      {/* top */}
+      <div className="relative flex items-start justify-between gap-2">
+        <span className="size-12 rounded-2xl grid place-items-center bg-accent/10 text-accent ring-1 ring-accent/25 shadow-[0_0_22px_-8px_var(--color-accent)]">
+          <Icon className="size-[22px]" />
         </span>
-        <ChevronRight className="size-4 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+        {badge && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground ring-1 ring-white/10 whitespace-nowrap">
+            <span className={`size-1.5 rounded-full ${dot} ${badgeTone === "online" ? "animate-pulse" : ""}`} />
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="relative mt-auto pt-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold leading-tight">{title}</p>
-          {badge && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground ring-1 ring-white/10">
-              <span className={`size-1.5 rounded-full ${dot}`} />
-              {badge}
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1 leading-snug">{desc}</p>
+
+      {/* middle */}
+      <div className="relative mt-3">
+        <p className="text-sm font-semibold leading-tight truncate">{title}</p>
+        <p className="text-[11.5px] text-muted-foreground mt-1 leading-snug line-clamp-2">{desc}</p>
+        {chips && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {chips.map((c) => (
+              <span key={c} className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground ring-1 ring-white/10">{c}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* bottom action hint */}
+      <div className="relative mt-auto pt-3 flex items-center gap-1 text-[11px] font-medium text-accent">
+        <span>{hint}</span>
+        <ChevronRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
       </div>
     </motion.button>
   );
 }
+
 
 function Sheet({ open, onClose, children, lowMotion }: { open: boolean; onClose: () => void; children: ReactNode; lowMotion: boolean }) {
   return (
@@ -800,6 +844,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
   const { online, minutes } = resolveSupportStatus(settings);
   const hasWhatsApp = settings.whatsappNumbers.length > 0;
 
+  const [supportOpen, setSupportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -808,6 +853,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   const openLiveChat = () => { loadCrisp().then(() => openCrispChat()).catch(() => openCrispChat()); };
   const emailSupport = () => { window.location.href = "mailto:support@foundourmarket.com"; };
+  const callSupport = () => { setSupportOpen(false); nav({ to: "/contact" }); };
   const openWhatsApp = () => {
     if (!hasWhatsApp) { toast.info("WhatsApp support coming soon"); return; }
     const num = settings.whatsappNumbers[0].replace(/[^0-9]/g, "");
@@ -827,31 +873,64 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
     <>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <UtilityCard
-          icon={LifeBuoy} title="Help & Support" glow="var(--gradient-ember)" lowMotion={lowMotion}
-          desc="Get help from our support team."
+          icon={LifeBuoy} title="Help & Support"
+          glow="var(--gradient-ember)" accent="var(--color-accent)"
+          lowMotion={lowMotion}
+          desc="Get live assistance from our support team."
           badge={online ? "Online" : "Offline"} badgeTone={online ? "online" : "offline"}
-          onClick={() => nav({ to: "/help" })}
+          hint="Open Support"
+          onClick={() => setSupportOpen(true)}
         />
         <UtilityCard
-          icon={Search} title="Help Articles" glow="linear-gradient(135deg, oklch(0.7 0.16 240 / 0.5), transparent 65%)" lowMotion={lowMotion}
-          desc={`Browse ${HELP_ARTICLE_COUNT} answers and guides.`}
-          badge="Updated" badgeTone="accent"
+          icon={BookOpen} title="Help Articles"
+          glow="linear-gradient(135deg, oklch(0.7 0.16 240 / 0.5), transparent 65%)" accent="oklch(0.7 0.16 240)"
+          lowMotion={lowMotion}
+          desc="Browse guides, tutorials and FAQs."
+          badge={`${HELP_ARTICLE_COUNT} Articles`} badgeTone="accent"
+          hint="Browse Articles"
           onClick={() => nav({ to: "/help", hash: "faqs" })}
         />
         <UtilityCard
-          icon={MessageCircle} title="Contact Us" glow="linear-gradient(135deg, oklch(0.72 0.16 160 / 0.5), transparent 65%)" lowMotion={lowMotion}
-          desc="Reach our team anytime."
-          badge={online ? "Online" : "9AM–9PM"} badgeTone={online ? "online" : "neutral"}
+          icon={MessageCircle} title="Contact Us"
+          glow="linear-gradient(135deg, oklch(0.72 0.16 160 / 0.5), transparent 65%)" accent="oklch(0.72 0.16 160)"
+          lowMotion={lowMotion}
+          desc="Choose how you'd like to reach us."
+          chips={[hasWhatsApp ? "WhatsApp" : "Chat", "Email", "Callback"]}
+          hint="Choose Channel"
           onClick={() => setContactOpen(true)}
         />
         <UtilityCard
-          icon={UserCog} title="Account" glow="linear-gradient(135deg, oklch(0.7 0.2 18 / 0.5), transparent 65%)" lowMotion={lowMotion}
-          desc="Manage session & security."
+          icon={UserCog} title="Profile & Security"
+          glow="linear-gradient(135deg, oklch(0.7 0.2 18 / 0.5), transparent 65%)" accent="oklch(0.7 0.2 18)"
+          lowMotion={lowMotion}
+          desc="Manage your account, privacy and devices."
+          hint="Manage Account"
           onClick={() => setAccountOpen(true)}
         />
+
       </div>
 
+      {/* Support hub sheet */}
+      <Sheet open={supportOpen} onClose={() => setSupportOpen(false)} lowMotion={lowMotion}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-display font-semibold text-base leading-tight">Help &amp; Support</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{online ? "We're online now" : "Support hours: 9 AM–9 PM"}</p>
+          </div>
+          <button onClick={() => setSupportOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+            <X className="size-4" />
+          </button>
+        </div>
+        <div className="mt-4 space-y-2">
+          <SheetOption icon={MessageCircle} label="Live Chat" desc={online ? `Usually replies in under ${minutes} min` : "Leave us a message"} onClick={() => { setSupportOpen(false); openLiveChat(); }} />
+          <SheetOption icon={Plus} label="Create Ticket" desc="Report an issue or request" onClick={() => { setSupportOpen(false); nav({ to: "/account/support/new" }); }} />
+          <SheetOption icon={Search} label="Track Ticket" desc="View your open tickets" onClick={() => { setSupportOpen(false); nav({ to: "/account/support" }); }} />
+          <SheetOption icon={PhoneCall} label="Call Support" desc="Request a callback" onClick={callSupport} />
+        </div>
+      </Sheet>
+
       {/* Contact hub sheet */}
+
       <Sheet open={contactOpen} onClose={() => setContactOpen(false)} lowMotion={lowMotion}>
         <div className="flex items-center justify-between">
           <div>
@@ -881,7 +960,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
       {/* Account / session sheet */}
       <Sheet open={accountOpen} onClose={() => setAccountOpen(false)} lowMotion={lowMotion}>
         <div className="flex items-center justify-between">
-          <p className="font-display font-semibold text-base">Account</p>
+          <p className="font-display font-semibold text-base">Profile &amp; Security</p>
           <button onClick={() => setAccountOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
             <X className="size-4" />
           </button>
@@ -897,12 +976,19 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
           </div>
         </div>
 
-        <div className="mt-3 space-y-2">
-          <SheetOption icon={ShieldCheck} label="Manage Security" desc="Password & sign-in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
-          <SheetOption icon={Smartphone} label="Active Devices" desc="Where you're signed in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+        <div className="mt-3 space-y-2 max-h-[52vh] overflow-y-auto pr-1 -mr-1 scrollbar-hide">
+          <SheetOption icon={UserIcon} label="Profile" desc="Name, avatar & details" onClick={() => { setAccountOpen(false); nav({ to: "/account/profile" }); }} />
+          <SheetOption icon={ShieldCheck} label="Security" desc="Password & sign-in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={MapPin} label="Addresses" desc="Shipping & billing" onClick={() => { setAccountOpen(false); nav({ to: "/account/addresses" }); }} />
+          <SheetOption icon={CreditCard} label="Saved Payments" desc="Cards & methods" onClick={() => { setAccountOpen(false); nav({ to: "/account/payments" }); }} />
+          <SheetOption icon={Smartphone} label="Connected Devices" desc="Where you're signed in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={Globe} label="Language" desc="Region & language" onClick={() => { setAccountOpen(false); nav({ to: "/account/preferences" }); }} />
+          <SheetOption icon={Bell} label="Notifications" desc="Alerts & emails" onClick={() => { setAccountOpen(false); nav({ to: "/account/notifications" }); }} />
+          <SheetOption icon={Lock} label="Privacy" desc="Data & privacy controls" onClick={() => { setAccountOpen(false); nav({ to: "/privacy" }); }} />
           <SheetOption icon={ArrowLeftRight} label="Switch Account" desc="Use a different account" onClick={() => { setAccountOpen(false); nav({ to: "/auth" }); }} />
           <SheetOption icon={LogOut} label="Sign Out" tone="danger" onClick={() => setConfirmOpen(true)} />
         </div>
+
       </Sheet>
 
       {/* Sign-out confirmation */}
