@@ -153,14 +153,41 @@ export function Nav() {
   const topNavRef = useRef<HTMLDivElement | null>(null);
   const motionTier = useMotionTier();
   const lowEnd = motionTier === "low";
+  // Live mirror of the search-overlay state so the imperative visibility layer
+  // (which runs on scroll/touch rAF callbacks) never fights the search hide.
+  const searchOpenRef = useRef(searchOpen);
   const forceTopNavVisible = useCallback(() => {
     const topNav = topNavRef.current;
     if (!topNav) return;
+    // While the immersive search surface is open, the nav must stay hidden.
+    // Bailing here prevents scroll/touch callbacks from re-showing it.
+    if (searchOpenRef.current) return;
     topNav.style.display = "block";
     topNav.style.opacity = "1";
     topNav.style.visibility = "visible";
+    topNav.style.pointerEvents = "";
     topNav.style.transform = "translateY(0)";
   }, []);
+
+  // Single source of truth for hiding/restoring the top nav around search.
+  // The nav is NEVER unmounted (a remount stranded imperative inline styles and
+  // the scroll machine, leaving the header stuck over the hero). Instead we
+  // toggle it imperatively and fully reset it the instant search closes.
+  useEffect(() => {
+    searchOpenRef.current = searchOpen;
+    const topNav = topNavRef.current;
+    if (!topNav) return;
+    if (searchOpen) {
+      topNav.style.display = "none";
+      topNav.style.visibility = "hidden";
+      topNav.style.pointerEvents = "none";
+    } else {
+      setScrollMode("visible");
+      lastY.current = Math.max(window.scrollY, 0);
+      forceTopNavVisible();
+    }
+  }, [searchOpen, forceTopNavVisible]);
+
   // Keep the reserved header spacer exactly as tall as the pinned header in
   // every state (expanded/compact) so there is never an implicit gap or
   // overlap between the fixed top nav and page content.
@@ -255,8 +282,6 @@ export function Nav() {
 
   return (
     <>
-      {!searchOpen && (
-      <>
       <div
         ref={topNavRef}
         data-app-header
@@ -449,8 +474,6 @@ export function Nav() {
           background: "var(--background)",
         }}
       />
-      </>
-      )}
 
 
       {/* Mobile drawer — unified design for all themes (colors adapt per theme) */}
