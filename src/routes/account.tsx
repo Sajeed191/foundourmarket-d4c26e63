@@ -450,7 +450,7 @@ function AccountPage() {
         {/* 2 — OVERVIEW */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
           <SectionHeader title="Overview" eyebrow="Your account at a glance" />
-          <div className="grid grid-cols-1 min-[320px]:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-4">
             <OverviewCard icon={Package} label="Total Orders" value={stats.count} loading={!orders} to="/account/orders" tone="amber" />
             <OverviewCard icon={Heart} label="Wishlist" value={wishSlugs.size} to="/wishlist" tone="rose" />
             <OverviewCard icon={ShoppingBag} label="Cart Items" value={cartCount} to="/cart" tone="blue" />
@@ -532,10 +532,10 @@ function SectionBlock({
 }
 
 const TONES = {
-  amber: { icon: "bg-amber-500/15 text-amber-500", glow: "oklch(0.74 0.19 49)", tint: "linear-gradient(135deg, oklch(0.74 0.19 49 / 0.18), transparent 65%)" },
-  rose: { icon: "bg-rose-500/15 text-rose-500", glow: "oklch(0.7 0.2 18)", tint: "linear-gradient(135deg, oklch(0.7 0.2 18 / 0.18), transparent 65%)" },
-  blue: { icon: "bg-sky-500/15 text-sky-500", glow: "oklch(0.7 0.16 240)", tint: "linear-gradient(135deg, oklch(0.7 0.16 240 / 0.18), transparent 65%)" },
-  emerald: { icon: "bg-emerald-500/15 text-emerald-500", glow: "oklch(0.72 0.16 160)", tint: "linear-gradient(135deg, oklch(0.72 0.16 160 / 0.18), transparent 65%)" },
+  amber: { icon: "bg-amber-500/10 text-amber-400", glow: "oklch(0.74 0.19 49)", tint: "linear-gradient(135deg, oklch(0.74 0.19 49 / 0.16), transparent 62%)", hover: "0 8px 24px -6px oklch(0.74 0.19 49 / 0.35)" },
+  rose: { icon: "bg-rose-500/10 text-rose-400", glow: "oklch(0.7 0.2 18)", tint: "linear-gradient(135deg, oklch(0.7 0.2 18 / 0.16), transparent 62%)", hover: "0 8px 24px -6px oklch(0.7 0.2 18 / 0.35)" },
+  blue: { icon: "bg-sky-500/10 text-sky-400", glow: "oklch(0.7 0.16 240)", tint: "linear-gradient(135deg, oklch(0.7 0.16 240 / 0.16), transparent 62%)", hover: "0 8px 24px -6px oklch(0.7 0.16 240 / 0.35)" },
+  emerald: { icon: "bg-emerald-500/10 text-emerald-400", glow: "oklch(0.72 0.16 160)", tint: "linear-gradient(135deg, oklch(0.72 0.16 160 / 0.16), transparent 62%)", hover: "0 8px 24px -6px oklch(0.72 0.16 160 / 0.35)" },
 } as const;
 
 function OverviewCard({
@@ -544,17 +544,16 @@ function OverviewCard({
   const t = TONES[tone];
   const inner = (
     <motion.div
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.25, ease }}
-      className={`group h-full w-full relative overflow-hidden rounded-2xl p-4 sm:p-5 card-premium transition-all ${
-        accent ? "shadow-[var(--shadow-glow)]" : "hover:shadow-[var(--shadow-soft)]"
-      }`}
+      style={{ ["--tone-hover" as string]: t.hover }}
+      className="group h-full w-full min-h-[150px] sm:min-h-[164px] relative flex flex-col justify-between overflow-hidden rounded-[20px] p-5 card-premium transition-shadow duration-300 hover:shadow-[var(--tone-hover)]"
     >
       {/* Static tinted wash — cheap, no blur, survives low-end / degrade modes */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-90"
+        className="pointer-events-none absolute inset-0 rounded-[20px] opacity-90"
         style={{ background: t.tint }}
       />
       {/* Soft tinted corner glow (blurred; hidden on constrained GPUs) */}
@@ -563,21 +562,23 @@ function OverviewCard({
         className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
         style={{ background: t.glow }}
       />
-      <div className="relative flex items-center justify-between mb-3">
-        <span className={`size-9 rounded-xl grid place-items-center transition-transform group-hover:scale-105 ${t.icon}`}>
-          <Icon className="size-4" />
-        </span>
+      {/* Icon badge (circular, top-left) */}
+      <span className={`relative flex size-10 items-center justify-center rounded-full transition-transform group-hover:scale-105 ${t.icon}`}>
+        <Icon className="size-5" strokeWidth={2} />
+      </span>
+      {/* Metric + label (bottom) */}
+      <div className="relative mt-auto">
+        {loading ? (
+          <div className="h-8 w-14 rounded-md bg-foreground/5 animate-pulse" />
+        ) : (
+          <AnimatedNumber
+            value={value}
+            formatter={formatter}
+            className="block text-3xl font-display font-bold tracking-tight tabular-nums text-foreground"
+          />
+        )}
+        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground mt-1.5 truncate">{label}</p>
       </div>
-      {loading ? (
-        <div className="h-7 w-12 rounded-md bg-foreground/5 animate-pulse" />
-      ) : (
-        <AnimatedNumber
-          value={value}
-          formatter={formatter}
-          className="relative block text-2xl sm:text-3xl font-display font-semibold tabular-nums text-foreground"
-        />
-      )}
-      <p className="relative text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground mt-1.5 truncate">{label}</p>
     </motion.div>
   );
   return to ? <Link to={to} className="block h-full">{inner}</Link> : inner;
