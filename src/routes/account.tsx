@@ -708,42 +708,84 @@ const HELP_ARTICLE_COUNT = 14;
 
 /* ---------- account utilities (support + session) ---------- */
 function UtilityCard({
-  icon: Icon, title, desc, badge, badgeTone = "neutral", glow, onClick, lowMotion,
+  icon: Icon, title, desc, badge, badgeTone = "neutral", glow, accent, hint, chips, onClick, lowMotion,
 }: {
   icon: typeof Package; title: string; desc: string;
   badge?: string; badgeTone?: "online" | "offline" | "neutral" | "accent";
-  glow: string; onClick: () => void; lowMotion: boolean;
+  glow: string; accent: string; hint: string; chips?: string[];
+  onClick: () => void; lowMotion: boolean;
 }) {
   const dot = badgeTone === "online" ? "bg-emerald-500" : badgeTone === "offline" ? "bg-amber-500" : badgeTone === "accent" ? "bg-accent" : "bg-muted-foreground";
+  const [ripple, setRipple] = useState<{ x: number; y: number; k: number } | null>(null);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!lowMotion) {
+      const r = e.currentTarget.getBoundingClientRect();
+      setRipple({ x: e.clientX - r.left, y: e.clientY - r.top, k: Date.now() });
+    }
+    onClick();
+  };
+
   return (
     <motion.button
       type="button"
-      onClick={onClick}
-      whileTap={lowMotion ? undefined : { scale: 0.98 }}
-      className="group relative h-full min-h-[132px] flex flex-col text-left card-premium rounded-2xl p-4 sm:p-5 overflow-hidden hover:shadow-[var(--shadow-soft)] transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      onClick={handleClick}
+      whileHover={lowMotion ? undefined : { y: -2 }}
+      whileTap={lowMotion ? undefined : { scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className="group relative h-full min-h-[150px] flex flex-col text-left rounded-[20px] p-4 sm:p-[18px] overflow-hidden bg-white/[0.03] border border-accent/15 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.5)] transition-colors duration-200 hover:border-accent/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
     >
-      <span aria-hidden className="pointer-events-none absolute -top-8 -left-6 size-28 rounded-full blur-2xl opacity-40" style={{ background: glow }} />
-      <div className="relative flex items-start justify-between">
-        <span className="size-11 rounded-xl grid place-items-center bg-accent/10 text-accent ring-1 ring-accent/20 shadow-[0_0_20px_-8px_var(--color-accent)]">
-          <Icon className="size-5" />
+      {/* radial glow behind icon */}
+      <span aria-hidden className="pointer-events-none absolute -top-6 -left-4 size-24 rounded-full blur-2xl opacity-50 transition-opacity duration-200 group-hover:opacity-70" style={{ background: glow }} />
+
+      {/* ripple */}
+      {ripple && (
+        <motion.span
+          key={ripple.k} aria-hidden
+          initial={{ scale: 0, opacity: 0.35 }}
+          animate={{ scale: 4, opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          onAnimationComplete={() => setRipple(null)}
+          className="pointer-events-none absolute size-16 rounded-full -ml-8 -mt-8"
+          style={{ left: ripple.x, top: ripple.y, background: accent }}
+        />
+      )}
+
+      {/* top */}
+      <div className="relative flex items-start justify-between gap-2">
+        <span className="size-12 rounded-2xl grid place-items-center bg-accent/10 text-accent ring-1 ring-accent/25 shadow-[0_0_22px_-8px_var(--color-accent)]">
+          <Icon className="size-[22px]" />
         </span>
-        <ChevronRight className="size-4 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+        {badge && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground ring-1 ring-white/10 whitespace-nowrap">
+            <span className={`size-1.5 rounded-full ${dot} ${badgeTone === "online" ? "animate-pulse" : ""}`} />
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="relative mt-auto pt-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold leading-tight">{title}</p>
-          {badge && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground ring-1 ring-white/10">
-              <span className={`size-1.5 rounded-full ${dot}`} />
-              {badge}
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1 leading-snug">{desc}</p>
+
+      {/* middle */}
+      <div className="relative mt-3">
+        <p className="text-sm font-semibold leading-tight truncate">{title}</p>
+        <p className="text-[11.5px] text-muted-foreground mt-1 leading-snug line-clamp-2">{desc}</p>
+        {chips && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {chips.map((c) => (
+              <span key={c} className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground ring-1 ring-white/10">{c}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* bottom action hint */}
+      <div className="relative mt-auto pt-3 flex items-center gap-1 text-[11px] font-medium text-accent">
+        <span>{hint}</span>
+        <ChevronRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
       </div>
     </motion.button>
   );
 }
+
 
 function Sheet({ open, onClose, children, lowMotion }: { open: boolean; onClose: () => void; children: ReactNode; lowMotion: boolean }) {
   return (
