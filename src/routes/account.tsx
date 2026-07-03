@@ -21,6 +21,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
+import { useIsLowMotion } from "@/lib/motion-tier";
 const logoSrc = "/logo.webp";
 
 export const Route = createFileRoute("/account")({
@@ -122,6 +123,7 @@ function AccountStatusBanner({ profile }: { profile: Profile | null }) {
 
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
+  const lowMotion = useIsLowMotion();
   const { format } = useRegion();
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
