@@ -9,6 +9,8 @@ import {
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
+  BookOpen, Bell,
+
 } from "lucide-react";
 import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
 import { toast } from "sonner";
