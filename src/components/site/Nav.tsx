@@ -320,7 +320,7 @@ export function Nav() {
               </span>
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="truncate text-[15px] sm:text-xl lg:text-[22px] font-semibold tracking-tight">
-                  FoundOurMarket<span className="text-accent">™</span>
+                  <BrandName />
                 </span>
                 <span
                   className={`overflow-hidden font-mono uppercase tracking-[0.2em] text-accent/80 truncate transition-[max-height,opacity,margin] duration-200 ease-out text-[8px] sm:text-[10px] ${
