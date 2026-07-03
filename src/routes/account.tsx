@@ -123,7 +123,7 @@ function AccountStatusBanner({ profile }: { profile: Profile | null }) {
 
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
-  const lowMotion = useIsLowMotion();
+  const lowMotion = useMotionTier() !== "high";
   const { format } = useRegion();
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
