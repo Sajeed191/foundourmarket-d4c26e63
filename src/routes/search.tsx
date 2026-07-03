@@ -74,7 +74,33 @@ const RPC_SORTS = new Set(["relevance", "rating", "newest"]);
 // so they are fetched in one shot with pagination disabled — like trending.
 const PRICE_SORTS = new Set(["price_asc", "price_desc"]);
 
+// Current 2-hour rotation bucket. Changes every 2 hours so the browse order
+// reshuffles on that cadence but stays stable for everyone within the window.
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+export function rotationSeed(): number {
+  return Math.floor(Date.now() / TWO_HOURS_MS);
+}
+
+// Deterministic seeded shuffle (mulberry32). Same seed + same items => same
+// order, so pagination/re-renders stay consistent within a rotation window.
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const arr = [...items];
+  let s = seed >>> 0;
+  const rand = () => {
+    s |= 0; s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function applyClientSort(
+
   rows: Product[],
   sort: string | undefined,
   discountOf: (p: Product) => number,
@@ -316,6 +342,15 @@ function SearchPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
+  // Rotation bucket drives the every-2-hours reshuffle of the browse order.
+  const [rotBucket, setRotBucket] = useState<number>(() => rotationSeed());
+  useEffect(() => {
+    const id = setInterval(() => {
+      const b = rotationSeed();
+      setRotBucket((prev) => (prev === b ? prev : b));
+    }, 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -468,13 +503,17 @@ function SearchPage() {
     if (search.stock === "in") rows = rows.filter((p) => p.inStock);
     if (search.free === "1") rows = rows.filter((p) => shippingFeeOf(p) <= 0);
     if (search.disc === "1") rows = rows.filter((p) => discountPercent(priceOf(p), compareOf(p)) != null);
-    return applyClientSort(
+    const sorted = applyClientSort(
       rows,
       sort,
       (p) => discountPercent(priceOf(p), compareOf(p)) ?? 0,
       priceOf,
     );
-  }, [rawRows, isTrending, search.stock, search.free, search.disc, sort, shippingFeeOf, compareOf, priceOf]);
+    // Default browse ordering (relevance, no active text search) reshuffles
+    // every 2 hours via the rotation bucket so the catalog stays fresh.
+    const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim();
+    return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
+  }, [rawRows, isTrending, search.stock, search.free, search.disc, search.q, sort, rotBucket, shippingFeeOf, compareOf, priceOf]);
 
 
 
