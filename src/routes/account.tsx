@@ -853,11 +853,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   const openLiveChat = () => { loadCrisp().then(() => openCrispChat()).catch(() => openCrispChat()); };
   const emailSupport = () => { window.location.href = "mailto:support@foundourmarket.com"; };
-  const callSupport = () => {
-    const num = settings.phoneNumbers?.[0];
-    if (num) { window.location.href = `tel:${num.replace(/[^0-9+]/g, "")}`; }
-    else { setSupportOpen(false); nav({ to: "/contact" }); }
-  };
+  const callSupport = () => { setSupportOpen(false); nav({ to: "/contact" }); };
   const openWhatsApp = () => {
     if (!hasWhatsApp) { toast.info("WhatsApp support coming soon"); return; }
     const num = settings.whatsappNumbers[0].replace(/[^0-9]/g, "");
