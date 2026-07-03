@@ -710,6 +710,24 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
     perspective: none !important;
     contain: none !important;
   }
+  /* ROOT-CAUSE FIX — ghost text / stale repaint under the mobile navbar.
+     On phones the frosted blur is intentionally NOT emitted (it caused a
+     Chromium backdrop-readback band on refresh). Without blur, the nav pill's
+     translucent gradient (from-white/6 → black/30) let scrolling page content
+     show straight through, and a semi-transparent FIXED layer is precisely
+     what Android Chromium / Samsung Internet / Firefox mobile fail to repaint
+     reliably during momentum scroll — producing the "ghost text" and
+     stuck-navbar symptoms. Giving the pill an (almost) opaque solid backing
+     removes the see-through path AND lets the browser treat it as a normal
+     opaque compositor layer that repaints cleanly. The gradient still renders
+     on top for the same visual look; only what sits *behind* it changes.
+     Desktop (>=768px) keeps the real blur/glass and is untouched. */
+  [data-app-header] nav {
+    background-color: color-mix(in oklch, var(--background) 96%, black) !important;
+    /* Isolate the pill onto its own paint layer so text underneath can never
+       bleed into it and repaints stay contained to the header. */
+    isolation: isolate;
+  }
   /* While the search overlay is open, fully suppress the top nav (and its
      reserved spacer) so the search is a distraction-free immersive layer.
      Uses display:none to override the header's inline visibility styles. */
