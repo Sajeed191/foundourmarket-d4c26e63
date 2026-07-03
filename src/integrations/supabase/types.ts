@@ -6009,7 +6009,6 @@ export type Database = {
           recommended: boolean | null
           related_products: string[] | null
           replacement_eligible: boolean | null
-          reserved_quantity: number | null
           restock_eta: string | null
           return_eligible: boolean | null
           return_window_days: number | null
@@ -6099,7 +6098,6 @@ export type Database = {
           recommended?: boolean | null
           related_products?: string[] | null
           replacement_eligible?: boolean | null
-          reserved_quantity?: number | null
           restock_eta?: string | null
           return_eligible?: boolean | null
           return_window_days?: number | null
@@ -6189,7 +6187,6 @@ export type Database = {
           recommended?: boolean | null
           related_products?: string[] | null
           replacement_eligible?: boolean | null
-          reserved_quantity?: number | null
           restock_eta?: string | null
           return_eligible?: boolean | null
           return_window_days?: number | null
