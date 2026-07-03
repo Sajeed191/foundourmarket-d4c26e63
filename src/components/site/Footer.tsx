@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
+import { BrandName } from "@/components/site/BrandName";
 
 const EASE = "cubic-bezier(0.2,0.8,0.2,1)";
 
