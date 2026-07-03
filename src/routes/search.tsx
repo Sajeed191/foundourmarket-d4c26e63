@@ -254,7 +254,7 @@ function FilterPanel({
         </div>
       </div>
 
-      {/* Price range slider + presets */}
+      {/* Price range slider */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <SectionLabel>Price</SectionLabel>
@@ -265,20 +265,10 @@ function FilterPanel({
         <PriceRangeSlider
           max={PRICE_MAX}
           value={priceRange}
+          snapPoints={PRICE_SNAP}
           onValueChange={(v) => set({ min: v[0] > 0 ? v[0] : undefined, max: v[1] < PRICE_MAX ? v[1] : undefined })}
           fmt={fmt}
         />
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {pricePresets.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => set(isPresetActive(p) ? { min: undefined, max: undefined } : { min: p.min, max: p.max })}
-              className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all active:scale-95 ${isPresetActive(p) ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/10 hover:text-foreground hover:bg-white/[0.07]"}`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Rating filter — segmented cards */}
