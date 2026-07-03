@@ -137,18 +137,30 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Premium dual-handle price slider: gradient track + live value bubbles. */
+/** Premium dual-handle price slider: gradient track, live value bubbles above
+ *  each handle, and snapping to fixed price bands. */
 function PriceRangeSlider({
   max,
   value,
   onValueChange,
   fmt,
+  snapPoints,
 }: {
   max: number;
   value: [number, number];
   onValueChange: (v: number[]) => void;
   fmt: (usd: number) => string;
+  /** Sorted list of USD values the handles snap to (band edges). */
+  snapPoints: number[];
 }) {
+  const snap = (n: number) =>
+    snapPoints.reduce((best, p) => (Math.abs(p - n) < Math.abs(best - n) ? p : best), snapPoints[0]);
+  const handleChange = (v: number[]) => {
+    let lo = snap(v[0]);
+    let hi = snap(v[1]);
+    if (lo > hi) [lo, hi] = [hi, lo];
+    onValueChange([lo, hi]);
+  };
   return (
     <div className="pt-9 pb-1 px-1">
       <SliderPrimitive.Root
@@ -156,7 +168,7 @@ function PriceRangeSlider({
         max={max}
         step={10}
         value={value}
-        onValueChange={onValueChange}
+        onValueChange={handleChange}
         className="relative flex w-full touch-none select-none items-center"
       >
         <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-white/10">
@@ -173,6 +185,12 @@ function PriceRangeSlider({
           </SliderPrimitive.Thumb>
         ))}
       </SliderPrimitive.Root>
+      {/* Band tick labels under the track */}
+      <div className="mt-3 flex justify-between text-[10px] font-medium tabular-nums text-muted-foreground">
+        {snapPoints.map((p, i) => (
+          <span key={p}>{fmt(p)}{i === snapPoints.length - 1 ? "+" : ""}</span>
+        ))}
+      </div>
     </div>
   );
 }
