@@ -960,7 +960,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
       {/* Account / session sheet */}
       <Sheet open={accountOpen} onClose={() => setAccountOpen(false)} lowMotion={lowMotion}>
         <div className="flex items-center justify-between">
-          <p className="font-display font-semibold text-base">Account</p>
+          <p className="font-display font-semibold text-base">Profile &amp; Security</p>
           <button onClick={() => setAccountOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
             <X className="size-4" />
           </button>
@@ -976,12 +976,19 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
           </div>
         </div>
 
-        <div className="mt-3 space-y-2">
-          <SheetOption icon={ShieldCheck} label="Manage Security" desc="Password & sign-in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
-          <SheetOption icon={Smartphone} label="Active Devices" desc="Where you're signed in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+        <div className="mt-3 space-y-2 max-h-[52vh] overflow-y-auto pr-1 -mr-1 scrollbar-hide">
+          <SheetOption icon={UserIcon} label="Profile" desc="Name, avatar & details" onClick={() => { setAccountOpen(false); nav({ to: "/account/profile" }); }} />
+          <SheetOption icon={ShieldCheck} label="Security" desc="Password & sign-in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={MapPin} label="Addresses" desc="Shipping & billing" onClick={() => { setAccountOpen(false); nav({ to: "/account/addresses" }); }} />
+          <SheetOption icon={CreditCard} label="Saved Payments" desc="Cards & methods" onClick={() => { setAccountOpen(false); nav({ to: "/account/payments" }); }} />
+          <SheetOption icon={Smartphone} label="Connected Devices" desc="Where you're signed in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={Globe} label="Language" desc="Region & language" onClick={() => { setAccountOpen(false); nav({ to: "/account/preferences" }); }} />
+          <SheetOption icon={Bell} label="Notifications" desc="Alerts & emails" onClick={() => { setAccountOpen(false); nav({ to: "/account/notifications" }); }} />
+          <SheetOption icon={Lock} label="Privacy" desc="Data & privacy controls" onClick={() => { setAccountOpen(false); nav({ to: "/privacy" }); }} />
           <SheetOption icon={ArrowLeftRight} label="Switch Account" desc="Use a different account" onClick={() => { setAccountOpen(false); nav({ to: "/auth" }); }} />
           <SheetOption icon={LogOut} label="Sign Out" tone="danger" onClick={() => setConfirmOpen(true)} />
         </div>
+
       </Sheet>
 
       {/* Sign-out confirmation */}
