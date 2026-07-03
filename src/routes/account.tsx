@@ -21,7 +21,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
-import { useIsLowMotion } from "@/lib/motion-tier";
+import { useMotionTier } from "@/lib/motion-tier";
 const logoSrc = "/logo.webp";
 
 export const Route = createFileRoute("/account")({
