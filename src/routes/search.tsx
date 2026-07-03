@@ -342,6 +342,15 @@ function SearchPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
+  // Rotation bucket drives the every-2-hours reshuffle of the browse order.
+  const [rotBucket, setRotBucket] = useState<number>(() => rotationSeed());
+  useEffect(() => {
+    const id = setInterval(() => {
+      const b = rotationSeed();
+      setRotBucket((prev) => (prev === b ? prev : b));
+    }, 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
