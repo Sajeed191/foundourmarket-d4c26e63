@@ -210,7 +210,7 @@ export function StripeTrustSection() {
         style={{ background: "radial-gradient(closest-side,#FF7A00,transparent)" }} />
       <div className="relative">
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-orange-300">Why shop with us</p>
-        <h3 className="mt-1 font-display font-semibold text-lg sm:text-xl">Why Shop With FoundOurMarket™</h3>
+        <h3 className="mt-1 font-display font-semibold text-lg sm:text-xl">Why Shop With <BrandName /></h3>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {TRUST_POINTS.map((p) => (
             <div key={p.label} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
