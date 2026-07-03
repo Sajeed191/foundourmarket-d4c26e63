@@ -551,7 +551,13 @@ function OverviewCard({
         accent ? "shadow-[var(--shadow-glow)]" : "hover:shadow-[var(--shadow-soft)]"
       }`}
     >
-      {/* Soft tinted corner glow */}
+      {/* Static tinted wash — cheap, no blur, survives low-end / degrade modes */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-2xl opacity-90"
+        style={{ background: t.tint }}
+      />
+      {/* Soft tinted corner glow (blurred; hidden on constrained GPUs) */}
       <div
         aria-hidden
         className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
