@@ -490,7 +490,7 @@ export function AdminShell({
                 <Sparkles className="size-3 text-accent-foreground" />
                 <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/15" />
               </span>
-              <span className="font-display text-[13px] tracking-tight truncate max-w-[9.5rem]">FoundOurMarket™</span>
+              <BrandName className="font-display text-[13px] tracking-tight truncate max-w-[9.5rem]" />
             </Link>
             {/* Desktop breadcrumb/title sits in the center slot */}
             <div className="hidden lg:block min-w-0">
