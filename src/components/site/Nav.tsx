@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/lib/wishlist";
 import { useSearchUI } from "@/lib/search-ui";
 import { NotificationBell } from "@/components/site/NotificationBell";
+import { BrandName } from "@/components/site/BrandName";
 import { CurrencySwitcher } from "@/components/site/CurrencySwitcher";
 import { MegaMenu } from "@/components/site/MegaMenu";
 import { supabase } from "@/integrations/supabase/client";
