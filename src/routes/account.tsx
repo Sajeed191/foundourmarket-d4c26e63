@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { openCrispChat } from "@/lib/crisp";
+import { openCrispChat, loadCrisp } from "@/lib/crisp";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, useMotionValue, useTransform, animate, useScroll, AnimatePresence, useMotionValueEvent } from "framer-motion";
 import {
@@ -8,7 +8,11 @@ import {
   HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
+  Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
 } from "lucide-react";
+import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
+import { toast } from "sonner";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useRegion } from "@/lib/region";
@@ -475,15 +479,12 @@ function AccountPage() {
           </motion.section>
         )}
 
-        {/* 5 — FOOTER ACTIONS */}
+        {/* 5 — ACCOUNT UTILITIES */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }} className="pt-1">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <FooterAction icon={HelpCircle} label="Support" to="/account/support" />
-            <FooterAction icon={LifeBuoy} label="FAQ" to="/help" />
-            <FooterAction icon={MessageCircle} label="Contact" onClick={() => openCrispChat()} />
-            <FooterAction icon={LogOut} label="Sign out" onClick={signOut} />
-          </div>
+          <SectionHeader title="Support & account" eyebrow="Utilities" />
+          <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} />
         </motion.section>
+
       </div>
     </div>
   );
@@ -701,7 +702,234 @@ function InsightStat({ label, value, accent, small, truncate }: { label: string;
 }
 
 
+const HELP_ARTICLE_COUNT = 14;
+
+/* ---------- account utilities (support + session) ---------- */
+function UtilityCard({
+  icon: Icon, title, desc, badge, badgeTone = "neutral", glow, onClick, lowMotion,
+}: {
+  icon: typeof Package; title: string; desc: string;
+  badge?: string; badgeTone?: "online" | "offline" | "neutral" | "accent";
+  glow: string; onClick: () => void; lowMotion: boolean;
+}) {
+  const dot = badgeTone === "online" ? "bg-emerald-500" : badgeTone === "offline" ? "bg-amber-500" : badgeTone === "accent" ? "bg-accent" : "bg-muted-foreground";
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={lowMotion ? undefined : { scale: 0.98 }}
+      className="group relative h-full min-h-[132px] flex flex-col text-left card-premium rounded-2xl p-4 sm:p-5 overflow-hidden hover:shadow-[var(--shadow-soft)] transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+    >
+      <span aria-hidden className="pointer-events-none absolute -top-8 -left-6 size-28 rounded-full blur-2xl opacity-40" style={{ background: glow }} />
+      <div className="relative flex items-start justify-between">
+        <span className="size-11 rounded-xl grid place-items-center bg-accent/10 text-accent ring-1 ring-accent/20 shadow-[0_0_20px_-8px_var(--color-accent)]">
+          <Icon className="size-5" />
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+      </div>
+      <div className="relative mt-auto pt-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold leading-tight">{title}</p>
+          {badge && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground ring-1 ring-white/10">
+              <span className={`size-1.5 rounded-full ${dot}`} />
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 leading-snug">{desc}</p>
+      </div>
+    </motion.button>
+  );
+}
+
+function Sheet({ open, onClose, children, lowMotion }: { open: boolean; onClose: () => void; children: ReactNode; lowMotion: boolean }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[95] grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={lowMotion ? { opacity: 0 } : { y: 40, opacity: 0 }}
+            animate={lowMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+            exit={lowMotion ? { opacity: 0 } : { y: 40, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog" aria-modal="true"
+            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-xl p-5 shadow-2xl"
+            style={{ paddingBottom: "calc(var(--mobile-nav-clearance, 0px) + 1.25rem)" }}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SheetOption({ icon: Icon, label, desc, tone = "default", onClick }: { icon: typeof Package; label: string; desc?: string; tone?: "default" | "danger"; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+        tone === "danger"
+          ? "border-red-500/20 bg-red-500/[0.04] hover:bg-red-500/10"
+          : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+      }`}
+    >
+      <span className={`size-10 rounded-xl grid place-items-center shrink-0 ${tone === "danger" ? "bg-red-500/10 text-red-400" : "bg-accent/10 text-accent"}`}>
+        <Icon className="size-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block text-sm font-medium leading-tight ${tone === "danger" ? "text-red-400" : ""}`}>{label}</span>
+        {desc && <span className="block text-[11px] text-muted-foreground mt-0.5 truncate">{desc}</span>}
+      </span>
+      <ChevronRight className={`size-4 shrink-0 ${tone === "danger" ? "text-red-400/60" : "text-muted-foreground"}`} />
+    </button>
+  );
+}
+
+function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void> }) {
+  const nav = useNavigate();
+  const lowMotion = useIsLowMotion();
+  const { settings } = useSupportSettings();
+  const { online, minutes } = resolveSupportStatus(settings);
+  const hasWhatsApp = settings.whatsappNumbers.length > 0;
+
+  const [contactOpen, setContactOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const openLiveChat = () => { loadCrisp().then(() => openCrispChat()).catch(() => openCrispChat()); };
+  const emailSupport = () => { window.location.href = "mailto:support@foundourmarket.com"; };
+  const openWhatsApp = () => {
+    if (!hasWhatsApp) { toast.info("WhatsApp support coming soon"); return; }
+    const num = settings.whatsappNumbers[0].replace(/[^0-9]/g, "");
+    window.open(`https://wa.me/${num}`, "_blank", "noopener,noreferrer");
+  };
+  const copyEmail = async () => {
+    try { await navigator.clipboard.writeText("support@foundourmarket.com"); setCopied("email"); toast.success("Email copied"); setTimeout(() => setCopied(null), 1600); }
+    catch { toast.error("Couldn't copy"); }
+  };
+
+  const doSignOut = async () => {
+    setSigningOut(true);
+    try { await signOut(); } finally { setSigningOut(false); setConfirmOpen(false); setAccountOpen(false); }
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <UtilityCard
+          icon={LifeBuoy} title="Help & Support" glow="var(--gradient-ember)" lowMotion={lowMotion}
+          desc="Get help from our support team."
+          badge={online ? "Online" : "Offline"} badgeTone={online ? "online" : "offline"}
+          onClick={() => nav({ to: "/help" })}
+        />
+        <UtilityCard
+          icon={Search} title="Help Articles" glow="linear-gradient(135deg, oklch(0.7 0.16 240 / 0.5), transparent 65%)" lowMotion={lowMotion}
+          desc={`Browse ${HELP_ARTICLE_COUNT} answers and guides.`}
+          badge="Updated" badgeTone="accent"
+          onClick={() => nav({ to: "/help", hash: "faqs" })}
+        />
+        <UtilityCard
+          icon={MessageCircle} title="Contact Us" glow="linear-gradient(135deg, oklch(0.72 0.16 160 / 0.5), transparent 65%)" lowMotion={lowMotion}
+          desc="Reach our team anytime."
+          badge={online ? "Online" : "9AM–9PM"} badgeTone={online ? "online" : "neutral"}
+          onClick={() => setContactOpen(true)}
+        />
+        <UtilityCard
+          icon={UserCog} title="Account" glow="linear-gradient(135deg, oklch(0.7 0.2 18 / 0.5), transparent 65%)" lowMotion={lowMotion}
+          desc="Manage session & security."
+          onClick={() => setAccountOpen(true)}
+        />
+      </div>
+
+      {/* Contact hub sheet */}
+      <Sheet open={contactOpen} onClose={() => setContactOpen(false)} lowMotion={lowMotion}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-display font-semibold text-base leading-tight">Contact us</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Support hours: Mon–Sun · 9 AM–9 PM</p>
+          </div>
+          <button onClick={() => setContactOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+            <X className="size-4" />
+          </button>
+        </div>
+        {online && (
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-500/20">
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online now
+          </span>
+        )}
+        <div className="mt-4 space-y-2">
+          <SheetOption icon={MessageCircle} label="Live Chat" desc={online ? `Usually replies in under ${minutes} min` : "Leave us a message"} onClick={() => { setContactOpen(false); openLiveChat(); }} />
+          <SheetOption icon={Mail} label="Email" desc="support@foundourmarket.com" onClick={emailSupport} />
+          <SheetOption icon={Smartphone} label="WhatsApp" desc={hasWhatsApp ? "Replies in 5–30 min" : "Coming soon"} onClick={openWhatsApp} />
+          <SheetOption icon={PhoneCall} label="Request a Callback" desc="We'll call you back" onClick={() => { setContactOpen(false); nav({ to: "/contact" }); }} />
+        </div>
+        <button onClick={copyEmail} className="mt-3 w-full inline-flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground transition">
+          {copied === "email" ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />} Copy support email
+        </button>
+      </Sheet>
+
+      {/* Account / session sheet */}
+      <Sheet open={accountOpen} onClose={() => setAccountOpen(false)} lowMotion={lowMotion}>
+        <div className="flex items-center justify-between">
+          <p className="font-display font-semibold text-base">Account</p>
+          <button onClick={() => setAccountOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="size-11 rounded-2xl overflow-hidden grid place-items-center bg-secondary ring-1 ring-accent/30 shrink-0">
+            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <img src={logoSrc} alt="" className="w-full h-full object-cover" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate capitalize">{firstName}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          <SheetOption icon={ShieldCheck} label="Manage Security" desc="Password & sign-in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={Smartphone} label="Active Devices" desc="Where you're signed in" onClick={() => { setAccountOpen(false); nav({ to: "/account/security" }); }} />
+          <SheetOption icon={ArrowLeftRight} label="Switch Account" desc="Use a different account" onClick={() => { setAccountOpen(false); nav({ to: "/auth" }); }} />
+          <SheetOption icon={LogOut} label="Sign Out" tone="danger" onClick={() => setConfirmOpen(true)} />
+        </div>
+      </Sheet>
+
+      {/* Sign-out confirmation */}
+      <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} lowMotion={lowMotion}>
+        <div className="text-center">
+          <span className="mx-auto inline-flex size-12 rounded-2xl items-center justify-center bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
+            <LogOut className="size-6" />
+          </span>
+          <p className="mt-4 font-display font-semibold text-lg">Sign out?</p>
+          <p className="mt-1.5 text-sm text-muted-foreground max-w-xs mx-auto">You will need to sign in again to access your account.</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button onClick={() => setConfirmOpen(false)} className="h-11 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-medium hover:bg-white/[0.07] transition">
+              Cancel
+            </button>
+            <button onClick={doSignOut} disabled={signingOut}
+              className="h-11 rounded-2xl grid place-items-center bg-red-500/90 text-white text-sm font-semibold hover:bg-red-500 disabled:opacity-60 transition">
+              {signingOut ? <Loader2 className="size-4 animate-spin" /> : "Sign Out"}
+            </button>
+          </div>
+        </div>
+      </Sheet>
+    </>
+  );
+}
+
 function FooterAction({ icon: Icon, label, to, onClick }: { icon: typeof Package; label: string; to?: string; onClick?: () => void }) {
+
   const inner = (
     <>
       <span className="size-9 rounded-xl bg-accent/10 text-accent grid place-items-center group-hover:bg-accent/20 transition-colors">
