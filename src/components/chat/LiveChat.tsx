@@ -192,12 +192,16 @@ export function LiveChat() {
     return () => { offMsg(); offTyping(); offAvail(); };
   }, []);
 
-  // Lock body scroll & autoscroll when open.
+  // Lock body scroll, hide top & bottom nav while chat is open.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    document.body.classList.add("hide-bottom-nav");
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.classList.remove("hide-bottom-nav");
+    };
   }, [open]);
 
   useEffect(() => {
