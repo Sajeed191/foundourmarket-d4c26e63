@@ -1,6 +1,6 @@
-import { useRef, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, X, Plus, Check } from "lucide-react";
+import { useRef, useMemo } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronLeft, ChevronRight, X, Zap } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
