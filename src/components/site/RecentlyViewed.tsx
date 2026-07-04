@@ -24,10 +24,7 @@ type Props = {
 /** Minimal recently-viewed card — image, name, price and add button only. */
 function MiniCard({ product }: { product: Product }) {
   const { priceOf } = useRegion();
-  const { add, setQty, items } = useCart();
-  const navigate = useNavigate();
-  const buyLock = useRef(false);
-  const cartQty = items.find((i) => i.slug === product.slug)?.qty ?? 0;
+  const buyNow = useBuyNow();
 
   return (
     <div data-product-card data-android-static-card className="group card-premium product-card-shell overflow-hidden p-2.5 flex flex-col">
@@ -49,13 +46,7 @@ function MiniCard({ product }: { product: Product }) {
         <button
           onClick={(e) => {
             e.preventDefault();
-            if (!product.inStock || buyLock.current) return;
-            buyLock.current = true;
-            window.setTimeout(() => { buyLock.current = false; }, 700);
-            const promise = cartQty > 0 ? setQty(product.slug, 1) : add(product.slug, 1);
-            void Promise.resolve(promise).finally(() => {
-              void navigate({ to: "/cart" });
-            });
+            buyNow(product);
           }}
           aria-label={`Buy ${product.name} now`}
           className="shrink-0 grid place-items-center size-8 rounded-full bg-accent text-accent-foreground transition-colors hover:brightness-110 shadow-[var(--shadow-ember)]"
@@ -64,6 +55,7 @@ function MiniCard({ product }: { product: Product }) {
         </button>
       </div>
     </div>
+
   );
 }
 
