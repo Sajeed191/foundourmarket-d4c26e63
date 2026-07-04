@@ -292,11 +292,11 @@ export function WishlistCard({
           </div>
           {product.inStock ? (
             <button
-              onClick={handleAdd}
-              aria-label={`Add ${product.name} to cart`}
-              className={`relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-colors duration-300 hover:brightness-110 ${justAdded ? "animate-cart-pulse" : ""}`}
+              onClick={handleBuyNow}
+              aria-label={`Buy ${product.name} now`}
+              className="relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-colors duration-300 hover:brightness-110"
             >
-              {justAdded ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+              <Zap className="size-4" strokeWidth={2.5} />
               {cartQty > 0 && (
               <span data-product-text className="product-typography absolute -top-1.5 -right-1.5 grid place-items-center min-w-[16px] h-4 px-1 rounded-full bg-black text-white text-[9px] font-bold tabular-nums border border-white/20">
                   {cartQty}
