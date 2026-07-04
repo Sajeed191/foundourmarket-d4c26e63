@@ -196,6 +196,18 @@
   --gold: #ffc857;
 }
 
+/* Keyboard focus rings for every interactive control on the product page and
+   its sticky purchase dock. Uses outline + offset (no box-model change) so
+   there is zero layout shift, and only shows for keyboard users. */
+[data-product-page] a:focus-visible,
+[data-product-page] button:focus-visible,
+[data-product-cta] a:focus-visible,
+[data-product-cta] button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 9999px;
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
