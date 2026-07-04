@@ -1599,9 +1599,14 @@ html[data-android="true"] [data-product-image] {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  /* No translateZ(0)/backface-visibility here: on constrained Android GPUs a
+     permanent GPU layer PER image (there can be dozens on screen) is the actual
+     cause of scroll-time tile corruption — banding, duplicated pixels, stale
+     tiles that clear on refresh. The image now rasters inside the flat,
+     CPU-composited grid layer defined by the rule below (no per-image
+     promotion), which is compositor-safe. */
 }
+
 
 /* The grid stays a single flat CPU-composited layer instead of promoting. */
 html[data-android="true"] [data-product-grid],
