@@ -374,21 +374,13 @@ function ProductPage() {
     add(product.slug, qty);
     toast.success(`${product.name} added to cart`);
   };
-  // Buy Now is fully independent from Add to Cart. Add to Cart ACCUMULATES
-  // (line += qty); Buy Now SETS the line to EXACTLY the selected qty so it is
-  // idempotent — clicking it repeatedly (or after Back navigation) never
-  // increments a stale persisted quantity. A short ref lock swallows rapid
-  // double-taps that would otherwise fire two writes before navigation.
-  const buyNowLock = useRef(false);
+  // Buy Now uses the single centralized handler (see useBuyNow): it purchases
+  // EXACTLY the selected `qty`, SETS the line rather than accumulating (so it is
+  // idempotent across repeat clicks, Back navigation, and refresh), and is
+  // guarded by a shared double-tap lock. `navigate: false` lets the wrapping
+  // <Link to="/cart"> own routing so the page's existing markup is unchanged.
   const handleBuyNow = () => {
-    if (isOOS || buyNowLock.current) return;
-    buyNowLock.current = true;
-    window.setTimeout(() => {
-      buyNowLock.current = false;
-    }, 700);
-    const inCart = items.some((i) => i.slug === product.slug);
-    if (inCart) setCartQty(product.slug, qty);
-    else add(product.slug, qty);
+    buyNow(product, { qty, disabled: isOOS, navigate: false });
   };
   const handleShare = () => {
     if (typeof window === "undefined") return;
