@@ -272,7 +272,7 @@ function ProductPage() {
   // Computed on the client only. Rendering a date range during SSR causes a
   // hydration mismatch whenever the server and client evaluate `new Date()` on
   // different sides of a day/timezone boundary, so we defer to after mount.
-  const [deliveryWindow, setDeliveryWindow] = useState("5–10 business days");
+  const [deliveryWindow, setDeliveryWindow] = useState("");
   useEffect(() => {
     const start = new Date();
     start.setDate(start.getDate() + 3);
