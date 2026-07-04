@@ -206,29 +206,15 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
 const QuickViewButton = memo(QuickViewButtonImpl);
 
 function BuyNowButtonImpl({ product }: { product: Product }) {
-  const qty = useCartQty(product.slug);
-  const { add, setQty } = useCartActions();
-  const navigate = useNavigate();
-  const lock = useRef(false);
+  const buyNow = useBuyNow();
 
-  // Buy Now purchases EXACTLY 1 unit and is idempotent: it never accumulates a
-  // stale persisted quantity. If the product is already a cart line we SET it to
-  // 1 (overwriting any prior value from context/localStorage/DB); otherwise we
-  // add a single unit. A short ref lock swallows rapid double-taps so we never
-  // fire duplicate writes/navigations before the route change lands. This also
-  // makes the flow correct after Back navigation and refreshes since we read the
-  // live persisted qty at click time and overwrite rather than increment.
+  // Delegates to the single centralized Buy Now handler (see useBuyNow).
   const onBuyNow = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.inStock || lock.current) return;
-    lock.current = true;
-    window.setTimeout(() => { lock.current = false; }, 700);
-    const promise = qty > 0 ? setQty(product.slug, 1) : add(product.slug, 1);
-    void Promise.resolve(promise).finally(() => {
-      void navigate({ to: "/cart" });
-    });
-  }, [add, setQty, navigate, product.slug, product.inStock, qty]);
+    buyNow(product);
+  }, [buyNow, product]);
+
 
   const gradient = "linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%)";
   const glow = "0 6px 18px -4px rgba(255,122,0,0.45)";
