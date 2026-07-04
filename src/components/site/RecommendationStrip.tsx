@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+
 import { fetchProductsBySlugs, type Product } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
 import { ProductRail } from "./ProductRail";
