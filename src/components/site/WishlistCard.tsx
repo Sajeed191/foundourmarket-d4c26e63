@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Heart, Zap, Eye, TrendingDown } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { Price } from "@/components/site/Price";
 import { useCart } from "@/lib/cart";
+import { useBuyNow } from "@/lib/use-buy-now";
 import { useWishlist } from "@/lib/wishlist";
 
 import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
