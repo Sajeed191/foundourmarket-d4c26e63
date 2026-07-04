@@ -197,7 +197,8 @@ function ProductPage() {
   // customer purchase UI (sticky Buy Now dock) so staff aren't shown a shopping
   // bar while editing. Customers never reach this state.
   const [editorOpen, setEditorOpen] = useState(false);
-  const { add, setQty: setCartQty, items } = useCart();
+  const { add } = useCart();
+  const buyNow = useBuyNow();
   const { record } = useRecentlyViewed();
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
   const { has: inWishlist, toggle: toggleWishlist } = useWishlist();
