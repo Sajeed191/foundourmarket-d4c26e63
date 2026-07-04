@@ -802,7 +802,7 @@ function ProductPage() {
 
             <Link
               to="/cart"
-              onClick={() => add(product.slug, qty)}
+              onClick={handleBuyNow}
               className="hidden sm:block text-center w-full glass-strong text-foreground font-semibold py-3.5 rounded-full text-xs uppercase tracking-widest hover:bg-white/10 hover:-translate-y-0.5 transition-all mb-8"
             >
               Buy Now
