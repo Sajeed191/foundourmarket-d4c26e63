@@ -1,11 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Heart, Star, ArrowRight, Zap } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
 import { useRegion } from "@/lib/region";
-import { useCartActions, useCartQty } from "@/lib/cart";
 import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
+import { useBuyNow } from "@/lib/use-buy-now";
 import { Price } from "@/components/site/Price";
 import { ProductImage } from "@/components/site/ProductImage";
 import { formatSold } from "@/lib/format-sold";
