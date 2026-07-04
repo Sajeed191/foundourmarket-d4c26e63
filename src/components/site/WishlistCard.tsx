@@ -72,13 +72,7 @@ export function WishlistCard({
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!product.inStock || buyLock.current) return;
-    buyLock.current = true;
-    window.setTimeout(() => { buyLock.current = false; }, 700);
-    const promise = cartQty > 0 ? setQty(product.slug, 1) : add(product.slug, 1);
-    void Promise.resolve(promise).finally(() => {
-      void navigate({ to: "/cart" });
-    });
+    buyNow(product);
   };
 
 
