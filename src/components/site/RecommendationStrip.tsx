@@ -11,7 +11,7 @@ type Props = {
   subtitle?: string;
 };
 
-export function RecommendationStrip({ title, slugs, icon, subtitle }: Props) {
+export function RecommendationStrip({ title, slugs, subtitle }: Props) {
   const [products, setProducts] = useState<Product[] | null>(null);
 
   useEffect(() => {
@@ -25,14 +25,11 @@ export function RecommendationStrip({ title, slugs, icon, subtitle }: Props) {
     <section className="py-6 sm:py-8 scroll-mt-24">
       <div className="flex items-end justify-between mb-3 sm:mb-4 px-1">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1.5">
-            {icon ?? <Sparkles className="size-3" />}
-            <span>For you</span>
-          </div>
           <h2 className="text-lg sm:text-2xl md:text-3xl font-display font-semibold tracking-tight">{title}</h2>
           {subtitle && <p className="text-[11px] sm:text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </div>
+
       {!products ? (
         <>
           <div className="sm:hidden -mx-4 flex gap-2.5 overflow-hidden px-4">
