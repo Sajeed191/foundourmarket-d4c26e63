@@ -685,10 +685,12 @@ function ProductPage() {
                         key={v.id}
                         onClick={() => !oos && setVariantId(v.id)}
                         disabled={oos}
-                        className={`px-4 py-2 rounded-full text-xs border transition-colors ${sel ? "border-accent text-accent bg-accent/10" : "border-border hover:border-accent/50"} disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through`}
+                        aria-pressed={sel}
+                        className={`min-h-11 px-4 py-2.5 rounded-full text-xs border transition-all active:scale-95 ${sel ? "border-accent text-accent bg-accent/10 shadow-[var(--shadow-ember)]" : "border-border hover:border-accent/50"} disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through`}
                       >
                         {v.name}
                       </button>
+
                     );
                   })}
                 </div>
