@@ -537,11 +537,15 @@ function RootComponent() {
  *   - AuthProvider         (required: RegionProvider + WishlistProvider read useAuth)
  *   - RegionProvider       (required: ProductCard calls useRegion for pricing)
  *   - WishlistProvider     (required: ProductCard calls useWishlist* hooks)
+ *   - AdminModeProvider    (required: ProductCard mounts ProductCardAdminControlsGate,
+ *                           which calls useAdminMode and THROWS without it — the only
+ *                           entry from the "excluded" list that ProductCard strictly
+ *                           needs to render, kept as a hard dependency)
  *   - <Outlet />           (renders ProductCard → ProductImage inside a plain div)
  *
  * Deliberately EXCLUDED (present on every production route via <AppRoot />):
  *   ThemeProvider, GraphicsCompatProvider, NotificationsProvider,
- *   WishlistAlertsProvider, CartProvider, AdminModeProvider,
+ *   WishlistAlertsProvider, CartProvider,
  *   CommandCenterProvider, LayoutMetricsProvider, BadgeEngineProvider,
  *   SearchUIProvider, Nav (header), Footer, MobileBottomNav (bottom nav),
  *   DeferredShell (live chat, region modal, admin tooling, compare tray,
