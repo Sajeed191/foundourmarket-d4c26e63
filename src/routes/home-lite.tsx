@@ -49,13 +49,19 @@ import { useProducts } from "@/lib/use-products";
 import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { ProductCard } from "@/components/site/ProductCard";
-import { DiagnosticProductCard, DIAG_FEATURE_LABELS, type DiagFeature } from "@/components/site/DiagnosticProductCard";
+import {
+  DiagnosticProductCard,
+  DIAG_FEATURE_LABELS,
+  ROUND_TECHNIQUE_LABELS,
+  type DiagFeature,
+  type RoundTechnique,
+} from "@/components/site/DiagnosticProductCard";
 import { Reveal } from "@/components/site/Reveal";
 import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
 // ⇩ Flip this to isolate the exact trigger (see the table above).
-const TEST_STAGE: number = 18;
+const TEST_STAGE: number = 20;
 
 // Maps a diagnostic stage (9–19) to the single feature disabled on the clone.
 const DIAG_STAGE_FEATURE: Record<number, DiagFeature> = {
@@ -70,6 +76,18 @@ const DIAG_STAGE_FEATURE: Record<number, DiagFeature> = {
   17: "gradients",
   18: "shadows",
   19: "filters",
+};
+
+// Stages 20+ keep the FULL clone (nothing disabled) but change HOW the rounded
+// look is produced, to keep rounded cards while avoiding the overflow:hidden
+// clip that corrupts Chrome 149. Test one technique at a time.
+//   20 → (1) Keep border-radius, remove overflow:hidden   ← implemented now
+//   21 → (2) Move rounded corners to an inner wrapper       (not yet implemented)
+//   22 → (3) Clip only the image, not the card             (not yet implemented)
+//   23 → (4) Replace clipping with a CSS mask              (not yet implemented)
+//   24 → (5) Rectangular card; only image + buttons rounded (not yet implemented)
+const DIAG_STAGE_ROUND: Record<number, RoundTechnique> = {
+  20: "radiusNoClip",
 };
 
 export const Route = createFileRoute("/home-lite")({
@@ -128,7 +146,10 @@ function HomeLite() {
           : trending; // stages 2, 6, 7, 8, 9–19 use the full set
   const singleColumn = TEST_STAGE === 7;
   const usePlaceholders = TEST_STAGE === 6;
-  const diagFeature: DiagFeature | null = TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
+  // Rounding-technique stages (20+) use the full clone with a technique applied.
+  const diagRound: RoundTechnique | null = TEST_STAGE >= 20 ? (DIAG_STAGE_ROUND[TEST_STAGE] ?? null) : null;
+  const diagFeature: DiagFeature | null =
+    TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
   const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
@@ -215,12 +236,16 @@ function HomeLite() {
             </div>
           </Reveal>
 
-          {/* Diagnostic banner — states exactly which feature is isolated. */}
-          {diagFeature && (
+          {/* Diagnostic banner — states exactly which feature/technique is isolated. */}
+          {diagRound ? (
+            <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[13px] font-medium text-accent">
+              Diagnostic stage {TEST_STAGE}: {ROUND_TECHNIQUE_LABELS[diagRound]}
+            </p>
+          ) : diagFeature ? (
             <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[13px] font-medium text-accent">
               Diagnostic stage {TEST_STAGE}: {DIAG_FEATURE_LABELS[diagFeature]}
             </p>
-          )}
+          ) : null}
 
           {/* Card area — gated by stage. Stage 3 renders nothing below the heading. */}
           {trendingCards.length > 0 && (
@@ -234,6 +259,9 @@ function HomeLite() {
                         aria-hidden
                         className="h-full w-full rounded-3xl bg-accent/25 ring-1 ring-white/10 min-h-[240px]"
                       />
+                    ) : diagRound ? (
+                      // Stages 20+: full clone with a rounding TECHNIQUE applied.
+                      <DiagnosticProductCard product={p} disable="none" round={diagRound} />
                     ) : diagFeature ? (
                       // Stages 9–19: temporary diagnostic clone with one feature off.
                       <DiagnosticProductCard product={p} disable={diagFeature} />

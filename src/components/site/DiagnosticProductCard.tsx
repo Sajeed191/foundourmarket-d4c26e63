@@ -50,12 +50,35 @@ export const DIAG_FEATURE_LABELS: Record<DiagFeature, string> = {
   filters: "All backdrop/filter effects OFF",
 };
 
+/**
+ * Rounding technique under test. All keep the visual rounded appearance while
+ * changing HOW the rounding is achieved, to avoid the outer-card
+ * overflow:hidden clip that triggers Chrome 149 Android tile corruption.
+ */
+export type RoundTechnique =
+  | "clip" // production baseline: outer card border-radius + overflow:hidden
+  | "radiusNoClip" // (1) keep outer border-radius, remove overflow:hidden
+  | "innerWrapper" // (2) outer card square+visible; inner wrapper does radius+clip
+  | "imageOnly" // (3) clip only the image, not the card
+  | "mask" // (4) replace clipping with a CSS mask
+  | "elementsOnly"; // (5) outer card rectangular; only image + buttons rounded
+
+export const ROUND_TECHNIQUE_LABELS: Record<RoundTechnique, string> = {
+  clip: "Baseline: outer border-radius + overflow:hidden (must corrupt)",
+  radiusNoClip: "(1) Keep border-radius, remove overflow:hidden",
+  innerWrapper: "(2) Move rounded corners to an inner wrapper",
+  imageOnly: "(3) Clip only the image, not the card",
+  mask: "(4) Replace clipping with a CSS mask",
+  elementsOnly: "(5) Rectangular card; only image + buttons rounded",
+};
+
 type Props = {
   product: Product;
   disable: DiagFeature;
+  round?: RoundTechnique;
 };
 
-function DiagnosticProductCardImpl({ product, disable }: Props) {
+function DiagnosticProductCardImpl({ product, disable, round = "clip" }: Props) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [justSaved, setJustSaved] = useState(false);
 
@@ -72,11 +95,26 @@ function DiagnosticProductCardImpl({ product, disable }: Props) {
   const shellShadow = off("shadows")
     ? "none"
     : "0 8px 24px rgba(0,0,0,0.35)";
-  const shellRadius = off("rounding") ? "0px" : "22px";
-  const shellClip = off("rounding") ? "visible" : "hidden";
 
-  // ── Media: rounding, image, fade ──
-  const mediaRadius = off("rounding") ? "0px" : undefined;
+  // Baseline (production-equivalent) rounding/clipping.
+  let shellRadius = off("rounding") ? "0px" : "22px";
+  let shellClip: CSSProperties["overflow"] = off("rounding") ? "visible" : "hidden";
+  // Media clip: whether the white image tile clips its overflow.
+  let mediaClip: CSSProperties["overflow"] = off("rounding") ? "visible" : "hidden";
+  let mediaRadius: string | undefined = off("rounding") ? "0px" : undefined;
+
+  // ── Rounding-technique overrides (only when a technique is under test) ──
+  // TECHNIQUE 1 — keep the outer border-radius but REMOVE overflow:hidden so
+  // the compositor never has to clip the outer card layer.
+  if (round === "radiusNoClip") {
+    shellRadius = "22px";
+    shellClip = "visible";
+    // Keep the media tile itself clipped so the image corners still look round.
+    mediaClip = "hidden";
+    mediaRadius = undefined;
+  }
+
+
 
   // ── Badge: gradient vs solid ──
   const discountBadgeStyle: CSSProperties = off("gradients")
@@ -114,7 +152,7 @@ function DiagnosticProductCardImpl({ product, disable }: Props) {
           className="relative aspect-square w-full p-[1.5%]"
           style={{
             background: "#ffffff",
-            overflow: off("rounding") ? "visible" : "hidden",
+            overflow: mediaClip,
             borderTopLeftRadius: mediaRadius,
             borderTopRightRadius: mediaRadius,
           }}
