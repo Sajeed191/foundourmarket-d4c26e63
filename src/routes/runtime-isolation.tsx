@@ -244,6 +244,16 @@ function HomeSections({ products }: { products: Product[] }) {
           </div>
         </div>
       )}
+      {STAGE >= 3 && NEW_ARRIVALS_MODE === "boxes" && BOX_MODE === "D" && (
+        // CSS PROPERTY ISOLATION: grid, 8 boxes, one extra property via CSS_TEST.
+        <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={cssTestStyle(i)} />
+            ))}
+          </div>
+        </div>
+      )}
       {STAGE >= 4 && (
         <LazyMount minHeight={360}>
           <FlashDeals />
