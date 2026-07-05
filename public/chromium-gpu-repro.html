@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<!--
+  ==========================================================================
+  CHROMIUM GPU RASTERIZATION CORRUPTION — STANDALONE REPRODUCTION
+  --------------------------------------------------------------------------
+  Single file. Plain HTML/CSS/JS. No React, no Tailwind, no frameworks,
+  no libraries, no build step. Host it anywhere or open it directly on an
+  affected Android Chrome device.
+
+  PURPOSE
+    Reproduce (NOT fix) the rounded-clip / GPU-raster compositing corruption
+    seen on some Android Chromium devices after scrolling a product grid.
+
+  HOW TO USE
+    1. Open on the affected device.
+    2. Scroll to the very bottom, then scroll back up.
+    3. Watch for torn tiles, ghosting, smeared rounded corners, or flicker.
+    4. Toggle ONE feature flag (in the <script> block below) at a time,
+       reload, and repeat to find the smallest combination that corrupts.
+    5. Tap "Copy diagnostics" / "Download JSON" to capture the environment.
+
+  Each CSS/JS section is annotated with the exact browser rendering feature
+  it exercises (rounded clip, texture upload, opacity animation, GPU raster
+  candidate, compositing layer, etc.).
+  ==========================================================================
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Chromium GPU Raster Repro</title>
+<style>
+  /* --------------------------------------------------------------------
+     BASE / RESET
+     Exercises: nothing GPU-specific. Just a dark full-height document so
+     the compositor must produce and recycle many raster tiles on scroll.
+     -------------------------------------------------------------------- */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #05070d;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --------------------------------------------------------------------
+     DIAGNOSTICS OVERLAY (fixed)
+     Exercises: a fixed-position compositing layer that stays on its own
+     GPU layer while the page scrolls underneath — a common overlay that
+     forces a separate render surface.
+     -------------------------------------------------------------------- */
+  #diag {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(8, 10, 18, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255, 138, 0, 0.35);
+    padding: 8px 12px;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #cfe;
+  }
+  #diag .row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  #diag b { color: #FFA52E; font-weight: 700; }
+  #diag .btns { display: flex; gap: 8px; margin-top: 6px; }
+  #diag button {
+    border: none;
+    border-radius: 9999px;
+    padding: 6px 12px;
+    font: 700 11px/1 ui-monospace, monospace;
+    color: #000;
+    background: linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%);
+  }
+
+  /* Spacer so content clears the fixed diagnostics bar. */
+  #spacer { height: 96px; }
+
+  header.intro { padding: 0 14px 14px; }
+  header.intro h1 { font-size: 16px; margin: 0 0 4px; }
+  header.intro p { margin: 0; font-size: 12px; opacity: 0.7; }
+
+  /* --------------------------------------------------------------------
+     GRID CONTAINER
+     Exercises: CSS grid layout. The 2-column responsive grid matches a
+     mobile ecommerce product grid and produces tall content that forces
+     tile recycling during scroll (a GPU-raster stress path).
+     Controlled by ENABLE_GRID via the .no-grid class.
+     -------------------------------------------------------------------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px;
+    max-width: 720px;      /* keeps card width close to a mobile shop */
+    margin: 0 auto;
+  }
+  .grid.no-grid { display: block; }
+  .grid.no-grid .card { margin-bottom: 12px; }
+
+  /* --------------------------------------------------------------------
+     CARD SHELL
+     Exercises:
+       - border-radius (22px): rounded corners on the card.
+       - overflow:hidden: TOGETHER with border-radius this forms a
+         ROUNDED-RECT CLIP. Chromium can lower this to a MaskFilterInfo on
+         the SharedQuadState (is_fast_rounded_corner) — the prime suspect
+         for the corruption.
+       - box-shadow: a non-clipping paint effect that can push the element
+         onto its own compositing consideration.
+     Controlled independently by:
+       ENABLE_BORDER_RADIUS  -> .no-radius
+       ENABLE_OVERFLOW_HIDDEN-> .no-clip
+       ENABLE_BOX_SHADOW     -> .no-shadow
+     -------------------------------------------------------------------- */
+  .card {
+    position: relative;              /* stacking context candidate + badge/wishlist anchor */
+    background: #0f131c;             /* dark card background */
+    border: 1px solid rgba(255, 138, 0, 0.16);
+    border-radius: 22px;            /* ROUNDED CORNERS */
+    overflow: hidden;               /* ROUNDED CLIP (with radius) */
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45); /* DROP SHADOW */
+    display: flex;
+    flex-direction: column;
+  }
+  .card.no-radius { border-radius: 0; }
+  .card.no-clip   { overflow: visible; }
+  .card.no-shadow { box-shadow: none; }
+
+  /* --------------------------------------------------------------------
+     MEDIA AREA
+     Exercises:
+       - Real <img> decode + GPU TEXTURE UPLOAD under the rounded clip.
+         Texture upload under a rounded-rect mask is the specific path
+         suspected of corrupting on affected drivers.
+       - White image area (background) so torn tiles are visible against
+         the dark card and dark page.
+     Controlled by ENABLE_IMAGES -> .no-img (renders a flat white div).
+     -------------------------------------------------------------------- */
+  .media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    background: #ffffff;            /* WHITE IMAGE AREA */
+    overflow: hidden;
+  }
+  .media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* --------------------------------------------------------------------
+     IMAGE FADE-IN
+     Exercises: an OPACITY ANIMATION on freshly decoded image content.
+     Opacity transitions promote the element to a compositing layer and,
+     combined with a rounded clip + texture upload, stress the render
+     surface / mask interaction during scroll.
+     Controlled by ENABLE_IMAGE_FADE. When on, images start at opacity 0
+     and transition to 1 on load. When off, images render fully opaque.
+     -------------------------------------------------------------------- */
+  .media.fade img {
+    opacity: 0;
+    transition: opacity 420ms ease;
+  }
+  .media.fade img.loaded { opacity: 1; }
+
+  /* --------------------------------------------------------------------
+     DISCOUNT BADGE
+     Exercises: an absolutely-positioned gradient overlay inside the
+     rounded clip (extra quad on the card's SharedQuadState).
+     Controlled by ENABLE_BADGE.
+     -------------------------------------------------------------------- */
+  .badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    z-index: 2;
+    padding: 4px 9px;
+    border-radius: 9999px;
+    font: 800 12px/1 sans-serif;
+    color: #000;
+    background: linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%);
+    box-shadow: 0 4px 10px rgba(255, 106, 0, 0.4);
+  }
+
+  /* --------------------------------------------------------------------
+     WISHLIST BUTTON
+     Exercises: another absolutely-positioned compositing candidate
+     (blurred glass circle) layered above the image texture.
+     Controlled by ENABLE_WISHLIST.
+     -------------------------------------------------------------------- */
+  .wishlist {
+    position: absolute;
+    top: 8px; right: 8px;
+    z-index: 2;
+    width: 36px; height: 36px;
+    border-radius: 9999px;
+    border: none;
+    display: grid;
+    place-items: center;
+    background: rgba(8, 10, 18, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #FFA52E;
+    font-size: 18px;
+  }
+
+  /* --------------------------------------------------------------------
+     CARD BODY / TEXT
+     Exercises: standard text raster. Same spacing on every card so any
+     per-tile corruption is obvious against a uniform layout.
+     -------------------------------------------------------------------- */
+  .body { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .price-row { display: flex; align-items: baseline; gap: 8px; }
+  .price { font-size: 20px; font-weight: 800; }
+  .strike { font-size: 12px; opacity: 0.5; text-decoration: line-through; }
+
+  /* --------------------------------------------------------------------
+     BUY BUTTON
+     Exercises: a rounded gradient button (another rounded paint) at the
+     bottom of each card.
+     Controlled by ENABLE_BUY_BUTTON.
+     -------------------------------------------------------------------- */
+  .buy {
+    margin-top: 4px;
+    height: 44px;
+    width: 100%;
+    border: none;
+    border-radius: 9999px;
+    font: 700 14px/1 sans-serif;
+    color: #000;
+    background: linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%);
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================================
+     DIAGNOSTICS OVERLAY
+     Live FPS, scroll position, devicePixelRatio, WebGL renderer/vendor,
+     browser version, GPU renderer, and copy/download buttons.
+     ====================================================================== -->
+<div id="diag">
+  <div class="row">
+    <span><b>FPS</b> <span id="d-fps">–</span></span>
+    <span><b>Scroll</b> <span id="d-scroll">0</span>px</span>
+    <span><b>DPR</b> <span id="d-dpr">–</span></span>
+    <span><b>GPU</b> <span id="d-gpu">–</span></span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span><b>Vendor</b> <span id="d-vendor">–</span></span>
+    <span><b>Renderer</b> <span id="d-renderer">–</span></span>
+    <span><b>Browser</b> <span id="d-browser">–</span></span>
+  </div>
+  <div class="btns">
+    <button id="btn-copy" type="button">Copy diagnostics</button>
+    <button id="btn-download" type="button">Download JSON</button>
+  </div>
+</div>
+
+<div id="spacer"></div>
+
+<header class="intro">
+  <h1>Chromium GPU Rasterization Repro</h1>
+  <p>Scroll to the bottom, then back up. Look for torn/smeared tiles or ghosted rounded corners. Toggle one flag in the source and reload to isolate.</p>
+</header>
+
+<!-- Cards are injected here by JS so feature flags fully control markup. -->
+<main id="grid" class="grid"></main>
+
+<div style="height: 60vh"></div>
+
+<script>
+/* ========================================================================
+   FEATURE FLAGS
+   Flip exactly ONE at a time to isolate which rendering feature triggers
+   the corruption. Each flag independently enables/disables exactly one
+   feature and nothing else.
+   ======================================================================== */
+const ENABLE_BORDER_RADIUS  = true;  // rounded corners (22px) on the card
+const ENABLE_OVERFLOW_HIDDEN = true; // overflow:hidden clip on the card
+const ENABLE_BOX_SHADOW     = true;  // drop shadow on the card
+const ENABLE_IMAGES         = true;  // real image decode + GPU texture upload
+const ENABLE_IMAGE_FADE     = true;  // opacity fade-in animation on load
+const ENABLE_BADGE          = true;  // orange discount badge overlay
+const ENABLE_WISHLIST       = true;  // wishlist glass button overlay
+const ENABLE_BUY_BUTTON     = true;  // gradient buy button
+const ENABLE_GRID           = true;  // 2-column grid (vs single column)
+
+const CARD_COUNT = 20;
+
+/* ------------------------------------------------------------------------
+   BUILD THE GRID
+   Real placeholder images with unique URLs so each card triggers its own
+   decode + texture upload (the GPU-raster candidate path).
+   ------------------------------------------------------------------------ */
+const grid = document.getElementById("grid");
+if (!ENABLE_GRID) grid.classList.add("no-grid");
+
+function imageFor(i) {
+  // Unique seed per card -> unique decode/upload, cache-bustable.
+  return "https://picsum.photos/seed/gpu-repro-" + i + "/600/750";
+}
+
+for (let i = 0; i < CARD_COUNT; i++) {
+  const card = document.createElement("article");
+  card.className = "card";
+  if (!ENABLE_BORDER_RADIUS)   card.classList.add("no-radius");
+  if (!ENABLE_OVERFLOW_HIDDEN) card.classList.add("no-clip");
+  if (!ENABLE_BOX_SHADOW)      card.classList.add("no-shadow");
+
+  // --- Media area (rounded clip + texture upload + opacity animation) ---
+  const media = document.createElement("div");
+  media.className = "media" + (ENABLE_IMAGE_FADE ? " fade" : "");
+
+  if (ENABLE_BADGE) {
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = "-" + (10 + (i % 6) * 5) + "%";
+    media.appendChild(badge);
+  }
+
+  if (ENABLE_WISHLIST) {
+    const wl = document.createElement("button");
+    wl.className = "wishlist";
+    wl.type = "button";
+    wl.setAttribute("aria-label", "Add to wishlist");
+    wl.textContent = "\u2661"; // ♡
+    media.appendChild(wl);
+  }
+
+  if (ENABLE_IMAGES) {
+    const img = document.createElement("img");
+    img.src = imageFor(i);
+    img.alt = "";
+    img.width = 600;
+    img.height = 750;
+    img.loading = "lazy"; // staggered decodes during scroll = raster invalidation
+    if (ENABLE_IMAGE_FADE) {
+      img.addEventListener("load", () => img.classList.add("loaded"));
+      // If it decodes from cache before listener attaches:
+      if (img.complete) img.classList.add("loaded");
+    }
+    media.appendChild(img);
+  }
+
+  card.appendChild(media);
+
+  // --- Card body: text + buy button ---
+  const body = document.createElement("div");
+  body.className = "body";
+  body.innerHTML =
+    '<h3 class="title">Product Title ' + (i + 1) + '</h3>' +
+    '<div class="price-row"><span class="price">$' + (49 + i) + '</span>' +
+    '<span class="strike">$' + (89 + i) + '</span></div>';
+
+  if (ENABLE_BUY_BUTTON) {
+    const buy = document.createElement("button");
+    buy.className = "buy";
+    buy.type = "button";
+    buy.textContent = "Buy Now";
+    body.appendChild(buy);
+  }
+
+  card.appendChild(body);
+  grid.appendChild(card);
+}
+
+/* ------------------------------------------------------------------------
+   LIVE FPS COUNTER
+   Samples frames per second continuously via requestAnimationFrame.
+   ------------------------------------------------------------------------ */
+const fpsEl = document.getElementById("d-fps");
+let frames = 0, lastT = performance.now();
+function fpsTick(now) {
+  frames++;
+  if (now - lastT >= 500) {
+    const fps = Math.round((frames * 1000) / (now - lastT));
+    fpsEl.textContent = String(fps);
+    frames = 0;
+    lastT = now;
+  }
+  requestAnimationFrame(fpsTick);
+}
+requestAnimationFrame(fpsTick);
+
+/* ------------------------------------------------------------------------
+   SCROLL POSITION DISPLAY
+   ------------------------------------------------------------------------ */
+const scrollEl = document.getElementById("d-scroll");
+window.addEventListener("scroll", () => {
+  scrollEl.textContent = String(Math.round(window.scrollY));
+}, { passive: true });
+
+/* ------------------------------------------------------------------------
+   ENVIRONMENT / WEBGL DIAGNOSTICS
+   devicePixelRatio, WebGL vendor/renderer (masked + unmasked), and a
+   best-effort browser version parse. Read-only probe.
+   ------------------------------------------------------------------------ */
+function collectWebGL() {
+  const canvas = document.createElement("canvas");
+  let gl = canvas.getContext("webgl2") || canvas.getContext("webgl") ||
+           canvas.getContext("experimental-webgl");
+  const out = {
+    contextType: gl ? (gl instanceof WebGL2RenderingContext ? "webgl2" : "webgl") : "none",
+    vendor: null, renderer: null,
+    unmaskedVendor: null, unmaskedRenderer: null,
+    version: null, shadingLanguageVersion: null,
+    maxTextureSize: null,
+  };
+  if (gl) {
+    try {
+      out.vendor = gl.getParameter(gl.VENDOR);
+      out.renderer = gl.getParameter(gl.RENDERER);
+      out.version = gl.getParameter(gl.VERSION);
+      out.shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+      out.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+      const ext = gl.getExtension("WEBGL_debug_renderer_info");
+      if (ext) {
+        out.unmaskedVendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+        out.unmaskedRenderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+      }
+    } catch (e) { /* ignore */ }
+  }
+  return out;
+}
+
+function parseBrowser(ua) {
+  let m;
+  if ((m = ua.match(/Chrome\/([\d.]+)/))) return "Chrome " + m[1];
+  if ((m = ua.match(/CriOS\/([\d.]+)/)))  return "Chrome iOS " + m[1];
+  if ((m = ua.match(/Firefox\/([\d.]+)/))) return "Firefox " + m[1];
+  if ((m = ua.match(/Version\/([\d.]+).*Safari/))) return "Safari " + m[1];
+  return ua;
+}
+
+const webgl = collectWebGL();
+const browser = parseBrowser(navigator.userAgent);
+const gpuFamily = (function (r) {
+  if (!r) return "unknown";
+  r = r.toLowerCase();
+  if (r.includes("adreno")) return "Adreno (Qualcomm)";
+  if (r.includes("mali")) return "Mali (ARM)";
+  if (r.includes("powervr") || r.includes("img")) return "PowerVR (Imagination)";
+  if (r.includes("apple")) return "Apple";
+  if (r.includes("nvidia") || r.includes("geforce")) return "NVIDIA";
+  if (r.includes("intel")) return "Intel";
+  if (r.includes("amd") || r.includes("radeon")) return "AMD";
+  if (r.includes("swiftshader") || r.includes("llvmpipe")) return "Software";
+  return "other";
+})(webgl.unmaskedRenderer || webgl.renderer);
+
+document.getElementById("d-dpr").textContent = String(window.devicePixelRatio);
+document.getElementById("d-gpu").textContent = gpuFamily;
+document.getElementById("d-vendor").textContent = webgl.unmaskedVendor || webgl.vendor || "–";
+document.getElementById("d-renderer").textContent =
+  (webgl.unmaskedRenderer || webgl.renderer || "–");
+document.getElementById("d-browser").textContent = browser;
+
+function buildDiagnostics() {
+  return {
+    collectedAt: new Date().toISOString(),
+    url: location.href,
+    flags: {
+      ENABLE_BORDER_RADIUS, ENABLE_OVERFLOW_HIDDEN, ENABLE_BOX_SHADOW,
+      ENABLE_IMAGES, ENABLE_IMAGE_FADE, ENABLE_BADGE, ENABLE_WISHLIST,
+      ENABLE_BUY_BUTTON, ENABLE_GRID, CARD_COUNT,
+    },
+    browser,
+    userAgent: navigator.userAgent,
+    userAgentData: navigator.userAgentData
+      ? JSON.parse(JSON.stringify(navigator.userAgentData)) : null,
+    platform: navigator.platform,
+    devicePixelRatio: window.devicePixelRatio,
+    deviceMemory: navigator.deviceMemory ?? null,
+    hardwareConcurrency: navigator.hardwareConcurrency ?? null,
+    screen: {
+      width: screen.width, height: screen.height,
+      availWidth: screen.availWidth, availHeight: screen.availHeight,
+    },
+    viewport: { innerWidth: window.innerWidth, innerHeight: window.innerHeight },
+    gpuFamily,
+    webgl,
+    currentFps: fpsEl.textContent,
+  };
+}
+
+/* ------------------------------------------------------------------------
+   COPY / DOWNLOAD DIAGNOSTICS
+   ------------------------------------------------------------------------ */
+document.getElementById("btn-copy").addEventListener("click", async () => {
+  const json = JSON.stringify(buildDiagnostics(), null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    alert("Diagnostics copied to clipboard.");
+  } catch (e) {
+    // Clipboard blocked (non-secure context): fall back to a prompt.
+    window.prompt("Copy diagnostics JSON:", json);
+  }
+});
+
+document.getElementById("btn-download").addEventListener("click", () => {
+  const json = JSON.stringify(buildDiagnostics(), null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const tag = (webgl.unmaskedRenderer || webgl.renderer || "device")
+    .replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
+  a.href = url;
+  a.download = "gpu-diagnostics-" + tag + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
