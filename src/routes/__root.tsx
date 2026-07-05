@@ -566,7 +566,10 @@ function IsolationRoot() {
         <RegionProvider>
           <WishlistProvider>
             <AdminModeProvider>
-              <Outlet />
+              {/* ISOLATION STEP 2: LayoutMetricsProvider added back (only this). */}
+              <LayoutMetricsProvider>
+                <Outlet />
+              </LayoutMetricsProvider>
             </AdminModeProvider>
           </WishlistProvider>
         </RegionProvider>
