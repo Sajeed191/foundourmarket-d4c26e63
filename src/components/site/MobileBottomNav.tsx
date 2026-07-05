@@ -307,8 +307,8 @@ export function MobileBottomNav() {
         opacity: ready ? 1 : 0,
         transform: ready ? "translateY(0)" : "translateY(16px)",
         visibility: ready ? "visible" : "hidden",
-        // EXPERIMENT: compositing/animation stripped — no transform/opacity transition.
-        transition: "none",
+        transition:
+          "opacity 200ms cubic-bezier(0.2,0.8,0.2,1), transform 200ms cubic-bezier(0.2,0.8,0.2,1)",
 
       }}
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
