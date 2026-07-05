@@ -319,7 +319,10 @@ export function MobileBottomNav() {
         // selectors ([style*="backdrop-filter"]) would then recolor the dock to
         // a theme background. Blur is removed via the .nav-glass CSS class only,
         // keeping ONE fixed color across every device/state.
-        style={{ willChange: "transform, opacity" }}
+        // STEP 2 ISOLATION (temporary): `will-change: transform, opacity`
+        // removed. On a position:fixed element this hint forces a PERSISTENT
+        // GPU backing store that overlaps the scrolling document — a prime
+        // Chrome 149 tile-recycle corruption trigger. Revert if no effect.
         className={
           // SINGLE unified surface for every theme + state. No theme-conditional
           // colors, so there is no hydration flash or color switching.
