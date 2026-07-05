@@ -286,6 +286,7 @@ export function MobileBottomNav() {
   // No stagger, no icon scale, no breathing glow — the safety mode.
   const lowEnd = motionTier === "low";
   const stagger = !lowEnd;
+  void stagger; // EXPERIMENT: stagger delay removed; keep ref to avoid unused var.
 
   const items: { to?: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number; onClick?: () => void }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
