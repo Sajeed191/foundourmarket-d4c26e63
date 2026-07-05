@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Flame, Award, Sparkles } from "lucide-react";
 import { fetchProducts, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -32,7 +32,35 @@ const NEW_ARRIVALS_HEIGHT = 846;
 const NEW_ARRIVALS_BOX_HEIGHT = 190; // 4 rows × 190 + gaps/padding ≈ 846
 // FINAL COMPOSITOR EXPERIMENT: "A" = 8 boxes stacked vertically (no grid),
 // "B" = grid with only 4 boxes, "C" = grid with 8 boxes, minimal styles only.
-const BOX_MODE = "C" as "A" | "B" | "C";
+ const BOX_MODE = "D" as "A" | "B" | "C" | "D";
+ // CSS PROPERTY ISOLATION: baseline = width/height/background-color, add ONE at a time.
+ const CSS_TEST = "border" as
+   | "border-radius"
+   | "overflow"
+   | "box-shadow"
+   | "background-shorthand"
+   | "border";
+ function cssTestStyle(i: number): CSSProperties {
+   const base: CSSProperties = {
+     width: "100%",
+     height: NEW_ARRIVALS_BOX_HEIGHT,
+     backgroundColor: i % 2 ? "#334155" : "#475569",
+   };
+   switch (CSS_TEST) {
+     case "border-radius":
+       return { ...base, borderRadius: 16 };
+     case "overflow":
+       return { ...base, overflow: "hidden" };
+     case "box-shadow":
+       return { ...base, boxShadow: "0 10px 30px rgba(0,0,0,0.35)" };
+     case "background-shorthand": {
+       const { backgroundColor, ...rest } = base;
+       return { ...rest, background: i % 2 ? "#334155" : "#475569" };
+     }
+     case "border":
+       return { ...base, border: "1px solid #64748b" };
+   }
+ }
 
 export const Route = createFileRoute("/runtime-isolation")({
   head: () => ({
@@ -212,6 +240,16 @@ function HomeSections({ products }: { products: Product[] }) {
                 key={i}
                 style={{ width: "100%", height: NEW_ARRIVALS_BOX_HEIGHT, backgroundColor: i % 2 ? "#334155" : "#475569" }}
               />
+            ))}
+          </div>
+        </div>
+      )}
+      {STAGE >= 3 && NEW_ARRIVALS_MODE === "boxes" && BOX_MODE === "D" && (
+        // CSS PROPERTY ISOLATION: grid, 8 boxes, one extra property via CSS_TEST.
+        <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={cssTestStyle(i)} />
             ))}
           </div>
         </div>
