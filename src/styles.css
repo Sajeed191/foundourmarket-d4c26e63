@@ -3068,3 +3068,40 @@ html[data-gpu-unsafe="true"] [data-uniform-card] [data-uniform-glow] {
 html[data-graphics-compat="true"] [data-product-card] {
   overflow: visible !important;
 }
+
+/* ------------------------------------------------------------------
+   Bottom-navigation compositor workaround (device-specific corruption).
+
+   Root cause (proven by isolation experiments): a continuously
+   evaluated scroll-synchronized requestAnimationFrame combined with a
+   GPU-promoted fixed bottom-navigation layer (transform-gpu +
+   will-change + transform/opacity transitions + the breathing glow
+   animation) corrupts compositing over a complex scrolling page on some
+   Chromium/GPU combinations (e.g. Oppo F9).
+
+   When Compatibility Mode is ON we neutralise ONLY the bottom nav's
+   compositing hints and animations — the rAF loop, state machine,
+   scroll logic and DOM are untouched, and every other device keeps the
+   full premium experience. The 2D translateY positions are re-declared
+   so the show/compact/hidden states still work WITHOUT forcing a
+   composited layer (no translateZ, no will-change).
+   ------------------------------------------------------------------ */
+html[data-graphics-compat="true"] [data-app-bottom-nav],
+html[data-graphics-compat="true"] [data-app-bottom-nav] * {
+  transition: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+
+/* Re-declare the dock surface positions as plain 2D transforms so the
+   nav stays fully functional but is no longer GPU-promoted. */
+html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass {
+  transform: translateY(0) !important;
+}
+html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[data-compact] {
+  transform: translateY(0.125rem) !important;
+}
+html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="true"] {
+  transform: translateY(140%) !important;
+}
+

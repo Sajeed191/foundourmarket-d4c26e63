@@ -286,7 +286,6 @@ export function MobileBottomNav() {
   // No stagger, no icon scale, no breathing glow — the safety mode.
   const lowEnd = motionTier === "low";
   const stagger = !lowEnd;
-  void stagger; // EXPERIMENT: stagger delay removed; keep ref to avoid unused var.
 
   const items: { to?: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number; onClick?: () => void }[] = [
     { to: "/", label: "Home", icon: Home, match: (p) => p === "/" },
@@ -307,8 +306,8 @@ export function MobileBottomNav() {
         opacity: ready ? 1 : 0,
         transform: ready ? "translateY(0)" : "translateY(16px)",
         visibility: ready ? "visible" : "hidden",
-        // EXPERIMENT: compositing/animation stripped — no transform/opacity transition.
-        transition: "none",
+        transition:
+          "opacity 200ms cubic-bezier(0.2,0.8,0.2,1), transform 200ms cubic-bezier(0.2,0.8,0.2,1)",
 
       }}
       className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-bottom-nav)] px-[max(0.875rem,var(--mobile-safe-left))] pb-[calc(var(--mobile-safe-bottom)+var(--mobile-nav-edge-gap))] pt-[var(--mobile-nav-top-gap)] pointer-events-none"
@@ -316,15 +315,18 @@ export function MobileBottomNav() {
 
       <ul
         data-compact={compact ? "" : undefined}
-        // EXPERIMENT: compositing hint removed — no will-change.
+        style={{ willChange: "transform, opacity" }}
         // NOTE: never set an inline `backdrop-filter` here — global safe-mode
         // selectors ([style*="backdrop-filter"]) would then recolor the dock to
         // a theme background. Blur is removed via the .nav-glass CSS class only,
         // keeping ONE fixed color across every device/state.
         className={
-          // EXPERIMENT: transform-gpu removed, transition classes removed. Static.
-          "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2" +
-          ` h-[var(--mobile-nav-surface-height)] py-2 ${
+          // SINGLE unified surface for every theme + state. No theme-conditional
+          // colors, so there is no hydration flash or color switching.
+          "nav-glass transform-gpu pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2" +
+          // Transform + opacity only. Micro-collapse is visual, not a separate
+          // state, so compact is the only visible scroll-safe mode.
+          ` h-[var(--mobile-nav-surface-height)] py-2 transition-[transform,opacity] duration-[180ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
             lowEnd ? "" : "shadow-[0_16px_42px_-18px_oklch(0_0_0/0.7)]"
           } ${
             hidden
@@ -345,27 +347,26 @@ export function MobileBottomNav() {
           const inner = (
             <>
                 <span
-                  className={`relative grid place-items-center size-9 rounded-2xl scale-100 ${
+                  className={`relative grid place-items-center size-9 rounded-2xl scale-100 transition-[transform,opacity] duration-[160ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-90 ${
                     iconsReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
                   }`}
                 >
 
                   {/* Soft radial energy field behind the active icon — a breathing
                       bloom. Runs ONLY in the fully-expanded state; frozen in
-                      compact and disabled on low-end (Android safe mode).
-                      EXPERIMENT: transition + animate-energy-breathe removed. */}
+                      compact and disabled on low-end (Android safe mode). */}
                   {!lowEnd && (
                     <span
                       aria-hidden
-                      className={`absolute inset-0 rounded-full blur-[7px] [background:radial-gradient(circle,color-mix(in_oklab,var(--color-accent)_55%,transparent)_0%,transparent_70%)] ${
-                        active && !compact ? "opacity-100" : "opacity-0"
+                      className={`absolute inset-0 rounded-full blur-[7px] transition-opacity duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] [background:radial-gradient(circle,color-mix(in_oklab,var(--color-accent)_55%,transparent)_0%,transparent_70%)] ${
+                        active && !compact ? "opacity-100 animate-energy-breathe" : "opacity-0"
                       }`}
                     />
                   )}
 
                   <span className="relative">
                     <Icon
-                      className={`size-[21px] ${
+                      className={`size-[21px] transition-colors duration-200 ${
                         active ? "text-accent" : "text-white/70"
                       }`}
                       strokeWidth={active ? 2.5 : 2}
@@ -380,8 +381,12 @@ export function MobileBottomNav() {
 
                 <span
                   aria-hidden={!labelsReady}
-                  // EXPERIMENT: transition + stagger delay removed.
-                  className={`h-3 max-w-full truncate leading-none ${
+                  style={
+                    labelsReady && stagger
+                      ? { transitionDelay: `${i * 40}ms` }
+                      : undefined
+                  }
+                  className={`h-3 max-w-full truncate leading-none transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
                     labelsReady ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-0.5 scale-90 opacity-0"
                   } ${
                     active ? "font-semibold text-accent" : "text-white/65"
