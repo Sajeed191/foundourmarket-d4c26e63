@@ -159,8 +159,9 @@ function PreferencesPage() {
                 <div className="min-w-0">
                   <p className="font-medium text-sm">Graphics Compatibility Mode</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Reduces GPU effects for smoother, glitch-free rendering on
-                    devices that show flickering or banding while scrolling.
+                    If you experience flickering, graphical glitches, or display
+                    corruption in Chrome or Brave, enable Compatibility Mode for
+                    improved stability — it uses a simplified graphics pipeline.
                   </p>
                 </div>
                 <Toggle on={compatOn} onClick={toggleCompat} />
