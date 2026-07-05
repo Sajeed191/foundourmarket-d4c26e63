@@ -8,6 +8,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { SectionTracker } from "@/components/site/SectionTracker";
 import { Reveal } from "@/components/site/Reveal";
 import { FlashDeals } from "@/components/site/FlashDeals";
+import type { BadgeKey } from "@/lib/badges";
 import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 
