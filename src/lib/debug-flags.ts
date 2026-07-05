@@ -823,7 +823,6 @@ export type RunnerStep = {
   features: RunnerFeatureRef[];
 };
 
-const b = (id: string): RunnerFeatureRef => ({ kind: "bisect", id });
 const f = (flag: DebugFlag): RunnerFeatureRef => ({ kind: "flag", flag });
 
 /** Highest-probability Android rendering causes first, exactly as prioritised. */
