@@ -547,9 +547,18 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   background: oklch(1 0 0 / 0.018);
   border: 1px solid oklch(1 0 0 / 0.12);
   border-radius: var(--radius);
-  backdrop-filter: blur(14px);
+  /* Blur emitted DESKTOP-ONLY (see the .glass note above). Lightning CSS
+     strips backdrop-filter removals, so the only reliable way to keep this
+     framebuffer-READBACK layer off phones — where it was a live Chromium
+     Android scroll-banding source (previously gated only behind the never-set
+     data-low-end flag) — is to never emit it below 768px. Zero mobile visual
+     change: the surface is a near-transparent outline card, not frosted glass. */
   transition: transform 0.45s var(--ease-out-expo), border-color 0.3s ease, background 0.3s ease;
 }
+@media (min-width: 768px) {
+  .card-outline { backdrop-filter: blur(14px); }
+}
+
 .card-outline:hover {
   transform: translateY(-3px);
   border-color: oklch(0.74 0.19 49 / 0.5);
