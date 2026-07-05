@@ -152,7 +152,7 @@ function DiagnosticProductCardImpl({ product, disable, round = "clip" }: Props) 
           className="relative aspect-square w-full p-[1.5%]"
           style={{
             background: "#ffffff",
-            overflow: off("rounding") ? "visible" : "hidden",
+            overflow: mediaClip,
             borderTopLeftRadius: mediaRadius,
             borderTopRightRadius: mediaRadius,
           }}
