@@ -39,14 +39,11 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
 // ⇩ Flip this to isolate the exact trigger (see the table above).
-const TEST_STAGE: number = 3;
+const TEST_STAGE: number = 4;
 
 export const Route = createFileRoute("/home-lite")({
   head: () => ({
-    meta: [
-      { title: "Home Lite (diagnostic)" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "Home Lite (diagnostic)" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: HomeLite,
 });
@@ -91,15 +88,16 @@ function HomeLite() {
 
   // Which trending cards to mount for the current stage (only rendering is gated).
   const trendingCards =
-    TEST_STAGE === 3 ? [] :
-    TEST_STAGE === 4 ? trending.slice(0, 1) :
-    TEST_STAGE === 5 ? trending.slice(0, 2) :
-    trending; // stages 2, 6, 7, 8 use the full set
+    TEST_STAGE === 3
+      ? []
+      : TEST_STAGE === 4
+        ? trending.slice(0, 1)
+        : TEST_STAGE === 5
+          ? trending.slice(0, 2)
+          : trending; // stages 2, 6, 7, 8 use the full set
   const singleColumn = TEST_STAGE === 7;
   const usePlaceholders = TEST_STAGE === 6;
-  const gridClass = singleColumn
-    ? "grid grid-cols-1 gap-3 sm:gap-4"
-    : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
+  const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
     <>
@@ -129,8 +127,8 @@ function HomeLite() {
               </span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-[15px] sm:text-lg leading-relaxed text-muted-foreground">
-              A premium independent marketplace, sourcing top-quality products from
-              across the world — delivered with cinematic precision.
+              A premium independent marketplace, sourcing top-quality products from across the world — delivered with
+              cinematic precision.
             </p>
 
             <div className="relative z-10 mx-auto mt-8 max-w-2xl">
@@ -179,7 +177,9 @@ function HomeLite() {
           <Reveal className="flex justify-between items-end mb-4 sm:mb-6 gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Hot right now</p>
-              <h2 className="mt-1 font-display text-2xl sm:text-3xl font-semibold tracking-[-0.02em]">Trending Products</h2>
+              <h2 className="mt-1 font-display text-2xl sm:text-3xl font-semibold tracking-[-0.02em]">
+                Trending Products
+              </h2>
             </div>
           </Reveal>
 
