@@ -28,7 +28,6 @@ import { Route as ProductFeedDotxmlRouteImport } from './routes/product-feed[.]x
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as HomeLiteRouteImport } from './routes/home-lite'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GpuTestRouteImport } from './routes/gpu-test'
 import { Route as DealsRouteImport } from './routes/deals'
@@ -249,11 +248,6 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeLiteRoute = HomeLiteRouteImport.update({
-  id: '/home-lite',
-  path: '/home-lite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -981,7 +975,6 @@ export interface FileRoutesByFullPath {
   '/deals': typeof DealsRoute
   '/gpu-test': typeof GpuTestRoute
   '/help': typeof HelpRouteWithChildren
-  '/home-lite': typeof HomeLiteRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -1129,7 +1122,6 @@ export interface FileRoutesByTo {
   '/deals': typeof DealsRoute
   '/gpu-test': typeof GpuTestRoute
   '/help': typeof HelpRouteWithChildren
-  '/home-lite': typeof HomeLiteRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -1277,7 +1269,6 @@ export interface FileRoutesById {
   '/deals': typeof DealsRoute
   '/gpu-test': typeof GpuTestRoute
   '/help': typeof HelpRouteWithChildren
-  '/home-lite': typeof HomeLiteRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -1427,7 +1418,6 @@ export interface FileRouteTypes {
     | '/deals'
     | '/gpu-test'
     | '/help'
-    | '/home-lite'
     | '/login'
     | '/privacy'
     | '/privacy-policy'
@@ -1575,7 +1565,6 @@ export interface FileRouteTypes {
     | '/deals'
     | '/gpu-test'
     | '/help'
-    | '/home-lite'
     | '/login'
     | '/privacy'
     | '/privacy-policy'
@@ -1722,7 +1711,6 @@ export interface FileRouteTypes {
     | '/deals'
     | '/gpu-test'
     | '/help'
-    | '/home-lite'
     | '/login'
     | '/privacy'
     | '/privacy-policy'
@@ -1871,7 +1859,6 @@ export interface RootRouteChildren {
   DealsRoute: typeof DealsRoute
   GpuTestRoute: typeof GpuTestRoute
   HelpRoute: typeof HelpRouteWithChildren
-  HomeLiteRoute: typeof HomeLiteRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -2062,13 +2049,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home-lite': {
-      id: '/home-lite'
-      path: '/home-lite'
-      fullPath: '/home-lite'
-      preLoaderRoute: typeof HomeLiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -3104,7 +3084,6 @@ const rootRouteChildren: RootRouteChildren = {
   DealsRoute: DealsRoute,
   GpuTestRoute: GpuTestRoute,
   HelpRoute: HelpRouteWithChildren,
-  HomeLiteRoute: HomeLiteRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -3164,13 +3143,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
