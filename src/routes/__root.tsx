@@ -513,7 +513,69 @@ function OAuthReturnScreen() {
   );
 }
 
+/**
+ * TEMPORARY — runtime-isolation baseline switch.
+ *
+ * Route "/runtime-isolation" must run with a TRUE zero-runtime baseline: none
+ * of the global providers, chrome, effects, analytics, or overlays that the
+ * normal app shell mounts. Because React hooks can't be conditional, we branch
+ * at the component level here — RootComponent is a thin switch that mounts a
+ * completely separate tree per route. Production routes render <AppRoot />,
+ * which is byte-for-byte the previous RootComponent body (unchanged behavior).
+ * Only "/runtime-isolation" renders <IsolationRoot />.
+ */
 function RootComponent() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/runtime-isolation") return <IsolationRoot />;
+  return <AppRoot />;
+}
+
+/**
+ * Minimal layout for "/runtime-isolation" ONLY. Keeps the bare minimum needed
+ * to render the product grid:
+ *   - QueryClientProvider  (data loading / router query context)
+ *   - AuthProvider         (required: RegionProvider + WishlistProvider read useAuth)
+ *   - RegionProvider       (required: ProductCard calls useRegion for pricing)
+ *   - WishlistProvider     (required: ProductCard calls useWishlist* hooks)
+ *   - AdminModeProvider    (required: ProductCard mounts ProductCardAdminControlsGate,
+ *                           which calls useAdminMode and THROWS without it — the only
+ *                           entry from the "excluded" list that ProductCard strictly
+ *                           needs to render, kept as a hard dependency)
+ *   - <Outlet />           (renders ProductCard → ProductImage inside a plain div)
+ *
+ * Deliberately EXCLUDED (present on every production route via <AppRoot />):
+ *   ThemeProvider, GraphicsCompatProvider, NotificationsProvider,
+ *   WishlistAlertsProvider, CartProvider,
+ *   CommandCenterProvider, LayoutMetricsProvider, BadgeEngineProvider,
+ *   SearchUIProvider, Nav (header), Footer, MobileBottomNav (bottom nav),
+ *   DeferredShell (live chat, region modal, admin tooling, compare tray,
+ *   install prompt), Toaster, ShareDialog, DebugPanel, WindowMetricsPanel,
+ *   GlobalSearchMount, and ALL RootComponent effects (analytics/GA page views,
+ *   perf monitor, capability governor, motion tier, crisp preload, product
+ *   cache warm, startup/debug diagnostics, OAuth return handling).
+ *
+ * ProductCard also calls useBadgeEngine, but that hook has a default context
+ * value and does NOT require BadgeEngineProvider, so badges resolve to their
+ * safe defaults without mounting the engine.
+ */
+function IsolationRoot() {
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RegionProvider>
+          <WishlistProvider>
+            <AdminModeProvider>
+              <Outlet />
+            </AdminModeProvider>
+          </WishlistProvider>
+        </RegionProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+function AppRoot() {
   useRenderDiagnostics("RootComponent");
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
