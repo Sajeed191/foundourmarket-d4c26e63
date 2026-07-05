@@ -32,7 +32,7 @@ const NEW_ARRIVALS_HEIGHT = 846;
 const NEW_ARRIVALS_BOX_HEIGHT = 190; // 4 rows × 190 + gaps/padding ≈ 846
 // FINAL COMPOSITOR EXPERIMENT: "A" = 8 boxes stacked vertically (no grid),
 // "B" = grid with only 4 boxes, "C" = grid with 8 boxes, minimal styles only.
-const BOX_MODE = "B" as "A" | "B" | "C";
+const BOX_MODE = "C" as "A" | "B" | "C";
 
 export const Route = createFileRoute("/runtime-isolation")({
   head: () => ({
