@@ -39,7 +39,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
 // ⇩ Flip this to isolate the exact trigger (see the table above).
-const TEST_STAGE = 3;
+const TEST_STAGE: number = 3;
 
 export const Route = createFileRoute("/home-lite")({
   head: () => ({
