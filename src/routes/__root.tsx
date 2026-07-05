@@ -598,6 +598,7 @@ function IsolationRoot() {
                   </CartProvider>
                 </BadgeEngineProvider>
               </LayoutMetricsProvider>
+              </CommandCenterProvider>
             </AdminModeProvider>
           </WishlistProvider>
         </RegionProvider>
