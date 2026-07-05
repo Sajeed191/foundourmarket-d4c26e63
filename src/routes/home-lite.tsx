@@ -259,6 +259,9 @@ function HomeLite() {
                         aria-hidden
                         className="h-full w-full rounded-3xl bg-accent/25 ring-1 ring-white/10 min-h-[240px]"
                       />
+                    ) : diagRound ? (
+                      // Stages 20+: full clone with a rounding TECHNIQUE applied.
+                      <DiagnosticProductCard product={p} disable="none" round={diagRound} />
                     ) : diagFeature ? (
                       // Stages 9–19: temporary diagnostic clone with one feature off.
                       <DiagnosticProductCard product={p} disable={diagFeature} />
