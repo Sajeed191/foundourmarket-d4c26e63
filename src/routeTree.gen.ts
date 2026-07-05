@@ -18,6 +18,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as RuntimeIsolationRouteImport } from './routes/runtime-isolation'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ReturnPolicyRouteImport } from './routes/return-policy'
@@ -200,6 +201,11 @@ const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuntimeIsolationRoute = RuntimeIsolationRouteImport.update({
+  id: '/runtime-isolation',
+  path: '/runtime-isolation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -999,6 +1005,7 @@ export interface FileRoutesByFullPath {
   '/return-policy': typeof ReturnPolicyRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
@@ -1148,6 +1155,7 @@ export interface FileRoutesByTo {
   '/return-policy': typeof ReturnPolicyRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
@@ -1297,6 +1305,7 @@ export interface FileRoutesById {
   '/return-policy': typeof ReturnPolicyRoute
   '/returns': typeof ReturnsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
@@ -1448,6 +1457,7 @@ export interface FileRouteTypes {
     | '/return-policy'
     | '/returns'
     | '/robots.txt'
+    | '/runtime-isolation'
     | '/search'
     | '/shipping-policy'
     | '/signin'
@@ -1597,6 +1607,7 @@ export interface FileRouteTypes {
     | '/return-policy'
     | '/returns'
     | '/robots.txt'
+    | '/runtime-isolation'
     | '/search'
     | '/shipping-policy'
     | '/signin'
@@ -1745,6 +1756,7 @@ export interface FileRouteTypes {
     | '/return-policy'
     | '/returns'
     | '/robots.txt'
+    | '/runtime-isolation'
     | '/search'
     | '/shipping-policy'
     | '/signin'
@@ -1895,6 +1907,7 @@ export interface RootRouteChildren {
   ReturnPolicyRoute: typeof ReturnPolicyRoute
   ReturnsRoute: typeof ReturnsRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  RuntimeIsolationRoute: typeof RuntimeIsolationRoute
   SearchRoute: typeof SearchRoute
   ShippingPolicyRoute: typeof ShippingPolicyRoute
   SigninRoute: typeof SigninRoute
@@ -2005,6 +2018,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/runtime-isolation': {
+      id: '/runtime-isolation'
+      path: '/runtime-isolation'
+      fullPath: '/runtime-isolation'
+      preLoaderRoute: typeof RuntimeIsolationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -3136,6 +3156,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnPolicyRoute: ReturnPolicyRoute,
   ReturnsRoute: ReturnsRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  RuntimeIsolationRoute: RuntimeIsolationRoute,
   SearchRoute: SearchRoute,
   ShippingPolicyRoute: ShippingPolicyRoute,
   SigninRoute: SigninRoute,
@@ -3185,3 +3206,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
