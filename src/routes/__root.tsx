@@ -46,7 +46,7 @@ import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-d
 import { initDebugFlags, getFlag } from "@/lib/debug-flags";
 import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
 import { DebugPanel } from "@/components/site/DebugPanel";
-import { GraphicsCompatSuggestion } from "@/components/site/GraphicsCompatSuggestion";
+
 import { WindowMetricsPanel } from "@/components/site/WindowMetricsPanel";
 
 const STARTUP_GUARD_SCRIPT = `(function(){
@@ -641,7 +641,7 @@ function RootComponent() {
                             />
                             <Toaster position="bottom-center" richColors />
                             <ShareDialog />
-                            <GraphicsCompatSuggestion />
+                            
                             <DebugPanel />
                             <WindowMetricsPanel />
                             <GlobalSearchMount />

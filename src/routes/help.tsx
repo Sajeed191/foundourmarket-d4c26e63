@@ -66,6 +66,7 @@ const FAQS: FAQ[] = [
   { cat: "Sellers", q: "How do I contact a seller?", a: "Open the order and tap 'Message Seller'. Verified sellers reply within 24h on average." },
   { cat: "Sellers", q: "Does my product include a warranty?", a: "Most electronics carry a 12-month manufacturer warranty. Check the product page for exact coverage." },
   { cat: "Technical", q: "The app isn't loading correctly — what can I do?", a: "Refresh the page, clear your cache, or try another browser. If the issue continues, report it below and we'll investigate quickly." },
+  { cat: "Technical", q: "Why do I sometimes see graphical glitches in Chrome?", a: "A small number of Android Chrome and WebView combinations may occasionally show rendering issues — such as flickering, horizontal lines, or duplicated images while scrolling — that are related to the browser rather than the website itself. If you run into this, open Account → Preferences → Display & performance and turn on Graphics Compatibility Mode. It switches to a simplified graphics path that can improve stability, is purely visual (it never affects your account, orders or payments), and can be turned off again at any time." },
 ];
 
 const CATEGORY_META: { key: Category; icon: any }[] = [

@@ -1,17 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Mail, Bell, Settings as SettingsIcon, MonitorSmartphone } from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Bell, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ThemeSelector } from "@/components/site/ThemeSelector";
-import {
-  readGraphicsCompatPref,
-  setGraphicsCompatPref,
-  isAndroidChromium,
-  type GraphicsCompatPref,
-} from "@/lib/graphics-compat";
+import { GraphicsCompatCard } from "@/components/site/GraphicsCompatCard";
 
 export const Route = createFileRoute("/account_/preferences")({
   head: () => ({ meta: [{ title: "Preferences — FoundOurMarket™" }] }),
@@ -83,25 +78,6 @@ function PreferencesPage() {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [compat, setCompat] = useState<GraphicsCompatPref>("auto");
-  const [suggestCompat, setSuggestCompat] = useState(false);
-
-  useEffect(() => {
-    setCompat(readGraphicsCompatPref());
-    setSuggestCompat(isAndroidChromium());
-  }, []);
-
-  const compatOn = compat === "on";
-  const toggleCompat = () => {
-    const next: GraphicsCompatPref = compatOn ? "off" : "on";
-    setGraphicsCompatPref(next);
-    setCompat(next);
-    toast.success(
-      next === "on"
-        ? "Graphics Compatibility Mode enabled"
-        : "Graphics Compatibility Mode disabled",
-    );
-  };
 
   useEffect(() => {
     if (loading) return;
@@ -149,53 +125,8 @@ function PreferencesPage() {
             <ThemeSelector />
           </div>
 
-          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
-            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
-              <MonitorSmartphone className="size-4 text-accent" />
-              <h2 className="font-display text-base font-semibold">Display &amp; performance</h2>
-            </div>
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-medium text-sm">Graphics Compatibility Mode</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    If you experience flickering, graphical glitches, or display
-                    corruption in Chrome or Brave, enable Compatibility Mode for
-                    improved stability — it uses a simplified graphics pipeline.
-                  </p>
-                </div>
-                <Toggle on={compatOn} onClick={toggleCompat} />
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                  Status
-                </span>
-                <span
-                  className={
-                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium " +
-                    (compatOn
-                      ? "bg-accent/15 text-accent"
-                      : "bg-emerald-500/10 text-emerald-500")
-                  }
-                >
-                  <span
-                    className={
-                      "size-1.5 rounded-full " +
-                      (compatOn ? "bg-accent" : "bg-emerald-500")
-                    }
-                  />
-                  {compatOn ? "Compatibility Mode Enabled" : "Premium Rendering"}
-                </span>
-              </div>
-              {suggestCompat && !compatOn && (
-                <p className="text-xs text-accent/90 mt-3 rounded-lg bg-accent/10 px-3 py-2">
-                  Seeing flickering or corrupted graphics in Chrome or Brave?
-                  Enabling Compatibility Mode uses a simplified graphics pipeline
-                  for improved stability.
-                </p>
-              )}
-            </div>
-          </div>
+          <GraphicsCompatCard />
+
 
 
 

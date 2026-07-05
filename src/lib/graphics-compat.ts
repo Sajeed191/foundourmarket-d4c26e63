@@ -24,7 +24,6 @@
 export type GraphicsCompatPref = "auto" | "on" | "off";
 
 const PREF_KEY = "fom-graphics-compat";
-const DISMISS_KEY = "fom-graphics-compat-suggested";
 
 /** Read the persisted user preference. Absent / invalid → "auto". */
 export function readGraphicsCompatPref(): GraphicsCompatPref {
@@ -92,28 +91,48 @@ export function isAndroidChromium(): boolean {
 }
 
 /**
- * Suggest (never force) compatibility mode. True only when:
- *   - the user has made no explicit choice (pref is "auto"),
- *   - the suggestion was not previously dismissed,
- *   - the environment is Android Chromium (where the driver bug occurs).
+ * Human-readable browser name + major version, e.g. "Chrome 138".
+ * Diagnostics-only; never used to auto-enable compatibility mode.
  */
-export function shouldSuggestGraphicsCompat(): boolean {
-  if (typeof localStorage === "undefined") return false;
-  if (readGraphicsCompatPref() !== "auto") return false;
-  try {
-    if (localStorage.getItem(DISMISS_KEY) === "true") return false;
-  } catch {
-    return false;
-  }
-  return isAndroidChromium();
+export function detectBrowser(ua?: string): string {
+  const s = ua ?? (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
+  if (!s) return "Unknown";
+  let m: RegExpMatchArray | null;
+  if ((m = s.match(/Edg(?:A|iOS)?\/(\d+)/))) return `Edge ${m[1]}`;
+  if ((m = s.match(/OPR\/(\d+)/)) || (m = s.match(/Opera\/(\d+)/))) return `Opera ${m[1]}`;
+  if ((m = s.match(/SamsungBrowser\/(\d+)/))) return `Samsung Internet ${m[1]}`;
+  if ((m = s.match(/(?:Firefox|FxiOS)\/(\d+)/))) return `Firefox ${m[1]}`;
+  if (/CriOS\/(\d+)/.test(s) && (m = s.match(/CriOS\/(\d+)/))) return `Chrome ${m[1]}`;
+  if ((m = s.match(/Chrome\/(\d+)/))) return `Chrome ${m[1]}`;
+  if (/Version\/(\d+).*Safari/.test(s) && (m = s.match(/Version\/(\d+)/))) return `Safari ${m[1]}`;
+  return "Unknown";
 }
 
-/** Remember that the suggestion was shown/dismissed so it never nags again. */
-export function dismissGraphicsCompatSuggestion() {
-  if (typeof localStorage === "undefined") return;
-  try {
-    localStorage.setItem(DISMISS_KEY, "true");
-  } catch {
-    /* ignore */
-  }
+/** Android version, e.g. "Android 15", or "Not Android" when not applicable. */
+export function detectAndroidVersion(ua?: string): string {
+  const s = ua ?? (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
+  const m = s.match(/Android\s+(\d+(?:\.\d+)?)/);
+  return m ? `Android ${m[1]}` : "Not Android";
 }
+
+export type GraphicsDiagnostics = {
+  renderingMode: "Premium Rendering" | "Compatibility Rendering";
+  browser: string;
+  androidVersion: string;
+  compatibility: "Enabled" | "Disabled";
+};
+
+/**
+ * Informational diagnostics for the Settings panel. Intentionally excludes GPU
+ * renderer, WebGL renderer, driver strings and internal debug flags.
+ */
+export function getGraphicsDiagnostics(): GraphicsDiagnostics {
+  const active = readGraphicsCompatPref() === "on" || isGraphicsCompatActive();
+  return {
+    renderingMode: active ? "Compatibility Rendering" : "Premium Rendering",
+    browser: detectBrowser(),
+    androidVersion: detectAndroidVersion(),
+    compatibility: active ? "Enabled" : "Disabled",
+  };
+}
+
