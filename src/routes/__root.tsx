@@ -562,6 +562,10 @@ function IsolationRoot() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
+      {/* ISOLATION STEP 4: ThemeProvider is a HARD dependency of the Header —
+          Nav calls useTheme(), which THROWS without it (SSR 500). Not a
+          "feature" provider, just required plumbing to render the shell. */}
+      <ThemeProvider>
       <AuthProvider>
         <RegionProvider>
           <WishlistProvider>
@@ -574,8 +578,10 @@ function IsolationRoot() {
                       CartProvider is a HARD dependency — both Nav and
                       MobileBottomNav call useCart(), which throws without it
                       (useSearchUI has a safe no-op fallback, so SearchUIProvider
-                      is intentionally NOT added). Shell markup mirrors the normal
-                      app shell but omits Footer, DeferredShell, Toaster, etc. */}
+                      is intentionally NOT added; NotificationBell uses a default
+                      context, so NotificationsProvider is NOT added either).
+                      Shell markup mirrors the normal app shell but omits Footer,
+                      DeferredShell, Toaster, etc. */}
                   <CartProvider>
                     <div data-app-shell className="min-h-dvh flex flex-col">
                       <Nav />
