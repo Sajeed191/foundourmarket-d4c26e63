@@ -61,7 +61,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
 // ⇩ Flip this to isolate the exact trigger (see the table above).
-const TEST_STAGE: number = 20;
+const TEST_STAGE: number = 9;
 
 // Maps a diagnostic stage (9–19) to the single feature disabled on the clone.
 const DIAG_STAGE_FEATURE: Record<number, DiagFeature> = {
@@ -148,8 +148,7 @@ function HomeLite() {
   const usePlaceholders = TEST_STAGE === 6;
   // Rounding-technique stages (20+) use the full clone with a technique applied.
   const diagRound: RoundTechnique | null = TEST_STAGE >= 20 ? (DIAG_STAGE_ROUND[TEST_STAGE] ?? null) : null;
-  const diagFeature: DiagFeature | null =
-    TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
+  const diagFeature: DiagFeature | null = TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
   const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
