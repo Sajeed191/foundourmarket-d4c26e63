@@ -34,7 +34,7 @@ const NEW_ARRIVALS_BOX_HEIGHT = 190; // 4 rows × 190 + gaps/padding ≈ 846
 // "B" = grid with only 4 boxes, "C" = grid with 8 boxes, minimal styles only.
  const BOX_MODE = "D" as "A" | "B" | "C" | "D";
  // CSS PROPERTY ISOLATION: baseline = width/height/background-color, add ONE at a time.
- const CSS_TEST = "background-shorthand" as
+ const CSS_TEST = "border" as
    | "border-radius"
    | "overflow"
    | "box-shadow"
