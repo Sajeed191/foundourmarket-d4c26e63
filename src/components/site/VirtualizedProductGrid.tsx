@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Children, cloneElement, isValidElement, memo, useEffect, useLayoutEffect, useRef, useState, type ReactElement } from "react";
 import { publishWindowMetrics, resetWindowMetrics } from "@/lib/window-metrics";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { getResponsiveImage } from "@/lib/product-images";
