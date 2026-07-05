@@ -120,7 +120,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   return (
     <div
       data-product-media
-      className="relative aspect-square w-full overflow-hidden rounded-t-[22px] p-[1.5%]"
+      className="relative aspect-square w-full p-[1.5%]"
       style={{
         background: palette.background,
         transition: "background 300ms ease",
