@@ -25,6 +25,21 @@
 //          placeholder div of identical cell size (NO ProductCard mounted)
 //     7 → Hero + Trending real ProductCards in a SINGLE-column layout
 //     8 → Hero + Trending real ProductCards in the normal TWO-column grid
+//
+//   Stages 9–19 render the TEMPORARY DiagnosticProductCard clone in the normal
+//   TWO-column grid (the layout that corrupts) with exactly ONE feature disabled
+//   at a time, to pinpoint which ProductCard feature triggers the corruption:
+//     9  → Full clone, nothing disabled (baseline — MUST corrupt)
+//     10 → Product image OFF
+//     11 → Rounded-corner clipping (overflow:hidden) OFF
+//     12 → Image fade/opacity transition OFF
+//     13 → Discount badge OFF
+//     14 → Wishlist button OFF
+//     15 → Price section OFF
+//     16 → Buy button OFF
+//     17 → All gradients OFF (solid colors)
+//     18 → All shadows OFF
+//     19 → All backdrop/filter effects OFF
 // ─────────────────────────────────────────────────────────────────────────────
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
@@ -34,12 +49,32 @@ import { useProducts } from "@/lib/use-products";
 import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { ProductCard } from "@/components/site/ProductCard";
+import {
+  DiagnosticProductCard,
+  DIAG_FEATURE_LABELS,
+  type DiagFeature,
+} from "@/components/site/DiagnosticProductCard";
 import { Reveal } from "@/components/site/Reveal";
 import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
 // ⇩ Flip this to isolate the exact trigger (see the table above).
-const TEST_STAGE: number = 8;
+const TEST_STAGE: number = 9;
+
+// Maps a diagnostic stage (9–19) to the single feature disabled on the clone.
+const DIAG_STAGE_FEATURE: Record<number, DiagFeature> = {
+  9: "none",
+  10: "image",
+  11: "rounding",
+  12: "imageFade",
+  13: "discountBadge",
+  14: "wishlist",
+  15: "price",
+  16: "buyButton",
+  17: "gradients",
+  18: "shadows",
+  19: "filters",
+};
 
 export const Route = createFileRoute("/home-lite")({
   head: () => ({
@@ -94,9 +129,11 @@ function HomeLite() {
         ? trending.slice(0, 1)
         : TEST_STAGE === 5
           ? trending.slice(0, 2)
-          : trending; // stages 2, 6, 7, 8 use the full set
+          : trending; // stages 2, 6, 7, 8, 9–19 use the full set
   const singleColumn = TEST_STAGE === 7;
   const usePlaceholders = TEST_STAGE === 6;
+  const diagFeature: DiagFeature | null =
+    TEST_STAGE >= 9 ? DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none" : null;
   const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
@@ -183,6 +220,13 @@ function HomeLite() {
             </div>
           </Reveal>
 
+          {/* Diagnostic banner — states exactly which feature is isolated. */}
+          {diagFeature && (
+            <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[13px] font-medium text-accent">
+              Diagnostic stage {TEST_STAGE}: {DIAG_FEATURE_LABELS[diagFeature]}
+            </p>
+          )}
+
           {/* Card area — gated by stage. Stage 3 renders nothing below the heading. */}
           {trendingCards.length > 0 && (
             <LazyMount minHeight={260}>
@@ -195,6 +239,9 @@ function HomeLite() {
                         aria-hidden
                         className="h-full w-full rounded-3xl bg-accent/25 ring-1 ring-white/10 min-h-[240px]"
                       />
+                    ) : diagFeature ? (
+                      // Stages 9–19: temporary diagnostic clone with one feature off.
+                      <DiagnosticProductCard product={p} disable={diagFeature} />
                     ) : (
                       <ProductCard product={p} compact forceBadge="trending" />
                     )}
