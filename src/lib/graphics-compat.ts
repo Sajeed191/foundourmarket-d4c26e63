@@ -44,7 +44,9 @@ export function readGraphicsCompatPref(): GraphicsCompatPref {
 
 /** True when Compatibility Mode is currently enabled. */
 export function isGraphicsCompatEnabled(): boolean {
-  return readGraphicsCompatPref() === "on";
+  // TEMPORARY TESTING OVERRIDE — force Graphics Compatibility Mode ON.
+  // Rollback: restore `return readGraphicsCompatPref() === "on";`
+  return true;
 }
 
 /** Apply / remove the single html attribute at runtime. */
