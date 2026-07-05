@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   MonitorSmartphone,
@@ -7,6 +7,10 @@ import {
   HelpCircle,
   ChevronDown,
   Info,
+  RotateCcw,
+  Flag,
+  Send,
+  Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,11 +27,10 @@ import {
 } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
 import {
-  readGraphicsCompatPref,
   setGraphicsCompatPref,
+  resetGraphicsCompatPref,
+  useGraphicsCompatPref,
   getGraphicsDiagnostics,
-  type GraphicsCompatPref,
-  type GraphicsDiagnostics,
 } from "@/lib/graphics-compat";
 
 /**
@@ -41,30 +44,24 @@ import {
  */
 export function GraphicsCompatCard() {
   const reduceMotion = useReducedMotion();
-  const [compat, setCompat] = useState<GraphicsCompatPref>("auto");
-  const [diag, setDiag] = useState<GraphicsDiagnostics | null>(null);
+  const pref = useGraphicsCompatPref();
+  const compatOn = pref === "on";
   const [learnOpen, setLearnOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
-  const compatOn = compat === "on";
-
-  useEffect(() => {
-    setCompat(readGraphicsCompatPref());
-    setDiag(getGraphicsDiagnostics());
+  const apply = useCallback((next: "on" | "off") => {
+    setGraphicsCompatPref(next);
+    toast.success(
+      next === "on"
+        ? "Compatibility Rendering enabled"
+        : "Premium Rendering restored",
+    );
   }, []);
 
-  const apply = useCallback(
-    (next: GraphicsCompatPref) => {
-      setGraphicsCompatPref(next);
-      setCompat(next);
-      setDiag(getGraphicsDiagnostics());
-      toast.success(
-        next === "on"
-          ? "Compatibility Rendering enabled"
-          : "Premium Rendering restored",
-      );
-    },
-    [],
-  );
+  const restoreDefault = useCallback(() => {
+    resetGraphicsCompatPref();
+    toast.success("Default rendering restored");
+  }, []);
 
   const onToggle = useCallback(
     (checked: boolean) => apply(checked ? "on" : "off"),
@@ -103,6 +100,19 @@ export function GraphicsCompatCard() {
             aria-label="Graphics Compatibility Mode"
           />
         </div>
+
+        {/* --- Secondary action: Restore Default --- */}
+        {pref !== "auto" && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={restoreDefault}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" /> Restore Default
+            </button>
+          </div>
+        )}
 
         {/* --- Animated status: Graphics Engine --- */}
         <div className="mt-4 rounded-xl border border-border bg-background/40 p-4">
@@ -202,14 +212,20 @@ export function GraphicsCompatCard() {
           />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <dl className="px-6 pb-4 space-y-2 text-xs">
-            <DiagRow label="Rendering Mode" value={diag?.renderingMode ?? "—"} />
-            <DiagRow label="Browser" value={diag?.browser ?? "—"} />
-            <DiagRow label="Android Version" value={diag?.androidVersion ?? "—"} />
-            <DiagRow label="Compatibility" value={diag?.compatibility ?? "—"} />
-          </dl>
+          <DiagnosticsList />
         </CollapsibleContent>
       </Collapsible>
+
+      {/* --- Report a graphics issue --- */}
+      <div className="border-t border-border px-6 py-3">
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Flag className="size-3.5" aria-hidden="true" /> Report a graphics issue
+        </button>
+      </div>
 
       {/* --- Learn More bottom sheet --- */}
       <Sheet open={learnOpen} onOpenChange={setLearnOpen}>
@@ -234,12 +250,21 @@ export function GraphicsCompatCard() {
               </p>
             </section>
             <section>
-              <h3 className="font-medium text-foreground">When to use it</h3>
-              <p className="mt-1">
-                Turn it on if you see flickering, horizontal lines, duplicated
-                images, or display corruption while scrolling — this occasionally
-                happens on a small number of Android Chromium browsers.
-              </p>
+              <h3 className="font-medium text-foreground">When should I use this?</h3>
+              <ul className="mt-2 space-y-1.5">
+                {[
+                  "Flickering while scrolling",
+                  "Horizontal coloured lines",
+                  "Corrupted or duplicated images",
+                  "Parts of the page not updating correctly",
+                  "Visual glitches in Chrome or Brave",
+                ].map((ex) => (
+                  <li key={ex} className="flex items-start gap-2">
+                    <span className="mt-1.5 size-1.5 rounded-full bg-accent shrink-0" aria-hidden="true" />
+                    <span>{ex}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
             <section>
               <h3 className="font-medium text-foreground">Your data is safe</h3>
@@ -255,6 +280,10 @@ export function GraphicsCompatCard() {
                 restore the full premium experience.
               </p>
             </section>
+            <p className="rounded-lg bg-muted px-3 py-2 text-foreground">
+              If you do not experience these issues, keep Premium Rendering
+              enabled for the best visual experience.
+            </p>
           </div>
           <div className="mt-6 flex gap-2">
             {!compatOn ? (
@@ -283,7 +312,108 @@ export function GraphicsCompatCard() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* --- Report issue sheet --- */}
+      <ReportIssueSheet open={reportOpen} onOpenChange={setReportOpen} />
     </div>
+  );
+}
+
+/** Diagnostics rows — computed from the current pref via the live hook. */
+function DiagnosticsList() {
+  useGraphicsCompatPref(); // re-render when the mode changes
+  const d = getGraphicsDiagnostics();
+  return (
+    <dl className="px-6 pb-4 space-y-2 text-xs">
+      <DiagRow label="Rendering Mode" value={d.renderingMode} />
+      <DiagRow label="Browser" value={d.browserName} />
+      <DiagRow label="Browser Version" value={d.browserVersion} />
+      <DiagRow label="Android Version" value={d.androidVersion} />
+      <DiagRow label="Compatibility Mode" value={d.compatibility} />
+    </dl>
+  );
+}
+
+function ReportIssueSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  useGraphicsCompatPref();
+  const d = getGraphicsDiagnostics();
+  const [notes, setNotes] = useState("");
+
+  const report = useMemo(
+    () =>
+      [
+        `Rendering Mode: ${d.renderingMode}`,
+        `Compatibility Mode: ${d.compatibility}`,
+        `Browser: ${d.browserName}`,
+        `Browser Version: ${d.browserVersion}`,
+        `Android Version: ${d.androidVersion}`,
+      ].join("\n"),
+    [d.renderingMode, d.compatibility, d.browserName, d.browserVersion, d.androidVersion],
+  );
+
+  const submit = () => {
+    // No PII, no GPU/WebGL/driver strings — only the reviewed technical summary.
+    toast.success("Thanks — your graphics report has been noted.");
+    onOpenChange(false);
+    setNotes("");
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] overflow-y-auto">
+        <SheetHeader className="text-left">
+          <SheetTitle className="flex items-center gap-2">
+            <Flag className="size-5 text-accent" aria-hidden="true" />
+            Report a graphics issue
+          </SheetTitle>
+          <SheetDescription>
+            Review the details below before sending. No personal information is
+            included.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label htmlFor="report-notes" className="text-sm font-medium">
+              What did you see? <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="report-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="e.g. Horizontal lines appeared while scrolling the product grid."
+              className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+
+          <div>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              Included details
+            </p>
+            <pre className="mt-1.5 whitespace-pre-wrap rounded-xl border border-border bg-muted px-3 py-2 text-xs text-foreground">
+{report}
+            </pre>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={submit}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90 transition-opacity"
+          >
+            <Send className="size-4" aria-hidden="true" /> Send report
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -292,6 +422,40 @@ function DiagRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-4">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * Compact "Graphics Engine" line for Settings → About / App Information.
+ * Reuses the same wording and iconography as the compatibility card and stays
+ * in sync live via the shared preference hook.
+ */
+export function GraphicsEngineAbout() {
+  const pref = useGraphicsCompatPref();
+  const compatOn = pref === "on";
+  return (
+    <div className="flex items-center justify-between gap-4 px-6 py-4">
+      <div className="flex items-center gap-2 min-w-0">
+        <Cpu className="size-4 text-accent shrink-0" aria-hidden="true" />
+        <span className="text-sm font-medium">Graphics Engine</span>
+      </div>
+      <span
+        className="inline-flex items-center gap-1.5 text-sm font-semibold"
+        aria-live="polite"
+      >
+        {compatOn ? (
+          <>
+            <ShieldCheck className="size-4 text-accent" aria-hidden="true" />
+            <span className="text-accent">Compatibility Rendering</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="size-4 text-emerald-500" aria-hidden="true" />
+            <span className="text-emerald-500">Premium Rendering</span>
+          </>
+        )}
+      </span>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Mail, Bell, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Bell, Settings as SettingsIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ThemeSelector } from "@/components/site/ThemeSelector";
-import { GraphicsCompatCard } from "@/components/site/GraphicsCompatCard";
+import { GraphicsCompatCard, GraphicsEngineAbout } from "@/components/site/GraphicsCompatCard";
 
 export const Route = createFileRoute("/account_/preferences")({
   head: () => ({ meta: [{ title: "Preferences — FoundOurMarket™" }] }),
@@ -164,6 +164,16 @@ function PreferencesPage() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+              <Info className="size-4 text-accent" />
+              <h2 className="font-display text-base font-semibold">About</h2>
+            </div>
+            <div className="divide-y divide-border">
+              <GraphicsEngineAbout />
+            </div>
           </div>
 
           <div className="flex justify-end">

@@ -20,6 +20,7 @@
  *   data-render-safe="true"      → the existing CSS hook that swaps expensive
  *                                  GPU effects for CPU-friendly fallbacks.
  */
+import { useSyncExternalStore } from "react";
 
 export type GraphicsCompatPref = "auto" | "on" | "off";
 
@@ -78,6 +79,36 @@ export function setGraphicsCompatPref(pref: GraphicsCompatPref) {
     }
   }
   applyAttributes(pref === "on");
+  notify();
+}
+
+/**
+ * Restore the default rendering behaviour: clears the stored preference and
+ * returns to Premium Rendering. Applies immediately, no reload.
+ */
+export function resetGraphicsCompatPref() {
+  setGraphicsCompatPref("auto");
+}
+
+// --- Live subscription (so multiple cards stay in sync without a reload) ---
+const listeners = new Set<() => void>();
+function notify() {
+  listeners.forEach((l) => l());
+}
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
+/** React hook: current persisted preference, updates live on any change. */
+export function useGraphicsCompatPref(): GraphicsCompatPref {
+  return useSyncExternalStore(
+    subscribe,
+    readGraphicsCompatPref,
+    () => "auto" as GraphicsCompatPref,
+  );
 }
 
 /** Chromium-family engine on Android (Chrome, Brave, Edge, etc.) — excludes Firefox. */
@@ -90,22 +121,43 @@ export function isAndroidChromium(): boolean {
   return isAndroid && isChromium && !isFirefox;
 }
 
+/** Browser family name (no version), e.g. "Chrome". Diagnostics-only. */
+export function detectBrowserName(ua?: string): string {
+  const s = ua ?? (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
+  if (!s) return "Unknown";
+  if (/Edg(?:A|iOS)?\//.test(s)) return "Edge";
+  if (/OPR\/|Opera\//.test(s)) return "Opera";
+  if (/SamsungBrowser\//.test(s)) return "Samsung Internet";
+  if (/Firefox\/|FxiOS\//.test(s)) return "Firefox";
+  if (/CriOS\/|Chrome\//.test(s)) return "Chrome";
+  if (/Version\/\d+.*Safari/.test(s)) return "Safari";
+  return "Unknown";
+}
+
+/** Browser major version as a string, e.g. "138". Diagnostics-only. */
+export function detectBrowserVersion(ua?: string): string {
+  const s = ua ?? (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
+  if (!s) return "—";
+  let m: RegExpMatchArray | null;
+  if ((m = s.match(/Edg(?:A|iOS)?\/(\d+)/))) return m[1];
+  if ((m = s.match(/OPR\/(\d+)/)) || (m = s.match(/Opera\/(\d+)/))) return m[1];
+  if ((m = s.match(/SamsungBrowser\/(\d+)/))) return m[1];
+  if ((m = s.match(/(?:Firefox|FxiOS)\/(\d+)/))) return m[1];
+  if ((m = s.match(/CriOS\/(\d+)/))) return m[1];
+  if ((m = s.match(/Chrome\/(\d+)/))) return m[1];
+  if (/Version\/(\d+).*Safari/.test(s) && (m = s.match(/Version\/(\d+)/))) return m[1];
+  return "—";
+}
+
 /**
  * Human-readable browser name + major version, e.g. "Chrome 138".
  * Diagnostics-only; never used to auto-enable compatibility mode.
  */
 export function detectBrowser(ua?: string): string {
-  const s = ua ?? (typeof navigator !== "undefined" ? navigator.userAgent || "" : "");
-  if (!s) return "Unknown";
-  let m: RegExpMatchArray | null;
-  if ((m = s.match(/Edg(?:A|iOS)?\/(\d+)/))) return `Edge ${m[1]}`;
-  if ((m = s.match(/OPR\/(\d+)/)) || (m = s.match(/Opera\/(\d+)/))) return `Opera ${m[1]}`;
-  if ((m = s.match(/SamsungBrowser\/(\d+)/))) return `Samsung Internet ${m[1]}`;
-  if ((m = s.match(/(?:Firefox|FxiOS)\/(\d+)/))) return `Firefox ${m[1]}`;
-  if (/CriOS\/(\d+)/.test(s) && (m = s.match(/CriOS\/(\d+)/))) return `Chrome ${m[1]}`;
-  if ((m = s.match(/Chrome\/(\d+)/))) return `Chrome ${m[1]}`;
-  if (/Version\/(\d+).*Safari/.test(s) && (m = s.match(/Version\/(\d+)/))) return `Safari ${m[1]}`;
-  return "Unknown";
+  const name = detectBrowserName(ua);
+  const version = detectBrowserVersion(ua);
+  if (name === "Unknown") return "Unknown";
+  return version === "—" ? name : `${name} ${version}`;
 }
 
 /** Android version, e.g. "Android 15", or "Not Android" when not applicable. */
@@ -118,6 +170,8 @@ export function detectAndroidVersion(ua?: string): string {
 export type GraphicsDiagnostics = {
   renderingMode: "Premium Rendering" | "Compatibility Rendering";
   browser: string;
+  browserName: string;
+  browserVersion: string;
   androidVersion: string;
   compatibility: "Enabled" | "Disabled";
 };
@@ -131,8 +185,11 @@ export function getGraphicsDiagnostics(): GraphicsDiagnostics {
   return {
     renderingMode: active ? "Compatibility Rendering" : "Premium Rendering",
     browser: detectBrowser(),
+    browserName: detectBrowserName(),
+    browserVersion: detectBrowserVersion(),
     androidVersion: detectAndroidVersion(),
     compatibility: active ? "Enabled" : "Disabled",
   };
 }
+
 
