@@ -34,6 +34,7 @@ import { Route as DealsRouteImport } from './routes/deals'
 import { Route as ContinueShoppingRouteImport } from './routes/continue-shopping'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as ChromiumRenderTestRouteImport } from './routes/chromium-render-test'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CartRouteImport } from './routes/cart'
@@ -278,6 +279,11 @@ const ContactRoute = ContactRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChromiumRenderTestRoute = ChromiumRenderTestRouteImport.update({
+  id: '/chromium-render-test',
+  path: '/chromium-render-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -969,6 +975,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/chromium-render-test': typeof ChromiumRenderTestRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/continue-shopping': typeof ContinueShoppingRoute
@@ -1116,6 +1123,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/chromium-render-test': typeof ChromiumRenderTestRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/continue-shopping': typeof ContinueShoppingRoute
@@ -1263,6 +1271,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
+  '/chromium-render-test': typeof ChromiumRenderTestRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/continue-shopping': typeof ContinueShoppingRoute
@@ -1412,6 +1421,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/chromium-render-test'
     | '/compare'
     | '/contact'
     | '/continue-shopping'
@@ -1559,6 +1569,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/chromium-render-test'
     | '/compare'
     | '/contact'
     | '/continue-shopping'
@@ -1705,6 +1716,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/categories'
     | '/checkout'
+    | '/chromium-render-test'
     | '/compare'
     | '/contact'
     | '/continue-shopping'
@@ -1853,6 +1865,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
+  ChromiumRenderTestRoute: typeof ChromiumRenderTestRoute
   CompareRoute: typeof CompareRoute
   ContactRoute: typeof ContactRoute
   ContinueShoppingRoute: typeof ContinueShoppingRoute
@@ -2091,6 +2104,13 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chromium-render-test': {
+      id: '/chromium-render-test'
+      path: '/chromium-render-test'
+      fullPath: '/chromium-render-test'
+      preLoaderRoute: typeof ChromiumRenderTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -3078,6 +3098,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
+  ChromiumRenderTestRoute: ChromiumRenderTestRoute,
   CompareRoute: CompareRoute,
   ContactRoute: ContactRoute,
   ContinueShoppingRoute: ContinueShoppingRoute,
@@ -3143,13 +3164,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
