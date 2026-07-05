@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ThemeSelector } from "@/components/site/ThemeSelector";
-import { GraphicsCompatCard } from "@/components/site/GraphicsCompatCard";
+import { GraphicsCompatCard, GraphicsEngineAbout } from "@/components/site/GraphicsCompatCard";
 
 export const Route = createFileRoute("/account_/preferences")({
   head: () => ({ meta: [{ title: "Preferences — FoundOurMarket™" }] }),
