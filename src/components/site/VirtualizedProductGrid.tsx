@@ -269,7 +269,6 @@ function StaggeredGridChildren({ grid }: { grid: ReactElement }) {
   useEffect(() => {
     if (count >= total) {
       gridLog("stagger-mount complete →", { insertedPerCommit: 1, total });
-      publishGridTelemetry({ staggerMountTotal: total });
       return;
     }
     const id = requestAnimationFrame(() => setCount((c) => Math.min(total, c + 1)));
