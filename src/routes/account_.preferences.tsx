@@ -159,16 +159,39 @@ function PreferencesPage() {
                 <div className="min-w-0">
                   <p className="font-medium text-sm">Graphics Compatibility Mode</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Reduces GPU effects for smoother, glitch-free rendering on
-                    devices that show flickering or banding while scrolling.
+                    If you experience flickering, graphical glitches, or display
+                    corruption in Chrome or Brave, enable Compatibility Mode for
+                    improved stability — it uses a simplified graphics pipeline.
                   </p>
                 </div>
                 <Toggle on={compatOn} onClick={toggleCompat} />
               </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  Status
+                </span>
+                <span
+                  className={
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium " +
+                    (compatOn
+                      ? "bg-accent/15 text-accent"
+                      : "bg-emerald-500/10 text-emerald-500")
+                  }
+                >
+                  <span
+                    className={
+                      "size-1.5 rounded-full " +
+                      (compatOn ? "bg-accent" : "bg-emerald-500")
+                    }
+                  />
+                  {compatOn ? "Compatibility Mode Enabled" : "Premium Rendering"}
+                </span>
+              </div>
               {suggestCompat && !compatOn && (
                 <p className="text-xs text-accent/90 mt-3 rounded-lg bg-accent/10 px-3 py-2">
-                  This device may benefit from Graphics Compatibility Mode if you
-                  notice display glitches while scrolling.
+                  Seeing flickering or corrupted graphics in Chrome or Brave?
+                  Enabling Compatibility Mode uses a simplified graphics pipeline
+                  for improved stability.
                 </p>
               )}
             </div>
