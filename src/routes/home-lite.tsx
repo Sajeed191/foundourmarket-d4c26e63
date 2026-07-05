@@ -13,9 +13,18 @@
 //
 // The whole experiment is removable by deleting THIS FILE only.
 //
-//   TEST_STAGE controls how much painted content is mounted:
-//     >= 1  → Hero
-//     >= 2  → Hero + Trending Products grid
+//   TEST_STAGE controls exactly what is mounted (Hero is always rendered and is
+//   never changed). Only what is rendered is gated — ProductCard,
+//   AdaptiveProductMedia and all CSS are untouched.
+//     1 → Hero only
+//     2 → Hero + full Trending grid (real ProductCards, normal 2-col)
+//     3 → Hero + Trending heading only (NO ProductCards)
+//     4 → Hero + Trending heading + exactly ONE real ProductCard
+//     5 → Hero + Trending heading + exactly TWO real ProductCards
+//     6 → Hero + Trending full grid layout, every card replaced by a colored
+//          placeholder div of identical cell size (NO ProductCard mounted)
+//     7 → Hero + Trending real ProductCards in a SINGLE-column layout
+//     8 → Hero + Trending real ProductCards in the normal TWO-column grid
 // ─────────────────────────────────────────────────────────────────────────────
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
@@ -29,8 +38,8 @@ import { Reveal } from "@/components/site/Reveal";
 import { LazyMount } from "@/components/site/LazyMount";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 
-// ⇩ Flip this to grow the painted area one section at a time during testing.
-const TEST_STAGE = 2;
+// ⇩ Flip this to isolate the exact trigger (see the table above).
+const TEST_STAGE = 3;
 
 export const Route = createFileRoute("/home-lite")({
   head: () => ({
