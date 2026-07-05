@@ -220,6 +220,13 @@ function HomeLite() {
             </div>
           </Reveal>
 
+          {/* Diagnostic banner — states exactly which feature is isolated. */}
+          {diagFeature && (
+            <p className="mb-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[13px] font-medium text-accent">
+              Diagnostic stage {TEST_STAGE}: {DIAG_FEATURE_LABELS[diagFeature]}
+            </p>
+          )}
+
           {/* Card area — gated by stage. Stage 3 renders nothing below the heading. */}
           {trendingCards.length > 0 && (
             <LazyMount minHeight={260}>
@@ -232,6 +239,9 @@ function HomeLite() {
                         aria-hidden
                         className="h-full w-full rounded-3xl bg-accent/25 ring-1 ring-white/10 min-h-[240px]"
                       />
+                    ) : diagFeature ? (
+                      // Stages 9–19: temporary diagnostic clone with one feature off.
+                      <DiagnosticProductCard product={p} disable={diagFeature} />
                     ) : (
                       <ProductCard product={p} compact forceBadge="trending" />
                     )}
