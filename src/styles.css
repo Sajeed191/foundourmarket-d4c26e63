@@ -3065,4 +3065,6 @@ html[data-gpu-unsafe="true"] [data-uniform-card] [data-uniform-glow] {
    longer relevant.
    ====================================================== */
 
-/* html[data-graphics-compat="true"] .some-selector { ... } */
+html[data-graphics-compat="true"] [data-product-card] {
+  overflow: visible !important;
+}
