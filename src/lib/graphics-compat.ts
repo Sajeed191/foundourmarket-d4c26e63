@@ -24,7 +24,6 @@
 export type GraphicsCompatPref = "auto" | "on" | "off";
 
 const PREF_KEY = "fom-graphics-compat";
-const DISMISS_KEY = "fom-graphics-compat-suggested";
 
 /** Read the persisted user preference. Absent / invalid → "auto". */
 export function readGraphicsCompatPref(): GraphicsCompatPref {
