@@ -166,7 +166,11 @@ export function Nav() {
     topNav.style.opacity = "1";
     topNav.style.visibility = "visible";
     topNav.style.pointerEvents = "";
-    topNav.style.transform = "translateY(0)";
+    // Intentionally do NOT set a transform here. Visibility is driven by
+    // display/opacity/visibility above; an identity translateY(0) would only
+    // re-promote the fixed header to a composited layer (Chrome 149 GPU-raster
+    // tile corruption trigger) with no visual effect.
+    topNav.style.transform = "";
   }, []);
 
   // Single source of truth for hiding/restoring the top nav around search.
@@ -295,7 +299,11 @@ export function Nav() {
           display: "block",
           filter: "none",
           visibility: "visible",
-          transform: "translateY(0)",
+          /* No transform: an identity translateY(0) still forces Chromium to
+             promote this fixed header to its own composited layer, which is the
+             layer that overlaps document-scrolling content and triggers the
+             Chrome 149 GPU-raster tile bug (duplicated tiles / horizontal
+             bands / stale fragments). Omitting it is a visual no-op. */
           opacity: 1,
           transition: "none",
           willChange: "auto",
