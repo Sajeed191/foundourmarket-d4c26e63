@@ -146,7 +146,10 @@ function HomeLite() {
           : trending; // stages 2, 6, 7, 8, 9–19 use the full set
   const singleColumn = TEST_STAGE === 7;
   const usePlaceholders = TEST_STAGE === 6;
-  const diagFeature: DiagFeature | null = TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
+  // Rounding-technique stages (20+) use the full clone with a technique applied.
+  const diagRound: RoundTechnique | null = TEST_STAGE >= 20 ? (DIAG_STAGE_ROUND[TEST_STAGE] ?? null) : null;
+  const diagFeature: DiagFeature | null =
+    TEST_STAGE >= 9 ? (DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none") : null;
   const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
