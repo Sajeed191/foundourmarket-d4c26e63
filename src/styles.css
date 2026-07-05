@@ -2539,6 +2539,40 @@ html[data-ff-animations="off"] *::after {
   transition: none !important;
 }
 
+html[data-ff-js-animations="off"] .hero-rise,
+html[data-ff-js-animations="off"] .hero-rise-h1,
+html[data-ff-js-animations="off"] .animate-fade-up,
+html[data-ff-js-animations="off"] .animate-fade-in,
+html[data-ff-js-animations="off"] .animate-scale-in,
+html[data-ff-js-animations="off"] .animate-search-drop,
+html[data-ff-js-animations="off"] .animate-search-rise,
+html[data-ff-js-animations="off"] .animate-panel-reveal,
+html[data-ff-js-animations="off"] .animate-nav-rematerialize,
+html[data-ff-js-animations="off"] .animate-hero-product,
+html[data-ff-js-animations="off"] .animate-float,
+html[data-ff-js-animations="off"] .animate-float-soft,
+html[data-ff-js-animations="off"] .animate-float-slow,
+html[data-ff-js-animations="off"] .animate-orb,
+html[data-ff-js-animations="off"] .animate-orb-breathe,
+html[data-ff-js-animations="off"] .animate-glow,
+html[data-ff-js-animations="off"] .animate-glow-breathe,
+html[data-ff-js-animations="off"] .animate-ambient,
+html[data-ff-js-animations="off"] .animate-energy-breathe,
+html[data-ff-js-animations="off"] .animate-cta-breathe,
+html[data-ff-js-animations="off"] .animate-footer-line,
+html[data-ff-js-animations="off"] .animate-flame-pulse,
+html[data-ff-js-animations="off"] .animate-pulse,
+html[data-ff-js-animations="off"] .badge-anim-pulse,
+html[data-ff-js-animations="off"] .badge-anim-bounce,
+html[data-ff-js-animations="off"] .badge-anim-glow,
+html[data-ff-js-animations="off"] .badge-anim-float,
+html[data-ff-js-animations="off"] .badge-anim-slide,
+html[data-ff-js-animations="off"] .badge-anim-flash,
+html[data-ff-js-animations="off"] .badge-anim-shine::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 html[data-ff-gpu-transforms="off"] *,
 html[data-ff-gpu-transforms="off"] *::before,
 html[data-ff-gpu-transforms="off"] *::after {
@@ -2550,6 +2584,32 @@ html[data-ff-gpu-transforms="off"] *::after {
   transform-style: flat !important;
   backface-visibility: visible !important;
   will-change: auto !important;
+}
+
+html[data-ff-transform="off"] *,
+html[data-ff-transform="off"] *::before,
+html[data-ff-transform="off"] *::after {
+  transform: none !important;
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+html[data-ff-will-change="off"] *,
+html[data-ff-will-change="off"] *::before,
+html[data-ff-will-change="off"] *::after {
+  will-change: auto !important;
+}
+
+html[data-ff-containment="off"] *,
+html[data-ff-containment="off"] *::before,
+html[data-ff-containment="off"] *::after {
+  contain: none !important;
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+  isolation: auto !important;
 }
 
 html[data-ff-css-filters="off"] *,
@@ -2571,6 +2631,85 @@ html[data-ff-blur-effects="off"] *::after {
   backdrop-filter: none !important;
 }
 
+html[data-ff-mix-blend-mode="off"] *,
+html[data-ff-mix-blend-mode="off"] *::before,
+html[data-ff-mix-blend-mode="off"] *::after {
+  mix-blend-mode: normal !important;
+}
+
+html[data-ff-css-masks="off"] *,
+html[data-ff-css-masks="off"] *::before,
+html[data-ff-css-masks="off"] *::after {
+  mask: none !important;
+  -webkit-mask: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  mask-composite: add !important;
+  -webkit-mask-composite: source-over !important;
+}
+
+html[data-ff-clip-path="off"] *,
+html[data-ff-clip-path="off"] *::before,
+html[data-ff-clip-path="off"] *::after {
+  clip-path: none !important;
+}
+
+html[data-ff-box-shadows="off"] *,
+html[data-ff-box-shadows="off"] *::before,
+html[data-ff-box-shadows="off"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-ff-gradients="off"] *,
+html[data-ff-gradients="off"] *::before,
+html[data-ff-gradients="off"] *::after {
+  background-image: none !important;
+}
+
+html[data-ff-sticky-position="off"] .lg\:sticky,
+html[data-ff-sticky-position="off"] .sticky,
+html[data-ff-sticky-position="off"] [style*="position: sticky"],
+html[data-ff-sticky-position="off"] [style*="position:sticky"] {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+}
+
+html[data-ff-fixed-position="off"] .fixed,
+html[data-ff-fixed-position="off"] [data-app-header],
+html[data-ff-fixed-position="off"] [data-app-bottom-nav],
+html[data-ff-fixed-position="off"] [data-floating-control],
+html[data-ff-fixed-position="off"] [data-floating-ui],
+html[data-ff-fixed-position="off"] [data-product-cta],
+html[data-ff-fixed-position="off"] [data-sonner-toaster],
+html[data-ff-fixed-position="off"] [style*="position: fixed"],
+html[data-ff-fixed-position="off"] [style*="position:fixed"] {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+html[data-ff-overflow-clipping="off"] [data-product-card],
+html[data-ff-overflow-clipping="off"] [data-product-media],
+html[data-ff-overflow-clipping="off"] .product-card-shell,
+html[data-ff-overflow-clipping="off"] .overflow-hidden[class*="rounded"],
+html[data-ff-overflow-clipping="off"] [class*="overflow-hidden"][class*="rounded"],
+html[data-ff-overflow-clipping="off"] [style*="overflow: hidden"][style*="border-radius"],
+html[data-ff-overflow-clipping="off"] [style*="overflow:hidden"][style*="borderRadius"] {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+html[data-ff-object-fit="off"] [data-product-image],
+html[data-ff-object-fit="off"] img {
+  object-fit: fill !important;
+}
+
 /* ISOLATION TEST FLAG (temporary). `?ff-disable-cv` sets
    data-ff-content-visibility="off" before first paint. This neutralises ONLY
    content-visibility: auto + its render-skip containment across the tree —
@@ -2581,10 +2720,10 @@ html[data-ff-blur-effects="off"] *::after {
    conservatively, which is why Firefox never reproduces. */
 html[data-ff-content-visibility="off"] [data-product-card-frame],
 html[data-ff-content-visibility="off"] .cv-auto,
-html[data-ff-content-visibility="off"] [style*="content-visibility"] {
+html[data-ff-content-visibility="off"] [style*="content-visibility"],
+html[data-ff-content-visibility="off"] [style*="contentVisibility"] {
   content-visibility: visible !important;
   contain-intrinsic-size: auto !important;
-  contain: none !important;
 }
 
 /* =====================================================================
