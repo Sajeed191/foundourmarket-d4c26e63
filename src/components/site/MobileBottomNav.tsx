@@ -315,18 +315,15 @@ export function MobileBottomNav() {
 
       <ul
         data-compact={compact ? "" : undefined}
+        style={{ willChange: "transform, opacity" }}
         // NOTE: never set an inline `backdrop-filter` here — global safe-mode
         // selectors ([style*="backdrop-filter"]) would then recolor the dock to
         // a theme background. Blur is removed via the .nav-glass CSS class only,
         // keeping ONE fixed color across every device/state.
-        // STEP 2 ISOLATION (temporary): `will-change: transform, opacity`
-        // removed. On a position:fixed element this hint forces a PERSISTENT
-        // GPU backing store that overlaps the scrolling document — a prime
-        // Chrome 149 tile-recycle corruption trigger. Revert if no effect.
         className={
           // SINGLE unified surface for every theme + state. No theme-conditional
           // colors, so there is no hydration flash or color switching.
-          "nav-glass pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2" +
+          "nav-glass transform-gpu pointer-events-auto relative mx-auto grid max-w-md grid-cols-5 rounded-[30px] px-2" +
           // Transform + opacity only. Micro-collapse is visual, not a separate
           // state, so compact is the only visible scroll-safe mode.
           ` h-[var(--mobile-nav-surface-height)] py-2 transition-[transform,opacity] duration-[180ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
