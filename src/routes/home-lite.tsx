@@ -129,9 +129,11 @@ function HomeLite() {
         ? trending.slice(0, 1)
         : TEST_STAGE === 5
           ? trending.slice(0, 2)
-          : trending; // stages 2, 6, 7, 8 use the full set
+          : trending; // stages 2, 6, 7, 8, 9–19 use the full set
   const singleColumn = TEST_STAGE === 7;
   const usePlaceholders = TEST_STAGE === 6;
+  const diagFeature: DiagFeature | null =
+    TEST_STAGE >= 9 ? DIAG_STAGE_FEATURE[TEST_STAGE] ?? "none" : null;
   const gridClass = singleColumn ? "grid grid-cols-1 gap-3 sm:gap-4" : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
