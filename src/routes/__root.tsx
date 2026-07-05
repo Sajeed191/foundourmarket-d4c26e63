@@ -331,6 +331,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           "(function(){try{var d=document.documentElement;if(localStorage.getItem('fom-graphics-compat')==='on'){d.setAttribute('data-graphics-compat','true');d.setAttribute('data-render-safe','true');}}catch(e){}})();",
       },
+      {
+        // TEMPORARY: Chrome/Chromium Android 149–150 GPU raster rounded-clip
+        // compositor bug (Viz fast-rounded-corner MaskFilterInfo merge; fixed in
+        // Chromium 151). Set ONE attribute before first paint for ONLY affected
+        // browsers — Android + Chromium engine + major version 149 or 150,
+        // excluding Firefox. All rendering changes live behind this attribute in
+        // styles.css. Remove after Chromium <=150 support is dropped.
+        children:
+          "(function(){try{var d=document.documentElement,ua=navigator.userAgent||'';if(/Android/.test(ua)&&!/Firefox|FxiOS/.test(ua)){var m=ua.match(/Chrom(?:e|ium)\\/(\\d+)/);if(m){var v=parseInt(m[1],10);if(v>=149&&v<=150)d.setAttribute('data-chromium149-roundedclip-workaround','true');}}}catch(e){}})();",
+      },
+
+
 
       {
         // GPU-compositor safety gate. Some Android GPUs (Mali, PowerVR, software

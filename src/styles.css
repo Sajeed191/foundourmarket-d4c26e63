@@ -2538,6 +2538,24 @@ html[data-ff-overflow-clipping="off"] [data-product-media] {
   mask-image: none !important;
 }
 
+/* TEMPORARY:
+   Chrome/Chromium Android 149–150 GPU raster rounded-clip compositor bug.
+   Chromium's Viz "fast-rounded-corner" path (SharedQuadState::is_fast_rounded_corner
+   + CanMergeMaskFilterInfo) incorrectly merges the rounded-corner MaskFilterInfo of
+   adjacent GPU raster tiles once a product grid spans an extra tile row (~5th card),
+   producing horizontal tile corruption. Fixed in Chromium 151; never reproduces on
+   Firefox/desktop/iOS or with GPU rasterization off.
+
+   Validated fix: only the OUTER product-card rounded *overflow* clip lowers to the
+   buggy MaskFilterInfo. Dropping just that clip removes the trigger. border-radius,
+   box-shadow, gradients, spacing, typography and animations are all untouched — the
+   card background and border stay rounded via border-radius, and the media wrapper
+   keeps its own clip. Gated to affected browsers only via the attribute set in
+   src/routes/__root.tsx. Remove this block once Chromium <=150 support is dropped. */
+html[data-chromium149-roundedclip-workaround="true"] [data-product-card] {
+  overflow: visible;
+}
+
 html[data-ultra-low-end="true"] [data-product-card],
 html[data-ultra-low-end="true"] [data-product-card-frame],
 html[data-ultra-low-end="true"] [data-product-media],
