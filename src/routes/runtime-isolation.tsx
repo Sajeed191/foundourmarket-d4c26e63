@@ -156,7 +156,7 @@ function HomeSections({ products }: { products: Product[] }) {
           badge="bestseller"
         />
       )}
-      {STAGE >= 3 && (
+      {STAGE >= 3 && NEW_ARRIVALS_MODE === "section" && (
         <RailSection
           sectionKey="new_arrivals"
           title="New Arrivals"
@@ -164,6 +164,25 @@ function HomeSections({ products }: { products: Product[] }) {
           items={newArrivals}
           badge="new"
         />
+      )}
+      {/* HEIGHT-THRESHOLD EXPERIMENT: New Arrivals replaced by an equivalent-height
+          spacer — no ProductCards, images, observers, LazyMount, or grid. */}
+      {STAGE >= 3 && NEW_ARRIVALS_MODE === "spacer" && (
+        <div style={{ height: NEW_ARRIVALS_HEIGHT }} />
+      )}
+      {/* HEIGHT-THRESHOLD EXPERIMENT: New Arrivals replaced by 8 plain colored
+          boxes of the same total height — no ProductCard, images, observers, hooks. */}
+      {STAGE >= 3 && NEW_ARRIVALS_MODE === "boxes" && (
+        <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                style={{ height: NEW_ARRIVALS_BOX_HEIGHT, background: i % 2 ? "#334155" : "#475569" }}
+              />
+            ))}
+          </div>
+        </div>
       )}
       {STAGE >= 4 && (
         <LazyMount minHeight={360}>
