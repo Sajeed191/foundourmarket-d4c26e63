@@ -41,11 +41,23 @@ function ProductImageImpl({
   style,
   onLoad,
 }: Props) {
+  const rootDataset = typeof document === "undefined" ? null : document.documentElement.dataset;
+  const activePropTest = rootDataset?.bisectOverride === "on" ? rootDataset?.bisectTest : null;
+  const disableSrcset =
+    rootDataset?.ffImageTransformations === "off" ||
+    rootDataset?.ffProductImages === "off" ||
+    activePropTest === "product-image-srcset";
+  const disableLazyLoading =
+    rootDataset?.ffLazyLoading === "off" || activePropTest === "product-image-lazy-loading";
+  const disableAsyncDecoding =
+    rootDataset?.ffImageDecoding === "off" || activePropTest === "product-image-decoding-async";
+  const disableImageDecode =
+    rootDataset?.ffImageDecoding === "off" || activePropTest === "product-image-image-decode";
   // Bundled demo assets ship a build-time srcset; real (storage-hosted) product
   // images get an on-the-fly resized srcset so we never download the original.
-  const bundled = getResponsiveImage(src);
-  const storage = bundled ? null : getStorageResponsive(src);
-  const srcset = bundled?.srcset ?? storage?.srcset;
+  const bundled = disableSrcset ? null : getResponsiveImage(src);
+  const storage = disableSrcset || bundled ? null : getStorageResponsive(src);
+  const srcset = disableSrcset ? undefined : (bundled?.srcset ?? storage?.srcset);
   const resolvedSrc = storage?.src ?? src;
 
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -66,7 +78,7 @@ function ProductImageImpl({
       onLoad?.(img);
     };
 
-    if (typeof img.decode === "function") {
+    if (!disableImageDecode && typeof img.decode === "function") {
       img
         .decode()
         .then(reveal)
@@ -87,7 +99,7 @@ function ProductImageImpl({
       // Best-effort cleanup if the src changes before the timer fires.
       return () => clearTimeout(t);
     }
-  }, [onLoad, resolvedSrc]);
+  }, [disableImageDecode, onLoad, resolvedSrc]);
 
   useEffect(() => {
     activeSrcRef.current = resolvedSrc;
@@ -106,9 +118,9 @@ function ProductImageImpl({
       alt={alt}
       width={width}
       height={height}
-      loading={priority ? "eager" : "lazy"}
+      loading={priority || disableLazyLoading ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "low"}
-      decoding="async"
+      decoding={disableAsyncDecoding ? "sync" : "async"}
       data-product-image
       suppressHydrationWarning
       style={style}

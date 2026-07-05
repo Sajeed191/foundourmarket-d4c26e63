@@ -422,9 +422,9 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
    Lightning CSS strips any `backdrop-filter: none|initial !important` override,
    so blur can only be kept off mobile by never emitting it below 768px (adding
    a real value in a min-width query is preserved, a removal is not). This
-   eliminates the backdrop-filter READBACK compositor layers on phones — the
-   source of the transient horizontal band on hard refresh — with zero mobile
-   visual change (mobile glass was already meant to be blur-free). */
+   eliminates backdrop-filter READBACK compositor layers on phones — one
+   suspected Chromium banding trigger — with zero mobile visual change (mobile
+   glass was already meant to be blur-free). */
 @media (min-width: 768px) {
   .glass { backdrop-filter: blur(20px); }
   .glass-strong { backdrop-filter: blur(24px) saturate(140%); }
@@ -472,13 +472,9 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 .product-card-glass {
   position: relative;
   border-radius: 20px;
-  /* Root cause of Chromium stale-tile / duplicated-image corruption: a
-     `backdrop-filter` here repeats on every product card. Chromium gives each
-     one its own offscreen backdrop-readback layer that re-samples the page
-     behind it during scroll, producing duplicated tiles / horizontal bands /
-     stale textures (Firefox composites these differently, hence no corruption).
-     The blur was visually negligible behind an ~80%-opaque fill, so we drop it
-     and make the gradient fully opaque — pixel-identical card, no readback. */
+  /* Avoid per-card backdrop readback layers. This is a suspected Chromium
+     compositor risk and is intentionally covered by the binary-search harness;
+     do not treat it as a proven root cause without A/B/A device evidence. */
   background:
     radial-gradient(120% 90% at 50% -10%, oklch(0.74 0.19 49 / 0.08), transparent 55%),
     linear-gradient(180deg, oklch(0.2 0.012 260), oklch(0.15 0.009 260));
@@ -1277,7 +1273,7 @@ html[data-low-end="true"] .sm\:hover\:scale-\[1\.02\]:hover {
    ===================================================================== */
 
 /* 1. Kill all filters, backdrop-filters, blur and blends across the tree.
-      These are the single biggest source of compositor tile corruption. */
+      These are high-risk compositor features on affected Chromium builds. */
 html[data-low-end="true"] *,
 html[data-low-end="true"] *::before,
 html[data-low-end="true"] *::after {
@@ -1436,8 +1432,8 @@ html[data-degrade-effects="true"] [style*="blur("] {
    keep only the sticky header glass for its premium look. Animations stay on
    transform/opacity only. */
 @media (max-width: 767px) {
-  /* Backdrop-filter READBACK layers are the source of the transient horizontal
-     band on hard refresh (a backdrop-filter layer samples the framebuffer
+  /* Backdrop-filter READBACK layers are a suspected source of transient
+     bands on hard refresh (a backdrop-filter layer samples the framebuffer
      behind it; before it is rasterized on the first commit the sample is
      garbage, which clears on the next frame / on scroll).
      Blur is removed at the SOURCE on mobile — .glass/.glass-strong emit blur
@@ -1503,12 +1499,9 @@ html[data-degrade-effects="true"] [style*="blur("] {
 
 /* ===== Android compositor corruption guard (ALL Android devices) =====
    `content-visibility: auto`, `contain: paint`, and `isolation: isolate` on
-   repeated product cards are the confirmed trigger for Chrome/Samsung Android
-   GPU tile corruption (duplicated text/badges + rainbow bands) on Mali /
-   PowerVR / older Adreno GPUs. The perf gain is marginal; the corruption is
-   severe and reproduces on real hardware that is NOT flagged low-end. So we
-   strip these properties on every Android device, unconditionally, while
-   desktop keeps the optimization. */
+   repeated product cards are high-risk Chromium Android tile-invalidation
+   features. They remain under binary-search investigation and must not be
+   considered proven without reproduce → disable → re-enable device evidence. */
 html[data-android="true"] .cv-auto,
 html[data-android="true"] [data-product-card-frame],
 html[data-android="true"] .product-card-shell,
@@ -2539,6 +2532,40 @@ html[data-ff-animations="off"] *::after {
   transition: none !important;
 }
 
+html[data-ff-js-animations="off"] .hero-rise,
+html[data-ff-js-animations="off"] .hero-rise-h1,
+html[data-ff-js-animations="off"] .animate-fade-up,
+html[data-ff-js-animations="off"] .animate-fade-in,
+html[data-ff-js-animations="off"] .animate-scale-in,
+html[data-ff-js-animations="off"] .animate-search-drop,
+html[data-ff-js-animations="off"] .animate-search-rise,
+html[data-ff-js-animations="off"] .animate-panel-reveal,
+html[data-ff-js-animations="off"] .animate-nav-rematerialize,
+html[data-ff-js-animations="off"] .animate-hero-product,
+html[data-ff-js-animations="off"] .animate-float,
+html[data-ff-js-animations="off"] .animate-float-soft,
+html[data-ff-js-animations="off"] .animate-float-slow,
+html[data-ff-js-animations="off"] .animate-orb,
+html[data-ff-js-animations="off"] .animate-orb-breathe,
+html[data-ff-js-animations="off"] .animate-glow,
+html[data-ff-js-animations="off"] .animate-glow-breathe,
+html[data-ff-js-animations="off"] .animate-ambient,
+html[data-ff-js-animations="off"] .animate-energy-breathe,
+html[data-ff-js-animations="off"] .animate-cta-breathe,
+html[data-ff-js-animations="off"] .animate-footer-line,
+html[data-ff-js-animations="off"] .animate-flame-pulse,
+html[data-ff-js-animations="off"] .animate-pulse,
+html[data-ff-js-animations="off"] .badge-anim-pulse,
+html[data-ff-js-animations="off"] .badge-anim-bounce,
+html[data-ff-js-animations="off"] .badge-anim-glow,
+html[data-ff-js-animations="off"] .badge-anim-float,
+html[data-ff-js-animations="off"] .badge-anim-slide,
+html[data-ff-js-animations="off"] .badge-anim-flash,
+html[data-ff-js-animations="off"] .badge-anim-shine::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 html[data-ff-gpu-transforms="off"] *,
 html[data-ff-gpu-transforms="off"] *::before,
 html[data-ff-gpu-transforms="off"] *::after {
@@ -2552,6 +2579,32 @@ html[data-ff-gpu-transforms="off"] *::after {
   will-change: auto !important;
 }
 
+html[data-ff-transform="off"] *,
+html[data-ff-transform="off"] *::before,
+html[data-ff-transform="off"] *::after {
+  transform: none !important;
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+
+html[data-ff-will-change="off"] *,
+html[data-ff-will-change="off"] *::before,
+html[data-ff-will-change="off"] *::after {
+  will-change: auto !important;
+}
+
+html[data-ff-containment="off"] *,
+html[data-ff-containment="off"] *::before,
+html[data-ff-containment="off"] *::after {
+  contain: none !important;
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+  isolation: auto !important;
+}
+
 html[data-ff-css-filters="off"] *,
 html[data-ff-css-filters="off"] *::before,
 html[data-ff-css-filters="off"] *::after {
@@ -2561,14 +2614,96 @@ html[data-ff-css-filters="off"] *::after {
 html[data-ff-backdrop-filters="off"] *,
 html[data-ff-backdrop-filters="off"] *::before,
 html[data-ff-backdrop-filters="off"] *::after {
-  backdrop-filter: none !important;
+  backdrop-filter: initial !important;
+  -webkit-backdrop-filter: initial !important;
 }
 
 html[data-ff-blur-effects="off"] *,
 html[data-ff-blur-effects="off"] *::before,
 html[data-ff-blur-effects="off"] *::after {
   filter: none !important;
-  backdrop-filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: initial !important;
+  -webkit-backdrop-filter: initial !important;
+}
+
+html[data-ff-mix-blend-mode="off"] *,
+html[data-ff-mix-blend-mode="off"] *::before,
+html[data-ff-mix-blend-mode="off"] *::after {
+  mix-blend-mode: normal !important;
+}
+
+html[data-ff-css-masks="off"] *,
+html[data-ff-css-masks="off"] *::before,
+html[data-ff-css-masks="off"] *::after {
+  mask: none !important;
+  -webkit-mask: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  mask-composite: add !important;
+  -webkit-mask-composite: source-over !important;
+}
+
+html[data-ff-clip-path="off"] *,
+html[data-ff-clip-path="off"] *::before,
+html[data-ff-clip-path="off"] *::after {
+  clip-path: none !important;
+}
+
+html[data-ff-box-shadows="off"] *,
+html[data-ff-box-shadows="off"] *::before,
+html[data-ff-box-shadows="off"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-ff-gradients="off"] *,
+html[data-ff-gradients="off"] *::before,
+html[data-ff-gradients="off"] *::after {
+  background-image: none !important;
+}
+
+html[data-ff-sticky-position="off"] .lg\:sticky,
+html[data-ff-sticky-position="off"] .sticky,
+html[data-ff-sticky-position="off"] [style*="position: sticky"],
+html[data-ff-sticky-position="off"] [style*="position:sticky"] {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+}
+
+html[data-ff-fixed-position="off"] .fixed,
+html[data-ff-fixed-position="off"] [data-app-header],
+html[data-ff-fixed-position="off"] [data-app-bottom-nav],
+html[data-ff-fixed-position="off"] [data-floating-control],
+html[data-ff-fixed-position="off"] [data-floating-ui],
+html[data-ff-fixed-position="off"] [data-product-cta],
+html[data-ff-fixed-position="off"] [data-sonner-toaster],
+html[data-ff-fixed-position="off"] [style*="position: fixed"],
+html[data-ff-fixed-position="off"] [style*="position:fixed"] {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+html[data-ff-overflow-clipping="off"] [data-product-card],
+html[data-ff-overflow-clipping="off"] [data-product-media],
+html[data-ff-overflow-clipping="off"] .product-card-shell,
+html[data-ff-overflow-clipping="off"] .overflow-hidden[class*="rounded"],
+html[data-ff-overflow-clipping="off"] [class*="overflow-hidden"][class*="rounded"],
+html[data-ff-overflow-clipping="off"] [style*="overflow: hidden"][style*="border-radius"],
+html[data-ff-overflow-clipping="off"] [style*="overflow:hidden"][style*="borderRadius"] {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+html[data-ff-object-fit="off"] [data-product-image],
+html[data-ff-object-fit="off"] img {
+  object-fit: fill !important;
 }
 
 /* ISOLATION TEST FLAG (temporary). `?ff-disable-cv` sets
@@ -2581,10 +2716,10 @@ html[data-ff-blur-effects="off"] *::after {
    conservatively, which is why Firefox never reproduces. */
 html[data-ff-content-visibility="off"] [data-product-card-frame],
 html[data-ff-content-visibility="off"] .cv-auto,
-html[data-ff-content-visibility="off"] [style*="content-visibility"] {
+html[data-ff-content-visibility="off"] [style*="content-visibility"],
+html[data-ff-content-visibility="off"] [style*="contentVisibility"] {
   content-visibility: visible !important;
   contain-intrinsic-size: auto !important;
-  contain: none !important;
 }
 
 /* =====================================================================
@@ -2642,11 +2777,10 @@ html[data-render-safe="true"] [style*="backdrop-filter"] {
 /* ════════════════════════════════════════════════════════════════════════
    GPU-COMPOSITOR SAFE MODE — data-gpu-unsafe="true"
    ────────────────────────────────────────────────────────────────────────
-   ROOT CAUSE: Chrome on Mali GPUs (and software/very-old renderers) corrupts
-   compositor tiles when many backdrop-filter + large blur() + mix-blend-mode
-   layers stack — producing black flashes, vanished hero, red/white stripes and
-   flicker. Adreno GPUs (e.g. Realme 5 Pro) composite the same tree correctly,
-   which is exactly why only certain devices fail.
+   WORKING HYPOTHESIS: Some Chromium Android GPU/driver combinations corrupt
+    compositor tiles when many backdrop-filter + large blur() + mix-blend-mode
+    layers stack — producing black flashes, vanished hero, red/white stripes and
+    flicker. This block is a compatibility safety layer, not proof of root cause.
 
    This block is gated purely on the detected GPU (see boot script). It REPLACES
    the GPU-heavy effects with visually-equivalent CPU-friendly ones: frosted
@@ -2749,7 +2883,7 @@ html[data-gpu-unsafe="true"] [style*="drop-shadow"] {
 
 /* 8. Foreground filter:blur() passes (Tailwind `blur-sm`/`blur`/`blur-lg`…
       utilities and inline `filter: blur(...)`) on NON-decorative content. Each
-      one allocates an offscreen GPU buffer and is a primary source of duplicated
+      one allocates an offscreen GPU buffer and is a possible source of duplicated
       textures / horizontal stripes on Mali/PowerVR. Strip the foreground blur
       (backdrop-filter is handled in rule 1); content paints crisp instead of
       soft — never corrupt. Backdrop-blur classes match too but only their
@@ -2760,10 +2894,10 @@ html[data-gpu-unsafe="true"] :not([aria-hidden="true"])[style*="blur("] {
   -webkit-filter: none !important;
 }
 
-/* Final targeted Chrome cold-refresh fix for the trust badges strip. The broad
+/* Targeted Chrome cold-refresh stabilization for the trust badges strip. The broad
    Android/GPU safety rules above intentionally flatten most layers with
-   !important, so this row-specific rule must stay last to ensure the verified
-   feature-row stabilization is actually applied. */
+   !important, so this row-specific rule must stay last to ensure the
+   feature-row stabilization is actually applied during diagnostics. */
 html .feature-row.feature-row {
   backface-visibility: hidden !important;
   transform: translate3d(0, 0, 0) !important;
@@ -2826,7 +2960,7 @@ body.hide-bottom-nav [data-app-header] {
 /* ============================================================
    Account Overview cards — ONE uniform, environment-independent design.
    ------------------------------------------------------------
-   Root cause of Preview vs Production divergence: the runtime device
+    Known Preview vs Production divergence factor: the runtime device
    governors (`data-degrade-effects` from the live FPS/long-task governor,
    and `data-gpu-unsafe` from the boot GPU gate) toggle <html> attributes at
    runtime and the global kill-switch rules above strip these cards' hover

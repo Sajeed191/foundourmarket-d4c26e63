@@ -33,7 +33,19 @@ export const DEBUG_FLAGS = [
   "cssFilters",
   "backdropFilters",
   "blurEffects",
+  "mixBlendMode",
+  "contentVisibility",
+  "containment",
+  "willChange",
+  "transform",
+  "stickyPosition",
+  "fixedPosition",
+  "cssMasks",
+  "clipPath",
   "overflowClipping",
+  "boxShadows",
+  "gradients",
+  "objectFit",
   "gpuTransforms",
   "jsAnimations",
 ] as const;
@@ -369,7 +381,19 @@ export const FLAG_LABELS: Record<DebugFlag, string> = {
   cssFilters: "CSS Filters",
   backdropFilters: "Backdrop Filters",
   blurEffects: "Blur Effects",
+  mixBlendMode: "Mix Blend Mode",
+  contentVisibility: "Content Visibility",
+  containment: "Containment",
+  willChange: "Will Change",
+  transform: "Transform",
+  stickyPosition: "Position Sticky",
+  fixedPosition: "Position Fixed",
+  cssMasks: "CSS Masks",
+  clipPath: "Clip Path",
   overflowClipping: "Overflow Clipping",
+  boxShadows: "Large Box Shadows",
+  gradients: "Gradient Overlays",
+  objectFit: "Object Fit",
   gpuTransforms: "GPU Transforms",
   jsAnimations: "JS Animations (rAF)",
 };
@@ -479,6 +503,69 @@ function parseQuery() {
   if (typeof window === "undefined") return;
   const params = new URLSearchParams(window.location.search);
   if (params.has("debug")) enabled = params.get("debug") !== "0";
+  const aliases: Record<string, DebugFlag> = {
+    backdrop: "backdropFilters",
+    "backdrop-filter": "backdropFilters",
+    blur: "blurEffects",
+    filter: "cssFilters",
+    "mix-blend": "mixBlendMode",
+    "mix-blend-mode": "mixBlendMode",
+    cv: "contentVisibility",
+    "content-visibility": "contentVisibility",
+    contain: "containment",
+    containment: "containment",
+    "will-change": "willChange",
+    transform: "transform",
+    transforms: "transform",
+    "gpu-transform": "gpuTransforms",
+    "gpu-transforms": "gpuTransforms",
+    sticky: "stickyPosition",
+    fixed: "fixedPosition",
+    mask: "cssMasks",
+    masks: "cssMasks",
+    "clip-path": "clipPath",
+    overflow: "overflowClipping",
+    "overflow-clipping": "overflowClipping",
+    framer: "jsAnimations",
+    "framer-motion": "jsAnimations",
+    animations: "animations",
+    "css-animations": "animations",
+    translate3d: "gpuTransforms",
+    translatez: "gpuTransforms",
+    shadow: "boxShadows",
+    shadows: "boxShadows",
+    "box-shadow": "boxShadows",
+    gradient: "gradients",
+    gradients: "gradients",
+    lazy: "lazyLoading",
+    "lazy-loading": "lazyLoading",
+    virtualization: "virtualization",
+    "intersection-observer": "virtualization",
+    "object-fit": "objectFit",
+    "image-decoding": "imageDecoding",
+    "image-transformations": "imageTransformations",
+    "palette-extraction": "paletteExtraction",
+  };
+  const disable = (raw: string) => {
+    const key = raw.trim().toLowerCase();
+    const alias = aliases[key];
+    if (alias) {
+      enabled = true;
+      state[alias] = false;
+      return;
+    }
+    const direct = DEBUG_FLAGS.find((f) => f.toLowerCase() === key.replace(/-/g, ""));
+    if (direct) {
+      enabled = true;
+      state[direct] = false;
+    }
+  };
+  for (const key of Object.keys(aliases)) {
+    const param = `ff-disable-${key}`;
+    if (params.has(param)) disable(key);
+  }
+  const disabledList = params.get("ff-disable");
+  if (disabledList) disabledList.split(",").forEach(disable);
   const ff = params.get(QUERY_KEY);
   if (!ff) return;
   enabled = true;
@@ -490,7 +577,10 @@ function parseQuery() {
     for (const f of DEBUG_FLAGS) state[f] = false;
     for (const f of list) if (f in state) state[f] = true;
   } else {
-    for (const f of list) if (f in state) state[f] = false;
+    for (const f of list) {
+      if (f in state) state[f] = false;
+      else disable(String(f));
+    }
   }
 }
 
@@ -740,25 +830,31 @@ const f = (flag: DebugFlag): RunnerFeatureRef => ({ kind: "flag", flag });
 
 /** Highest-probability Android rendering causes first, exactly as prioritised. */
 export const RUNNER_SINGLES: RunnerStep[] = [
-  { id: "s-gpu-transform", label: "1. GPU transform (translateZ)", combo: false, features: [b("product-card-transform")] },
-  { id: "s-backdrop", label: "2. Backdrop filter", combo: false, features: [b("card-backdrop-filter")] },
-  { id: "s-filter", label: "3. CSS filter", combo: false, features: [b("product-card-filter")] },
-  { id: "s-blur", label: "4. Blur", combo: false, features: [b("card-blur")] },
-  { id: "s-overflow", label: "5. Overflow clipping", combo: false, features: [b("product-card-overflow")] },
-  { id: "s-contain", label: "6. Contain", combo: false, features: [b("card-frame-contain")] },
-  { id: "s-cv", label: "7. Content-visibility", combo: false, features: [b("card-frame-content-visibility")] },
-  { id: "s-isolation", label: "8. Isolation", combo: false, features: [b("card-frame-isolation")] },
-  { id: "s-willchange", label: "9. Will-change", combo: false, features: [b("product-card-will-change")] },
-  { id: "s-perspective", label: "10. Perspective", combo: false, features: [b("product-grid-perspective")] },
-  { id: "s-translate3d", label: "11. Translate3d", combo: false, features: [b("product-card-translate3d")] },
-  { id: "s-decoding", label: "12. Image decoding", combo: false, features: [b("product-image-decoding-async")] },
-  { id: "s-cib", label: "13. createImageBitmap", combo: false, features: [b("product-image-create-image-bitmap")] },
-  { id: "s-imgdecode", label: "14. Image.decode()", combo: false, features: [b("product-image-image-decode")] },
-  { id: "s-srcset", label: "15. Srcset / responsive transforms", combo: false, features: [b("product-image-srcset")] },
-  { id: "s-lazy", label: "16. Lazy loading", combo: false, features: [b("product-image-lazy-loading")] },
-  { id: "s-virtualization", label: "17. Virtualization", combo: false, features: [f("virtualization")] },
-  { id: "s-infinite", label: "18. Infinite scrolling", combo: false, features: [f("infiniteScroll")] },
-  { id: "s-sw", label: "19. Service Worker", combo: false, features: [f("serviceWorker")] },
+  { id: "s-backdrop", label: "1. Backdrop filter", combo: false, features: [f("backdropFilters")] },
+  { id: "s-blur", label: "2. filter: blur()", combo: false, features: [f("blurEffects")] },
+  { id: "s-mix-blend", label: "3. Mix blend mode", combo: false, features: [f("mixBlendMode")] },
+  { id: "s-cv", label: "4. Content-visibility", combo: false, features: [f("contentVisibility")] },
+  { id: "s-containment", label: "5. Containment", combo: false, features: [f("containment")] },
+  { id: "s-willchange", label: "6. Will-change", combo: false, features: [f("willChange")] },
+  { id: "s-transform", label: "7. Transform", combo: false, features: [f("transform")] },
+  { id: "s-sticky", label: "8. Position sticky", combo: false, features: [f("stickyPosition")] },
+  { id: "s-fixed", label: "9. Position fixed", combo: false, features: [f("fixedPosition")] },
+  { id: "s-masks", label: "10. CSS masks", combo: false, features: [f("cssMasks")] },
+  { id: "s-clip", label: "11. Clip path", combo: false, features: [f("clipPath")] },
+  { id: "s-overflow", label: "12. Overflow hidden + radius", combo: false, features: [f("overflowClipping")] },
+  { id: "s-framer", label: "13. Framer Motion", combo: false, features: [f("jsAnimations")] },
+  { id: "s-css-animations", label: "14. CSS animations", combo: false, features: [f("animations")] },
+  { id: "s-translate3d", label: "15. translate3d / translateZ", combo: false, features: [f("gpuTransforms")] },
+  { id: "s-shadows", label: "16. Large box shadows", combo: false, features: [f("boxShadows")] },
+  { id: "s-gradients", label: "17. Gradient overlays", combo: false, features: [f("gradients")] },
+  { id: "s-lazy", label: "18. Image lazy-loading", combo: false, features: [f("lazyLoading")] },
+  { id: "s-virtualization", label: "19. IntersectionObserver virtualization", combo: false, features: [f("virtualization")] },
+  { id: "s-object-fit", label: "20. Object-fit image pipeline", combo: false, features: [f("objectFit")] },
+  { id: "s-decoding", label: "21. Image decoding", combo: false, features: [f("imageDecoding")] },
+  { id: "s-palette", label: "22. Canvas palette extraction", combo: false, features: [f("paletteExtraction")] },
+  { id: "s-srcset", label: "23. Image transformations/srcset", combo: false, features: [f("imageTransformations")] },
+  { id: "s-filter", label: "24. Any CSS filter", combo: false, features: [f("cssFilters")] },
+  { id: "s-sw", label: "25. Service Worker", combo: false, features: [f("serviceWorker")] },
 ];
 
 /** Two-feature fallback — only reached if every single feature fails A/B/A. */

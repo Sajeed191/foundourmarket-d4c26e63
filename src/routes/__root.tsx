@@ -333,24 +333,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}var R='unknown',U=false;try{var ua=navigator.userAgent||'';var r=rd();R=r||'unknown';var rl=r.toLowerCase();var gpuUnsafe=/mali/.test(rl)||/swiftshader|software|llvmpipe|microsoft basic/.test(rl)||/powervr/.test(rl)||/videocore/.test(rl)||/vivante/.test(rl)||/adreno\\s*(2|3)\\d\\d/.test(rl);var engineUnsafe=false;var m;if((m=ua.match(/SamsungBrowser\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<14;else if(/Android/.test(ua)&&(m=ua.match(/Chrome\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<80;var unsafe=gpuUnsafe||engineUnsafe;U=unsafe;if(/Android/.test(ua))d.setAttribute('data-android','true');d.setAttribute('data-gpu-renderer',r||'unknown');d.setAttribute('data-gpu-unsafe',unsafe?'true':'false');if(unsafe)d.setAttribute('data-compat-reason',gpuUnsafe?'gpu':'engine');}catch(y){d.setAttribute('data-gpu-unsafe','false');try{if(/Android/.test(navigator.userAgent||''))d.setAttribute('data-android','true');}catch(z){}}try{window.__fomCompat=function(){var flags={};var names=d.getAttributeNames?d.getAttributeNames():[];for(var i=0;i<names.length;i++){var n=names[i];if(n.indexOf('data-')===0&&(/android|gpu|compat|degrade|low-end|render-safe|ultra|ff-/.test(n)))flags[n]=d.getAttribute(n);}var info={webglRenderer:R,userAgent:navigator.userAgent,compatibilityMode:d.getAttribute('data-gpu-unsafe')==='true',flags:flags};try{console.info('%c[FOM Compatibility]','color:#ff8a3d;font-weight:bold',info);}catch(e){}return info;};window.__fomCompat();}catch(w){}})();",
       },
       {
-        // ISOLATION TEST FLAG (temporary). `?ff-disable-backdrop` sets
-        // data-ff-backdrop-filters="off" before first paint, which the existing
-        // CSS kill-switch (styles.css) uses to strip ONLY backdrop-filter across
-        // the tree. Nothing else changes — no filter, transform, animation, or
-        // layout is touched. Used to confirm whether per-card backdrop-filter is
-        // the Android tile-corruption trigger. Remove once verified.
+        // TEMPORARY BINARY-SEARCH ISOLATION FLAGS. These attributes are set
+        // before first paint so Chromium Android can be tested one rendering
+        // feature at a time on the affected device. Production is unchanged
+        // unless a `?ff-disable-*` / `?render=safe` URL flag is present.
         children:
-          "(function(){try{if(/[?&]ff-disable-backdrop(=1)?(&|$)/.test(window.location.search))document.documentElement.setAttribute('data-ff-backdrop-filters','off');}catch(e){}})();",
-      },
-      {
-        // ISOLATION TEST FLAG (temporary). `?ff-disable-cv` sets
-        // data-ff-content-visibility="off" before first paint, which the CSS
-        // kill-switch (styles.css) uses to disable ONLY content-visibility:auto
-        // + its render-skip containment on product cards. Nothing else changes.
-        // Confirms whether content-visibility relevance-skipping is the
-        // Chromium tile-corruption root cause. Remove once verified.
-        children:
-          "(function(){try{if(/[?&]ff-disable-cv(=1)?(&|$)/.test(window.location.search))document.documentElement.setAttribute('data-ff-content-visibility','off');}catch(e){}})();",
+          "(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search);function off(a){d.setAttribute(a,'off')}function has(k){return q.has(k)||q.get(k)==='1'||q.get(k)==='true'}if(q.get('render')==='safe'||has('render-safe'))d.setAttribute('data-render-safe','true');var map={backdrop:'data-ff-backdrop-filters','backdrop-filter':'data-ff-backdrop-filters',blur:'data-ff-blur-effects',filter:'data-ff-css-filters','mix-blend':'data-ff-mix-blend-mode','mix-blend-mode':'data-ff-mix-blend-mode',cv:'data-ff-content-visibility','content-visibility':'data-ff-content-visibility',contain:'data-ff-containment',containment:'data-ff-containment','will-change':'data-ff-will-change',transform:'data-ff-transform',transforms:'data-ff-transform','gpu-transform':'data-ff-gpu-transforms','gpu-transforms':'data-ff-gpu-transforms',sticky:'data-ff-sticky-position',fixed:'data-ff-fixed-position',mask:'data-ff-css-masks',masks:'data-ff-css-masks','clip-path':'data-ff-clip-path',overflow:'data-ff-overflow-clipping','overflow-clipping':'data-ff-overflow-clipping',framer:'data-ff-js-animations','framer-motion':'data-ff-js-animations','css-animations':'data-ff-animations',animations:'data-ff-animations','translate3d':'data-ff-transform','translatez':'data-ff-transform',shadow:'data-ff-box-shadows',shadows:'data-ff-box-shadows','box-shadow':'data-ff-box-shadows',gradients:'data-ff-gradients',gradient:'data-ff-gradients',lazy:'data-ff-lazy-loading','lazy-loading':'data-ff-lazy-loading',virtualization:'data-ff-virtualization','intersection-observer':'data-ff-virtualization','object-fit':'data-ff-object-fit','image-decoding':'data-ff-image-decoding','image-transformations':'data-ff-image-transformations','palette-extraction':'data-ff-palette-extraction'};Object.keys(map).forEach(function(k){if(has('ff-disable-'+k))off(map[k])});var list=q.get('ff-disable');if(list)list.split(',').forEach(function(k){k=k.trim().toLowerCase();if(map[k])off(map[k])});var ff=q.get('ff');if(ff&&ff.indexOf('off:')===0)ff.slice(4).split(',').forEach(function(k){k=k.trim();var css=k.replace(/[A-Z]/g,function(m){return '-'+m.toLowerCase()}).toLowerCase();if(map[css])off(map[css]);else off('data-ff-'+css)})}catch(e){}})();",
       },
 
       {

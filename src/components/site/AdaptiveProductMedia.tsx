@@ -29,18 +29,21 @@ type Props = {
  * Falls back to white when extraction is unavailable (SSR / CORS / failure).
  */
 function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, children }: Props) {
+  const rootDataset = typeof document === "undefined" ? null : document.documentElement.dataset;
+  const disablePaletteExtraction = rootDataset?.ffPaletteExtraction === "off";
+  const disableObjectFit = rootDataset?.ffObjectFit === "off";
   const [palette, setPalette] = useState<ImagePalette>(
-    () => (src ? getCachedPalette(src) : null) ?? FALLBACK_PALETTE,
+    () => (disablePaletteExtraction ? null : src ? getCachedPalette(src) : null) ?? FALLBACK_PALETTE,
   );
-  const [ready, setReady] = useState<boolean>(() => (src ? getCachedPalette(src) != null : false));
+  const [ready, setReady] = useState<boolean>(() => disablePaletteExtraction || (src ? getCachedPalette(src) != null : false));
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadedSrc(null);
-    const cached = src ? getCachedPalette(src) : null;
+    const cached = disablePaletteExtraction ? null : src ? getCachedPalette(src) : null;
     setPalette(cached ?? FALLBACK_PALETTE);
-    setReady(cached != null);
-  }, [src]);
+    setReady(disablePaletteExtraction || cached != null);
+  }, [disablePaletteExtraction, src]);
 
   // Reuse the already-decoded, on-screen bitmap for palette extraction — no
   // second decode for same-origin (bundled) images. Only cross-origin storage
@@ -48,6 +51,11 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   const handleImageLoad = useCallback(
     (img: HTMLImageElement) => {
       setLoadedSrc(src);
+      if (disablePaletteExtraction) {
+        setPalette(FALLBACK_PALETTE);
+        setReady(true);
+        return;
+      }
       if (getCachedPalette(src)) {
         setPalette(getCachedPalette(src)!);
         setReady(true);
@@ -74,7 +82,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         active = false;
       };
     },
-    [src],
+    [disablePaletteExtraction, src],
   );
 
   const imgLoaded = loadedSrc === src;
@@ -93,7 +101,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
           width={800}
           height={800}
           priority={priority}
-          className="block h-full w-full object-contain object-center"
+          className={`block h-full w-full object-center ${disableObjectFit ? "" : "object-contain"}`}
         />
       </div>
     );
@@ -124,7 +132,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         height={800}
         priority={priority}
         onLoad={handleImageLoad}
-        className="relative z-[1] block h-full w-full rounded-[14px] object-contain object-center transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03]"
+        className={`relative z-[1] block h-full w-full rounded-[14px] object-center transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03] ${disableObjectFit ? "" : "object-contain"}`}
         style={{ opacity: revealed ? 1 : 0 }}
       />
 
