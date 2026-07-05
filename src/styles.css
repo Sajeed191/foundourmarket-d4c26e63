@@ -2367,7 +2367,7 @@ html[data-android="true"] [style*="mix-blend"] {
   mix-blend-mode: normal !important;
 }
 
-
+@media (prefers-reduced-motion: reduce) {
   .search-cta { animation: none; }
   .search-cta__shimmer::after { animation: none; display: none; }
   .search-cta__ripple--run { animation: none; }
