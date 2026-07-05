@@ -1,41 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Flame } from "lucide-react";
+import { Flame, Award, Sparkles } from "lucide-react";
 import { fetchProducts, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import { LazyMount } from "@/components/site/LazyMount";
 import { SectionTracker } from "@/components/site/SectionTracker";
+import { Reveal } from "@/components/site/Reveal";
+import { FlashDeals } from "@/components/site/FlashDeals";
 import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 
 /**
  * BINARY-ISOLATION HARNESS — Android Chrome scroll-corruption investigation.
  *
- * This is a deliberately STRIPPED clone of the Browse grid (the page that does
- * NOT reproduce the corruption). It keeps ONLY:
- *   - the route itself,
- *   - the same ProductCard component,
- *   - the same ProductImage (via ProductCard),
- *   - the same data source (fetchProducts → products_public view).
- *
- * Everything else is intentionally absent from THIS page's own render:
- *   - no VirtualizedProductGrid / TwoPhaseGrid (no observers, no rAF, no
- *     scroll-restore, no decode-gate, no window metrics),
- *   - no rails / recommendations / related products,
- *   - no page-level effects beyond the one data fetch,
- *   - no analytics, no page transitions, no dialogs/portals/overlays.
- *
- * NOTE: page-global chrome that lives in src/routes/__root.tsx (header, footer,
- * bottom nav, live chat, LayoutMetricsProvider, notifications) still wraps every
- * route and cannot be removed from a single leaf without refactoring __root.
- * Those are the FIRST features to add back in the isolation sequence (starting
- * with LayoutMetricsProvider) once this baseline is confirmed to render.
- *
- * Plain vertical CSS grid, normal document flow, no transforms — matches the
- * Browse grid layout classes exactly so the ONLY difference from Browse is the
- * removal of the surrounding runtime features.
+ * FINAL EXPERIMENT: cumulatively recreate the Home page sections on top of the
+ * existing 60-card isolation grid to find the smallest section combination that
+ * reproduces the production corruption. Stages are gated by STAGE below:
+ *   1 = Trending
+ *   2 = Trending + Best Sellers
+ *   3 = Trending + Best Sellers + New Arrivals
+ *   4 = Trending + Best Sellers + New Arrivals + Flash Deals
+ * Each section is replicated EXACTLY as production renders it in
+ * src/routes/index.tsx. No providers or startup effects restored.
  */
+const STAGE = 2 as 1 | 2 | 3 | 4;
+
 export const Route = createFileRoute("/runtime-isolation")({
   head: () => ({
     meta: [
@@ -47,13 +37,8 @@ export const Route = createFileRoute("/runtime-isolation")({
 });
 
 /**
- * ISOLATION STEP 8: Home "Trending" section, replicated EXACTLY as production
- * renders it (see ProductSection sectionKey="trending" in src/routes/index.tsx).
- * Same trending derivation (filter p.trending → seededShuffle → slice), same
- * SectionTracker + LazyMount + VirtualizedProductGrid (virtualizeThreshold={0}
- * → IncrementalGrid batched mount), same ProductCard compact forceBadge.
- * No Best Sellers / New Arrivals / Flash Deals / recommendations / Browse
- * sections. No new startup effects. The 60-card grid below is unchanged.
+ * Trending — replicated EXACTLY as production ProductSection sectionKey="trending"
+ * (SectionTracker → LazyMount → VirtualizedProductGrid virtualizeThreshold={0}).
  */
 function TrendingSection({ products }: { products: Product[] }) {
   const rotationSeed = useOrderRotationSeed();
@@ -94,6 +79,100 @@ function TrendingSection({ products }: { products: Product[] }) {
   );
 }
 
+/**
+ * Best Sellers / New Arrivals — replicated EXACTLY as production ProductSection
+ * non-trending branch (SectionTracker → LazyMount → plain grid of Reveal-wrapped
+ * ProductCards with productCardFrame).
+ */
+function RailSection({
+  sectionKey,
+  title,
+  icon: Icon,
+  items,
+  badge,
+}: {
+  sectionKey: string;
+  title: string;
+  icon: typeof Flame;
+  items: Product[];
+  badge: string;
+}) {
+  const preview = items.slice(0, 4);
+  if (preview.length === 0) return null;
+  return (
+    <SectionTracker
+      sectionKey={sectionKey}
+      className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block"
+    >
+      <div className="mb-4 flex items-center gap-2">
+        <Icon className="size-5 text-accent" />
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
+      </div>
+      <LazyMount minHeight={260}>
+        <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {preview.map((p, i) => (
+            <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame>
+              <ProductCard product={p} compact forceBadge={badge} />
+            </Reveal>
+          ))}
+        </div>
+      </LazyMount>
+    </SectionTracker>
+  );
+}
+
+function HomeSections({ products }: { products: Product[] }) {
+  const rotationSeed = useOrderRotationSeed();
+  const rotationNonce = useRotationNonce();
+
+  const bestSellers = useMemo(
+    () =>
+      seededShuffle(
+        products.filter((p) => p.bestseller),
+        rotationSeed + rotationNonce + 1,
+      ).slice(0, 8),
+    [products, rotationSeed, rotationNonce],
+  );
+
+  const newArrivals = useMemo(
+    () =>
+      products
+        .filter((p) => p.newArrival)
+        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+        .slice(0, 8),
+    [products],
+  );
+
+  return (
+    <>
+      <TrendingSection products={products} />
+      {STAGE >= 2 && (
+        <RailSection
+          sectionKey="best_sellers"
+          title="Best Sellers"
+          icon={Award}
+          items={bestSellers}
+          badge="bestseller"
+        />
+      )}
+      {STAGE >= 3 && (
+        <RailSection
+          sectionKey="new_arrivals"
+          title="New Arrivals"
+          icon={Sparkles}
+          items={newArrivals}
+          badge="new"
+        />
+      )}
+      {STAGE >= 4 && (
+        <LazyMount minHeight={360}>
+          <FlashDeals />
+        </LazyMount>
+      )}
+    </>
+  );
+}
+
 function RuntimeIsolationPage() {
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -110,7 +189,7 @@ function RuntimeIsolationPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <TrendingSection products={products} />
+      <HomeSections products={products} />
       <h1 className="mb-6 text-lg font-semibold text-white">Runtime Isolation ({products.length})</h1>
       <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         {products.map((p) => (
