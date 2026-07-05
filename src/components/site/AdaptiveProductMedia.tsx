@@ -142,7 +142,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         height={800}
         priority={priority}
         onLoad={handleImageLoad}
-        className={`relative z-[1] block h-full w-full rounded-[14px] object-center transition-[transform,opacity] duration-300 ease-out group-hover:scale-[1.03] ${disableObjectFit ? "" : "object-contain"}`}
+        className={`relative z-[1] block h-full w-full rounded-[14px] object-center transition-opacity duration-300 ease-out ${disableObjectFit ? "" : "object-contain"}`}
         style={{ opacity: revealed ? 1 : 0 }}
       />
 
