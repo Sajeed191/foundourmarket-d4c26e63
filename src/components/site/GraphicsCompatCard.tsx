@@ -326,9 +326,6 @@ function DiagnosticsList() {
   return (
     <dl className="px-6 pb-4 space-y-2 text-xs">
       <DiagRow label="Rendering Mode" value={d.renderingMode} />
-      <DiagRow label="Browser" value={d.browserName} />
-      <DiagRow label="Browser Version" value={d.browserVersion} />
-      <DiagRow label="Android Version" value={d.androidVersion} />
       <DiagRow label="Compatibility Mode" value={d.compatibility} />
     </dl>
   );
@@ -350,11 +347,8 @@ function ReportIssueSheet({
       [
         `Rendering Mode: ${d.renderingMode}`,
         `Compatibility Mode: ${d.compatibility}`,
-        `Browser: ${d.browserName}`,
-        `Browser Version: ${d.browserVersion}`,
-        `Android Version: ${d.androidVersion}`,
       ].join("\n"),
-    [d.renderingMode, d.compatibility, d.browserName, d.browserVersion, d.androidVersion],
+    [d.renderingMode, d.compatibility],
   );
 
   const submit = () => {
