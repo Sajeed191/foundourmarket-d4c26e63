@@ -56,6 +56,16 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         setReady(true);
         return;
       }
+      // Compatibility / render-safe path (opt-in): skip ALL per-image canvas
+      // work — `getImagePaletteFromElement` draws each on-screen product image
+      // onto a 2D canvas for readback, which forces a GPU→CPU texture readback
+      // per image. This early return (above that call) means the safe path
+      // never touches the canvas. Default rendering is unchanged.
+      if (isConstrainedDevice()) {
+        setPalette(FALLBACK_PALETTE);
+        setReady(true);
+        return;
+      }
       if (getCachedPalette(src)) {
         setPalette(getCachedPalette(src)!);
         setReady(true);

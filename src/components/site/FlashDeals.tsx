@@ -115,10 +115,15 @@ function FlashCard({ item, now }: { item: FlashItem; now: number }) {
   }, [toggle, p.slug]);
 
 
-  const iconBtn = "grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full text-white/90 transition-colors hover:text-accent";
+  const iconBtn = "deal-icon-glass grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full text-white/90 transition-colors hover:text-accent";
+  // NOTE: backdrop-filter is intentionally NOT set inline here. A blur() readback
+  // layer over a scrolling card is a documented source of Chromium-Android
+  // scroll-time banding (see styles.css "backdrop-filter READBACK" note), so —
+  // like every other glass surface in the app — the blur is emitted only at
+  // >=768px via the `.deal-icon-glass` class. The opaque fill keeps the icons
+  // legible on mobile with no visual regression.
   const iconStyle = {
     backgroundColor: "rgba(20,20,20,0.6)",
-    backdropFilter: "blur(8px)",
     border: "1px solid rgba(255,255,255,0.12)",
   } as const;
 

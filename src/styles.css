@@ -428,6 +428,10 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 @media (min-width: 768px) {
   .glass { backdrop-filter: blur(20px); }
   .glass-strong { backdrop-filter: blur(24px) saturate(140%); }
+  /* Flash-deal card icon pills: blur only on desktop (same rationale as .glass —
+     avoids a per-icon backdrop-filter readback layer over scrolling cards on
+     Chromium Android). Mobile keeps the opaque fill from the inline style. */
+  .deal-icon-glass { backdrop-filter: blur(8px); }
 }
 
 /* Premium card with subtle gradient border */
