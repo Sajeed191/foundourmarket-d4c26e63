@@ -585,6 +585,8 @@ function IsolationRoot() {
                       Shell markup mirrors the normal app shell but omits Footer,
                       DeferredShell, Toaster, etc. */}
                   <CartProvider>
+                    {/* ISOLATION STEP 6: SearchUIProvider added back (only this). */}
+                    <SearchUIProvider>
                     <div data-app-shell className="min-h-dvh flex flex-col">
                       <Nav />
                       <main
@@ -595,6 +597,7 @@ function IsolationRoot() {
                       </main>
                       <MobileBottomNav />
                     </div>
+                    </SearchUIProvider>
                   </CartProvider>
                 </BadgeEngineProvider>
               </LayoutMetricsProvider>
