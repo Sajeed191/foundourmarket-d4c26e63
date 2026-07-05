@@ -16,6 +16,7 @@ import { RegionProvider } from "@/lib/region";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
+import { GraphicsCompatProvider } from "@/lib/graphics-compat";
 import { WishlistProvider } from "@/lib/wishlist";
 import { WishlistAlertsProvider } from "@/lib/wishlist-alerts";
 import { NotificationsProvider } from "@/lib/notifications";
