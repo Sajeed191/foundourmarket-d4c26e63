@@ -175,21 +175,34 @@ function HomeLite() {
       {/* ── TRENDING (copied from index.tsx ProductSection grid, lines 226–231) ── */}
       {TEST_STAGE >= 2 && (
         <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block">
+          {/* Heading — rendered for every trending stage (>= 2). */}
           <Reveal className="flex justify-between items-end mb-4 sm:mb-6 gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Hot right now</p>
               <h2 className="mt-1 font-display text-2xl sm:text-3xl font-semibold tracking-[-0.02em]">Trending Products</h2>
             </div>
           </Reveal>
-          <LazyMount minHeight={260}>
-            <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {trending.map((p, i) => (
-                <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame>
-                  <ProductCard product={p} compact forceBadge="trending" />
-                </Reveal>
-              ))}
-            </div>
-          </LazyMount>
+
+          {/* Card area — gated by stage. Stage 3 renders nothing below the heading. */}
+          {trendingCards.length > 0 && (
+            <LazyMount minHeight={260}>
+              <div data-product-grid className={gridClass}>
+                {trendingCards.map((p, i) => (
+                  <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame>
+                    {usePlaceholders ? (
+                      // Stage 6: identical grid cell size, no ProductCard mounted.
+                      <div
+                        aria-hidden
+                        className="h-full w-full rounded-3xl bg-accent/25 ring-1 ring-white/10 min-h-[240px]"
+                      />
+                    ) : (
+                      <ProductCard product={p} compact forceBadge="trending" />
+                    )}
+                  </Reveal>
+                ))}
+              </div>
+            </LazyMount>
+          )}
         </section>
       )}
     </>
