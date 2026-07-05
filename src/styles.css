@@ -1584,8 +1584,8 @@ html[data-low-end="true"] [data-product-image] {
   transition: opacity 160ms ease !important;
 }
 
-/* ===== Compositor-corruption fix for weak Mali / Adreno GPUs =====
-   On low-end Android, `contain: paint` and `isolation: isolate` promote each
+/* ===== Android compositor diagnostic guard for weak Mali / Adreno GPUs =====
+   Working hypothesis: on low-end Android, `contain: paint` and `isolation: isolate` promote each
    product media box / card shell / image to its own backing store. Those GPUs
    frequently fail to paint the freshly-allocated texture before compositing it,
    leaving the "colored/noisy rectangles" behind cards reported on 4GB phones.
@@ -1609,14 +1609,14 @@ html[data-low-end="true"] [data-product-image] {
   backdrop-filter: none !important;
 }
 
-/* ===== Clip-boundary relocation (Android only) =====
-   ROOT TRIGGER: `overflow:hidden` + `border-radius` on the card shell, with
+/* ===== Clip-boundary diagnostic relocation (Android only) =====
+   Working hypothesis: `overflow:hidden` + `border-radius` on the card shell, with
    stacked children (badges, wishlist, overlays), forces Chromium to allocate a
    masked clip layer + composited backing store PER CARD. Under scroll pressure
    the tile pool recycles textures before raster completes → rainbow bands /
    duplicated images / stale tiles on Mali / PowerVR / older Adreno GPUs.
 
-   FIX: move the rounded clip OFF the composited card boundary and onto the
+   Candidate mitigation under test: move the rounded clip OFF the composited card boundary and onto the
    image only. The shell keeps its rounded look via border-radius but stops
    clipping (overflow: visible), so it folds into the root paint layer instead
    of spawning one clip layer per card. Scoped strictly to Android — desktop,
@@ -2469,10 +2469,10 @@ html[data-android-gpu-safe-mode="true"] [data-product-image] {
   background: #ffffff !important;
 }
 
-/* Realme Narzo 20 / Mali GPU isolation result:
-   border-radius + overflow:hidden on the product card/media boxes keeps the
+/* Realme Narzo 20 / Mali GPU isolation hypothesis:
+   border-radius + overflow:hidden on the product card/media boxes may keep the
    whole card subtree (image + badges + text) in a clipped raster tile while
-   scrolling. On weak Android Chrome GPUs that tile is reused before repaint,
+   scrolling. On weak Android Chrome GPUs that tile may be reused before repaint,
    causing duplicated badges/cards and ghost images. In Android software mode,
    remove only this clipping layer; the image itself remains rounded. */
 html[data-ultra-low-end="true"] [data-product-card],
