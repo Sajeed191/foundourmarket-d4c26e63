@@ -337,10 +337,10 @@ function GuidedRunner({ runner, diag }: { runner: RunnerState; diag: Diagnostics
     return (
       <div style={{ marginBottom: 10, border: "1px solid #a52", borderRadius: 8, padding: 10, background: "#160c08" }}>
         <div style={{ color: "#ffcf8a", fontWeight: 800, marginBottom: 4 }}>
-          No single or two-feature culprit reproduced A/B/A
+          No single-feature culprit reproduced A/B/A
         </div>
         <div style={{ fontSize: 11, color: "#cba", lineHeight: 1.4 }}>
-          Every priority feature and combination was tested. Download the report so we can decide next steps.
+          Every priority feature was tested one at a time. Download the report so we can decide next steps.
         </div>
         <button type="button" onClick={() => downloadBisectReport(diag)} style={{ ...btn, width: "100%", marginTop: 8, background: "#f97316", color: "#111", fontWeight: 800 }}>
           ⬇ Download JSON report
@@ -357,9 +357,9 @@ function GuidedRunner({ runner, diag }: { runner: RunnerState; diag: Diagnostics
       <div style={{ marginBottom: 10, border: "1px solid #f97316", borderRadius: 8, padding: 10 }}>
         <div style={{ color: "#f97316", fontWeight: 800, marginBottom: 4 }}>Guided culprit hunt</div>
         <div style={{ fontSize: 11, color: "#aaa", lineHeight: 1.4 }}>
-          Tests the 19 highest-probability causes in priority order, one feature at a time
+          Tests the highest-probability causes in priority order, one feature at a time
           (ON → OFF → ON). Auto-skips on failure, auto-stops on the first confirmed culprit,
-          then falls back to two-feature combos.
+          and never disables multiple features together.
         </div>
         <button type="button" onClick={() => startRunner()} style={{ ...btn, width: "100%", marginTop: 8, background: "#f97316", color: "#111", fontWeight: 800 }}>
           ▶ Start guided runner
@@ -529,6 +529,39 @@ const btn: React.CSSProperties = {
   borderRadius: 6,
   padding: "4px 0",
 };
+
+function LayerMapSummary({ diag }: { diag: Diagnostics }) {
+  const layers = diag.compositorLayerMap.slice(0, 8);
+  const scrollers = diag.scrollContainers.slice(0, 5);
+  return (
+    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #222" }}>
+      <div style={{ color: "#f97316", fontWeight: 800, marginBottom: 4 }}>Layer map</div>
+      {layers.length === 0 ? (
+        <div style={{ color: "#888" }}>No app-side layer triggers in sample.</div>
+      ) : (
+        layers.map((entry, i) => (
+          <div key={`${entry.selector}:${i}`} style={{ marginBottom: 5 }}>
+            <div style={{ color: "#ddd", wordBreak: "break-word" }}>{entry.selector}</div>
+            <div style={{ color: "#888", wordBreak: "break-word" }}>{entry.reasons.join(", ")}</div>
+          </div>
+        ))
+      )}
+      <div style={{ color: "#f97316", fontWeight: 800, margin: "8px 0 4px" }}>Scroll map</div>
+      {scrollers.length === 0 ? (
+        <div style={{ color: "#888" }}>No nested scroll containers in sample.</div>
+      ) : (
+        scrollers.map((entry, i) => (
+          <div key={`${entry.selector}:scroll:${i}`} style={{ marginBottom: 5 }}>
+            <div style={{ color: "#ddd", wordBreak: "break-word" }}>{entry.selector}</div>
+            <div style={{ color: entry.nested ? "#ffcf8a" : "#888" }}>
+              {entry.axis}-axis{entry.nested ? " · nested" : ""}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
