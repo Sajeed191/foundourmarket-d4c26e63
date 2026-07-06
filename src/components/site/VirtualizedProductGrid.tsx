@@ -253,8 +253,8 @@ function StaggeredGridChildren({ grid }: { grid: ReactElement }) {
       gridLog("stagger-mount complete →", { insertedPerCommit: 1, total });
       return;
     }
-    const id = requestAnimationFrame(() => setCount((c) => Math.min(total, c + 1)));
-    return () => cancelAnimationFrame(id);
+    // EXPERIMENT: rAF disabled — advance the stagger count directly.
+    setCount((c) => Math.min(total, c + 1));
   }, [count, total]);
 
   return cloneElement(grid, undefined, frames.slice(0, count));
