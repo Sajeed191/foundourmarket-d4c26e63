@@ -3130,3 +3130,24 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="
   clip-path: none !important;
 }
 /* === END EXPERIMENT: NEUTRALIZE COMPOSITOR-HEAVY CSS EFFECTS === */
+
+/* =====================================================================
+   EXPERIMENT: NEUTRALIZE CSS PAINT/COMPOSITING CONTAINMENT (temporary)
+   ---------------------------------------------------------------------
+   Diagnostic-only global override to test whether Android Chromium
+   (Oppo F9) rendering corruption is caused by containment/isolation.
+   Neutralizes ONLY: contain, content-visibility, contain-intrinsic-size,
+   isolation — globally, including any inline styles and Tailwind
+   utilities (CSS !important overrides non-important inline styles).
+   Everything else (JS, rAF, observers, animations, CSS effects,
+   virtualization, layout, transforms) is untouched.
+   ROLLBACK: delete this entire block (from this comment to the end-of-
+   block marker below).
+   ===================================================================== */
+* {
+  contain: none !important;
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+  isolation: auto !important;
+}
+/* === END EXPERIMENT: NEUTRALIZE CSS PAINT/COMPOSITING CONTAINMENT === */
