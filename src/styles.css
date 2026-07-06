@@ -3105,3 +3105,28 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="
   transform: translateY(140%) !important;
 }
 
+
+/* =====================================================================
+   EXPERIMENT: NEUTRALIZE COMPOSITOR-HEAVY CSS EFFECTS (temporary)
+   ---------------------------------------------------------------------
+   Diagnostic-only global override to test whether Android Chromium
+   (Oppo F9) rendering corruption is caused by compositor-heavy CSS.
+   Removes ONLY: backdrop-filter, filter, mix-blend-mode, mask /
+   mask-image / -webkit-mask, and clip-path. Transforms, positioning,
+   DOM structure, JS, rAF, observers and Framer Motion are untouched.
+   ROLLBACK: delete this entire block (from this comment to the end of
+   file marker below).
+   ===================================================================== */
+*,
+*::before,
+*::after {
+  backdrop-filter: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  mask: none !important;
+  mask-image: none !important;
+  -webkit-mask: none !important;
+  -webkit-mask-image: none !important;
+  clip-path: none !important;
+}
+/* === END EXPERIMENT: NEUTRALIZE COMPOSITOR-HEAVY CSS EFFECTS === */
