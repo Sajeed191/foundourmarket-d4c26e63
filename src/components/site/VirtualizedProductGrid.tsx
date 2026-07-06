@@ -162,12 +162,8 @@ function gridLog(...args: unknown[]): void {
 /** Wait N animation frames — a "decode barrier flush" so the compositor and
  * rasterizer are synced before we mount the real grid. */
 function nextFrames(n: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    if (typeof requestAnimationFrame !== "function") return resolve();
-    let left = n;
-    const tick = () => (--left <= 0 ? resolve() : requestAnimationFrame(tick));
-    requestAnimationFrame(tick);
-  });
+  // EXPERIMENT: rAF disabled — resolve directly instead of waiting frames.
+  return Promise.resolve();
 }
 
 /**
@@ -178,22 +174,8 @@ function nextFrames(n: number): Promise<void> {
  * gridReady is delayed until scroll is stable. No-op when not restoring.
  */
 function waitForScrollSettled(): Promise<void> {
-  return new Promise<void>((resolve) => {
-    if (typeof window === "undefined" || !isScrollRestoring()) return resolve();
-    let last = window.scrollY;
-    let stableFrames = 0;
-    const start = performance.now();
-    const tick = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - last) <= 1) stableFrames += 1;
-      else stableFrames = 0;
-      last = y;
-      // Settled = 2 consecutive stable frames, or hard cap at 400ms.
-      if (stableFrames >= 2 || performance.now() - start > 400) return resolve();
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
+  // EXPERIMENT: rAF disabled — resolve directly (no per-frame scroll polling).
+  return Promise.resolve();
 }
 
 /**
@@ -271,8 +253,8 @@ function StaggeredGridChildren({ grid }: { grid: ReactElement }) {
       gridLog("stagger-mount complete →", { insertedPerCommit: 1, total });
       return;
     }
-    const id = requestAnimationFrame(() => setCount((c) => Math.min(total, c + 1)));
-    return () => cancelAnimationFrame(id);
+    // EXPERIMENT: rAF disabled — advance the stagger count directly.
+    setCount((c) => Math.min(total, c + 1));
   }, [count, total]);
 
   return cloneElement(grid, undefined, frames.slice(0, count));
@@ -311,11 +293,8 @@ function TwoPhaseGrid({
     const y = window.scrollY;
     const start = performance.now();
     const LOCK_MS = 220;
-    const hold = () => {
-      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
-      if (performance.now() - start < LOCK_MS) requestAnimationFrame(hold);
-    };
-    requestAnimationFrame(hold);
+    // EXPERIMENT: rAF disabled — perform the scroll pin once, synchronously.
+    if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
     publishGridTelemetry({ scrollLockDurationMs: LOCK_MS });
   };
 
@@ -663,19 +642,14 @@ function WindowedGrid<T>({
 
   // Track scroll position (rAF-throttled).
   useEffect(() => {
-    let raf = 0;
+    // EXPERIMENT: rAF disabled — update scroll position directly on each event.
     const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        setScrollY(window.scrollY || window.pageYOffset || 0);
-      });
+      setScrollY(window.scrollY || window.pageYOffset || 0);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
