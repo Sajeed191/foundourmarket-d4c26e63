@@ -728,6 +728,14 @@ function AppRoot() {
 
   return (
     <AppErrorBoundary>
+      {/* EXPERIMENT: globally neutralize Framer Motion. reducedMotion="always"
+          strips transform/opacity movement and the zero-duration default
+          transition makes every animation/AnimatePresence transition instant.
+          DOM structure, layout and CSS are unchanged. ROLLBACK: remove this
+          <MotionConfig> wrapper (and its closing tag) plus the MotionConfig
+          import, restoring the previous <QueryClientProvider> as the direct
+          child of <AppErrorBoundary>. */}
+      <MotionConfig reducedMotion="always" transition={{ duration: 0 }}>
       <QueryClientProvider client={queryClient}>
       <ThemeProvider>
        <GraphicsCompatProvider>
