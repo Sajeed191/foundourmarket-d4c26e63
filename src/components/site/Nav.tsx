@@ -77,6 +77,14 @@ export function Nav() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { open: searchOpen, openSearch } = useSearchUI();
   const [isAdmin, setIsAdmin] = useState(false);
+  // EXPERIMENT (gpu-unsafe devices only): take the top nav OFF its fixed
+  // compositor overlay layer and render it in normal document flow. Detected
+  // after mount to avoid an SSR/hydration mismatch; every other device keeps
+  // the fixed header unchanged.
+  const [gpuUnsafe, setGpuUnsafe] = useState(false);
+  useEffect(() => {
+    setGpuUnsafe(document.documentElement.dataset.gpuUnsafe === "true");
+  }, []);
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
@@ -325,6 +333,8 @@ export function Nav() {
           backfaceVisibility: "visible",
           contain: "none",
           perspective: "none",
+          // gpu-unsafe: leave the fixed-overlay layer entirely — normal flow.
+          ...(gpuUnsafe ? { position: "static" as const, zIndex: "auto" } : null),
         }}
         className="fixed inset-x-0 top-0 z-[99999] px-[max(0.75rem,var(--mobile-safe-left))] sm:px-4 pt-[calc(var(--mobile-safe-top)+0.4rem)] sm:pt-[calc(var(--mobile-safe-top)+0.6rem)]"
       >
@@ -491,7 +501,8 @@ export function Nav() {
         style={{
           // Synced to the real pinned header height (expanded/compact) to avoid
           // any gap or overlap; calc() is only the pre-measure fallback.
-          height: headerHeight != null ? `${headerHeight}px` : "calc(var(--mobile-safe-top) + 4.75rem)",
+          // gpu-unsafe: the header is now in-flow, so no reserved spacer is needed.
+          height: gpuUnsafe ? 0 : headerHeight != null ? `${headerHeight}px` : "calc(var(--mobile-safe-top) + 4.75rem)",
           // Reserved header space carries the page background so it stays
           // continuous with the content below — no darker/blank band on refresh.
           background: "var(--background)",
