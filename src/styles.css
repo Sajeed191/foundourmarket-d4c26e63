@@ -3128,3 +3128,26 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[data-compact]
 html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="true"] {
   transform: translateY(140%) !important;
 }
+
+/* ------------------------------------------------------------------
+   GPU-UNSAFE: square product cards (no rounded clipping).
+
+   On gpu-unsafe devices only, rounded corners on product cards force
+   the compositor to allocate a mask/clip buffer per card. Under scroll
+   on the affected Chromium/Mali combos this clip masking is a proven
+   corruption source. We flatten ONLY the product card shell, its media
+   containers and the product image to plain square rectangles and drop
+   the overflow:hidden that existed purely for rounded clipping.
+
+   Scope is limited to product-card elements — badges, buttons, chips,
+   navigation, images, transforms and animations are untouched.
+   ------------------------------------------------------------------ */
+html[data-gpu-unsafe="true"] [data-product-card],
+html[data-gpu-unsafe="true"] [data-product-media],
+html[data-gpu-unsafe="true"] [data-product-media] img {
+  border-radius: 0 !important;
+}
+html[data-gpu-unsafe="true"] [data-product-card],
+html[data-gpu-unsafe="true"] [data-product-media] {
+  overflow: visible !important;
+}
