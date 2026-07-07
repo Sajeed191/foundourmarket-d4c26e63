@@ -5,7 +5,7 @@ import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive } from "@/lib/storage-image";
 import { publishGridTelemetry, isScrollRestoring } from "@/lib/grid-telemetry";
 import { useFlag } from "@/lib/use-debug-flag";
-import { isGpuUnsafe } from "@/lib/gpu-compat";
+
 
 function flagOff(name: string): boolean {
   return typeof document !== "undefined" && document.documentElement.dataset[name] === "off";
@@ -752,20 +752,6 @@ function useWindowExperiment(): boolean {
 }
 
 /**
- * EXPERIMENT — read the persistent gpuUnsafe flag (client-only, effect-gated so
- * SSR/first hydration matches the server). When true, the grid bypasses
- * IncrementalGrid/WindowedGrid entirely and renders the plain grid path so no
- * DOM/image textures are appended during active scrolling.
- */
-function useGpuUnsafeGrid(): boolean {
-  const [unsafe, setUnsafe] = useState(false);
-  useEffect(() => {
-    setUnsafe(isGpuUnsafe());
-  }, []);
-  return unsafe;
-}
-
-/**
  * Adaptive product grid. Small lists render as a plain responsive grid (also
  * the SSR output). Large lists use the append-only IncrementalGrid by default;
  * with `?ff-window=on` they use the experimental true windowed virtualization
@@ -781,7 +767,6 @@ export function VirtualizedProductGrid<T>({
   getImageSrc,
 }: Props<T>) {
   const windowExperiment = useWindowExperiment();
-  const gpuUnsafeGrid = useGpuUnsafeGrid();
   const virtualizationEnabled = useFlag("virtualization");
   const big = items.length > virtualizeThreshold;
   const stableKey = getKey ?? ((item: T) => {
@@ -801,10 +786,7 @@ export function VirtualizedProductGrid<T>({
     : undefined;
 
   // Large catalogs: bounded, transform-free rendering.
-  // EXPERIMENT: gpuUnsafe devices skip IncrementalGrid/WindowedGrid entirely and
-  // fall through to the plain grid path below (no batching, no IntersectionObserver,
-  // no append-during-scroll).
-  if (big && virtualizationEnabled && !gpuUnsafeGrid) {
+  if (big && virtualizationEnabled) {
     if (windowExperiment) {
       return (
         <WindowedGrid

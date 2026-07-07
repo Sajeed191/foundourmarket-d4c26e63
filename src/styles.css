@@ -2842,146 +2842,17 @@ html[data-render-safe="true"] [style*="backdrop-filter"] {
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   GPU-COMPOSITOR SAFE MODE — data-gpu-unsafe="true"
+   ISOLATED EXPERIMENT — data-gpu-unsafe="true"
    ────────────────────────────────────────────────────────────────────────
-   WORKING HYPOTHESIS: Some Chromium Android GPU/driver combinations corrupt
-    compositor tiles when many backdrop-filter + large blur() + mix-blend-mode
-    layers stack — producing black flashes, vanished hero, red/white stripes and
-    flicker. This block is a compatibility safety layer, not proof of root cause.
+   The earlier site-wide GPU-unsafe flattening (glass→solid, orbs→gradient,
+   blur/mask/contain/will-change strips, fixed-header→static) has been removed
+   so gpu-unsafe devices render the ORIGINAL design again: rounded product
+   cards, fixed floating navigation, bottom dock and decorative glow layers.
 
-   This block is gated purely on the detected GPU (see boot script). It REPLACES
-   the GPU-heavy effects with visually-equivalent CPU-friendly ones: frosted
-   glass becomes a solid translucent fill (no backdrop-filter), large decorative
-   blur orbs become soft radial gradients, mix-blend/3D/will-change are dropped,
-   and oversized multi-layer glow shadows are trimmed. Images, lazy loading,
-   image quality, layout and 2D transitions are all preserved. */
-
-/* 1. Frosted glass surfaces → solid translucent fills (no backdrop blur). */
-html[data-gpu-unsafe="true"] .glass,
-html[data-gpu-unsafe="true"] .glass-strong,
-html[data-gpu-unsafe="true"] .product-card-glass,
-html[data-gpu-unsafe="true"] .card-outline,
-html[data-gpu-unsafe="true"] .bottom-nav-light,
-html[data-gpu-unsafe="true"] .premium-back-btn,
-html[data-gpu-unsafe="true"] [class*="backdrop-blur"],
-html[data-gpu-unsafe="true"] [style*="backdrop-filter"] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-html[data-gpu-unsafe="true"] .glass {
-  background: oklch(0.2 0.012 260 / 0.86) !important;
-}
-html[data-gpu-unsafe="true"] .glass-strong {
-  background: oklch(0.2 0.012 260 / 0.9) !important;
-}
-html[data-gpu-unsafe="true"] .product-card-glass {
-  background: linear-gradient(180deg, oklch(0.2 0.012 260 / 0.96), oklch(0.145 0.009 260 / 0.98)) !important;
-}
-html[data-gpu-unsafe="true"] .card-outline {
-  background: oklch(0.18 0.011 260 / 0.92) !important;
-}
-
-/* 2. Kill GPU-pathological compositing triggers across the tree, but KEEP 2D
-      transforms + animations (those composite fine on Mali). We only strip the
-      properties that force extra tiled GPU buffers / blend passes, unnecessary
-      layer promotion (will-change), paint containment and isolation contexts —
-      all of which can trigger Mali/PowerVR tile-cache corruption. */
-html[data-gpu-unsafe="true"] *,
-html[data-gpu-unsafe="true"] *::before,
-html[data-gpu-unsafe="true"] *::after {
-  mix-blend-mode: normal !important;
-  will-change: auto !important;
-  isolation: auto !important;
-  contain: none !important;
-  /* Drop compositor-layer promotion hints (translateZ/translate3d rely on
-     these to allocate extra GPU tiles). Flattening backface + 3D context
-     removes overlay planes that Mali corrupts, without touching 2D layout. */
-  backface-visibility: visible !important;
-  -webkit-backface-visibility: visible !important;
-  -webkit-mask: none !important;
-  mask: none !important;
-  mask-image: none !important;
-  -webkit-mask-image: none !important;
-}
-
-/* 3. Flatten 3D rendering contexts (perspective/preserve-3d trigger Mali tile
-      corruption); 2D transforms used by the carousel still work. */
-html[data-gpu-unsafe="true"] [style*="perspective"],
-html[data-gpu-unsafe="true"] [class*="perspective"],
-html[data-gpu-unsafe="true"] [style*="preserve-3d"] {
-  perspective: none !important;
-  transform-style: flat !important;
-}
-
-/* 4. Large decorative blur orbs → cheap soft radial gradients (no filter:blur).
-      filter:blur(80px) on a full-bleed element is the single most expensive GPU
-      layer on these devices. */
-html[data-gpu-unsafe="true"] .orb {
-  filter: none !important;
-  opacity: 0.22 !important;
-  background: radial-gradient(circle at center, currentColor 0%, transparent 70%) !important;
-}
-
-/* 5. Trim oversized multi-layer glow shadows that force big offscreen GPU
-      buffers — keep a single tight shadow for depth. */
-html[data-gpu-unsafe="true"] .product-card-glass,
-html[data-gpu-unsafe="true"] .product-card-glass:hover,
-html[data-gpu-unsafe="true"] .product-card-glass:active,
-html[data-gpu-unsafe="true"] .card-premium:hover,
-html[data-gpu-unsafe="true"] .card-elevated:hover {
-  box-shadow: 0 8px 24px -12px oklch(0 0 0 / 0.6) !important;
-}
-
-/* 6. Decorative blurred glow layers (aria-hidden orbs/halos using Tailwind
-      blur-* utilities or inline filter:blur) → drop the blur, keep a faint
-      gradient. These full-bleed blur layers are the heaviest Mali GPU buffers. */
-html[data-gpu-unsafe="true"] [aria-hidden="true"][class*="blur-"],
-html[data-gpu-unsafe="true"] [aria-hidden="true"][style*="blur("] {
-  filter: none !important;
-  opacity: 0.18 !important;
-}
-
-/* 7. CSS drop-shadow() filter passes (Tailwind `drop-shadow-*` utilities and
-      inline `filter: drop-shadow(...)`) allocate an offscreen GPU buffer per
-      element on Mali/PowerVR and can leave ghost/duplicate tiles. Strip the
-      filter so icons/SVGs paint flat — their fill colour is untouched, so the
-      glyph still looks the same minus the soft glow. box-shadow (handled above)
-      composites fine and is left intact for depth. */
-html[data-gpu-unsafe="true"] [class*="drop-shadow"],
-html[data-gpu-unsafe="true"] [style*="drop-shadow"] {
-  filter: none !important;
-  -webkit-filter: none !important;
-}
-
-/* 8. Foreground filter:blur() passes (Tailwind `blur-sm`/`blur`/`blur-lg`…
-      utilities and inline `filter: blur(...)`) on NON-decorative content. Each
-      one allocates an offscreen GPU buffer and is a possible source of duplicated
-      textures / horizontal stripes on Mali/PowerVR. Strip the foreground blur
-      (backdrop-filter is handled in rule 1); content paints crisp instead of
-      soft — never corrupt. Backdrop-blur classes match too but only their
-      `filter` is cleared, which they don't rely on. */
-html[data-gpu-unsafe="true"] :not([aria-hidden="true"])[class*="blur-"]:not([class*="backdrop-blur"]),
-html[data-gpu-unsafe="true"] :not([aria-hidden="true"])[style*="blur("] {
-  filter: none !important;
-  -webkit-filter: none !important;
-}
-
-/* Chrome 149 / Mali compatibility: the component switches the mobile header to
-   normal document flow on gpu-unsafe devices, but the mobile chrome rule above
-   uses `position: fixed !important` and was overriding that inline safeguard.
-   This final gpu-unsafe override removes the fixed overlay layer for real. */
-html[data-gpu-unsafe="true"] [data-app-header] {
-  position: static !important;
-  inset: auto !important;
-  z-index: auto !important;
-  transform: none !important;
-  transition: none !important;
-  will-change: auto !important;
-}
-
-html[data-gpu-unsafe="true"] [data-app-header-spacer] {
-  height: 0 !important;
-}
+   The single remaining experiment lives at the very end of this file
+   ("HOMEPAGE-SCOPED COMPOSITOR TEST") and neutralises compositor-heavy
+   rendering ONLY inside the homepage hero, category sections and the floating
+   support widget on gpu-unsafe devices. Everything else is untouched. */
 
 /* Targeted Chrome cold-refresh stabilization for the trust badges strip. The broad
    Android/GPU safety rules above intentionally flatten most layers with
@@ -3129,25 +3000,48 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="
   transform: translateY(140%) !important;
 }
 
-/* ------------------------------------------------------------------
-   GPU-UNSAFE: square product cards (no rounded clipping).
+/* ══════════════════════════════════════════════════════════════════════
+   HOMEPAGE-SCOPED COMPOSITOR TEST — data-gpu-unsafe="true" ONLY
+   ──────────────────────────────────────────────────────────────────────
+   Single isolated experiment. On gpu-unsafe devices we neutralise every
+   compositor-heavy rendering feature ONLY inside the homepage hero, the
+   category sections (Browse / Main Categories), the floating 24/7 support
+   widget, and their decorative hero backgrounds / glow-orb layers.
 
-   On gpu-unsafe devices only, rounded corners on product cards force
-   the compositor to allocate a mask/clip buffer per card. Under scroll
-   on the affected Chromium/Mali combos this clip masking is a proven
-   corruption source. We flatten ONLY the product card shell, its media
-   containers and the product image to plain square rectangles and drop
-   the overflow:hidden that existed purely for rounded clipping.
+   These are the only sections tagged with [data-gpu-experiment] (hero +
+   categories) plus the support orb [data-floating-control]. Everything else
+   — product cards, product images, product grid, navigation, footer, search,
+   buttons and typography — is completely untouched, so the original design is
+   fully preserved and only these decorative homepage layers are flattened.
 
-   Scope is limited to product-card elements — badges, buttons, chips,
-   navigation, images, transforms and animations are untouched.
-   ------------------------------------------------------------------ */
-html[data-gpu-unsafe="true"] [data-product-card],
-html[data-gpu-unsafe="true"] [data-product-media],
-html[data-gpu-unsafe="true"] [data-product-media] img {
-  border-radius: 0 !important;
-}
-html[data-gpu-unsafe="true"] [data-product-card],
-html[data-gpu-unsafe="true"] [data-product-media] {
-  overflow: visible !important;
+   Rollback: delete this whole block and remove the two [data-gpu-experiment]
+   attributes in src/routes/index.tsx. */
+html[data-gpu-unsafe="true"] [data-gpu-experiment],
+html[data-gpu-unsafe="true"] [data-gpu-experiment] *,
+html[data-gpu-unsafe="true"] [data-gpu-experiment]::before,
+html[data-gpu-unsafe="true"] [data-gpu-experiment]::after,
+html[data-gpu-unsafe="true"] [data-floating-control],
+html[data-gpu-unsafe="true"] [data-floating-control] *,
+html[data-gpu-unsafe="true"] [data-floating-control]::before,
+html[data-gpu-unsafe="true"] [data-floating-control]::after {
+  transform: none !important;
+  translate: none !important;
+  rotate: none !important;
+  scale: none !important;
+  perspective: none !important;
+  will-change: auto !important;
+  transition: none !important;
+  animation: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  mask-composite: initial !important;
+  clip-path: none !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  isolation: auto !important;
+  backface-visibility: visible !important;
 }

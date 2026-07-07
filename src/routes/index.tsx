@@ -561,6 +561,7 @@ function Home() {
 
       {/* 2 · Premium rotating product showcase hero */}
       <section
+        data-gpu-experiment="hero"
         className="relative z-30 px-3 sm:px-6 lg:px-10 pb-3 sm:pb-5"
         style={{
           background: "var(--gradient-hero)",
@@ -644,7 +645,7 @@ function Home() {
       <TrustBadgesStrip />
 
       {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+      <section id="categories" data-gpu-experiment="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
         <div className="relative">
           <SectionHeader eyebrow="Browse" title="Main Categories" href="/categories" />
           {isProductAdmin && (
