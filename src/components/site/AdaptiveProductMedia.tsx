@@ -97,7 +97,12 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   );
 
   const imgLoaded = loadedSrc === src;
-  const revealed = plain || (ready && imgLoaded);
+  // GPU compatibility (centralized via isGpuUnsafe()): show the image with no
+  // animated reveal — no opacity fade, no skeleton shimmer, no background
+  // transition. These are compositor/paint animations that add GPU work per
+  // card; skipping them removes texture churn while the layout stays identical.
+  const gpuUnsafe = isGpuUnsafe();
+  const revealed = plain || gpuUnsafe || (ready && imgLoaded);
 
   if (plain) {
     return (
@@ -124,10 +129,10 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
       className="relative aspect-square w-full overflow-hidden rounded-t-[22px] p-[1.5%]"
       style={{
         background: palette.background,
-        transition: "background 300ms ease",
+        transition: gpuUnsafe ? undefined : "background 300ms ease",
       }}
     >
-      {/* Skeleton shimmer until palette + bitmap are ready. */}
+      {/* Skeleton shimmer until palette + bitmap are ready (skipped on GPU-unsafe). */}
       {!revealed && (
         <div
           aria-hidden
@@ -143,8 +148,8 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         height={800}
         priority={priority}
         onLoad={handleImageLoad}
-        className={`relative z-[1] block h-full w-full rounded-[14px] object-center transition-opacity duration-300 ease-out ${disableObjectFit ? "" : "object-contain"}`}
-        style={{ opacity: revealed ? 1 : 0 }}
+        className={`relative z-[1] block h-full w-full rounded-[14px] object-center ${gpuUnsafe ? "" : "transition-opacity duration-300 ease-out"} ${disableObjectFit ? "" : "object-contain"}`}
+        style={gpuUnsafe ? undefined : { opacity: revealed ? 1 : 0 }}
       />
 
       {children}
