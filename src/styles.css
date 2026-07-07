@@ -3000,27 +3000,33 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   ISOLATED EXPERIMENT — gpuUnsafe bottom dock layer promotion ONLY
+   ISOLATED EXPERIMENT — gpuUnsafe ROOT SCROLL COMPOSITOR de-promotion ONLY
    ──────────────────────────────────────────────────────────────────────
-   On the affected Chromium 149 / Mali path, the strongest remaining suspect is
-   the fixed mobile bottom dock's always-promoted transform layer: it is fixed,
-   scroll-state driven, uses transform-gpu / translate classes, and carries
-   transform+opacity transitions directly over the scrolling document. Keep the
-   dock mounted, fixed, visible and functional; remove only its compositor-layer
-   promotion on gpuUnsafe devices. */
-html[data-gpu-unsafe="true"] [data-app-bottom-nav],
-html[data-gpu-unsafe="true"] [data-app-bottom-nav] * {
-  will-change: auto !important;
-  transition: none !important;
-  animation: none !important;
-}
+   Rationale (per user analysis): disabling individual components (bottom
+   dock, hero, categories, cards) only made the corruption MOVE, never
+   disappear. That pattern is inconsistent with any single component being
+   the root cause and consistent with the SHARED root scrolling compositor
+   layer being corrupted by the Chromium 149 / Mali-G72 path (Chrome 151 and
+   Firefox render fine → engine-level compositing differentiator).
 
-html[data-gpu-unsafe="true"] [data-app-bottom-nav],
-html[data-gpu-unsafe="true"] [data-app-bottom-nav] .nav-glass {
+   This single experiment removes GPU/layer promotion and containment hints
+   from ONLY the top-level scroll/shell wrappers (html, body, [data-app-shell],
+   [data-app-content]) so the page paints into the root compositing surface
+   instead of a separately-promoted scrolling layer. All nested UI — rounded
+   cards, fixed navbars, hero, categories, animations, transforms — is left
+   completely untouched. Only the outermost containers are neutralised. */
+html[data-gpu-unsafe="true"],
+html[data-gpu-unsafe="true"] body,
+html[data-gpu-unsafe="true"] [data-app-shell],
+html[data-gpu-unsafe="true"] [data-app-content] {
+  will-change: auto !important;
   transform: none !important;
   translate: none !important;
-  rotate: none !important;
-  scale: none !important;
   perspective: none !important;
   backface-visibility: visible !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  isolation: auto !important;
+  filter: none !important;
+  backdrop-filter: none !important;
 }
