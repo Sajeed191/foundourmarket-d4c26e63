@@ -20,6 +20,8 @@ import {
  */
 export function isConstrainedDevice(): boolean {
   if (typeof document === "undefined") return false;
+  // GPU-unsafe devices never sample the palette (centralized via isGpuUnsafe()).
+  if (isGpuUnsafe()) return true;
   const d = document.documentElement;
   // Debug harness: treat palette extraction as off when its flag is disabled.
   if (d.dataset.ffPaletteExtraction === "off") return true;
