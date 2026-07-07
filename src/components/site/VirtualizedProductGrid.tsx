@@ -801,7 +801,10 @@ export function VirtualizedProductGrid<T>({
     : undefined;
 
   // Large catalogs: bounded, transform-free rendering.
-  if (big && virtualizationEnabled) {
+  // EXPERIMENT: gpuUnsafe devices skip IncrementalGrid/WindowedGrid entirely and
+  // fall through to the plain grid path below (no batching, no IntersectionObserver,
+  // no append-during-scroll).
+  if (big && virtualizationEnabled && !gpuUnsafeGrid) {
     if (windowExperiment) {
       return (
         <WindowedGrid
