@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { RenderExperiments } from "@/lib/render-experiments";
+import { GpuCompatBanner } from "@/components/site/GpuCompatBanner";
 import { MotionConfig } from "framer-motion";
 import { RegionProvider } from "@/lib/region";
 import { CartProvider } from "@/lib/cart";
@@ -105,8 +105,9 @@ const STARTUP_GUARD_SCRIPT = `(function(){
   window.addEventListener('error', function(e){ var t = e && e.target; var src = t && (t.src || t.href) || ''; if (isEntryFailure(e && e.message) || isEntryFailure(src)) window.__fomRecover(e && e.message || src); }, true);
 })();`;
 
-const FF_ISOLATION_SCRIPT =
-  "(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search);function off(a){d.setAttribute(a,'off')}function has(k){return q.has(k)||q.get(k)==='1'||q.get(k)==='true'}if(q.get('render')==='safe'||has('render-safe'))d.setAttribute('data-render-safe','true');var map={backdrop:'data-ff-backdrop-filters','backdrop-filter':'data-ff-backdrop-filters',blur:'data-ff-blur-effects',filter:'data-ff-css-filters','mix-blend':'data-ff-mix-blend-mode','mix-blend-mode':'data-ff-mix-blend-mode',cv:'data-ff-content-visibility','content-visibility':'data-ff-content-visibility',contain:'data-ff-containment',containment:'data-ff-containment','will-change':'data-ff-will-change',transform:'data-ff-transform',transforms:'data-ff-transform','gpu-transform':'data-ff-gpu-transforms','gpu-transforms':'data-ff-gpu-transforms',sticky:'data-ff-sticky-position',fixed:'data-ff-fixed-position',mask:'data-ff-css-masks',masks:'data-ff-css-masks','clip-path':'data-ff-clip-path',overflow:'data-ff-overflow-clipping','overflow-clipping':'data-ff-overflow-clipping',framer:'data-ff-js-animations','framer-motion':'data-ff-js-animations','css-animations':'data-ff-animations',animations:'data-ff-animations','translate3d':'data-ff-gpu-transforms','translatez':'data-ff-gpu-transforms',shadow:'data-ff-box-shadows',shadows:'data-ff-box-shadows','box-shadow':'data-ff-box-shadows',gradients:'data-ff-gradients',gradient:'data-ff-gradients',lazy:'data-ff-lazy-loading','lazy-loading':'data-ff-lazy-loading',virtualization:'data-ff-virtualization','intersection-observer':'data-ff-virtualization','object-fit':'data-ff-object-fit','image-decoding':'data-ff-image-decoding','image-transformations':'data-ff-image-transformations','palette-extraction':'data-ff-palette-extraction'};var requested=[];Object.keys(map).forEach(function(k){if(has('ff-disable-'+k))requested.push(k)});var list=q.get('ff-disable');if(list)list.split(',').forEach(function(k){requested.push(k.trim().toLowerCase())});var ff=q.get('ff');if(ff&&ff.indexOf('off:')===0)ff.slice(4).split(',').forEach(function(k){requested.push(k.trim())});for(var i=0;i<requested.length;i++){var k=requested[i];if(!k)continue;var css=k.replace(/[A-Z]/g,function(m){return '-'+m.toLowerCase()}).toLowerCase();if(map[css]){off(map[css]);break}}}catch(e){}})();";
+// (Removed temporary FF binary-search isolation script — all diagnostic
+// URL-flag experiments have been retired in favour of the permanent
+// Compatibility Mode driven by the WebGL gate below.)
 
 // Non-critical client-only shell: deferred out of the entry bundle so the
 // homepage/product/search first paint never pays for admin tooling, the live
@@ -333,16 +334,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           "(function(){try{if(localStorage.getItem('fom-graphics-compat')==='on'){document.documentElement.setAttribute('data-graphics-compat','true');}}catch(e){}})();",
       },
-      {
-        // TEMPORARY: Chrome/Chromium Android 149–150 GPU raster rounded-clip
-        // compositor bug (Viz fast-rounded-corner MaskFilterInfo merge; fixed in
-        // Chromium 151). Set ONE attribute before first paint for ONLY affected
-        // browsers — Android + Chromium engine + major version 149 or 150,
-        // excluding Firefox. All rendering changes live behind this attribute in
-        // styles.css. Remove after Chromium <=150 support is dropped.
-        children:
-          "(function(){try{var d=document.documentElement,ua=navigator.userAgent||'';if(/Android/.test(ua)&&!/Firefox|FxiOS/.test(ua)){var m=ua.match(/Chrom(?:e|ium)\\/(\\d+)/);if(m){var v=parseInt(m[1],10);if(v>=149&&v<=150)d.setAttribute('data-chromium149-roundedclip-workaround','true');}}}catch(e){}})();",
-      },
+
+
 
 
 
@@ -358,13 +351,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}var R='unknown',U=false;try{var ua=navigator.userAgent||'';var r=rd();R=r||'unknown';var rl=r.toLowerCase();var gpuUnsafe=/mali/.test(rl)||/swiftshader|software|llvmpipe|microsoft basic/.test(rl)||/powervr/.test(rl)||/videocore/.test(rl)||/vivante/.test(rl)||/adreno\\s*(2|3)\\d\\d/.test(rl);var engineUnsafe=false;var m;if((m=ua.match(/SamsungBrowser\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<14;else if(/Android/.test(ua)&&(m=ua.match(/Chrome\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<80;var unsafe=gpuUnsafe||engineUnsafe;U=unsafe;if(/Android/.test(ua))d.setAttribute('data-android','true');d.setAttribute('data-gpu-renderer',r||'unknown');d.setAttribute('data-gpu-unsafe',unsafe?'true':'false');if(unsafe)d.setAttribute('data-compat-reason',gpuUnsafe?'gpu':'engine');}catch(y){d.setAttribute('data-gpu-unsafe','false');try{if(/Android/.test(navigator.userAgent||''))d.setAttribute('data-android','true');}catch(z){}}try{window.__fomCompat=function(){var flags={};var names=d.getAttributeNames?d.getAttributeNames():[];for(var i=0;i<names.length;i++){var n=names[i];if(n.indexOf('data-')===0&&(/android|gpu|compat|degrade|low-end|render-safe|ultra|ff-/.test(n)))flags[n]=d.getAttribute(n);}var info={webglRenderer:R,userAgent:navigator.userAgent,compatibilityMode:d.getAttribute('data-gpu-unsafe')==='true',flags:flags};try{console.info('%c[FOM Compatibility]','color:#ff8a3d;font-weight:bold',info);}catch(e){}return info;};window.__fomCompat();}catch(w){}})();",
       },
-      {
-        // TEMPORARY BINARY-SEARCH ISOLATION FLAGS. These attributes are set
-        // before first paint so Chromium Android can be tested one rendering
-        // feature at a time on the affected device. Production is unchanged
-        // unless a `?ff-disable-*` / `?render=safe` URL flag is present.
-        children: FF_ISOLATION_SCRIPT,
-      },
+
+
 
       {
 
@@ -451,7 +439,6 @@ function DeferredShell({
 
   return (
     <Suspense fallback={null}>
-      <RenderExperiments />
       <RegionSelectModal />
       {!isAuthRoute && <AdminMobileBar />}
       {!isAuthRoute && <AdminFloatingToolbar />}
@@ -771,6 +758,7 @@ function AppRoot() {
                               hideLiveChat={isCheckoutRoute || isTicketRoute}
                             />
                             <Toaster position="bottom-center" richColors />
+                            <GpuCompatBanner />
                             <ShareDialog />
                             
                             <DebugPanel />
