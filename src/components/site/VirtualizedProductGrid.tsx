@@ -751,6 +751,20 @@ function useWindowExperiment(): boolean {
 }
 
 /**
+ * EXPERIMENT — read the persistent gpuUnsafe flag (client-only, effect-gated so
+ * SSR/first hydration matches the server). When true, the grid bypasses
+ * IncrementalGrid/WindowedGrid entirely and renders the plain grid path so no
+ * DOM/image textures are appended during active scrolling.
+ */
+function useGpuUnsafeGrid(): boolean {
+  const [unsafe, setUnsafe] = useState(false);
+  useEffect(() => {
+    setUnsafe(isGpuUnsafe());
+  }, []);
+  return unsafe;
+}
+
+/**
  * Adaptive product grid. Small lists render as a plain responsive grid (also
  * the SSR output). Large lists use the append-only IncrementalGrid by default;
  * with `?ff-window=on` they use the experimental true windowed virtualization
