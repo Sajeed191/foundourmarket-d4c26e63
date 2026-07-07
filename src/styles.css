@@ -2966,6 +2966,23 @@ html[data-gpu-unsafe="true"] :not([aria-hidden="true"])[style*="blur("] {
   -webkit-filter: none !important;
 }
 
+/* Chrome 149 / Mali compatibility: the component switches the mobile header to
+   normal document flow on gpu-unsafe devices, but the mobile chrome rule above
+   uses `position: fixed !important` and was overriding that inline safeguard.
+   This final gpu-unsafe override removes the fixed overlay layer for real. */
+html[data-gpu-unsafe="true"] [data-app-header] {
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+html[data-gpu-unsafe="true"] [data-app-header-spacer] {
+  height: 0 !important;
+}
+
 /* Targeted Chrome cold-refresh stabilization for the trust badges strip. The broad
    Android/GPU safety rules above intentionally flatten most layers with
    !important, so this row-specific rule must stay last to ensure the
