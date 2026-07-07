@@ -36,10 +36,7 @@ export function resizedStorageImage(url: string, width: number, quality = 62): s
     // Mali GPU compatibility: on devices flagged data-gpu-unsafe, pin the
     // transform endpoint to WebP so Chrome never negotiates AVIF (a riskier
     // Skia/Mali decode+raster path). No effect on any other device.
-    if (
-      typeof document !== "undefined" &&
-      document.documentElement.dataset.gpuUnsafe === "true"
-    ) {
+    if (isGpuUnsafe()) {
       u.searchParams.set("format", "webp");
     }
     return u.toString();
