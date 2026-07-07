@@ -2969,20 +2969,22 @@ html[data-gpu-unsafe="true"] :not([aria-hidden="true"])[style*="blur("] {
 /* Targeted Chrome cold-refresh stabilization for the trust badges strip. The broad
    Android/GPU safety rules above intentionally flatten most layers with
    !important, so this row-specific rule must stay last to ensure the
-   feature-row stabilization is actually applied during diagnostics. */
-html .feature-row.feature-row {
+   feature-row stabilization is actually applied during diagnostics.
+   Excluded on data-gpu-unsafe devices: forcing translate3d/translateZ +
+   will-change there re-promotes GPU layers we are deliberately flattening. */
+html:not([data-gpu-unsafe="true"]) .feature-row.feature-row {
   backface-visibility: hidden !important;
   transform: translate3d(0, 0, 0) !important;
   will-change: transform !important;
 }
 
-html .feature-row .feature-card {
+html:not([data-gpu-unsafe="true"]) .feature-row .feature-card {
   backface-visibility: hidden !important;
   contain: layout !important;
   transform: translateZ(0) !important;
 }
 
-html .feature-row .feature-card * {
+html:not([data-gpu-unsafe="true"]) .feature-row .feature-card * {
   will-change: auto !important;
 }
 
