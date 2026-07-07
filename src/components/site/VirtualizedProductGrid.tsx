@@ -5,6 +5,7 @@ import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive } from "@/lib/storage-image";
 import { publishGridTelemetry, isScrollRestoring } from "@/lib/grid-telemetry";
 import { useFlag } from "@/lib/use-debug-flag";
+import { isGpuUnsafe } from "@/lib/gpu-compat";
 
 function flagOff(name: string): boolean {
   return typeof document !== "undefined" && document.documentElement.dataset[name] === "off";
