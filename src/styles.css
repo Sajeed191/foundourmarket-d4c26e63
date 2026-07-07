@@ -2893,6 +2893,11 @@ html[data-gpu-unsafe="true"] *::after {
   will-change: auto !important;
   isolation: auto !important;
   contain: none !important;
+  /* Drop compositor-layer promotion hints (translateZ/translate3d rely on
+     these to allocate extra GPU tiles). Flattening backface + 3D context
+     removes overlay planes that Mali corrupts, without touching 2D layout. */
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
   -webkit-mask: none !important;
   mask: none !important;
   mask-image: none !important;
