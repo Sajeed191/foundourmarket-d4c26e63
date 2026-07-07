@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { ProductImage } from "@/components/site/ProductImage";
 import { isConstrainedDevice } from "@/lib/use-image-palette";
+import { isGpuUnsafe } from "@/lib/gpu-compat";
 import {
   getImagePalette,
   getImagePaletteFromElement,
