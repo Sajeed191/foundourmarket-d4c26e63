@@ -767,7 +767,6 @@ export function VirtualizedProductGrid<T>({
   getImageSrc,
 }: Props<T>) {
   const windowExperiment = useWindowExperiment();
-  const gpuUnsafeGrid = useGpuUnsafeGrid();
   const virtualizationEnabled = useFlag("virtualization");
   const big = items.length > virtualizeThreshold;
   const stableKey = getKey ?? ((item: T) => {
