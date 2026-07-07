@@ -9,6 +9,7 @@
 // (e.g. cache-busting `?v=`) are preserved.
 
 const OBJECT_SEGMENT = "/storage/v1/object/public/";
+import { isGpuUnsafe } from "@/lib/gpu-compat";
 const RENDER_SEGMENT = "/storage/v1/render/image/public/";
 
 /** True when the URL is a Supabase Storage public-object URL we can resize. */
