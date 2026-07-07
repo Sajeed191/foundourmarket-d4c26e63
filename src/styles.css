@@ -2538,77 +2538,11 @@ html[data-ff-overflow-clipping="off"] [data-product-media] {
   mask-image: none !important;
 }
 
-/* TEMPORARY:
-   Chrome/Chromium Android 149–150 GPU raster rounded-clip compositor bug.
-   Chromium's Viz "fast-rounded-corner" path (SharedQuadState::is_fast_rounded_corner
-   + CanMergeMaskFilterInfo) incorrectly merges the rounded-corner MaskFilterInfo of
-   adjacent GPU raster tiles once a product grid spans an extra tile row (~5th card),
-   producing horizontal tile corruption. Fixed in Chromium 151; never reproduces on
-   Firefox/desktop/iOS or with GPU rasterization off.
+/* (Removed temporary Chromium 149–150 rounded-clip experiment and the dormant
+   ultra-low-end / gpu-safe-mode product-card flatten blocks. GPU-unsafe devices
+   are now handled by the single production "GPU COMPATIBILITY MODE" section at
+   the end of this file — no per-experiment card/media clipping overrides.) */
 
-   Validated fix: only the OUTER product-card rounded *overflow* clip lowers to the
-   buggy MaskFilterInfo. Dropping just that clip removes the trigger. border-radius,
-   box-shadow, gradients, spacing, typography and animations are all untouched — the
-   card background and border stay rounded via border-radius, and the media wrapper
-   keeps its own clip. Gated to affected browsers only via the attribute set in
-   src/routes/__root.tsx. Remove this block once Chromium <=150 support is dropped. */
-html[data-chromium149-roundedclip-workaround="true"] [data-product-card] {
-  overflow: visible;
-}
-
-/* ISOLATED EXPERIMENT — inner product-media rounded-clip trigger.
-   The outer [data-product-card] clip above was already lowered, but the INNER
-   [data-product-media] wrapper (shared by ProductCard/AdaptiveProductMedia AND
-   WishlistCard via the [data-product-media] marker) still uses
-   `border-radius + overflow:hidden`, which is the SAME Chromium 149/150
-   fast-rounded-corner MaskFilterInfo path that corrupts adjacent GPU raster
-   tiles in repeated card lists (Home Trending, Cart, Saved, Account).
-
-   Fix: drop ONLY the media wrapper's rounded *overflow* clip (the mask-filter
-   trigger) and round the image itself via border-radius:inherit instead —
-   replaced <img> elements clip their own content to border-radius natively, so
-   the corners stay visually rounded without a composited rounded-corner mask.
-   Gated to the affected-browser attribute already set in src/routes/__root.tsx,
-   scoped to product media only — no shell/nav/hero/category/global changes.
-   Rollback: delete this block. */
-html[data-chromium149-roundedclip-workaround="true"] [data-product-media] {
-  overflow: visible;
-}
-html[data-chromium149-roundedclip-workaround="true"] [data-product-media] [data-product-image] {
-  border-radius: inherit;
-}
-
-
-
-html[data-ultra-low-end="true"] [data-product-card],
-html[data-ultra-low-end="true"] [data-product-card-frame],
-html[data-ultra-low-end="true"] [data-product-media],
-html[data-ultra-low-end="true"] [data-product-image],
-html[data-android-gpu-safe-mode="true"] [data-product-card],
-html[data-android-gpu-safe-mode="true"] [data-product-card-frame],
-html[data-android-gpu-safe-mode="true"] [data-product-media],
-html[data-android-gpu-safe-mode="true"] [data-product-image] {
-  contain: none !important;
-  content-visibility: visible !important;
-  isolation: auto !important;
-  transform: none !important;
-  filter: none !important;
-  backdrop-filter: none !important;
-  will-change: auto !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-html[data-android-gpu-safe-mode="true"] [data-app-bottom-nav],
-html[data-android-gpu-safe-mode="true"] [data-floating-button],
-html[data-android-gpu-safe-mode="true"] [data-live-chat],
-html[data-ultra-low-end="true"] [data-app-bottom-nav],
-html[data-ultra-low-end="true"] [data-floating-button],
-html[data-ultra-low-end="true"] [data-live-chat] {
-  position: static !important;
-  inset: auto !important;
-  z-index: auto !important;
-}
 
 /* =====================================================================
    TEMPORARY DEBUG HARNESS — feature-flag CSS kill-switches.
