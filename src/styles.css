@@ -3151,3 +3151,24 @@ html[data-graphics-compat="true"] [data-app-bottom-nav] .nav-glass[aria-hidden="
   isolation: auto !important;
 }
 /* === END EXPERIMENT: NEUTRALIZE CSS PAINT/COMPOSITING CONTAINMENT === */
+
+/* =====================================================================
+   EXPERIMENT: FLATTEN TO A SINGLE COMPOSITED LAYER (temporary)
+   ---------------------------------------------------------------------
+   Diagnostic-only. Tests whether Chromium HARDWARE-OVERLAY / compositor
+   layer promotion (not GPU tile rasterization) is responsible for the
+   Mali-G72 (Oppo F9) corruption. Only on data-gpu-unsafe="true" devices,
+   the entire app subtree is forced into ONE composited backing texture
+   via an imperceptible opacity, which disqualifies per-element hardware-
+   overlay planes and collapses the persistent fixed nav overlays into the
+   root layer. `opacity` does NOT establish a containing block for
+   position:fixed descendants, so the fixed navs stay pinned and the
+   visual layout is unchanged. No transforms, animations, DOM, images,
+   src/srcset, or effects are altered.
+   ROLLBACK: delete this entire block (from this comment to the end-of-
+   block marker below).
+   ===================================================================== */
+html[data-gpu-unsafe="true"] #root {
+  opacity: 0.999;
+}
+/* === END EXPERIMENT: FLATTEN TO A SINGLE COMPOSITED LAYER === */
