@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { getResponsiveImage } from "@/lib/product-images";
 import { getStorageResponsive, getStorageSafeSrc } from "@/lib/storage-image";
@@ -75,7 +75,76 @@ function ProductImageImpl({
   const imgRef = useRef<HTMLImageElement | null>(null);
   const activeSrcRef = useRef(resolvedSrc);
 
+  // Reliability layer: automatic retry with backoff + cache-busting, a stall
+  // timeout, and a graceful "image unavailable" fallback. `attempt` 0 uses the
+  // pristine URL (best cache hit); retries 1..MAX append a version param to
+  // dodge a poisoned/aborted cache entry. `failed` renders the fallback tile so
+  // a blank white/gray rectangle can never remain after loading attempts.
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [300, 800, 1500];
+  const STALL_TIMEOUT = 10000;
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  // Reset the reliability state machine whenever the underlying source changes.
+  useEffect(() => {
+    setAttempt(0);
+    setFailed(false);
+  }, [resolvedSrc]);
+
+  const withCacheBust = useCallback((url: string, n: number) => {
+    if (n <= 0) return url;
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}v=retry${n}`;
+  }, []);
+
+  const displaySrc = withCacheBust(resolvedSrc, attempt);
+
+  // Stall protection: if a load neither completes nor errors within the timeout,
+  // treat it as a failure so the retry/fallback path runs. Cleared on load/error
+  // and on src change.
+  const stallRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearStall = useCallback(() => {
+    if (stallRef.current) {
+      clearTimeout(stallRef.current);
+      stallRef.current = null;
+    }
+  }, []);
+
+  const scheduleRetry = useCallback(() => {
+    clearStall();
+    setAttempt((prev) => {
+      if (prev >= MAX_RETRIES) {
+        setFailed(true);
+        return prev;
+      }
+      const delay = RETRY_DELAYS[prev] ?? 1500;
+      window.setTimeout(() => {
+        setFailed(false);
+        setAttempt(prev + 1);
+      }, delay);
+      return prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearStall]);
+
+  useEffect(() => {
+    if (failed) return;
+    // Arm the stall timer for the current attempt. An already-complete cached
+    // image (img.complete) needs no timer.
+    if (typeof window === "undefined") return;
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) return;
+    stallRef.current = setTimeout(() => {
+      const el = imgRef.current;
+      if (el && el.complete && el.naturalWidth > 0) return;
+      scheduleRetry();
+    }, STALL_TIMEOUT);
+    return clearStall;
+  }, [displaySrc, failed, scheduleRetry, clearStall]);
+
   const handleLoad = useCallback(() => {
+    clearStall();
     if (activeSrcRef.current !== resolvedSrc) return;
     const img = imgRef.current;
     if (!img) return;
@@ -111,7 +180,11 @@ function ProductImageImpl({
       // Best-effort cleanup if the src changes before the timer fires.
       return () => clearTimeout(t);
     }
-  }, [disableImageDecode, onLoad, resolvedSrc]);
+  }, [disableImageDecode, onLoad, resolvedSrc, clearStall]);
+
+  const handleError = useCallback(() => {
+    scheduleRetry();
+  }, [scheduleRetry]);
 
   useEffect(() => {
     activeSrcRef.current = resolvedSrc;
@@ -120,13 +193,36 @@ function ProductImageImpl({
     };
   }, [resolvedSrc]);
 
+  useEffect(() => clearStall, [clearStall]);
+
+  if (failed) {
+    // Graceful fallback tile — never a bare white/gray rectangle. Keeps the
+    // reserved box dimensions so layout stays stable.
+    return (
+      <div
+        role="img"
+        aria-label={`${alt} — image unavailable`}
+        data-product-image-fallback
+        className={`flex flex-col items-center justify-center gap-1 bg-white/[0.04] text-white/40 ${className}`}
+        style={style}
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="9" cy="9" r="1.5" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
+        <span className="text-[10px] font-medium leading-none">Image unavailable</span>
+      </div>
+    );
+  }
+
   return (
     <img
       key={`${resolvedSrc}|${width}x${height}`}
       ref={imgRef}
-      src={resolvedSrc}
-      srcSet={srcset}
-      sizes={srcset ? sizes : undefined}
+      src={displaySrc}
+      srcSet={attempt > 0 ? undefined : srcset}
+      sizes={attempt === 0 && srcset ? sizes : undefined}
       alt={alt}
       width={width}
       height={height}
@@ -137,9 +233,11 @@ function ProductImageImpl({
       suppressHydrationWarning
       style={style}
       onLoad={handleLoad}
+      onError={handleError}
       className={className}
     />
   );
 }
+
 
 export const ProductImage = memo(ProductImageImpl);
