@@ -1020,9 +1020,6 @@ function ProductPage() {
             {currencyReady ? (
               <span className="flex items-baseline gap-1.5">
                 <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * qty)}</span>
-                {discountPct && (
-                  <span className="text-[9px] font-mono font-bold text-accent whitespace-nowrap">−{discountPct}%</span>
-                )}
               </span>
             ) : (
               <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
