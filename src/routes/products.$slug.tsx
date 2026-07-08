@@ -389,6 +389,13 @@ function ProductPage() {
   const unitShipping = shippingFeeOf(product);
   const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
   const isOOS = effectiveStock <= 0;
+  // Live cart quantity for this product — drives the "quantity selector replaces
+  // Add to Cart" flow. The selector is shown ONLY after a successful add
+  // animation completes (addState back to idle) and the item is in the cart.
+  const cartQty = cartItems.find((i) => i.slug === product.slug && !i.savedForLater)?.qty ?? 0;
+  const showQtySelector = addState === "idle" && cartQty > 0;
+  const incCartQty = () => cartSetQty(product.slug, cartQty + 1);
+  const decCartQty = () => (cartQty <= 1 ? cartRemove(product.slug) : cartSetQty(product.slug, cartQty - 1));
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
 
