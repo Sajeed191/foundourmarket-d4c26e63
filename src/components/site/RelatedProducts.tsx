@@ -1,5 +1,5 @@
-import { useRef, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { Product } from "@/lib/products";
@@ -15,6 +15,8 @@ type Props = {
   eyebrow?: string;
   /** Target number of items shown. */
   limit?: number;
+  /** Number of items shown before "View all". */
+  initial?: number;
 };
 
 export function RelatedProducts({
@@ -23,9 +25,10 @@ export function RelatedProducts({
   title = "You may also like",
   eyebrow = "Discover",
   limit = 8,
+  initial = 4,
 }: Props) {
   const { products, loading } = useProducts();
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const items = useMemo(() => {
     const exclude = new Set<string>(excludeSlugs);
@@ -44,59 +47,42 @@ export function RelatedProducts({
     return [...sameCat, ...others].slice(0, limit);
   }, [products, product, excludeSlugs, limit]);
 
-  function scroll(dir: -1 | 1) {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const amount = el.clientWidth * 0.85;
-    el.scrollBy({ left: amount * dir, behavior: "smooth" });
-  }
-
   if (loading || items.length === 0) return null;
 
+  const visible = showAll ? items : items.slice(0, initial);
+  const hasMore = items.length > initial;
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="flex items-end justify-between gap-4 mb-5 sm:mb-7">
-        <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{eyebrow}</p>
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-display tracking-tight">{title}</h2>
-        </div>
-        <div className="hidden sm:flex items-center gap-2">
-          <button
-            onClick={() => scroll(-1)}
-            aria-label="Scroll left"
-            className="size-10 grid place-items-center rounded-full border border-border hover:border-accent/40 hover:text-accent transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            onClick={() => scroll(1)}
-            aria-label="Scroll right"
-            className="size-10 grid place-items-center rounded-full border border-border hover:border-accent/40 hover:text-accent transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <div className="mb-4 sm:mb-6">
+        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1.5">{eyebrow}</p>
+        <h2 className="text-xl sm:text-3xl md:text-4xl font-display tracking-tight">{title}</h2>
       </div>
 
-      <div
-        ref={scrollerRef}
-        data-product-grid
-        className="flex items-start gap-3 sm:gap-3.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
-        style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
-      >
-        {items.map((p) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 items-stretch">
+        {visible.map((p) => (
           <div
             key={p.id ?? p.slug}
             data-product-card-frame
-            className="snap-start shrink-0 w-[58%] xs:w-[46%] sm:w-[30%] md:w-[22%] lg:w-[18%] last:mr-4 sm:last:mr-0 rounded-2xl glow-border"
+            className="h-full rounded-2xl glow-border"
           >
             <ProductCard product={p} compact />
           </div>
         ))}
       </div>
 
-
+      {hasMore && !showAll && (
+        <div className="mt-5 grid place-items-center">
+          <button
+            onClick={() => setShowAll(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/[0.08] px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-accent transition-all hover:border-accent/50 hover:bg-accent/[0.12]"
+          >
+            View all related products ({items.length}) <ChevronDown className="size-3.5" />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
+
 
