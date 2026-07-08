@@ -239,9 +239,9 @@ function CartPage() {
                         </div>
                         <div className="text-right">
                           {pr.original > pr.sale && (
-                            <span className="block text-[11px] text-muted-foreground line-through font-mono">{format(pr.original * item.qty)}</span>
+                            <span className="fom-price-compare block text-[11px] font-mono">{format(pr.original * item.qty)}</span>
                           )}
-                          <span className="font-mono text-sm text-accent">{format(pr.sale * item.qty)}</span>
+                          <span className="fom-price-current block text-sm font-mono">{format(pr.sale * item.qty)}</span>
                           {pr.save > 0 && (
                             <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
                           )}
