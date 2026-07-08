@@ -586,11 +586,12 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               </div>
             )}
           </div>
+          )}
 
 
 
           {/* Trust boosters */}
-          {hasReviews && (
+          {expanded && hasReviews && (
             <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatCard icon={<Users className="size-4" />} value={verifiedCount.toLocaleString()} label="Verified Buyers" />
               <StatCard icon={<Star className="size-4" />} value={avg.toFixed(1)} label="Average Rating" />
