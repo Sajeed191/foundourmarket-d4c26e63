@@ -322,17 +322,8 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const identity = productIdentity(product);
 
   const badges = useMemo<CardBadge[]>(() => {
-    // Discount badge always leads when the product is discounted.
-    const discountBadge: CardBadge | null = discount
-      ? {
-          id: "discount",
-          label: `${discount}% OFF`,
-          style: {
-            background: "linear-gradient(135deg,#FF5A52 0%,#E11D1D 100%)",
-            color: "#FFFFFF",
-          },
-        }
-      : null;
+    // Discount percentage badge removed sitewide per design decision.
+    const discountBadge: CardBadge | null = null;
 
     const computed: CardBadge[] = labels.map((b) => ({
       id: b.key,
