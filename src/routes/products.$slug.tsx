@@ -607,7 +607,7 @@ function ProductPage() {
             {galleryMedia.length > 1 && (
               <div
                 ref={thumbStripRef}
-                className="mt-2.5 flex gap-2.5 overflow-x-auto scrollbar-hide px-4 py-1 scroll-smooth snap-x"
+                className="mt-2.5 flex justify-between sm:justify-start gap-2.5 overflow-x-auto scrollbar-hide px-4 py-1 scroll-smooth snap-x"
                 style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
               >
                 {galleryMedia.map((item, i) => (
