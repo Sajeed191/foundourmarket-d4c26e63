@@ -20,7 +20,12 @@ import {
   formatDiagnostics,
   type CompatDiagnostics,
 } from "@/lib/compat-diagnostics";
-import { AlertTriangle, Check, Copy, X } from "lucide-react";
+import { toast } from "sonner";
+import { AlertTriangle, ChevronRight, Chrome, Flame, LifeBuoy, X } from "lucide-react";
+
+/** External help destinations (stable, vendor-neutral pages). */
+const BROWSER_UPDATE_URL = "https://browsehappy.com/";
+const FIREFOX_URL = "https://www.mozilla.org/firefox/new/";
 
 const DISMISS_KEY = "fom-compat-banner-dismissed";
 const DISMISS_TS_KEY = "fom-compat-banner-dismissed-at";
