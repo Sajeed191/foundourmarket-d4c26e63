@@ -214,6 +214,8 @@ function ProductPage() {
   // True once images + variants have resolved from the server.
   const [dataReady, setDataReady] = useState(false);
   const [mobileDockVisible, setMobileDockVisible] = useState(false);
+  const [titleExpanded, setTitleExpanded] = useState(false);
+
 
   useEffect(() => {
     layoutMetrics.setExpectedCtaHeight(64);
@@ -508,11 +510,11 @@ function ProductPage() {
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
                 {/* badges — max 2 visible, rest collapse into a "+N" pill so
                     they never overlap or clip on any image */}
-                <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10 max-w-[calc(100%-5.5rem)]">
+                <div className="absolute top-3.5 left-3.5 flex flex-col items-start gap-2 z-10 max-w-[70%] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 duration-500">
                   {visibleBadges.map((b) => (
                     <span
                       key={b.key}
-                      className={`inline-flex h-[27px] w-auto max-w-full items-center gap-1.5 rounded-full px-3.5 text-[11px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap shadow-md shadow-black/30 backdrop-blur-sm ${b.className}`}
+                      className={`inline-flex h-9 w-auto max-w-full items-center gap-1.5 rounded-full px-4 text-[11px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap shadow-lg shadow-black/40 ring-1 ring-white/10 backdrop-blur-md ${b.className}`}
                     >
                       {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
                       <span className="truncate">{b.label}</span>
@@ -521,11 +523,12 @@ function ProductPage() {
                   {hiddenBadgeCount > 0 && (
                     <span
                       aria-label={`${hiddenBadgeCount} more badges`}
-                      className="inline-flex h-[27px] items-center rounded-full bg-black/55 px-3.5 text-[11px] font-bold font-mono uppercase tracking-wide text-white/90 shadow-md shadow-black/30 backdrop-blur-md"
+                      className="inline-flex h-9 items-center rounded-full bg-black/60 px-4 text-[11px] font-bold font-mono uppercase tracking-wide text-white/90 shadow-lg shadow-black/40 ring-1 ring-accent/30 backdrop-blur-md"
                     >
                       +{hiddenBadgeCount}
                     </span>
                   )}
+
                 </div>
 
                 {/* Floating stock pill — premium glass */}
@@ -537,22 +540,23 @@ function ProductPage() {
                     </span>
                   </div>
                 )}
-                <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
+                <div className="absolute top-3.5 right-3.5 flex flex-col gap-2 z-10">
                   <button
                     onClick={() => toggleWishlist(product.slug)}
                     aria-label="Wishlist"
-                    className={`size-8 grid place-items-center backdrop-blur-md rounded-full border transition-all ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
+                    className={`size-12 grid place-items-center backdrop-blur-md rounded-full border shadow-lg shadow-black/30 transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-black/40 border-white/10 text-white/80 hover:text-accent hover:border-accent/50"}`}
                   >
-                    <Heart className={`size-3.5 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+                    <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
                   </button>
                   <button
                     onClick={handleShare}
                     aria-label="Share"
-                    className="size-8 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 hover:text-accent hover:border-accent/50 transition-all"
+                    className="size-12 grid place-items-center backdrop-blur-md bg-black/40 border border-white/10 rounded-full text-white/80 shadow-lg shadow-black/30 hover:text-accent hover:border-accent/50 transition-all active:scale-90"
                   >
-                    <Share2 className="size-3.5" />
+                    <Share2 className="size-4" />
                   </button>
                 </div>
+
                 {isAdmin && (
                   <Suspense fallback={null}>
                     <AdminImageManager
@@ -567,14 +571,14 @@ function ProductPage() {
 
 
             {galleryMedia.length > 1 && (
-              <div className="mt-2.5 grid grid-cols-6 gap-2 sm:gap-2.5">
+              <div className="mt-2.5 flex gap-2.5 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth snap-x" style={{ scrollbarWidth: "none" }}>
                 {galleryMedia.map((item, i) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveImg(i)}
                     aria-label={item.id === "video" ? "Play video" : `View image ${i + 1}`}
                     aria-current={i === activeImg}
-                    className={`relative aspect-square rounded-xl overflow-hidden border transition-all active:scale-95 bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
+                    className={`relative size-16 sm:size-[72px] shrink-0 snap-start rounded-xl overflow-hidden border transition-all active:scale-95 bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
                   >
                     {item.id === "video" ? (
                       <div className="w-full h-full bg-black grid place-items-center">
@@ -587,6 +591,7 @@ function ProductPage() {
                 ))}
               </div>
             )}
+
 
 
             <ImageLightbox
@@ -608,7 +613,17 @@ function ProductPage() {
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent/90 mb-1.5 mt-4 lg:mt-0">{product.tagline}</p>
-            <h1 className="text-[1.35rem] sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-2.5 text-balance leading-[1.22] sm:leading-[1.12]">{product.name}</h1>
+            <h1 className={`text-[1.35rem] sm:text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-1 text-balance leading-[1.22] sm:leading-[1.12] ${titleExpanded ? "" : "line-clamp-3"}`}>{product.name}</h1>
+            {product.name.length > 70 && (
+              <button
+                onClick={() => setTitleExpanded((v) => !v)}
+                className="mb-2.5 text-[11px] font-mono uppercase tracking-widest text-accent hover:underline"
+                aria-expanded={titleExpanded}
+              >
+                {titleExpanded ? "Read less" : "Read more"}
+              </button>
+            )}
+
 
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <StarRating
@@ -811,7 +826,7 @@ function ProductPage() {
             </div>
 
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <ProductInfoPanel title="Specifications" icon={Layers}>
+              <Accordion title="Specifications" icon={Layers}>
                 <dl className="divide-y divide-border/60">
                   {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
                     <div key={k} className="flex gap-4 py-2.5 text-sm">
@@ -820,11 +835,11 @@ function ProductPage() {
                     </div>
                   ))}
                 </dl>
-              </ProductInfoPanel>
+              </Accordion>
             )}
 
             {product.attributes && Object.keys(product.attributes).length > 0 && (
-              <ProductInfoPanel title="Details" icon={Info}>
+              <Accordion title="Details" icon={Info}>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(product.attributes as Record<string, string>).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/50 px-3 py-1 text-xs">
@@ -833,8 +848,9 @@ function ProductPage() {
                     </span>
                   ))}
                 </div>
-              </ProductInfoPanel>
+              </Accordion>
             )}
+
 
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
@@ -914,14 +930,26 @@ function ProductPage() {
           >
             <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
           </button>
-          <div className="flex flex-col leading-none px-1 shrink-0">
+          <img
+            src={activeMedia?.url || product.image}
+            alt=""
+            aria-hidden
+            className="size-10 shrink-0 rounded-xl object-cover border border-white/10"
+          />
+          <div className="flex flex-col leading-none px-0.5 min-w-0 shrink">
             <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
             {currencyReady ? (
-              <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+              <span className="flex items-baseline gap-1.5">
+                <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+                {discountPct && (
+                  <span className="text-[9px] font-mono font-bold text-accent">−{discountPct}%</span>
+                )}
+              </span>
             ) : (
               <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
             )}
           </div>
+
           <button
             onClick={handleAdd}
             disabled={isOOS}
