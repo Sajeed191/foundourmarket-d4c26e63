@@ -826,7 +826,7 @@ function ProductPage() {
             </div>
 
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <ProductInfoPanel title="Specifications" icon={Layers}>
+              <Accordion title="Specifications" icon={Layers}>
                 <dl className="divide-y divide-border/60">
                   {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
                     <div key={k} className="flex gap-4 py-2.5 text-sm">
@@ -835,11 +835,11 @@ function ProductPage() {
                     </div>
                   ))}
                 </dl>
-              </ProductInfoPanel>
+              </Accordion>
             )}
 
             {product.attributes && Object.keys(product.attributes).length > 0 && (
-              <ProductInfoPanel title="Details" icon={Info}>
+              <Accordion title="Details" icon={Info}>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(product.attributes as Record<string, string>).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/50 px-3 py-1 text-xs">
@@ -848,8 +848,9 @@ function ProductPage() {
                     </span>
                   ))}
                 </div>
-              </ProductInfoPanel>
+              </Accordion>
             )}
+
 
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
