@@ -420,8 +420,16 @@ function ProductPage() {
   const showPurchaseDock = dataReady && mobileDockVisible && !editorOpen;
 
   const handleAdd = () => {
+    if (addState !== "idle") return;
+    // Existing add-to-cart logic — unchanged.
     add(product.slug, qty);
     toast.success(`${product.name} added to cart`);
+    // Visual state progression: Adding… → Added → back to normal.
+    setAddState("loading");
+    addTimers.current.push(
+      setTimeout(() => setAddState("success"), 450),
+      setTimeout(() => setAddState("idle"), 1900),
+    );
   };
   // Buy Now uses the single centralized handler (see useBuyNow): it purchases
   // EXACTLY the selected `qty`, SETS the line rather than accumulating (so it is
@@ -429,7 +437,12 @@ function ProductPage() {
   // guarded by a shared double-tap lock. `navigate: false` lets the wrapping
   // <Link to="/cart"> own routing so the page's existing markup is unchanged.
   const handleBuyNow = () => {
+    // Existing buy-now logic — unchanged.
     buyNow(product, { qty, disabled: isOOS, navigate: false });
+    if (isOOS) return;
+    // Brief "Preparing…" affordance while routing to checkout proceeds.
+    setBuyState("loading");
+    addTimers.current.push(setTimeout(() => setBuyState("idle"), 1200));
   };
   const handleShare = () => {
     if (typeof window === "undefined") return;
