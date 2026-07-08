@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, Shield, RotateCcw, Minus, Plus, Scale,
   ChevronDown, Share2, Sparkles, Package, Clock, CheckCircle2, Users, ShoppingBag as ShoppingBagIcon, Play, Layers, Info,
+  ShoppingCart, Zap, Check, Loader2, Lock,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -204,6 +205,11 @@ function ProductPage() {
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
   const { has: inWishlist, toggle: toggleWishlist } = useWishlist();
   const [qty, setQty] = useState(1);
+  // Purchase-button UI states (visual only — underlying cart/buy-now logic unchanged).
+  const [addState, setAddState] = useState<"idle" | "loading" | "success">("idle");
+  const [buyState, setBuyState] = useState<"idle" | "loading">("idle");
+  const addTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => addTimers.current.forEach(clearTimeout), []);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [activeImg, setActiveImg] = useState(0);
@@ -414,8 +420,16 @@ function ProductPage() {
   const showPurchaseDock = dataReady && mobileDockVisible && !editorOpen;
 
   const handleAdd = () => {
+    if (addState !== "idle") return;
+    // Existing add-to-cart logic — unchanged.
     add(product.slug, qty);
     toast.success(`${product.name} added to cart`);
+    // Visual state progression: Adding… → Added → back to normal.
+    setAddState("loading");
+    addTimers.current.push(
+      setTimeout(() => setAddState("success"), 450),
+      setTimeout(() => setAddState("idle"), 1900),
+    );
   };
   // Buy Now uses the single centralized handler (see useBuyNow): it purchases
   // EXACTLY the selected `qty`, SETS the line rather than accumulating (so it is
@@ -423,7 +437,12 @@ function ProductPage() {
   // guarded by a shared double-tap lock. `navigate: false` lets the wrapping
   // <Link to="/cart"> own routing so the page's existing markup is unchanged.
   const handleBuyNow = () => {
+    // Existing buy-now logic — unchanged.
     buyNow(product, { qty, disabled: isOOS, navigate: false });
+    if (isOOS) return;
+    // Brief "Preparing…" affordance while routing to checkout proceeds.
+    setBuyState("loading");
+    addTimers.current.push(setTimeout(() => setBuyState("idle"), 1200));
   };
   const handleShare = () => {
     if (typeof window === "undefined") return;
@@ -780,42 +799,92 @@ function ProductPage() {
               </div>
             )}
 
-            {/* CTA (desktop) — Buy Now is the primary, attention-drawing action */}
-            <div className="hidden sm:block mb-4 space-y-2.5">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center glass rounded-full">
-                  <button onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease quantity" className="size-12 grid place-items-center hover:text-accent transition-colors active:scale-90">
+            {/* Premium purchase panel — unique FoundOurMarket design.
+                Compact glass card: quantity + wishlist/share on top, dual CTAs
+                below, trust strip at the base. GPU-friendly (no backdrop blur). */}
+            <div className="mb-4 rounded-[20px] border border-white/10 bg-card/60 p-3 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.6)] sm:p-3.5">
+              {/* Row 1 — quantity selector + wishlist + share */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="inline-flex items-center rounded-2xl border border-white/10 bg-white/[0.03]">
+                  <button
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                    disabled={qty <= 1}
+                    aria-label="Decrease quantity"
+                    className="grid size-11 place-items-center rounded-l-2xl text-foreground/80 transition-colors hover:text-accent active:scale-90 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
                     <Minus className="size-4" />
                   </button>
-                  <span className="w-10 text-center font-mono text-sm tabular-nums">{qty}</span>
-                  <button onClick={() => setQty(qty + 1)} aria-label="Increase quantity" className="size-12 grid place-items-center hover:text-accent transition-colors active:scale-90">
+                  <span aria-live="polite" className="w-9 text-center font-mono text-sm tabular-nums">{qty}</span>
+                  <button
+                    onClick={() => setQty(qty + 1)}
+                    aria-label="Increase quantity"
+                    className="grid size-11 place-items-center rounded-r-2xl text-foreground/80 transition-colors hover:text-accent active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
                     <Plus className="size-4" />
                   </button>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleWishlist(product.slug)}
+                    aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
+                    aria-pressed={inWishlist(product.slug)}
+                    className={`grid size-11 place-items-center rounded-2xl border transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${inWishlist(product.slug) ? "border-accent/50 bg-accent/15 text-accent" : "border-white/10 bg-white/[0.03] text-foreground/70 hover:text-accent hover:border-accent/40"}`}
+                  >
+                    <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    aria-label="Share this product"
+                    className="grid size-11 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-foreground/70 transition-all hover:text-accent hover:border-accent/40 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    <Share2 className="size-[18px]" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2 — Add to Cart + Buy Now (equal width) */}
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={handleAdd}
+                  disabled={isOOS || addState !== "idle"}
+                  aria-label={isOOS ? "Notify me when available" : "Add to cart"}
+                  className="inline-flex h-[54px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,oklch(0.80_0.18_58),oklch(0.68_0.20_42))] px-3 text-sm font-bold text-black shadow-[var(--shadow-ember)] transition-transform active:scale-[0.97] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                >
+                  {isOOS ? (
+                    "Notify Me"
+                  ) : addState === "loading" ? (
+                    <><Loader2 className="size-4 animate-spin" /> Adding…</>
+                  ) : addState === "success" ? (
+                    <><Check className="size-4" strokeWidth={3} /> Added</>
+                  ) : (
+                    <><ShoppingCart className="size-4" strokeWidth={2.5} /> Add to Cart</>
+                  )}
+                </button>
                 <Link
                   to="/cart"
                   onClick={handleBuyNow}
                   aria-disabled={isOOS}
-                  className={`flex-1 text-center bg-accent text-accent-foreground font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all hover:brightness-110 hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
+                  aria-label={isOOS ? "Out of stock" : "Buy now"}
+                  className={`inline-flex h-[54px] items-center justify-center gap-2 rounded-2xl border border-accent/60 bg-white/[0.04] px-3 text-sm font-bold text-foreground transition-all hover:border-accent hover:bg-accent/10 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isOOS ? "pointer-events-none opacity-50" : ""}`}
                 >
-                  {isOOS ? "Out of stock" : "Buy Now"}
+                  {isOOS ? (
+                    "Out of stock"
+                  ) : buyState === "loading" ? (
+                    <><Loader2 className="size-4 animate-spin text-accent" /> Preparing…</>
+                  ) : (
+                    <><Zap className="size-4 text-accent" strokeWidth={2.5} /> Buy Now</>
+                  )}
                 </Link>
-                <button
-                  aria-label="Add to compare"
-                  onClick={() => toggleCompare(product.slug)}
-                  disabled={!inCompare(product.slug) && compareFull}
-                  className={`size-12 grid place-items-center glass rounded-full transition-all hover:-translate-y-0.5 active:scale-90 disabled:opacity-40 ${inCompare(product.slug) ? "text-accent border-accent/40" : "hover:text-accent"}`}
-                >
-                  <Scale className="size-4" />
-                </button>
               </div>
-              <button
-                onClick={handleAdd}
-                disabled={isOOS}
-                className="w-full border border-border text-foreground font-semibold py-3.5 rounded-full text-xs uppercase tracking-widest hover:border-accent/50 hover:bg-white/[0.03] hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:translate-y-0"
-              >
-                {isOOS ? "Notify me when available" : "Add to Cart"}
-              </button>
+
+              {/* Trust strip */}
+              <div className="mt-3 flex items-center gap-3 overflow-x-auto pt-2.5 text-[11px] text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <span className="inline-flex shrink-0 items-center gap-1.5"><Truck className="size-3.5 text-accent/80" /> Free Delivery</span>
+                <span aria-hidden className="h-3 w-px shrink-0 bg-white/10" />
+                <span className="inline-flex shrink-0 items-center gap-1.5"><Lock className="size-3.5 text-accent/80" /> Secure Checkout</span>
+                <span aria-hidden className="h-3 w-px shrink-0 bg-white/10" />
+                <span className="inline-flex shrink-0 items-center gap-1.5"><RotateCcw className="size-3.5 text-accent/80" /> Easy Returns</span>
+              </div>
             </div>
 
             {/* Premium Information Hub — one tabbed card replacing the separate
