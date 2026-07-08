@@ -1102,7 +1102,7 @@ function ProductPage() {
             <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
             {currencyReady ? (
               <span className="flex items-baseline gap-1.5">
-                <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * qty)}</span>
+                <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * Math.max(1, cartQty))}</span>
               </span>
             ) : (
               <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
