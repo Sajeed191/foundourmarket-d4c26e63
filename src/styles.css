@@ -3004,7 +3004,7 @@ html[data-graphics-compat="true"] *::after {
   right: 12px;
   width: calc(100% - 24px);
   bottom: calc(var(--app-bottom-nav-height) + 12px);
-  z-index: 700; /* below floating controls (800) */
+  z-index: 100; /* banner sits above nav, below dialog/backdrop */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3107,4 +3107,20 @@ html[data-graphics-compat="true"] *::after {
     max-width: calc(100% - 32px);
     bottom: calc(var(--floating-bottom-offset, 16px) + 12px);
   }
+}
+
+/* Compatibility dialog z-ordering + hide floating widgets while it is open. */
+.gpu-compat-dialog {
+  z-index: 9999 !important;
+}
+
+html[data-compat-dialog-open] [data-radix-dialog-overlay],
+html[data-compat-dialog-open] [data-slot="dialog-overlay"] {
+  z-index: 9998 !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Keep floating support/chat/install widgets behind the modal (hidden). */
+html[data-compat-dialog-open] [data-floating-control] {
+  display: none !important;
 }

@@ -17,43 +17,73 @@ const DISMISS_KEY = "fom-compat-banner-dismissed";
  * Compatibility Mode notice — shown ONCE on gpu-unsafe devices only.
  *
  * UI/UX ONLY. Detection (useGpuUnsafe) and Compatibility Mode logic are
- * untouched. This is a compact bottom sheet on mobile that never covers the
- * bottom navigation or floating support buttons, and a small bottom-right toast
- * on tablet/desktop. Swipe down or tap X to dismiss (remembered in localStorage);
- * Learn More opens the existing dialog.
+ * untouched. Compact bottom sheet on mobile, small bottom-right toast on
+ * desktop. Never covers the bottom nav or floating support buttons.
+ *
+ * State management:
+ *   - bannerDismissed → persisted in localStorage
+ *   - isCompatDialogOpen → single boolean; while the "Learn More" dialog is
+ *     open the banner is fully unmounted (renders only when
+ *     gpuUnsafe && !isCompatDialogOpen && !bannerDismissed) and floating
+ *     support widgets are hidden via a document flag. Closing the dialog
+ *     restores the banner without replaying its entrance animation.
  */
 export function GpuCompatBanner() {
   const gpuUnsafe = useGpuUnsafe();
-  const [visible, setVisible] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [isCompatDialogOpen, setIsCompatDialogOpen] = useState(false);
   const [entered, setEntered] = useState(false);
-  const [learnMore, setLearnMore] = useState(false);
+
+  // Remembers whether the entrance animation already played, so returning from
+  // the dialog does not replay it.
+  const hasAnimatedIn = useRef(false);
 
   // Swipe-to-dismiss tracking
   const dragStartY = useRef<number | null>(null);
   const [dragY, setDragY] = useState(0);
 
+  // Read persisted dismissal once.
   useEffect(() => {
-    if (!gpuUnsafe) return;
     try {
-      if (localStorage.getItem(DISMISS_KEY) === "1") return;
+      if (localStorage.getItem(DISMISS_KEY) === "1") setBannerDismissed(true);
     } catch {
       /* storage disabled — still show this session */
     }
-    setVisible(true);
-    // Trigger enter animation on next frame.
-    const id = requestAnimationFrame(() => setEntered(true));
+  }, []);
+
+  const shouldRenderBanner = gpuUnsafe && !isCompatDialogOpen && !bannerDismissed;
+
+  // Play the entrance animation only the first time the banner appears.
+  useEffect(() => {
+    if (!shouldRenderBanner) return;
+    if (hasAnimatedIn.current) {
+      setEntered(true);
+      return;
+    }
+    setEntered(false);
+    const id = requestAnimationFrame(() => {
+      setEntered(true);
+      hasAnimatedIn.current = true;
+    });
     return () => cancelAnimationFrame(id);
-  }, [gpuUnsafe]);
+  }, [shouldRenderBanner]);
+
+  // Hide floating support/chat widgets while the dialog is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const d = document.documentElement;
+    if (isCompatDialogOpen) d.setAttribute("data-compat-dialog-open", "true");
+    else d.removeAttribute("data-compat-dialog-open");
+    return () => d.removeAttribute("data-compat-dialog-open");
+  }, [isCompatDialogOpen]);
 
   function dismiss() {
-    setEntered(false);
+    setBannerDismissed(true);
     try {
       localStorage.setItem(DISMISS_KEY, "1");
     } catch {
       /* ignore */
     }
-    // Let the 180ms out-animation play before unmounting.
-    window.setTimeout(() => setVisible(false), 180);
   }
 
   function onPointerDown(e: React.PointerEvent) {
@@ -74,58 +104,61 @@ export function GpuCompatBanner() {
     dragStartY.current = null;
   }
 
-  if (!gpuUnsafe || !visible) return null;
-
   const translateY = entered ? dragY : 8;
 
   return (
     <>
-      <div
-        role="status"
-        aria-live="polite"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="gpu-compat-banner"
-        style={{
-          opacity: entered ? 1 : 0,
-          transform: `translateY(${translateY}px)`,
-          transition: dragStartY.current !== null ? "none" : "opacity 180ms ease-out, transform 180ms ease-out",
-        }}
-      >
-        <span className="gpu-compat-banner__icon" aria-hidden="true">
-          <AlertTriangle className="h-4 w-4" />
-        </span>
+      {shouldRenderBanner && (
+        <div
+          role="status"
+          aria-live="polite"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="gpu-compat-banner"
+          style={{
+            opacity: entered ? 1 : 0,
+            transform: `translateY(${translateY}px)`,
+            transition:
+              dragStartY.current !== null
+                ? "none"
+                : "opacity 180ms ease-out, transform 180ms ease-out",
+          }}
+        >
+          <span className="gpu-compat-banner__icon" aria-hidden="true">
+            <AlertTriangle className="h-4 w-4" />
+          </span>
 
-        <div className="gpu-compat-banner__text">
-          <p className="gpu-compat-banner__title">Graphics Compatibility Mode</p>
-          <p className="gpu-compat-banner__desc">
-            Some graphics effects have been reduced for better stability.
-          </p>
+          <div className="gpu-compat-banner__text">
+            <p className="gpu-compat-banner__title">Graphics Compatibility Mode</p>
+            <p className="gpu-compat-banner__desc">
+              Some graphics effects have been reduced for better stability.
+            </p>
+          </div>
+
+          <div className="gpu-compat-banner__actions">
+            <button
+              type="button"
+              onClick={() => setIsCompatDialogOpen(true)}
+              className="gpu-compat-banner__learn"
+            >
+              Learn More
+            </button>
+            <button
+              type="button"
+              onClick={dismiss}
+              aria-label="Dismiss"
+              className="gpu-compat-banner__close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+      )}
 
-        <div className="gpu-compat-banner__actions">
-          <button
-            type="button"
-            onClick={() => setLearnMore(true)}
-            className="gpu-compat-banner__learn"
-          >
-            Learn More
-          </button>
-          <button
-            type="button"
-            onClick={dismiss}
-            aria-label="Dismiss"
-            className="gpu-compat-banner__close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      <Dialog open={learnMore} onOpenChange={setLearnMore}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isCompatDialogOpen} onOpenChange={setIsCompatDialogOpen}>
+        <DialogContent className="gpu-compat-dialog max-w-md">
           <DialogHeader>
             <DialogTitle>About Compatibility Mode</DialogTitle>
             <DialogDescription>Why you&apos;re seeing this notice</DialogDescription>
@@ -146,14 +179,7 @@ export function GpuCompatBanner() {
             </p>
           </div>
           <DialogFooter>
-            <Button
-              onClick={() => {
-                setLearnMore(false);
-                dismiss();
-              }}
-            >
-              Got it
-            </Button>
+            <Button onClick={() => setIsCompatDialogOpen(false)}>Got it</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
