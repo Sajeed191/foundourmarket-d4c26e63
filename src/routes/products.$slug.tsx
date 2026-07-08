@@ -395,7 +395,7 @@ function ProductPage() {
       ? [{ key: "lowstock", label: `Only ${effectiveStock} left`, emoji: "⚠️", className: "bg-destructive/90 text-destructive-foreground" }]
       : []),
   ];
-  const visibleBadges = heroBadges.slice(0, 2);
+  const visibleBadges = showAllBadges ? heroBadges : heroBadges.slice(0, 2);
   const hiddenBadgeCount = heroBadges.length - visibleBadges.length;
 
 
