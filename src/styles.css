@@ -3113,8 +3113,6 @@ html[data-graphics-compat="true"] *::after {
 .gpu-compat-dialog {
   z-index: 9999 !important;
 }
-/* The shadcn overlay is the immediate previous sibling of the content. */
-.gpu-compat-dialog ~ * { /* no-op guard */ }
 
 html[data-compat-dialog-open] [data-radix-dialog-overlay],
 html[data-compat-dialog-open] [data-slot="dialog-overlay"] {
