@@ -726,7 +726,8 @@ function ProductPage() {
 
             {/* Variants */}
             {variants.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-4">
+
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Variant</p>
                 <div className="flex flex-wrap gap-2">
                   {variants.map((v) => {
