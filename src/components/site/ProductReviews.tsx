@@ -615,7 +615,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
           )}
 
           {/* Customer photos gallery */}
-          {galleryMedia.length > 0 && (
+          {expanded && galleryMedia.length > 0 && (
             <div className="mb-8">
               <h3 className="mb-4 text-sm font-display tracking-tight flex items-center gap-2">
                 <Camera className="size-4 text-accent" /> Customer Photos &amp; Videos
