@@ -20,18 +20,18 @@ import {
   formatDiagnostics,
   type CompatDiagnostics,
 } from "@/lib/compat-diagnostics";
-import { AlertTriangle, Check, Copy, X } from "lucide-react";
+import { toast } from "sonner";
+import { AlertTriangle, ChevronRight, Chrome, Flame, LifeBuoy, X } from "lucide-react";
+
+/** External help destinations (stable, vendor-neutral pages). */
+const BROWSER_UPDATE_URL = "https://browsehappy.com/";
+const FIREFOX_URL = "https://www.mozilla.org/firefox/new/";
 
 const DISMISS_KEY = "fom-compat-banner-dismissed";
 const DISMISS_TS_KEY = "fom-compat-banner-dismissed-at";
 const DISMISS_DAYS = 30;
 
-/**
- * Optional browser-update URL. Rendered as a secondary modal action ONLY when
- * present. Left null by default (no reliable per-browser update deep-link);
- * set to a support URL if one becomes available.
- */
-const UPDATE_BROWSER_URL: string | null = null;
+
 
 /**
  * Compatibility Mode notice — shown on gpu-unsafe devices only.
@@ -54,7 +54,7 @@ export function GpuCompatBanner() {
   const [compatDialogOpen, setCompatDialogOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [diagnostics, setDiagnostics] = useState<CompatDiagnostics | null>(null);
-  const [copied, setCopied] = useState(false);
+  
   const [entered, setEntered] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -111,7 +111,6 @@ export function GpuCompatBanner() {
   useEffect(() => {
     if (advancedOpen) {
       setDiagnostics(collectCompatDiagnostics());
-      setCopied(false);
     }
   }, [advancedOpen]);
 
@@ -122,10 +121,10 @@ export function GpuCompatBanner() {
 
   async function copyDiagnostics() {
     const text = formatDiagnostics(diagnostics ?? collectCompatDiagnostics());
+    let ok = false;
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      ok = true;
     } catch {
       // Clipboard API unavailable/blocked — fall back to a hidden textarea.
       try {
@@ -137,12 +136,13 @@ export function GpuCompatBanner() {
         ta.select();
         document.execCommand("copy");
         document.body.removeChild(ta);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
+        ok = true;
       } catch {
         /* give up silently */
       }
     }
+    if (ok) toast.success("Diagnostics copied successfully.");
+    else toast.error("Couldn't copy diagnostics.");
   }
 
   function persistDismiss() {
@@ -242,42 +242,89 @@ export function GpuCompatBanner() {
           aria-describedby="compat-dialog-desc"
         >
           <DialogHeader>
-            <DialogTitle id="compat-dialog-title">
-              About Compatibility Mode
-            </DialogTitle>
+            <DialogTitle id="compat-dialog-title">Graphics Compatibility</DialogTitle>
             <DialogDescription id="compat-dialog-desc">
-              Why you&apos;re seeing this notice
+              We&apos;ve detected a graphics rendering issue in your browser and
+              automatically enabled Compatibility Mode to improve stability. Your
+              shopping experience, account, and payments are not affected. If you
+              still notice visual issues, you can try one of the options below.
             </DialogDescription>
           </DialogHeader>
-          <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-            <li>Your browser has a known graphics rendering issue on this device.</li>
-            <li>Your data and purchases are completely safe.</li>
-            <li>The website is functioning normally.</li>
-            <li>Compatibility Mode reduces the graphics workload for stability.</li>
-            <li>Firefox and newer Chromium versions already include fixes.</li>
-            <li>Updating your browser is the recommended fix.</li>
-          </ul>
-          <DialogFooter className="gap-2 sm:gap-2">
-            {UPDATE_BROWSER_URL && (
-              <Button
-                variant="outline"
-                onClick={() => window.open(UPDATE_BROWSER_URL!, "_blank", "noopener")}
-              >
-                Update Browser
-              </Button>
-            )}
-            <Button variant="outline" onClick={openAdvanced}>
-              Advanced Fix
-            </Button>
+
+          <div className="space-y-2.5">
+            {/* Card 1 — Update Browser */}
+            <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <Chrome className="h-4.5 w-4.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">Update Browser</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  Browser updates often include graphics rendering fixes.
+                </p>
+                <Button
+                  variant="link"
+                  className="mt-1 h-auto p-0 text-xs"
+                  onClick={() => window.open(BROWSER_UPDATE_URL, "_blank", "noopener")}
+                >
+                  Learn More
+                </Button>
+              </div>
+            </div>
+
+            {/* Card 2 — Try Firefox */}
+            <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <Flame className="h-4.5 w-4.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">Try Firefox</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  Firefox uses a different graphics rendering engine and may
+                  display the site correctly.
+                </p>
+                <Button
+                  variant="link"
+                  className="mt-1 h-auto p-0 text-xs"
+                  onClick={() => window.open(FIREFOX_URL, "_blank", "noopener")}
+                >
+                  Open Firefox Website
+                </Button>
+              </div>
+            </div>
+
+            {/* Card 3 — Advanced Help */}
+            <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <LifeBuoy className="h-4.5 w-4.5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">Advanced Help</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  For users who continue experiencing rendering issues.
+                </p>
+                <Button
+                  variant="link"
+                  className="mt-1 h-auto p-0 text-xs"
+                  onClick={openAdvanced}
+                >
+                  Show Advanced Information
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-end">
             <Button onClick={() => setCompatDialogOpen(false)}>Got it</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Advanced Graphics Help — honest guidance. Web pages CANNOT disable GPU
-          rasterization / hardware acceleration (no Web API, CSS, WebGL, WebGPU,
-          or Permissions API exposes that; it is a browser-level setting), so we
-          never fake it — we only explain the real, user-actionable options. */}
+      {/* Advanced Help — all technical detail lives here. Web pages CANNOT
+          disable GPU rasterization / hardware acceleration (no Web API, CSS,
+          WebGL, WebGPU, or Permissions API exposes that; it is a browser-level
+          setting), so we never fake it — we only explain honestly. */}
       <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <DialogContent
           className="gpu-compat-dialog max-w-lg"
@@ -285,87 +332,63 @@ export function GpuCompatBanner() {
           aria-describedby="compat-advanced-desc"
         >
           <DialogHeader>
-            <DialogTitle id="compat-advanced-title">Advanced Graphics Help</DialogTitle>
+            <DialogTitle id="compat-advanced-title">Advanced Information</DialogTitle>
             <DialogDescription id="compat-advanced-desc">
-              This issue is caused by a browser graphics rendering bug. Websites
-              cannot disable GPU Rasterization or Hardware Acceleration
-              automatically because browsers do not expose that capability for
-              security reasons.
+              Technical details about this graphics issue and Compatibility Mode.
             </DialogDescription>
           </DialogHeader>
 
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="update">
-              <AccordionTrigger>Update your browser</AccordionTrigger>
+            <AccordionItem value="why">
+              <AccordionTrigger>Why this happens</AccordionTrigger>
               <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                Newer Chromium versions may contain fixes for this graphics
-                rendering bug. Update your browser to the latest available
-                version, then fully close and reopen it so the update takes
-                effect. This is the recommended fix.
+                Some browser and graphics-driver combinations contain a bug in how
+                the browser draws (rasterizes) the page on the GPU. This can cause
+                visual artifacts such as flickering, striping, or corrupted images
+                on certain devices, even though the website itself is working
+                correctly.
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="firefox">
-              <AccordionTrigger>Try Firefox</AccordionTrigger>
+            <AccordionItem value="cannot-disable">
+              <AccordionTrigger>
+                Why websites cannot disable GPU Rasterization
+              </AccordionTrigger>
               <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
-                Firefox uses a different rendering pipeline than Chromium-based
-                browsers and may not exhibit this issue at all. If the corruption
-                persists, opening this site in Firefox is a reliable workaround.
+                GPU Rasterization and Hardware Acceleration are browser-level
+                settings. For security and privacy reasons, browsers do not expose
+                any web API, CSS, or JavaScript capability that lets a website turn
+                them off. They can only be changed manually inside the browser&apos;s
+                own settings, and this page will never attempt to change them for
+                you.
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="rasterization">
-              <AccordionTrigger>Disable GPU Rasterization (Advanced)</AccordionTrigger>
-              <AccordionContent className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-                <p>
-                  GPU Rasterization and Hardware Acceleration are browser-level
-                  settings. They can only be changed manually inside your
-                  browser&apos;s own settings — a website cannot change them for
-                  you, and this page will not attempt to.
-                </p>
-                <p className="rounded-md border border-border/60 bg-muted/40 px-3 py-2 text-foreground">
-                  This browser version does not expose a verified GPU
-                  Rasterization setting.
-                </p>
+            <AccordionItem value="why-compat">
+              <AccordionTrigger>Why Compatibility Mode exists</AccordionTrigger>
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                When we detect a high likelihood that your device is affected, we
+                automatically reduce the graphics workload (fewer blur, glow, and
+                layering effects) to sidestep the rendering bug and keep the site
+                stable. Your data, orders, and payments are never affected.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="limitations">
+              <AccordionTrigger>Browser graphics limitations</AccordionTrigger>
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                A website can only work around these issues — it cannot fix the
+                underlying browser bug. The permanent fix comes from the browser
+                vendor: newer Chromium versions often include graphics fixes, and
+                Firefox uses a different rendering pipeline that may avoid the issue
+                entirely.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
 
-          {diagnostics && (
-            <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Diagnostics
-              </p>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <dt className="font-medium text-foreground">Browser</dt>
-                <dd className="truncate">
-                  {diagnostics.browserName} {diagnostics.browserVersion}
-                </dd>
-                <dt className="font-medium text-foreground">OS</dt>
-                <dd className="truncate">{diagnostics.operatingSystem}</dd>
-                <dt className="font-medium text-foreground">Renderer</dt>
-                <dd className="truncate">{diagnostics.webglRenderer}</dd>
-                <dt className="font-medium text-foreground">Vendor</dt>
-                <dd className="truncate">{diagnostics.webglVendor}</dd>
-                <dt className="font-medium text-foreground">Compat Mode</dt>
-                <dd className="truncate">{diagnostics.compatibilityMode}</dd>
-                <dt className="font-medium text-foreground">Reason</dt>
-                <dd className="truncate">{diagnostics.compatibilityReason}</dd>
-              </dl>
-            </div>
-          )}
-
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" onClick={copyDiagnostics}>
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" /> Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" /> Copy Diagnostics
-                </>
-              )}
+              Copy Diagnostics
             </Button>
             <Button onClick={() => setAdvancedOpen(false)}>Close</Button>
           </DialogFooter>
