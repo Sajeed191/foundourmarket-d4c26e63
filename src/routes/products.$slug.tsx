@@ -215,6 +215,7 @@ function ProductPage() {
   const [dataReady, setDataReady] = useState(false);
   const [mobileDockVisible, setMobileDockVisible] = useState(false);
   const [titleExpanded, setTitleExpanded] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   // Single-open accordion group for the detail sections below the fold.
   const [openSection, setOpenSection] = useState<string | null>("specs");
   const toggleSection = (id: string) => setOpenSection((cur) => (cur === id ? null : id));
