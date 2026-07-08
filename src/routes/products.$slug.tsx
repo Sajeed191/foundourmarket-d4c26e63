@@ -506,24 +506,28 @@ function ProductPage() {
                 )}
                 {/* premium glass overlay gradient */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                {/* badges */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 items-start z-10">
-                  {computeBadges(product, DEFAULT_BADGE_SETTINGS, 4).map((b) => (
+                {/* badges — max 2 visible, rest collapse into a "+N" pill so
+                    they never overlap or clip on any image */}
+                <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10 max-w-[calc(100%-5.5rem)]">
+                  {visibleBadges.map((b) => (
                     <span
                       key={b.key}
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase leading-none tracking-wide shadow-sm shadow-black/30 backdrop-blur-sm ${b.className}`}
+                      className={`inline-flex h-[27px] w-auto max-w-full items-center gap-1.5 rounded-full px-3.5 text-[11px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap shadow-md shadow-black/30 backdrop-blur-sm ${b.className}`}
                     >
-                      <span aria-hidden>{b.emoji}</span>
-                      {b.label}
+                      {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
+                      <span className="truncate">{b.label}</span>
                     </span>
                   ))}
-                  {discountPct && (
-                    <span className="bg-accent text-accent-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">−{discountPct}% SALE</span>
-                  )}
-                  {lowStock && (
-                    <span className="bg-destructive/90 text-destructive-foreground text-[10px] font-bold font-mono px-2.5 py-1 rounded-full uppercase tracking-widest">Only {effectiveStock} left</span>
+                  {hiddenBadgeCount > 0 && (
+                    <span
+                      aria-label={`${hiddenBadgeCount} more badges`}
+                      className="inline-flex h-[27px] items-center rounded-full bg-black/55 px-3.5 text-[11px] font-bold font-mono uppercase tracking-wide text-white/90 shadow-md shadow-black/30 backdrop-blur-md"
+                    >
+                      +{hiddenBadgeCount}
+                    </span>
                   )}
                 </div>
+
                 {/* Floating stock pill — premium glass */}
                 {isOOS && (
                   <div className="absolute top-4 right-16 z-10">
