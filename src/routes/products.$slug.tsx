@@ -445,7 +445,7 @@ function ProductPage() {
   // <Link to="/cart"> own routing so the page's existing markup is unchanged.
   const handleBuyNow = () => {
     // Existing buy-now logic — unchanged.
-    buyNow(product, { qty, disabled: isOOS, navigate: false });
+    buyNow(product, { qty: Math.max(1, cartQty), disabled: isOOS, navigate: false });
     if (isOOS) return;
     // Brief "Preparing…" affordance while routing to checkout proceeds.
     setBuyState("loading");
