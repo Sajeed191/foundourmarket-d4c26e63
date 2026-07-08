@@ -6,7 +6,6 @@ import {
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { DiscountBadge } from "@/components/site/DiscountBadge";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
 import { openShare, toPreviewImage } from "@/lib/share";
 import { useAllCategories } from "@/lib/use-categories";
