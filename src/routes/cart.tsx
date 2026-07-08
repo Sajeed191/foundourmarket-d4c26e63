@@ -239,9 +239,9 @@ function CartPage() {
                         </div>
                         <div className="text-right">
                           {pr.original > pr.sale && (
-                            <span className="block text-[11px] text-muted-foreground line-through font-mono">{format(pr.original * item.qty)}</span>
+                            <span className="fom-price-compare block text-[11px] font-mono">{format(pr.original * item.qty)}</span>
                           )}
-                          <span className="font-mono text-sm text-accent">{format(pr.sale * item.qty)}</span>
+                          <span className="fom-price-current block text-sm font-mono">{format(pr.sale * item.qty)}</span>
                           {pr.save > 0 && (
                             <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
                           )}
@@ -354,7 +354,7 @@ function CartPage() {
                 )}
                 <div className="border-t border-border pt-3 flex justify-between items-baseline text-base">
                   <dt className="font-medium">Total</dt>
-                  <motion.dd key={total} initial={{ scale: 1.08 }} animate={{ scale: 1 }} className="font-mono text-accent">{format(total)}</motion.dd>
+                  <motion.dd key={total} initial={{ scale: 1.08 }} animate={{ scale: 1 }} className="fom-price-current font-mono text-lg">{format(total)}</motion.dd>
                 </div>
               </dl>
 
@@ -412,7 +412,7 @@ function CartPage() {
           >
             <div className="flex-1 min-w-0 leading-none">
               <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/80">Total · {count} {count === 1 ? "item" : "items"}</p>
-              <motion.p key={total} initial={{ scale: 1.06 }} animate={{ scale: 1 }} className="font-mono text-[15px] text-accent leading-tight truncate mt-0.5">{format(total)}</motion.p>
+              <motion.p key={total} initial={{ scale: 1.06 }} animate={{ scale: 1 }} className="fom-price-current font-mono text-[16px] leading-tight truncate mt-0.5">{format(total)}</motion.p>
             </div>
             <Link to="/checkout" className="shrink-0 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-xl text-[11px] uppercase tracking-widest inline-flex items-center gap-2 whitespace-nowrap transition-all active:scale-95 shadow-[0_0_20px_hsl(var(--accent)/0.5)]">
               <Lock className="size-3.5" /> Checkout

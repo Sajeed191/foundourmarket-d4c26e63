@@ -537,6 +537,74 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   color: transparent;
 }
 
+/* ============================================================
+   FoundOurMarket — Global premium price typography system
+   One reusable design used for every price across the site.
+   UI-only. No filters, no backdrop-filter, no blur, no glow,
+   no layout shift — background-clip:text is a cheap paint.
+   ============================================================ */
+
+/* Current / featured price — soft warm white → champagne → premium orange.
+   The metallic sheen comes from a linear gradient clipped to the glyphs;
+   a tiny low-opacity text-shadow adds premium depth while staying sharp. */
+.fom-price-current {
+  display: inline-block;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+  background: linear-gradient(
+    180deg,
+    oklch(0.99 0.012 90) 0%,
+    oklch(0.94 0.045 82) 46%,
+    oklch(0.80 0.165 58) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 1.5px oklch(0.20 0.02 55 / 0.22);
+}
+
+/* Original / struck price — muted gray, smaller weight, clean strike. */
+.fom-price-compare {
+  display: inline-block;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+  color: oklch(0.66 0.008 260);
+  -webkit-text-fill-color: oklch(0.66 0.008 260);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: oklch(0.66 0.008 260 / 0.55);
+}
+
+/* Light / grey themes: keep WCAG contrast — deepen the metallic ramp so the
+   price stays legible against light surfaces. */
+[data-theme="light"] .fom-price-current,
+[data-theme="grey"] .fom-price-current {
+  background: linear-gradient(
+    180deg,
+    oklch(0.42 0.06 70) 0%,
+    oklch(0.55 0.13 60) 45%,
+    oklch(0.62 0.19 49) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+[data-theme="light"] .fom-price-compare,
+[data-theme="grey"] .fom-price-compare {
+  color: oklch(0.48 0.01 260);
+  -webkit-text-fill-color: oklch(0.48 0.01 260);
+  text-decoration-color: oklch(0.48 0.01 260 / 0.55);
+}
+
+
 /* ---- Cinematic card variation system ---- */
 /* Elevated card: lifted, brighter top-light, deeper float shadow */
 .card-elevated {

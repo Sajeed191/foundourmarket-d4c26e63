@@ -694,9 +694,9 @@ function ProductPage() {
                 className="mb-3"
               >
                 <div className="flex items-baseline gap-3 sm:gap-4 flex-wrap">
-                  <span className="text-4xl sm:text-5xl font-display font-semibold tracking-tight text-gradient-ember tabular-nums">{format(effectivePrice)}</span>
+                  <span className="fom-price-current text-4xl sm:text-5xl font-display tracking-tight">{format(effectivePrice)}</span>
                   {originalPrice && originalPrice > effectivePrice && (
-                    <span className="text-base font-mono text-muted-foreground/60 line-through decoration-muted-foreground/40">{format(originalPrice)}</span>
+                    <span className="fom-price-compare text-base font-mono">{format(originalPrice)}</span>
                   )}
                   {discountPct && (
                     <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent text-accent-foreground px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">{discountPct}% OFF</span>
@@ -1024,7 +1024,7 @@ function ProductPage() {
             <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
             {currencyReady ? (
               <span className="flex items-baseline gap-1.5">
-                <span className="text-base font-display font-semibold tabular-nums text-gradient-ember whitespace-nowrap">{format(effectivePrice * qty)}</span>
+                <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * qty)}</span>
                 {discountPct && (
                   <span className="text-[9px] font-mono font-bold text-accent whitespace-nowrap">−{discountPct}%</span>
                 )}

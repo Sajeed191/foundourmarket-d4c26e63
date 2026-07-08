@@ -1031,7 +1031,7 @@ function CheckoutPage() {
                   <div className="border-t border-white/10 pt-3 flex justify-between items-end">
                     <dt className="font-medium text-base">Total</dt>
                     <dd className="text-right">
-                      <span className="block font-mono text-2xl font-semibold text-accent leading-none">{fmt(totalINR)}</span>
+                      <span className="fom-price-current block font-mono text-2xl leading-none">{fmt(totalINR)}</span>
                     </dd>
                   </div>
                 </dl>

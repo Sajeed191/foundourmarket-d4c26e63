@@ -426,7 +426,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           <Price value={price} className="shrink-0 font-display text-[22px] font-extrabold leading-none tabular-nums text-white sm:text-[30px]" />
           {originalPrice && discount ? (
             <div className="flex min-w-0 items-baseline gap-2 overflow-hidden">
-              <Price value={originalPrice} className="shrink-0 text-[12px] tabular-nums text-muted-foreground line-through sm:text-[15px]" />
+              <Price value={originalPrice} variant="compare" className="shrink-0 text-[12px] sm:text-[15px]" />
               <span data-product-text className="product-typography product-price-text truncate text-[12px] font-bold leading-none text-accent sm:text-[15px]">{discount}% OFF</span>
             </div>
           ) : null}
