@@ -808,8 +808,9 @@ function ProductPage() {
                     onClick={() => setInfoTab(t.id)}
                     className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 px-1 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-colors ${infoTab === t.id ? "text-accent border-b-2 border-accent bg-accent/[0.06]" : "text-muted-foreground hover:text-foreground"}`}
                   >
-                    <t.icon className="size-3.5 shrink-0" />
-                    <span className="hidden xs:inline">{t.label}</span>
+                    <t.icon className="hidden sm:block size-3.5 shrink-0" />
+                    <span>{t.label}</span>
+
                   </button>
                 ))}
               </div>
