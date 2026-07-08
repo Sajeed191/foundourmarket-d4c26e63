@@ -629,7 +629,7 @@ function ProductPage() {
             )}
 
 
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
               <StarRating
                 rating={product.rating}
                 count={product.reviews}
