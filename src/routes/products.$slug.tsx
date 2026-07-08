@@ -930,14 +930,26 @@ function ProductPage() {
           >
             <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
           </button>
-          <div className="flex flex-col leading-none px-1 shrink-0">
+          <img
+            src={activeMedia?.url || product.image}
+            alt=""
+            aria-hidden
+            className="size-10 shrink-0 rounded-xl object-cover border border-white/10"
+          />
+          <div className="flex flex-col leading-none px-0.5 min-w-0 shrink">
             <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
             {currencyReady ? (
-              <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+              <span className="flex items-baseline gap-1.5">
+                <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+                {discountPct && (
+                  <span className="text-[9px] font-mono font-bold text-accent">−{discountPct}%</span>
+                )}
+              </span>
             ) : (
               <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
             )}
           </div>
+
           <button
             onClick={handleAdd}
             disabled={isOOS}
