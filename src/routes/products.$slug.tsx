@@ -215,6 +215,7 @@ function ProductPage() {
   const [dataReady, setDataReady] = useState(false);
   const [mobileDockVisible, setMobileDockVisible] = useState(false);
   const [titleExpanded, setTitleExpanded] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   // Single-open accordion group for the detail sections below the fold.
   const [openSection, setOpenSection] = useState<string | null>("specs");
   const toggleSection = (id: string) => setOpenSection((cur) => (cur === id ? null : id));
@@ -394,7 +395,7 @@ function ProductPage() {
       ? [{ key: "lowstock", label: `Only ${effectiveStock} left`, emoji: "⚠️", className: "bg-destructive/90 text-destructive-foreground" }]
       : []),
   ];
-  const visibleBadges = heroBadges.slice(0, 2);
+  const visibleBadges = showAllBadges ? heroBadges : heroBadges.slice(0, 2);
   const hiddenBadgeCount = heroBadges.length - visibleBadges.length;
 
 
@@ -522,21 +523,35 @@ function ProductPage() {
                     <span
                       key={b.key}
                       style={{ width: "fit-content" }}
-                      className={`inline-flex h-9 max-w-full items-center gap-2 rounded-full px-4 text-[12px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap ring-1 ring-black/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] drop-shadow-[0_1px_2px_oklch(0_0_0/0.6)] ${b.className}`}
+                      className={`inline-flex h-7 sm:h-9 max-w-full items-center gap-1.5 sm:gap-2 rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap ring-1 ring-black/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] drop-shadow-[0_1px_2px_oklch(0_0_0/0.6)] ${b.className}`}
                     >
-                      {b.emoji && <span aria-hidden className="shrink-0 text-[13px] leading-none">{b.emoji}</span>}
+                      {b.emoji && <span aria-hidden className="shrink-0 text-[11px] sm:text-[13px] leading-none">{b.emoji}</span>}
                       <span className="whitespace-nowrap">{b.label}</span>
                     </span>
                   ))}
                   {hiddenBadgeCount > 0 && (
-                    <span
-                      aria-label={`${hiddenBadgeCount} more badges`}
+                    <button
+                      type="button"
+                      onClick={() => setShowAllBadges(true)}
+                      aria-label={`Show ${hiddenBadgeCount} more badges`}
                       style={{ width: "fit-content", background: "oklch(0.18 0.01 260 / 0.85)" }}
-                      className="inline-flex h-9 items-center rounded-full px-4 text-[12px] font-semibold font-mono uppercase tracking-wide leading-none text-white ring-1 ring-white/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] backdrop-blur-md"
+                      className="inline-flex h-7 sm:h-9 items-center rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold font-mono uppercase tracking-wide leading-none text-white ring-1 ring-white/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] backdrop-blur-md transition-transform hover:scale-105"
                     >
                       +{hiddenBadgeCount}
-                    </span>
+                    </button>
                   )}
+                  {showAllBadges && heroBadges.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllBadges(false)}
+                      aria-label="Show fewer badges"
+                      style={{ width: "fit-content", background: "oklch(0.18 0.01 260 / 0.85)" }}
+                      className="inline-flex h-7 sm:h-9 items-center rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold font-mono uppercase tracking-wide leading-none text-white ring-1 ring-white/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] backdrop-blur-md transition-transform hover:scale-105"
+                    >
+                      Less
+                    </button>
+                  )}
+
 
                 </div>
 
