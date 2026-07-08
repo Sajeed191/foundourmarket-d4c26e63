@@ -751,7 +751,7 @@ function ProductPage() {
             )}
 
             {/* CTA (desktop) — Buy Now is the primary, attention-drawing action */}
-            <div className="hidden sm:block mb-6 space-y-2.5">
+            <div className="hidden sm:block mb-4 space-y-2.5">
               <div className="flex items-center gap-3">
                 <div className="flex items-center glass rounded-full">
                   <button onClick={() => setQty(Math.max(1, qty - 1))} aria-label="Decrease quantity" className="size-12 grid place-items-center hover:text-accent transition-colors active:scale-90">
