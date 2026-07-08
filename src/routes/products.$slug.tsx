@@ -597,14 +597,19 @@ function ProductPage() {
 
 
             {galleryMedia.length > 1 && (
-              <div className="mt-2.5 flex gap-2.5 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth snap-x" style={{ scrollbarWidth: "none" }}>
+              <div
+                ref={thumbStripRef}
+                className="mt-2.5 flex gap-2.5 overflow-x-auto scrollbar-hide px-4 py-1 scroll-smooth snap-x"
+                style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem", scrollPaddingRight: "1rem" }}
+              >
                 {galleryMedia.map((item, i) => (
                   <button
                     key={item.id}
+                    data-thumb-index={i}
                     onClick={() => setActiveImg(i)}
                     aria-label={item.id === "video" ? "Play video" : `View image ${i + 1}`}
                     aria-current={i === activeImg}
-                    className={`relative size-16 sm:size-[72px] shrink-0 snap-start rounded-xl overflow-hidden border transition-all active:scale-95 bg-card ${i === activeImg ? "border-accent/70 ring-2 ring-accent/40 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.55)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
+                    className={`relative size-16 sm:size-[72px] shrink-0 snap-start rounded-2xl overflow-hidden border-2 transition-[border-color,box-shadow,opacity] active:scale-95 bg-card ${i === activeImg ? "border-accent/80 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.6)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
                   >
                     {item.id === "video" ? (
                       <div className="w-full h-full bg-black grid place-items-center">
@@ -617,6 +622,7 @@ function ProductPage() {
                 ))}
               </div>
             )}
+
 
 
 
