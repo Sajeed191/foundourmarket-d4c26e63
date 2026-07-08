@@ -517,26 +517,29 @@ function ProductPage() {
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
                 {/* badges — max 2 visible, rest collapse into a "+N" pill so
                     they never overlap or clip on any image */}
-                <div className="absolute top-3.5 left-3.5 flex flex-col items-start gap-2 z-10 max-w-[70%] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 duration-500">
+        <div className="absolute top-3.5 left-3.5 flex flex-col items-start gap-2 z-10 max-w-[75%] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 duration-500">
                   {visibleBadges.map((b) => (
                     <span
                       key={b.key}
-                      className={`inline-flex h-9 w-auto max-w-full items-center gap-1.5 rounded-full px-4 text-[11px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap shadow-lg shadow-black/40 ring-1 ring-white/10 backdrop-blur-md ${b.className}`}
+                      className="inline-flex h-9 w-auto max-w-full items-center gap-2 rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap text-white ring-1 ring-[oklch(0.74_0.19_49/0.32)] shadow-[0_8px_24px_oklch(0_0_0/0.4)] backdrop-blur-md"
+                      style={{ background: "oklch(0.18 0.01 260 / 0.92)" }}
                     >
-                      {b.emoji && <span aria-hidden className="shrink-0">{b.emoji}</span>}
+                      {b.emoji && <span aria-hidden className="shrink-0 text-[13px] leading-none">{b.emoji}</span>}
                       <span className="truncate">{b.label}</span>
                     </span>
                   ))}
                   {hiddenBadgeCount > 0 && (
                     <span
                       aria-label={`${hiddenBadgeCount} more badges`}
-                      className="inline-flex h-9 items-center rounded-full bg-black/60 px-4 text-[11px] font-bold font-mono uppercase tracking-wide text-white/90 shadow-lg shadow-black/40 ring-1 ring-accent/30 backdrop-blur-md"
+                      className="inline-flex h-9 items-center rounded-full px-4 text-[12px] font-semibold font-mono leading-none text-white ring-1 ring-[oklch(0.74_0.19_49/0.32)] shadow-[0_8px_24px_oklch(0_0_0/0.4)] backdrop-blur-md"
+                      style={{ background: "oklch(0.18 0.01 260 / 0.92)" }}
                     >
                       +{hiddenBadgeCount}
                     </span>
                   )}
 
                 </div>
+
 
                 {/* Floating stock pill — premium glass */}
                 {isOOS && (
