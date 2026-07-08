@@ -93,7 +93,6 @@ function SubcategoryPage() {
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2">{parent?.name ?? titleizeSlug(main)}</p>
           <h1 className="text-3xl sm:text-5xl font-display font-semibold tracking-tight capitalize">{cat?.name ?? titleizeSlug(sub)}</h1>
           {cat?.description && <p className="text-muted-foreground mt-2 text-sm max-w-2xl">{cat.description}</p>}
-          <p className="text-muted-foreground mt-2 text-sm">{items.length} product{items.length === 1 ? "" : "s"}</p>
         </div>
       </header>
 
