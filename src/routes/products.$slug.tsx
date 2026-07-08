@@ -828,7 +828,7 @@ function ProductPage() {
               </ProductInfoPanel>
             )}
 
-            <div className="mb-6">
+            <div className="mb-4">
               <ProductDescription description={product.description} />
             </div>
 
