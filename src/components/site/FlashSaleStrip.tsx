@@ -123,9 +123,7 @@ export function FlashSaleStrip() {
                       sizes="(min-width: 1024px) 20vw, (min-width: 640px) 26vw, 42vw"
                       className="w-full h-full object-cover"
                     />
-                    <span className="absolute top-1.5 left-1.5 inline-flex items-center rounded-full bg-accent text-black text-[9px] font-bold font-mono px-2 py-0.5 shadow-[var(--shadow-ember)]">
-                      -{sale.discount_percent}%
-                    </span>
+                    {/* Discount percentage badge removed sitewide per design decision. */}
                   </div>
                   <p className="mt-2 text-[11px] font-medium truncate">{p.name}</p>
                   <div className="flex items-baseline gap-1.5">

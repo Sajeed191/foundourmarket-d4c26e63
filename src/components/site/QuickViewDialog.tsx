@@ -42,11 +42,7 @@ export function QuickViewDialog({
         <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
           <ProductImage src={product.image} alt={product.name} className="h-full w-full object-cover" />
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          {discount ? (
-            <span className="absolute left-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold text-black shadow-[var(--shadow-ember)]">
-              {discount}% OFF
-            </span>
-          ) : null}
+          {null}
         </div>
 
         <div className="p-5">

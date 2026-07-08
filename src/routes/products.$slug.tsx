@@ -6,7 +6,6 @@ import {
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { DiscountBadge } from "@/components/site/DiscountBadge";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
 import { openShare, toPreviewImage } from "@/lib/share";
 import { useAllCategories } from "@/lib/use-categories";
@@ -391,9 +390,6 @@ function ProductPage() {
   // pills, in priority order. The gallery renders at most 2 and collapses the
   // rest into a single "+N" pill so badges never overlap or clip.
   const heroBadges: { key: string; label: string; emoji?: string; className: string }[] = [
-    ...(discountPct
-      ? [{ key: "sale", label: `${discountPct}% OFF`, emoji: "🏷️", className: "bg-accent text-accent-foreground" }]
-      : []),
     ...computeBadges(product, DEFAULT_BADGE_SETTINGS, 4).map((b) => ({
       key: b.key,
       label: b.label,
@@ -698,9 +694,6 @@ function ProductPage() {
                   <span className="fom-price-current text-4xl sm:text-5xl font-display tracking-tight">{format(effectivePrice)}</span>
                   {originalPrice && originalPrice > effectivePrice && (
                     <span className="fom-price-compare text-base font-mono">{format(originalPrice)}</span>
-                  )}
-                  {discountPct && (
-                    <DiscountBadge percent={discountPct} />
                   )}
                 </div>
                 {originalPrice && originalPrice > effectivePrice && (
@@ -1026,9 +1019,6 @@ function ProductPage() {
             {currencyReady ? (
               <span className="flex items-baseline gap-1.5">
                 <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * qty)}</span>
-                {discountPct && (
-                  <span className="text-[9px] font-mono font-bold text-accent whitespace-nowrap">−{discountPct}%</span>
-                )}
               </span>
             ) : (
               <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />

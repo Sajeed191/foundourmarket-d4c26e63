@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 /**
  * Global discount capsule — the single reusable "% OFF" badge used everywhere
@@ -15,10 +15,6 @@ export function DiscountBadge({
   percent: number;
   className?: string;
 }) {
-  if (!percent || percent <= 0) return null;
-  return (
-    <span data-product-text className={cn("fom-discount-badge", className)}>
-      {percent}% OFF
-    </span>
-  );
+  // Product percentage badges removed sitewide per design decision.
+  return null;
 }

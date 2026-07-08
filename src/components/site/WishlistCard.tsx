@@ -134,12 +134,7 @@ export function WishlistCard({
             }`}
           />
 
-          {/* Discount badge — top-left, orange pill, black text */}
-          {discount ? (
-            <span data-product-badge className={`absolute top-2 inline-flex items-center rounded-full bg-accent text-black font-bold font-mono text-[10px] px-2 py-0.5 shadow-[var(--shadow-ember)] ${selectMode ? "left-10" : "left-2"}`}>
-              -{discount}%
-            </span>
-          ) : null}
+          {/* Discount percentage badge removed sitewide per design decision. */}
 
           {/* Badge stack — below the discount pill */}
           <div
