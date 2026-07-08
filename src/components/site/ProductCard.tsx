@@ -225,7 +225,6 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
     try {
       await add(product.slug, 1);
       setAdded(true);
-      toast.success("Added to Cart", { description: `${product.name} added successfully.` });
       setTimeout(() => setAdded(false), 1700);
     } catch (err) {
       toast.error("Could not add to cart", { description: err instanceof Error ? err.message : undefined });
