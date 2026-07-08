@@ -214,6 +214,8 @@ function ProductPage() {
   // True once images + variants have resolved from the server.
   const [dataReady, setDataReady] = useState(false);
   const [mobileDockVisible, setMobileDockVisible] = useState(false);
+  const [titleExpanded, setTitleExpanded] = useState(false);
+
 
   useEffect(() => {
     layoutMetrics.setExpectedCtaHeight(64);
