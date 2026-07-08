@@ -380,7 +380,78 @@ export function initCompatConfidence() {
   loadPersistedEvidence(hw.signature);
   installEvidenceListeners();
   reevaluateAndMaybeActivate();
+  installPreviewControls();
   notify();
+}
+
+// ---------------------------------------------------------------------------
+// Hidden preview/testing switch — for QA only. Lets you SHOW the Compatibility
+// Mode banner + dialogs on demand without affecting the real confidence engine,
+// scoring, evidence, or persistence. Enable via:
+//   • URL param:  ?compatPreview=1   (add ?compatPreview=0 to turn off)
+//   • Console:    window.__fomCompatPreview(true)  /  (false)
+// Preview mode is session-only and never writes the confirmed-activation key,
+// so it can't turn a healthy device into a "confirmed affected" one.
+// ---------------------------------------------------------------------------
+
+let previewOn = false;
+
+/** Turn the visual preview of Compatibility Mode on/off (testing only). */
+export function setCompatPreview(on: boolean) {
+  if (typeof document === "undefined") return;
+  previewOn = on;
+  const d = document.documentElement;
+  if (on) {
+    d.setAttribute("data-gpu-unsafe", "true");
+    if (!d.getAttribute("data-compat-reason")) d.setAttribute("data-compat-reason", "gpu");
+    d.setAttribute("data-compat-preview", "true");
+    // Clear the 30-day dismissal so the banner is guaranteed to appear.
+    try {
+      localStorage.removeItem("fom-compat-banner-dismissed");
+      localStorage.removeItem("fom-compat-banner-dismissed-at");
+    } catch {
+      /* ignore */
+    }
+  } else {
+    d.removeAttribute("data-compat-preview");
+    // Only clear the flag if it wasn't set by a genuine confirmed activation.
+    if (!isConfirmedActivated()) {
+      d.setAttribute("data-gpu-unsafe", "false");
+      d.removeAttribute("data-compat-reason");
+    }
+  }
+  notify();
+}
+
+/** True when the current device has a genuine, persisted confirmed activation. */
+function isConfirmedActivated(): boolean {
+  try {
+    const raw = localStorage.getItem(ACTIVATED_KEY);
+    if (!raw) return false;
+    const a = JSON.parse(raw) as { sig?: string };
+    return Boolean(a && a.sig === collectHardware().signature);
+  } catch {
+    return false;
+  }
+}
+
+function installPreviewControls() {
+  try {
+    (window as unknown as { __fomCompatPreview?: (on?: boolean) => void }).__fomCompatPreview = (
+      on = true,
+    ) => setCompatPreview(on);
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("compatPreview")) {
+      setCompatPreview(params.get("compatPreview") !== "0");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Whether the visual preview switch is currently active (testing only). */
+export function isCompatPreview(): boolean {
+  return previewOn;
 }
 
 // ---------------------------------------------------------------------------
