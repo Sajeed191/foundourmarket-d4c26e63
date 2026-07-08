@@ -22,6 +22,7 @@
  * existing boot probe; no feature flags; no URL params.
  */
 import { useSyncExternalStore } from "react";
+import { subscribeCompat } from "@/lib/compat-confidence";
 
 /** True on devices flagged by the boot GPU gate (Compatibility Mode active). */
 export function isGpuUnsafe(): boolean {
@@ -36,13 +37,11 @@ export function getCompatReason(): "gpu" | "engine" | null {
   return r === "gpu" || r === "engine" ? r : null;
 }
 
-// The gpu-unsafe attribute is set once before first paint and never changes, so
-// a static subscribe is sufficient for React consumers (e.g. the banner).
-function subscribe() {
-  return () => {};
-}
-
+// Compatibility Mode can now activate mid-session once the Affected-Device
+// Confidence Score crosses the threshold (runtime evidence accumulates after
+// first paint), so React consumers subscribe to the confidence engine and
+// re-render when `data-gpu-unsafe` flips.
 /** React hook mirroring isGpuUnsafe(), SSR-safe (false on the server). */
 export function useGpuUnsafe(): boolean {
-  return useSyncExternalStore(subscribe, isGpuUnsafe, () => false);
+  return useSyncExternalStore(subscribeCompat, isGpuUnsafe, () => false);
 }

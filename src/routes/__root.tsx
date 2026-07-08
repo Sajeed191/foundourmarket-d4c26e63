@@ -47,6 +47,7 @@ import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
 import { initDebugFlags, getFlag } from "@/lib/debug-flags";
 import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
+import { initCompatConfidence } from "@/lib/compat-confidence";
 import { DebugPanel } from "@/components/site/DebugPanel";
 
 import { WindowMetricsPanel } from "@/components/site/WindowMetricsPanel";
@@ -340,16 +341,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 
       {
-        // GPU-compositor safety gate. Some Android GPUs (Mali, PowerVR, software
-        // renderers, very old Adreno) corrupt compositor tiles when many
-        // backdrop-filter + large blur() + mix-blend-mode + 3D layers stack —
-        // producing horizontal colored lines, duplicated text/cards, partially
-        // corrupted images and random artifacts. We detect the renderer via
-        // WebGL and set data-gpu-unsafe="true" so the dormant safe-mode CSS
-        // swaps those effects for visually-equivalent CPU-friendly fallbacks.
-        // Premium effects are untouched on healthy GPUs (Adreno/Apple/desktop).
+        // Pre-paint hardware-signal probe for the Affected-Device Confidence
+        // System (see src/lib/compat-confidence.ts). This script NO LONGER
+        // activates Compatibility Mode from a single hardware/UA signal — a
+        // suspect GPU family or old browser alone is NOT enough. It only:
+        //   1. Records the WebGL renderer + Android/engine signals as data-*
+        //      attributes for the confidence engine to read, and
+        //   2. Re-applies data-gpu-unsafe before first paint ONLY for a
+        //      renderer signature that was CONFIRMED-affected (score >= 90%,
+        //      combining hardware + verified runtime evidence) in a prior
+        //      session — so a proven-bad device doesn't flash corruption again.
+        // First-time affected devices activate at runtime once evidence crosses
+        // the threshold; healthy Mali/Chromium devices never activate.
         children:
-          "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}var R='unknown',U=false;try{var ua=navigator.userAgent||'';var r=rd();R=r||'unknown';var rl=r.toLowerCase();var gpuUnsafe=/mali/.test(rl)||/swiftshader|software|llvmpipe|microsoft basic/.test(rl)||/powervr/.test(rl)||/videocore/.test(rl)||/vivante/.test(rl)||/adreno\\s*(2|3)\\d\\d/.test(rl);var engineUnsafe=false;var m;if((m=ua.match(/SamsungBrowser\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<14;else if(/Android/.test(ua)&&(m=ua.match(/Chrome\\/(\\d+)/)))engineUnsafe=parseInt(m[1],10)<80;var unsafe=gpuUnsafe||engineUnsafe;U=unsafe;if(/Android/.test(ua))d.setAttribute('data-android','true');d.setAttribute('data-gpu-renderer',r||'unknown');d.setAttribute('data-gpu-unsafe',unsafe?'true':'false');if(unsafe)d.setAttribute('data-compat-reason',gpuUnsafe?'gpu':'engine');}catch(y){d.setAttribute('data-gpu-unsafe','false');try{if(/Android/.test(navigator.userAgent||''))d.setAttribute('data-android','true');}catch(z){}}try{window.__fomCompat=function(){var flags={};var names=d.getAttributeNames?d.getAttributeNames():[];for(var i=0;i<names.length;i++){var n=names[i];if(n.indexOf('data-')===0&&(/android|gpu|compat|degrade|low-end|render-safe|ultra|ff-/.test(n)))flags[n]=d.getAttribute(n);}var info={webglRenderer:R,userAgent:navigator.userAgent,compatibilityMode:d.getAttribute('data-gpu-unsafe')==='true',flags:flags};try{console.info('%c[FOM Compatibility]','color:#ff8a3d;font-weight:bold',info);}catch(e){}return info;};window.__fomCompat();}catch(w){}})();",
+          "(function(){var d=document.documentElement;function rd(){try{var c=document.createElement('canvas');var gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return '';var e=gl.getExtension('WEBGL_debug_renderer_info');var s=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);return (s||'').toString();}catch(x){return '';}}var R='unknown';try{var ua=navigator.userAgent||'';var r=rd();R=r||'unknown';d.setAttribute('data-gpu-renderer',R);if(/Android/.test(ua))d.setAttribute('data-android','true');var eng='';var m;if((m=ua.match(/SamsungBrowser\\/(\\d+)/))&&parseInt(m[1],10)<14)eng='samsung';else if(/Android/.test(ua)&&(m=ua.match(/Chrome\\/(\\d+)/))&&parseInt(m[1],10)<80)eng='chromium';if(eng)d.setAttribute('data-compat-engine',eng);var on=false;try{var raw=localStorage.getItem('fom-compat-activated');if(raw){var a=JSON.parse(raw);if(a&&a.sig===R){on=true;d.setAttribute('data-gpu-unsafe','true');d.setAttribute('data-compat-reason',a.reason||'gpu');}}}catch(e){}if(!on)d.setAttribute('data-gpu-unsafe','false');}catch(y){d.setAttribute('data-gpu-unsafe','false');}try{window.__fomCompat=function(){var flags={};var names=d.getAttributeNames?d.getAttributeNames():[];for(var i=0;i<names.length;i++){var n=names[i];if(n.indexOf('data-')===0&&(/android|gpu|compat|degrade|low-end|render-safe|ultra|ff-/.test(n)))flags[n]=d.getAttribute(n);}var info={webglRenderer:R,userAgent:navigator.userAgent,compatibilityMode:d.getAttribute('data-gpu-unsafe')==='true',flags:flags};try{console.info('%c[FOM Compatibility]','color:#ff8a3d;font-weight:bold',info);}catch(e){}return info;};}catch(w){}})();",
       },
 
 
@@ -619,6 +624,11 @@ function AppRoot() {
 
   useEffect(() => {
     initDebugFlags();
+    // Affected-Device Confidence System: loads persisted per-device evidence,
+    // re-scores (a previously-confirmed device activates immediately), and
+    // installs always-on runtime-evidence listeners. Compatibility Mode only
+    // activates at score >= 90% (suspect hardware + verified runtime anomalies).
+    initCompatConfidence();
     installDebugDiagnostics();
     patchImageDecode();
     installStartupDiagnostics();
