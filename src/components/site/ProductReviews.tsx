@@ -524,6 +524,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
           )}
 
           {/* ── Single smart action card ─────────────────────────────────── */}
+          {expanded && (
           <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">
             <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
 
