@@ -73,7 +73,7 @@ export function QuickViewDialog({
           <div className="mt-3 flex items-baseline gap-2">
             <Price value={price} className="font-display text-2xl font-bold tabular-nums tracking-[-0.02em]" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="text-sm font-mono text-muted-foreground/55 line-through tabular-nums" />
+              <Price value={originalPrice} variant="compare" className="text-sm" />
             ) : null}
           </div>
 

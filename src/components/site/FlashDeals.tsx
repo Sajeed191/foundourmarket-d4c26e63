@@ -184,7 +184,7 @@ function FlashCard({ item, now }: { item: FlashItem; now: number }) {
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <Price value={displayPrice} className="text-sm sm:text-base font-display font-bold text-accent tabular-nums" />
             {hasFlash && (
-              <Price value={regularPrice} className="text-[10px] sm:text-[11px] font-mono line-through text-muted-foreground tabular-nums" />
+              <Price value={regularPrice} variant="compare" className="text-[10px] sm:text-[11px]" />
             )}
           </div>
           <p

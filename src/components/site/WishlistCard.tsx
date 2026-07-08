@@ -281,7 +281,7 @@ export function WishlistCard({
           <div className="min-w-0">
             <Price value={price} className="font-display font-bold text-white tabular-nums leading-none block text-base" />
             {originalPrice && discount ? (
-              <Price value={originalPrice} className="font-mono text-muted-foreground/60 line-through tabular-nums block text-[10px] mt-1" />
+              <Price value={originalPrice} variant="compare" className="block text-[10px] mt-1" />
             ) : null}
           </div>
           {product.inStock ? (
