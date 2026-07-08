@@ -699,7 +699,7 @@ function ProductPage() {
                     <span className="fom-price-compare text-base font-mono">{format(originalPrice)}</span>
                   )}
                   {discountPct && (
-                    <span className="animate-save text-[10px] font-mono font-bold uppercase tracking-widest bg-accent text-accent-foreground px-2.5 py-1 rounded-full shadow-[var(--shadow-ember)]">{discountPct}% OFF</span>
+                    <DiscountBadge percent={discountPct} />
                   )}
                 </div>
                 {originalPrice && originalPrice > effectivePrice && (
