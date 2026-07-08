@@ -106,6 +106,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [expanded, setExpanded] = useState(false);
 
   const load = useCallback(async () => {
     const table = (isAdmin ? "product_reviews" : "product_reviews_public") as "product_reviews_public";
