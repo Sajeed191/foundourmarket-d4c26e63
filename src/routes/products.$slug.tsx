@@ -791,31 +791,73 @@ function ProductPage() {
               </button>
             </div>
 
-            {/* Delivery & Trust — everything presented once, with hierarchy */}
+            {/* Premium Information Hub — one tabbed card replacing the separate
+                Delivery, Offers, Seller and Warranty sections. */}
             <div className="mb-4 rounded-2xl border border-border bg-card/50 overflow-hidden">
-
-              <div className="flex items-start gap-3 p-4">
-                <div className="size-9 rounded-full grid place-items-center bg-accent/10 text-accent shrink-0">
-                  <Truck className="size-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{unitShipping <= 0 ? "Free delivery" : `Shipping ${format(unitShipping)}`}</p>
-                  <p className="text-xs text-muted-foreground">{deliveryWindow ? <>Arrives <span className="text-foreground">{deliveryWindow}</span> · 5–10 business days</> : "Arrives in 5–10 business days"}</p>
-                </div>
-                <Link to="/track" className="ml-auto text-[10px] font-mono uppercase tracking-widest text-accent hover:underline shrink-0">Track</Link>
+              <div role="tablist" aria-label="Product information" className="flex border-b border-border/60">
+                {([
+                  { id: "delivery", label: "Delivery", icon: Truck },
+                  { id: "offers", label: "Offers", icon: Sparkles },
+                  { id: "seller", label: "Seller", icon: Users },
+                  { id: "warranty", label: "Warranty", icon: Shield },
+                ] as const).map((t) => (
+                  <button
+                    key={t.id}
+                    role="tab"
+                    aria-selected={infoTab === t.id}
+                    onClick={() => setInfoTab(t.id)}
+                    className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 px-1 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-colors ${infoTab === t.id ? "text-accent border-b-2 border-accent bg-accent/[0.06]" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <t.icon className="size-3.5 shrink-0" />
+                    <span className="hidden xs:inline">{t.label}</span>
+                  </button>
+                ))}
               </div>
-              <div aria-hidden className="h-px bg-border/60" />
-              <div className="grid grid-cols-2 divide-x divide-border/60">
-                <Link to="/returns" className="flex items-center gap-2.5 p-3.5 hover:bg-white/[0.03] transition-colors">
-                  <RotateCcw className="size-4 text-accent shrink-0" />
-                  <span className="text-[11px] font-medium leading-tight">{product.returnEligible ? `${product.returnWindowDays}-day returns` : "No returns"}</span>
-                </Link>
-                <Link to="/buyer-protection" className="flex items-center gap-2.5 p-3.5 hover:bg-white/[0.03] transition-colors">
-                  <Shield className="size-4 text-accent shrink-0" />
-                  <span className="text-[11px] font-medium leading-tight">Buyer Protection</span>
-                </Link>
+              <div className="p-4 min-h-[7.5rem]">
+                {infoTab === "delivery" && (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="size-9 rounded-full grid place-items-center bg-accent/10 text-accent shrink-0">
+                        <Truck className="size-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{unitShipping <= 0 ? "Free delivery" : `Shipping ${format(unitShipping)}`}</p>
+                        <p className="text-xs text-muted-foreground">{deliveryWindow ? <>Arrives <span className="text-foreground">{deliveryWindow}</span> · 5–10 business days</> : "Arrives in 5–10 business days"}</p>
+                      </div>
+                      <Link to="/track" className="ml-auto text-[10px] font-mono uppercase tracking-widest text-accent hover:underline shrink-0">Track</Link>
+                    </div>
+                    <Link to="/returns" className="flex items-center gap-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      <RotateCcw className="size-4 text-accent shrink-0" />
+                      {product.returnEligible ? `${product.returnWindowDays}-day easy returns` : "No returns on this item"}
+                    </Link>
+                  </div>
+                )}
+                {infoTab === "offers" && (
+                  <div className="space-y-2.5 text-sm">
+                    {discountPct && originalPrice ? (
+                      <>
+                        <p className="inline-flex items-center gap-1.5 font-mono font-semibold uppercase tracking-widest text-accent text-xs">
+                          <Sparkles className="size-3.5" /> Save {format(originalPrice - effectivePrice)} ({discountPct}% off)
+                        </p>
+                        <p className="text-xs text-muted-foreground">Limited-time price. No coupon required — discount applied at checkout.</p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No active offers right now. Secure checkout with buyer protection on every order.</p>
+                    )}
+                  </div>
+                )}
+                {infoTab === "seller" && <SellerTrustCard product={product} />}
+                {infoTab === "warranty" && (
+                  <div className="space-y-2.5 text-sm">
+                    <Link to="/buyer-protection" className="flex items-center gap-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      <Shield className="size-4 text-accent shrink-0" /> Buyer Protection on every order
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{product.returnEligible ? `Covered by a ${product.returnWindowDays}-day return window and full refund support.` : "Full refund support if your item doesn't arrive as described."}</p>
+                  </div>
+                )}
               </div>
             </div>
+
 
             {/* Product Highlights */}
             {product.features?.length > 0 && (
