@@ -1078,12 +1078,29 @@ function ProductPageSkeleton() {
 
 
 
-function Accordion({ title, icon: Icon, defaultOpen = false, children }: { title: string; icon: typeof Package; defaultOpen?: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
+function Accordion({
+  title,
+  icon: Icon,
+  defaultOpen = false,
+  children,
+  open: openProp,
+  onToggle,
+}: {
+  title: string;
+  icon: typeof Package;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  /** When provided, the accordion is controlled (used for single-open groups). */
+  open?: boolean;
+  onToggle?: () => void;
+}) {
+  const [openState, setOpen] = useState(defaultOpen);
+  const open = openProp !== undefined ? openProp : openState;
+  const toggle = () => (onToggle ? onToggle() : setOpen((v) => !v));
   return (
-    <div className="border-t border-border mt-6 pt-6">
+    <div className="border-t border-border mt-4 pt-4">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         className="flex items-center justify-between w-full group"
         aria-expanded={open}
       >
@@ -1108,6 +1125,7 @@ function Accordion({ title, icon: Icon, defaultOpen = false, children }: { title
     </div>
   );
 }
+
 
 function Faq({ q, a }: { q: string; a: string }) {
   return (
