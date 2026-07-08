@@ -98,14 +98,52 @@ export function GpuCompatBanner() {
     return () => cancelAnimationFrame(id);
   }, [shouldRenderBanner]);
 
-  // Hide floating support/chat widgets while the dialog is open.
+  // Hide floating support/chat widgets while either dialog is open.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const d = document.documentElement;
-    if (compatDialogOpen) d.setAttribute("data-compat-dialog-open", "true");
+    if (compatDialogOpen || advancedOpen) d.setAttribute("data-compat-dialog-open", "true");
     else d.removeAttribute("data-compat-dialog-open");
     return () => d.removeAttribute("data-compat-dialog-open");
-  }, [compatDialogOpen]);
+  }, [compatDialogOpen, advancedOpen]);
+
+  // Refresh diagnostics whenever the advanced dialog opens.
+  useEffect(() => {
+    if (advancedOpen) {
+      setDiagnostics(collectCompatDiagnostics());
+      setCopied(false);
+    }
+  }, [advancedOpen]);
+
+  function openAdvanced() {
+    setCompatDialogOpen(false);
+    setAdvancedOpen(true);
+  }
+
+  async function copyDiagnostics() {
+    const text = formatDiagnostics(diagnostics ?? collectCompatDiagnostics());
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable/blocked — fall back to a hidden textarea.
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      } catch {
+        /* give up silently */
+      }
+    }
+  }
 
   function persistDismiss() {
     try {
