@@ -694,7 +694,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             <>
               <ul className="grid gap-5 sm:grid-cols-2">
                 <AnimatePresence>
-                  {visible.map((r) => {
+                  {(expanded ? visible : sorted.slice(0, 2)).map((r) => {
                     // Admin: resolve author by UUID. Public: use denormalized fields.
                     const prof = r.user_id ? profiles[r.user_id] : undefined;
                     const name = (prof?.full_name ?? r.author_name) || "Customer";
