@@ -81,7 +81,7 @@ export function GpuCompatBanner() {
   }, []);
 
   const shouldRenderBanner =
-    gpuUnsafe && !bannerDismissed && !compatDialogOpen && !leaving;
+    gpuUnsafe && !bannerDismissed && !compatDialogOpen && !advancedOpen && !leaving;
 
   // Entrance animation plays only the first time the banner appears.
   useEffect(() => {
