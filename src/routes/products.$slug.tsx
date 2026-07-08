@@ -976,27 +976,27 @@ function ProductPage() {
           initialized and the user has scrolled past the hero. */}
       {showPurchaseDock && (
       <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300" style={{ bottom: "var(--product-dock-bottom)" }}>
-        <div className="flex h-full items-center gap-1.5 rounded-2xl border border-white/10 p-1.5 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9)]" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)" }}>
+        <div className="flex h-full items-center gap-2.5 rounded-[24px] border border-white/10 px-3" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
           <button
             onClick={() => toggleWishlist(product.slug)}
             aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
-            className={`size-10 grid place-items-center rounded-xl border shrink-0 transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/[0.03] border-white/10 text-white/60 hover:text-accent"}`}
+            className={`size-12 grid place-items-center rounded-full border shrink-0 transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/[0.03] border-white/10 text-white/60 hover:text-accent"}`}
           >
-            <Heart className={`size-4 ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
+            <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
           </button>
           <img
             src={activeMedia?.url || product.image}
             alt=""
             aria-hidden
-            className="size-10 shrink-0 rounded-xl object-cover border border-white/10"
+            className="size-12 shrink-0 rounded-xl object-cover border border-white/10"
           />
-          <div className="flex flex-col leading-none px-0.5 min-w-0 shrink">
+          <div className="flex flex-col justify-center leading-none min-w-0 shrink">
             <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
             {currencyReady ? (
               <span className="flex items-baseline gap-1.5">
-                <span className="text-base font-display font-semibold tabular-nums text-gradient-ember">{format(effectivePrice * qty)}</span>
+                <span className="text-base font-display font-semibold tabular-nums text-gradient-ember whitespace-nowrap">{format(effectivePrice * qty)}</span>
                 {discountPct && (
-                  <span className="text-[9px] font-mono font-bold text-accent">−{discountPct}%</span>
+                  <span className="text-[9px] font-mono font-bold text-accent whitespace-nowrap">−{discountPct}%</span>
                 )}
               </span>
             ) : (
@@ -1007,21 +1007,22 @@ function ProductPage() {
           <button
             onClick={handleAdd}
             disabled={isOOS}
-            className="w-10 shrink-0 grid place-items-center bg-white/[0.04] border border-white/10 text-white/70 rounded-xl py-2.5 transition-all active:scale-90 disabled:opacity-40 hover:text-accent"
+            className="size-12 shrink-0 grid place-items-center bg-white/[0.04] border border-white/10 text-white/70 rounded-full transition-all active:scale-90 disabled:opacity-40 hover:text-accent"
             aria-label={isOOS ? "Notify me" : "Add to cart"}
           >
-            <ShoppingBagIcon className="size-4" />
+            <ShoppingBagIcon className="size-[18px]" />
           </button>
           <Link
             to="/cart"
             onClick={handleBuyNow}
             aria-disabled={isOOS}
-            className={`flex-1 text-center bg-accent text-accent-foreground font-bold py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
+            className={`flex-1 grid place-items-center min-h-[52px] bg-accent text-accent-foreground font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
           >
             {isOOS ? "Notify Me" : "Buy Now"}
           </Link>
         </div>
       </div>
+
       )}
 
 
