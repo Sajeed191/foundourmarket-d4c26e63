@@ -266,7 +266,108 @@ export function GpuCompatBanner() {
                 Update Browser
               </Button>
             )}
+            <Button variant="outline" onClick={openAdvanced}>
+              Advanced Fix
+            </Button>
             <Button onClick={() => setCompatDialogOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Advanced Graphics Help — honest guidance. Web pages CANNOT disable GPU
+          rasterization / hardware acceleration (no Web API, CSS, WebGL, WebGPU,
+          or Permissions API exposes that; it is a browser-level setting), so we
+          never fake it — we only explain the real, user-actionable options. */}
+      <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
+        <DialogContent
+          className="gpu-compat-dialog max-w-lg"
+          aria-labelledby="compat-advanced-title"
+          aria-describedby="compat-advanced-desc"
+        >
+          <DialogHeader>
+            <DialogTitle id="compat-advanced-title">Advanced Graphics Help</DialogTitle>
+            <DialogDescription id="compat-advanced-desc">
+              This issue is caused by a browser graphics rendering bug. Websites
+              cannot disable GPU Rasterization or Hardware Acceleration
+              automatically because browsers do not expose that capability for
+              security reasons.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="update">
+              <AccordionTrigger>Update your browser</AccordionTrigger>
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                Newer Chromium versions may contain fixes for this graphics
+                rendering bug. Update your browser to the latest available
+                version, then fully close and reopen it so the update takes
+                effect. This is the recommended fix.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="firefox">
+              <AccordionTrigger>Try Firefox</AccordionTrigger>
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                Firefox uses a different rendering pipeline than Chromium-based
+                browsers and may not exhibit this issue at all. If the corruption
+                persists, opening this site in Firefox is a reliable workaround.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="rasterization">
+              <AccordionTrigger>Disable GPU Rasterization (Advanced)</AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+                <p>
+                  GPU Rasterization and Hardware Acceleration are browser-level
+                  settings. They can only be changed manually inside your
+                  browser&apos;s own settings — a website cannot change them for
+                  you, and this page will not attempt to.
+                </p>
+                <p className="rounded-md border border-border/60 bg-muted/40 px-3 py-2 text-foreground">
+                  This browser version does not expose a verified GPU
+                  Rasterization setting.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          {diagnostics && (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Diagnostics
+              </p>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <dt className="font-medium text-foreground">Browser</dt>
+                <dd className="truncate">
+                  {diagnostics.browserName} {diagnostics.browserVersion}
+                </dd>
+                <dt className="font-medium text-foreground">OS</dt>
+                <dd className="truncate">{diagnostics.operatingSystem}</dd>
+                <dt className="font-medium text-foreground">Renderer</dt>
+                <dd className="truncate">{diagnostics.webglRenderer}</dd>
+                <dt className="font-medium text-foreground">Vendor</dt>
+                <dd className="truncate">{diagnostics.webglVendor}</dd>
+                <dt className="font-medium text-foreground">Compat Mode</dt>
+                <dd className="truncate">{diagnostics.compatibilityMode}</dd>
+                <dt className="font-medium text-foreground">Reason</dt>
+                <dd className="truncate">{diagnostics.compatibilityReason}</dd>
+              </dl>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={copyDiagnostics}>
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" /> Copy Diagnostics
+                </>
+              )}
+            </Button>
+            <Button onClick={() => setAdvancedOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
