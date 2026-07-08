@@ -789,7 +789,8 @@ function ProductPage() {
             </div>
 
             {/* Delivery & Trust — everything presented once, with hierarchy */}
-            <div className="mb-6 rounded-2xl border border-border bg-card/50 overflow-hidden">
+            <div className="mb-4 rounded-2xl border border-border bg-card/50 overflow-hidden">
+
               <div className="flex items-start gap-3 p-4">
                 <div className="size-9 rounded-full grid place-items-center bg-accent/10 text-accent shrink-0">
                   <Truck className="size-4" />
