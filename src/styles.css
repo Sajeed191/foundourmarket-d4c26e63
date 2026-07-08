@@ -2991,3 +2991,120 @@ html[data-graphics-compat="true"] *::after {
   will-change: auto !important;
 }
 
+
+/* ============================================================
+   GPU COMPATIBILITY BANNER (UI ONLY)
+   Compact bottom sheet on mobile; small bottom-right toast on
+   larger screens. Never covers the bottom nav or floating
+   support/chat widgets (sits below --z-floating-controls).
+   ============================================================ */
+.gpu-compat-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  width: calc(100% - 24px);
+  bottom: calc(var(--app-bottom-nav-height) + 12px);
+  z-index: 700; /* below floating controls (800) */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-height: 96px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(18, 18, 20, 0.96);
+  border: 1px solid color-mix(in oklab, var(--accent, oklch(0.75 0.15 65)) 45%, transparent);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.gpu-compat-banner__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--accent, oklch(0.78 0.15 65));
+  background: color-mix(in oklab, var(--accent, oklch(0.75 0.15 65)) 16%, transparent);
+}
+
+.gpu-compat-banner__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.gpu-compat-banner__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.96);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gpu-compat-banner__desc {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.62);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gpu-compat-banner__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gpu-compat-banner__learn {
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--accent, oklch(0.8 0.15 65));
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.gpu-compat-banner__learn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gpu-compat-banner__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.gpu-compat-banner__close:hover {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Tablet / desktop: small toast anchored bottom-right. */
+@media (min-width: 768px) {
+  .gpu-compat-banner {
+    left: auto;
+    right: 16px;
+    width: 380px;
+    max-width: calc(100% - 32px);
+    bottom: calc(var(--floating-bottom-offset, 16px) + 12px);
+  }
+}
