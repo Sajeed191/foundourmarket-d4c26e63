@@ -686,7 +686,7 @@ function ProductPage() {
 
             {/* Real activity strip — only rendered when we have genuine data */}
             {socialProof && (socialProof.sold > 0 || socialProof.views > 0) && (
-              <div className="mb-5 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-widest">
                 {socialProof.sold > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-muted-foreground/90">
                     <ShoppingBagIcon className="size-3 text-accent" /> {formatSold(socialProof.sold)} sold
