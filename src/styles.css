@@ -3004,11 +3004,11 @@ html[data-graphics-compat="true"] *::after {
   right: 12px;
   width: calc(100% - 24px);
   bottom: calc(var(--app-bottom-nav-height) + 12px);
-  z-index: 100; /* banner sits above nav, below dialog/backdrop */
+  z-index: 200; /* banner: above nav   z-index: 100; /* banner sits above nav, below dialog/backdrop */ support, below dialog */
   display: flex;
   align-items: center;
   gap: 12px;
-  max-height: 96px;
+  max-height: 88px;
   padding: 12px 14px;
   border-radius: 18px;
   background: rgba(18, 18, 20, 0.96);
