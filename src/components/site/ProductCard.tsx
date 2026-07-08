@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import { Heart, Check, Star, Eye, Zap } from "lucide-react";
+import { Heart, Check, Star, Eye, ShoppingCart, Loader2 } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
 import { useVisibleBadges, useBadgeEngine, type BadgeContext } from "@/lib/badge-visibility";
 import { useProductBadges, type RenderBadge } from "@/lib/use-product-badges";
 import { useRegion } from "@/lib/region";
-import { useBuyNow } from "@/lib/use-buy-now";
+import { useCartActions } from "@/lib/cart";
+import { toast } from "sonner";
 import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { ProductCardAdminControlsGate } from "@/components/admin/ProductCardAdminControlsGate";
 import { Price } from "@/components/site/Price";
@@ -206,15 +207,26 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
 const QuickViewButton = memo(QuickViewButtonImpl);
 
 function BuyNowButtonImpl({ product }: { product: Product }) {
-  const buyNow = useBuyNow();
+  const { add } = useCartActions();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
 
-  // Delegates to the single centralized Buy Now handler (see useBuyNow).
-  const onBuyNow = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+  const onAddToCart = useCallback(async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    buyNow(product);
-  }, [buyNow, product]);
-
+    if (adding) return; // prevent duplicate requests
+    setAdding(true);
+    try {
+      await add(product.slug, 1);
+      setAdded(true);
+      toast.success("Added to Cart", { description: `${product.name} added successfully.` });
+      setTimeout(() => setAdded(false), 1400);
+    } catch (err) {
+      toast.error("Could not add to cart", { description: err instanceof Error ? err.message : undefined });
+    } finally {
+      setAdding(false);
+    }
+  }, [add, product.slug, product.name, adding]);
 
   const gradient = "linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%)";
   const glow = "0 6px 18px -4px rgba(255,122,0,0.45)";
@@ -229,16 +241,25 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
 
   return (
     <button
-      onClick={onBuyNow}
-      aria-label={`Buy ${product.name} now`}
+      onClick={onAddToCart}
+      disabled={adding}
+      aria-label={`Add ${product.name} to cart`}
+      aria-busy={adding}
       style={{ background: gradient, boxShadow: glow }}
-      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold text-black ${"transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.97]"}`}
+      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold text-black transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 disabled:hover:translate-y-0`}
     >
-      <Zap className="size-5 sm:size-6" strokeWidth={2.75} /> Buy Now
+      {adding ? (
+        <><Loader2 className="size-5 sm:size-6 animate-spin" strokeWidth={2.75} /> Adding…</>
+      ) : added ? (
+        <><Check className="size-5 sm:size-6 motion-safe:animate-in motion-safe:zoom-in" strokeWidth={2.75} /> Added</>
+      ) : (
+        <><ShoppingCart className="size-5 sm:size-6" strokeWidth={2.75} /> Add to Cart</>
+      )}
     </button>
   );
 }
 const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
+
 
 function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
