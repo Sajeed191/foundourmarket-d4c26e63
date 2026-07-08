@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import { Heart, Check, Star, Eye, ShoppingCart, Loader2 } from "lucide-react";
+import { Heart, Check, Star, Eye, ShoppingCart, Loader2, Minus, Plus } from "lucide-react";
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
 import { useVisibleBadges, useBadgeEngine, type BadgeContext } from "@/lib/badge-visibility";
 import { useProductBadges, type RenderBadge } from "@/lib/use-product-badges";
 import { useRegion } from "@/lib/region";
-import { useCartActions } from "@/lib/cart";
+import { useCartActions, useCartQty } from "@/lib/cart";
 import { toast } from "sonner";
 import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { ProductCardAdminControlsGate } from "@/components/admin/ProductCardAdminControlsGate";
@@ -206,36 +206,79 @@ function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => voi
 }
 const QuickViewButton = memo(QuickViewButtonImpl);
 
+const BTN_BASE =
+  "product-typography inline-flex h-[56px] sm:h-[60px] w-full items-center justify-center rounded-[20px] text-[15px] sm:text-[16px] font-bold";
+
 function BuyNowButtonImpl({ product }: { product: Product }) {
-  const { add } = useCartActions();
+  const { add, setQty } = useCartActions();
+  const qty = useCartQty(product.slug);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const busy = useRef(false);
 
   const onAddToCart = useCallback(async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (adding) return; // prevent duplicate requests
+    if (busy.current) return; // prevent duplicate requests
+    busy.current = true;
     setAdding(true);
     try {
       await add(product.slug, 1);
       setAdded(true);
       toast.success("Added to Cart", { description: `${product.name} added successfully.` });
-      setTimeout(() => setAdded(false), 1400);
+      setTimeout(() => setAdded(false), 1700);
     } catch (err) {
       toast.error("Could not add to cart", { description: err instanceof Error ? err.message : undefined });
     } finally {
       setAdding(false);
+      busy.current = false;
     }
-  }, [add, product.slug, product.name, adding]);
+  }, [add, product.slug, product.name]);
+
+  const changeQty = useCallback((next: number) => (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    void setQty(product.slug, next);
+  }, [setQty, product.slug]);
 
   const gradient = "linear-gradient(135deg, #FFA52E 0%, #FF6A00 100%)";
   const glow = "0 6px 18px -4px rgba(255,122,0,0.45)";
+  const greenGlow = "0 6px 18px -4px rgba(16,166,74,0.45)";
 
   if (!product.inStock) {
     return (
-      <span data-product-text className="product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center rounded-full border border-border bg-muted font-mono text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span data-product-text className={`${BTN_BASE} border border-border bg-muted font-mono text-[12px] uppercase tracking-wider text-muted-foreground`}>
         Sold Out
       </span>
+    );
+  }
+
+  // Quantity stepper — shown once the item is in the cart and the success
+  // flash has finished. Reflects the real cart quantity.
+  if (qty > 0 && !added) {
+    return (
+      <div
+        data-product-text
+        className={`${BTN_BASE} justify-between gap-1 px-1.5 text-white motion-safe:animate-scale-in`}
+        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,138,0,0.35)", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.4)" }}
+      >
+        <button
+          onClick={changeQty(qty - 1)}
+          aria-label={`Decrease ${product.name} quantity`}
+          className="grid h-[48px] w-[48px] place-items-center rounded-[16px] text-white transition-[background,transform] duration-150 hover:bg-white/10 active:scale-90"
+        >
+          <Minus className="size-5" strokeWidth={2.75} />
+        </button>
+        <span aria-live="polite" className="min-w-8 text-center text-[17px] font-bold tabular-nums">{qty}</span>
+        <button
+          onClick={changeQty(qty + 1)}
+          aria-label={`Increase ${product.name} quantity`}
+          style={{ background: gradient }}
+          className="grid h-[48px] w-[48px] place-items-center rounded-[16px] text-black transition-[filter,transform] duration-150 hover:brightness-105 active:scale-90"
+        >
+          <Plus className="size-5" strokeWidth={2.75} />
+        </button>
+      </div>
     );
   }
 
@@ -245,13 +288,13 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
       disabled={adding}
       aria-label={`Add ${product.name} to cart`}
       aria-busy={adding}
-      style={{ background: gradient, boxShadow: glow }}
-      className={`product-typography inline-flex h-[46px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-full text-[14px] sm:text-[16px] font-bold text-black transition-[filter,transform] duration-150 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 disabled:hover:translate-y-0`}
+      style={added ? { background: "linear-gradient(135deg,#34E07A 0%,#10A64A 100%)", boxShadow: greenGlow } : { background: gradient, boxShadow: glow }}
+      className={`${BTN_BASE} gap-2 text-black transition-[background,box-shadow,filter,transform] duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98] disabled:hover:translate-y-0 ${added ? "motion-safe:animate-scale-in" : ""}`}
     >
       {adding ? (
         <><Loader2 className="size-5 sm:size-6 animate-spin" strokeWidth={2.75} /> Adding…</>
       ) : added ? (
-        <><Check className="size-5 sm:size-6 motion-safe:animate-in motion-safe:zoom-in" strokeWidth={2.75} /> Added</>
+        <span className="inline-flex items-center gap-2 text-white"><Check className="size-5 sm:size-6 motion-safe:animate-in motion-safe:zoom-in" strokeWidth={2.75} /> Added</span>
       ) : (
         <><ShoppingCart className="size-5 sm:size-6" strokeWidth={2.75} /> Add to Cart</>
       )}
