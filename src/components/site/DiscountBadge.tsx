@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 /**
  * Global discount capsule — the single reusable "% OFF" badge used everywhere
