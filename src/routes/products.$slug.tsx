@@ -830,7 +830,7 @@ function ProductPage() {
             </div>
 
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <Accordion title="Specifications" icon={Layers}>
+              <Accordion title="Specifications" icon={Layers} open={openSection === "specs"} onToggle={() => toggleSection("specs")}>
                 <dl className="divide-y divide-border/60">
                   {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
                     <div key={k} className="flex gap-4 py-2.5 text-sm">
@@ -843,7 +843,7 @@ function ProductPage() {
             )}
 
             {product.attributes && Object.keys(product.attributes).length > 0 && (
-              <Accordion title="Details" icon={Info}>
+              <Accordion title="Details" icon={Info} open={openSection === "details"} onToggle={() => toggleSection("details")}>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(product.attributes as Record<string, string>).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/50 px-3 py-1 text-xs">
@@ -859,15 +859,16 @@ function ProductPage() {
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
 
-            <div className="pt-6 sm:pt-8 border-t border-border">
+            <div className="pt-5 sm:pt-6 border-t border-border">
               <SellerTrustCard product={product} />
             </div>
 
 
 
-            <Accordion title="FAQ" icon={Sparkles}>
+            <Accordion title="FAQ" icon={Sparkles} open={openSection === "faq"} onToggle={() => toggleSection("faq")}>
               <ProductFaqList slug={product.slug} />
             </Accordion>
+
 
           </motion.div>
         </div>
