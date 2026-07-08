@@ -510,6 +510,16 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 }
 .animate-cart-pulse { animation: cart-pulse 0.7s ease-out; }
 
+@keyframes success-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.animate-success-pop { animation: success-pop 0.28s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-success-pop { animation: none; }
+}
+
 /* Gradient orb backdrop */
 .orb {
   position: absolute;

@@ -253,9 +253,12 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
     );
   }
 
-  // Quantity stepper — shown once the item is in the cart and the success
-  // flash has finished. Reflects the real cart quantity.
-  if (qty > 0 && !added) {
+  // Quantity stepper — shown ONLY after the standalone "Adding…" and "✓ Added"
+  // confirmation states have finished. The cart qty updates optimistically
+  // during "Adding…", so we must also exclude adding/added here or the
+  // confirmation step would be skipped.
+  if (qty > 0 && !added && !adding) {
+
     return (
       <div
         data-product-text
@@ -289,7 +292,7 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
       aria-label={`Add ${product.name} to cart`}
       aria-busy={adding}
       style={added ? { background: "linear-gradient(135deg,#34E07A 0%,#10A64A 100%)", boxShadow: greenGlow } : { background: gradient, boxShadow: glow }}
-      className={`${BTN_BASE} gap-2 text-black transition-[background,box-shadow,filter,transform] duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98] disabled:hover:translate-y-0 ${added ? "motion-safe:animate-scale-in" : ""}`}
+      className={`${BTN_BASE} gap-2 text-black transition-[background,box-shadow,filter,transform] duration-300 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98] disabled:hover:translate-y-0 ${added ? "animate-success-pop" : ""}`}
     >
       {adding ? (
         <><Loader2 className="size-5 sm:size-6 animate-spin" strokeWidth={2.75} /> Adding…</>
