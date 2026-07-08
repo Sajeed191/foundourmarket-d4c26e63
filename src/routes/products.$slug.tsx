@@ -646,7 +646,8 @@ function ProductPage() {
             )}
 
             {/* subtle gradient separator */}
-            <div aria-hidden className="h-px w-full mb-4 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
+            <div aria-hidden className="h-px w-full mb-3 bg-gradient-to-r from-border/0 via-border/70 to-border/0" />
+
 
             {/* Premium animated price block */}
             {currencyReady ? (
