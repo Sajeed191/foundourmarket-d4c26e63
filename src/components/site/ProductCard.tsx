@@ -419,7 +419,6 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           {originalPrice && discount ? (
             <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <Price value={originalPrice} variant="compare" className="shrink-0 text-[12px] sm:text-[15px]" />
-              <DiscountBadge percent={discount} />
             </div>
           ) : null}
         </div>
