@@ -205,6 +205,11 @@ function ProductPage() {
   const { has: inCompare, toggle: toggleCompare, isFull: compareFull } = useCompare();
   const { has: inWishlist, toggle: toggleWishlist } = useWishlist();
   const [qty, setQty] = useState(1);
+  // Purchase-button UI states (visual only — underlying cart/buy-now logic unchanged).
+  const [addState, setAddState] = useState<"idle" | "loading" | "success">("idle");
+  const [buyState, setBuyState] = useState<"idle" | "loading">("idle");
+  const addTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => addTimers.current.forEach(clearTimeout), []);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [activeImg, setActiveImg] = useState(0);
