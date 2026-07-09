@@ -434,7 +434,7 @@ function CartPage() {
       </div>
 
       <div className="mt-4">
-        <RelatedProducts excludeSlugs={detailed.map((i) => i.slug)} title="Recommended For You" eyebrow="Customers also bought" limit={8} />
+        <RelatedProducts title="Recommended For You" eyebrow="Customers also bought" limit={8} />
       </div>
       <div className="border-t border-border/50 mt-2">
         <RecentlyViewed excludeSlug={detailed[0]?.slug} limit={8} />
