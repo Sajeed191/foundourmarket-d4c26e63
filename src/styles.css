@@ -74,7 +74,19 @@
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Canonical motion language ──────────────────────────────────────────
+     One shared easing + timing scale for the whole site. Components reference
+     these tokens so every interaction speaks the same visual language. */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-micro: 150ms;   /* micro interactions   120–180ms */
+  --motion-button: 180ms;  /* buttons              160–200ms */
+  --motion-card: 200ms;    /* cards                180–220ms */
+  --motion-panel: 240ms;   /* panels               220–260ms */
+  --motion-sheet: 290ms;   /* bottom sheets        260–320ms */
+  --motion-page: 300ms;    /* page transitions     250–350ms */
 }
+
 
 :root {
   --radius: 1rem;
@@ -3247,4 +3259,87 @@ html[data-compat-dialog-open] [data-slot="dialog-overlay"] {
 /* Keep floating support/chat/install widgets behind the modal (hidden). */
 html[data-compat-dialog-open] [data-floating-control] {
   display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL MOTION SYSTEM — reusable, GPU-friendly interaction utilities.
+   Transform/opacity only. No layout-triggering properties. Every rule degrades
+   gracefully under prefers-reduced-motion and on low-end devices.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Interactive press: gentle scale + soft color transition. Apply to buttons,
+   chips, quantity controls, nav buttons, wishlist/share/search/filter actions. */
+.motion-press {
+  transition:
+    transform var(--motion-button) var(--ease-premium),
+    background-color var(--motion-button) var(--ease-premium),
+    border-color var(--motion-button) var(--ease-premium),
+    color var(--motion-button) var(--ease-premium),
+    box-shadow var(--motion-button) var(--ease-premium);
+  will-change: transform;
+}
+.motion-press:active {
+  transform: scale(0.98);
+}
+
+/* Product card lift: translate + shadow interpolation only (never dimensions). */
+.motion-card {
+  transition:
+    transform var(--motion-card) var(--ease-premium),
+    box-shadow var(--motion-card) var(--ease-premium);
+  will-change: transform;
+}
+@media (hover: hover) and (pointer: fine) {
+  .motion-card:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Progressive image reveal: fade opacity 0 → 1 once loaded (aspect box locked
+   by the parent). Add .is-loaded when the image finishes decoding. */
+.motion-img {
+  opacity: 0;
+  transition: opacity var(--motion-card) var(--ease-premium);
+}
+.motion-img.is-loaded,
+.motion-img[data-loaded="true"] {
+  opacity: 1;
+}
+
+/* Fade-in-up entrance for cards, results, page content (8–12px translate). */
+.motion-in {
+  animation: motion-in var(--motion-page) var(--ease-premium) both;
+}
+@keyframes motion-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced-motion: honor user preference — no movement, no fades that delay
+   content. Instant, stable, still fully usable. */
+@media (prefers-reduced-motion: reduce) {
+  .motion-press,
+  .motion-card,
+  .motion-img,
+  .motion-in {
+    transition: none !important;
+    animation: none !important;
+  }
+  .motion-press:active,
+  .motion-card:hover {
+    transform: none !important;
+  }
+  .motion-img { opacity: 1 !important; }
+}
+
+/* Low-end devices: drop compositor hints and hover lifts to protect FPS,
+   consistent with the existing low-end safe-mode strategy. */
+html[data-low-end="true"] .motion-press,
+html[data-low-end="true"] .motion-card,
+html[data-low-end="true"] .motion-img,
+html[data-low-end="true"] .motion-in {
+  will-change: auto !important;
+}
+html[data-low-end="true"] .motion-card:hover {
+  transform: none !important;
 }
