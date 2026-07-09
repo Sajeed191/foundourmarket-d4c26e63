@@ -464,6 +464,51 @@ function CartPage() {
   );
 }
 
+/**
+ * Premium checkout CTA matching the Product page Buy Now feel — hover brighten,
+ * press scale, a brief loading spinner and a success check before navigating.
+ * GPU transform/opacity only; no layout shift (fixed height, content swapped).
+ */
+function CheckoutButton({ disabled, label, compact }: { disabled?: boolean; label: string; compact?: boolean }) {
+  const navigate = useNavigate();
+  const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
+
+  function go() {
+    if (disabled || phase !== "idle") return;
+    setPhase("loading");
+    window.setTimeout(() => {
+      setPhase("done");
+      window.setTimeout(() => navigate({ to: "/checkout" }), 320);
+    }, 420);
+  }
+
+  return (
+    <button
+      onClick={go}
+      disabled={disabled}
+      aria-label={label}
+      className={`group relative w-full overflow-hidden bg-accent text-accent-foreground font-bold rounded-full uppercase tracking-widest transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none shadow-[0_0_20px_hsl(var(--accent)/0.4)] ${compact ? "min-h-[46px] text-[11px] px-4" : "min-h-[52px] text-xs px-5"} inline-flex items-center justify-center gap-2 will-change-transform`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        {phase === "loading" ? (
+          <motion.span key="loading" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }} className="inline-flex items-center gap-2">
+            <Loader2 className="size-4 animate-spin" />
+          </motion.span>
+        ) : phase === "done" ? (
+          <motion.span key="done" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2">
+            <Check className="size-4" strokeWidth={3} />
+          </motion.span>
+        ) : (
+          <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="inline-flex items-center gap-2 whitespace-nowrap">
+            <Lock className="size-3.5" /> {label}
+            <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+}
+
 function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="flex justify-between">
