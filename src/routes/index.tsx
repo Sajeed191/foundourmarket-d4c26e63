@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
+import { ProductRail } from "@/components/site/ProductRail";
 // TEMPORARY EXPERIMENT (Trending section only): reuse Browse's grid so cards
 // mount incrementally in batches of 16 via IncrementalGrid instead of all at
 // once. Remove this import when reverting the experiment.
