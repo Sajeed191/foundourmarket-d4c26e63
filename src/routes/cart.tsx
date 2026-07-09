@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, Share2, Star,
+  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, Share2, Star, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
