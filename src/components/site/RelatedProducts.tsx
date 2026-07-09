@@ -50,8 +50,7 @@ export function RelatedProducts({
 
   if (loading || items.length === 0) return null;
 
-  const visible = showAll ? items : items.slice(0, initial);
-  const hasMore = items.length > initial;
+  const visible = items;
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
