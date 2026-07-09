@@ -370,7 +370,7 @@ function CartPage() {
 
 
 
-            <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
+            <div ref={summaryRef} className="bg-card border border-border rounded-2xl p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-5">Order Summary</h2>
 
               {/* Total savings highlight */}
