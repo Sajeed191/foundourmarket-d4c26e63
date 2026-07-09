@@ -190,20 +190,9 @@ function CartPage() {
       </div>
 
 
-      {/* Undo remove banner */}
-      <AnimatePresence>
-        {lastRemoved && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3"
-          >
-            <span className="text-sm text-muted-foreground">Item removed from cart.</span>
-            <button onClick={() => undoRemove()} className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold text-accent hover:brightness-110">
-              <Undo2 className="size-3.5" /> Undo
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Premium auto-dismiss undo toast */}
+      <UndoToast lastRemoved={lastRemoved} onUndo={undoRemove} />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
         <div className="lg:col-span-2 space-y-3">
