@@ -28,7 +28,7 @@ export function RelatedProducts({
   initial = 4,
 }: Props) {
   const { products, loading } = useProducts();
-  const [showAll, setShowAll] = useState(false);
+  
 
   const items = useMemo(() => {
     const exclude = new Set<string>(excludeSlugs);
