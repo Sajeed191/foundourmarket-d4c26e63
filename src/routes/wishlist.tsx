@@ -423,7 +423,7 @@ function WishlistPage() {
   );
 }
 
-/** Recently Viewed — shared ProductCard, excludes wishlist items, max 10. */
+/** Recently Viewed — shared ProductCard, excludes wishlist items, max 15. */
 function RecentlyViewedSection({ excludeSlugs }: { excludeSlugs: Set<string> }) {
   const { products } = useProducts();
   const { slugs } = useRecentlyViewed();
@@ -433,29 +433,35 @@ function RecentlyViewedSection({ excludeSlugs }: { excludeSlugs: Set<string> }) 
       .filter((s) => !excludeSlugs.has(s))
       .map((s) => map.get(s))
       .filter(Boolean)
-      .slice(0, 10) as Product[];
+      .slice(0, 15) as Product[];
   }, [products, slugs, excludeSlugs]);
 
   return (
     <ProductSection
       eyebrow="Continue browsing"
       title="Recently Viewed"
+      subtitle="Pick up where you left off"
       icon={<History className="size-3" />}
       products={list}
+      viewAllTo="/search"
+      carousel
     />
   );
 }
 
-/** Recommended For You — engine already excludes saved / cart / purchased, max 10. */
+/** Recommended For You — engine already excludes saved / cart / purchased, max 15. */
 function RecommendedSection() {
-  const { products } = useRecommendations({ limit: 10 });
+  const { products } = useRecommendations({ limit: 15 });
   return (
     <ProductSection
       eyebrow="Picked for you"
       title="Recommended For You"
+      subtitle="Curated from your saved items"
       icon={<Sparkles className="size-3" />}
       products={products}
       viewAllTo="/search"
+      carousel
     />
+
   );
 }
