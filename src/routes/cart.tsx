@@ -389,13 +389,9 @@ function CartPage() {
                 </div>
               </dl>
 
-              <Link
-                to="/checkout"
-                className={`group w-full mt-5 bg-accent text-accent-foreground font-bold py-3.5 rounded-full text-xs uppercase tracking-widest hover:brightness-110 transition-all inline-flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(var(--accent)/0.35)] ${count === 0 ? "pointer-events-none opacity-50" : ""}`}
-              >
-                <Lock className="size-3.5" /> Secure Checkout
-                <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              <div className="mt-5">
+                <CheckoutButton disabled={count === 0} label="Secure Checkout" />
+              </div>
 
               {/* Razorpay trust badge */}
               <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
