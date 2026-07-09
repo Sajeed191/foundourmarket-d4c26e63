@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
@@ -385,7 +385,7 @@ function CartPage() {
                 )}
                 <div className="border-t border-border pt-3 flex justify-between items-baseline text-base">
                   <dt className="font-medium">Total</dt>
-                  <motion.dd key={total} initial={{ scale: 1.08 }} animate={{ scale: 1 }} className="fom-price-current font-mono text-lg">{format(total)}</motion.dd>
+                  <AnimatedAmount value={total} format={format} className="fom-price-current font-mono text-lg" />
                 </div>
               </dl>
 
@@ -422,9 +422,10 @@ function CartPage() {
       </div>
 
 
-      {/* Sticky mobile checkout dock — one shared visibility state, GPU
-          transform + opacity only. Slides flush to the screen bottom when the
-          Bottom Navigation hides and returns smoothly when it reappears. */}
+      {/* Sticky mobile checkout bar — premium glass-dark floating dock. One
+          shared visibility state, GPU transform + opacity only (no
+          backdrop-filter / heavy blur). Slides flush to the screen bottom when
+          the Bottom Navigation hides and returns smoothly when it reappears. */}
       {count > 0 && (
         <div
           className="lg:hidden fixed inset-x-0 z-[var(--z-floating-controls)] px-3 pointer-events-none will-change-transform"
@@ -434,28 +435,47 @@ function CartPage() {
             transition: "transform 220ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
-          <div
-            className="pointer-events-auto rounded-2xl px-4 py-2.5 flex items-center gap-3 border border-white/10 shadow-[0_24px_60px_-18px_oklch(0_0_0/0.9),0_0_28px_-14px_hsl(var(--accent)/0.45)]"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            className="pointer-events-auto relative overflow-hidden rounded-[22px] px-4 py-3 flex items-center gap-3.5 border border-white/[0.08]"
             style={{
-              background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))",
-              backdropFilter: "blur(32px) saturate(160%)",
-              WebkitBackdropFilter: "blur(32px) saturate(160%)",
+              background: "linear-gradient(150deg, oklch(0.23 0.018 60 / 0.97), oklch(0.15 0.008 40 / 0.98))",
+              boxShadow: "0 18px 44px -22px oklch(0 0 0 / 0.85), inset 0 1px 0 oklch(1 0 0 / 0.05), 0 0 34px -20px hsl(var(--accent) / 0.55)",
             }}
           >
-            <div className="flex-1 min-w-0 leading-none">
-              <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/80 inline-flex items-center gap-1">
-                <Lock className="size-2.5 text-accent" /> Total · {count} {count === 1 ? "item" : "items"}
+            {/* Subtle static orange ambient glow — no blur filter. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -top-10 -left-8 h-28 w-28 rounded-full opacity-40"
+              style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.4), transparent)" }}
+            />
+
+            <div className="flex-1 min-w-0 leading-none relative">
+              <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground/80 inline-flex items-center gap-1.5">
+                <ShoppingBag className="size-3 text-accent" /> Ready to Checkout · {count} {count === 1 ? "item" : "items"}
               </p>
-              <motion.p key={total} initial={{ scale: 1.06 }} animate={{ scale: 1 }} className="fom-price-current font-mono text-[16px] leading-tight truncate mt-0.5">{format(total)}</motion.p>
-              {totalSavings > 0 && (
-                <p className="text-[9px] font-semibold text-accent leading-none mt-0.5">You save {format(totalSavings)}</p>
-              )}
-              <p className="text-[8px] uppercase tracking-widest text-muted-foreground/70 mt-1">Secure Payment · Fast Delivery · Easy Returns</p>
+              <div className="flex items-baseline gap-2 mt-1.5">
+                <AnimatedAmount value={total} format={format} className="fom-price-current font-mono text-[19px] leading-none tracking-tight" />
+                {totalSavings > 0 && <SavingsPill value={totalSavings} format={format} />}
+              </div>
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                {shipping === 0 && <StatusChip icon={Truck} tone="accent">Free shipping</StatusChip>}
+                {discount > 0 && <StatusChip icon={Sparkles} tone="accent">Coupon applied</StatusChip>}
+                {ship?.etaIso && (
+                  <StatusChip icon={Clock}>
+                    {new Date(ship.etaIso).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </StatusChip>
+                )}
+              </div>
+              <p className="text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-1.5">Secure Payment · Fast Delivery · Easy Returns</p>
             </div>
-            <div className="shrink-0 w-[42%] max-w-[168px]">
+
+            <div className="shrink-0 w-[42%] max-w-[172px]">
               <CheckoutButton disabled={count === 0} label="Checkout" compact />
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -464,50 +484,180 @@ function CartPage() {
   );
 }
 
+/** Fire a short haptic pulse on supported devices (no-op elsewhere). */
+function haptic(ms = 12) {
+  try {
+    navigator.vibrate?.(ms);
+  } catch {
+    /* unsupported */
+  }
+}
+
+/**
+ * Smoothly count a currency value up/down when it changes (rAF-interpolated,
+ * eased). Respects reduced-motion by snapping. GPU-free, no layout shift.
+ */
+function AnimatedAmount({
+  value, format, className,
+}: {
+  value: number;
+  format: (n: number) => string;
+  className?: string;
+}) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = value;
+    if (from === to) return;
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      fromRef.current = to;
+      setDisplay(to);
+      return;
+    }
+    const start = performance.now();
+    const dur = 420;
+    cancelAnimationFrame(rafRef.current);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(from + (to - from) * eased);
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+      else fromRef.current = to;
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [value]);
+
+  return <span className={className}>{format(display)}</span>;
+}
+
+/** Green savings pill that softly pulses whenever the saved amount increases. */
+function SavingsPill({ value, format }: { value: number; format: (n: number) => string }) {
+  const controls = useAnimationControls();
+  const prev = useRef(value);
+  useEffect(() => {
+    if (value > prev.current) {
+      controls.start({ scale: [1, 1.14, 1], transition: { duration: 0.4, ease: "easeOut" } });
+    }
+    prev.current = value;
+  }, [value, controls]);
+  return (
+    <motion.span
+      animate={controls}
+      className="inline-flex items-center rounded-full bg-emerald-500/12 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 will-change-transform"
+    >
+      You save {format(value)}
+    </motion.span>
+  );
+}
+
+/** Compact status chip for shipping / coupon / delivery ETA. */
+function StatusChip({
+  icon: Icon, children, tone,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  tone?: "accent";
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide ${
+        tone === "accent"
+          ? "bg-accent/12 text-accent"
+          : "bg-white/[0.05] text-muted-foreground"
+      }`}
+    >
+      <Icon className="size-2.5" /> {children}
+    </span>
+  );
+}
+
 /**
  * Premium checkout CTA matching the Product page Buy Now feel — hover brighten,
- * press scale, a brief loading spinner and a success check before navigating.
- * GPU transform/opacity only; no layout shift (fixed height, content swapped).
+ * press scale, tap ripple, haptics, a brief loading spinner and a success check
+ * before navigating. GPU transform/opacity only; no layout shift (fixed height,
+ * content swapped). First appearance emits a one-shot glow.
  */
 function CheckoutButton({ disabled, label, compact }: { disabled?: boolean; label: string; compact?: boolean }) {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+
+  function spawnRipple(e: React.PointerEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const id = Date.now() + Math.random();
+    setRipples((r) => [...r, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+    window.setTimeout(() => setRipples((r) => r.filter((x) => x.id !== id)), 620);
+  }
 
   function go() {
     if (disabled || phase !== "idle") return;
+    haptic(14);
     setPhase("loading");
     window.setTimeout(() => {
       setPhase("done");
+      haptic(20);
       window.setTimeout(() => navigate({ to: "/checkout" }), 320);
     }, 420);
   }
 
   return (
     <button
+      onPointerDown={spawnRipple}
       onClick={go}
       disabled={disabled}
       aria-label={label}
-      className={`group relative w-full overflow-hidden bg-accent text-accent-foreground font-bold rounded-full uppercase tracking-widest transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none shadow-[0_0_20px_hsl(var(--accent)/0.4)] ${compact ? "min-h-[46px] text-[11px] px-4" : "min-h-[52px] text-xs px-5"} inline-flex items-center justify-center gap-2 will-change-transform`}
+      className={`group relative w-full overflow-hidden bg-accent text-accent-foreground font-bold rounded-full uppercase tracking-widest transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none shadow-[0_0_20px_hsl(var(--accent)/0.4)] ${compact ? "min-h-[48px] text-[11px] px-4" : "min-h-[54px] text-xs px-5"} inline-flex items-center justify-center gap-2 will-change-transform`}
     >
+      {/* One-shot appearance glow ring. */}
+      <motion.span
+        aria-hidden
+        initial={{ opacity: 0.6, scale: 0.9 }}
+        animate={{ opacity: 0, scale: 1.15 }}
+        transition={{ duration: 1.1, ease: "easeOut" }}
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{ boxShadow: "0 0 26px 4px hsl(var(--accent) / 0.55)" }}
+      />
+
+      {/* Tap ripples. */}
+      {ripples.map((r) => (
+        <motion.span
+          key={r.id}
+          aria-hidden
+          initial={{ opacity: 0.45, scale: 0 }}
+          animate={{ opacity: 0, scale: 4 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="pointer-events-none absolute rounded-full bg-white/40"
+          style={{ left: r.x - 40, top: r.y - 40, width: 80, height: 80 }}
+        />
+      ))}
+
       <AnimatePresence mode="wait" initial={false}>
         {phase === "loading" ? (
-          <motion.span key="loading" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }} className="inline-flex items-center gap-2">
+          <motion.span key="loading" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }} className="relative inline-flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
           </motion.span>
         ) : phase === "done" ? (
-          <motion.span key="done" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2">
+          <motion.span key="done" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className="relative inline-flex items-center gap-2">
             <Check className="size-4" strokeWidth={3} />
           </motion.span>
         ) : (
-          <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="inline-flex items-center gap-2 whitespace-nowrap">
+          <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative inline-flex items-center gap-2 whitespace-nowrap">
             <Lock className="size-3.5" /> {label}
-            <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
           </motion.span>
         )}
       </AnimatePresence>
     </button>
   );
 }
+
 
 function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
