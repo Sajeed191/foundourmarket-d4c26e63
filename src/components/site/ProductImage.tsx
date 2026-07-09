@@ -193,6 +193,22 @@ function ProductImageImpl({
     };
   }, [resolvedSrc]);
 
+  // Cached-image reveal fix (root cause of persistent blank cards):
+  // When an image is served from the browser/memory cache, the native `load`
+  // event can fire BEFORE React attaches `onLoad` — so `handleLoad` never runs
+  // and consumers that gate their reveal on `onLoad` (e.g. AdaptiveProductMedia
+  // fades from opacity 0) stay blank forever despite a valid, decoded bitmap.
+  // On mount and whenever the source changes, if the element is already
+  // complete we invoke the same reveal path synchronously. Guarded by
+  // `activeSrcRef` so a stale async decode can't reveal the wrong product.
+  useEffect(() => {
+    if (failed) return;
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      handleLoad();
+    }
+  }, [displaySrc, failed, handleLoad]);
+
   useEffect(() => clearStall, [clearStall]);
 
   if (failed) {
