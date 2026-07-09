@@ -649,7 +649,7 @@ function SavingsPill({ value, format }: { value: number; format: (n: number) => 
       animate={controls}
       className="inline-flex items-center rounded-full bg-emerald-500/12 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 will-change-transform"
     >
-      You save {format(value)}
+      Save {format(value)}
     </motion.span>
   );
 }
