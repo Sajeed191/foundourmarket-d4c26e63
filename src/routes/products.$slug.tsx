@@ -864,31 +864,13 @@ function ProductPage() {
             )}
 
             {/* Premium purchase panel — unique FoundOurMarket design.
-                Compact glass card: wishlist/share on top, CTA row below (Add to
-                Cart morphs into a quantity selector after a successful add),
-                trust strip at the base. GPU-friendly (no backdrop blur). */}
+                Compact glass card: two-button CTA row (Add to Cart morphs into a
+                quantity selector after a successful add) + trust strip at the
+                base. GPU-friendly (no backdrop blur). */}
             <div ref={inlinePurchaseRef} className="mb-4 rounded-[20px] border border-white/10 bg-card/60 p-3 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.6)] sm:p-3.5">
-              {/* Row 1 — wishlist + share */}
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  onClick={() => toggleWishlist(product.slug)}
-                  aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
-                  aria-pressed={inWishlist(product.slug)}
-                  className={`grid size-11 place-items-center rounded-2xl border transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${inWishlist(product.slug) ? "border-accent/50 bg-accent/15 text-accent" : "border-white/10 bg-white/[0.03] text-foreground/70 hover:text-accent hover:border-accent/40"}`}
-                >
-                  <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
-                </button>
-                <button
-                  onClick={handleShare}
-                  aria-label="Share this product"
-                  className="grid size-11 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-foreground/70 transition-all hover:text-accent hover:border-accent/40 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <Share2 className="size-[18px]" />
-                </button>
-              </div>
+              {/* CTA row — Add to Cart (morphs into quantity selector) + Buy Now */}
+              <div className="grid grid-cols-2 gap-2.5">
 
-              {/* Row 2 — Add to Cart (morphs into quantity selector) + Buy Now */}
-              <div className="mt-3 grid grid-cols-2 gap-2.5">
                 {showQtySelector ? (
                   <div
                     key="qty"
