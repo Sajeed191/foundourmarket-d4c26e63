@@ -329,6 +329,12 @@
 }
 .animate-glow-breathe { animation: glow-breathe 6s ease-in-out infinite; }
 
+@keyframes icon-tilt {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(4deg); }
+}
+
+
 /* Slow drift for the secondary blurred showcase products */
 @keyframes float-slow {
   0%, 100% { transform: translateY(0); }
