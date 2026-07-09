@@ -74,18 +74,8 @@ export function RelatedProducts({
           </div>
         ))}
       </div>
-
-      {hasMore && !showAll && (
-        <div className="mt-5 grid place-items-center">
-          <button
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/[0.08] px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-accent transition-all hover:border-accent/50 hover:bg-accent/[0.12]"
-          >
-            View all related products ({items.length}) <ChevronDown className="size-3.5" />
-          </button>
-        </div>
-      )}
     </section>
+
   );
 }
 
