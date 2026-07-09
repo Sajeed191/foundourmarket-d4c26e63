@@ -208,13 +208,13 @@ export function ImageLightbox({
       // Rubber-band at the ends.
       if ((index === 0 && dx > 0) || (index === count - 1 && dx < 0)) resist = dx * 0.35;
       applyTrack(resist, false, index);
-    } else if (axis.current === "y" && dy > 0) {
+    } else if (axis.current === "y") {
       swipeClosing.current = true;
       const c = containerRef.current;
       if (c) {
         c.style.transition = "none";
         c.style.transform = `translate3d(0, ${dy}px, 0)`;
-        const bg = Math.max(0, 1 - dy / 500);
+        const bg = Math.max(0, 1 - Math.abs(dy) / 500);
         c.style.setProperty("--lb-bg", String(bg));
       }
     }
