@@ -102,12 +102,26 @@ function CartPage() {
   useEffect(() => {
     const el = summaryRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
+    // Debounce rapid intersection changes (100ms) so fast scrolling can never
+    // flip both checkout UIs on/off in quick succession (no flicker / race).
+    let raf = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(
-      ([entry]) => setSummaryVisible(entry.isIntersecting),
+      ([entry]) => {
+        const next = entry.isIntersecting;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          raf = requestAnimationFrame(() => setSummaryVisible(next));
+        }, 100);
+      },
       { threshold: 0 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      if (timer) clearTimeout(timer);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   // Pull the latest admin pricing/shipping when the cart opens.
