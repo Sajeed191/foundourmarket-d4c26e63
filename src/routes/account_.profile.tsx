@@ -335,7 +335,7 @@ function EditProfilePage() {
             transition={{ delay: 0.05, duration: 0.5 }}
             className="border-glow glass-strong rounded-3xl p-5 sm:p-6 mb-6 relative overflow-hidden"
           >
-            <div aria-hidden className="absolute -top-16 left-8 size-40 rounded-full blur-3xl opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
+            
             <div className="relative flex items-center gap-4 sm:gap-5">
               {/* Avatar with glow + online indicator */}
               <div className="relative shrink-0">
