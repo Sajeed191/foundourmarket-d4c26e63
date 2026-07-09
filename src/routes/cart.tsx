@@ -451,43 +451,33 @@ function CartPage() {
               }}
             >
               <div
-                className="pointer-events-auto relative overflow-hidden rounded-[22px] px-4 py-3 flex items-center gap-3.5 border border-white/[0.08]"
+                className="pointer-events-auto relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-4 border border-white/[0.08]"
                 style={{
                   background: "linear-gradient(150deg, oklch(0.23 0.018 60 / 0.97), oklch(0.15 0.008 40 / 0.98))",
-                  boxShadow: "0 18px 44px -22px oklch(0 0 0 / 0.85), inset 0 1px 0 oklch(1 0 0 / 0.05), 0 0 34px -20px hsl(var(--accent) / 0.55)",
+                  boxShadow: "0 14px 36px -22px oklch(0 0 0 / 0.7), inset 0 1px 0 oklch(1 0 0 / 0.05), 0 0 30px -22px hsl(var(--accent) / 0.5)",
                 }}
               >
-                {/* Subtle static orange ambient glow — no blur filter. */}
+                {/* Very soft orange ambient glow — no blur filter. */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -top-10 -left-8 h-28 w-28 rounded-full opacity-40"
-                  style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.4), transparent)" }}
+                  className="pointer-events-none absolute -top-10 -left-8 h-28 w-28 rounded-full opacity-30"
+                  style={{ background: "radial-gradient(closest-side, hsl(var(--accent) / 0.35), transparent)" }}
                 />
 
                 <div className="flex-1 min-w-0 leading-none relative">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground/80 inline-flex items-center gap-1.5">
-                    <ShoppingBag className="size-3 text-accent" /> Ready to Checkout · {count} {count === 1 ? "item" : "items"}
-                  </p>
-                  <div className="flex items-baseline gap-2 mt-1.5">
-                    <AnimatedAmount value={total} format={format} className="fom-price-current font-mono text-[19px] leading-none tracking-tight" />
+                  <AnimatedAmount value={total} format={format} className="fom-price-current font-mono text-[24px] leading-none tracking-tight" />
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {shipping === 0 && <StatusChip icon={Truck} tone="accent">Free shipping</StatusChip>}
                     {totalSavings > 0 && <SavingsPill value={totalSavings} format={format} />}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    {shipping === 0 && <StatusChip icon={Truck} tone="accent">Free shipping</StatusChip>}
-                    {discount > 0 && <StatusChip icon={Sparkles} tone="accent">Coupon applied</StatusChip>}
-                    {ship?.etaIso && (
-                      <StatusChip icon={Clock}>
-                        {new Date(ship.etaIso).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      </StatusChip>
-                    )}
-                  </div>
-                  <p className="text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-1.5">Secure Payment · Fast Delivery · Easy Returns</p>
+                  <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-2">Secure Payment · Easy Returns</p>
                 </div>
 
-                <div className="shrink-0 w-[42%] max-w-[172px]">
+                <div className="shrink-0 w-[44%] max-w-[172px]">
                   <CheckoutButton disabled={count === 0} label="Checkout" compact />
                 </div>
               </div>
+
             </div>
           </motion.div>
         )}
