@@ -1,59 +1,17 @@
-import { useMemo, useRef } from "react";
-import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Plus, Check, Sparkles, Heart, History } from "lucide-react";
+import { useMemo } from "react";
+import { Sparkles, Heart, History } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
-import { Price } from "@/components/site/Price";
-import { useCart } from "@/lib/cart";
+import { ProductCard } from "@/components/site/ProductCard";
+import { ProductRail } from "@/components/site/ProductRail";
 import type { Product } from "@/lib/products";
 
-/** Minimal product card used inside the wishlist recommendation rails. */
-function MiniCard({ product }: { product: Product }) {
-  const { priceOf } = useRegion();
-  const { add, items } = useCart();
-  const inCart = items.some((i) => i.slug === product.slug);
-
-  return (
-    <div data-product-card data-android-static-card className="group card-premium product-card-shell overflow-hidden p-2 flex flex-col">
-      <Link to="/products/$slug" params={{ slug: product.slug }} className="block">
-        <div data-product-media className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
-          <img
-            data-product-image
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-            decoding="sync"
-            className="w-full h-full object-cover transition-[opacity] duration-500"
-          />
-          {!product.inStock && (
-            <span className="product-typography absolute top-1.5 left-1.5 rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
-              Sold out
-            </span>
-          )}
-        </div>
-        <h4 data-product-text className="product-typography product-title-text text-[11px] font-medium line-clamp-1 group-hover:text-accent transition-colors">
-          {product.name}
-        </h4>
-      </Link>
-      <div className="mt-1.5 flex items-center justify-between gap-1.5">
-        <Price value={priceOf(product)} className="font-display font-semibold text-xs tabular-nums leading-none" />
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            if (product.inStock) add(product.slug);
-          }}
-          disabled={!product.inStock}
-          aria-label={`Add ${product.name} to cart`}
-          className="shrink-0 grid place-items-center size-7 rounded-full bg-accent text-accent-foreground transition-colors hover:brightness-110 shadow-[var(--shadow-ember)] disabled:opacity-40"
-        >
-          {inCart ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
-        </button>
-      </div>
-    </div>
-  );
-}
-
+/**
+ * A single recommendation rail — reuses the shared premium ProductCard used
+ * everywhere on the site. Mobile shows the shared snap ProductRail; sm+ shows
+ * the shared responsive product grid. No bespoke card design remains.
+ */
 function Rail({
   eyebrow,
   title,
@@ -65,57 +23,22 @@ function Rail({
   icon: React.ReactNode;
   products: Product[];
 }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-
-  function scroll(dir: -1 | 1) {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollBy({ left: el.clientWidth * 0.85 * dir, behavior: "smooth" });
-  }
-
   if (products.length === 0) return null;
 
   return (
-    <section className="mt-8">
-      <div className="flex items-end justify-between gap-4 mb-4">
+    <section className="mt-8 motion-safe:animate-fade-in">
+      <div className="flex items-end justify-between gap-4 mb-4 sm:mb-5 px-1">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1.5">
-            {icon}
-            <span>{eyebrow}</span>
-          </div>
-          <h2 className="text-lg sm:text-2xl font-display tracking-tight">{title}</h2>
-        </div>
-        <div className="hidden sm:flex items-center gap-2">
-          <button
-            onClick={() => scroll(-1)}
-            aria-label="Scroll left"
-            className="grid size-9 place-items-center rounded-full border border-border hover:border-accent/40 hover:text-accent transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            onClick={() => scroll(1)}
-            aria-label="Scroll right"
-            className="grid size-9 place-items-center rounded-full border border-border hover:border-accent/40 hover:text-accent transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-2 flex items-center gap-1.5">
+            {icon} {eyebrow}
+          </p>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-display font-semibold tracking-tight">{title}</h2>
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="flex gap-2.5 sm:gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 sm:mx-0 px-4 sm:px-0 pb-2 scroll-smooth"
-        style={{ scrollbarWidth: "none", scrollPaddingLeft: "1rem" }}
-      >
-        {products.map((p) => (
-          <div
-            key={p.id ?? p.slug}
-            className="snap-start shrink-0 w-[38%] xs:w-[34%] sm:w-[24%] md:w-[18%] lg:w-[15%] last:mr-4 sm:last:mr-0"
-          >
-            <MiniCard product={p} />
-          </div>
-        ))}
+      <ProductRail products={products} compact />
+      <div data-product-grid className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+        {products.map((p) => <ProductCard key={p.id ?? p.slug} product={p} compact />)}
       </div>
     </section>
   );
