@@ -4,7 +4,7 @@ import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useWishlist } from "@/lib/wishlist";
 import { useCart } from "@/lib/cart";
-import { discountPercent, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
 
 /**
  * Premium recommendation engine — deterministic, behaviour-driven, and stable.
