@@ -451,7 +451,6 @@ function ProductPage() {
     if (addState !== "idle") return;
     // Existing add-to-cart logic — unchanged (adds a single unit).
     add(product.slug, 1);
-    toast.success(`${product.name} added to cart`);
     // Visual progression: Adding… → ✓ Added (held ~1s) → quantity selector.
     setAddState("loading");
     addTimers.current.push(
