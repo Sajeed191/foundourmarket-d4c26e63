@@ -77,18 +77,24 @@ export function useProducts() {
 }
 
 export function useProduct(slug: string) {
-  const [product, setProduct] = useState<Product | null>(
-    cache?.find((p) => p.slug === slug) ?? null
-  );
-  const [loading, setLoading] = useState(!product);
+  // Only a FULL cached record (not a lean list entry) can seed the initial
+  // state — lean entries omit detail-only fields (features, specifications,
+  // attributes, SEO, related products, etc.), so they must be upgraded via a
+  // full fetch before the detail page renders those sections.
+  const cachedFull = cache?.find((p) => p.slug === slug && !p.__lean) ?? null;
+  const [product, setProduct] = useState<Product | null>(cachedFull);
+  const [loading, setLoading] = useState(!cachedFull);
   useEffect(() => {
     let active = true;
-    if (cache) {
-      const found = cache.find((p) => p.slug === slug) ?? null;
-      setProduct(found);
+    const full = cache?.find((p) => p.slug === slug && !p.__lean) ?? null;
+    if (full) {
+      setProduct(full);
       setLoading(false);
-      if (found) return;
+      return;
     }
+    // No full record cached (either missing or only a lean list entry) — fetch
+    // the complete product so detail-only fields are present.
+    setLoading(true);
     fetchProduct(slug).then((p) => { if (active) { setProduct(p); setLoading(false); } });
     return () => { active = false; };
   }, [slug]);
