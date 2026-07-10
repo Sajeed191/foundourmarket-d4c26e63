@@ -6402,6 +6402,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_product_published: { Args: { _slug: string }; Returns: boolean }
       is_security_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_security_staff: { Args: { _user_id?: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
@@ -6736,6 +6737,10 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
       soft_delete_own_question: { Args: { p_id: string }; Returns: undefined }
       soft_delete_own_review: { Args: { p_id: string }; Returns: undefined }
+      storage_object_is_published_product_image: {
+        Args: { _object_name: string }
+        Returns: boolean
+      }
       submit_review: {
         Args: {
           p_body?: string
