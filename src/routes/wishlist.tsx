@@ -217,7 +217,12 @@ function WishlistPage() {
     if (!loading && !user) nav({ to: "/auth" });
   }, [loading, user, nav]);
 
-  const items = useMemo(() => products.filter((p) => slugs.has(p.slug)), [products, slugs]);
+  // Only active/visible saved products — deleted or admin-deactivated items
+  // drop out automatically, so ghost products, counts and stats stay accurate.
+  const items = useMemo(
+    () => products.filter((p) => slugs.has(p.slug) && isProductVisible(p, market)),
+    [products, slugs, market],
+  );
 
   // Price-drop detection against a per-currency snapshot.
   useEffect(() => {
