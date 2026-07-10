@@ -300,7 +300,7 @@ function ContinueShoppingPage() {
       if (q && !(e.product.name.toLowerCase().includes(q) || (e.product.tagline ?? "").toLowerCase().includes(q))) return false;
       if (filter === "week") return e.at != null && Date.now() - e.at <= 7 * DAY;
       if (filter === "stock") return e.product.inStock;
-      if (filter === "drop") return e.priceDrop;
+      if (filter === "drop") return e.priceChange === "drop";
       return true; // recent
     });
   }, [ordered, query, filter]);
