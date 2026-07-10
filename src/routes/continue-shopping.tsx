@@ -198,7 +198,39 @@ function ContinueShoppingPage() {
   const { items: cartItems } = useCart();
   const { slugs: wishSlugs } = useWishlist();
   const { slugs: compareSlugs } = useCompare();
-  const { slugs: recentSlugs, entries: recentEntries } = useRecentlyViewed();
+  const { slugs: recentSlugs, entries: recentEntries, remove, clear, clearSince, restore } = useRecentlyViewed();
+
+  // Confirmation dialog for the destructive "Clear all history" action.
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  // Undo helper: show a toast with an action that restores the removed entries.
+  const offerUndo = (removed: RecentlyViewedEntry[], message: string) => {
+    if (removed.length === 0) return;
+    toast(message, {
+      duration: 6000,
+      action: { label: "Undo", onClick: () => void restore(removed) },
+    });
+  };
+
+  const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
+
+  const handleClearAll = async () => {
+    setConfirmClear(false);
+    const removed = await clear();
+    offerUndo(removed, `Cleared ${removed.length} ${removed.length === 1 ? "product" : "products"}`);
+  };
+  const handleClearToday = async () => {
+    const removed = await clearSince(startOfToday());
+    offerUndo(removed, `Cleared ${removed.length} viewed today`);
+  };
+  const handleClearWeek = async () => {
+    const removed = await clearSince(Date.now() - 7 * DAY);
+    offerUndo(removed, `Cleared ${removed.length} from the last 7 days`);
+  };
+  const handleRemoveOne = async (slug: string) => {
+    const removed = await remove(slug);
+    offerUndo(removed, "Removed from Continue Shopping");
+  };
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("recent");
