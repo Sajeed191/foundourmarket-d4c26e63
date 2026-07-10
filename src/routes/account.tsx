@@ -24,6 +24,7 @@ import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
+import { CarouselViewAllCard } from "@/components/site/CarouselViewAllCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
