@@ -13,6 +13,7 @@ import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
 import { buildVisibleMap } from "@/lib/product-availability";
 import { Price } from "@/components/site/Price";
+import { RailViewAllCard } from "@/components/site/RailViewAllCard";
 import type { Product } from "@/lib/products";
 
 export const Route = createFileRoute("/continue-shopping")({
