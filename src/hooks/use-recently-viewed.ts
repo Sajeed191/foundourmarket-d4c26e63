@@ -161,12 +161,7 @@ export function useRecentlyViewed() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "recommendation_events", filter: `user_id=eq.${accountUserId}` },
-        (payload) => {
-          const eventType =
-            ((payload.new as { event_type?: string } | null)?.event_type) ??
-            ((payload.old as { event_type?: string } | null)?.event_type);
-          if (eventType === "view") void load();
-        },
+        () => { void load(); },
       )
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
