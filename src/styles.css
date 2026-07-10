@@ -329,6 +329,11 @@
 }
 .animate-glow-breathe { animation: glow-breathe 6s ease-in-out infinite; }
 
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
 @keyframes icon-tilt {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(4deg); }
