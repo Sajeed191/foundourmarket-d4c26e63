@@ -205,8 +205,11 @@ function WishlistPage() {
   const { format, priceOf, compareOf, shippingFeeOf, currency, currencyReady } = useRegion();
   const nav = useNavigate();
 
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [sort, setSort] = useState<SortKey>("recently-added");
+  const { filter, sort, setFilter, setSort } = useFilterSort<FilterKey, SortKey>({
+    storageKey: "wishlist_filter_sort",
+    defaultFilter: "all",
+    defaultSort: "recently-added",
+  });
   const [query, setQuery] = useState("");
   const [drops, setDrops] = useState<Record<string, number>>({});
 
