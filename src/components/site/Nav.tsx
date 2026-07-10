@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
-import { useWishlist } from "@/lib/wishlist";
+import { useVisibleWishlistCount } from "@/lib/product-availability";
 import { useSearchUI } from "@/lib/search-ui";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { BrandName } from "@/components/site/BrandName";
