@@ -12,9 +12,10 @@ import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
 import { recordEvent } from "@/lib/personalization";
 import { buildVisibleMap } from "@/lib/product-availability";
+import { getViewedPrices, comparePrice, type PriceChange } from "@/lib/viewed-prices";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { discountPercent, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
 
 export const Route = createFileRoute("/continue-shopping")({
   head: () => ({
@@ -46,8 +47,13 @@ type Entry = {
   at: number | null;
   views: number;
   purchased: boolean;
-  priceDrop: boolean;
   compared: boolean;
+  inCart: boolean;
+  // Real price-change signal derived from the price the user actually saw.
+  priceChange: PriceChange;
+  savings: number;
+  pricePercent: number;
+  lowStock: boolean;
 };
 
 type FilterKey = "recent" | "week" | "stock" | "drop";
@@ -77,20 +83,51 @@ function relTime(ts: number | null): string {
   return `${weeks} weeks ago`;
 }
 
-/** One context label per product, by precedence. */
-function contextLabel(e: Entry): string {
-  if (e.priceDrop) return "Price changed";
-  if (e.compared) return "You compared this";
-  if (e.kind === "checkout") return "Checkout started";
-  if (e.kind === "cart") return "Added to cart before";
-  if (e.kind === "wishlist") return "Saved for later";
-  return `Viewed ${relTime(e.at)}`;
+/** Currency symbol for the active market. */
+function money(n: number, market: string): string {
+  const rounded = Math.round(n);
+  return market === "india" ? `₹${rounded.toLocaleString("en-IN")}` : `$${rounded.toLocaleString("en-US")}`;
+}
+
+type LabelTone = "drop" | "increase" | "neutral";
+
+/**
+ * Exactly ONE context label per product, chosen by strict priority:
+ * 1. Price Dropped  2. Price Increased  3. Back in Stock  4. Low Stock
+ * 5. In Cart  6. Recently Viewed / Viewed Today / Yesterday
+ *
+ * A price label is only ever produced when a real, stored viewed price differs
+ * from the current price — never globally.
+ */
+function contextLabel(e: Entry, market: string): { text: string; tone: LabelTone } {
+  if (e.priceChange === "drop") {
+    const extra = e.savings > 0 ? ` · Save ${money(e.savings, market)}` : e.pricePercent > 0 ? ` · ${e.pricePercent}% lower` : "";
+    return { text: `⬇ Price Dropped${extra}`, tone: "drop" };
+  }
+  if (e.priceChange === "increase") {
+    return { text: "⬆ Price Increased", tone: "increase" };
+  }
+  if (!e.product.inStock) {
+    return { text: "Currently Unavailable", tone: "neutral" };
+  }
+  if (e.lowStock) {
+    return { text: "Low Stock", tone: "neutral" };
+  }
+  if (e.inCart) return { text: "In Your Cart", tone: "neutral" };
+  if (e.kind === "wishlist") return { text: "Saved for Later", tone: "neutral" };
+  // Recency-based fallback.
+  if (e.at != null) {
+    const diff = Date.now() - e.at;
+    if (diff < DAY && new Date(e.at).getDate() === new Date().getDate()) return { text: "Viewed Today", tone: "neutral" };
+    if (diff < 2 * DAY) return { text: "Viewed Yesterday", tone: "neutral" };
+  }
+  return { text: `Viewed ${relTime(e.at)}`, tone: "neutral" };
 }
 
 function ContinueShoppingPage() {
   const { user, loading: authLoading } = useAuth();
   const { products, loading: productsLoading } = useProducts();
-  const { market, compareOf, priceOf } = useRegion();
+  const { market, priceOf } = useRegion();
   const { items: cartItems } = useCart();
   const { slugs: wishSlugs } = useWishlist();
   const { slugs: compareSlugs } = useCompare();
@@ -182,6 +219,9 @@ function ContinueShoppingPage() {
     const localViews = new Map<string, number>();
     for (const e of recentEntries) localViews.set(e.slug, e.at);
     const best = new Map<string, Entry>();
+    const cartSet = new Set(cartItems.map((i) => i.slug));
+    // Prices the user actually SAW — the only valid baseline for a price label.
+    const viewedPrices = getViewedPrices();
 
     const tsFor = (slug: string, kind: ActivityKind): number | null => {
       if (kind === "checkout") return checkoutAt.get(slug) ?? eventAt.get(slug) ?? null;
@@ -197,15 +237,23 @@ function ContinueShoppingPage() {
       if (at != null && Date.now() - at > EXPIRY_MS[kind]) return;
       const existing = best.get(slug);
       if (existing && PRIORITY[existing.kind] <= PRIORITY[kind]) return;
-      const compareVal = compareOf(product) ?? (product.discount ? priceOf(product) * (1 + product.discount / 100) : null);
+      // Real price change: compare the CURRENT selling price against the price
+      // the user actually saw for this exact product in this market.
+      const cmp = comparePrice(viewedPrices[slug], priceOf(product), market);
+      const lowStock =
+        product.inStock && product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5);
       best.set(slug, {
         product,
         kind,
         at,
         views: viewCounts.get(slug) ?? 0,
         purchased: purchasedSlugs.has(slug),
-        priceDrop: (discountPercent(priceOf(product), compareVal) ?? 0) > 0,
         compared: compareSet.has(slug),
+        inCart: cartSet.has(slug),
+        priceChange: cmp.change,
+        savings: cmp.savings,
+        pricePercent: cmp.percent,
+        lowStock,
       });
     };
 
@@ -214,7 +262,7 @@ function ContinueShoppingPage() {
     for (const slug of wishSlugs) consider(slug, "wishlist");
     for (const slug of recentSlugs) consider(slug, "viewed");
     return [...best.values()];
-  }, [products, market, checkoutAt, cartItems, wishSlugs, recentSlugs, recentEntries, eventAt, cartAt, viewedAt, viewCounts, purchasedSlugs, compareSet, compareOf, priceOf]);
+  }, [products, market, checkoutAt, cartItems, wishSlugs, recentSlugs, recentEntries, eventAt, cartAt, viewedAt, viewCounts, purchasedSlugs, compareSet, priceOf]);
 
   // Intelligent "Continue Shopping" score combining multiple signals so the
   // most relevant products always surface first. Purchased items are heavily
@@ -229,7 +277,7 @@ function ContinueShoppingPage() {
     else if (e.kind === "checkout") s += 500;
     s += Math.min(e.views, 10) * 40;                  // repeat visits
     if (e.kind === "wishlist") s += 200;              // saved for later
-    if (e.priceDrop) s += 350;                        // recent price drop
+    if (e.priceChange === "drop") s += 350;           // real price drop vs viewed price
     if (e.product.inStock) s += 120;                  // back / in stock
     // gentle recency tiebreaker (newer = slightly higher)
     if (e.at != null) s += Math.max(0, 100 - age / DAY);
@@ -252,7 +300,7 @@ function ContinueShoppingPage() {
       if (q && !(e.product.name.toLowerCase().includes(q) || (e.product.tagline ?? "").toLowerCase().includes(q))) return false;
       if (filter === "week") return e.at != null && Date.now() - e.at <= 7 * DAY;
       if (filter === "stock") return e.product.inStock;
-      if (filter === "drop") return e.priceDrop;
+      if (filter === "drop") return e.priceChange === "drop";
       return true; // recent
     });
   }, [ordered, query, filter]);
@@ -397,19 +445,28 @@ function ContinueShoppingPage() {
           ) : (
             <>
               <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-                {paged.map((e) => (
-                  <div
-                    key={e.product.id ?? e.product.slug}
-                    data-product-card-frame
-                    className="flex flex-col"
-                    onClickCapture={() => { void recordEvent({ type: "view", productSlug: e.product.slug }); }}
-                  >
-                    <ProductCard product={e.product} />
-                    <p className="mt-1.5 px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-                      {contextLabel(e)}
-                    </p>
-                  </div>
-                ))}
+                {paged.map((e) => {
+                  const label = contextLabel(e, market);
+                  const toneClass =
+                    label.tone === "drop"
+                      ? "text-emerald-400"
+                      : label.tone === "increase"
+                        ? "text-accent"
+                        : "text-muted-foreground";
+                  return (
+                    <div
+                      key={e.product.id ?? e.product.slug}
+                      data-product-card-frame
+                      className="flex flex-col"
+                      onClickCapture={() => { void recordEvent({ type: "view", productSlug: e.product.slug }); }}
+                    >
+                      <ProductCard product={e.product} />
+                      <p className={`mt-1.5 px-1 font-mono text-[10px] uppercase tracking-wider truncate ${toneClass}`}>
+                        {label.text}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Infinite scroll sentinel + skeleton */}

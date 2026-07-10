@@ -26,6 +26,7 @@ import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent
 import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
+import { recordViewedPrice } from "@/lib/viewed-prices";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { RecommendedForYou } from "@/components/site/RecommendedForYou";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
@@ -248,6 +249,7 @@ function ProductPage() {
   useEffect(() => {
     if (product) {
       record(product.slug);
+      recordViewedPrice(product.slug, priceOf(product), market);
       recordEvent({ type: "view", productSlug: product.slug, category: product.category });
       import("@/lib/visitor").then((m) => m.trackEvent("product_view", {
         productSlug: product.slug,
