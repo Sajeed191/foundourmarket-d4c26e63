@@ -545,7 +545,7 @@ function OverviewCard({
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.25, ease }}
       style={{ ["--tone-hover" as string]: t.hover }}
-      className="group h-full w-full min-h-[150px] sm:min-h-[164px] relative flex flex-col justify-between overflow-hidden rounded-[20px] p-5 card-premium transition-shadow duration-300 hover:shadow-[var(--tone-hover)]"
+      className="group h-full w-full min-h-[150px] sm:min-h-[164px] relative flex flex-col overflow-hidden rounded-[20px] p-5 card-premium transition-shadow duration-300 hover:shadow-[var(--tone-hover)]"
     >
       {/* Static tinted wash — cheap, no blur, survives low-end / degrade modes */}
       <div
@@ -559,10 +559,10 @@ function OverviewCard({
         <Icon className="size-5" strokeWidth={2} />
       </span>
       {/* Metric + label (bottom) — fixed content structure so every card aligns */}
-      <div className="relative mt-auto">
+      <div className="relative mt-auto pt-4">
         <div className="flex h-9 items-end overflow-hidden">
           {loading ? (
-            <div className="h-8 w-16 self-center rounded-md bg-foreground/5 animate-pulse" />
+            <div className="h-8 w-16 rounded-md bg-foreground/5 animate-pulse" />
           ) : (
             <AnimatedNumber
               value={value}
@@ -573,6 +573,7 @@ function OverviewCard({
         </div>
         <p className="h-4 text-[10px] font-mono font-bold uppercase tracking-widest leading-4 text-muted-foreground mt-1.5 truncate">{label}</p>
       </div>
+
     </motion.div>
   );
   return to ? <Link to={to} className="block h-full">{inner}</Link> : inner;
