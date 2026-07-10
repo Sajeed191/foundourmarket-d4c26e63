@@ -20,7 +20,7 @@ import { type Product, discountPercent } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { FilterSortBar, useFilterSort } from "@/components/site/FilterSortBar";
-import { isProductVisible } from "@/lib/product-availability";
+import { isProductVisible, useProductAvailability } from "@/lib/product-availability";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
