@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
+import { buildVisibleMap } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { discountPercent, type Product } from "@/lib/products";
@@ -72,7 +73,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 function RecentlyViewedPage() {
   const { products, loading } = useProducts();
   const { entries, clear, remove } = useRecentlyViewed();
-  const { priceOf, compareOf } = useRegion();
+  const { priceOf, compareOf, market } = useRegion();
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -80,14 +81,14 @@ function RecentlyViewedPage() {
 
   // Preserve view order + timestamps by joining entries with the catalog.
   const items = useMemo(() => {
-    const map = new Map(products.map((p) => [p.slug, p]));
+    const map = buildVisibleMap(products, market);
     return entries
       .map((e) => {
         const p = map.get(e.slug);
         return p ? { product: p, at: e.at } : null;
       })
       .filter(Boolean) as { product: Product; at: number }[];
-  }, [products, entries]);
+  }, [products, market, entries]);
 
   const discOf = (p: Product) => discountPercent(priceOf(p), compareOf(p)) ?? 0;
 
