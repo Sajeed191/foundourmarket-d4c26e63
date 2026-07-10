@@ -42,14 +42,18 @@ function write(store: Store) {
  * we intentionally do NOT overwrite it on every re-view, otherwise the baseline
  * would always equal the current price and no change could ever be detected.
  */
-export function recordViewedPrice(slug: string, price: number, market: string) {
+export function recordViewedPrice(slug: string, price: number, market: string, inStock?: boolean) {
   if (!slug || !Number.isFinite(price) || price <= 0) return;
   const store = read();
   const existing = store[slug];
   // Keep the earliest baseline for this market; refresh only if market changed
   // or nothing is stored yet.
   if (!existing || existing.market !== market) {
-    store[slug] = { price, market, at: Date.now() };
+    store[slug] = { price, market, at: Date.now(), inStock };
+    write(store);
+  } else if (existing.inStock === undefined && inStock !== undefined) {
+    // Backfill stock state onto an older baseline without resetting the price.
+    store[slug] = { ...existing, inStock };
     write(store);
   }
 }
