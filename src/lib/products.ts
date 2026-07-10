@@ -347,7 +347,7 @@ export async function fetchProducts(limit?: number): Promise<Product[]> {
 export async function fetchProductsBySlugs(slugs: string[]): Promise<Product[]> {
   if (!slugs.length) return [];
   const { data } = await supabase.from("products_public").select(LIST_SELECT_COLS).in("slug", slugs);
-  const map = new Map((data as Row[] ?? []).map((r) => [r.slug, { ...rowToProduct(r), __lean: true }]));
+  const map = new Map<string, Product>((data as Row[] ?? []).map((r) => [r.slug, { ...rowToProduct(r), __lean: true }]));
   return slugs.map((s) => map.get(s)).filter((p): p is Product => !!p);
 }
 
