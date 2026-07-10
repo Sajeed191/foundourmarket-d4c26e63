@@ -83,14 +83,45 @@ function relTime(ts: number | null): string {
   return `${weeks} weeks ago`;
 }
 
-/** One context label per product, by precedence. */
-function contextLabel(e: Entry): string {
-  if (e.priceDrop) return "Price changed";
-  if (e.compared) return "You compared this";
-  if (e.kind === "checkout") return "Checkout started";
-  if (e.kind === "cart") return "Added to cart before";
-  if (e.kind === "wishlist") return "Saved for later";
-  return `Viewed ${relTime(e.at)}`;
+/** Currency symbol for the active market. */
+function money(n: number, market: string): string {
+  const rounded = Math.round(n);
+  return market === "india" ? `₹${rounded.toLocaleString("en-IN")}` : `$${rounded.toLocaleString("en-US")}`;
+}
+
+type LabelTone = "drop" | "increase" | "neutral";
+
+/**
+ * Exactly ONE context label per product, chosen by strict priority:
+ * 1. Price Dropped  2. Price Increased  3. Back in Stock  4. Low Stock
+ * 5. In Cart  6. Recently Viewed / Viewed Today / Yesterday
+ *
+ * A price label is only ever produced when a real, stored viewed price differs
+ * from the current price — never globally.
+ */
+function contextLabel(e: Entry, market: string): { text: string; tone: LabelTone } {
+  if (e.priceChange === "drop") {
+    const extra = e.savings > 0 ? ` · Save ${money(e.savings, market)}` : e.pricePercent > 0 ? ` · ${e.pricePercent}% lower` : "";
+    return { text: `⬇ Price Dropped${extra}`, tone: "drop" };
+  }
+  if (e.priceChange === "increase") {
+    return { text: "⬆ Price Increased", tone: "increase" };
+  }
+  if (!e.product.inStock) {
+    return { text: "Currently Unavailable", tone: "neutral" };
+  }
+  if (e.lowStock) {
+    return { text: "Low Stock", tone: "neutral" };
+  }
+  if (e.inCart) return { text: "In Your Cart", tone: "neutral" };
+  if (e.kind === "wishlist") return { text: "Saved for Later", tone: "neutral" };
+  // Recency-based fallback.
+  if (e.at != null) {
+    const diff = Date.now() - e.at;
+    if (diff < DAY && new Date(e.at).getDate() === new Date().getDate()) return { text: "Viewed Today", tone: "neutral" };
+    if (diff < 2 * DAY) return { text: "Viewed Yesterday", tone: "neutral" };
+  }
+  return { text: `Viewed ${relTime(e.at)}`, tone: "neutral" };
 }
 
 function ContinueShoppingPage() {
