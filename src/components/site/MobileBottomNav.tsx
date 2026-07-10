@@ -63,7 +63,7 @@ function resolveNavState(
 export function MobileBottomNav() {
   const { count } = useCart();
   const { user } = useAuth();
-  const { slugs } = useWishlist();
+  const wishCount = useVisibleWishlistCount();
   const { adminMode } = useAdminMode();
   const { isAdmin } = useIsAdmin();
   
