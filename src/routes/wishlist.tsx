@@ -363,33 +363,17 @@ function WishlistPage() {
                 className="w-full rounded-full border border-border bg-card py-2.5 pl-11 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-accent/50 focus:ring-2 focus:ring-accent/30"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:border-accent/40 data-[state=open]:border-accent/50">
-                  <SlidersHorizontal className="size-3.5" /> {activeFilter.label}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-44">
-                  {FILTERS.map((f) => (
-                    <DropdownMenuItem key={f.key} onSelect={() => setFilter(f.key)} className="justify-between text-xs">
-                      {f.label} {filter === f.key && <Check className="size-3.5 text-accent" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:border-accent/40 data-[state=open]:border-accent/50">
-                  <ArrowUpDown className="size-3.5" /> {activeSort.label}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-48">
-                  {SORTS.map((s) => (
-                    <DropdownMenuItem key={s.key} onSelect={() => setSort(s.key)} className="justify-between text-xs">
-                      {s.label} {sort === s.key && <Check className="size-3.5 text-accent" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <FilterSortBar
+              filterOptions={FILTERS}
+              sortOptions={SORTS}
+              filter={filter}
+              sort={sort}
+              onFilterChange={setFilter}
+              onSortChange={setSort}
+              isFilterActive={filter !== "all"}
+            />
           </div>
+
 
           {/* Saved products */}
           <div className="mt-6">
