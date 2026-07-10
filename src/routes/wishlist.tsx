@@ -459,7 +459,7 @@ function RecommendedSection() {
       subtitle="Curated from your saved items"
       icon={<Sparkles className="size-3" />}
       products={products}
-      viewAllTo="/search"
+      viewAllTo="/recommended"
       carousel
     />
 
