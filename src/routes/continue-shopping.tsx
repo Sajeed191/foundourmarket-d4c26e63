@@ -445,19 +445,28 @@ function ContinueShoppingPage() {
           ) : (
             <>
               <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-                {paged.map((e) => (
-                  <div
-                    key={e.product.id ?? e.product.slug}
-                    data-product-card-frame
-                    className="flex flex-col"
-                    onClickCapture={() => { void recordEvent({ type: "view", productSlug: e.product.slug }); }}
-                  >
-                    <ProductCard product={e.product} />
-                    <p className="mt-1.5 px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-                      {contextLabel(e)}
-                    </p>
-                  </div>
-                ))}
+                {paged.map((e) => {
+                  const label = contextLabel(e, market);
+                  const toneClass =
+                    label.tone === "drop"
+                      ? "text-emerald-400"
+                      : label.tone === "increase"
+                        ? "text-accent"
+                        : "text-muted-foreground";
+                  return (
+                    <div
+                      key={e.product.id ?? e.product.slug}
+                      data-product-card-frame
+                      className="flex flex-col"
+                      onClickCapture={() => { void recordEvent({ type: "view", productSlug: e.product.slug }); }}
+                    >
+                      <ProductCard product={e.product} />
+                      <p className={`mt-1.5 px-1 font-mono text-[10px] uppercase tracking-wider truncate ${toneClass}`}>
+                        {label.text}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Infinite scroll sentinel + skeleton */}
