@@ -10,9 +10,7 @@ import {
   ShoppingCart,
   Heart,
   ArrowDown,
-  ArrowUp,
   PackageCheck,
-  AlertTriangle,
   Clock,
   CalendarDays,
   MoreHorizontal,
@@ -155,43 +153,69 @@ function viewedPhrase(at: number | null): { text: string; Icon: ComponentType<{ 
 }
 
 /**
- * Exactly ONE primary activity per product, chosen by strict priority:
- *   1. Added to Cart   2. Saved to Wishlist   3. Price Dropped / Increased
- *   4. Back in Stock   5. Low Stock           6-8. Viewed (recency)
+ * The card's activity presentation: exactly ONE primary label plus an optional
+ * lightweight secondary detail. This guarantees a single obvious status per
+ * card while still preserving all other real activity as a muted sub-line.
+ */
+type CardStatus = { primary: Status; secondary?: string };
+
+/** A view counts as "recent" for label purposes when it happened today. */
+function isRecentView(at: number | null): boolean {
+  return at != null && Date.now() - at <= DAY;
+}
+
+/**
+ * Primary priority (highest → lowest), from real data:
+ *   1. In Your Cart     2. Saved         3. Recently Viewed
+ *   4. Price Dropped    5. Back in Stock 6. Trending
+ *
+ * Everything else about the product (older view timing, saved state when it is
+ * not the primary, a real price drop) is folded into a single secondary detail
+ * line — never a second competing badge.
  *
  * A price label is only ever produced when a real, stored viewed price differs
  * from the current price — never globally.
  */
-function statusOf(e: Entry, market: string): Status {
-  // 1. Added to Cart — cart identity always wins.
+function describeActivity(e: Entry, market: string): CardStatus {
+  const viewed = viewedPhrase(e.at);
+  const savedCtx = dayContext(e.at);
+
+  let primary: Status;
   if (e.inCart) {
-    const d = dayContext(e.at);
-    return { key: "cart", text: d ? `Added to Cart ${d}` : "In Your Cart", Icon: ShoppingCart, fg: "text-accent" };
-  }
-  // 2. Saved to Wishlist.
-  if (e.inWishlist) {
-    const d = dayContext(e.at);
-    return { key: "wishlist", text: d ? `Saved ${d}` : "Saved for Later", Icon: Heart, fg: "text-purple-400" };
-  }
-  // 3. Real price change vs the price the user actually saw.
-  if (e.priceChange === "drop") {
+    // 1. In Your Cart — cart identity always wins.
+    primary = { key: "cart", text: "In Your Cart", Icon: ShoppingCart, fg: "text-accent" };
+  } else if (e.inWishlist) {
+    // 2. Saved to Wishlist.
+    primary = { key: "wishlist", text: "Saved", Icon: Heart, fg: "text-purple-400" };
+  } else if (isRecentView(e.at)) {
+    // 3. Recently Viewed — fresh views surface as-is.
+    primary = { key: "viewed", text: "Recently Viewed", Icon: Clock, fg: "text-sky-400" };
+  } else if (e.priceChange === "drop") {
+    // 4. Real price drop vs the price the user actually saw.
     const extra = e.savings > 0 ? ` · Save ${money(e.savings, market)}` : e.pricePercent > 0 ? ` · ${e.pricePercent}% off` : "";
-    return { key: "drop", text: `Price Dropped${extra}`, Icon: ArrowDown, fg: "text-emerald-400" };
+    primary = { key: "drop", text: `Price Dropped${extra}`, Icon: ArrowDown, fg: "text-emerald-400" };
+  } else if (e.backInStock) {
+    // 5. Back in Stock — out of stock when last viewed, in stock now.
+    primary = { key: "back", text: "Back in Stock", Icon: PackageCheck, fg: "text-sky-400" };
+  } else if (e.product.trending) {
+    // 6. Trending.
+    primary = { key: "trending", text: "Trending", Icon: TrendingUp, fg: "text-orange-400" };
+  } else {
+    // Fallback — older view, neutral recency phrasing.
+    primary = { key: "viewed", text: viewed.text, Icon: viewed.Icon, fg: "text-muted-foreground" };
   }
-  if (e.priceChange === "increase") {
-    return { key: "increase", text: "Price Increased", Icon: ArrowUp, fg: "text-rose-400" };
-  }
-  // 4. Back in Stock — was out of stock when last viewed, in stock now.
-  if (e.backInStock) {
-    return { key: "back", text: "Back in Stock", Icon: PackageCheck, fg: "text-sky-400" };
-  }
-  // 5. Low Stock.
-  if (e.lowStock) {
-    return { key: "low", text: `Only ${e.product.stockQuantity} Left`, Icon: AlertTriangle, fg: "text-amber-400" };
-  }
-  // 6-8. Recency-based, neutral.
-  const v = viewedPhrase(e.at);
-  return { key: "viewed", text: v.text, Icon: v.Icon, fg: "text-muted-foreground" };
+
+  // Secondary detail — the remaining real activity, deduped against the primary,
+  // rendered as one muted phrase (never a colored badge).
+  const bits: string[] = [];
+  if (e.inWishlist && primary.key !== "wishlist") bits.push(savedCtx ? `Saved ${savedCtx.toLowerCase()}` : "Saved");
+  if (primary.key !== "viewed") bits.push(viewed.text.toLowerCase());
+  else if (e.at != null && Date.now() - e.at >= 60 * 1000) bits.push(viewed.text.toLowerCase());
+  if (e.priceChange === "drop" && primary.key !== "drop") bits.push("price dropped");
+  if (e.lowStock && primary.key !== "drop") bits.push(`only ${e.product.stockQuantity} left`);
+
+  const secondary = bits.length ? bits.slice(0, 2).join(" · ") : undefined;
+  return { primary, secondary };
 }
 
 function ContinueShoppingPage() {
@@ -668,8 +692,8 @@ function ContinueShoppingPage() {
             <>
               <div data-product-grid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                 {paged.map((e) => {
-                  const status = statusOf(e, market);
-                  const StatusIcon = status.Icon;
+                  const { primary, secondary } = describeActivity(e, market);
+                  const StatusIcon = primary.Icon;
                   return (
                     <div
                       key={e.product.id ?? e.product.slug}
@@ -687,14 +711,21 @@ function ContinueShoppingPage() {
                       </button>
                       {/* Marketing badges hidden here — this is a personal surface. */}
                       <ProductCard product={e.product} hideBadges />
-                      {/* One minimal activity line — information, not a badge. */}
-                      <div className={`mt-2 flex max-w-full items-center gap-1.5 self-start ${status.fg}`}>
-                        <StatusIcon className="size-3.5 shrink-0" />
-                        <span className="truncate text-[12px] sm:text-[13px] font-medium">{status.text}</span>
+                      {/* ONE primary activity label — same location on every card. */}
+                      <div className="mt-2 flex flex-col gap-0.5 self-start max-w-full">
+                        <span className={`flex items-center gap-1.5 ${primary.fg}`}>
+                          <StatusIcon className="size-3.5 shrink-0" />
+                          <span className="truncate text-[12px] sm:text-[13px] font-medium">{primary.text}</span>
+                        </span>
+                        {/* Secondary activity — muted detail, never a badge. */}
+                        {secondary && (
+                          <span className="truncate text-[11px] text-muted-foreground/80 pl-[1.25rem]">{secondary}</span>
+                        )}
                       </div>
                     </div>
                   );
                 })}
+
               </div>
 
               {/* Infinite scroll sentinel + skeleton */}
