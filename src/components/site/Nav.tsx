@@ -139,7 +139,7 @@ export function Nav() {
 
   const quickActions = [
     { to: "/account/orders" as const, label: "Orders", icon: Package, badge: null as number | null },
-    { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishSlugs.size },
+    { to: "/wishlist" as const, label: "Wishlist", icon: Heart, badge: wishCount },
     { to: "/cart" as const, label: "Cart", icon: ShoppingBag, badge: count },
     { to: "/track" as const, label: "Track Order", icon: Truck, badge: null as number | null },
   ];
@@ -383,9 +383,9 @@ export function Nav() {
                 className="relative hidden sm:grid size-10 sm:size-11 rounded-xl place-items-center text-muted-foreground hover:text-accent hover:bg-accent/10 hover:shadow-[0_0_18px_-6px_var(--color-accent)] active:bg-accent/15 active:text-accent active:scale-90 transition-all duration-200"
               >
                 <Heart className="size-[18px]" />
-                {wishSlugs.size > 0 && (
-                  <span key={wishSlugs.size} className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono leading-none ring-2 ring-background shadow-[0_2px_6px_-1px_oklch(0.74_0.19_49/0.7)] animate-scale-in">
-                    {wishSlugs.size > 9 ? "9+" : wishSlugs.size}
+                {wishCount > 0 && (
+                  <span key={wishCount} className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-accent text-accent-foreground text-[9px] font-bold font-mono leading-none ring-2 ring-background shadow-[0_2px_6px_-1px_oklch(0.74_0.19_49/0.7)] animate-scale-in">
+                    {wishCount > 9 ? "9+" : wishCount}
                   </span>
                 )}
               </Link>
@@ -489,7 +489,7 @@ export function Nav() {
           membership={membership}
           ordersCount={ordersCount}
           cats={cats}
-          wishCount={wishSlugs.size}
+          wishCount={wishCount}
           cartCount={count}
           isAdmin={isAdmin}
           avatarUrl={user?.user_metadata?.avatar_url as string | undefined}
