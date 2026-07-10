@@ -443,7 +443,7 @@ function RecentlyViewedSection({ excludeSlugs }: { excludeSlugs: Set<string> }) 
       subtitle="Pick up where you left off"
       icon={<History className="size-3" />}
       products={list}
-      viewAllTo="/search"
+      viewAllTo="/recently-viewed"
       carousel
     />
   );
@@ -459,7 +459,7 @@ function RecommendedSection() {
       subtitle="Curated from your saved items"
       icon={<Sparkles className="size-3" />}
       products={products}
-      viewAllTo="/search"
+      viewAllTo="/recommended"
       carousel
     />
 

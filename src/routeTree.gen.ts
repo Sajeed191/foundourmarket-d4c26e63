@@ -26,6 +26,7 @@ import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ReturnPolicyRouteImport } from './routes/return-policy'
 import { Route as ReturnRouteImport } from './routes/return'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RecommendedRouteImport } from './routes/recommended'
 import { Route as RecentlyViewedRouteImport } from './routes/recently-viewed'
 import { Route as ProductFeedDotxmlRouteImport } from './routes/product-feed[.]xml'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -243,6 +244,11 @@ const ReturnRoute = ReturnRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecommendedRoute = RecommendedRouteImport.update({
+  id: '/recommended',
+  path: '/recommended',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecentlyViewedRoute = RecentlyViewedRouteImport.update({
@@ -1012,6 +1018,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
+  '/recommended': typeof RecommendedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
   '/return-policy': typeof ReturnPolicyRoute
@@ -1164,6 +1171,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
+  '/recommended': typeof RecommendedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
   '/return-policy': typeof ReturnPolicyRoute
@@ -1316,6 +1324,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/recently-viewed': typeof RecentlyViewedRoute
+  '/recommended': typeof RecommendedRoute
   '/reset-password': typeof ResetPasswordRoute
   '/return': typeof ReturnRoute
   '/return-policy': typeof ReturnPolicyRoute
@@ -1470,6 +1479,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product-feed.xml'
     | '/recently-viewed'
+    | '/recommended'
     | '/reset-password'
     | '/return'
     | '/return-policy'
@@ -1622,6 +1632,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product-feed.xml'
     | '/recently-viewed'
+    | '/recommended'
     | '/reset-password'
     | '/return'
     | '/return-policy'
@@ -1773,6 +1784,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/product-feed.xml'
     | '/recently-viewed'
+    | '/recommended'
     | '/reset-password'
     | '/return'
     | '/return-policy'
@@ -1926,6 +1938,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProductFeedDotxmlRoute: typeof ProductFeedDotxmlRoute
   RecentlyViewedRoute: typeof RecentlyViewedRoute
+  RecommendedRoute: typeof RecommendedRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnRoute: typeof ReturnRoute
   ReturnPolicyRoute: typeof ReturnPolicyRoute
@@ -2100,6 +2113,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recommended': {
+      id: '/recommended'
+      path: '/recommended'
+      fullPath: '/recommended'
+      preLoaderRoute: typeof RecommendedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recently-viewed': {
@@ -3191,6 +3211,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProductFeedDotxmlRoute: ProductFeedDotxmlRoute,
   RecentlyViewedRoute: RecentlyViewedRoute,
+  RecommendedRoute: RecommendedRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnRoute: ReturnRoute,
   ReturnPolicyRoute: ReturnPolicyRoute,
