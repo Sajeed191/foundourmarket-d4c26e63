@@ -161,6 +161,7 @@ export function useRecommendations(opts: { limit?: number; excludeSlug?: string 
   const { slugs: recent } = useRecentlyViewed();
   const { slugs: wishlistSet } = useWishlist();
   const { items } = useCart();
+  const { market } = useRegion();
   const purchased = usePurchasedSlugs();
 
   const wishlist = useMemo(() => [...wishlistSet], [wishlistSet]);
