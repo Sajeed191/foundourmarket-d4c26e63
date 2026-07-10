@@ -7,6 +7,9 @@ const MAX = 100;
 
 export type RecentlyViewedEntry = { slug: string; at: number };
 
+/** Result of a destructive history operation: what was removed + success flag. */
+export type RemovalResult = { removed: RecentlyViewedEntry[]; ok: boolean };
+
 /**
  * Recently-viewed history is ACCOUNT-based and DB-backed.
  *
