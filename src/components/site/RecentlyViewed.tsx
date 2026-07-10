@@ -32,7 +32,7 @@ export function RecentlyViewed({
   subtitle = "Continue where you left off",
   limit = 10,
 }: Props) {
-  const { products, loading } = useProducts();
+  const { loading } = useProducts();
   const { slugs, clear } = useRecentlyViewed();
   const { resolveVisible } = useProductAvailability();
 
