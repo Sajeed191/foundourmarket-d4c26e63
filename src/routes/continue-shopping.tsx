@@ -219,6 +219,9 @@ function ContinueShoppingPage() {
     const localViews = new Map<string, number>();
     for (const e of recentEntries) localViews.set(e.slug, e.at);
     const best = new Map<string, Entry>();
+    const cartSet = new Set(cartItems.map((i) => i.slug));
+    // Prices the user actually SAW — the only valid baseline for a price label.
+    const viewedPrices = getViewedPrices();
 
     const tsFor = (slug: string, kind: ActivityKind): number | null => {
       if (kind === "checkout") return checkoutAt.get(slug) ?? eventAt.get(slug) ?? null;
@@ -234,15 +237,23 @@ function ContinueShoppingPage() {
       if (at != null && Date.now() - at > EXPIRY_MS[kind]) return;
       const existing = best.get(slug);
       if (existing && PRIORITY[existing.kind] <= PRIORITY[kind]) return;
-      const compareVal = compareOf(product) ?? (product.discount ? priceOf(product) * (1 + product.discount / 100) : null);
+      // Real price change: compare the CURRENT selling price against the price
+      // the user actually saw for this exact product in this market.
+      const cmp = comparePrice(viewedPrices[slug], priceOf(product), market);
+      const lowStock =
+        product.inStock && product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 5);
       best.set(slug, {
         product,
         kind,
         at,
         views: viewCounts.get(slug) ?? 0,
         purchased: purchasedSlugs.has(slug),
-        priceDrop: (discountPercent(priceOf(product), compareVal) ?? 0) > 0,
         compared: compareSet.has(slug),
+        inCart: cartSet.has(slug),
+        priceChange: cmp.change,
+        savings: cmp.savings,
+        pricePercent: cmp.percent,
+        lowStock,
       });
     };
 
