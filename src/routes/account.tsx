@@ -27,6 +27,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { CarouselViewAllCard } from "@/components/site/CarouselViewAllCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { type Product, discountPercent } from "@/lib/products";
+import { isProductVisible } from "@/lib/product-availability";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
 import { useIsLowMotion } from "@/lib/motion-tier";
 const logoSrc = "/logo.webp";
@@ -131,7 +132,7 @@ function AccountStatusBanner({ profile }: { profile: Profile | null }) {
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
   const lowMotion = useIsLowMotion();
-  const { format } = useRegion();
+  const { format, market } = useRegion();
   const nav = useNavigate();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [returns, setReturns] = useState<Return[] | null>(null);
@@ -313,9 +314,8 @@ function AccountPage() {
   }, [orders]);
 
   /**
-   * Personalized "Continue Shopping" — only products THIS user has interacted
-   * with (cart > saved > recently viewed), excluding anything already purchased.
-   * Empty for brand-new visitors so the section hides entirely.
+   * Account "Continue Shopping" reads only from the unified viewed-history
+   * store. If history is cleared anywhere, this section collapses everywhere.
    */
   const continueShopping = useMemo(() => {
     const map = new Map(products.map((p) => [p.slug, p] as const));
@@ -324,15 +324,13 @@ function AccountPage() {
     const push = (slug: string, badge: "cart" | "saved" | "viewed") => {
       if (!slug || seen.has(slug)) return;
       const p = map.get(slug);
-      if (!p || purchasedNames.has(p.name)) return;
+      if (!isProductVisible(p, market) || purchasedNames.has(p.name)) return;
       seen.add(slug);
       out.push({ product: p, badge });
     };
-    for (const i of cart.items) push(i.slug, "cart");
-    for (const s of wishSlugs) push(s, "saved");
     for (const s of recentSlugs) push(s, "viewed");
     return out.slice(0, 10);
-  }, [products, cart.items, wishSlugs, recentSlugs, purchasedNames]);
+  }, [products, market, recentSlugs, purchasedNames]);
 
   if (loading || !user) {
     return <PremiumLoader />;
