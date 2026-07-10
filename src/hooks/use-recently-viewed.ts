@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const KEY = "fom_recently_viewed";
@@ -9,6 +9,14 @@ export type RecentlyViewedEntry = { slug: string; at: number };
 
 /** Result of a destructive history operation: what was removed + success flag. */
 export type RemovalResult = { removed: RecentlyViewedEntry[]; ok: boolean };
+
+type HistoryState = {
+  entries: RecentlyViewedEntry[];
+  loading: boolean;
+  userId: string | null;
+};
+
+const EMPTY_STATE: HistoryState = { entries: [], loading: true, userId: null };
 
 /**
  * Recently-viewed history is ACCOUNT-based and DB-backed.
@@ -77,7 +85,7 @@ function dedupeEntries(rows: { product_slug: string | null; created_at?: string 
 }
 
 async function fetchAccountViews(userId: string): Promise<RecentlyViewedEntry[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("recommendation_events")
     .select("product_slug, created_at")
     .eq("user_id", userId)
@@ -85,6 +93,7 @@ async function fetchAccountViews(userId: string): Promise<RecentlyViewedEntry[]>
     .not("product_slug", "is", null)
     .order("created_at", { ascending: false })
     .limit(300);
+  if (error) throw error;
   return dedupeEntries((data ?? []) as { product_slug: string | null; created_at: string | null }[]);
 }
 
@@ -98,12 +107,14 @@ function localEntries(): RecentlyViewedEntry[] {
 async function mergeGuestHistory(userId: string) {
   const local = readLocal();
   if (!local.length) return;
+  const ts = readLocalTs();
   // Insert oldest-first so newest stays newest after merge.
   const rows = [...local].reverse().map((slug) => ({
     user_id: userId,
     event_type: "view",
     product_slug: slug,
     weight: 1,
+    created_at: new Date(ts[slug] ?? Date.now()).toISOString(),
   }));
   try {
     await (supabase.from as any)("recommendation_events").insert(rows);
@@ -114,58 +125,189 @@ async function mergeGuestHistory(userId: string) {
   writeLocalTs({});
 }
 
-export function useRecentlyViewed() {
-  const [entries, setEntries] = useState<RecentlyViewedEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [accountUserId, setAccountUserId] = useState<string | null>(null);
-  const userIdRef = useRef<string | null>(null);
-  // Always-fresh mirror of `entries` so destructive ops can return exactly what
-  // was removed (for Undo) without depending on stale closures.
-  const entriesRef = useRef<RecentlyViewedEntry[]>([]);
-  useEffect(() => { entriesRef.current = entries; }, [entries]);
+let historyState: HistoryState = EMPTY_STATE;
+let started = false;
+let loadingRun = 0;
+let realtimeUserId: string | null = null;
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+const listeners = new Set<() => void>();
 
-  const load = useCallback(async () => {
+function publish(next: Partial<HistoryState>) {
+  historyState = { ...historyState, ...next };
+  for (const listener of listeners) listener();
+}
+
+function setRealtimeUser(userId: string | null) {
+  if (realtimeUserId === userId) return;
+  if (realtimeChannel) void supabase.removeChannel(realtimeChannel);
+  realtimeChannel = null;
+  realtimeUserId = userId;
+  if (!userId) return;
+  realtimeChannel = supabase
+    .channel(`recently-viewed-${userId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "recommendation_events", filter: `user_id=eq.${userId}` },
+      () => { void loadHistory({ silent: true }); },
+    )
+    .subscribe();
+}
+
+async function loadHistory(opts: { silent?: boolean } = {}) {
+  const run = ++loadingRun;
+  if (!opts.silent) publish({ loading: true });
+  try {
     const { data } = await supabase.auth.getUser();
     const user = data.user;
-    userIdRef.current = user?.id ?? null;
-    setAccountUserId(user?.id ?? null);
-    let next: RecentlyViewedEntry[];
-    if (user) {
-      next = await fetchAccountViews(user.id);
-    } else {
-      next = localEntries();
+    if (user) await mergeGuestHistory(user.id);
+    const next = user ? await fetchAccountViews(user.id) : localEntries();
+    if (run !== loadingRun) return;
+    setRealtimeUser(user?.id ?? null);
+    publish({ entries: next, userId: user?.id ?? null, loading: false });
+  } catch {
+    if (run === loadingRun) publish({ loading: false });
+  }
+}
+
+function ensureHistoryStarted() {
+  if (started || typeof window === "undefined") return;
+  started = true;
+  void loadHistory();
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_IN" && session?.user) {
+      void mergeGuestHistory(session.user.id).then(() => loadHistory({ silent: true }));
+    } else if (event === "SIGNED_OUT") {
+      setRealtimeUser(null);
+      void loadHistory({ silent: true });
     }
-    entriesRef.current = next;
-    setEntries(next);
-    setLoading(false);
-  }, []);
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === KEY || event.key === KEY_TS) {
+      void loadHistory({ silent: true });
+    }
+  });
+}
 
-  useEffect(() => {
-    void load();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        void mergeGuestHistory(session.user.id).then(load);
-      } else if (event === "SIGNED_OUT") {
-        void load();
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [load]);
+function subscribe(listener: () => void) {
+  ensureHistoryStarted();
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
-  // Keep signed-in history synchronized across open tabs/devices without
-  // refetching the product catalog. Only view-history records are refreshed.
-  useEffect(() => {
-    if (!accountUserId) return;
-    const channel = supabase
-      .channel(`recently-viewed-${accountUserId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "recommendation_events", filter: `user_id=eq.${accountUserId}` },
-        () => { void load(); },
-      )
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [accountUserId, load]);
+function getSnapshot() {
+  return historyState;
+}
+
+function getServerSnapshot() {
+  return EMPTY_STATE;
+}
+
+function saveGuestEntries(entries: RecentlyViewedEntry[]) {
+  writeLocal(entries.map((e) => e.slug));
+  const ts: Record<string, number> = {};
+  for (const e of entries) ts[e.slug] = e.at;
+  writeLocalTs(ts);
+}
+
+function optimisticEntries(next: RecentlyViewedEntry[]) {
+  publish({ entries: next });
+}
+
+function recordHistory(slug: string) {
+  if (!slug) return;
+  const now = Date.now();
+  const next = [{ slug, at: now }, ...historyState.entries.filter((e) => e.slug !== slug)].slice(0, MAX);
+  optimisticEntries(next);
+  if (!historyState.userId) saveGuestEntries(next);
+}
+
+async function removeSlugs(slugs: Iterable<string>): Promise<RemovalResult> {
+  const targets = new Set([...slugs].filter(Boolean));
+  if (targets.size === 0) return { removed: [], ok: true };
+  const snapshot = historyState.entries;
+  const removed = snapshot.filter((e) => targets.has(e.slug));
+  if (removed.length === 0) return { removed: [], ok: true };
+  const next = snapshot.filter((e) => !targets.has(e.slug));
+  optimisticEntries(next);
+  const userId = historyState.userId;
+  if (userId) {
+    try {
+      const { error } = await supabase
+        .from("recommendation_events")
+        .delete()
+        .eq("user_id", userId)
+        .eq("event_type", "view")
+        .in("product_slug", [...targets]);
+      if (error) throw error;
+    } catch {
+      optimisticEntries(snapshot);
+      return { removed: [], ok: false };
+    }
+  } else {
+    saveGuestEntries(next);
+  }
+  return { removed, ok: true };
+}
+
+async function clearHistory(): Promise<RemovalResult> {
+  const snapshot = historyState.entries;
+  if (snapshot.length === 0) return { removed: [], ok: true };
+  optimisticEntries([]);
+  const userId = historyState.userId;
+  if (userId) {
+    try {
+      const { error } = await supabase
+        .from("recommendation_events")
+        .delete()
+        .eq("user_id", userId)
+        .eq("event_type", "view");
+      if (error) throw error;
+    } catch {
+      optimisticEntries(snapshot);
+      return { removed: [], ok: false };
+    }
+  } else {
+    writeLocal([]);
+    writeLocalTs({});
+  }
+  return { removed: snapshot, ok: true };
+}
+
+async function clearSinceHistory(cutoffTs: number): Promise<RemovalResult> {
+  const removed = historyState.entries.filter((e) => e.at >= cutoffTs);
+  return removeSlugs(removed.map((e) => e.slug));
+}
+
+async function restoreHistory(toRestore: RecentlyViewedEntry[]) {
+  if (!toRestore.length) return;
+  const snapshot = historyState.entries;
+  const seen = new Set(snapshot.map((e) => e.slug));
+  const merged = [...snapshot, ...toRestore.filter((e) => !seen.has(e.slug))]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, MAX);
+  optimisticEntries(merged);
+  const userId = historyState.userId;
+  if (userId) {
+    const rows = toRestore.map((e) => ({
+      user_id: userId,
+      event_type: "view",
+      product_slug: e.slug,
+      weight: 1,
+      created_at: new Date(e.at).toISOString(),
+    }));
+    try {
+      const { error } = await (supabase.from as any)("recommendation_events").insert(rows);
+      if (error) throw error;
+    } catch {
+      optimisticEntries(snapshot);
+    }
+  } else {
+    saveGuestEntries(merged);
+  }
+}
+
+export function useRecentlyViewed() {
+  const { entries, loading } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   /**
    * Record a view. For guests we persist to localStorage; for signed-in users
@@ -173,17 +315,7 @@ export function useRecentlyViewed() {
    * page, so here we only update local UI state optimistically.
    */
   const record = useCallback((slug: string) => {
-    if (!slug) return;
-    const now = Date.now();
-    setEntries((prev) => {
-      const next = [{ slug, at: now }, ...prev.filter((e) => e.slug !== slug)].slice(0, MAX);
-      entriesRef.current = next;
-      return next;
-    });
-    if (!userIdRef.current) {
-      writeLocal([slug, ...readLocal().filter((s) => s !== slug)].slice(0, MAX));
-      writeLocalTs({ ...readLocalTs(), [slug]: now });
-    }
+    recordHistory(slug);
   }, []);
 
   /**
@@ -192,61 +324,15 @@ export function useRecentlyViewed() {
    * back and `ok: false` is returned so the caller can surface an error.
    */
   const remove = useCallback(async (slug: string): Promise<RemovalResult> => {
-    const snapshot = entriesRef.current;
-    const removed = snapshot.filter((e) => e.slug === slug);
-    if (removed.length === 0) return { removed: [], ok: true };
-    const next = snapshot.filter((e) => e.slug !== slug);
-    entriesRef.current = next;
-    setEntries(next);
-    const userId = userIdRef.current;
-    if (userId) {
-      try {
-        const { error } = await supabase
-          .from("recommendation_events")
-          .delete()
-          .eq("user_id", userId)
-          .eq("event_type", "view")
-          .eq("product_slug", slug);
-        if (error) throw error;
-      } catch {
-        entriesRef.current = snapshot;
-        setEntries(snapshot); // rollback
-        return { removed: [], ok: false };
-      }
-    } else {
-      writeLocal(readLocal().filter((s) => s !== slug));
-      const ts = readLocalTs();
-      delete ts[slug];
-      writeLocalTs(ts);
-    }
-    return { removed, ok: true };
+    return removeSlugs([slug]);
+  }, []);
+
+  const removeMany = useCallback(async (slugs: string[]): Promise<RemovalResult> => {
+    return removeSlugs(slugs);
   }, []);
 
   const clear = useCallback(async (): Promise<RemovalResult> => {
-    const snapshot = entriesRef.current;
-    const removed = snapshot;
-    if (removed.length === 0) return { removed: [], ok: true };
-    entriesRef.current = [];
-    setEntries([]);
-    const userId = userIdRef.current;
-    if (userId) {
-      try {
-        const { error } = await supabase
-          .from("recommendation_events")
-          .delete()
-          .eq("user_id", userId)
-          .eq("event_type", "view");
-        if (error) throw error;
-      } catch {
-        entriesRef.current = snapshot;
-        setEntries(snapshot); // rollback
-        return { removed: [], ok: false };
-      }
-    } else {
-      writeLocal([]);
-      writeLocalTs({});
-    }
-    return { removed, ok: true };
+    return clearHistory();
   }, []);
 
   /**
@@ -256,72 +342,15 @@ export function useRecentlyViewed() {
    * Returns the removed entries so the caller can offer Undo, plus an `ok` flag.
    */
   const clearSince = useCallback(async (cutoffTs: number): Promise<RemovalResult> => {
-    const snapshot = entriesRef.current;
-    const removed = snapshot.filter((e) => e.at >= cutoffTs);
-    if (removed.length === 0) return { removed: [], ok: true };
-    const removedSlugs = new Set(removed.map((e) => e.slug));
-    const next = snapshot.filter((e) => e.at < cutoffTs);
-    entriesRef.current = next;
-    setEntries(next);
-    const userId = userIdRef.current;
-    if (userId) {
-      try {
-        const { error } = await supabase
-          .from("recommendation_events")
-          .delete()
-          .eq("user_id", userId)
-          .eq("event_type", "view")
-          .in("product_slug", [...removedSlugs]);
-        if (error) throw error;
-      } catch {
-        entriesRef.current = snapshot;
-        setEntries(snapshot); // rollback
-        return { removed: [], ok: false };
-      }
-    } else {
-      writeLocal(readLocal().filter((s) => !removedSlugs.has(s)));
-      const ts = readLocalTs();
-      for (const s of removedSlugs) delete ts[s];
-      writeLocalTs(ts);
-    }
-    return { removed, ok: true };
+    return clearSinceHistory(cutoffTs);
   }, []);
 
   /** Re-insert previously-removed entries, preserving their timestamps (Undo). */
   const restore = useCallback(async (toRestore: RecentlyViewedEntry[]) => {
-    if (!toRestore.length) return;
-    setEntries((prev) => {
-      const seen = new Set(prev.map((e) => e.slug));
-      const merged = [...prev, ...toRestore.filter((e) => !seen.has(e.slug))];
-      merged.sort((a, b) => b.at - a.at);
-      const next = merged.slice(0, MAX);
-      entriesRef.current = next;
-      return next;
-    });
-    const userId = userIdRef.current;
-    if (userId) {
-      const rows = toRestore.map((e) => ({
-        user_id: userId,
-        event_type: "view",
-        product_slug: e.slug,
-        weight: 1,
-        created_at: new Date(e.at).toISOString(),
-      }));
-      try {
-        await (supabase.from as any)("recommendation_events").insert(rows);
-      } catch {
-        /* ignore */
-      }
-    } else {
-      const restoreSlugs = toRestore.map((e) => e.slug);
-      writeLocal([...new Set([...restoreSlugs, ...readLocal()])].slice(0, MAX));
-      const ts = readLocalTs();
-      for (const e of toRestore) ts[e.slug] = e.at;
-      writeLocalTs(ts);
-    }
+    await restoreHistory(toRestore);
   }, []);
 
   const slugs = useMemo(() => entries.map((e) => e.slug), [entries]);
 
-  return { slugs, entries, record, remove, clear, clearSince, restore, loading };
+  return { slugs, entries, record, remove, removeMany, clear, clearSince, restore, loading };
 }
