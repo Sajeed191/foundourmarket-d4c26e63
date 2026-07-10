@@ -552,10 +552,10 @@ function ContinueShoppingPage() {
       <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear all history?</AlertDialogTitle>
+            <AlertDialogTitle>Clear Continue Shopping History?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes every product from your Continue Shopping list. You can undo this for a
-              few seconds afterwards.
+              This will permanently remove all your recently viewed products. This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -564,7 +564,7 @@ function ContinueShoppingPage() {
               onClick={() => void handleClearAll()}
               className="bg-rose-500 text-white hover:bg-rose-600"
             >
-              Clear all
+              Clear History
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
