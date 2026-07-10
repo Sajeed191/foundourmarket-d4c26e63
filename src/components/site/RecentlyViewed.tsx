@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { X } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
+import { useProductAvailability } from "@/lib/product-availability";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductRail } from "@/components/site/ProductRail";
-import type { Product } from "@/lib/products";
 
 type Props = {
   /** Optional slug to exclude (e.g. current product on product page). */
