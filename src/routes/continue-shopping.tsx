@@ -209,16 +209,34 @@ function ContinueShoppingPage() {
     return [...best.values()];
   }, [products, market, checkoutAt, cartItems, wishSlugs, recentSlugs, recentEntries, eventAt, cartAt, viewedAt, viewCounts, purchasedSlugs, compareSet, compareOf, priceOf]);
 
-  // Intelligent ordering: purchased sink to bottom, then most recent activity,
-  // with frequently-revisited products winning ties.
+  // Intelligent "Continue Shopping" score combining multiple signals so the
+  // most relevant products always surface first. Purchased items are heavily
+  // demoted (sink to the bottom) but not removed.
+  const scoreOf = (e: Entry): number => {
+    let s = 0;
+    const age = e.at != null ? Date.now() - e.at : Infinity;
+    if (age <= 60 * 60 * 1000) s += 1000;            // viewed within the last hour
+    else if (age <= DAY) s += 400;                    // viewed today
+    else if (age <= 7 * DAY) s += 150;                // viewed this week
+    if (e.kind === "cart" && age <= 7 * DAY) s += 600; // recently added to cart
+    else if (e.kind === "checkout") s += 500;
+    s += Math.min(e.views, 10) * 40;                  // repeat visits
+    if (e.kind === "wishlist") s += 200;              // saved for later
+    if (e.priceDrop) s += 350;                        // recent price drop
+    if (e.product.inStock) s += 120;                  // back / in stock
+    // gentle recency tiebreaker (newer = slightly higher)
+    if (e.at != null) s += Math.max(0, 100 - age / DAY);
+    if (e.purchased) s -= 5000;                       // sink purchased to bottom
+    return s;
+  };
+
   const ordered = useMemo(() => {
     return [...entries].sort((a, b) => {
-      if (a.purchased !== b.purchased) return a.purchased ? 1 : -1;
-      const at = (b.at ?? 0) - (a.at ?? 0);
-      if (at !== 0) return at;
-      if (b.views !== a.views) return b.views - a.views;
-      return PRIORITY[a.kind] - PRIORITY[b.kind];
+      const diff = scoreOf(b) - scoreOf(a);
+      if (diff !== 0) return diff;
+      return (b.at ?? 0) - (a.at ?? 0);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries]);
 
   const filtered = useMemo(() => {
