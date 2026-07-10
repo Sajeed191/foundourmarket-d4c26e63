@@ -10,6 +10,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { useCompare } from "@/hooks/use-compare";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
+import { recordEvent } from "@/lib/personalization";
 import { buildVisibleMap } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
