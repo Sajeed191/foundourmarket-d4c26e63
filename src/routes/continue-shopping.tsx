@@ -253,7 +253,9 @@ function ContinueShoppingPage() {
   // Build one entry per product, keeping ONLY the highest-priority, non-expired
   // activity. Delivered purchases are excluded entirely.
   const entries = useMemo<Entry[]>(() => {
-    const map = new Map(products.map((p) => [p.slug, p] as const));
+    // Only active/visible products — deleted or deactivated items never appear
+    // in Continue Shopping.
+    const map = buildVisibleMap(products, market);
     const best = new Map<string, Entry>();
     const tsFor = (slug: string, kind: ActivityKind): number | null => {
       if (kind === "checkout") return checkoutAt.get(slug) ?? eventAt.get(slug) ?? null;
