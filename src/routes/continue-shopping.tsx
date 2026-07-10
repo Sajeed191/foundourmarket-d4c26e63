@@ -204,6 +204,11 @@ function ContinueShoppingPage() {
 
   // Confirmation dialog for the destructive "Clear all history" action.
   const [confirmClear, setConfirmClear] = useState(false);
+  // Which history action is currently persisting. Drives the inline spinner,
+  // disables the whole menu, and blocks duplicate/repeated taps.
+  const [busy, setBusy] = useState<null | "today" | "week" | "all">(null);
+  // Per-product removals in flight — prevents duplicate delete requests.
+  const removing = useRef<Set<string>>(new Set());
 
   const ERROR_MSG = "Couldn't update your history. Please try again.";
 
@@ -211,7 +216,16 @@ function ContinueShoppingPage() {
   const notify = (removed: RecentlyViewedEntry[], message: string, undoable: boolean) => {
     toast.success(message, {
       duration: 6000,
-      action: undoable && removed.length > 0 ? { label: "Undo", onClick: () => void restore(removed) } : undefined,
+      action:
+        undoable && removed.length > 0
+          ? {
+              label: "Undo",
+              onClick: () => {
+                void track("history_restore", { value: removed.length });
+                void restore(removed);
+              },
+            }
+          : undefined,
     });
   };
 
@@ -230,25 +244,53 @@ function ContinueShoppingPage() {
   const historyCount = recentEntries.length;
 
   const handleClearAll = async () => {
+    if (busy) return;
     setConfirmClear(false);
-    const { ok } = await clear();
-    if (!ok) { toast.error(ERROR_MSG); return; }
-    toast.success("Continue Shopping history cleared.");
+    setBusy("all");
+    void track("history_clear_all", { value: historyCount });
+    try {
+      const { ok } = await clear();
+      if (!ok) { toast.error(ERROR_MSG); return; }
+      toast.success("Continue Shopping history cleared.");
+    } finally {
+      setBusy(null);
+    }
   };
   const handleClearToday = async () => {
-    const { removed, ok } = await clearSince(startOfToday());
-    if (!ok) { toast.error(ERROR_MSG); return; }
-    notify(removed, "Viewed today cleared.", true);
+    if (busy) return;
+    setBusy("today");
+    void track("history_clear_today", { value: todayCount });
+    try {
+      const { removed, ok } = await clearSince(startOfToday());
+      if (!ok) { toast.error(ERROR_MSG); return; }
+      notify(removed, "Viewed today cleared.", true);
+    } finally {
+      setBusy(null);
+    }
   };
   const handleClearWeek = async () => {
-    const { removed, ok } = await clearSince(Date.now() - 7 * DAY);
-    if (!ok) { toast.error(ERROR_MSG); return; }
-    notify(removed, "Last 7 days history cleared.", true);
+    if (busy) return;
+    setBusy("week");
+    void track("history_clear_last7", { value: weekCount });
+    try {
+      const { removed, ok } = await clearSince(Date.now() - 7 * DAY);
+      if (!ok) { toast.error(ERROR_MSG); return; }
+      notify(removed, "Last 7 days history cleared.", true);
+    } finally {
+      setBusy(null);
+    }
   };
   const handleRemoveOne = async (slug: string) => {
-    const { removed, ok } = await remove(slug);
-    if (!ok) { toast.error(ERROR_MSG); return; }
-    notify(removed, "Removed from Continue Shopping.", true);
+    if (removing.current.has(slug)) return; // no duplicate requests
+    removing.current.add(slug);
+    void track("history_remove_product", { productSlug: slug });
+    try {
+      const { removed, ok } = await remove(slug);
+      if (!ok) { toast.error(ERROR_MSG); return; }
+      notify(removed, "Removed from Continue Shopping.", true);
+    } finally {
+      removing.current.delete(slug);
+    }
   };
 
 
