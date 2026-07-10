@@ -425,21 +425,6 @@ function ContinueShoppingPage() {
     return [...best.values()];
   }, [products, market, cartItems, recentEntries, viewCounts, purchasedSlugs, compareSet, wishlistSet, priceOf]);
 
-  // Automatic background cleanup (runs once, after the catalog has loaded).
-  // Permanently prunes view history whose product is deleted / hidden / inactive
-  // / out of region, or whose last view is older than 90 days. This keeps broken
-  // or unavailable products from ever lingering in Continue Shopping.
-  const cleaned = useRef(false);
-  useEffect(() => {
-    if (cleaned.current || productsLoading || recentEntries.length === 0) return;
-    cleaned.current = true;
-    const visible = buildVisibleMap(products, market);
-    const cutoff = Date.now() - 90 * DAY;
-    const stale = recentEntries.filter((e) => !visible.has(e.slug) || e.at < cutoff);
-    for (const e of stale) void remove(e.slug);
-  }, [productsLoading, recentEntries, products, market, remove]);
-
-
   // Intelligent "Continue Shopping" score combining multiple signals so the
   // most relevant products always surface first. Purchased items are heavily
   // demoted (sink to the bottom) but not removed.

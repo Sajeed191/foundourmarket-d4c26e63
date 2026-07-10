@@ -43,6 +43,8 @@ export function RecentlyViewed({
     return resolveVisible(active).slice(0, limit);
   }, [resolveVisible, slugs, excludeSlug, limit]);
 
+  if (slugs.length === 0) return null;
+
   if (loading) {
     return (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">

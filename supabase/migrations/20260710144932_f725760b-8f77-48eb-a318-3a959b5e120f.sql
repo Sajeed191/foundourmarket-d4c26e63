@@ -1,0 +1,1 @@
+ALTER TABLE public.recommendation_events REPLICA IDENTITY FULL;

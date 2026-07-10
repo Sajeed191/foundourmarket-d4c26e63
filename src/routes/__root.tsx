@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
   Outlet,
   Link,
@@ -31,7 +31,7 @@ import { registerServiceWorker } from "@/lib/pwa";
 import { logBuildVersion } from "@/lib/build-version";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
-import { loadProducts } from "@/lib/use-products";
+import { loadProducts, useProducts } from "@/lib/use-products";
 import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { BadgeEngineProvider } from "@/lib/badge-visibility";
@@ -49,8 +49,13 @@ import { initDebugFlags, getFlag } from "@/lib/debug-flags";
 import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
 import { initCompatConfidence } from "@/lib/compat-confidence";
 import { DebugPanel } from "@/components/site/DebugPanel";
+import { useRegion } from "@/lib/region";
+import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
+import { buildVisibleMap } from "@/lib/product-availability";
 
 import { WindowMetricsPanel } from "@/components/site/WindowMetricsPanel";
+
+const HISTORY_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
@@ -774,6 +779,7 @@ function AppRoot() {
                             <DebugPanel />
                             <WindowMetricsPanel />
                             <GlobalSearchMount />
+                            <ContinueShoppingHistoryCleanup />
                           </div>
                           </SearchUIProvider>
                           </BadgeEngineProvider>
@@ -792,4 +798,30 @@ function AppRoot() {
     </MotionConfig>
     </AppErrorBoundary>
   );
+}
+
+function ContinueShoppingHistoryCleanup() {
+  const { products, loading } = useProducts();
+  const { market } = useRegion();
+  const { entries, removeMany } = useRecentlyViewed();
+  const lastCleanupKey = useRef("");
+
+  useEffect(() => {
+    if (loading || entries.length === 0) return;
+    const visible = buildVisibleMap(products, market);
+    const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
+    const stale = entries
+      .filter((entry) => !visible.has(entry.slug) || entry.at < cutoff)
+      .map((entry) => entry.slug)
+      .sort();
+    const key = stale.join("|");
+    if (stale.length > 0 && key !== lastCleanupKey.current) {
+      lastCleanupKey.current = key;
+      void removeMany(stale).then((result) => {
+        if (!result.ok) lastCleanupKey.current = "";
+      });
+    }
+  }, [loading, products, market, entries, removeMany]);
+
+  return null;
 }
