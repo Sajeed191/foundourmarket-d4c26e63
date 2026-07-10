@@ -68,7 +68,7 @@ function AnimatedHamburger({ open }: { open: boolean }) {
 export function Nav() {
   const { count } = useCart();
   const { user } = useAuth();
-  const { slugs: wishSlugs } = useWishlist();
+  const wishCount = useVisibleWishlistCount();
   const { effectiveTheme } = useTheme();
   const isLight = effectiveTheme === "light";
   const [open, setOpen] = useState(false);
