@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
   Outlet,
   Link,
@@ -804,13 +804,23 @@ function ContinueShoppingHistoryCleanup() {
   const { products, loading } = useProducts();
   const { market } = useRegion();
   const { entries, removeMany } = useRecentlyViewed();
+  const lastCleanupKey = useRef("");
 
   useEffect(() => {
     if (loading || entries.length === 0) return;
     const visible = buildVisibleMap(products, market);
     const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
-    const stale = entries.filter((entry) => !visible.has(entry.slug) || entry.at < cutoff).map((entry) => entry.slug);
-    if (stale.length > 0) void removeMany(stale);
+    const stale = entries
+      .filter((entry) => !visible.has(entry.slug) || entry.at < cutoff)
+      .map((entry) => entry.slug)
+      .sort();
+    const key = stale.join("|");
+    if (stale.length > 0 && key !== lastCleanupKey.current) {
+      lastCleanupKey.current = key;
+      void removeMany(stale).then((result) => {
+        if (!result.ok) lastCleanupKey.current = "";
+      });
+    }
   }, [loading, products, market, entries, removeMany]);
 
   return null;
