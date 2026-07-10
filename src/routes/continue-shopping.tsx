@@ -127,54 +127,10 @@ function ActivityCard({ entry }: { entry: Entry }) {
 }
 
 /**
- * Premium "View All" gateway card. Not a product card — a distinct navigation
- * destination to the full catalogue, sized to align with the product grid.
- * GPU-friendly transforms only (no backdrop-filter / heavy blur).
+ * Premium "View All" gateway card, sized to align with the product grid via the
+ * shared RailViewAllCard component (see src/components/site/RailViewAllCard.tsx).
  */
-function ViewAllCard({ productCount }: { productCount: number }) {
-  const hint =
-    productCount > 0
-      ? `${Math.max(10, Math.floor(productCount / 10) * 10)}+ products`
-      : "Based on your interests";
 
-  return (
-    <Link
-      to="/"
-      onClick={() => {
-        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-          try { navigator.vibrate?.(8); } catch { /* no-op */ }
-        }
-      }}
-      className="group card-premium product-card-shell relative flex flex-col items-center justify-between overflow-hidden p-4 text-center transition-transform duration-200 will-change-transform active:scale-[0.97]"
-      aria-label="View all products"
-    >
-      {/* Soft breathing orange glow — transform/opacity only */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 size-40 rounded-full opacity-40 animate-[glow-breathe_4s_ease-in-out_infinite]"
-        style={{ background: "var(--gradient-ember)" }}
-      />
-
-      {/* Top: elegant circular icon container */}
-      <div className="relative mt-3 grid size-14 place-items-center rounded-full bg-accent/15 border border-accent/30 text-accent shadow-[var(--shadow-ember)]">
-        <LayoutGrid className="size-6 transition-transform duration-700 group-hover:rotate-[5deg] animate-[icon-tilt_6s_ease-in-out_infinite]" />
-      </div>
-
-      {/* Center */}
-      <div className="relative">
-        <h3 className="font-display text-lg sm:text-xl font-semibold tracking-tight">View All</h3>
-        <p className="mt-1 text-[11px] text-muted-foreground">Discover more products</p>
-        <p className="mt-1.5 text-[10px] font-mono uppercase tracking-widest text-accent/90">{hint}</p>
-      </div>
-
-      {/* Bottom premium chip */}
-      <span className="relative mb-1 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-accent">
-        Browse Collection
-        <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" />
-      </span>
-    </Link>
-  );
-}
 
 function ContinueShoppingPage() {
   const { user, loading: authLoading } = useAuth();
