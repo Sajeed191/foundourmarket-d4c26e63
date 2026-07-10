@@ -313,7 +313,7 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
 const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
 
 
-function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight }: ProductCardProps) {
+function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const price = priceOf(product);
