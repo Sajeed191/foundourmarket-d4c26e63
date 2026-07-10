@@ -6,9 +6,7 @@ import {
   Sparkles,
   Flame,
   Search,
-  SlidersHorizontal,
-  ArrowUpDown,
-  Check,
+  FilterX,
   History,
   ArrowRight,
 } from "lucide-react";
