@@ -381,8 +381,25 @@ function WishlistPage() {
           {/* Saved products */}
           <div className="mt-6">
             {filtered.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                No items match your search or filter.
+              <div className="mx-auto max-w-md rounded-3xl border border-border bg-card p-10 text-center motion-safe:animate-[fade-up_0.4s_ease-out]">
+                <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent">
+                  <FilterX className="size-5" />
+                </div>
+                <h3 className="mb-1.5 text-base font-display font-semibold">No matching items</h3>
+                <p className="mx-auto mb-5 max-w-xs text-sm text-muted-foreground">
+                  {query.trim()
+                    ? `No saved items match "${query.trim()}"${filter !== "all" ? ` with the "${FILTERS.find((f) => f.key === filter)?.label}" filter` : ""}.`
+                    : `None of your saved items match the "${FILTERS.find((f) => f.key === filter)?.label}" filter right now.`}
+                </p>
+                {hasActiveFilter && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-6 text-[11px] font-bold uppercase tracking-widest text-accent-foreground shadow-[var(--shadow-ember)] transition-all hover:brightness-110 active:scale-[0.97]"
+                  >
+                    <FilterX className="size-3.5" /> Clear filters
+                  </button>
+                )}
               </div>
             ) : (
               <div data-product-grid className={GRID}>
