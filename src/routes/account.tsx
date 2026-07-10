@@ -314,9 +314,16 @@ function AccountPage() {
   }, [orders]);
 
   /**
-   * Account "Continue Shopping" reads only from the unified viewed-history
-   * store. If history is cleared anywhere, this section collapses everywhere.
+   * Account "Continue Shopping" is a live projection of the SAME shared stores
+   * used everywhere else: viewed-history (useRecentlyViewed), cart (useCart)
+   * and wishlist (useWishlist). It keeps no local/cached copy — every one of
+   * those stores is a dependency, so any change (view, remove, clear, add/remove
+   * from cart, wishlist toggle, product becoming inactive, login/logout, sync
+   * completing) rebuilds the list instantly with no refresh. Invalid products
+   * (deleted / hidden / unavailable / already purchased) are dropped so no empty
+   * slots remain, and ordering is stable: cart → saved → viewed.
    */
+  const cartSlugs = useMemo(() => cart.items.map((i) => i.slug), [cart.items]);
   const continueShopping = useMemo(() => {
     const map = new Map(products.map((p) => [p.slug, p] as const));
     const seen = new Set<string>();
@@ -328,9 +335,12 @@ function AccountPage() {
       seen.add(slug);
       out.push({ product: p, badge });
     };
+    // Stable priority ordering — cart identity wins, then saved, then viewed.
+    for (const s of cartSlugs) push(s, "cart");
+    for (const s of wishSlugs) push(s, "saved");
     for (const s of recentSlugs) push(s, "viewed");
     return out.slice(0, 10);
-  }, [products, market, recentSlugs, purchasedNames]);
+  }, [products, market, cartSlugs, wishSlugs, recentSlugs, purchasedNames]);
 
   if (loading || !user) {
     return <PremiumLoader />;
