@@ -204,6 +204,8 @@ function ContinueShoppingPage() {
 
   // Confirmation dialog for the destructive "Clear all history" action.
   const [confirmClear, setConfirmClear] = useState(false);
+  // Controlled menu so we can keep it open for the spinner, then close on done.
+  const [menuOpen, setMenuOpen] = useState(false);
   // Which history action is currently persisting. Drives the inline spinner,
   // disables the whole menu, and blocks duplicate/repeated taps.
   const [busy, setBusy] = useState<null | "today" | "week" | "all">(null);
