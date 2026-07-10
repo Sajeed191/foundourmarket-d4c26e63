@@ -337,7 +337,7 @@ function ContinueShoppingPage() {
             {visible.map((entry) => (
               <ActivityCard key={entry.product.slug} entry={entry} />
             ))}
-            <ViewAllCard productCount={products.length} />
+            <RailViewAllCard to="/continue-shopping" remaining={products.length} subtitle="See your full activity" />
           </motion.div>
         </>
       )}
