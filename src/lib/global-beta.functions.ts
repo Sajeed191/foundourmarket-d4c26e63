@@ -135,7 +135,17 @@ export const joinGlobalWaitlist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => waitlistSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { userId } = context as { userId: string };
+    const { userId, claims } = context as { userId: string; claims?: { email?: string } };
+
+    // Enforce email ownership: the waitlist email must match the caller's
+    // authenticated account email. supabaseAdmin bypasses RLS, so this check
+    // replaces the table policy that would otherwise enforce it.
+    const authEmail = (claims?.email ?? "").toLowerCase();
+    const submitted = data.email.toLowerCase();
+    if (!authEmail || authEmail !== submitted) {
+      throw new Error("Email must match your account email.");
+    }
+
     const { error } = await supabaseAdmin.from("international_waitlist").insert({
       user_id: userId,
       name: data.name,
