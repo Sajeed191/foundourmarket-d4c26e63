@@ -11,7 +11,7 @@
 
 const KEY = "fom_viewed_prices";
 
-export type ViewedPrice = { price: number; market: string; at: number };
+export type ViewedPrice = { price: number; market: string; at: number; inStock?: boolean };
 
 type Store = Record<string, ViewedPrice>;
 
