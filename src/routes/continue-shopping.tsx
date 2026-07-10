@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
+import { buildVisibleMap } from "@/lib/product-availability";
 import { Price } from "@/components/site/Price";
 import type { Product } from "@/lib/products";
 
