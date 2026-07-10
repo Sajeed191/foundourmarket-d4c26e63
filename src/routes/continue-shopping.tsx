@@ -1,7 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentType } from "react";
 import { motion } from "framer-motion";
-import { ShoppingBag, Search, Sparkles, TrendingUp } from "lucide-react";
+import {
+  ShoppingBag,
+  Search,
+  Sparkles,
+  TrendingUp,
+  ShoppingCart,
+  Heart,
+  ArrowDown,
+  ArrowUp,
+  PackageCheck,
+  AlertTriangle,
+  Clock,
+  CalendarDays,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useProducts } from "@/lib/use-products";
