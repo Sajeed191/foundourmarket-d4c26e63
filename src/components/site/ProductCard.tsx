@@ -392,7 +392,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
         >
-          <ProductBadges badges={badges} />
+          <ProductBadges badges={hideBadges ? [] : badges} />
           <WishlistButton slug={product.slug} name={product.name} />
         </AdaptiveProductMedia>
       </Link>
