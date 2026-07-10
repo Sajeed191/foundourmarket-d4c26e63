@@ -115,6 +115,10 @@ export function useRecentlyViewed() {
   const [entries, setEntries] = useState<RecentlyViewedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const userIdRef = useRef<string | null>(null);
+  // Always-fresh mirror of `entries` so destructive ops can return exactly what
+  // was removed (for Undo) without depending on stale closures.
+  const entriesRef = useRef<RecentlyViewedEntry[]>([]);
+  useEffect(() => { entriesRef.current = entries; }, [entries]);
 
   const load = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
