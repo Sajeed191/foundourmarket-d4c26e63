@@ -81,22 +81,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 
 const PAGE_SIZE = 12;
 
-/** Human relative time: "2 hours ago", "Yesterday". */
-function relTime(ts: number | null): string {
-  if (!ts) return "recently";
-  const diff = Date.now() - ts;
-  if (diff < 0) return "just now";
-  const min = 60 * 1000, hour = 60 * min;
-  if (diff < min) return "just now";
-  if (diff < hour) { const m = Math.round(diff / min); return `${m} minute${m > 1 ? "s" : ""} ago`; }
-  if (diff < DAY) { const h = Math.round(diff / hour); return `${h} hour${h > 1 ? "s" : ""} ago`; }
-  const days = Math.round(diff / DAY);
-  if (days === 1) return "yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 14) return "last week";
-  const weeks = Math.round(days / 7);
-  return `${weeks} weeks ago`;
-}
+
 
 /** Currency symbol for the active market. */
 function money(n: number, market: string): string {
