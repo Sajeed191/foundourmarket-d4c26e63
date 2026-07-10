@@ -34,12 +34,14 @@ export function RecentlyViewed({
 }: Props) {
   const { products, loading } = useProducts();
   const { slugs, clear } = useRecentlyViewed();
+  const { resolveVisible } = useProductAvailability();
 
   const items = useMemo(() => {
     const active = excludeSlug ? slugs.filter((s) => s !== excludeSlug) : slugs;
-    const map = new Map(products.map((p) => [p.slug, p]));
-    return active.map((s) => map.get(s)).filter(Boolean).slice(0, limit) as Product[];
-  }, [products, slugs, excludeSlug, limit]);
+    // Skip deleted / deactivated products automatically; the next eligible
+    // active products fill the rail up to `limit`.
+    return resolveVisible(active).slice(0, limit);
+  }, [resolveVisible, slugs, excludeSlug, limit]);
 
   if (loading) {
     return (
