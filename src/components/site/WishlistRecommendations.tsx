@@ -51,9 +51,16 @@ function Rail({
  * Each rail hides itself when it has no products.
  */
 export function WishlistRecommendations({ wishlistSlugs }: { wishlistSlugs: string[] }) {
-  const { products } = useProducts();
-  const { priceOf } = useRegion();
+  const { products: allProducts } = useProducts();
+  const { priceOf, market } = useRegion();
   const { slugs: recentSlugs } = useRecentlyViewed();
+
+  // Only active/visible products feed any rail — deleted/deactivated items are
+  // never recommended or shown.
+  const products = useMemo(
+    () => allProducts.filter((p) => isProductVisible(p, market)),
+    [allProducts, market],
+  );
 
   const saved = useMemo(
     () => products.filter((p) => wishlistSlugs.includes(p.slug)),
