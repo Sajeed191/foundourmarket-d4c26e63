@@ -257,22 +257,51 @@ function ContinueShoppingPage() {
     });
   }, [ordered, query, filter]);
 
-  // Reset paging when the visible set changes.
-  useEffect(() => { setLimit(PAGE_SIZE); }, [query, filter]);
+  // Reset paging (and any saved scroll) when the user changes search/filter —
+  // that is an intentional new query, not a return visit.
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    setLimit(PAGE_SIZE);
+    if (typeof window !== "undefined") sessionStorage.removeItem("fom_cs_scroll");
+  }, [query, filter]);
 
   const paged = useMemo(() => filtered.slice(0, limit), [filtered, limit]);
 
-  // Infinite scroll sentinel.
+  // Persist paging depth for return-visit restoration.
+  useEffect(() => {
+    if (typeof window !== "undefined") sessionStorage.setItem("fom_cs_limit", String(limit));
+  }, [limit]);
+
+  // Infinite scroll sentinel — prefetch well before the bottom for continuous scroll.
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver((ents) => {
       if (ents[0]?.isIntersecting) setLimit((l) => (l < filtered.length ? l + PAGE_SIZE : l));
-    }, { rootMargin: "600px 0px" });
+    }, { rootMargin: "1200px 0px" });
     io.observe(el);
     return () => io.disconnect();
   }, [filtered.length]);
+
+  // Scroll restoration: save position continuously, restore once the saved
+  // page depth has rendered so returning from a product feels native.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onScroll = () => sessionStorage.setItem("fom_cs_scroll", String(window.scrollY));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || typeof window === "undefined" || paged.length === 0) return;
+    const y = Number(sessionStorage.getItem("fom_cs_scroll"));
+    if (Number.isFinite(y) && y > 0) {
+      restored.current = true;
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    }
+  }, [paged.length]);
 
   const loading = authLoading || productsLoading;
 
