@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  ShoppingBag, Heart, Eye, CreditCard, Clock, ArrowDownUp, Sparkles, LogIn, ArrowRight, LayoutGrid,
+  ShoppingBag, Heart, Eye, CreditCard, Clock, ArrowDownUp, Sparkles, LogIn, ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
