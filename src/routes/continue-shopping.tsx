@@ -488,11 +488,61 @@ function ContinueShoppingPage() {
           <p className="text-sm text-muted-foreground mt-1">Pick up where you left off.</p>
         </div>
         {ordered.length > 0 && (
-          <span className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold tabular-nums text-muted-foreground">
-            {ordered.length} {ordered.length === 1 ? "Product" : "Products"}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold tabular-nums text-muted-foreground">
+              {ordered.length} {ordered.length === 1 ? "Product" : "Products"}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  aria-label="Manage Continue Shopping history"
+                  className="grid size-9 place-items-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-accent/40 hover:text-accent"
+                >
+                  <MoreHorizontal className="size-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel>Manage history</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => void handleClearToday()}>
+                  <Clock className="size-4" /> Clear viewed today
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleClearWeek()}>
+                  <CalendarDays className="size-4" /> Clear last 7 days
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setConfirmClear(true)}
+                  className="text-rose-400 focus:text-rose-400"
+                >
+                  <Trash2 className="size-4" /> Clear all history
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
+
+      {/* Confirmation before clearing everything */}
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes every product from your Continue Shopping list. You can undo this for a
+              few seconds afterwards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleClearAll()}
+              className="bg-rose-500 text-white hover:bg-rose-600"
+            >
+              Clear all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Empty state */}
       {ordered.length === 0 ? (
