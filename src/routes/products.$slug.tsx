@@ -443,6 +443,10 @@ function ProductPage() {
     el?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
   }, [activeImg]);
 
+  // Reset the measured aspect whenever the visible media changes so the next
+  // image sizes to its own dimensions (fallback aspect reserves height first).
+  useEffect(() => { setMediaAspect(null); }, [activeImg]);
+
   const hasVideoFirst = galleryMedia[0]?.id === "video";
   const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
   const handleLightboxIndexChange = (i: number) => setActiveImg(hasVideoFirst ? i + 1 : i);
