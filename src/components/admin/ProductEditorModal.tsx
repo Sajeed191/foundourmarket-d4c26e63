@@ -198,7 +198,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
-  const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "analytics" | "preview">("basic");
+  const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "variants" | "analytics" | "preview">("basic");
 
 
 
