@@ -1211,7 +1211,7 @@ function ProductPage() {
             <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
           </button>
           <img
-            src={activeMedia?.url || product.image}
+            src={thumbDisplaySrc(activeMedia?.url || product.image)}
             alt=""
             aria-hidden
             className="size-12 shrink-0 rounded-xl object-cover border border-white/10"
