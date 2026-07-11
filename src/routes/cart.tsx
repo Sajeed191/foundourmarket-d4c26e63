@@ -371,7 +371,8 @@ function CartPage() {
 
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
