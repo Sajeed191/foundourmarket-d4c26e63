@@ -212,16 +212,20 @@ function OrderDetailPage() {
         >
           <h3 className="text-[10px] font-mono uppercase tracking-widest text-accent mb-4">Items</h3>
           <ul className="space-y-3">
-            {order.order_items.map((it) => (
+            {order.order_items.map((it) => {
+              const options = [it.variant_color, it.variant_size].filter(Boolean).join(" · ") || it.variant_name || "";
+              return (
               <li key={it.id} className="flex items-center gap-3">
-                {it.image && <img src={it.image} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
+                {(it.variant_image || it.image) && <img src={it.variant_image || it.image || undefined} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
                 <div className="flex-1 min-w-0">
                   <Link to="/products/$slug" params={{ slug: it.product_slug }} className="text-sm font-medium truncate hover:text-accent block">{it.name}</Link>
+                  {options && <p className="text-xs text-accent/90 truncate">{options}{it.variant_sku ? ` · ${it.variant_sku}` : ""}</p>}
                   <p className="text-xs text-muted-foreground font-mono">Qty {it.quantity} · {format(Number(it.unit_price))} ea</p>
                 </div>
                 <p className="font-mono text-sm whitespace-nowrap">{format(Number(it.line_total))}</p>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
             <Row label="Subtotal" value={format(Number(order.subtotal))} />
