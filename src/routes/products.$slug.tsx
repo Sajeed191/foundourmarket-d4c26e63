@@ -487,7 +487,7 @@ function ProductPage() {
       }
     };
     probe.onload = apply;
-    probe.src = activeUrl;
+    probe.src = resizedStorageImage(activeUrl, 96, 40);
     if (probe.complete) apply();
     return () => { active = false; };
   }, [activeUrl]);
