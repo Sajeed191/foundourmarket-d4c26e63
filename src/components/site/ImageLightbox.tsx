@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Share2 } from "lucide-react";
 import type { ProductImage } from "@/lib/products";
+import { resizedStorageImage } from "@/lib/storage-image";
 
 /**
  * Immersive full-screen product gallery.
