@@ -62,7 +62,7 @@ function OrderDetailPage() {
     if (!user) return;
     supabase
       .from("orders")
-      .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,shipping_address,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
+      .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,shipping_address,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug,variant_name,variant_size,variant_color,variant_sku,variant_image)")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => setOrder((data as Order) ?? null));
