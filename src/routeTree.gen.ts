@@ -139,6 +139,7 @@ import { Route as AdminProductSlugIndexRouteImport } from './routes/admin-produc
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as CategoryMainSubRouteImport } from './routes/category.$main.$sub'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as AdminProductSlugVariantsRouteImport } from './routes/admin-product.$slug.variants'
 import { Route as AdminProductSlugShippingRouteImport } from './routes/admin-product.$slug.shipping'
 import { Route as AdminProductSlugSeoRouteImport } from './routes/admin-product.$slug.seo'
 import { Route as AdminProductSlugReturnsRouteImport } from './routes/admin-product.$slug.returns'
@@ -817,6 +818,12 @@ const ApiPublicRazorpayWebhookRoute =
     path: '/api/public/razorpay-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminProductSlugVariantsRoute =
+  AdminProductSlugVariantsRouteImport.update({
+    id: '/variants',
+    path: '/variants',
+    getParentRoute: () => AdminProductSlugRoute,
+  } as any)
 const AdminProductSlugShippingRoute =
   AdminProductSlugShippingRouteImport.update({
     id: '/shipping',
@@ -1072,6 +1079,7 @@ export interface FileRoutesByFullPath {
   '/admin-product/$slug/returns': typeof AdminProductSlugReturnsRoute
   '/admin-product/$slug/seo': typeof AdminProductSlugSeoRoute
   '/admin-product/$slug/shipping': typeof AdminProductSlugShippingRoute
+  '/admin-product/$slug/variants': typeof AdminProductSlugVariantsRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1224,6 +1232,7 @@ export interface FileRoutesByTo {
   '/admin-product/$slug/returns': typeof AdminProductSlugReturnsRoute
   '/admin-product/$slug/seo': typeof AdminProductSlugSeoRoute
   '/admin-product/$slug/shipping': typeof AdminProductSlugShippingRoute
+  '/admin-product/$slug/variants': typeof AdminProductSlugVariantsRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1378,6 +1387,7 @@ export interface FileRoutesById {
   '/admin-product/$slug/returns': typeof AdminProductSlugReturnsRoute
   '/admin-product/$slug/seo': typeof AdminProductSlugSeoRoute
   '/admin-product/$slug/shipping': typeof AdminProductSlugShippingRoute
+  '/admin-product/$slug/variants': typeof AdminProductSlugVariantsRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/category/$main/$sub': typeof CategoryMainSubRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -1533,6 +1543,7 @@ export interface FileRouteTypes {
     | '/admin-product/$slug/returns'
     | '/admin-product/$slug/seo'
     | '/admin-product/$slug/shipping'
+    | '/admin-product/$slug/variants'
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
@@ -1685,6 +1696,7 @@ export interface FileRouteTypes {
     | '/admin-product/$slug/returns'
     | '/admin-product/$slug/seo'
     | '/admin-product/$slug/shipping'
+    | '/admin-product/$slug/variants'
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
@@ -1838,6 +1850,7 @@ export interface FileRouteTypes {
     | '/admin-product/$slug/returns'
     | '/admin-product/$slug/seo'
     | '/admin-product/$slug/shipping'
+    | '/admin-product/$slug/variants'
     | '/api/public/razorpay-webhook'
     | '/category/$main/$sub'
     | '/lovable/email/suppression'
@@ -2906,6 +2919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-product/$slug/variants': {
+      id: '/admin-product/$slug/variants'
+      path: '/variants'
+      fullPath: '/admin-product/$slug/variants'
+      preLoaderRoute: typeof AdminProductSlugVariantsRouteImport
+      parentRoute: typeof AdminProductSlugRoute
+    }
     '/admin-product/$slug/shipping': {
       id: '/admin-product/$slug/shipping'
       path: '/shipping'
@@ -3108,6 +3128,7 @@ interface AdminProductSlugRouteChildren {
   AdminProductSlugReturnsRoute: typeof AdminProductSlugReturnsRoute
   AdminProductSlugSeoRoute: typeof AdminProductSlugSeoRoute
   AdminProductSlugShippingRoute: typeof AdminProductSlugShippingRoute
+  AdminProductSlugVariantsRoute: typeof AdminProductSlugVariantsRoute
   AdminProductSlugIndexRoute: typeof AdminProductSlugIndexRoute
 }
 
@@ -3121,6 +3142,7 @@ const AdminProductSlugRouteChildren: AdminProductSlugRouteChildren = {
   AdminProductSlugReturnsRoute: AdminProductSlugReturnsRoute,
   AdminProductSlugSeoRoute: AdminProductSlugSeoRoute,
   AdminProductSlugShippingRoute: AdminProductSlugShippingRoute,
+  AdminProductSlugVariantsRoute: AdminProductSlugVariantsRoute,
   AdminProductSlugIndexRoute: AdminProductSlugIndexRoute,
 }
 
