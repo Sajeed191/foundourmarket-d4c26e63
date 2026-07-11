@@ -3016,37 +3016,67 @@ export type Database = {
       }
       product_variants: {
         Row: {
+          active: boolean
+          barcode: string | null
+          color: string | null
+          color_hex: string | null
+          compare_price: number | null
           created_at: string
           id: string
+          image_url: string | null
+          low_stock_threshold: number
           name: string
+          price_adjustment: number
           price_override: number | null
           product_slug: string
+          size: string | null
           sku: string | null
           sort_order: number
           stock_quantity: number
           updated_at: string
+          weight: number | null
         }
         Insert: {
+          active?: boolean
+          barcode?: string | null
+          color?: string | null
+          color_hex?: string | null
+          compare_price?: number | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          low_stock_threshold?: number
           name: string
+          price_adjustment?: number
           price_override?: number | null
           product_slug: string
+          size?: string | null
           sku?: string | null
           sort_order?: number
           stock_quantity?: number
           updated_at?: string
+          weight?: number | null
         }
         Update: {
+          active?: boolean
+          barcode?: string | null
+          color?: string | null
+          color_hex?: string | null
+          compare_price?: number | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          low_stock_threshold?: number
           name?: string
+          price_adjustment?: number
           price_override?: number | null
           product_slug?: string
+          size?: string | null
           sku?: string | null
           sort_order?: number
           stock_quantity?: number
           updated_at?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -3109,6 +3139,7 @@ export type Database = {
           flash_deal: boolean
           fragile: boolean
           gift_idea: boolean
+          has_variants: boolean
           height: number | null
           hide_from_recommendations: boolean
           hide_from_search: boolean
@@ -3218,6 +3249,7 @@ export type Database = {
           flash_deal?: boolean
           fragile?: boolean
           gift_idea?: boolean
+          has_variants?: boolean
           height?: number | null
           hide_from_recommendations?: boolean
           hide_from_search?: boolean
@@ -3327,6 +3359,7 @@ export type Database = {
           flash_deal?: boolean
           fragile?: boolean
           gift_idea?: boolean
+          has_variants?: boolean
           height?: number | null
           hide_from_recommendations?: boolean
           hide_from_search?: boolean
@@ -5940,12 +5973,22 @@ export type Database = {
       }
       product_variants_public: {
         Row: {
+          barcode: string | null
+          color: string | null
+          color_hex: string | null
+          compare_price: number | null
           id: string | null
+          image_url: string | null
+          low_stock_threshold: number | null
           name: string | null
+          price_adjustment: number | null
           price_override: number | null
           product_slug: string | null
+          size: string | null
+          sku: string | null
           sort_order: number | null
           stock_quantity: number | null
+          weight: number | null
         }
         Relationships: []
       }
@@ -6617,6 +6660,7 @@ export type Database = {
           flash_deal: boolean
           fragile: boolean
           gift_idea: boolean
+          has_variants: boolean
           height: number | null
           hide_from_recommendations: boolean
           hide_from_search: boolean
@@ -6914,6 +6958,7 @@ export type Database = {
           flash_deal: boolean
           fragile: boolean
           gift_idea: boolean
+          has_variants: boolean
           height: number | null
           hide_from_recommendations: boolean
           hide_from_search: boolean

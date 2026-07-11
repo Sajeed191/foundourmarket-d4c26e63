@@ -158,7 +158,7 @@ function useProductRow(slug: string, cols: string[]) {
 
 /* ----------------------------- editor nav bar ----------------------------- */
 
-function EditorNavBar({ slug, sectionKey }: { slug: string; sectionKey?: string }) {
+export function EditorNavBar({ slug, sectionKey }: { slug: string; sectionKey?: string }) {
   const navigate = useNavigate();
   const isOverview = !sectionKey;
   return (
@@ -196,6 +196,7 @@ const SECTIONS = [
   { key: "details", to: "/admin-product/$slug/details", label: "Product Details" },
   { key: "pricing", to: "/admin-product/$slug/pricing", label: "Pricing" },
   { key: "inventory", to: "/admin-product/$slug/inventory", label: "Inventory" },
+  { key: "variants", to: "/admin-product/$slug/variants", label: "Variants" },
   { key: "shipping", to: "/admin-product/$slug/shipping", label: "Shipping" },
   { key: "returns", to: "/admin-product/$slug/returns", label: "Returns" },
   { key: "seo", to: "/admin-product/$slug/seo", label: "SEO" },
@@ -218,7 +219,7 @@ function useCompletion(slug: string, active?: string) {
   return data;
 }
 
-function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: string }) {
+export function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active?: string }) {
   const completion = useCompletion(h.slug, active);
   return (
     <div className="card-premium rounded-2xl p-3 sm:p-4">
