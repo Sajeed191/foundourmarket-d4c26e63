@@ -6,6 +6,10 @@ type InvoiceItem = {
   quantity: number;
   unit_price: number;
   line_total: number;
+  variant_name?: string | null;
+  variant_size?: string | null;
+  variant_color?: string | null;
+  variant_sku?: string | null;
 };
 
 type InvoiceOrder = {
