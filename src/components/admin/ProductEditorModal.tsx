@@ -21,6 +21,7 @@ import {
 } from "@/components/admin/product-editor/field-builders";
 import type { KV } from "@/components/admin/product-editor/field-builders";
 import { ListChecks, Layers } from "lucide-react";
+import { VariantBuilder } from "@/components/admin/product-editor/VariantBuilder";
 import type { Product } from "@/lib/products";
 
 const RATING_SOURCES = [
@@ -198,7 +199,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
-  const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "analytics" | "preview">("basic");
+  const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "variants" | "analytics" | "preview">("basic");
 
 
 
@@ -517,6 +518,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               ["merch", "Merchandising"],
               ["seo", "SEO & FAQs"],
               ["related", "Related"],
+              ["variants", "Variants"],
               ["analytics", "Analytics"],
               ["preview", "Preview"],
             ] as const).map(([id, label]) => (
@@ -998,6 +1000,24 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </CollapsibleModule>
         </>)}
+
+        {tab === "variants" && (<>
+        <CollapsibleModule eyebrow="Options" title="Product Variants" badge={<Layers className="size-3.5 text-accent" />}>
+          {row?.id && row?.slug ? (
+            <VariantBuilder slug={row.slug} />
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-6 text-center opacity-70">
+              <Layers className="mx-auto mb-2 size-5 text-muted-foreground" />
+              <p className="text-sm font-medium">Save the product first, then add variants.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Size / Colour combinations attach to a saved product. Fill in the basics and save — the full Variant Builder unlocks here automatically.
+              </p>
+            </div>
+          )}
+        </CollapsibleModule>
+        </>)}
+
+
 
         {tab === "merch" && (<>
         {/* Product Labels */}
