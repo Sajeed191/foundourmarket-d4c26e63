@@ -497,10 +497,13 @@ function ProductPage() {
   // Live cart quantity for this product — drives the "quantity selector replaces
   // Add to Cart" flow. The selector is shown ONLY after a successful add
   // animation completes (addState back to idle) and the item is in the cart.
-  const cartQty = cartItems.find((i) => i.slug === product.slug && !i.savedForLater)?.qty ?? 0;
+  const cartQty = cartItems.find((i) => i.slug === product.slug && (i.variantId ?? null) === (variantId ?? null) && !i.savedForLater)?.qty ?? 0;
   const showQtySelector = addState === "idle" && cartQty > 0;
-  const incCartQty = () => cartSetQty(product.slug, cartQty + 1);
-  const decCartQty = () => (cartQty <= 1 ? cartRemove(product.slug) : cartSetQty(product.slug, cartQty - 1));
+  const incCartQty = () => cartSetQty(product.slug, cartQty + 1, variantId);
+  const decCartQty = () => (cartQty <= 1 ? cartRemove(product.slug, variantId) : cartSetQty(product.slug, cartQty - 1, variantId));
+  // Products with variants require a valid selection before purchase.
+  const requiresVariant = variants.length > 0;
+  const missingVariant = requiresVariant && !variantId;
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
 
