@@ -101,7 +101,7 @@ function AdminPage() {
   useEffect(() => {
     if (!isAdmin) return;
     supabase.from("orders")
-      .select("id,user_id,status,total,currency,contact_email,created_at,paid_at,fulfilled_at,cancelled_at,order_items(name,quantity,product_slug,unit_price,line_total)")
+      .select("id,user_id,status,total,currency,contact_email,created_at,paid_at,fulfilled_at,cancelled_at,order_items(name,quantity,product_slug,unit_price,line_total,variant_name,variant_size,variant_color,variant_sku)")
       .order("created_at", { ascending: false }).limit(500)
       .then(({ data }) => setOrders((data as Order[]) ?? []));
     loadProducts();
