@@ -21,6 +21,7 @@ import {
 } from "@/components/admin/product-editor/field-builders";
 import type { KV } from "@/components/admin/product-editor/field-builders";
 import { ListChecks, Layers } from "lucide-react";
+import { VariantBuilder } from "@/components/admin/product-editor/VariantBuilder";
 import type { Product } from "@/lib/products";
 
 const RATING_SOURCES = [
