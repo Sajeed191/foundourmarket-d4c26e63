@@ -258,7 +258,7 @@ function OrdersPage() {
     if (!user) return;
     const [{ data: rawOrders }, { data: pays }, { data: rets }, { data: refs }] = await Promise.all([
       supabase.from("orders")
-        .select("id,status,total,currency,created_at,tracking_number,carrier,payment_status,fulfillment_status,razorpay_order_id,order_items(name,quantity,image,unit_price,product_slug)")
+        .select("id,status,total,currency,created_at,tracking_number,carrier,payment_status,fulfillment_status,razorpay_order_id,order_items(name,quantity,image,unit_price,product_slug,variant_name,variant_size,variant_color,variant_sku,variant_image)")
         .order("created_at", { ascending: false }),
       supabase.from("payments").select("order_id,status,meta,created_at").order("created_at", { ascending: false }),
       supabase.from("returns").select("order_id,status,refund_status,resolution_type,replacement_status,created_at").order("created_at", { ascending: false }),
