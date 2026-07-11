@@ -1079,6 +1079,7 @@ function ProductsInner() {
           nextSort={(products.length ?? 0) + 1}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); loadProducts(); invalidateProducts(); }}
+          onRefresh={() => { loadProducts(); invalidateProducts(); }}
         />
       )}
     </div>

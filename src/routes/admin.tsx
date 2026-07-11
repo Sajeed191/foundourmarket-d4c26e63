@@ -574,6 +574,7 @@ function AdminPage() {
           categories={categories ?? []}
           onClose={() => setEditing(null)}
           onSaved={async () => { setEditing(null); await loadProducts(); invalidateProducts(); }}
+          onRefresh={() => { void loadProducts(); invalidateProducts(); }}
         />
       )}
 

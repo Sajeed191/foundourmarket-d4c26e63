@@ -181,8 +181,12 @@ function CollectionsField({ value, onChange }: { value: string[]; onChange: (v: 
   );
 }
 
-export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved }: {
-  row: ProductEditorRow | null; categories: Category[]; nextSort?: number; onClose: () => void; onSaved: () => void;
+export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved, onRefresh }: {
+  row: ProductEditorRow | null; categories: Category[]; nextSort?: number;
+  onClose: () => void; onSaved: () => void;
+  /** Refresh the product list WITHOUT closing the modal (used after a create so
+   *  the admin stays on the same product to add variants). */
+  onRefresh?: () => void;
 }) {
   const { settings } = useStoreSettings();
   const [saving, setSaving] = useState(false);
@@ -200,6 +204,12 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [faqA, setFaqA] = useState("");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
   const [tab, setTab] = useState<"basic" | "merch" | "seo" | "related" | "variants" | "analytics" | "preview">("basic");
+
+  // After a successful CREATE we keep the modal open and remember the new
+  // product's id/slug so the Variants tab unlocks immediately — no re-open.
+  const [savedProduct, setSavedProduct] = useState<{ id: string; slug: string } | null>(null);
+  const effectiveId = row?.id ?? savedProduct?.id ?? null;
+  const effectiveSlug = row?.slug ?? savedProduct?.slug ?? null;
 
 
 
@@ -466,13 +476,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       admin_notes: form.admin_notes.trim() || null,
       scheduled_publish_at: form.scheduled_publish_at ? new Date(form.scheduled_publish_at).toISOString() : null,
     };
-    const { error: err } = row?.id
-      ? await supabase.from("products").update(payload).eq("id", row.id)
-      : await supabase.from("products").insert(payload);
+    const existingId = effectiveId;
+    const { data: savedRow, error: err } = existingId
+      ? await supabase.from("products").update(payload).eq("id", existingId).select("id, slug").single()
+      : await supabase.from("products").insert(payload).select("id, slug").single();
     if (err) { setSaving(false); setError(err.message); return; }
     // Newly created product: auto-assign the "New" badge, then flush any
     // pending manual badge assignments (in priority order).
-    if (!row?.id) {
+    if (!existingId) {
       try { await assignNewBadge(payload.slug); }
       catch { /* non-fatal: badge can be added manually in the editor */ }
       if (pendingBadges.length) {
@@ -482,7 +493,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       }
     }
     // Flush pending FAQs for a newly created product (in display order).
-    if (!row?.id && pendingFaqs.length) {
+    if (!existingId && pendingFaqs.length) {
       try {
         let i = 0;
         for (const faq of pendingFaqs) {
@@ -491,9 +502,20 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       } catch { /* non-fatal: product is saved, FAQs can be added in editor */ }
     }
     setSaving(false);
-    logActivity(row?.id ? "product_updated" : "product_created", "product", row?.id, { slug: payload.slug });
-    toast.success(row?.id ? "Product updated" : "Product created");
-    onSaved();
+    if (existingId) {
+      logActivity("product_updated", "product", existingId, { slug: payload.slug });
+      toast.success("Product updated");
+      onSaved();
+      return;
+    }
+    // CREATE succeeded: stay open, unlock variants, refresh list in background.
+    logActivity("product_created", "product", savedRow?.id, { slug: payload.slug });
+    setSavedProduct({ id: savedRow!.id, slug: savedRow!.slug });
+    setPendingBadges([]);
+    setPendingFaqs([]);
+    onRefresh?.();
+    setTab("variants");
+    toast.success("Product created successfully. You can now add Size & Color variants.");
   }
 
   return (
@@ -509,7 +531,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       >
         <div className="sticky top-0 z-20 -mx-4 sm:-mx-5 px-4 sm:px-5 pt-2 pb-2 bg-background/90 backdrop-blur space-y-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-display">{row?.id ? "Edit product" : "New product"}</h2>
+            <h2 className="text-lg font-display">{effectiveId ? "Edit product" : "New product"}</h2>
             <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
           </div>
           <div className="flex gap-1 overflow-x-auto -mx-1 px-1">
@@ -1003,8 +1025,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {tab === "variants" && (<>
         <CollapsibleModule eyebrow="Options" title="Product Variants" badge={<Layers className="size-3.5 text-accent" />}>
-          {row?.id && row?.slug ? (
-            <VariantBuilder slug={row.slug} />
+          {effectiveId && effectiveSlug ? (
+            <VariantBuilder slug={effectiveSlug} />
           ) : (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-6 text-center opacity-70">
               <Layers className="mx-auto mb-2 size-5 text-muted-foreground" />
@@ -1192,7 +1214,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
         <div className="sticky bottom-0 -mx-4 sm:-mx-5 px-4 sm:px-5 py-3 bg-background/85 backdrop-blur flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-white/10 text-sm hover:bg-white/5">Cancel</button>
           <button type="submit" disabled={saving} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-accent-foreground text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2">
-            {saving ? <Loader2 className="size-4 animate-spin" /> : null} {row?.id ? "Save changes" : "Create product"}
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null} {effectiveId ? "Save changes" : "Create product"}
           </button>
         </div>
       </motion.form>
