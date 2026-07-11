@@ -463,8 +463,14 @@ function ProductPage() {
     if (probe.complete) apply();
     return () => { active = false; };
   }, [activeUrl]);
-  // Clamp to a sane range so extreme panoramas / very tall images stay usable.
-  const displayAspect = mediaAspect ? Math.min(1.5, Math.max(0.66, mediaAspect)) : null;
+  // The container's aspect ratio is set to the image's *exact* natural aspect so
+  // it collapses to the real rendered image height — no fixed box, no letterbox,
+  // no reserved blank space. Video uses a standard 16:9; a square is used only as
+  // a first-paint placeholder before the natural aspect is known. A very tall
+  // portrait is capped by max-h below (which centers horizontally, never leaving
+  // a bottom gap).
+  const displayAspect =
+    activeMedia?.id === "video" ? 16 / 9 : mediaAspect ?? 1;
 
   const hasVideoFirst = galleryMedia[0]?.id === "video";
   const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
