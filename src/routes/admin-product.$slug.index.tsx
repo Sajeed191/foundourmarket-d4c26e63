@@ -38,7 +38,7 @@ export const Route = createFileRoute("/admin-product/$slug/")({
 });
 
 const ICONS: Record<string, any> = {
-  details: FileText, pricing: IndianRupee, inventory: Boxes, shipping: Truck,
+  details: FileText, pricing: IndianRupee, inventory: Boxes, variants: Package, shipping: Truck,
   returns: RotateCcw, seo: Search, merchandising: Sparkles, analytics: BarChart3, preview: Eye,
 };
 
@@ -46,6 +46,7 @@ const DESC: Record<string, string> = {
   details: "Name, description, media & attributes",
   pricing: "Regional prices, cost & margins",
   inventory: "Stock levels, SKU & availability",
+  variants: "Optional Size / Colour combinations",
   shipping: "Dimensions, fees & delivery options",
   returns: "Return window, replacements & warranty",
   seo: "Search title, description & keywords",
