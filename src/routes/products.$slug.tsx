@@ -664,9 +664,20 @@ function ProductPage() {
                   ) : (
                     <motion.img
                       key={activeMedia?.id}
-                      src={activeMedia?.url || product.image}
+                      src={galleryDisplaySrc(activeMedia?.url || product.image)}
                       alt={activeMedia?.alt || product.name}
                       onClick={() => setLightboxOpen(true)}
+                      onError={(e) => {
+                        // Self-healing: fall back to the primary product image,
+                        // then to the raw original, never a broken icon.
+                        const el = e.currentTarget;
+                        const primary = galleryDisplaySrc(product.image);
+                        if (el.src !== primary && product.image) {
+                          el.src = primary;
+                        } else if (el.src !== product.image && product.image) {
+                          el.src = product.image;
+                        }
+                      }}
                       initial={{ opacity: 0, scale: 1.04 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
