@@ -1545,6 +1545,14 @@ html[data-degrade-effects="true"] .card-ambient,
 html[data-degrade-effects="true"] .card-outline {
   box-shadow: var(--shadow-soft) !important;
 }
+/* Collapse heavy inline glow shadows on card frames, rails and testimonials so
+   low-end devices shed multi-layer shadow compositing outside the product grid
+   too (Phase 4D). Keeps a single cheap soft shadow — visuals stay equivalent. */
+html[data-degrade-effects="true"] [data-product-card-frame][style*="box-shadow"],
+html[data-degrade-effects="true"] [data-product-card-frame] [style*="box-shadow"],
+html[data-degrade-effects="true"] .glow-border {
+  box-shadow: var(--shadow-soft) !important;
+}
 /* Hide purely decorative floating glow / orb / particle layers. */
 html[data-degrade-effects="true"] [data-decorative],
 html[data-degrade-effects="true"] .orb,

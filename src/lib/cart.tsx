@@ -5,6 +5,7 @@ import { useProducts } from "./use-products";
 import { useAuth } from "./auth";
 import { useRegion } from "./region";
 import { buildVisibleMap } from "./product-availability";
+import { runWhenIdle } from "./idle";
 
 // A cart line is identified by product slug AND variant id. `variantId` is null
 // for products without variants (every product today) — in that case all logic
@@ -271,20 +272,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [variantIdsKey]);
 
   const add = async (slug: string, qty = 1, variantId: string | null = null) => {
-    import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty, variantId })).catch(() => {});
-    import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
-    import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
     const product = products.find((p) => p.slug === slug);
-    if (product) {
-      import("@/lib/ga4").then((m) => m.ga4AddToCart({
-        item_id: product.sku || product.slug,
-        item_name: product.name,
-        price: priceOf(product),
-        quantity: qty,
-        item_category: product.category ?? undefined,
-        item_brand: product.brand ?? undefined,
-      }, market === "india" ? "INR" : "USD")).catch(() => {});
-    }
+    // Non-critical analytics/personalization must not run before the optimistic
+    // cart update paints — defer them to idle time so the tap feels instant (INP).
+    runWhenIdle(() => {
+      import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty, variantId })).catch(() => {});
+      import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
+      import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
+      if (product) {
+        import("@/lib/ga4").then((m) => m.ga4AddToCart({
+          item_id: product.sku || product.slug,
+          item_name: product.name,
+          price: priceOf(product),
+          quantity: qty,
+          item_category: product.category ?? undefined,
+          item_brand: product.brand ?? undefined,
+        }, market === "india" ? "INR" : "USD")).catch(() => {});
+      }
+    });
     if (user && cartId) {
       const existing = items.find((i) => sameLine(i, slug, variantId) && !i.savedForLater);
       const newQty = (existing?.qty ?? 0) + qty;

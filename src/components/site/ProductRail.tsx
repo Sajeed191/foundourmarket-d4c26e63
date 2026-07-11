@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ProductCard } from "./ProductCard";
 import type { Product } from "@/lib/products";
 
@@ -8,7 +9,7 @@ import type { Product } from "@/lib/products";
  * - Each card ~68% viewport width so the next card peeks (Amazon/Nike pattern)
  * - Hidden on sm+ where a grid layout is preferred
  */
-export function ProductRail({
+function ProductRailImpl({
   products,
   className = "",
   compact = false,
@@ -44,4 +45,10 @@ export function ProductRail({
     </div>
   );
 }
+
+/**
+ * Memoized so parent re-renders (e.g. region/search state changes upstream) do
+ * not rebuild the rail's element tree. Re-renders only when its own props change.
+ */
+export const ProductRail = memo(ProductRailImpl);
 
