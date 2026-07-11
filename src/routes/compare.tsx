@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { X, Check, Minus, ShoppingBag, Scale } from "lucide-react";
 import { StarRating } from "@/components/site/StarRating";
 import { useCompare } from "@/hooks/use-compare";
 import { useProducts } from "@/lib/use-products";
-import { resolveImage, type Product } from "@/lib/products";
+import { resolveImage, fetchProductsBySlugs, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/compare")({
@@ -26,6 +27,24 @@ function ComparePage() {
   const items = slugs
     .map((s) => products.find((p) => p.slug === s))
     .filter((p): p is Product => Boolean(p));
+
+  // Grid products use the lean CARD projection (no `description`); fetch the
+  // blurbs for the compared set (max 4) on demand so the Description row fills in.
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const missing = items.filter((p) => !p.description && !(p.slug in descriptions)).map((p) => p.slug);
+    if (missing.length === 0) return;
+    let active = true;
+    fetchProductsBySlugs(missing).then((full) => {
+      if (!active) return;
+      setDescriptions((prev) => {
+        const next = { ...prev };
+        for (const s of missing) next[s] = full.find((f) => f.slug === s)?.description ?? "";
+        return next;
+      });
+    });
+    return () => { active = false; };
+  }, [items, descriptions]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
@@ -144,7 +163,7 @@ function ComparePage() {
               <Row label="Description">
                 {items.map((p) => (
                   <Cell key={p.id ?? p.slug}>
-                    <p className="text-xs text-muted-foreground line-clamp-6">{p.description || "—"}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-6">{p.description || descriptions[p.slug] || "—"}</p>
                   </Cell>
                 ))}
               </Row>

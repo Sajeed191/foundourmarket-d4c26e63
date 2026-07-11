@@ -341,11 +341,24 @@ export const SELECT_COLS = "id,slug,name,tagline,category,categories,price,ratin
 // are fetched on demand by fetchProduct() for the product detail page.
 export const LIST_SELECT_COLS = "id,slug,name,tagline,category,categories,price,rating,reviews,rating_source,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,restock_eta,preorder,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,premium,fast_selling,editors_choice,priority_score,collections,brand,product_type";
 
+// CARD columns — the leanest projection, used ONLY by high-volume browsing
+// grids/carousels (home, browse, category, trending/new/best sections) via
+// fetchProducts(). This is the SAME cache the cart reads (useProducts), so it
+// MUST retain the few fields checkout needs: cod_enabled + shipping fees.
+// Dropped, on top of LIST, are columns no grid/card/badge/cart/checkout reads:
+//   `description` (the single largest field — refetched on demand by
+//   QuickView/Compare), the non-COD payment-gateway flags, and
+//   logistics/scheduling/positioning fields (replacement/return-window/pickup/
+//   international_shipping/restock/scheduled_*/homepage_section/is_category_banner/
+//   featured_until/homepage_position/category_position/priority_score/product_type).
+// This roughly halves the catalog JSON downloaded to every visitor.
+// Product detail refetches the full record via SELECT_COLS (fetchProduct).
+export const CARD_SELECT_COLS = "id,slug,name,tagline,category,categories,price,rating,reviews,rating_source,image,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,cod_enabled,return_eligible,fragile,preorder,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,hide_from_search,hide_from_recommendations,premium,fast_selling,editors_choice,collections,brand";
 
 export async function fetchProducts(limit?: number): Promise<Product[]> {
   let query = supabase
     .from("products_public")
-    .select(LIST_SELECT_COLS)
+    .select(CARD_SELECT_COLS)
     .order("sort_order", { ascending: true });
   if (typeof limit === "number" && limit > 0) query = query.limit(limit);
   const { data, error } = await query;

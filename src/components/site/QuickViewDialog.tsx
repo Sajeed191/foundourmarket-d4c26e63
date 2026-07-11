@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, Star, ArrowRight, Zap } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { type Product, discountPercent } from "@/lib/products";
+import { type Product, discountPercent, fetchProduct } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { useBuyNow } from "@/lib/use-buy-now";
@@ -23,6 +23,19 @@ export function QuickViewDialog({
   const { toggle } = useWishlistActions();
   const saved = useWishlistSaved(product.slug);
   const buyNow = useBuyNow();
+
+  // Grid/card products use the lean CARD projection which omits `description`.
+  // Fetch it on demand when the dialog opens so the quick view keeps its blurb.
+  const [description, setDescription] = useState(product.description ?? "");
+  useEffect(() => {
+    if (!open) return;
+    if (product.description) { setDescription(product.description); return; }
+    let active = true;
+    fetchProduct(product.slug).then((full) => {
+      if (active && full?.description) setDescription(full.description);
+    });
+    return () => { active = false; };
+  }, [open, product.slug, product.description]);
 
   // Delegates to the single centralized Buy Now handler (see useBuyNow).
   const onBuyNow = useCallback(() => {
@@ -73,8 +86,8 @@ export function QuickViewDialog({
             ) : null}
           </div>
 
-          {product.description && (
-            <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{product.description}</p>
+          {description && (
+            <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{description}</p>
           )}
 
           {lowStock && (

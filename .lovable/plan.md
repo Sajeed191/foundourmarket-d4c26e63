@@ -1,50 +1,91 @@
-# Phase 3 — Variants Across Cart → Checkout → Orders → Invoice → Inventory
+# Phase 4 — Performance & Scalability
 
-Goal: make the dynamic variant system flow end-to-end without changing behavior for the ~158 existing products (none of which use variants today). Every change is additive and gated on a variant actually being selected, so non-variant products follow the exact current code path.
+Goal: make the catalog fast and scalable without touching the variant system, checkout, PDP correctness, SEO, or accessibility. Delivered in verifiable sub-phases (4A–4F), each shipped and checked before the next — the same low-risk cadence as Phases 1–3.
 
-## Guiding principle
-The cart's identity changes from `slug` to a composite `slug + variantId`. When `variantId` is `null` (every product today), all logic reduces to the current behavior. This keeps existing carts, orders, and checkout byte-for-byte compatible.
+## Baseline (measured today)
 
-## 1. Database (one migration)
-- `order_items`: add `variant_id uuid`, `variant_name text`, `variant_size text`, `variant_color text`, `variant_sku text`, `variant_image text`. All nullable — historical rows and non-variant orders stay valid. Snapshotted at purchase so later admin edits never mutate history.
-- `product_variants`: add `reserved_quantity int not null default 0` for per-variant reservations.
-- Reservation RPCs: extend `reserve_order_stock`, the commit, and the release functions so that when an `order_items` row has a `variant_id`, availability and reservation apply to that `product_variants` row; when `variant_id` is null, behavior is unchanged (product-level). Product-level `reserved_quantity` continues to gate non-variant lines.
-- Keeps existing GRANTs/RLS; no policy loosening.
+- **Catalog is the #1 win.** The homepage/browse list currently fetches ~72 columns per card via `LIST_SELECT_COLS`. For 48 products that is **126.7 KB**; a true card-only projection (15 fields) is **28.2 KB** — a **78% payload cut**, already beating the 40–60% target.
+- Published catalog size: **158 products**.
+- Homepage runtime (dev build, mobile 393px): FCP ~972 ms, CLS 0, ~250 requests. Production numbers will be captured against the published build as the official baseline before/after each sub-phase.
+- Existing groundwork to build on (not rebuild): `products_public` view, `LIST_SELECT_COLS` vs `SELECT_COLS`, `VirtualizedProductGrid`, `AdaptiveProductMedia`, `LazyMount`, `ProductSkeleton`, `__lean` marker on Product.
 
-## 2. Cart model (`src/lib/cart.tsx`)
-- `CartItem` gains optional `variantId` + a snapshot (`variantName`, `size`, `color`, `sku`, `image`, `unitPriceUSD`). Line identity = `slug|variantId`.
-- `add/remove/setQty/saveForLater/moveToCart/moveToWishlist` take an optional variant; DB rows read/write `variant_id` (column already exists). LS format extended (old entries parse fine — missing variant = null).
-- Snapshot the selected variant on add so the cart keeps the user's choice even if the admin edits the product later (revalidated at checkout, not silently overwritten).
-- Subtotal/count use the variant's price when present.
+## Success criteria (mobile)
 
-## 3. Product page (`src/routes/products.$slug.tsx`)
-- When `has_variants` and no variant selected, Add to Cart / Buy Now are blocked with a "Select options" prompt.
-- Add/Buy pass the selected variant + snapshot into cart/buy-now.
+- Lighthouse ≥ 90, LCP < 2.5 s, INP < 200 ms, CLS < 0.1, TBT trending down.
+- Initial catalog payload reduced ≥ 40–60% (target ~78% via card projection).
+- Smooth scroll on 2 GB / 4 GB / 8 GB Android where feasible.
+- Zero regressions: schema, checkout/payment, variants, PDP data, SEO, a11y.
 
-## 4. Cart UI (`src/routes/cart.tsx`)
-- Per line: variant image, Size/Color/custom options, optional SKU, qty, unit price, stock status.
-- If a line's variant became inactive/out of stock (revalidated on cart load), show a clear notice, block its checkout, and offer an inline switch to another available variant of the same product without removing it.
+---
 
-## 5. Checkout (`src/routes/checkout.tsx` + `src/lib/razorpay.functions.ts` + `global-beta.functions.ts`)
-- Order item payload carries `variantId`.
-- `repriceFromDb` reprices variant lines from `product_variants` (price_override / price_adjustment) via trusted server read; non-variant lines unchanged.
-- Re-validate variant active + stock before payment; never allow an inactive/OOS variant through.
-- Order-summary UI shows selected options + variant image + SKU.
+## 4A — Catalog API optimization (highest ROI)
 
-## 6. Orders / Invoice / Admin
-- `order_items` insert writes the variant snapshot columns.
-- Customer order view (`orders.$id.tsx`, `account_.orders.tsx`), invoice (`invoice.ts` / `order-invoice.ts`), and admin orders (`admin-orders.tsx`) render options + SKU beneath the product name. Historical orders with no variant render exactly as today.
+- Add a dedicated **card projection** constant `CARD_SELECT_COLS` (slug, name, price + regional prices/compare, rating, reviews, image, in_stock, discount, region visibility, featured, plus the few merchandising flags the cards/badges actually render).
+- Point list fetchers (`useProducts`/homepage/browse/section carousels) at the card projection; keep `__lean=true` so any detail-only field access is a no-op until PDP refetch.
+- Keep `SELECT_COLS` (full) exclusively on the PDP (`products.$slug.tsx`) and admin. Full backward compatibility — same `Product` shape, detail fields simply arrive on PDP.
+- Verify: re-measure list payload (expect ~28 KB/48), confirm cards + badges + region pricing render identically.
 
-## 7. Inventory
-- Admin variant builder already stores per-variant stock; reservation/commit now decrement the correct `product_variants` row. A product stays available while any variant has stock; only the depleted variant disables.
+## 4B — Image pipeline
 
-## 8. Performance
-- No new queries on browse/scroll. Variant data loads only on the product page (already) and once at cart/checkout revalidation. Cart snapshots avoid per-render variant fetches.
+- Responsive `srcset`/`sizes` + explicit width/height (or aspect-ratio box) on every card image to lock CLS.
+- WebP/AVIF where the source/CDN supports it, with graceful fallback to the original.
+- Blur/skeleton placeholder → fade-in; native `loading="lazy"` + `decoding="async"` for below-the-fold thumbnails; eager + `fetchpriority="high"` only for the LCP hero.
+- **Robustness**: automatic fallback image on error, integrity check for missing/empty URLs, and gallery self-healing (skip broken entries) on the PDP.
+- Prefetch only the *likely next* images (next carousel page / next-in-viewport), not the whole list.
 
-## 9. Validation before finishing
-- Typecheck clean (`tsgo`).
-- Manual trace: a non-variant product still adds/checks out/creates order/invoice identically.
-- A variant product requires selection, preserves the choice in cart, reprices correctly, reserves the right variant stock, and shows options in order + invoice + admin.
+## 4C — Caching strategy
 
-## Sequencing / risk
-DB migration first (approved separately), then cart model, then product page, then cart UI, then checkout/server repricing, then order/invoice/admin display. Checkout server changes are the highest-risk step and are done last, after the read paths are verified. Because `variantId` is null for all current data, each step is a no-op for existing products until a variant is actually chosen.
+- Cache headers for public catalog reads (browser + CDN) with `stale-while-revalidate` for card lists.
+- Route `staleTime`/`gcTime` tuning so re-navigation doesn't refetch static catalog data.
+- Explicit **cache invalidation** after product/admin edits so the storefront never serves stale cards (query invalidation + versioned key).
+
+## 4D — Rendering performance
+
+- Trim unnecessary re-renders (memoize card rows, stabilize callbacks/props, split context reads).
+- Confirm/extend virtualization + incremental mount for long grids; smooth infinite scroll with an IntersectionObserver sentinel.
+- Keep main-thread work chunked to protect INP/60 FPS on low-end Android.
+
+## 4E — Database / query optimization
+
+- Ensure the card projection maps to indexed filter/sort columns (status, region visibility, homepage/category position, created_at); add targeted indexes only where `EXPLAIN ANALYZE` shows a real cost (plain `CREATE INDEX` via migration).
+- Paginate heavy admin product queries; eliminate any N+1 (batch image/variant lookups).
+- No schema-breaking changes; migrations are additive.
+
+## 4F — Production monitoring
+
+- Client Web Vitals (LCP, INP, CLS, TTFB) reporting.
+- Slow API/query logging, image-load-failure counter, JS error capture, and checkout/payment timing + failure events.
+- Lightweight, sampled, and privacy-safe (no PII); surfaced for admins.
+
+---
+
+## Safety checklist (every sub-phase)
+
+- `tsgo` clean; no build/runtime errors.
+- Products **without** variants and **with** variants both render and check out.
+- Cart, checkout, orders, invoices, inventory reservations unchanged.
+- SEO: PDP metadata, `product-feed.xml`, canonical/OG intact.
+- A11y: alt text, focus, contrast preserved.
+- Before/after metrics recorded against the published build.
+
+## Sequencing
+
+4A (biggest, safest win) → 4B → 4C → 4D → 4E → 4F. Later roadmap items (Search/Recommendation intelligence, SEO & caching deep-dive, AI personalization, inventory analytics dashboard, "Continue Shopping" intelligence) stay as follow-on phases after this performance foundation lands.
+
+## Technical notes
+
+- 4A is pure frontend/query-shape: new `CARD_SELECT_COLS`, fetcher wiring, no schema change — fastest to ship and verify.
+- 4E is the only sub-phase that may add DB objects; all additive indexes, validated with `EXPLAIN ANALYZE`, run via the migration tool for approval.
+- Monitoring (4F) uses a `createServerFn`/public route ingestion endpoint; no third-party SDK required.
+
+---
+
+## Progress log
+
+### 4A — Catalog API optimization ✅ (done)
+- Added `CARD_SELECT_COLS` (51 cols) used only by browsing grids via `fetchProducts()`. Drops `description` (largest field), non-COD payment flags, and logistics/scheduling/positioning columns.
+- Kept `cod_enabled` + shipping fees in CARD because the cart reads products from the same `useProducts` cache and checkout needs them.
+- QuickView and Compare now lazy-fetch `description` on demand so those surfaces are unchanged.
+- Cart/checkout, PDP (full `SELECT_COLS`), recommendations, returns all keep the richer projections.
+- **Measured: 48-card list payload 126.7 KB → 66.5 KB (~48% smaller).** tsgo clean; grid, PDP, and detail verified in-browser with no runtime errors.
+- Behavior change (minor): client `SearchCommand` no longer substring-matches on product `description` (still matches name/brand/tagline/category).
