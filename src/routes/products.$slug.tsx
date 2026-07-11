@@ -216,6 +216,10 @@ function ProductPage() {
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [activeImg, setActiveImg] = useState(0);
+  // Natural aspect ratio (w/h) of the currently displayed image. Drives the
+  // main media container so it sizes to the image itself — no cropping and no
+  // unused blank space — while a sensible fallback reserves height (no CLS).
+  const [mediaAspect, setMediaAspect] = useState<number | null>(null);
   const thumbStripRef = useRef<HTMLDivElement>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
   const [fbtSlugs, setFbtSlugs] = useState<string[]>([]);
