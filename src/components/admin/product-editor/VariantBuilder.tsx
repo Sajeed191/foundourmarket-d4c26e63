@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Layers, Loader2, Plus, Trash2, Save, Wand2, AlertTriangle, Check } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Layers, Loader2, Plus, Trash2, Save, Wand2, AlertTriangle, Check, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";
 import {
   fetchAdminVariants,
