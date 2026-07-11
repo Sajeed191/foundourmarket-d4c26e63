@@ -46,3 +46,9 @@ function ProductRailImpl({
   );
 }
 
+/**
+ * Memoized so parent re-renders (e.g. region/search state changes upstream) do
+ * not rebuild the rail's element tree. Re-renders only when its own props change.
+ */
+export const ProductRail = memo(ProductRailImpl);
+
