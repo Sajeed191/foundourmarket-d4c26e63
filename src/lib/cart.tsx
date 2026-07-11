@@ -1,25 +1,38 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { type Product } from "./products";
+import { type Product, type CartVariant, fetchVariantsByIds } from "./products";
 import { useProducts } from "./use-products";
 import { useAuth } from "./auth";
 import { useRegion } from "./region";
 import { buildVisibleMap } from "./product-availability";
 
-type CartItem = { slug: string; qty: number; savedForLater?: boolean };
-type DetailedItem = CartItem & { product: Product };
-type RemovedItem = { slug: string; qty: number; at: number };
+// A cart line is identified by product slug AND variant id. `variantId` is null
+// for products without variants (every product today) — in that case all logic
+// below reduces to the original slug-only behavior for full backward compat.
+type CartItem = { slug: string; qty: number; savedForLater?: boolean; variantId?: string | null };
+type DetailedItem = CartItem & {
+  product: Product;
+  /** Current resolved variant (null for non-variant lines). */
+  variant: CartVariant | null;
+  /** Region unit price actually charged for this line. */
+  unitPrice: number;
+  /** True when a selected variant is inactive/unavailable or out of stock. */
+  unavailable: boolean;
+};
+type RemovedItem = { slug: string; qty: number; at: number; variantId: string | null };
 
 type Ctx = {
   items: CartItem[];
-  add: (slug: string, qty?: number) => Promise<void>;
-  remove: (slug: string) => Promise<void>;
-  removeSaved: (slug: string) => Promise<void>;
-  setQty: (slug: string, qty: number) => Promise<void>;
+  add: (slug: string, qty?: number, variantId?: string | null) => Promise<void>;
+  remove: (slug: string, variantId?: string | null) => Promise<void>;
+  removeSaved: (slug: string, variantId?: string | null) => Promise<void>;
+  setQty: (slug: string, qty: number, variantId?: string | null) => Promise<void>;
+  /** Switch a line to a different variant of the same product (keeps qty). */
+  switchVariant: (slug: string, fromVariantId: string | null, toVariantId: string) => Promise<void>;
   clear: () => Promise<void>;
-  saveForLater: (slug: string) => Promise<void>;
-  moveToCart: (slug: string) => Promise<void>;
-  moveToWishlist: (slug: string) => Promise<void>;
+  saveForLater: (slug: string, variantId?: string | null) => Promise<void>;
+  moveToCart: (slug: string, variantId?: string | null) => Promise<void>;
+  moveToWishlist: (slug: string, variantId?: string | null) => Promise<void>;
   undoRemove: () => Promise<void>;
   lastRemoved: RemovedItem | null;
   count: number;
@@ -34,18 +47,30 @@ type Ctx = {
 const CartContext = createContext<Ctx | null>(null);
 const LS_KEY = "cart";
 
+const nv = (v?: string | null) => v ?? null;
+const lineKey = (slug: string, variantId?: string | null) => `${slug}::${variantId ?? ""}`;
+const sameLine = (i: CartItem, slug: string, variantId?: string | null) =>
+  i.slug === slug && nv(i.variantId) === nv(variantId);
+
+// Reactive per-slug quantity (summed across variants) — powers on-card steppers.
 const cartQtyListeners = new Set<() => void>();
 let cartQtySnapshot = new Map<string, number>();
+// Non-reactive per-line quantity — powers Buy Now idempotency per variant.
+let lineQtySnapshot = new Map<string, number>();
 let cartActionsSnapshot: Pick<Ctx, "add" | "setQty"> = {
   add: async () => {},
   setQty: async () => {},
 };
 
-function publishCartQty(items: CartItem[]) {
+function publishCartQty(items: DetailedItem[]) {
   const next = new Map<string, number>();
+  const lines = new Map<string, number>();
   for (const item of items) {
-    if (!item.savedForLater) next.set(item.slug, item.qty);
+    if (item.savedForLater) continue;
+    next.set(item.slug, (next.get(item.slug) ?? 0) + item.qty);
+    lines.set(lineKey(item.slug, item.variantId), item.qty);
   }
+  lineQtySnapshot = lines;
   let changed = next.size !== cartQtySnapshot.size;
   if (!changed) {
     for (const [slug, qty] of next) {
@@ -68,13 +93,26 @@ function subscribeCartQty(listener: () => void) {
 function readLS(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(LS_KEY) ?? "[]");
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]");
+    if (!Array.isArray(raw)) return [];
+    // Tolerate the legacy shape (no variantId) — treat as a null-variant line.
+    return raw.map((r: any) => ({
+      slug: r.slug,
+      qty: r.qty,
+      savedForLater: !!r.savedForLater,
+      variantId: r.variantId ?? null,
+    }));
   } catch {
     return [];
   }
 }
 function writeLS(items: CartItem[]) {
   if (typeof window !== "undefined") localStorage.setItem(LS_KEY, JSON.stringify(items));
+}
+
+// Apply a variant filter to a supabase query builder (null => IS NULL).
+function withVariant<T>(q: any, variantId?: string | null): T {
+  return (variantId ? q.eq("variant_id", variantId) : q.is("variant_id", null)) as T;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -84,9 +122,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // undefined = not yet loaded; otherwise the user id (or null for guest) the cart was loaded for
   const [loadedFor, setLoadedFor] = useState<string | null | undefined>(undefined);
   const [lastRemoved, setLastRemoved] = useState<RemovedItem | null>(null);
+  const [variantsById, setVariantsById] = useState<Record<string, CartVariant>>({});
   const mergedRef = useRef(false);
 
   // Load LS on first mount (guests)
@@ -131,13 +169,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const guest = readLS();
         if (guest.length) {
           for (const g of guest) {
-            const { data: row } = await supabase
-              .from("cart_items")
-              .select("id,quantity")
-              .eq("cart_id", id)
-              .eq("product_slug", g.slug)
-              .is("variant_id", null)
-              .maybeSingle();
+            const { data: row } = await withVariant(
+              supabase
+                .from("cart_items")
+                .select("id,quantity")
+                .eq("cart_id", id)
+                .eq("product_slug", g.slug),
+              g.variantId,
+            ).maybeSingle();
             if (row) {
               await supabase
                 .from("cart_items")
@@ -146,7 +185,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             } else {
               await supabase
                 .from("cart_items")
-                .insert({ cart_id: id, product_slug: g.slug, quantity: g.qty });
+                .insert({ cart_id: id, product_slug: g.slug, quantity: g.qty, variant_id: g.variantId ?? null });
             }
           }
           writeLS([]);
@@ -155,7 +194,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       const { data: rows } = await supabase
         .from("cart_items")
-        .select("product_slug,quantity,saved_for_later")
+        .select("product_slug,quantity,saved_for_later,variant_id")
         .eq("cart_id", id);
       if (!cancelled) {
         setItems(
@@ -163,6 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             slug: r.product_slug,
             qty: r.quantity,
             savedForLater: !!r.saved_for_later,
+            variantId: r.variant_id ?? null,
           })),
         );
         setLoading(false);
@@ -185,13 +225,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         async () => {
           const { data: rows } = await supabase
             .from("cart_items")
-            .select("product_slug,quantity,saved_for_later")
+            .select("product_slug,quantity,saved_for_later,variant_id")
             .eq("cart_id", cartId);
           setItems(
             (rows ?? []).map((r) => ({
               slug: r.product_slug,
               qty: r.quantity,
               savedForLater: !!r.saved_for_later,
+              variantId: r.variant_id ?? null,
             })),
           );
         },
@@ -202,15 +243,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [user, cartId]);
 
-
-
   // Persist guests to LS
   useEffect(() => {
     if (!user) writeLS(items);
   }, [items, user]);
 
-  const add = async (slug: string, qty = 1) => {
-    import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty })).catch(() => {});
+  // Resolve current variant details for every variant in the cart. Runs only
+  // when the set of variant ids changes (not on qty changes) — zero cost for
+  // carts without variants, one query otherwise.
+  const variantIdsKey = useMemo(
+    () => [...new Set(items.map((i) => i.variantId).filter(Boolean) as string[])].sort().join(","),
+    [items],
+  );
+  useEffect(() => {
+    const ids = variantIdsKey ? variantIdsKey.split(",") : [];
+    if (ids.length === 0) {
+      setVariantsById((prev) => (Object.keys(prev).length ? {} : prev));
+      return;
+    }
+    let cancelled = false;
+    fetchVariantsByIds(ids).then((map) => {
+      if (!cancelled) setVariantsById(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [variantIdsKey]);
+
+  const add = async (slug: string, qty = 1, variantId: string | null = null) => {
+    import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty, variantId })).catch(() => {});
     import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
     import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
     const product = products.find((p) => p.slug === slug);
@@ -225,70 +286,77 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }, market === "india" ? "INR" : "USD")).catch(() => {});
     }
     if (user && cartId) {
-      const existing = items.find((i) => i.slug === slug && !i.savedForLater);
+      const existing = items.find((i) => sameLine(i, slug, variantId) && !i.savedForLater);
       const newQty = (existing?.qty ?? 0) + qty;
       setItems((p) =>
         existing
-          ? p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, qty: newQty } : i))
-          : [...p, { slug, qty, savedForLater: false }],
+          ? p.map((i) => (sameLine(i, slug, variantId) && !i.savedForLater ? { ...i, qty: newQty } : i))
+          : [...p, { slug, qty, savedForLater: false, variantId }],
       );
-      const { data: row } = await supabase
-        .from("cart_items")
-        .select("id")
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", false)
-        .is("variant_id", null)
-        .maybeSingle();
+      const { data: row } = await withVariant(
+        supabase
+          .from("cart_items")
+          .select("id")
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", false),
+        variantId,
+      ).maybeSingle();
       if (row) await supabase.from("cart_items").update({ quantity: newQty }).eq("id", row.id);
       else
         await supabase
           .from("cart_items")
-          .insert({ cart_id: cartId, product_slug: slug, quantity: qty, saved_for_later: false });
+          .insert({ cart_id: cartId, product_slug: slug, quantity: qty, saved_for_later: false, variant_id: variantId });
     } else {
       setItems((prev) => {
-        const f = prev.find((i) => i.slug === slug);
+        const f = prev.find((i) => sameLine(i, slug, variantId) && !i.savedForLater);
         return f
-          ? prev.map((i) => (i.slug === slug ? { ...i, qty: i.qty + qty } : i))
-          : [...prev, { slug, qty }];
+          ? prev.map((i) => (sameLine(i, slug, variantId) && !i.savedForLater ? { ...i, qty: i.qty + qty } : i))
+          : [...prev, { slug, qty, variantId }];
       });
     }
   };
 
-  const remove = async (slug: string) => {
-    const existing = items.find((i) => i.slug === slug && !i.savedForLater);
-    if (existing) setLastRemoved({ slug, qty: existing.qty, at: Date.now() });
-    setItems((p) => p.filter((i) => !(i.slug === slug && !i.savedForLater)));
+  const remove = async (slug: string, variantId: string | null = null) => {
+    const existing = items.find((i) => sameLine(i, slug, variantId) && !i.savedForLater);
+    if (existing) setLastRemoved({ slug, qty: existing.qty, at: Date.now(), variantId });
+    setItems((p) => p.filter((i) => !(sameLine(i, slug, variantId) && !i.savedForLater)));
     if (user && cartId) {
-      await supabase
-        .from("cart_items")
-        .delete()
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", false);
+      await withVariant(
+        supabase
+          .from("cart_items")
+          .delete()
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", false),
+        variantId,
+      );
     }
   };
 
-  const removeSaved = async (slug: string) => {
-    setItems((p) => p.filter((i) => !(i.slug === slug && i.savedForLater)));
+  const removeSaved = async (slug: string, variantId: string | null = null) => {
+    setItems((p) => p.filter((i) => !(sameLine(i, slug, variantId) && i.savedForLater)));
     if (user && cartId) {
-      await supabase
-        .from("cart_items")
-        .delete()
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", true);
+      await withVariant(
+        supabase
+          .from("cart_items")
+          .delete()
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", true),
+        variantId,
+      );
     }
   };
 
   const undoRemove = async () => {
     if (!lastRemoved) return;
-    const { slug, qty } = lastRemoved;
+    const { slug, qty, variantId } = lastRemoved;
     setLastRemoved(null);
-    await add(slug, qty);
+    await add(slug, qty, variantId);
   };
 
-  const moveToWishlist = async (slug: string) => {
+  const moveToWishlist = async (slug: string, variantId: string | null = null) => {
     if (user) {
       const { data: existing } = await supabase
         .from("wishlist")
@@ -300,21 +368,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
       }
     }
-    await remove(slug);
+    await remove(slug, variantId);
   };
 
-
-  const setQty = async (slug: string, qty: number) => {
-    if (qty <= 0) return remove(slug);
-    setItems((p) => p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, qty } : i)));
+  const setQty = async (slug: string, qty: number, variantId: string | null = null) => {
+    if (qty <= 0) return remove(slug, variantId);
+    setItems((p) => p.map((i) => (sameLine(i, slug, variantId) && !i.savedForLater ? { ...i, qty } : i)));
     if (user && cartId) {
-      await supabase
-        .from("cart_items")
-        .update({ quantity: qty })
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", false);
+      await withVariant(
+        supabase
+          .from("cart_items")
+          .update({ quantity: qty })
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", false),
+        variantId,
+      );
     }
+  };
+
+  // Move a line to a different variant, merging into an existing line if the
+  // target variant already sits in the cart.
+  const switchVariant = async (slug: string, fromVariantId: string | null, toVariantId: string) => {
+    if (nv(fromVariantId) === toVariantId) return;
+    const src = items.find((i) => sameLine(i, slug, fromVariantId) && !i.savedForLater);
+    if (!src) return;
+    const qty = src.qty;
+    await remove(slug, fromVariantId);
+    await add(slug, qty, toVariantId);
   };
 
   const clear = async () => {
@@ -330,41 +411,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const saveForLater = async (slug: string) => {
-    setItems((p) => p.map((i) => (i.slug === slug && !i.savedForLater ? { ...i, savedForLater: true } : i)));
+  const saveForLater = async (slug: string, variantId: string | null = null) => {
+    setItems((p) => p.map((i) => (sameLine(i, slug, variantId) && !i.savedForLater ? { ...i, savedForLater: true } : i)));
     if (user && cartId) {
-      await supabase
-        .from("cart_items")
-        .update({ saved_for_later: true })
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", false);
+      await withVariant(
+        supabase
+          .from("cart_items")
+          .update({ saved_for_later: true })
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", false),
+        variantId,
+      );
     }
   };
 
-  const moveToCart = async (slug: string) => {
-    setItems((p) => p.map((i) => (i.slug === slug && i.savedForLater ? { ...i, savedForLater: false } : i)));
+  const moveToCart = async (slug: string, variantId: string | null = null) => {
+    setItems((p) => p.map((i) => (sameLine(i, slug, variantId) && i.savedForLater ? { ...i, savedForLater: false } : i)));
     if (user && cartId) {
-      await supabase
-        .from("cart_items")
-        .update({ saved_for_later: false })
-        .eq("cart_id", cartId)
-        .eq("product_slug", slug)
-        .eq("saved_for_later", true);
+      await withVariant(
+        supabase
+          .from("cart_items")
+          .update({ saved_for_later: false })
+          .eq("cart_id", cartId)
+          .eq("product_slug", slug)
+          .eq("saved_for_later", true),
+        variantId,
+      );
     }
   };
 
   // Only currently-visible/active products contribute to the cart the user
-  // sees, the totals and the badge count. If an admin deletes or deactivates a
-  // product it drops out here automatically (via the products realtime/focus
-  // refresh) — no stale rows, totals or counts, and no reload required.
+  // sees, the totals and the badge count.
   const visibleMap = useMemo(() => buildVisibleMap(products, market), [products, market]);
 
   const toDetailed = (list: CartItem[]): DetailedItem[] =>
     list
       .map((i) => {
         const product = visibleMap.get(i.slug);
-        return product ? { ...i, product } : null;
+        if (!product) return null;
+        const variant = i.variantId ? variantsById[i.variantId] ?? null : null;
+        // A variant line is unavailable when the variant no longer resolves
+        // (inactive / deleted) or has no stock. Non-variant lines are never
+        // flagged here (product-level availability handled elsewhere).
+        const unavailable = i.variantId ? !variant || variant.stockQuantity <= 0 : false;
+        const unitPrice = variant?.priceOverride ?? priceOf(product);
+        return { ...i, product, variant, unitPrice, unavailable } as DetailedItem;
       })
       .filter(Boolean) as DetailedItem[];
 
@@ -373,14 +465,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const detailed = toDetailed(active);
   const savedDetailed = toDetailed(saved);
 
-  const subtotalUSD = detailed.reduce((s, i) => s + priceOf(i.product) * i.qty, 0);
-  // Badge/count reflects only purchasable items actually shown in the cart.
+  const subtotalUSD = detailed.reduce((s, i) => s + i.unitPrice * i.qty, 0);
   const count = detailed.reduce((s, i) => s + i.qty, 0);
   const hydrated = loadedFor === (user?.id ?? null);
 
   useEffect(() => {
-    // Publish only visible items so on-card qty steppers never reflect a
-    // deleted/deactivated product.
     publishCartQty(detailed);
   }, [detailed]);
 
@@ -396,6 +485,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         remove,
         removeSaved,
         setQty,
+        switchVariant,
         clear,
         saveForLater,
         moveToCart,
@@ -430,19 +520,23 @@ export function useCartQty(slug: string) {
 }
 
 /**
- * Non-reactive read of the current persisted cart quantity for a slug.
- * Used by the centralized Buy Now handler to decide (at click time) whether a
- * line already exists — without subscribing the caller to cart updates.
+ * Non-reactive read of the current persisted cart quantity for a slug (summed
+ * across variants). Used by the centralized Buy Now handler.
  */
 export function readCartQty(slug: string): number {
   return cartQtySnapshot.get(slug) ?? 0;
 }
 
+/** Non-reactive per-line quantity (slug + variant). */
+export function readLineQty(slug: string, variantId?: string | null): number {
+  return lineQtySnapshot.get(lineKey(slug, variantId)) ?? 0;
+}
+
 export function useCartActions() {
   return useMemo(
     () => ({
-      add: (slug: string, qty?: number) => cartActionsSnapshot.add(slug, qty),
-      setQty: (slug: string, qty: number) => cartActionsSnapshot.setQty(slug, qty),
+      add: (slug: string, qty?: number, variantId?: string | null) => cartActionsSnapshot.add(slug, qty, variantId),
+      setQty: (slug: string, qty: number, variantId?: string | null) => cartActionsSnapshot.setQty(slug, qty, variantId),
     }),
     [],
   );
