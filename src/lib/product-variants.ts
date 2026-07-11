@@ -147,11 +147,19 @@ export async function saveVariants(slug: string, drafts: VariantDraft[]): Promis
     .filter(({ draft }) => !draft.id);
 
   for (const { draft, i } of updates) {
-    const { error } = await supabase
+    let q = supabase
       .from("product_variants")
       .update(draftToRow(slug, draft, i))
       .eq("id", draft.id as string);
+    // Optimistic concurrency: only apply if the row hasn't changed since load.
+    if (typeof draft.version === "number") q = q.eq("version", draft.version);
+    const { data, error } = await q.select("id");
     if (error) throw error;
+    if (typeof draft.version === "number" && (!data || data.length === 0)) {
+      throw new Error(
+        "This variant was changed by someone else. Reload the variants and re-apply your edits.",
+      );
+    }
   }
   if (inserts.length) {
     const { error } = await supabase
