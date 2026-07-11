@@ -482,6 +482,15 @@ function ProductPage() {
   const effectivePrice = selectedVariant?.priceOverride ?? basePrice;
   const effectiveStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
   const effectiveSku = selectedVariant?.sku ?? product.sku;
+  // When a selected variant has its own image, jump the gallery to it (if that
+  // image is part of the gallery). Never disrupts products/variants without one.
+  const variantImg = selectedVariant?.imageUrl ?? null;
+  useEffect(() => {
+    if (!variantImg) return;
+    const idx = galleryMedia.findIndex((m) => m.url === variantImg);
+    if (idx >= 0) setActiveImg(idx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantImg]);
   const unitShipping = shippingFeeOf(product);
   const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
   const isOOS = effectiveStock <= 0;
