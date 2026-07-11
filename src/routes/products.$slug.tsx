@@ -40,6 +40,7 @@ const AdminImageManager = lazy(() =>
   import("@/components/admin/AdminImageManager").then((m) => ({ default: m.AdminImageManager })),
 );
 import { ImageLightbox } from "@/components/site/ImageLightbox";
+import { VariantSelector } from "@/components/site/VariantSelector";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
 import { ProductInfoPanel } from "@/components/site/ProductInfoPanel";
@@ -481,6 +482,15 @@ function ProductPage() {
   const effectivePrice = selectedVariant?.priceOverride ?? basePrice;
   const effectiveStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
   const effectiveSku = selectedVariant?.sku ?? product.sku;
+  // When a selected variant has its own image, jump the gallery to it (if that
+  // image is part of the gallery). Never disrupts products/variants without one.
+  const variantImg = selectedVariant?.imageUrl ?? null;
+  useEffect(() => {
+    if (!variantImg) return;
+    const idx = galleryMedia.findIndex((m) => m.url === variantImg);
+    if (idx >= 0) setActiveImg(idx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantImg]);
   const unitShipping = shippingFeeOf(product);
   const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
   const isOOS = effectiveStock <= 0;
@@ -878,30 +888,9 @@ function ProductPage() {
               
             </div>
 
-            {/* Variants */}
+            {/* Variants — fully dynamic, data-driven, adaptive selector */}
             {variants.length > 0 && (
-              <div className="mb-4">
-
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Variant</p>
-                <div className="flex flex-wrap gap-2">
-                  {variants.map((v) => {
-                    const sel = v.id === variantId;
-                    const oos = v.stockQuantity <= 0;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => !oos && setVariantId(v.id)}
-                        disabled={oos}
-                        aria-pressed={sel}
-                        className={`min-h-11 px-4 py-2.5 rounded-full text-xs border transition-all active:scale-95 ${sel ? "border-accent text-accent bg-accent/10 shadow-[var(--shadow-ember)]" : "border-border hover:border-accent/50"} disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through`}
-                      >
-                        {v.name}
-                      </button>
-
-                    );
-                  })}
-                </div>
-              </div>
+              <VariantSelector variants={variants} selectedId={variantId} onSelect={setVariantId} />
             )}
 
             {/* Premium purchase panel — unique FoundOurMarket design.
