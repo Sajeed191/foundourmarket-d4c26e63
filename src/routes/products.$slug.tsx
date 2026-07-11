@@ -602,11 +602,17 @@ function ProductPage() {
                       src={activeMedia?.url || product.image}
                       alt={activeMedia?.alt || product.name}
                       onClick={() => setLightboxOpen(true)}
+                      onLoad={(e) => {
+                        const el = e.currentTarget;
+                        if (el.naturalWidth > 0 && el.naturalHeight > 0) {
+                          setMediaAspect(el.naturalWidth / el.naturalHeight);
+                        }
+                      }}
                       initial={{ opacity: 0, scale: 1.04 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-contain cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
                     />
                   )}
                 </AnimatePresence>
