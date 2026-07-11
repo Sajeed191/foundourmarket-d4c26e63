@@ -51,7 +51,7 @@ export async function fetchInvoiceOrder(orderId: string): Promise<InvoiceOrder |
   const { data } = await supabase
     .from("orders")
     .select(
-      "id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,shipping_address,created_at,order_items(name,quantity,unit_price,line_total)"
+      "id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,shipping_address,created_at,order_items(name,quantity,unit_price,line_total,variant_name,variant_size,variant_color,variant_sku)"
     )
     .eq("id", orderId)
     .maybeSingle();
