@@ -27,6 +27,7 @@ export type AdminVariant = {
   lowStockThreshold: number;
   active: boolean;
   sortOrder: number;
+  version: number;
 };
 
 export const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
