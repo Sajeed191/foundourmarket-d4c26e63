@@ -1025,8 +1025,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {tab === "variants" && (<>
         <CollapsibleModule eyebrow="Options" title="Product Variants" badge={<Layers className="size-3.5 text-accent" />}>
-          {row?.id && row?.slug ? (
-            <VariantBuilder slug={row.slug} />
+          {effectiveId && effectiveSlug ? (
+            <VariantBuilder slug={effectiveSlug} />
           ) : (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-6 text-center opacity-70">
               <Layers className="mx-auto mb-2 size-5 text-muted-foreground" />
