@@ -38,7 +38,7 @@ type Order = {
   id: string; user_id: string; status: string; total: number; currency: string;
   contact_email: string | null; created_at: string;
   paid_at: string | null; fulfilled_at: string | null; cancelled_at: string | null;
-  order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number }[];
+  order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number; variant_name?: string | null; variant_size?: string | null; variant_color?: string | null; variant_sku?: string | null }[];
 };
 
 type ProductRow = {
@@ -101,7 +101,7 @@ function AdminPage() {
   useEffect(() => {
     if (!isAdmin) return;
     supabase.from("orders")
-      .select("id,user_id,status,total,currency,contact_email,created_at,paid_at,fulfilled_at,cancelled_at,order_items(name,quantity,product_slug,unit_price,line_total)")
+      .select("id,user_id,status,total,currency,contact_email,created_at,paid_at,fulfilled_at,cancelled_at,order_items(name,quantity,product_slug,unit_price,line_total,variant_name,variant_size,variant_color,variant_sku)")
       .order("created_at", { ascending: false }).limit(500)
       .then(({ data }) => setOrders((data as Order[]) ?? []));
     loadProducts();
@@ -397,6 +397,9 @@ function AdminPage() {
                                       <tr key={idx} className="border-t border-white/5">
                                         <td className="px-3 py-2">
                                           <span className="font-medium">{i.name}</span>
+                                          {([i.variant_color, i.variant_size].filter(Boolean).join(" · ") || i.variant_name) && (
+                                            <span className="block text-[10px] text-accent/90">{[i.variant_color, i.variant_size].filter(Boolean).join(" · ") || i.variant_name}{i.variant_sku ? ` · ${i.variant_sku}` : ""}</span>
+                                          )}
                                           {i.product_slug && <span className="block text-[10px] text-muted-foreground font-mono">{i.product_slug}</span>}
                                         </td>
                                         <td className="px-3 py-2 text-right font-mono tabular-nums">{i.quantity}</td>

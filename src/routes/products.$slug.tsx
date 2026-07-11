@@ -497,10 +497,13 @@ function ProductPage() {
   // Live cart quantity for this product — drives the "quantity selector replaces
   // Add to Cart" flow. The selector is shown ONLY after a successful add
   // animation completes (addState back to idle) and the item is in the cart.
-  const cartQty = cartItems.find((i) => i.slug === product.slug && !i.savedForLater)?.qty ?? 0;
+  const cartQty = cartItems.find((i) => i.slug === product.slug && (i.variantId ?? null) === (variantId ?? null) && !i.savedForLater)?.qty ?? 0;
   const showQtySelector = addState === "idle" && cartQty > 0;
-  const incCartQty = () => cartSetQty(product.slug, cartQty + 1);
-  const decCartQty = () => (cartQty <= 1 ? cartRemove(product.slug) : cartSetQty(product.slug, cartQty - 1));
+  const incCartQty = () => cartSetQty(product.slug, cartQty + 1, variantId);
+  const decCartQty = () => (cartQty <= 1 ? cartRemove(product.slug, variantId) : cartSetQty(product.slug, cartQty - 1, variantId));
+  // Products with variants require a valid selection before purchase.
+  const requiresVariant = variants.length > 0;
+  const missingVariant = requiresVariant && !variantId;
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
 
@@ -533,8 +536,10 @@ function ProductPage() {
 
   const handleAdd = () => {
     if (addState !== "idle") return;
-    // Existing add-to-cart logic — unchanged (adds a single unit).
-    add(product.slug, 1);
+    if (missingVariant) { toast.error("Please select an option first"); return; }
+    // Adds a single unit of the selected variant (variantId is null for
+    // products without variants — identical to the previous behavior).
+    add(product.slug, 1, variantId);
     // Visual progression: Adding… → ✓ Added (held ~1s) → quantity selector.
     setAddState("loading");
     addTimers.current.push(
@@ -548,8 +553,8 @@ function ProductPage() {
   // guarded by a shared double-tap lock. `navigate: false` lets the wrapping
   // <Link to="/cart"> own routing so the page's existing markup is unchanged.
   const handleBuyNow = () => {
-    // Existing buy-now logic — unchanged.
-    buyNow(product, { qty: Math.max(1, cartQty), disabled: isOOS, navigate: false });
+    if (missingVariant) { toast.error("Please select an option first"); return; }
+    buyNow(product, { qty: Math.max(1, cartQty), disabled: isOOS, navigate: false, variantId });
     if (isOOS) return;
     // Brief "Preparing…" affordance while routing to checkout proceeds.
     setBuyState("loading");

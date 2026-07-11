@@ -2402,6 +2402,12 @@ export type Database = {
           product_slug: string
           quantity: number
           unit_price: number
+          variant_color: string | null
+          variant_id: string | null
+          variant_image: string | null
+          variant_name: string | null
+          variant_size: string | null
+          variant_sku: string | null
         }
         Insert: {
           created_at?: string
@@ -2414,6 +2420,12 @@ export type Database = {
           product_slug: string
           quantity: number
           unit_price: number
+          variant_color?: string | null
+          variant_id?: string | null
+          variant_image?: string | null
+          variant_name?: string | null
+          variant_size?: string | null
+          variant_sku?: string | null
         }
         Update: {
           created_at?: string
@@ -2426,6 +2438,12 @@ export type Database = {
           product_slug?: string
           quantity?: number
           unit_price?: number
+          variant_color?: string | null
+          variant_id?: string | null
+          variant_image?: string | null
+          variant_name?: string | null
+          variant_size?: string | null
+          variant_sku?: string | null
         }
         Relationships: [
           {
@@ -3029,6 +3047,7 @@ export type Database = {
           price_adjustment: number
           price_override: number | null
           product_slug: string
+          reserved_quantity: number
           size: string | null
           sku: string | null
           sort_order: number
@@ -3050,6 +3069,7 @@ export type Database = {
           price_adjustment?: number
           price_override?: number | null
           product_slug: string
+          reserved_quantity?: number
           size?: string | null
           sku?: string | null
           sort_order?: number
@@ -3071,6 +3091,7 @@ export type Database = {
           price_adjustment?: number
           price_override?: number | null
           product_slug?: string
+          reserved_quantity?: number
           size?: string | null
           sku?: string | null
           sort_order?: number

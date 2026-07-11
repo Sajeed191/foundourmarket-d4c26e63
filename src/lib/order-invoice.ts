@@ -12,6 +12,10 @@ export type InvoiceItem = {
   quantity: number;
   unit_price: number;
   line_total: number;
+  variant_name?: string | null;
+  variant_size?: string | null;
+  variant_color?: string | null;
+  variant_sku?: string | null;
 };
 
 export type InvoiceData = {
@@ -76,13 +80,17 @@ export function buildInvoiceHTML(d: InvoiceData): string {
 
   const rows = d.items
     .map(
-      (it) => `
+      (it) => {
+        const options = [it.variant_color, it.variant_size].filter(Boolean).join(" / ") || it.variant_name || "";
+        const detail = [options, it.variant_sku ? `SKU: ${it.variant_sku}` : ""].filter(Boolean).join(" · ");
+        return `
       <tr>
-        <td class="prod">${esc(it.name)}</td>
+        <td class="prod">${esc(it.name)}${detail ? `<br/><span style="font-size:11px;color:#666">${esc(detail)}</span>` : ""}</td>
         <td class="num">${esc(it.quantity)}</td>
         <td class="num">${money(it.unit_price, cur)}</td>
         <td class="num">${money(it.line_total, cur)}</td>
-      </tr>`,
+      </tr>`;
+      },
     )
     .join("");
 

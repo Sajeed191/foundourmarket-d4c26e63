@@ -20,6 +20,7 @@ import { enqueueOrderEmail } from "./order-emails.server";
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),
   qty: z.number().int().min(1).max(99),
+  variantId: z.string().uuid().optional().nullable(),
 });
 
 const attributionSchema = z
@@ -108,7 +109,7 @@ export async function resolveRegion(
 export async function repriceFromDb(
   supabase: any,
   region: Region,
-  items: { slug: string; qty: number }[],
+  items: { slug: string; qty: number; variantId?: string | null }[],
   promoCode?: string | null,
 ) {
   const slugs = items.map((i) => i.slug);
@@ -119,25 +120,57 @@ export async function repriceFromDb(
     .in("slug", slugs);
   if (error) throw new Error("Could not load products.");
 
+  // Load selected variants (trusted). A variant must be active and belong to
+  // its line's product; otherwise the order is rejected before payment.
+  const variantIds = [...new Set(items.map((i) => i.variantId).filter(Boolean) as string[])];
+  const variantById = new Map<string, any>();
+  if (variantIds.length > 0) {
+    const { data: variants, error: vErr } = await supabaseAdmin
+      .from("product_variants")
+      .select("id,product_slug,name,sku,size,color,image_url,price_override,stock_quantity,reserved_quantity,active")
+      .in("id", variantIds);
+    if (vErr) throw new Error("Could not load variants.");
+    for (const v of (variants ?? []) as any[]) variantById.set(v.id, v);
+  }
+
   const bySlug = new Map<string, any>((products ?? []).map((p: any) => [p.slug, p]));
   const lines = items.map((i) => {
     const p = bySlug.get(i.slug);
     if (!p) throw new Error(`Product unavailable: ${i.slug}`);
-    const raw = region === "india" ? p.price_inr : p.price_usd;
-    if (raw == null) {
+    const baseRaw = region === "india" ? p.price_inr : p.price_usd;
+    if (baseRaw == null) {
       throw new Error(`Pricing unavailable for ${i.slug} in your region.`);
     }
-    const unit = roundMoney(region, Number(raw));
+    let unit = roundMoney(region, Number(baseRaw));
+    let variant: any = null;
+    if (i.variantId) {
+      variant = variantById.get(i.variantId);
+      if (!variant || variant.active === false || variant.product_slug !== i.slug) {
+        throw new Error(`Selected option is no longer available for ${p.name}.`);
+      }
+      const avail = Number(variant.stock_quantity ?? 0) - Number(variant.reserved_quantity ?? 0);
+      if (avail < i.qty) {
+        throw new Error(`Selected option for ${p.name} is out of stock.`);
+      }
+      // Variant price override (region-native, matching the product page) wins.
+      if (variant.price_override != null) unit = roundMoney(region, Number(variant.price_override));
+    }
     const shipFeeRaw = region === "india" ? p.shipping_fee_inr : p.shipping_fee_usd;
     const shipFee = Math.max(0, Number(shipFeeRaw ?? 0));
     return {
       slug: i.slug,
       name: p.name as string,
-      image: (p.image as string) ?? null,
+      image: (variant?.image_url as string) || ((p.image as string) ?? null),
       unit,
       qty: i.qty,
       lineTotal: roundMoney(region, unit * i.qty),
       shipFee,
+      variantId: (i.variantId as string) ?? null,
+      variantName: (variant?.name as string) ?? null,
+      variantSize: (variant?.size as string) ?? null,
+      variantColor: (variant?.color as string) ?? null,
+      variantSku: (variant?.sku as string) ?? null,
+      variantImage: (variant?.image_url as string) ?? null,
     };
   });
 
@@ -257,6 +290,12 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       unit_price: l.unit,
       quantity: l.qty,
       line_total: l.lineTotal,
+      variant_id: l.variantId,
+      variant_name: l.variantName,
+      variant_size: l.variantSize,
+      variant_color: l.variantColor,
+      variant_sku: l.variantSku,
+      variant_image: l.variantImage,
     }));
     const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
     if (oiErr) {
@@ -606,6 +645,12 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       unit_price: l.unit,
       quantity: l.qty,
       line_total: l.lineTotal,
+      variant_id: l.variantId,
+      variant_name: l.variantName,
+      variant_size: l.variantSize,
+      variant_color: l.variantColor,
+      variant_sku: l.variantSku,
+      variant_image: l.variantImage,
     }));
     const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
     if (oiErr) {

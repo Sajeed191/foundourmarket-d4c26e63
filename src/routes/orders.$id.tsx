@@ -22,7 +22,7 @@ const STATUSES = [
   { key: "delivered", label: "Delivered", icon: Package },
 ] as const;
 
-type OrderItem = { id: string; name: string; quantity: number; image: string | null; unit_price: number; line_total: number; product_slug: string };
+type OrderItem = { id: string; name: string; quantity: number; image: string | null; unit_price: number; line_total: number; product_slug: string; variant_name?: string | null; variant_size?: string | null; variant_color?: string | null; variant_sku?: string | null; variant_image?: string | null };
 type Order = {
   id: string;
   status: string;
@@ -62,7 +62,7 @@ function OrderDetailPage() {
     if (!user) return;
     supabase
       .from("orders")
-      .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,shipping_address,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug)")
+      .select("id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,shipping_address,created_at,updated_at,order_items(id,name,quantity,image,unit_price,line_total,product_slug,variant_name,variant_size,variant_color,variant_sku,variant_image)")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => setOrder((data as Order) ?? null));
@@ -212,16 +212,20 @@ function OrderDetailPage() {
         >
           <h3 className="text-[10px] font-mono uppercase tracking-widest text-accent mb-4">Items</h3>
           <ul className="space-y-3">
-            {order.order_items.map((it) => (
+            {order.order_items.map((it) => {
+              const options = [it.variant_color, it.variant_size].filter(Boolean).join(" · ") || it.variant_name || "";
+              return (
               <li key={it.id} className="flex items-center gap-3">
-                {it.image && <img src={it.image} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
+                {(it.variant_image || it.image) && <img src={it.variant_image || it.image || undefined} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
                 <div className="flex-1 min-w-0">
                   <Link to="/products/$slug" params={{ slug: it.product_slug }} className="text-sm font-medium truncate hover:text-accent block">{it.name}</Link>
+                  {options && <p className="text-xs text-accent/90 truncate">{options}{it.variant_sku ? ` · ${it.variant_sku}` : ""}</p>}
                   <p className="text-xs text-muted-foreground font-mono">Qty {it.quantity} · {format(Number(it.unit_price))} ea</p>
                 </div>
                 <p className="font-mono text-sm whitespace-nowrap">{format(Number(it.line_total))}</p>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
             <Row label="Subtotal" value={format(Number(order.subtotal))} />

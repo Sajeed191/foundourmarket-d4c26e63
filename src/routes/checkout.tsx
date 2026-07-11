@@ -271,7 +271,7 @@ function CheckoutPage() {
       const createOnce = () =>
         createOrder({
           data: {
-            items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
+            items: detailed.map((i) => ({ slug: i.slug, qty: i.qty, variantId: i.variantId ?? null })),
             addressId: selectedAddress.id,
             promoCode: coupon?.code ?? null,
             attribution: buildOrderAttribution(),
@@ -549,7 +549,7 @@ function CheckoutPage() {
       // database prices — never from client state (anti price-tampering).
       const placed = await placeCodOrderFn({
         data: {
-          items: detailed.map((i) => ({ slug: i.slug, qty: i.qty })),
+          items: detailed.map((i) => ({ slug: i.slug, qty: i.qty, variantId: i.variantId ?? null })),
           addressId: selectedAddress.id,
           promoCode: coupon?.code ?? null,
           attribution: buildOrderAttribution(),
@@ -659,7 +659,7 @@ function CheckoutPage() {
     ? addressCompleteness(selectedAddress).score >= 85
     : false;
   const paymentMethodSelected = payMethod === "cod" ? codAllowed : true;
-  const stockAvailable = detailed.every((i) => i.product.inStock !== false);
+  const stockAvailable = detailed.every((i) => i.product.inStock !== false && !i.unavailable);
   const sessionValid = !!user && reserveLeft > 0;
 
   const checkoutState: CheckoutState = computeCheckoutState({
@@ -992,16 +992,20 @@ function CheckoutPage() {
                 </div>
 
                 <ul className="space-y-3 mb-5 max-h-56 overflow-y-auto pr-1">
-                  {detailed.map((i) => (
-                    <li key={i.slug} className="flex items-center gap-3 text-sm">
-                      <img src={i.product.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover bg-black/30 shrink-0" />
+                  {detailed.map((i) => {
+                    const options = i.variant ? [i.variant.color, i.variant.size].filter(Boolean).join(" · ") || i.variant.name : "";
+                    return (
+                    <li key={`${i.slug}::${i.variantId ?? ""}`} className="flex items-center gap-3 text-sm">
+                      <img src={i.variant?.imageUrl || i.product.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover bg-black/30 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="truncate">{i.product.name}</p>
+                        {options && <p className="text-[11px] text-accent/90 truncate">{options}{i.variant?.sku ? ` · ${i.variant.sku}` : ""}</p>}
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
                       </div>
-                      <span className="font-mono text-xs">{fmt(priceOf(i.product) * i.qty)}</span>
+                      <span className="font-mono text-xs">{fmt(i.unitPrice * i.qty)}</span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
 
                 {savingsINR > 0 && (
@@ -1096,7 +1100,7 @@ function CheckoutPage() {
                 open={summaryOpen}
                 onOpenChange={setSummaryOpen}
                 trigger={<span className="sr-only" aria-hidden />}
-                lines={detailed.map((i) => ({ slug: i.slug, name: i.product.name, image: i.product.image, qty: i.qty, lineTotal: priceOf(i.product) * i.qty }))}
+                lines={detailed.map((i) => ({ slug: i.slug, name: i.variant ? `${i.product.name}${[i.variant.color, i.variant.size].filter(Boolean).length ? ` (${[i.variant.color, i.variant.size].filter(Boolean).join(" · ")})` : ""}` : i.product.name, image: i.variant?.imageUrl || i.product.image, qty: i.qty, lineTotal: i.unitPrice * i.qty }))}
                 fmt={fmt}
                 subtotal={subtotalINR}
                 shipping={shippingINR}

@@ -6,6 +6,10 @@ type InvoiceItem = {
   quantity: number;
   unit_price: number;
   line_total: number;
+  variant_name?: string | null;
+  variant_size?: string | null;
+  variant_color?: string | null;
+  variant_sku?: string | null;
 };
 
 type InvoiceOrder = {
@@ -47,7 +51,7 @@ export async function fetchInvoiceOrder(orderId: string): Promise<InvoiceOrder |
   const { data } = await supabase
     .from("orders")
     .select(
-      "id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,shipping_address,created_at,order_items(name,quantity,unit_price,line_total)"
+      "id,status,subtotal,discount,shipping,tax,total,currency,promo_code,contact_email,payment_method,shipping_address,created_at,order_items(name,quantity,unit_price,line_total,variant_name,variant_size,variant_color,variant_sku)"
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -148,7 +152,10 @@ export function generateInvoicePdf(order: InvoiceOrder) {
   doc.setFontSize(10);
   doc.setTextColor(...ink);
   order.order_items.forEach((it) => {
-    const nameLines = doc.splitTextToSize(it.name, colQty - M - 24);
+    const options = [it.variant_color, it.variant_size].filter(Boolean).join(" / ") || it.variant_name || "";
+    const detail = [options, it.variant_sku ? `SKU: ${it.variant_sku}` : ""].filter(Boolean).join("  ");
+    const label = detail ? `${it.name}\n${detail}` : it.name;
+    const nameLines = doc.splitTextToSize(label, colQty - M - 24);
     doc.text(nameLines, M + 8, y);
     doc.text(String(it.quantity), colQty, y, { align: "right" });
     doc.text(money(order.currency, it.unit_price), colPrice, y, { align: "right" });

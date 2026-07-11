@@ -21,7 +21,7 @@ export const Route = createFileRoute("/account_/orders")({
   component: OrdersPage,
 });
 
-type Item = { name: string; quantity: number; image: string | null; unit_price: number | null; product_slug: string };
+type Item = { name: string; quantity: number; image: string | null; unit_price: number | null; product_slug: string; variant_name?: string | null; variant_size?: string | null; variant_color?: string | null; variant_sku?: string | null; variant_image?: string | null };
 type ReturnRec = {
   status: string;
   refund_status: string;
@@ -198,8 +198,9 @@ type FilterId = (typeof FILTERS)[number]["id"];
 
 function ItemImage({ item, size = "size-14" }: { item: Item; size?: string }) {
   const [err, setErr] = useState(false);
-  if (item.image && !err) {
-    return <img src={item.image} alt={item.name} loading="lazy" onError={() => setErr(true)} className={`${size} rounded-xl object-cover border border-border/60 bg-muted`} />;
+  const src = item.variant_image || item.image;
+  if (src && !err) {
+    return <img src={src} alt={item.name} loading="lazy" onError={() => setErr(true)} className={`${size} rounded-xl object-cover border border-border/60 bg-muted`} />;
   }
   return (
     <div className={`${size} rounded-xl border border-border/60 bg-muted grid place-items-center`}>
@@ -258,7 +259,7 @@ function OrdersPage() {
     if (!user) return;
     const [{ data: rawOrders }, { data: pays }, { data: rets }, { data: refs }] = await Promise.all([
       supabase.from("orders")
-        .select("id,status,total,currency,created_at,tracking_number,carrier,payment_status,fulfillment_status,razorpay_order_id,order_items(name,quantity,image,unit_price,product_slug)")
+        .select("id,status,total,currency,created_at,tracking_number,carrier,payment_status,fulfillment_status,razorpay_order_id,order_items(name,quantity,image,unit_price,product_slug,variant_name,variant_size,variant_color,variant_sku,variant_image)")
         .order("created_at", { ascending: false }),
       supabase.from("payments").select("order_id,status,meta,created_at").order("created_at", { ascending: false }),
       supabase.from("returns").select("order_id,status,refund_status,resolution_type,replacement_status,created_at").order("created_at", { ascending: false }),

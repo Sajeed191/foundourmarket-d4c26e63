@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import type { Product } from "./products";
-import { useCartActions, readCartQty } from "./cart";
+import { useCartActions, readLineQty } from "./cart";
 
 /**
  * The single, centralized Buy Now implementation for the entire app.
@@ -31,6 +31,8 @@ export type BuyNowOptions = {
   disabled?: boolean;
   /** When false, skip internal routing (a wrapping <Link> handles it). */
   navigate?: boolean;
+  /** Selected variant id, when the product has variants. */
+  variantId?: string | null;
 };
 
 export function useBuyNow() {
@@ -40,14 +42,14 @@ export function useBuyNow() {
 
   return useCallback(
     (product: Product, options: BuyNowOptions = {}) => {
-      const { qty = 1, disabled = false, navigate: doNavigate = true } = options;
+      const { qty = 1, disabled = false, navigate: doNavigate = true, variantId = null } = options;
       if (disabled || !product.inStock || lock.current) return;
       lock.current = true;
       window.setTimeout(() => {
         lock.current = false;
       }, 700);
-      const inCart = readCartQty(product.slug) > 0;
-      const promise = inCart ? setQty(product.slug, qty) : add(product.slug, qty);
+      const inCart = readLineQty(product.slug, variantId) > 0;
+      const promise = inCart ? setQty(product.slug, qty, variantId) : add(product.slug, qty, variantId);
       void Promise.resolve(promise).finally(() => {
         if (doNavigate) void navigate({ to: "/cart" });
       });

@@ -357,6 +357,10 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
                 quantity: it.quantity,
                 unit_price: it.unit_price,
                 line_total: it.line_total,
+                variant_name: it.variant_name,
+                variant_size: it.variant_size,
+                variant_color: it.variant_color,
+                variant_sku: it.variant_sku,
               })),
             })}
             className="w-full inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-xl border border-accent/40 bg-accent/[0.06] text-accent hover:bg-accent/10 transition-colors"

@@ -16,6 +16,7 @@ import { RelatedProducts } from "@/components/site/RelatedProducts";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
 import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
+import { VariantSwitcher } from "@/components/site/VariantSwitcher";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -56,7 +57,8 @@ function shareProduct(slug: string, name: string, image?: string) {
 function CartPage() {
   const {
     detailed, savedDetailed, setQty, remove, removeSaved, saveForLater, moveToCart,
-    moveToWishlist, undoRemove, lastRemoved, subtotalUSD, count,
+    moveToWishlist, undoRemove, lastRemoved, subtotalUSD, count, switchVariant,
+
   } = useCart();
   const { format, priceOf, compareOf, shippingFeeOf, currencyReady } = useRegion();
 
@@ -220,21 +222,26 @@ function CartPage() {
           ) : (
             <AnimatePresence initial={false}>
               {detailed.map((item) => {
-                const pr = unitPricing(priceOf(item.product), compareOf(item.product), item.product.discount);
-                const stock = item.product.stockQuantity ?? 0;
-                const low = item.product.inStock && stock > 0 && stock <= (item.product.lowStockThreshold ?? 5);
-                const out = !item.product.inStock || stock <= 0;
+                const variant = item.variant;
+                const compareUnit = variant?.comparePrice ?? compareOf(item.product);
+                const pr = unitPricing(item.unitPrice, compareUnit, variant ? undefined : item.product.discount);
+                const stock = variant ? variant.stockQuantity : (item.product.stockQuantity ?? 0);
+                const out = item.unavailable || (variant ? stock <= 0 : (!item.product.inStock || stock <= 0));
+                const low = !out && stock > 0 && stock <= (variant?.lowStockThreshold ?? item.product.lowStockThreshold ?? 5);
                 const atMax = item.qty >= stock && stock > 0;
+                const img = variant?.imageUrl || item.product.image;
+                const options = variant ? [variant.color, variant.size].filter(Boolean).join(" · ") || variant.name : "";
+                const vid = item.variantId ?? null;
                 return (
                   <motion.div
-                    key={item.slug}
+                    key={`${item.slug}::${vid ?? ""}`}
                     layout
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -40, transition: { duration: 0.2 } }}
-                    className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-card border border-border rounded-2xl"
+                    className={`flex gap-3 sm:gap-4 p-3 sm:p-4 bg-card border rounded-2xl ${item.unavailable ? "border-destructive/50" : "border-border"}`}
                   >
                     <Link to="/products/$slug" params={{ slug: item.slug }} className="relative size-24 sm:size-28 shrink-0 rounded-xl overflow-hidden bg-black/40">
-                      <img src={item.product.image} alt={item.product.name} loading="lazy" className="w-full h-full object-cover" />
+                      <img src={img} alt={item.product.name} loading="lazy" className="w-full h-full object-cover" />
                       {pr.discount > 0 && (
                         <span className="absolute top-1 left-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-accent text-accent-foreground">-{Math.round(pr.discount)}%</span>
                       )}
@@ -246,8 +253,15 @@ function CartPage() {
                           <Link to="/products/$slug" params={{ slug: item.slug }} className="font-medium hover:text-accent transition-colors line-clamp-1">
                             {item.product.name}
                           </Link>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{item.product.tagline}</p>
-                          {item.product.rating > 0 && (
+                          {options ? (
+                            <p className="text-xs text-accent/90 line-clamp-1">{options}</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground line-clamp-1">{item.product.tagline}</p>
+                          )}
+                          {variant?.sku && (
+                            <p className="text-[10px] font-mono text-muted-foreground line-clamp-1">SKU: {variant.sku}</p>
+                          )}
+                          {item.product.rating > 0 && !options && (
                             <div className="mt-1 flex items-center gap-1 text-[11px]">
                               <Star className="size-3 fill-accent text-accent" />
                               <span className="font-medium">{item.product.rating.toFixed(1)}</span>
@@ -258,7 +272,7 @@ function CartPage() {
                           )}
                           <div className="mt-1 flex items-center gap-2 text-[11px]">
                             {out ? (
-                              <span className="text-destructive inline-flex items-center gap-1"><AlertTriangle className="size-3" /> Out of stock</span>
+                              <span className="text-destructive inline-flex items-center gap-1"><AlertTriangle className="size-3" /> {item.unavailable ? "Unavailable" : "Out of stock"}</span>
                             ) : low ? (
                               <span className="text-accent inline-flex items-center gap-1"><AlertTriangle className="size-3" /> Only {stock} left</span>
                             ) : (
@@ -266,20 +280,29 @@ function CartPage() {
                             )}
                             <span className="text-muted-foreground inline-flex items-center gap-1"><Truck className="size-3" /> 4–6 days</span>
                           </div>
+                          {item.unavailable && (
+                            <div className="mt-2">
+                              <VariantSwitcher
+                                slug={item.slug}
+                                currentVariantId={vid}
+                                onSwitch={(to: string) => { switchVariant(item.slug, vid, to); toast.success("Option updated"); }}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <button onClick={() => remove(item.slug)} aria-label="Remove" className="text-muted-foreground hover:text-destructive shrink-0 h-fit">
+                        <button onClick={() => remove(item.slug, vid)} aria-label="Remove" className="text-muted-foreground hover:text-destructive shrink-0 h-fit">
                           <X className="size-4" />
                         </button>
                       </div>
 
                       <div className="flex items-end justify-between mt-auto pt-3 gap-3">
                         <div className="flex items-center border border-border rounded-full">
-                          <button onClick={() => setQty(item.slug, item.qty - 1)} aria-label="Decrease" className="size-9 grid place-items-center hover:text-accent active:scale-90 transition-transform">
+                          <button onClick={() => setQty(item.slug, item.qty - 1, vid)} aria-label="Decrease" className="size-9 grid place-items-center hover:text-accent active:scale-90 transition-transform">
                             <Minus className="size-3" />
                           </button>
                           <motion.span key={item.qty} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="w-8 text-center text-xs font-mono">{item.qty}</motion.span>
                           <button
-                            onClick={() => { if (atMax) { toast.error(`Only ${stock} in stock`); return; } setQty(item.slug, item.qty + 1); }}
+                            onClick={() => { if (atMax) { toast.error(`Only ${stock} in stock`); return; } setQty(item.slug, item.qty + 1, vid); }}
                             aria-label="Increase"
                             disabled={atMax}
                             className="size-9 grid place-items-center hover:text-accent active:scale-90 transition-transform disabled:opacity-40"
@@ -299,10 +322,10 @@ function CartPage() {
                       </div>
 
                       <div className="flex items-center gap-4 mt-2.5">
-                        <button onClick={() => saveForLater(item.slug)} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
+                        <button onClick={() => saveForLater(item.slug, vid)} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
                           <Bookmark className="size-3" /> Save
                         </button>
-                        <button onClick={() => { moveToWishlist(item.slug); toast.success("Moved to wishlist"); }} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
+                        <button onClick={() => { moveToWishlist(item.slug, vid); toast.success("Moved to wishlist"); }} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
                           <Heart className="size-3" /> Wishlist
                         </button>
                         <button onClick={() => shareProduct(item.slug, item.product.name, item.product.image)} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent inline-flex items-center gap-1.5">
@@ -323,27 +346,33 @@ function CartPage() {
                 Saved for later · {savedDetailed.length}
               </h2>
               <div className="space-y-3">
-                {savedDetailed.map((item) => (
-                  <div key={item.slug} className="flex gap-4 p-3 bg-card/60 border border-border rounded-2xl items-center">
+                {savedDetailed.map((item) => {
+                  const vid = item.variantId ?? null;
+                  const options = item.variant ? [item.variant.color, item.variant.size].filter(Boolean).join(" · ") || item.variant.name : "";
+                  return (
+                  <div key={`${item.slug}::${vid ?? ""}`} className="flex gap-4 p-3 bg-card/60 border border-border rounded-2xl items-center">
                     <Link to="/products/$slug" params={{ slug: item.slug }} className="size-16 shrink-0 rounded-lg overflow-hidden bg-black/40">
-                      <img src={item.product.image} alt={item.product.name} loading="lazy" className="w-full h-full object-cover" />
+                      <img src={item.variant?.imageUrl || item.product.image} alt={item.product.name} loading="lazy" className="w-full h-full object-cover" />
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link to="/products/$slug" params={{ slug: item.slug }} className="text-sm font-medium hover:text-accent transition-colors truncate block">
                         {item.product.name}
                       </Link>
-                      <p className="text-xs text-muted-foreground">{format(priceOf(item.product))} · qty {item.qty}</p>
+                      {options && <p className="text-[11px] text-accent/90 truncate">{options}</p>}
+                      <p className="text-xs text-muted-foreground">{format(item.unitPrice)} · qty {item.qty}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => moveToCart(item.slug)} className="text-[10px] uppercase tracking-widest font-bold bg-accent text-accent-foreground px-3 py-2 rounded-full inline-flex items-center gap-1.5 hover:brightness-110">
+                      <button onClick={() => moveToCart(item.slug, vid)} className="text-[10px] uppercase tracking-widest font-bold bg-accent text-accent-foreground px-3 py-2 rounded-full inline-flex items-center gap-1.5 hover:brightness-110">
                         <RotateCcw className="size-3" /> Move to cart
                       </button>
-                      <button onClick={() => removeSaved(item.slug)} aria-label="Remove" className="text-muted-foreground hover:text-destructive">
+                      <button onClick={() => removeSaved(item.slug, vid)} aria-label="Remove" className="text-muted-foreground hover:text-destructive">
                         <X className="size-4" />
                       </button>
+
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
