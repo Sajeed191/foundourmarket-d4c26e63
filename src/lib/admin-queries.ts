@@ -7,7 +7,7 @@ export type OrderRow = {
   fulfillment_status: string; total: number; subtotal: number;
   shipping: number; tax: number; discount: number; currency: string;
   contact_email: string | null; created_at: string;
-  order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number }[];
+  order_items: { name: string; quantity: number; product_slug?: string; unit_price?: number; line_total?: number; variant_name?: string | null; variant_size?: string | null; variant_color?: string | null; variant_sku?: string | null; variant_image?: string | null }[];
 };
 
 export async function fetchOrders(days = 90): Promise<OrderRow[]> {
