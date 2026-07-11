@@ -439,6 +439,32 @@ function ProductPage() {
   const galleryImages = galleryMedia.filter((m) => m.id !== "video");
   const activeMedia = galleryMedia[activeImg] ?? galleryMedia[0];
 
+  // Serve device-appropriate, format-negotiated variants instead of the
+  // full-resolution originals. Storage URLs are rewritten to the on-the-fly
+  // transform endpoint (AVIF/WebP via Accept header, GPU-unsafe pinned to WebP);
+  // non-storage URLs pass through untouched. No change to ordering or design.
+  const galleryDisplaySrc = useCallback((url: string) => resizedStorageImage(url, 1280, 72), []);
+  const thumbDisplaySrc = useCallback((url: string) => resizedStorageImage(url, 160, 60), []);
+
+  // Prefetch only the immediately adjacent gallery images (next + previous), and
+  // never on constrained devices — limits concurrent decodes / memory pressure.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.documentElement.dataset.gpuUnsafe === "true") return;
+    const mem = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
+    if (typeof mem === "number" && mem <= 4) return;
+    const neighbours = [galleryMedia[activeImg + 1], galleryMedia[activeImg - 1]];
+    const imgs = neighbours
+      .filter((m) => m && m.id !== "video" && m.url)
+      .map((m) => {
+        const im = new Image();
+        im.decoding = "async";
+        im.src = galleryDisplaySrc(m!.url);
+        return im;
+      });
+    return () => imgs.forEach((im) => (im.src = ""));
+  }, [activeImg, galleryMedia, galleryDisplaySrc]);
+
   // Keep the selected thumbnail fully visible within the scroll strip.
   useEffect(() => {
     const el = thumbStripRef.current?.querySelector<HTMLElement>(`[data-thumb-index="${activeImg}"]`);
