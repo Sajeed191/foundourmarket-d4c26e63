@@ -446,6 +446,8 @@ function ProductPage() {
   // Reset the measured aspect whenever the visible media changes so the next
   // image sizes to its own dimensions (fallback aspect reserves height first).
   useEffect(() => { setMediaAspect(null); }, [activeImg]);
+  // Clamp to a sane range so extreme panoramas / very tall images stay usable.
+  const displayAspect = mediaAspect ? Math.min(1.5, Math.max(0.66, mediaAspect)) : null;
 
   const hasVideoFirst = galleryMedia[0]?.id === "video";
   const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
