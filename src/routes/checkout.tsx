@@ -992,16 +992,20 @@ function CheckoutPage() {
                 </div>
 
                 <ul className="space-y-3 mb-5 max-h-56 overflow-y-auto pr-1">
-                  {detailed.map((i) => (
-                    <li key={i.slug} className="flex items-center gap-3 text-sm">
-                      <img src={i.product.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover bg-black/30 shrink-0" />
+                  {detailed.map((i) => {
+                    const options = i.variant ? [i.variant.color, i.variant.size].filter(Boolean).join(" · ") || i.variant.name : "";
+                    return (
+                    <li key={`${i.slug}::${i.variantId ?? ""}`} className="flex items-center gap-3 text-sm">
+                      <img src={i.variant?.imageUrl || i.product.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover bg-black/30 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="truncate">{i.product.name}</p>
+                        {options && <p className="text-[11px] text-accent/90 truncate">{options}{i.variant?.sku ? ` · ${i.variant.sku}` : ""}</p>}
                         <p className="text-xs text-muted-foreground">× {i.qty}</p>
                       </div>
-                      <span className="font-mono text-xs">{fmt(priceOf(i.product) * i.qty)}</span>
+                      <span className="font-mono text-xs">{fmt(i.unitPrice * i.qty)}</span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
 
                 {savingsINR > 0 && (
