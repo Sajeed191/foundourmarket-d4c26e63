@@ -89,6 +89,12 @@ export const placeDemoOrder = createServerFn({ method: "POST" })
       unit_price: l.unit,
       quantity: l.qty,
       line_total: l.lineTotal,
+      variant_id: l.variantId,
+      variant_name: l.variantName,
+      variant_size: l.variantSize,
+      variant_color: l.variantColor,
+      variant_sku: l.variantSku,
+      variant_image: l.variantImage,
     }));
     const { error: oiErr } = await supabaseAdmin.from("order_items").insert(orderItems);
     if (oiErr) {
