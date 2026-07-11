@@ -181,8 +181,12 @@ function CollectionsField({ value, onChange }: { value: string[]; onChange: (v: 
   );
 }
 
-export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved }: {
-  row: ProductEditorRow | null; categories: Category[]; nextSort?: number; onClose: () => void; onSaved: () => void;
+export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved, onRefresh }: {
+  row: ProductEditorRow | null; categories: Category[]; nextSort?: number;
+  onClose: () => void; onSaved: () => void;
+  /** Refresh the product list WITHOUT closing the modal (used after a create so
+   *  the admin stays on the same product to add variants). */
+  onRefresh?: () => void;
 }) {
   const { settings } = useStoreSettings();
   const [saving, setSaving] = useState(false);
