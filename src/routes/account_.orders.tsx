@@ -21,7 +21,7 @@ export const Route = createFileRoute("/account_/orders")({
   component: OrdersPage,
 });
 
-type Item = { name: string; quantity: number; image: string | null; unit_price: number | null; product_slug: string };
+type Item = { name: string; quantity: number; image: string | null; unit_price: number | null; product_slug: string; variant_name?: string | null; variant_size?: string | null; variant_color?: string | null; variant_sku?: string | null; variant_image?: string | null };
 type ReturnRec = {
   status: string;
   refund_status: string;
