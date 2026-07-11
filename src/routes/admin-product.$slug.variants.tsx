@@ -34,7 +34,7 @@ function blankRow(size: string | null, color: string | null, colorHex: string | 
     sku: null, size, color, colorHex,
     imageUrl: null, priceAdjustment: 0, comparePrice: null,
     barcode: null, weight: null, stockQuantity: 0, lowStockThreshold: 5,
-    active: true, sortOrder: 0,
+    active: true, sortOrder: 0, version: 1,
   };
 }
 const isNew = (id: string) => id.startsWith("new-");

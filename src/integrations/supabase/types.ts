@@ -3053,6 +3053,7 @@ export type Database = {
           sort_order: number
           stock_quantity: number
           updated_at: string
+          version: number
           weight: number | null
         }
         Insert: {
@@ -3075,6 +3076,7 @@ export type Database = {
           sort_order?: number
           stock_quantity?: number
           updated_at?: string
+          version?: number
           weight?: number | null
         }
         Update: {
@@ -3097,6 +3099,7 @@ export type Database = {
           sort_order?: number
           stock_quantity?: number
           updated_at?: string
+          version?: number
           weight?: number | null
         }
         Relationships: []
@@ -6590,6 +6593,7 @@ export type Database = {
         Args: { _review_id: string }
         Returns: undefined
       }
+      release_expired_order_reservations: { Args: never; Returns: number }
       release_order_stock: {
         Args: { _order_id: string; _reason?: string }
         Returns: undefined
