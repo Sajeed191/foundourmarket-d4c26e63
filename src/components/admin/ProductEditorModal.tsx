@@ -476,13 +476,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       admin_notes: form.admin_notes.trim() || null,
       scheduled_publish_at: form.scheduled_publish_at ? new Date(form.scheduled_publish_at).toISOString() : null,
     };
-    const { error: err } = row?.id
-      ? await supabase.from("products").update(payload).eq("id", row.id)
-      : await supabase.from("products").insert(payload);
+    const existingId = effectiveId;
+    const { data: savedRow, error: err } = existingId
+      ? await supabase.from("products").update(payload).eq("id", existingId).select("id, slug").single()
+      : await supabase.from("products").insert(payload).select("id, slug").single();
     if (err) { setSaving(false); setError(err.message); return; }
     // Newly created product: auto-assign the "New" badge, then flush any
     // pending manual badge assignments (in priority order).
-    if (!row?.id) {
+    if (!existingId) {
       try { await assignNewBadge(payload.slug); }
       catch { /* non-fatal: badge can be added manually in the editor */ }
       if (pendingBadges.length) {
@@ -492,7 +493,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       }
     }
     // Flush pending FAQs for a newly created product (in display order).
-    if (!row?.id && pendingFaqs.length) {
+    if (!existingId && pendingFaqs.length) {
       try {
         let i = 0;
         for (const faq of pendingFaqs) {
@@ -501,9 +502,20 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       } catch { /* non-fatal: product is saved, FAQs can be added in editor */ }
     }
     setSaving(false);
-    logActivity(row?.id ? "product_updated" : "product_created", "product", row?.id, { slug: payload.slug });
-    toast.success(row?.id ? "Product updated" : "Product created");
-    onSaved();
+    if (existingId) {
+      logActivity("product_updated", "product", existingId, { slug: payload.slug });
+      toast.success("Product updated");
+      onSaved();
+      return;
+    }
+    // CREATE succeeded: stay open, unlock variants, refresh list in background.
+    logActivity("product_created", "product", savedRow?.id, { slug: payload.slug });
+    setSavedProduct({ id: savedRow!.id, slug: savedRow!.slug });
+    setPendingBadges([]);
+    setPendingFaqs([]);
+    onRefresh?.();
+    setTab("variants");
+    toast.success("Product created successfully. You can now add Size & Color variants.");
   }
 
   return (
