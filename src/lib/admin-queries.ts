@@ -15,7 +15,7 @@ export async function fetchOrders(days = 90): Promise<OrderRow[]> {
   const includeSeed = await includeSeedInAnalytics();
   let query = supabase
     .from("orders")
-    .select("id,user_id,status,payment_status,fulfillment_status,total,subtotal,shipping,tax,discount,currency,contact_email,created_at,order_items(name,quantity,product_slug,unit_price,line_total)")
+    .select("id,user_id,status,payment_status,fulfillment_status,total,subtotal,tax,shipping,discount,currency,contact_email,created_at,order_items(name,quantity,product_slug,unit_price,line_total,variant_name,variant_size,variant_color,variant_sku,variant_image)")
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(1000);
