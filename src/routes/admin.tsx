@@ -397,6 +397,9 @@ function AdminPage() {
                                       <tr key={idx} className="border-t border-white/5">
                                         <td className="px-3 py-2">
                                           <span className="font-medium">{i.name}</span>
+                                          {([i.variant_color, i.variant_size].filter(Boolean).join(" · ") || i.variant_name) && (
+                                            <span className="block text-[10px] text-accent/90">{[i.variant_color, i.variant_size].filter(Boolean).join(" · ") || i.variant_name}{i.variant_sku ? ` · ${i.variant_sku}` : ""}</span>
+                                          )}
                                           {i.product_slug && <span className="block text-[10px] text-muted-foreground font-mono">{i.product_slug}</span>}
                                         </td>
                                         <td className="px-3 py-2 text-right font-mono tabular-nums">{i.quantity}</td>
