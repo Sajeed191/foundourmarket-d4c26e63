@@ -530,16 +530,21 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
           {/* ---- Products ---- */}
           <Section title={`Products (${o.line_count})`} icon={<Package className="size-3.5" />}>
             <div className="space-y-3">
-              {o.items.map((it, i) => (
+              {o.items.map((it, i) => {
+                const img = it.variant_image ?? it.image;
+                const options = [it.variant_color, it.variant_size].filter(Boolean).join(" · ") || it.variant_name || "";
+                return (
                 <div key={i} className="flex items-start gap-3">
-                  {it.image ? <img src={it.image} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-border" /> : <div className="size-12 rounded-xl bg-muted/40 grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>}
+                  {img ? <img src={img} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-border" /> : <div className="size-12 rounded-xl bg-muted/40 grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>}
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium leading-snug line-clamp-2">{it.name}</p>
+                    {options && <p className="text-[11px] text-accent/90 mt-0.5 truncate">{options}{it.variant_sku ? ` · ${it.variant_sku}` : ""}</p>}
                     <p className="text-[11px] text-muted-foreground mt-0.5">Qty {it.quantity} · {inr(it.unit_price)} ea</p>
                   </div>
                   <span className="text-[13px] font-semibold tabular-nums shrink-0">{inr(it.line_total)}</span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </Section>
 
