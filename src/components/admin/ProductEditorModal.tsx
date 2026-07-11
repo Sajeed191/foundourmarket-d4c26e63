@@ -517,6 +517,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               ["merch", "Merchandising"],
               ["seo", "SEO & FAQs"],
               ["related", "Related"],
+              ["variants", "Variants"],
               ["analytics", "Analytics"],
               ["preview", "Preview"],
             ] as const).map(([id, label]) => (
