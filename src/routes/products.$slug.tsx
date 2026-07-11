@@ -216,6 +216,10 @@ function ProductPage() {
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [activeImg, setActiveImg] = useState(0);
+  // Natural aspect ratio (w/h) of the currently displayed image. Drives the
+  // main media container so it sizes to the image itself — no cropping and no
+  // unused blank space — while a sensible fallback reserves height (no CLS).
+  const [mediaAspect, setMediaAspect] = useState<number | null>(null);
   const thumbStripRef = useRef<HTMLDivElement>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
   const [fbtSlugs, setFbtSlugs] = useState<string[]>([]);
@@ -439,6 +443,28 @@ function ProductPage() {
     el?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
   }, [activeImg]);
 
+  // Measure the natural aspect of the visible image so the main media container
+  // sizes to the image itself (no crop, no blank). Uses a decode/Image() probe
+  // which fires reliably even for browser-cached images (unlike a JSX onLoad).
+  const activeUrl = activeMedia?.id === "video" ? null : (activeMedia?.url || product.image);
+  useEffect(() => {
+    setMediaAspect(null);
+    if (!activeUrl || typeof window === "undefined") return;
+    let active = true;
+    const probe = new Image();
+    const apply = () => {
+      if (active && probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+        setMediaAspect(probe.naturalWidth / probe.naturalHeight);
+      }
+    };
+    probe.onload = apply;
+    probe.src = activeUrl;
+    if (probe.complete) apply();
+    return () => { active = false; };
+  }, [activeUrl]);
+  // Clamp to a sane range so extreme panoramas / very tall images stay usable.
+  const displayAspect = mediaAspect ? Math.min(1.5, Math.max(0.66, mediaAspect)) : null;
+
   const hasVideoFirst = galleryMedia[0]?.id === "video";
   const lightboxIndex = hasVideoFirst ? Math.max(0, activeImg - 1) : activeImg;
   const handleLightboxIndexChange = (i: number) => setActiveImg(hasVideoFirst ? i + 1 : i);
@@ -565,7 +591,11 @@ function ProductPage() {
               {/* Cinematic ambient backlight */}
               <div aria-hidden className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 animate-pulse" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
               <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
-              <div data-product-image className="relative aspect-[4/3] sm:aspect-square max-h-[58svh] sm:max-h-none mx-auto w-full card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]">
+              <div
+                data-product-image
+                className="relative aspect-[4/3] sm:aspect-square max-h-[80svh] mx-auto w-full card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]"
+                style={displayAspect ? { aspectRatio: String(displayAspect) } : undefined}
+              >
                 <AnimatePresence mode="wait">
                   {activeMedia?.id === "video" ? (
                     <motion.video
@@ -592,7 +622,7 @@ function ProductPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-contain cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-110"
                     />
                   )}
                 </AnimatePresence>
