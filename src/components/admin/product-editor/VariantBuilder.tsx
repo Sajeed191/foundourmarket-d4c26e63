@@ -303,6 +303,25 @@ function VariantCard({ r, onChange, onRemove, onDuplicate }: {
   r: Row; onChange: (p: Partial<Row>) => void; onRemove: () => void; onDuplicate: () => void;
 }) {
   const low = r.stockQuantity <= r.lowStockThreshold;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadImage(file: File) {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      onChange({ imageUrl: data.publicUrl });
+      toast.success("Variant image uploaded");
+    } catch (e: any) {
+      toast.error("Upload failed", { description: e?.message });
+    } finally {
+      setUploading(false);
+    }
+  }
   return (
     <div className="card-premium rounded-2xl p-4">
       <div className="flex items-center justify-between gap-2 mb-3">
