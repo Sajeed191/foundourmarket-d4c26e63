@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import type { Product } from "./products";
-import { useCartActions, readCartQty } from "./cart";
+import { useCartActions, readLineQty } from "./cart";
 
 /**
  * The single, centralized Buy Now implementation for the entire app.
