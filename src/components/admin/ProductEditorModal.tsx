@@ -531,7 +531,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       >
         <div className="sticky top-0 z-20 -mx-4 sm:-mx-5 px-4 sm:px-5 pt-2 pb-2 bg-background/90 backdrop-blur space-y-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-display">{row?.id ? "Edit product" : "New product"}</h2>
+            <h2 className="text-lg font-display">{effectiveId ? "Edit product" : "New product"}</h2>
             <button type="button" onClick={onClose} className="size-8 grid place-items-center rounded-full hover:bg-white/5"><X className="size-4" /></button>
           </div>
           <div className="flex gap-1 overflow-x-auto -mx-1 px-1">
