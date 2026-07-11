@@ -346,12 +346,13 @@ export function ImageLightbox({
                     }
                   >
                     <img
-                      src={img.url}
+                      src={resizedStorageImage(img.url, 1600, 78)}
                       alt={img.alt || alt}
                       draggable={false}
                       decoding="async"
                       loading="eager"
                       fetchPriority={isActive ? "high" : "low"}
+                      onError={(e) => { if (e.currentTarget.src !== img.url) e.currentTarget.src = img.url; }}
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
