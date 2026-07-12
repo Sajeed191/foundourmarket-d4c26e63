@@ -151,9 +151,9 @@ export function ImageLightbox({
     axis.current = null;
     swipeClosing.current = false;
 
-    // Double-tap to zoom.
+    // Double-tap to zoom (images only — never zoom video slides).
     const now = Date.now();
-    if (now - lastTap.current < 280) {
+    if (!activeIsVideo && now - lastTap.current < 280) {
       lastTap.current = 0;
       const stage = stageRef.current;
       if (zoomRef.current > 1) {
@@ -172,7 +172,8 @@ export function ImageLightbox({
     } else {
       lastTap.current = now;
     }
-  }, [clampPan, resetZoom, setTransforms]);
+  }, [clampPan, resetZoom, setTransforms, activeIsVideo]);
+
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!pointers.current.has(e.pointerId)) return;
