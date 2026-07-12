@@ -4,6 +4,9 @@ import { X, Share2 } from "lucide-react";
 import type { ProductImage } from "@/lib/products";
 import { resizedStorageImage } from "@/lib/storage-image";
 
+/** A lightbox slide may be an image (zoomable) or a video (native controls). */
+export type LightboxMedia = ProductImage & { kind?: "image" | "video"; poster?: string | null };
+
 /**
  * Immersive full-screen product gallery.
  *
