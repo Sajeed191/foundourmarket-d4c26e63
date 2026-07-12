@@ -29,6 +29,9 @@ import {
   Replace,
   Eye,
   X,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
