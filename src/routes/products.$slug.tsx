@@ -488,7 +488,7 @@ function ProductPage() {
     if (typeof mem === "number" && mem <= 4) return;
     const neighbours = [galleryMedia[activeImg + 1], galleryMedia[activeImg - 1]];
     const imgs = neighbours
-      .filter((m) => m && m.id !== "video" && m.url)
+      .filter((m) => m && m.kind !== "video" && m.url)
       .map((m) => {
         const im = new Image();
         im.decoding = "async";
