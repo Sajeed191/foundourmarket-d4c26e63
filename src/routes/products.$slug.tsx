@@ -836,17 +836,27 @@ function ProductPage() {
                     key={item.id}
                     data-thumb-index={i}
                     onClick={() => setActiveImg(i)}
-                    aria-label={item.id === "video" ? "Play video" : `View image ${i + 1}`}
+                    aria-label={item.kind === "video" ? "Play video" : `View image ${i + 1}`}
                     aria-current={i === activeImg}
                     className={`relative size-16 sm:size-[72px] shrink-0 snap-start rounded-2xl overflow-hidden border-2 transition-[border-color,box-shadow,opacity] active:scale-95 bg-card ${i === activeImg ? "border-accent/80 shadow-[0_6px_20px_-6px_oklch(0.74_0.19_49/0.6)]" : "border-white/10 opacity-55 hover:opacity-100 hover:border-accent/40"}`}
                   >
-                    {item.id === "video" ? (
-                      <div className="w-full h-full bg-black grid place-items-center">
-                        <Play className="size-6 text-white/80" />
-                      </div>
+                    {item.kind === "video" ? (
+                      item.poster ? (
+                        <>
+                          <img src={item.poster} alt={item.alt || "video"} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                          <span className="absolute inset-0 grid place-items-center bg-black/25">
+                            <Play className="size-5 text-white fill-white/90" />
+                          </span>
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-black grid place-items-center">
+                          <Play className="size-6 text-white/80" />
+                        </div>
+                      )
                     ) : (
                       <img src={thumbDisplaySrc(item.url)} alt={item.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { if (e.currentTarget.src !== item.url) e.currentTarget.src = item.url; }} />
                     )}
+
                   </button>
                 ))}
               </div>
