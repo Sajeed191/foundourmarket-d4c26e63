@@ -260,14 +260,18 @@ function VariantsPage() {
                   </div>
                 )}
                 {rows.map((r) => (
-                  <VariantCard key={r.id} r={r} onChange={(p) => updateRow(r.id, p)} onRemove={() => removeRow(r.id)} onDuplicate={() => duplicateRow(r.id)} />
+                  <VariantCard
+                    key={r.id}
+                    r={r}
+                    onChange={(p) => updateRow(r.id, p)}
+                    onRemove={() => removeRow(r.id)}
+                    onDuplicate={() => duplicateRow(r.id)}
+                    gallery={gallery}
+                  />
                 ))}
               </div>
 
-              {/* Per-colour media galleries (images + videos) */}
-              {colorsInUse.length > 0 && (
-                <VariantImagesSection slug={slug} colors={colorsInUse} />
-              )}
+
 
 
               <div className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
