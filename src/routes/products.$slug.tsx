@@ -866,7 +866,7 @@ function ProductPage() {
 
 
             <ImageLightbox
-              images={galleryImages}
+              images={galleryMedia}
               index={lightboxIndex}
               open={lightboxOpen}
               onClose={() => setLightboxOpen(false)}
