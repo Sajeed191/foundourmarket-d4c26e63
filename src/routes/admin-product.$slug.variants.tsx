@@ -12,6 +12,7 @@ import {
 } from "@/components/admin/product-editor/kit";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";
+import { VariantImagesSection } from "@/components/admin/product-editor/VariantImagesSection";
 import {
   fetchAdminVariants,
   fetchHasVariants,
