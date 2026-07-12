@@ -12,7 +12,7 @@ import {
 } from "@/components/admin/product-editor/kit";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";
-import { VariantImagesSection } from "@/components/admin/product-editor/VariantImagesSection";
+import { VariantMediaPanel, useColorGalleryManager } from "@/components/admin/product-editor/VariantImagesSection";
 import {
   fetchAdminVariants,
   fetchHasVariants,
@@ -147,14 +147,8 @@ function VariantsPage() {
     return false;
   }, [rows]);
 
-  // Distinct colours across all variant rows — each gets its own media gallery.
-  const colorsInUse = useMemo(() => {
-    const map = new Map<string, { color: string; hex: string | null }>();
-    for (const r of rows) {
-      if (r.color && !map.has(r.color)) map.set(r.color, { color: r.color, hex: r.colorHex });
-    }
-    return Array.from(map.values());
-  }, [rows]);
+  // Shared per-colour media manager — every size card of a colour edits ONE gallery.
+  const gallery = useColorGalleryManager(slug);
 
   async function save() {
     if (dupWarning) { toast.error("Remove duplicate Size + Colour combinations first"); return; }
@@ -266,14 +260,18 @@ function VariantsPage() {
                   </div>
                 )}
                 {rows.map((r) => (
-                  <VariantCard key={r.id} r={r} onChange={(p) => updateRow(r.id, p)} onRemove={() => removeRow(r.id)} onDuplicate={() => duplicateRow(r.id)} />
+                  <VariantCard
+                    key={r.id}
+                    r={r}
+                    onChange={(p) => updateRow(r.id, p)}
+                    onRemove={() => removeRow(r.id)}
+                    onDuplicate={() => duplicateRow(r.id)}
+                    gallery={gallery}
+                  />
                 ))}
               </div>
 
-              {/* Per-colour media galleries (images + videos) */}
-              {colorsInUse.length > 0 && (
-                <VariantImagesSection slug={slug} colors={colorsInUse} />
-              )}
+
 
 
               <div className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
@@ -314,8 +312,9 @@ function SwatchChip({ active, hex, onClick, children }: { active: boolean; hex: 
   );
 }
 
-function VariantCard({ r, onChange, onRemove, onDuplicate }: {
+function VariantCard({ r, onChange, onRemove, onDuplicate, gallery }: {
   r: Row; onChange: (p: Partial<Row>) => void; onRemove: () => void; onDuplicate: () => void;
+  gallery: ReturnType<typeof useColorGalleryManager>;
 }) {
   const low = r.stockQuantity <= r.lowStockThreshold;
   return (
@@ -361,6 +360,37 @@ function VariantCard({ r, onChange, onRemove, onDuplicate }: {
       <div className="mt-3">
         <Toggle checked={r.active} onChange={(v) => onChange({ active: v })} label="Active" hint="Inactive variants are hidden from customers but kept for records." />
       </div>
+
+      {/* Variant Media — shared per COLOUR. Every size card of this colour edits ONE gallery. */}
+      {r.color ? (
+        gallery.loading ? (
+          <div className="mt-3 grid place-items-center rounded-xl border border-white/10 bg-white/[0.02] py-6">
+            <Loader2 className="size-4 animate-spin text-accent" />
+          </div>
+        ) : (
+          <div className="mt-3">
+            <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              Variant Media · shared across all {r.color} sizes
+            </p>
+            <VariantMediaPanel
+              slug={gallery.slug}
+              color={r.color}
+              hex={r.colorHex}
+              max={gallery.max}
+              media={gallery.getMedia(r.color)}
+              onChange={(next) => gallery.setColorMedia(r.color!, next)}
+              dirty={gallery.isDirty(r.color)}
+              saving={gallery.savingColor === r.color}
+              onSave={() => gallery.saveColor(r.color!)}
+              showHeaderSwatch={false}
+            />
+          </div>
+        )
+      ) : (
+        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[11px] text-muted-foreground">
+          Add a colour to this variant to manage its shared media gallery.
+        </p>
+      )}
     </div>
   );
 }

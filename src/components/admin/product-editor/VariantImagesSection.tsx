@@ -1,14 +1,20 @@
 // ============================================================
-// VariantImagesSection — per-COLOUR media galleries inside the
-// Variant Builder. Each colour manages its own gallery of images
-// AND videos: bulk image upload (responsive WebP variants), video
-// upload, add-by-URL (image or video), drag & drop reorder,
-// delete, replace, bulk delete, set-as-thumbnail, live media
-// counter, preview, and a configurable per-product maximum.
-// Saving a colour syncs its first IMAGE into every variant of that
-// colour (cart/checkout/order thumbnail).
+// Variant media manager — per-COLOUR galleries (images + videos).
+//
+// Media is shared by COLOUR, not size: every size variant of a
+// colour (Blue S / Blue M / Blue L …) points at ONE gallery. To
+// support that while still rendering the media manager *inside*
+// every variant card, gallery state is lifted into a shared
+// manager hook (`useColorGalleryManager`). Each card renders a
+// controlled `VariantMediaPanel`; two cards of the same colour
+// read/write the exact same state, so there is never a duplicate
+// gallery or duplicate upload.
+//
+// `VariantImagesSection` (self-contained, one panel per colour)
+// is retained for the Variant Builder modal, which manages its
+// own local state.
 // ============================================================
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Images,
   Loader2,
@@ -42,13 +48,72 @@ import {
 
 type ColorInfo = { color: string; hex: string | null };
 
-export function VariantImagesSection({
-  slug,
-  colors,
-}: {
-  slug: string;
-  colors: ColorInfo[];
-}) {
+// ---------------------------------------------------------------------------
+// Shared per-colour gallery manager (used by the variants route so that all
+// size cards of a colour edit ONE gallery).
+// ---------------------------------------------------------------------------
+export function useColorGalleryManager(slug: string) {
+  const [loading, setLoading] = useState(true);
+  const [galleries, setGalleries] = useState<Record<string, VariantImageDraft[]>>({});
+  const [saved, setSaved] = useState<Record<string, string>>({}); // color -> JSON snapshot
+  const [savingColor, setSavingColor] = useState<string | null>(null);
+  const [max, setMax] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    (async () => {
+      const [g, m] = await Promise.all([fetchAdminColorGalleries(slug), fetchVariantImageMax(slug)]);
+      if (!active) return;
+      setGalleries(g);
+      setSaved(Object.fromEntries(Object.entries(g).map(([k, v]) => [k, JSON.stringify(v)])));
+      setMax(m);
+      setLoading(false);
+    })().catch(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [slug]);
+
+  async function commitMax(next: number | null) {
+    setMax(next);
+    try {
+      await setVariantImageMax(slug, next);
+    } catch (e: any) {
+      toast.error("Could not save limit", { description: e?.message });
+    }
+  }
+
+  const getMedia = (color: string) => galleries[color] ?? [];
+
+  const setColorMedia = (color: string, next: VariantImageDraft[]) =>
+    setGalleries((g) => ({ ...g, [color]: next }));
+
+  const isDirty = (color: string) =>
+    JSON.stringify(galleries[color] ?? []) !== (saved[color] ?? "[]");
+
+  async function saveColor(color: string) {
+    setSavingColor(color);
+    try {
+      const media = galleries[color] ?? [];
+      await saveColorGallery(slug, color, media);
+      setSaved((s) => ({ ...s, [color]: JSON.stringify(media) }));
+      toast.success(`${color} gallery saved`);
+    } catch (e: any) {
+      toast.error("Save failed", { description: e?.message });
+    } finally {
+      setSavingColor(null);
+    }
+  }
+
+  return { slug, loading, max, commitMax, getMedia, setColorMedia, isDirty, savingColor, saveColor };
+}
+
+// ---------------------------------------------------------------------------
+// VariantImagesSection — self-contained (local state) list of colour
+// galleries. Kept for the Variant Builder modal.
+// ---------------------------------------------------------------------------
+export function VariantImagesSection({ slug, colors }: { slug: string; colors: ColorInfo[] }) {
   const [loading, setLoading] = useState(true);
   const [galleries, setGalleries] = useState<Record<string, VariantImageDraft[]>>({});
   const [max, setMax] = useState<number | null>(null);
@@ -91,9 +156,7 @@ export function VariantImagesSection({
         <h3 className="text-sm font-medium">Variant Media</h3>
         <span className="text-[11px] text-muted-foreground">Each colour has its own image + video gallery</span>
         <div className="ml-auto flex items-center gap-2">
-          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Max / colour
-          </label>
+          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Max / colour</label>
           <input
             value={maxInput}
             onChange={(e) => setMaxInput(e.target.value.replace(/[^\d]/g, ""))}
@@ -113,14 +176,7 @@ export function VariantImagesSection({
       ) : (
         <div className="space-y-4">
           {colors.map((c) => (
-            <ColorGallery
-              key={c.color}
-              slug={slug}
-              color={c.color}
-              hex={c.hex}
-              max={max}
-              initial={galleries[c.color] ?? []}
-            />
+            <LocalColorGallery key={c.color} slug={slug} color={c.color} hex={c.hex} max={max} initial={galleries[c.color] ?? []} />
           ))}
         </div>
       )}
@@ -128,7 +184,8 @@ export function VariantImagesSection({
   );
 }
 
-function ColorGallery({
+// Self-contained gallery (local state + save) wrapping the controlled panel.
+function LocalColorGallery({
   slug,
   color,
   hex,
@@ -144,6 +201,66 @@ function ColorGallery({
   const [media, setMedia] = useState<VariantImageDraft[]>(initial);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  function change(next: VariantImageDraft[]) {
+    setMedia(next);
+    setDirty(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      await saveColorGallery(slug, color, media);
+      setDirty(false);
+      toast.success(`${color} gallery saved`);
+    } catch (e: any) {
+      toast.error("Save failed", { description: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <VariantMediaPanel
+      slug={slug}
+      color={color}
+      hex={hex}
+      max={max}
+      media={media}
+      onChange={change}
+      dirty={dirty}
+      saving={saving}
+      onSave={save}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// VariantMediaPanel — controlled media manager for one colour gallery.
+// ---------------------------------------------------------------------------
+export function VariantMediaPanel({
+  slug,
+  color,
+  hex,
+  max,
+  media,
+  onChange,
+  dirty,
+  saving,
+  onSave,
+  showHeaderSwatch = true,
+}: {
+  slug: string;
+  color: string;
+  hex: string | null;
+  max: number | null;
+  media: VariantImageDraft[];
+  onChange: (next: VariantImageDraft[]) => void;
+  dirty: boolean;
+  saving: boolean;
+  onSave: () => void;
+  showHeaderSwatch?: boolean;
+}) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [videoBusy, setVideoBusy] = useState(false);
   const [preview, setPreview] = useState<VariantImageDraft | null>(null);
@@ -153,21 +270,16 @@ function ColorGallery({
   const replaceTarget = useRef<string | null>(null);
 
   const atMax = max != null && media.length >= max;
-  const imageCount = media.filter((m) => m.mediaType === "image").length;
+  const imageCount = useMemo(() => media.filter((m) => m.mediaType === "image").length, [media]);
   const videoCount = media.length - imageCount;
 
   function addDraft(draft: VariantImageDraft): boolean {
-    let added = false;
-    setMedia((prev) => {
-      if (max != null && prev.length >= max) {
-        toast.error(`Limit reached — max ${max} media for ${color}`);
-        return prev;
-      }
-      added = true;
-      return [...prev, draft];
-    });
-    if (added) setDirty(true);
-    return added;
+    if (max != null && media.length >= max) {
+      toast.error(`Limit reached — max ${max} media for ${color}`);
+      return false;
+    }
+    onChange([...media, draft]);
+    return true;
   }
 
   function onImageUploaded(url: string, thumbUrl: string | null, mediumUrl: string | null) {
@@ -178,19 +290,21 @@ function ColorGallery({
     if (!files || files.length === 0) return;
     setVideoBusy(true);
     try {
+      const next = [...media];
       for (const file of Array.from(files)) {
         const ext = (file.name.split(".").pop() || "").toLowerCase();
         if (!VIDEO_EXT.includes(ext)) {
           toast.error(`${file.name}: only ${VIDEO_EXT.join(", ")} videos are supported`);
           continue;
         }
-        if (max != null && media.length >= max) {
+        if (max != null && next.length >= max) {
           toast.error(`Limit reached — max ${max} media for ${color}`);
           break;
         }
         const url = await uploadVariantVideo(slug, file);
-        addDraft({ id: newImgId(), url, thumbUrl: null, mediumUrl: null, mediaType: "video", posterUrl: null });
+        next.push({ id: newImgId(), url, thumbUrl: null, mediumUrl: null, mediaType: "video", posterUrl: null });
       }
+      onChange(next);
       toast.success("Video added");
     } catch (e: any) {
       toast.error("Video upload failed", { description: e?.message });
@@ -212,21 +326,19 @@ function ColorGallery({
   }
 
   function remove(id: string) {
-    setMedia((prev) => prev.filter((i) => i.id !== id));
+    onChange(media.filter((i) => i.id !== id));
     setSelected((prev) => {
       const n = new Set(prev);
       n.delete(id);
       return n;
     });
-    setDirty(true);
   }
 
   function bulkDelete() {
     if (selected.size === 0) return;
     if (!window.confirm(`Delete ${selected.size} selected media item(s) from ${color}?`)) return;
-    setMedia((prev) => prev.filter((i) => !selected.has(i.id)));
+    onChange(media.filter((i) => !selected.has(i.id)));
     setSelected(new Set());
-    setDirty(true);
   }
 
   function toggleSelect(id: string) {
@@ -238,26 +350,20 @@ function ColorGallery({
   }
 
   function makeThumbnail(id: string) {
-    setMedia((prev) => {
-      const idx = prev.findIndex((i) => i.id === id);
-      if (idx <= 0) return prev;
-      const next = [...prev];
-      const [item] = next.splice(idx, 1);
-      next.unshift(item);
-      return next;
-    });
-    setDirty(true);
+    const idx = media.findIndex((i) => i.id === id);
+    if (idx <= 0) return;
+    const next = [...media];
+    const [item] = next.splice(idx, 1);
+    next.unshift(item);
+    onChange(next);
   }
 
   function reorder(from: number, to: number) {
     if (from === to) return;
-    setMedia((prev) => {
-      const next = [...prev];
-      const [item] = next.splice(from, 1);
-      next.splice(to, 0, item);
-      return next;
-    });
-    setDirty(true);
+    const next = [...media];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
   }
 
   function beginReplace(id: string) {
@@ -273,17 +379,12 @@ function ColorGallery({
     try {
       if (VIDEO_EXT.includes(ext)) {
         const url = await uploadVariantVideo(slug, file);
-        setMedia((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, url, thumbUrl: null, mediumUrl: null, mediaType: "video" } : m)),
-        );
-        setDirty(true);
+        onChange(media.map((m) => (m.id === id ? { ...m, url, thumbUrl: null, mediumUrl: null, mediaType: "video" } : m)));
       } else {
-        // reuse the image pipeline via MediaUploader is per-drop; here we do a
-        // direct process using the shared media-engine.
         const { processAndUpload } = await import("@/lib/media-engine");
         const done = await processAndUpload(file, { entityType: "product", entityRef: slug });
-        setMedia((prev) =>
-          prev.map((m) =>
+        onChange(
+          media.map((m) =>
             m.id === id
               ? {
                   ...m,
@@ -295,7 +396,6 @@ function ColorGallery({
               : m,
           ),
         );
-        setDirty(true);
       }
       toast.success("Media replaced");
     } catch (e: any) {
@@ -306,17 +406,15 @@ function ColorGallery({
     }
   }
 
-  async function save() {
-    setSaving(true);
-    try {
-      await saveColorGallery(slug, color, media);
-      setDirty(false);
-      toast.success(`${color} gallery saved`);
-    } catch (e: any) {
-      toast.error("Save failed", { description: e?.message });
-    } finally {
-      setSaving(false);
-    }
+  function download(m: VariantImageDraft) {
+    const a = document.createElement("a");
+    a.href = m.url;
+    a.download = "";
+    a.target = "_blank";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   return (
@@ -329,20 +427,20 @@ function ColorGallery({
         className="hidden"
         onChange={(e) => onVideoFiles(e.target.files)}
       />
-      <input
-        ref={replaceRef}
-        type="file"
-        accept="image/*,video/*"
-        className="hidden"
-        onChange={(e) => onReplaceFile(e.target.files)}
-      />
+      <input ref={replaceRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => onReplaceFile(e.target.files)} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="size-4 rounded-full border border-white/20 shrink-0" style={{ background: hex ?? "#111111" }} />
-        <span className="text-sm font-medium">{color}</span>
-        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
-          Media ({media.length}){max != null ? ` / ${max}` : ""}
+        {showHeaderSwatch && (
+          <span className="size-4 rounded-full border border-white/20 shrink-0" style={{ background: hex ?? "#111111" }} />
+        )}
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
+          <Images className="size-3.5 text-accent" /> Media ({media.length}){max != null ? ` / ${max}` : ""}
         </span>
+        {imageCount > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
+            <Star className="size-3 fill-current text-accent" /> Cover
+          </span>
+        )}
         {videoCount > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
             <Video className="size-3" /> {videoCount}
@@ -351,11 +449,11 @@ function ColorGallery({
         {dirty ? (
           <button
             type="button"
-            onClick={save}
+            onClick={onSave}
             disabled={saving}
             className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110 disabled:opacity-50"
           >
-            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} Save media
           </button>
         ) : media.length > 0 ? (
           <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-emerald-400">
@@ -369,9 +467,7 @@ function ColorGallery({
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <button
             type="button"
-            onClick={() =>
-              setSelected((prev) => (prev.size === media.length ? new Set() : new Set(media.map((m) => m.id))))
-            }
+            onClick={() => setSelected((prev) => (prev.size === media.length ? new Set() : new Set(media.map((m) => m.id))))}
             className="rounded-lg border border-white/10 px-2 py-1 text-muted-foreground hover:text-foreground"
           >
             {selected.size === media.length ? "Clear all" : "Select all"}
@@ -385,7 +481,7 @@ function ColorGallery({
               <Trash2 className="size-3" /> Delete {selected.size}
             </button>
           )}
-          <span className="ml-auto text-muted-foreground">Drag tiles to reorder · first image = thumbnail</span>
+          <span className="ml-auto text-muted-foreground">Drag tiles to reorder · first image = cover</span>
         </div>
       )}
 
@@ -404,7 +500,7 @@ function ColorGallery({
                   if (dragIndex.current != null) reorder(dragIndex.current, i);
                   dragIndex.current = null;
                 }}
-                className={`group relative aspect-square overflow-hidden rounded-lg border ${
+                className={`group relative aspect-square overflow-hidden rounded-lg border transition-transform hover:scale-[1.02] ${
                   isSel ? "border-accent ring-2 ring-accent" : i === 0 ? "border-accent/60 ring-1 ring-accent/40" : "border-white/10"
                 } bg-black/20`}
               >
@@ -425,7 +521,6 @@ function ColorGallery({
                   <img src={m.thumbUrl ?? m.url} alt={`${color} ${i + 1}`} loading="lazy" className="size-full object-cover" />
                 )}
 
-                {/* select checkbox */}
                 <button
                   type="button"
                   onClick={() => toggleSelect(m.id)}
@@ -439,7 +534,7 @@ function ColorGallery({
 
                 {i === 0 && !isVideo && (
                   <span className="absolute left-8 top-1 inline-flex items-center gap-0.5 rounded bg-accent px-1.5 py-0.5 text-[9px] font-semibold text-accent-foreground">
-                    <Star className="size-2.5 fill-current" /> Thumb
+                    <Star className="size-2.5 fill-current" /> Cover
                   </span>
                 )}
                 <span className="absolute right-1 top-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-mono uppercase text-white/80">
@@ -459,7 +554,7 @@ function ColorGallery({
                     <button
                       type="button"
                       onClick={() => makeThumbnail(m.id)}
-                      title="Set as thumbnail"
+                      title="Set as cover"
                       className="grid size-6 place-items-center rounded bg-white/15 text-white hover:bg-accent hover:text-accent-foreground"
                     >
                       <Star className="size-3" />
@@ -472,6 +567,16 @@ function ColorGallery({
                     className="grid size-6 place-items-center rounded bg-white/15 text-white hover:bg-accent hover:text-accent-foreground"
                   >
                     <Replace className="size-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => download(m)}
+                    title="Download"
+                    className="grid size-6 place-items-center rounded bg-white/15 text-white hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3">
+                      <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                   <button
                     type="button"
@@ -528,23 +633,14 @@ function ColorGallery({
           entityType="product"
           entityRef={slug}
           compact
-          label={`Add ${color} images`}
-          onComplete={(done) =>
-            onImageUploaded(
-              done.variants.large_url || done.variants.url,
-              done.variants.thumb_url,
-              done.variants.medium_url,
-            )
-          }
+          label={`Upload ${color} images`}
+          onComplete={(done) => onImageUploaded(done.variants.large_url || done.variants.url, done.variants.thumb_url, done.variants.medium_url)}
         />
       )}
 
       {preview &&
         createPortal(
-          <div
-            className="fixed inset-0 z-[2147483646] grid place-items-center bg-black/90 p-4"
-            onClick={() => setPreview(null)}
-          >
+          <div className="fixed inset-0 z-[2147483646] grid place-items-center bg-black/90 p-4" onClick={() => setPreview(null)}>
             <button
               className="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-white/10 text-white"
               onClick={() => setPreview(null)}
