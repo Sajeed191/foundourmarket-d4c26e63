@@ -441,26 +441,36 @@ function ProductPage() {
   const activeColorGallery = selectedColorKey ? colorGalleries[selectedColorKey] ?? null : null;
 
   const galleryMedia = (() => {
-    const items: ProductImage[] = [];
+    const items: LightboxMedia[] = [];
     if (product.videoUrl) {
-      items.push({ id: "video", url: product.videoUrl, alt: `${product.name} — video`, sortOrder: -2 });
+      items.push({ id: "video", url: product.videoUrl, alt: `${product.name} — video`, sortOrder: -2, kind: "video" });
     }
-    // When the selected colour has its own gallery, show ONLY those images
-    // (no images from other colours). Otherwise fall back to the product's
-    // default gallery so the gallery is never broken/empty.
+    // When the selected colour has its own gallery, show ONLY that colour's
+    // media (images + videos, no media from other colours). Otherwise fall back
+    // to the product's default gallery so the gallery is never broken/empty.
     if (activeColorGallery && activeColorGallery.length > 0) {
       activeColorGallery.forEach((img, i) => {
-        items.push({ id: `variant-${img.id}`, url: img.url, alt: `${product.name} — ${selectedColorKey} ${i + 1}`, sortOrder: i });
+        items.push({
+          id: `variant-${img.id}`,
+          url: img.url,
+          alt: `${product.name} — ${selectedColorKey} ${i + 1}`,
+          sortOrder: i,
+          kind: img.mediaType,
+          poster: img.posterUrl,
+        });
       });
       return items;
     }
-    const main = { id: "main", url: product.image, alt: product.name, sortOrder: -1 };
-    const extras = images.filter((img) => img.url && img.url !== product.image);
+    const main: LightboxMedia = { id: "main", url: product.image, alt: product.name, sortOrder: -1, kind: "image" };
+    const extras: LightboxMedia[] = images
+      .filter((img) => img.url && img.url !== product.image)
+      .map((img) => ({ ...img, kind: "image" as const }));
     items.push(main, ...extras);
     return items;
   })();
-  const galleryImages = galleryMedia.filter((m) => m.id !== "video");
+  const galleryImages = galleryMedia.filter((m) => m.kind !== "video");
   const activeMedia = galleryMedia[activeImg] ?? galleryMedia[0];
+
 
   // Serve device-appropriate, format-negotiated variants instead of the
   // full-resolution originals. Storage URLs are rewritten to the on-the-fly
