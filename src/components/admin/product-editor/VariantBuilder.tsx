@@ -16,6 +16,12 @@ import {
   COMMON_COLORS,
   type AdminVariant,
 } from "@/lib/product-variants";
+import {
+  renameColorGallery,
+  deleteColorGallery,
+  resyncColorThumbnails,
+} from "@/lib/variant-images";
+import { VariantImagesSection } from "@/components/admin/product-editor/VariantImagesSection";
 
 /**
  * Self-contained Size/Colour variant builder for a single product `slug`.
@@ -177,16 +183,19 @@ export function VariantBuilder({ slug }: { slug: string }) {
           : r,
       ),
     );
+    // Keep the colour's gallery attached to the renamed colour.
+    renameColorGallery(slug, oldColor, nextName).catch(() => {});
     toast.success(`Colour updated to "${nextName}"`);
   }
   function deleteColor(color: string, count: number) {
     setConfirm({
       title: `Delete colour "${color}"?`,
-      message: `This will remove ${count} variant${count === 1 ? "" : "s"} using this colour. Other colours are not affected. This applies when you save.`,
+      message: `This will remove ${count} variant${count === 1 ? "" : "s"} and this colour's images. Other colours are not affected. This applies when you save.`,
       confirmLabel: "Delete colour",
       danger: true,
       onConfirm: () => {
         setRows((p) => p.filter((r) => r.color !== color));
+        deleteColorGallery(slug, color).catch(() => {});
         toast.success(`Colour "${color}" removed`);
       },
     });
@@ -259,6 +268,9 @@ export function VariantBuilder({ slug }: { slug: string }) {
       const fresh = await fetchAdminVariants(slug);
       setRows(fresh.map(({ productSlug: _p, ...r }) => r));
       setSelected(new Set());
+      // Sync each colour's first gallery image into its variant thumbnails so
+      // cart/checkout/orders show the chosen colour image.
+      await resyncColorThumbnails(slug).catch(() => {});
       invalidateProducts();
       toast.success("Variants saved");
     } catch (e: any) {
@@ -375,6 +387,16 @@ export function VariantBuilder({ slug }: { slug: string }) {
               )}
             </div>
           )}
+
+          {/* Per-colour image galleries */}
+          {colorsInUse.length > 0 && (
+            <VariantImagesSection
+              slug={slug}
+              colors={colorsInUse.map((c) => ({ color: c.color, hex: c.hex }))}
+            />
+          )}
+
+
 
           {dupWarning && (
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">

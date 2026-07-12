@@ -3032,6 +3032,57 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variant_images: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          image_url: string
+          medium_url: string | null
+          product_slug: string
+          sort_order: number
+          thumb_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          image_url: string
+          medium_url?: string | null
+          product_slug: string
+          sort_order?: number
+          thumb_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          medium_url?: string | null
+          product_slug?: string
+          sort_order?: number
+          thumb_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variant_images_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "product_variant_images_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           active: boolean
@@ -3231,6 +3282,7 @@ export type Database = {
           trending: boolean
           updated_at: string
           upsell_products: string[]
+          variant_image_max: number | null
           video_url: string | null
           views_count: number
           warehouse_location: string | null
@@ -3341,6 +3393,7 @@ export type Database = {
           trending?: boolean
           updated_at?: string
           upsell_products?: string[]
+          variant_image_max?: number | null
           video_url?: string | null
           views_count?: number
           warehouse_location?: string | null
@@ -3451,6 +3504,7 @@ export type Database = {
           trending?: boolean
           updated_at?: string
           upsell_products?: string[]
+          variant_image_max?: number | null
           video_url?: string | null
           views_count?: number
           warehouse_location?: string | null
@@ -5995,6 +6049,33 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variant_images_public: {
+        Row: {
+          color: string | null
+          id: string | null
+          image_url: string | null
+          medium_url: string | null
+          product_slug: string | null
+          sort_order: number | null
+          thumb_url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variant_images_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "product_variant_images_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       product_variants_public: {
         Row: {
           barcode: string | null
@@ -6753,6 +6834,7 @@ export type Database = {
           trending: boolean
           updated_at: string
           upsell_products: string[]
+          variant_image_max: number | null
           video_url: string | null
           views_count: number
           warehouse_location: string | null
@@ -7051,6 +7133,7 @@ export type Database = {
           trending: boolean
           updated_at: string
           upsell_products: string[]
+          variant_image_max: number | null
           video_url: string | null
           views_count: number
           warehouse_location: string | null

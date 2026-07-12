@@ -23,6 +23,7 @@ import { StarRating } from "@/components/site/StarRating";
 import { useCompare } from "@/hooks/use-compare";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
+import { fetchPublicColorGalleries, type VariantImage } from "@/lib/variant-images";
 import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
 import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
@@ -217,6 +218,9 @@ function ProductPage() {
   useEffect(() => () => addTimers.current.forEach(clearTimeout), []);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  // Per-colour galleries, keyed by lowercased colour name. Empty when the
+  // product has no colour galleries (falls back to the default gallery).
+  const [colorGalleries, setColorGalleries] = useState<Record<string, VariantImage[]>>({});
   const [activeImg, setActiveImg] = useState(0);
   // Natural aspect ratio (w/h) of the currently displayed image. Drives the
   // main media container so it sizes to the image itself — no cropping and no
@@ -291,10 +295,15 @@ function ProductPage() {
     let active = true;
     const fallback = window.setTimeout(() => { if (active) setDataReady(true); }, 1200);
     setDataReady(false);
-    Promise.all([fetchProductImages(slug), fetchProductVariants(slug)]).then(([imgs, vars]) => {
+    Promise.all([
+      fetchProductImages(slug),
+      fetchProductVariants(slug),
+      fetchPublicColorGalleries(slug),
+    ]).then(([imgs, vars, galleries]) => {
       if (!active) return;
       setImages(imgs);
       setVariants(vars);
+      setColorGalleries(galleries);
       setActiveImg(0);
       setVariantId(vars[0]?.id ?? null);
       setDataReady(true);
@@ -426,10 +435,24 @@ function ProductPage() {
     );
   }
 
+  // Colour currently selected (drives which gallery is shown).
+  const selectedColorKey =
+    variants.find((v) => v.id === variantId)?.color?.trim().toLowerCase() ?? null;
+  const activeColorGallery = selectedColorKey ? colorGalleries[selectedColorKey] ?? null : null;
+
   const galleryMedia = (() => {
     const items: ProductImage[] = [];
     if (product.videoUrl) {
       items.push({ id: "video", url: product.videoUrl, alt: `${product.name} — video`, sortOrder: -2 });
+    }
+    // When the selected colour has its own gallery, show ONLY those images
+    // (no images from other colours). Otherwise fall back to the product's
+    // default gallery so the gallery is never broken/empty.
+    if (activeColorGallery && activeColorGallery.length > 0) {
+      activeColorGallery.forEach((img, i) => {
+        items.push({ id: `variant-${img.id}`, url: img.url, alt: `${product.name} — ${selectedColorKey} ${i + 1}`, sortOrder: i });
+      });
+      return items;
     }
     const main = { id: "main", url: product.image, alt: product.name, sortOrder: -1 };
     const extras = images.filter((img) => img.url && img.url !== product.image);
@@ -509,15 +532,25 @@ function ProductPage() {
   const effectivePrice = selectedVariant?.priceOverride ?? basePrice;
   const effectiveStock = selectedVariant ? selectedVariant.stockQuantity : product.stockQuantity;
   const effectiveSku = selectedVariant?.sku ?? product.sku;
-  // When a selected variant has its own image, jump the gallery to it (if that
-  // image is part of the gallery). Never disrupts products/variants without one.
+  // Colour change → swap galleries: reset to the new colour's first image.
+  // Changing only the size keeps the same colour key, so the gallery (and the
+  // active image) is preserved — no reload of images.
+  const hasColorGallery = !!(activeColorGallery && activeColorGallery.length > 0);
+  useEffect(() => {
+    if (hasColorGallery) {
+      setActiveImg(product.videoUrl ? 1 : 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedColorKey, hasColorGallery]);
+  // When a colour has no gallery but the selected variant has a single image,
+  // jump the default gallery to it (legacy single-image behaviour).
   const variantImg = selectedVariant?.imageUrl ?? null;
   useEffect(() => {
-    if (!variantImg) return;
+    if (hasColorGallery || !variantImg) return;
     const idx = galleryMedia.findIndex((m) => m.url === variantImg);
     if (idx >= 0) setActiveImg(idx);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variantImg]);
+  }, [variantImg, hasColorGallery]);
   const unitShipping = shippingFeeOf(product);
   const lowStock = effectiveStock > 0 && effectiveStock <= product.lowStockThreshold;
   const isOOS = effectiveStock <= 0;
