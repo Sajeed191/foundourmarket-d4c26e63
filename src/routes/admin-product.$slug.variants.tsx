@@ -312,8 +312,9 @@ function SwatchChip({ active, hex, onClick, children }: { active: boolean; hex: 
   );
 }
 
-function VariantCard({ r, onChange, onRemove, onDuplicate }: {
+function VariantCard({ r, onChange, onRemove, onDuplicate, gallery }: {
   r: Row; onChange: (p: Partial<Row>) => void; onRemove: () => void; onDuplicate: () => void;
+  gallery: ReturnType<typeof useColorGalleryManager>;
 }) {
   const low = r.stockQuantity <= r.lowStockThreshold;
   return (
