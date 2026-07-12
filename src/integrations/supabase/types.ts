@@ -3038,7 +3038,9 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          media_type: string
           medium_url: string | null
+          poster_url: string | null
           product_slug: string
           sort_order: number
           thumb_url: string | null
@@ -3049,7 +3051,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          media_type?: string
           medium_url?: string | null
+          poster_url?: string | null
           product_slug: string
           sort_order?: number
           thumb_url?: string | null
@@ -3060,7 +3064,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          media_type?: string
           medium_url?: string | null
+          poster_url?: string | null
           product_slug?: string
           sort_order?: number
           thumb_url?: string | null
@@ -6054,7 +6060,9 @@ export type Database = {
           color: string | null
           id: string | null
           image_url: string | null
+          media_type: string | null
           medium_url: string | null
+          poster_url: string | null
           product_slug: string | null
           sort_order: number | null
           thumb_url: string | null
