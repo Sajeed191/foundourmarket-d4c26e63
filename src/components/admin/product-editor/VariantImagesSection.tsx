@@ -746,26 +746,7 @@ export function VariantMediaPanel({
         />
       )}
 
-      {preview &&
-        createPortal(
-          <div className="fixed inset-0 z-[2147483646] grid place-items-center bg-black/90 p-4" onClick={() => setPreview(null)}>
-            <button
-              className="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-white/10 text-white"
-              onClick={() => setPreview(null)}
-              aria-label="Close preview"
-            >
-              <X className="size-5" />
-            </button>
-            <div className="max-h-[85vh] max-w-[92vw]" onClick={(e) => e.stopPropagation()}>
-              {preview.mediaType === "video" ? (
-                <video src={preview.url} controls autoPlay className="max-h-[85vh] max-w-[92vw] rounded-lg" />
-              ) : (
-                <img src={preview.url} alt="" className="max-h-[85vh] max-w-[92vw] rounded-lg object-contain" />
-              )}
-            </div>
-          </div>,
-          document.body,
-        )}
+      {preview && createPortal(<MediaPreview media={preview} onClose={() => setPreview(null)} />, document.body)}
     </div>
   );
 }
