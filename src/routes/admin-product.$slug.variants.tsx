@@ -12,6 +12,7 @@ import {
 } from "@/components/admin/product-editor/kit";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";
+import { VariantImagesSection } from "@/components/admin/product-editor/VariantImagesSection";
 import {
   fetchAdminVariants,
   fetchHasVariants,
@@ -146,6 +147,15 @@ function VariantsPage() {
     return false;
   }, [rows]);
 
+  // Distinct colours across all variant rows — each gets its own media gallery.
+  const colorsInUse = useMemo(() => {
+    const map = new Map<string, { color: string; hex: string | null }>();
+    for (const r of rows) {
+      if (r.color && !map.has(r.color)) map.set(r.color, { color: r.color, hex: r.colorHex });
+    }
+    return Array.from(map.values());
+  }, [rows]);
+
   async function save() {
     if (dupWarning) { toast.error("Remove duplicate Size + Colour combinations first"); return; }
     setSaving(true);
@@ -260,7 +270,12 @@ function VariantsPage() {
                 ))}
               </div>
 
-              {/* Save bar */}
+              {/* Per-colour media galleries (images + videos) */}
+              {colorsInUse.length > 0 && (
+                <VariantImagesSection slug={slug} colors={colorsInUse} />
+              )}
+
+
               <div className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
                 style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
                 <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2.5 pb-1">
@@ -341,7 +356,6 @@ function VariantCard({ r, onChange, onRemove, onDuplicate }: {
         <Field label="Compare price" type="number" value={r.comparePrice != null ? String(r.comparePrice) : ""} onChange={(v) => onChange({ comparePrice: v.trim() === "" ? null : Number(v) })} />
         <Field label="Barcode" value={r.barcode ?? ""} onChange={(v) => onChange({ barcode: v || null })} />
         <Field label="Weight" type="number" value={r.weight != null ? String(r.weight) : ""} onChange={(v) => onChange({ weight: v.trim() === "" ? null : Number(v) })} />
-        <Field label="Image URL (optional)" value={r.imageUrl ?? ""} onChange={(v) => onChange({ imageUrl: v || null })} className="col-span-2" />
       </div>
 
       <div className="mt-3">
