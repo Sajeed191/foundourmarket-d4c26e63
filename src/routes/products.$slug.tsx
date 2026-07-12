@@ -507,7 +507,7 @@ function ProductPage() {
   // Measure the natural aspect of the visible image so the main media container
   // sizes to the image itself (no crop, no blank). Uses a decode/Image() probe
   // which fires reliably even for browser-cached images (unlike a JSX onLoad).
-  const activeUrl = activeMedia?.id === "video" ? null : (activeMedia?.url || product.image);
+  const activeUrl = activeMedia?.kind === "video" ? null : (activeMedia?.url || product.image);
   useEffect(() => {
     // Keep the previous aspect until the next image resolves so the container
     // never briefly falls back to a mismatched box (which would letterbox).
