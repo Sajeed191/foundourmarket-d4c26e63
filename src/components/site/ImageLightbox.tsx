@@ -37,7 +37,7 @@ export function ImageLightbox({
   alt,
   onShare,
 }: {
-  images: ProductImage[];
+  images: LightboxMedia[];
   index: number;
   open: boolean;
   onClose: () => void;
@@ -46,6 +46,8 @@ export function ImageLightbox({
   onShare?: () => void;
 }) {
   const count = images.length;
+  const activeIsVideo = images[index]?.kind === "video";
+
 
   // Live view transform for the CURRENT slide (zoom + pan).
   const [zoom, setZoom] = useState(1);
