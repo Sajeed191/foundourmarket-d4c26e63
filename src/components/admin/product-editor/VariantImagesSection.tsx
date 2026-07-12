@@ -491,6 +491,7 @@ export function VariantMediaPanel({
         onChange={(e) => onVideoFiles(e.target.files)}
       />
       <input ref={replaceRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => onReplaceFile(e.target.files)} />
+      <input ref={bulkReplaceRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => onBulkReplace(e.target.files)} />
 
       <div className="flex flex-wrap items-center gap-2">
         {showHeaderSwatch && (
