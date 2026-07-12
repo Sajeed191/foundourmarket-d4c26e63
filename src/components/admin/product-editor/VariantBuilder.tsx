@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Layers, Loader2, Plus, Trash2, Save, Wand2, AlertTriangle, Check, Upload,
+  Layers, Loader2, Plus, Trash2, Save, Wand2, AlertTriangle, Check,
   Pencil, Copy, X, CheckSquare, Square, Power,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+
 import { invalidateProducts } from "@/lib/use-products";
 import {
   fetchAdminVariants,
@@ -595,25 +595,7 @@ function VariantCard({ r, selected, onSelect, onChange, onRemove, onDuplicate }:
   r: Row; selected: boolean; onSelect: () => void; onChange: (p: Partial<Row>) => void; onRemove: () => void; onDuplicate: () => void;
 }) {
   const low = r.stockQuantity <= r.lowStockThreshold;
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
 
-  async function uploadImage(file: File) {
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-      if (error) throw error;
-      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-      onChange({ imageUrl: data.publicUrl });
-      toast.success("Variant image uploaded");
-    } catch (e: any) {
-      toast.error("Upload failed", { description: e?.message });
-    } finally {
-      setUploading(false);
-    }
-  }
   return (
     <div className={`card-premium rounded-2xl p-4 transition-colors ${selected ? "ring-1 ring-accent/50" : ""}`}>
       <div className="flex items-center justify-between gap-2 mb-3">
@@ -656,23 +638,8 @@ function VariantCard({ r, selected, onSelect, onChange, onRemove, onDuplicate }:
         <VField label="Compare price" type="number" value={r.comparePrice != null ? String(r.comparePrice) : ""} onChange={(v) => onChange({ comparePrice: v.trim() === "" ? null : Number(v) })} />
         <VField label="Barcode" value={r.barcode ?? ""} onChange={(v) => onChange({ barcode: v || null })} />
         <VField label="Weight" type="number" value={r.weight != null ? String(r.weight) : ""} onChange={(v) => onChange({ weight: v.trim() === "" ? null : Number(v) })} />
-        <div className="col-span-2">
-          <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Variant image (optional)</label>
-          <div className="flex items-center gap-2">
-            {r.imageUrl ? (
-              <img src={r.imageUrl} alt="Variant" className="size-11 shrink-0 rounded-lg object-cover border border-white/10" />
-            ) : (
-              <div className="size-11 shrink-0 rounded-lg border border-dashed border-white/15 grid place-items-center text-muted-foreground"><Upload className="size-4" /></div>
-            )}
-            <input value={r.imageUrl ?? ""} onChange={(e) => onChange({ imageUrl: e.target.value || null })} placeholder="Paste image URL or upload"
-              className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40" />
-            <input ref={fileRef} type="file" accept="image/*" className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.currentTarget.value = ""; }} />
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-white/12 px-3 py-2 text-xs hover:border-white/25 disabled:opacity-50">
-              {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />} Upload
-            </button>
-          </div>
+        <div className="col-span-2 rounded-xl border border-dashed border-white/12 bg-white/[0.02] px-3 py-2.5 text-[11px] text-muted-foreground">
+          Media for this variant is managed per-colour in the <span className="text-foreground font-medium">Variant Media</span> gallery above. The colour’s cover image is used automatically across product cards, cart, checkout, orders and invoices.
         </div>
       </div>
 
