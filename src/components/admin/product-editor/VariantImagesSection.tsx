@@ -268,6 +268,7 @@ export function VariantMediaPanel({
   const videoRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
   const replaceTarget = useRef<string | null>(null);
+  const bulkReplaceRef = useRef<HTMLInputElement>(null);
 
   const atMax = max != null && media.length >= max;
   const imageCount = useMemo(() => media.filter((m) => m.mediaType === "image").length, [media]);
