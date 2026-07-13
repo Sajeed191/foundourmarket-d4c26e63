@@ -37,6 +37,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
 import { FlashDeals } from "@/components/site/FlashDeals";
+import { SmartRecommendations } from "@/components/site/SmartRecommendations";
 import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
 import { useTestimonials } from "@/lib/use-testimonials";
@@ -752,6 +753,8 @@ function Home() {
         <LazyMount minHeight={360}>
           {ffFlashDeals && <FlashDeals />}
         </LazyMount>
+
+        <SmartRecommendations />
 
 
 
