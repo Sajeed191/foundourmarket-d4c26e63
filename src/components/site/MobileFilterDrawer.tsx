@@ -306,22 +306,50 @@ export function MobileFilterDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
 
-  // Body scroll-lock while open.
+  // Full-screen bottom-sheet mount + open/close animation state.
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    if (!open) return;
+    if (open) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setVisible(false);
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  // Lock background scrolling while the sheet is mounted (prevents layout shift).
+  useEffect(() => {
+    if (!mounted) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [mounted]);
+
+  // Android/browser back button closes the drawer before leaving the page.
+  useEffect(() => {
+    if (!open) return;
+    window.history.pushState({ filterDrawer: true }, "");
+    const onPop = () => onClose();
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // If closed by other means (button/backdrop/apply), drop our pushed entry.
+      if (window.history.state?.filterDrawer) window.history.back();
+    };
+  }, [open, onClose]);
 
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (open) closeRef.current?.focus();
   }, [open]);
 
-  if (!open) return null;
+  if (!mounted) return null;
+
 
   const catSummary = draft.sub
     ? allCategories.find((c) => c.slug === draft.sub)?.name
@@ -331,7 +359,17 @@ export function MobileFilterDrawer({
   const sortSummary = SORT_OPTIONS.find((s) => s.value === sort)?.label;
 
   return (
-    <div className="fixed inset-0 z-[100001] lg:hidden flex flex-col bg-background animate-fade-in" role="dialog" aria-modal="true" aria-label="Filters">
+    <div className="fixed inset-0 z-[100001] lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+      {/* Semi-transparent backdrop (tap to close) */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
+      />
+      {/* Full-screen bottom-sheet */}
+      <div
+        className={`absolute inset-0 flex flex-col bg-background shadow-2xl transition-transform duration-300 ease-out will-change-transform ${visible ? "translate-y-0" : "translate-y-full"}`}
+      >
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between gap-2 border-b border-white/10 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <div className="min-w-0">
@@ -772,6 +810,7 @@ export function MobileFilterDrawer({
             Show {resultCount.toLocaleString()} Product{resultCount === 1 ? "" : "s"}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
