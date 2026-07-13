@@ -23,7 +23,13 @@ import {
   COMMON_COLORS,
   type AdminVariant,
 } from "@/lib/product-variants";
-import { cleanupOrphanColorGalleries, resyncColorThumbnails } from "@/lib/variant-images";
+import {
+  cleanupOrphanColorGalleries,
+  resyncColorThumbnails,
+  syncProductCardImage,
+  setDefaultVariantColor,
+  fetchDefaultVariantColor,
+} from "@/lib/variant-images";
 
 export const Route = createFileRoute("/admin-product/$slug/variants")({ component: VariantsPage });
 
@@ -48,6 +54,7 @@ function VariantsPage() {
   const [enabled, setEnabled] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [saving, setSaving] = useState(false);
+  const [defaultColor, setDefaultColor] = useState<string | null>(null);
 
   // Combination generator inputs
   const [selSizes, setSelSizes] = useState<string[]>([]);
@@ -60,15 +67,17 @@ function VariantsPage() {
     let active = true;
     setLoading(true);
     (async () => {
-      const [{ data: prod }, hv, vars] = await Promise.all([
+      const [{ data: prod }, hv, vars, defColor] = await Promise.all([
         supabase.from("products").select("id,slug,name,image,sku,status,category").eq("slug", slug).maybeSingle(),
         fetchHasVariants(slug),
         fetchAdminVariants(slug),
+        fetchDefaultVariantColor(slug),
       ]);
       if (!active) return;
       setHeader((prod as any) ?? null);
       setEnabled(hv);
       setRows(vars.map(({ productSlug: _p, ...r }) => r));
+      setDefaultColor(defColor);
       setLoading(false);
     })().catch(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -130,6 +139,9 @@ function VariantsPage() {
     setEnabled(v);
     try {
       await setHasVariants(slug, v);
+      // Re-point the storefront card image: to a variant cover when enabling
+      // (if media exists), or back to the original image when disabling.
+      await syncProductCardImage(slug);
       invalidateProducts();
       toast.success(v ? "Variants enabled" : "Variants disabled");
     } catch (e: any) {
@@ -168,6 +180,10 @@ function VariantsPage() {
       const cleaned = await cleanupOrphanColorGalleries(slug, keepColors);
       // 4. Re-sync colour thumbnails into cart/checkout for surviving colours.
       await resyncColorThumbnails(slug);
+      // 5. Persist the default variant colour + re-point the storefront card
+      //    image to the default variant cover (or restore original if none).
+      await setDefaultVariantColor(slug, defaultColor);
+      await syncProductCardImage(slug);
 
       const fresh = await fetchAdminVariants(slug);
       setRows(fresh.map(({ productSlug: _p, ...r }) => r));
@@ -271,7 +287,37 @@ function VariantsPage() {
                 </div>
               )}
 
-              {/* Variant rows */}
+              {/* Default variant — drives storefront card image, initial PDP
+                  gallery, initial selected colour, and search/collection thumbnails. */}
+              {(() => {
+                const colours = [
+                  ...new Set(rows.map((r) => r.color?.trim()).filter(Boolean) as string[]),
+                ];
+                if (colours.length === 0) return null;
+                return (
+                  <div className="card-premium rounded-2xl p-4 sm:p-5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Check className="size-4 text-accent" />
+                      <h3 className="text-sm font-medium">Default variant</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      The colour shown by default on the product card, search, collections and the
+                      initial product page gallery. Leave on “First colour” to use the first colour automatically.
+                    </p>
+                    <select
+                      value={defaultColor ?? ""}
+                      onChange={(e) => setDefaultColor(e.target.value || null)}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40"
+                    >
+                      <option value="">First colour (automatic)</option>
+                      {colours.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
               <div className="space-y-3">
                 {rows.length === 0 && (
                   <div className="card-premium rounded-2xl p-8 text-center text-sm text-muted-foreground">

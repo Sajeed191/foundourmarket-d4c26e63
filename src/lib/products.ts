@@ -104,6 +104,8 @@ export type Product = {
   revenue: number;
   // Media
   videoUrl: string | null;
+  /** Admin-selected default variant colour (drives storefront gallery/card). */
+  defaultVariantColor: string | null;
   // Rich content shown to customers
   features: string[];
   specifications: Record<string, string>;
@@ -222,7 +224,7 @@ type Row = {
   priority_score?: number | null; collections?: string[] | null;
   seo_title?: string | null; seo_description?: string | null;
   meta_keywords?: string[] | null; brand?: string | null; product_type?: string | null;
-  video_url?: string | null;
+  video_url?: string | null; default_variant_color?: string | null;
   features?: string[] | null;
   specifications?: Record<string, string> | null;
   attributes?: Record<string, string> | null;
@@ -319,6 +321,7 @@ export function rowToProduct(r: Row): Product {
     brand: r.brand ?? null,
     productType: r.product_type ?? null,
     videoUrl: r.video_url ?? null,
+    defaultVariantColor: r.default_variant_color ?? null,
     features: r.features ?? [],
     specifications: r.specifications ?? {},
     attributes: r.attributes ?? {},
@@ -327,7 +330,7 @@ export function rowToProduct(r: Row): Product {
 
 // Public catalog columns only — sensitive fields (cost, cost prices, barcode,
 // warehouse_location, admin_notes) are NOT exposed via the products_public view.
-export const SELECT_COLS = "id,slug,name,tagline,category,categories,price,rating,reviews,rating_source,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,related_products,cross_sell_products,upsell_products,premium,fast_selling,editors_choice,priority_score,collections,seo_title,seo_description,meta_keywords,brand,product_type,video_url,features,specifications,attributes";
+export const SELECT_COLS = "id,slug,name,tagline,category,categories,price,rating,reviews,rating_source,image,description,in_stock,discount,featured,sku,stock_quantity,low_stock_threshold,views_count,created_at,sold_count,wishlist_count,price_inr,compare_price_inr,price_usd,compare_price_usd,india_visible,international_visible,warranty,status,shipping_fee_inr,shipping_fee_usd,razorpay_enabled,stripe_enabled,paypal_enabled,cod_enabled,return_eligible,replacement_eligible,return_window_days,pickup_supported,international_shipping,fragile,customs_info,restock_eta,preorder,scheduled_publish_at,scheduled_expiry_at,trending,bestseller,new_arrival,hot_deal,flash_deal,staff_pick,recommended,homepage_hero,gift_idea,homepage_section,is_category_banner,hide_from_search,hide_from_recommendations,homepage_position,category_position,featured_until,related_products,cross_sell_products,upsell_products,premium,fast_selling,editors_choice,priority_score,collections,seo_title,seo_description,meta_keywords,brand,product_type,video_url,default_variant_color,features,specifications,attributes";
 
 // LEAN list columns — used by every LIST/GRID/SEARCH surface (home, category,
 // search, wishlist, continue-shopping, flash deals). Drops the heavy

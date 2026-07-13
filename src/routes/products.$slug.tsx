@@ -305,7 +305,14 @@ function ProductPage() {
       setVariants(vars);
       setColorGalleries(galleries);
       setActiveImg(0);
-      setVariantId(vars[0]?.id ?? null);
+      // Initial selection honours the admin's default variant colour, then
+      // falls back to the first active variant (already sorted by sort_order).
+      const defColor = product?.defaultVariantColor?.trim().toLowerCase() ?? null;
+      const initial =
+        (defColor && vars.find((v) => (v.color ?? "").trim().toLowerCase() === defColor)) ||
+        vars[0] ||
+        null;
+      setVariantId(initial?.id ?? null);
       setDataReady(true);
     }).catch(() => { if (active) setDataReady(true); });
     return () => { active = false; window.clearTimeout(fallback); };

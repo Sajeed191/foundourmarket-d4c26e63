@@ -3190,6 +3190,7 @@ export type Database = {
           admin_notes: string | null
           attributes: Json
           barcode: string | null
+          base_image: string | null
           bestseller: boolean
           brand: string | null
           categories: string[]
@@ -3206,6 +3207,7 @@ export type Database = {
           created_at: string
           cross_sell_products: string[]
           customs_info: string | null
+          default_variant_color: string | null
           deleted_at: string | null
           deleted_by: string | null
           delivery_estimate: string | null
@@ -3301,6 +3303,7 @@ export type Database = {
           admin_notes?: string | null
           attributes?: Json
           barcode?: string | null
+          base_image?: string | null
           bestseller?: boolean
           brand?: string | null
           categories?: string[]
@@ -3317,6 +3320,7 @@ export type Database = {
           created_at?: string
           cross_sell_products?: string[]
           customs_info?: string | null
+          default_variant_color?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           delivery_estimate?: string | null
@@ -3412,6 +3416,7 @@ export type Database = {
           admin_notes?: string | null
           attributes?: Json
           barcode?: string | null
+          base_image?: string | null
           bestseller?: boolean
           brand?: string | null
           categories?: string[]
@@ -3428,6 +3433,7 @@ export type Database = {
           created_at?: string
           cross_sell_products?: string[]
           customs_info?: string | null
+          default_variant_color?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           delivery_estimate?: string | null
@@ -6121,6 +6127,7 @@ export type Database = {
           created_at: string | null
           cross_sell_products: string[] | null
           customs_info: string | null
+          default_variant_color: string | null
           delivery_estimate: string | null
           description: string | null
           discount: number | null
@@ -6210,6 +6217,7 @@ export type Database = {
           created_at?: string | null
           cross_sell_products?: string[] | null
           customs_info?: string | null
+          default_variant_color?: string | null
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
@@ -6299,6 +6307,7 @@ export type Database = {
           created_at?: string | null
           cross_sell_products?: string[] | null
           customs_info?: string | null
+          default_variant_color?: string | null
           delivery_estimate?: string | null
           description?: string | null
           discount?: number | null
@@ -6744,6 +6753,7 @@ export type Database = {
           admin_notes: string | null
           attributes: Json
           barcode: string | null
+          base_image: string | null
           bestseller: boolean
           brand: string | null
           categories: string[]
@@ -6760,6 +6770,7 @@ export type Database = {
           created_at: string
           cross_sell_products: string[]
           customs_info: string | null
+          default_variant_color: string | null
           deleted_at: string | null
           deleted_by: string | null
           delivery_estimate: string | null
@@ -7043,6 +7054,7 @@ export type Database = {
           admin_notes: string | null
           attributes: Json
           barcode: string | null
+          base_image: string | null
           bestseller: boolean
           brand: string | null
           categories: string[]
@@ -7059,6 +7071,7 @@ export type Database = {
           created_at: string
           cross_sell_products: string[]
           customs_info: string | null
+          default_variant_color: string | null
           deleted_at: string | null
           deleted_by: string | null
           delivery_estimate: string | null
