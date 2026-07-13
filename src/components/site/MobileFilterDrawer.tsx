@@ -330,18 +330,28 @@ export function MobileFilterDrawer({
     };
   }, [mounted]);
 
+  // Keep a stable reference to onClose so the history effect below only ever
+  // re-runs when `open` actually changes — never because the parent passed a
+  // fresh inline onClose on re-render (which previously caused the drawer to
+  // pop its own history entry and immediately close itself).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // Android/browser back button closes the drawer before leaving the page.
   useEffect(() => {
     if (!open) return;
     window.history.pushState({ filterDrawer: true }, "");
-    const onPop = () => onClose();
+    const onPop = () => onCloseRef.current();
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);
       // If closed by other means (button/backdrop/apply), drop our pushed entry.
       if (window.history.state?.filterDrawer) window.history.back();
     };
-  }, [open, onClose]);
+  }, [open]);
+
 
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
