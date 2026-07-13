@@ -319,6 +319,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const [preview, setPreview] = useState<SwatchPreview | null>(null);
+  const [hasSwatches, setHasSwatches] = useState(false);
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
