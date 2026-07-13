@@ -35,6 +35,10 @@ export function runEngine(
     seed,
     seedScores,
     restrictTo,
+    priceMin,
+    priceMax,
+    sameCategoryAsSeed,
+    differentCategoryFromSeed,
     includeOutOfStock = false,
     diversity = true,
     rotationSeed = 0,
@@ -58,6 +62,14 @@ export function runEngine(
     if (!isProductVisible(p, signals.market)) return false;
     if (p.hideFromRecommendations) return false;
     if (!includeOutOfStock && (!p.inStock || p.status === "out_of_stock")) return false;
+    if (seed && sameCategoryAsSeed && p.category !== seed.category) return false;
+    if (seed && differentCategoryFromSeed && p.category === seed.category) return false;
+    if (priceMin != null || priceMax != null) {
+      const price = signals.priceOf(p);
+      if (price <= 0) return false;
+      if (priceMin != null && price < priceMin) return false;
+      if (priceMax != null && price > priceMax) return false;
+    }
     return true;
   });
 
