@@ -14,6 +14,12 @@ export {
 } from "./context";
 export { buildAffinity, scoreProduct, isFresh } from "./scorer";
 export { diversify } from "./diversity";
+export {
+  recordImpression,
+  recordClick,
+  priorityMultiplier,
+  getPerformanceSnapshot,
+} from "./performance";
 export type {
   RecommendationItem,
   RecommendationSignals,
