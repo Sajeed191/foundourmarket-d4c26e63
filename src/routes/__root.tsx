@@ -60,23 +60,58 @@ const HISTORY_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
-  var fallbackShown = false;
+  var BUILD_ID = ${JSON.stringify(BUILD_ID)};
+  var MAX_RECOVER = 3;      // capped reload attempts before the fatal screen
+  var BASE_DELAY = 800;     // exponential backoff base (ms)
+  var fatalShown = false;
+  var pendingOffline = false;
+  var recovering = false;
+
   function txt(x){
     try { return typeof x === 'string' ? x : (x && (x.message || (x.reason && x.reason.message) || x.type || '')) || ''; }
     catch(e){ return ''; }
   }
-  function isEntryFailure(x){
-    return /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk/i.test(String(txt(x)));
+  function urlOf(x){
+    try {
+      if (!x) return '';
+      if (typeof x === 'string') return x;
+      return x.href || x.src || (x.target && (x.target.src || x.target.href)) || '';
+    } catch(e){ return ''; }
   }
+  function isEntryFailure(x){
+    return /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk|Loading CSS chunk/i.test(String(txt(x)));
+  }
+  function isAssetUrl(u){ return /\\/assets\\/.*\\.(js|css|mjs)/i.test(String(u || '')); }
+  function swVersion(){
+    try { return (navigator.serviceWorker && navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL) || 'none'; }
+    catch(e){ return 'unknown'; }
+  }
+  function getCount(){ try { return parseInt(sessionStorage.getItem('fom_recover_count') || '0', 10) || 0; } catch(e){ return 0; } }
+  function setCount(n){ try { sessionStorage.setItem('fom_recover_count', String(n)); } catch(e){} }
+
   function log(name, payload){
     try {
-      var item = { event: name, at: new Date().toISOString(), path: location.pathname, payload: payload || {} };
+      var item = { event: name, at: new Date().toISOString(), path: location.pathname, build: BUILD_ID, payload: payload || {} };
       var arr = JSON.parse(localStorage.getItem('fom_startup_diagnostics') || '[]');
       if (!Array.isArray(arr)) arr = [];
       arr.push(item);
       localStorage.setItem('fom_startup_diagnostics', JSON.stringify(arr.slice(-80)));
     } catch(e) {}
     try { console.warn('[startup-diagnostics]', name, payload || {}); } catch(e) {}
+  }
+  // Telemetry for every asset-load failure: URL, status, deploy version,
+  // browser/device, service-worker version, online status, retry count.
+  function telemetry(reason, assetUrl, status){
+    log('asset-load-failure', {
+      asset: assetUrl || urlOf(reason),
+      status: (status == null ? '' : status),
+      deploy: BUILD_ID,
+      ua: (navigator.userAgent || '').slice(0, 300),
+      sw: swVersion(),
+      online: !!navigator.onLine,
+      retry: getCount(),
+      reason: txt(reason)
+    });
   }
   function renderFallback(reason){
     function commit(){
@@ -87,9 +122,9 @@ const STARTUP_GUARD_SCRIPT = `(function(){
           document.documentElement.appendChild(body);
         }
         document.documentElement.classList.remove('dark');
-        body.innerHTML = '<div id="fom-startup-fallback" style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><div style="max-width:22rem;text-align:center"><div style="margin:0 auto 1rem;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);overflow:hidden"><img src="/logo.webp" alt="FoundOurMarket\u2122" style="width:100%;height:100%;object-fit:cover" /></div><h1 style="font-size:1.15rem;font-weight:600;margin:0 0 .5rem">FoundOurMarket\u2122 couldn\u2019t finish loading.</h1><p style="font-size:.9rem;color:#a3a3a3;margin:0 0 1.5rem">A required app file was blocked or failed. Auto-reload is disabled, so this screen will stay stable.</p><button id="fom-retry" style="appearance:none;border:none;cursor:pointer;border-radius:9999px;padding:.75rem 1.75rem;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;background:#f59e0b">Reload manually</button></div></div>';
+        body.innerHTML = '<div id="fom-startup-fallback" style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><div style="max-width:22rem;text-align:center"><div style="margin:0 auto 1rem;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);overflow:hidden"><img src="/logo.webp" alt="FoundOurMarket\u2122" style="width:100%;height:100%;object-fit:cover" /></div><h1 style="font-size:1.15rem;font-weight:600;margin:0 0 .5rem">FoundOurMarket\u2122 couldn\u2019t finish loading.</h1><p style="font-size:.9rem;color:#a3a3a3;margin:0 0 1.5rem">We tried reconnecting a few times but a required file kept failing to load. Please check your connection and try again.</p><button id="fom-retry" style="appearance:none;border:none;cursor:pointer;border-radius:9999px;padding:.75rem 1.75rem;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;background:#f59e0b">Reload</button></div></div>';
         var b = document.getElementById('fom-retry');
-        if (b) b.onclick = function(){ location.reload(); };
+        if (b) b.onclick = function(){ setCount(0); location.reload(); };
       } catch(e) {
         try { setTimeout(commit, 0); } catch(x) {}
       }
@@ -99,17 +134,84 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     else commit();
   }
   function showFatal(reason){
-    if (fallbackShown && document.getElementById('fom-startup-fallback')) return;
-    fallbackShown = true;
-    log('startup-fallback-shown', { reason: txt(reason) });
+    if (fatalShown && document.getElementById('fom-startup-fallback')) return;
+    fatalShown = true;
+    log('startup-fallback-shown', { reason: txt(reason), attempts: getCount() });
     renderFallback(reason);
   }
-  window.__fomRecover = function(reason){ log('auto-reload-blocked', { reason: txt(reason) }); showFatal(reason); };
+
+  // Defensive stale-cache eviction before a recovery reload: kill any SW and
+  // its caches so the reload cannot be served an outdated app shell.
+  function clearCaches(){
+    try { if ('caches' in window) caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){}); } catch(e){}
+    try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister().catch(function(){}); }); }).catch(function(){}); } catch(e){}
+  }
+  function reloadFresh(){
+    try {
+      var u = new URL(location.href);
+      u.searchParams.set('_rc', String(Date.now()));
+      location.replace(u.toString());
+    } catch(e){ location.reload(); }
+  }
+  // Detect a newer deployment: re-fetch the current document fresh and check
+  // whether it still references our build id. Either way the reload pulls the
+  // latest asset graph; the check is for telemetry + bypassing the retry cap.
+  function checkVersionThenReload(cb){
+    var done = false;
+    function go(newer){ if (done) return; done = true; if (newer) log('deploy-version-mismatch', { from: BUILD_ID }); clearCaches(); cb(newer); }
+    try {
+      var ctrl = ('AbortController' in window) ? new AbortController() : null;
+      var t = setTimeout(function(){ if (ctrl) try { ctrl.abort(); } catch(e){} go(false); }, 4000);
+      fetch(location.pathname + '?_v=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+        .then(function(r){ return r.text(); })
+        .then(function(html){ clearTimeout(t); go(html.indexOf(BUILD_ID) === -1); })
+        .catch(function(){ clearTimeout(t); go(false); });
+    } catch(e){ go(false); }
+  }
+
+  function doRecover(reason, assetUrl, status){
+    if (fatalShown || recovering) return;
+    telemetry(reason, assetUrl, status);
+
+    // Offline: never burn a retry. Wait for connectivity to return, then retry.
+    if (!navigator.onLine){
+      if (pendingOffline) return;
+      pendingOffline = true;
+      log('recovery-waiting-online', {});
+      var onOnline = function(){ window.removeEventListener('online', onOnline); pendingOffline = false; doRecover(reason, assetUrl, status); };
+      window.addEventListener('online', onOnline);
+      return;
+    }
+
+    var count = getCount();
+    recovering = true;
+    checkVersionThenReload(function(newer){
+      // A fresh deployment is a legitimate reason to reload beyond the cap once.
+      if (!newer && count >= MAX_RECOVER){ recovering = false; showFatal(reason); return; }
+      if (!newer) setCount(count + 1);
+      var delay = BASE_DELAY * Math.pow(2, count);
+      log('recovery-scheduled', { attempt: count + 1, delayMs: delay, newer: !!newer });
+      setTimeout(reloadFresh, newer ? 0 : delay);
+    });
+  }
+
+  window.__fomRecover = function(reason){ doRecover(reason, urlOf(reason), null); };
   window.__fomShowStartupError = showFatal;
-  window.__fomBootOk = function(){ log('boot-ok'); };
-  window.addEventListener('vite:preloadError', function(e){ try { e.preventDefault(); } catch(x) {} window.__fomRecover(e && e.payload || e); });
-  window.addEventListener('unhandledrejection', function(e){ if (isEntryFailure(e.reason)) { try { e.preventDefault(); } catch(x) {} window.__fomRecover(e.reason); } });
-  window.addEventListener('error', function(e){ var t = e && e.target; var src = t && (t.src || t.href) || ''; if (isEntryFailure(e && e.message) || isEntryFailure(src)) window.__fomRecover(e && e.message || src); }, true);
+  window.__fomBootOk = function(){
+    log('boot-ok');
+    setCount(0);
+    try {
+      var u = new URL(location.href);
+      if (u.searchParams.has('_rc') || u.searchParams.has('_v')) {
+        u.searchParams.delete('_rc');
+        u.searchParams.delete('_v');
+        history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      }
+    } catch(e){}
+  };
+  window.addEventListener('vite:preloadError', function(e){ try { e.preventDefault(); } catch(x) {} var p = e && e.payload; doRecover(p || e, urlOf(p || e), null); });
+  window.addEventListener('unhandledrejection', function(e){ if (isEntryFailure(e.reason)) { try { e.preventDefault(); } catch(x) {} doRecover(e.reason, urlOf(e.reason), null); } });
+  window.addEventListener('error', function(e){ var t = e && e.target; var src = t && (t.src || t.href) || ''; if (isEntryFailure(e && e.message) || isAssetUrl(src)) doRecover(e && e.message || src, src, null); }, true);
 })();`;
 
 // (Removed temporary FF binary-search isolation script — all diagnostic
