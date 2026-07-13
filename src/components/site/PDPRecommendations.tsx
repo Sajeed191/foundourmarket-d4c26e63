@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useRegion } from "@/lib/region";
 import { useRecommendationRail } from "@/lib/recommendations/context";
 import { priorityMultiplier } from "@/lib/recommendations/performance";
+import { getGraphEdgeSets } from "@/lib/recommendations/graph.functions";
 import { RecommendationRailSection } from "./RecommendationRailSection";
 import type { RecommendationItem, RecommendationSource } from "@/lib/recommendations/types";
 import type { Product } from "@/lib/products";

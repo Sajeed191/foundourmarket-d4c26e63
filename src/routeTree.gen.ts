@@ -62,6 +62,7 @@ import { Route as AdminSearchRouteImport } from './routes/admin-search'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminRegionRouteImport } from './routes/admin-region'
+import { Route as AdminRecommendationRulesRouteImport } from './routes/admin-recommendation-rules'
 import { Route as AdminRecommendationHealthRouteImport } from './routes/admin-recommendation-health'
 import { Route as AdminQualityRouteImport } from './routes/admin-quality'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
@@ -429,6 +430,12 @@ const AdminRegionRoute = AdminRegionRouteImport.update({
   path: '/admin-region',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRecommendationRulesRoute =
+  AdminRecommendationRulesRouteImport.update({
+    id: '/admin-recommendation-rules',
+    path: '/admin-recommendation-rules',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminRecommendationHealthRoute =
   AdminRecommendationHealthRouteImport.update({
     id: '/admin-recommendation-health',
@@ -1005,6 +1012,7 @@ export interface FileRoutesByFullPath {
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
+  '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1161,6 +1169,7 @@ export interface FileRoutesByTo {
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
+  '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1317,6 +1326,7 @@ export interface FileRoutesById {
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
+  '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1475,6 +1485,7 @@ export interface FileRouteTypes {
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-health'
+    | '/admin-recommendation-rules'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1631,6 +1642,7 @@ export interface FileRouteTypes {
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-health'
+    | '/admin-recommendation-rules'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1786,6 +1798,7 @@ export interface FileRouteTypes {
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-health'
+    | '/admin-recommendation-rules'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1943,6 +1956,7 @@ export interface RootRouteChildren {
   AdminProductsRoute: typeof AdminProductsRoute
   AdminQualityRoute: typeof AdminQualityRoute
   AdminRecommendationHealthRoute: typeof AdminRecommendationHealthRoute
+  AdminRecommendationRulesRoute: typeof AdminRecommendationRulesRoute
   AdminRegionRoute: typeof AdminRegionRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
@@ -2406,6 +2420,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-region'
       fullPath: '/admin-region'
       preLoaderRoute: typeof AdminRegionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-recommendation-rules': {
+      id: '/admin-recommendation-rules'
+      path: '/admin-recommendation-rules'
+      fullPath: '/admin-recommendation-rules'
+      preLoaderRoute: typeof AdminRecommendationRulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-recommendation-health': {
@@ -3241,6 +3262,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProductsRoute: AdminProductsRoute,
   AdminQualityRoute: AdminQualityRoute,
   AdminRecommendationHealthRoute: AdminRecommendationHealthRoute,
+  AdminRecommendationRulesRoute: AdminRecommendationRulesRoute,
   AdminRegionRoute: AdminRegionRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
