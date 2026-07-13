@@ -492,3 +492,141 @@ export async function cleanupOrphanColorGalleries(
 
   return results;
 }
+
+// ---------------------------------------------------------------------------
+// Variant-driven product card image (default variant cover)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the ordered list of ACTIVE colours for a product (variant sort order,
+ * de-duplicated, case preserved from the first occurrence).
+ */
+async function activeColorOrder(slug: string): Promise<string[]> {
+  const { fetchAdminVariants } = await import("@/lib/product-variants");
+  const variants = await fetchAdminVariants(slug);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of variants) {
+    if (v.active === false) continue;
+    const c = (v.color ?? "").trim();
+    if (!c) continue;
+    const key = c.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  return out;
+}
+
+/**
+ * Sync the product's storefront card image to the DEFAULT variant's cover.
+ *
+ * Rules:
+ *  - When variants are ON and at least one colour has media, `products.image`
+ *    becomes the cover (first IMAGE) of the default colour. Default priority:
+ *      1. admin-selected `default_variant_color`
+ *      2. first active colour (by variant sort order)
+ *      3. any colour that has media
+ *    The colour must actually have media; if the top-priority colour has no
+ *    media we fall through to the next colour that does. If NO colour has media
+ *    the original image is kept/restored.
+ *  - The ORIGINAL image is preserved in `products.base_image` (backed up once)
+ *    so it is never lost.
+ *  - When variants are OFF, or no colour has media, `products.image` is
+ *    restored from `base_image` and the backup is cleared.
+ *
+ * Only the image-source selection changes — cart/checkout/orders are untouched.
+ */
+export async function syncProductCardImage(slug: string): Promise<void> {
+  const { data: prod } = await supabase
+    .from("products")
+    .select("image,base_image,has_variants,default_variant_color")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!prod) return;
+  const p = prod as {
+    image: string | null;
+    base_image: string | null;
+    has_variants: boolean | null;
+    default_variant_color: string | null;
+  };
+
+  const revert = async () => {
+    // Restore the original card image (if we backed one up) and clear backup.
+    if (p.base_image) {
+      await supabase
+        .from("products")
+        .update({ image: p.base_image, base_image: null, updated_at: new Date().toISOString() })
+        .eq("slug", slug);
+    }
+  };
+
+  if (!p.has_variants) {
+    await revert();
+    return;
+  }
+
+  const galleries = await fetchAdminColorGalleries(slug);
+  const galleryKeys = Object.keys(galleries);
+  if (galleryKeys.length === 0) {
+    await revert();
+    return;
+  }
+
+  // Build the colour priority order.
+  const colours = await activeColorOrder(slug);
+  const order: string[] = [];
+  const push = (c: string | null | undefined) => {
+    const t = (c ?? "").trim();
+    if (t && !order.some((x) => x.toLowerCase() === t.toLowerCase())) order.push(t);
+  };
+  push(p.default_variant_color);
+  colours.forEach(push);
+  galleryKeys.forEach(push); // any remaining colours that have galleries
+
+  // Find the first colour in priority order that has a usable cover IMAGE.
+  let cover: string | null = null;
+  for (const c of order) {
+    const key = Object.keys(galleries).find((g) => g.trim().toLowerCase() === c.trim().toLowerCase());
+    if (!key) continue;
+    const url = firstImageUrl(galleries[key]);
+    if (url) {
+      cover = url;
+      break;
+    }
+  }
+
+  if (!cover) {
+    // Variants on but no colour has any image → fall back to original.
+    await revert();
+    return;
+  }
+
+  // Back up the original card image once, then point the card at the cover.
+  const baseImage = p.base_image ?? p.image ?? null;
+  if (cover !== p.image || p.base_image !== baseImage) {
+    await supabase
+      .from("products")
+      .update({ image: cover, base_image: baseImage, updated_at: new Date().toISOString() })
+      .eq("slug", slug);
+  }
+}
+
+/** Persist the admin-selected default variant colour for a product. */
+export async function setDefaultVariantColor(slug: string, color: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("products")
+    .update({ default_variant_color: color?.trim() || null, updated_at: new Date().toISOString() })
+    .eq("slug", slug);
+  if (error) throw error;
+}
+
+/** Read the admin-selected default variant colour for a product. */
+export async function fetchDefaultVariantColor(slug: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("products")
+    .select("default_variant_color")
+    .eq("slug", slug)
+    .maybeSingle();
+  return ((data as any)?.default_variant_color as string | null) ?? null;
+}
