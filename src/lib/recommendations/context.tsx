@@ -120,10 +120,11 @@ export function RecommendationProvider({ children }: { children: ReactNode }) {
   );
 
   const personalized = recent.length + wishlist.length + cart.length + purchased.size > 0;
+  const businessRules = useBusinessRules(products);
 
   const value = useMemo<SignalsContextValue>(
-    () => ({ signals, rotationSeed: dayBucket(), loading, personalized }),
-    [signals, loading, personalized],
+    () => ({ signals, rotationSeed: dayBucket(), loading, personalized, businessRules }),
+    [signals, loading, personalized, businessRules],
   );
 
   return <SignalsContext.Provider value={value}>{children}</SignalsContext.Provider>;
