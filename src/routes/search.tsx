@@ -169,6 +169,30 @@ const RATINGS = [4, 3, 2];
 
 type Filters = ClientFilters;
 
+const FILTER_KEYS: (keyof Filters)[] = [
+  "cat",
+  "sub",
+  "brand",
+  "color",
+  "size",
+  "min",
+  "max",
+  "rating",
+  "stock",
+  "free",
+  "cod",
+  "sale",
+  "flash",
+  "hot",
+  "newx",
+  "feat",
+  "dmin",
+];
+
+function sameFilters(a: Filters, b: Filters): boolean {
+  return FILTER_KEYS.every((key) => a[key] === b[key]);
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -578,13 +602,15 @@ function SearchPage() {
   // Local draft for the mobile drawer (applied on "Show N Products").
   const [draft, setDraft] = useState<Filters>(currentFilters);
   const [draftSort, setDraftSort] = useState<string>(search.sort ?? "relevance");
+  const wasDrawerOpenRef = useRef(false);
   useEffect(() => {
-    if (drawerOpen) {
-      setDraft(currentFilters);
-      setDraftSort(search.sort ?? "relevance");
+    if (drawerOpen && !wasDrawerOpenRef.current) {
+      setDraft((prev) => (sameFilters(prev, currentFilters) ? prev : currentFilters));
+      const nextSort = search.sort ?? "relevance";
+      setDraftSort((prev) => (prev === nextSort ? prev : nextSort));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawerOpen]);
+    wasDrawerOpenRef.current = drawerOpen;
+  }, [drawerOpen, currentFilters, search.sort]);
 
   useEffect(() => {
     const q = (search.q ?? "").trim();
@@ -746,7 +772,15 @@ function SearchPage() {
   // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
   const liveFacets = useFacets(rawRows, currentFilters, priceCtx, variantFacets);
   // Facets + live draft count for the mobile drawer (reflects the pending draft).
-  const draftFacets = useFacets(rawRows, draft, priceCtx, variantFacets);
+  const draftMatchesCurrent = useMemo(() => sameFilters(draft, currentFilters), [draft, currentFilters]);
+  const draftFacets = useFacets(
+    rawRows,
+    draft,
+    priceCtx,
+    variantFacets,
+    drawerOpen && !draftMatchesCurrent,
+    liveFacets,
+  );
   const draftBrands = draftFacets.brands;
   const draftColors = draftFacets.colors;
   const draftSizes = draftFacets.sizes;
@@ -799,14 +833,14 @@ function SearchPage() {
   function clearAll() {
     nav({ search: { q: search.q, sort: search.sort }, replace: true });
   }
-  function applyDraft() {
+  const applyDraft = useCallback(() => {
     nav({ search: (prev: SearchParams) => ({ ...prev, ...draft, sort: draftSort }), replace: true });
     setDrawerOpen(false);
-  }
-  function resetDraft() {
+  }, [nav, draft, draftSort]);
+  const resetDraft = useCallback(() => {
     setDraft({});
     setDraftSort("relevance");
-  }
+  }, []);
 
   const openFilterDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeFilterDrawer = useCallback(() => setDrawerOpen(false), []);
@@ -918,7 +952,7 @@ function SearchPage() {
               colors={draftColors}
               sizes={draftSizes}
               priceMax={PRICE_MAX}
-              snapPoints={[0, 50, 200, 500, PRICE_MAX]}
+              snapPoints={FILTER_SNAP_POINTS}
               fmt={fmt}
               rate={rate}
               symbol={symbol}

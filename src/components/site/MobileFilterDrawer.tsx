@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { X, Search, Check, Star, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
@@ -149,7 +149,7 @@ function PriceSlider({
 /* ------------------------------------------------------------------ */
 /* Main drawer                                                         */
 /* ------------------------------------------------------------------ */
-export function MobileFilterDrawer({
+export const MobileFilterDrawer = memo(function MobileFilterDrawer({
   open,
   onClose,
   draft,
@@ -862,4 +862,4 @@ export function MobileFilterDrawer({
       </div>
     </div>
   );
-}
+});
