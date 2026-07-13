@@ -79,7 +79,7 @@ function haptic() {
   }
 }
 
-function SwatchStripImpl({ product, onPreview, className }: Props) {
+function SwatchStripImpl({ product, onPreview, onAvailability, className }: Props) {
   const slug = product.slug;
   const [summary, setSummary] = useState<VariantSummary | null | undefined>(() =>
     getCachedVariantSummary(slug),
