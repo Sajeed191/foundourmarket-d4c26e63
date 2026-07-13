@@ -31,6 +31,9 @@ import { recordViewedPrice } from "@/lib/viewed-prices";
 import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { RecommendedForYou } from "@/components/site/RecommendedForYou";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
+import { FrequentlyBoughtTogether } from "@/components/site/FrequentlyBoughtTogether";
+import { PDPRecommendations } from "@/components/site/PDPRecommendations";
+import { fetchProductsBySlugs } from "@/lib/products";
 import { useIsProductAdmin } from "@/lib/use-admin";
 // Admin-only editors: lazy so customers never download the heavy admin graph
 // (framer-motion menus, server-fn clients) on a product page. Gated by isAdmin.
