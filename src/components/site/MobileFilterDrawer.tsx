@@ -7,6 +7,7 @@ import {
   type Facet,
   type Filters,
   SORT_OPTIONS,
+  countActive,
 } from "@/lib/search-filters";
 
 type Props = {
@@ -177,6 +178,8 @@ export function MobileFilterDrawer({
     });
 
   const set = (patch: Partial<Filters>) => setDraft({ ...draft, ...patch });
+
+  const activeCount = useMemo(() => countActive(draft), [draft]);
 
   /* ----- Category tree ----- */
   const [catSearch, setCatSearch] = useState("");
@@ -740,19 +743,35 @@ export function MobileFilterDrawer({
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="shrink-0 flex items-center gap-3 border-t border-white/10 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <button
-          onClick={onReset}
-          className="rounded-full px-6 py-3.5 text-sm font-medium bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all"
-        >
-          Reset
-        </button>
-        <button
-          onClick={onApply}
-          className="flex-1 rounded-full bg-accent text-accent-foreground py-3.5 text-sm font-semibold shadow-[0_8px_24px_-8px_var(--accent)] hover:brightness-110 active:scale-[0.98] transition-all"
-        >
-          Show {resultCount.toLocaleString()} Product{resultCount === 1 ? "" : "s"}
-        </button>
+      <div className="shrink-0 border-t border-white/10 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {activeCount > 0 && (
+          <div className="mb-2 flex items-center justify-between text-[12px]">
+            <span className="text-muted-foreground">
+              <span className="font-semibold text-foreground">{activeCount}</span> filter{activeCount === 1 ? "" : "s"} applied
+            </span>
+            <button
+              onClick={onReset}
+              className="font-semibold text-accent hover:underline active:scale-95 transition-transform"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onReset}
+            disabled={activeCount === 0}
+            className="rounded-full px-5 py-3.5 text-sm font-medium bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all disabled:opacity-40"
+          >
+            Reset{activeCount > 0 ? ` · ${activeCount}` : ""}
+          </button>
+          <button
+            onClick={onApply}
+            className="flex-1 rounded-full bg-accent text-accent-foreground py-3.5 text-sm font-semibold shadow-[0_8px_24px_-8px_var(--accent)] hover:brightness-110 active:scale-[0.98] transition-all"
+          >
+            Show {resultCount.toLocaleString()} Product{resultCount === 1 ? "" : "s"}
+          </button>
+        </div>
       </div>
     </div>
   );

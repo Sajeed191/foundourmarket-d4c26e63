@@ -15,6 +15,8 @@ import { Price } from "@/components/site/Price";
 import { DiscountBadge } from "@/components/site/DiscountBadge";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
+import { VariantSwatchStrip, type SwatchPreview } from "@/components/site/VariantSwatchStrip";
+import { resizedStorageImage } from "@/lib/storage-image";
 import { formatSold } from "@/lib/format-sold";
 
 type ProductCardProps = {
@@ -316,6 +318,7 @@ const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.produ
 function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
+  const [preview, setPreview] = useState<SwatchPreview | null>(null);
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
@@ -372,6 +375,25 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
   const openQuickView = useCallback(() => setQuickOpen(true), []);
 
+  const previewSrc = useMemo(() => {
+    const cover = preview?.option.cover;
+    if (!cover) return null;
+    return resizedStorageImage(cover, 640) || cover;
+  }, [preview]);
+
+  // Starting price for the previewed colour (additive adjustment only; absolute
+  // overrides are skipped to avoid cross-region currency mismatches).
+  const previewPrice = useMemo(() => {
+    if (!preview) return null;
+    const adj = preview.option.adjustment;
+    if (!adj) return null;
+    const p = price + adj;
+    return p !== price ? p : null;
+  }, [preview, price]);
+
+  const previewStock = preview?.option.stock ?? null;
+
+
   return (
     <article
       key={identity}
@@ -394,7 +416,18 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         >
           <ProductBadges badges={hideBadges ? [] : badges} />
           <WishlistButton slug={product.slug} name={product.name} />
+          {/* Variant colour preview — fades a colour's cover image over the
+              base image. Overlaid (never swaps the base src) so palette,
+              layout and aspect ratio never shift. */}
+          <img
+            aria-hidden
+            src={previewSrc ?? undefined}
+            alt=""
+            decoding="async"
+            className={`pointer-events-none absolute inset-0 z-[1] size-full object-contain p-[8%] transition-opacity duration-200 ${previewSrc ? "opacity-100" : "opacity-0"}`}
+          />
         </AdaptiveProductMedia>
+
       </Link>
 
       {/* Details — flex column, 16px padding, 8px gap. */}
@@ -449,6 +482,37 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           ) : (
             <span data-product-text className="product-typography shrink-0 text-[11px] sm:text-[14px] font-medium text-muted-foreground">Out of Stock</span>
           )}
+        </div>
+
+        {/* Colour swatches + live preview availability. Fixed min-height keeps
+            the card stable whether or not a colour is being previewed. */}
+        <div className="flex min-h-[26px] items-center justify-between gap-2 overflow-hidden">
+          <VariantSwatchStrip product={product} onPreview={setPreview} />
+          {preview ? (
+            <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 truncate text-[11px] sm:text-[13px] font-semibold">
+              <span
+                className={
+                  previewStock === "out"
+                    ? "text-muted-foreground"
+                    : previewStock === "low"
+                      ? "text-orange-300"
+                      : "text-emerald-400"
+                }
+              >
+                {previewStock === "out"
+                  ? "Out of Stock"
+                  : previewStock === "low"
+                    ? "Low Stock"
+                    : "In Stock"}
+              </span>
+              {previewPrice != null && previewStock !== "out" ? (
+                <span className="inline-flex items-center gap-1 text-white">
+                  <span className="text-muted-foreground">from</span>
+                  <Price value={previewPrice} className="text-[11px] sm:text-[13px] font-bold" />
+                </span>
+              ) : null}
+            </span>
+          ) : null}
         </div>
 
         {/* Button — sits directly below content, no filler gap. */}

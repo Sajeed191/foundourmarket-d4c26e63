@@ -16,6 +16,7 @@ import {
 } from "@/lib/search-filters";
 import { useFacets } from "@/lib/search-facets";
 import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
+import { primeVariantSummaries } from "@/lib/variant-swatch-cache";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
@@ -514,6 +515,8 @@ function SearchPage() {
   }, []);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  // Sticky control bar visibility: collapse on scroll-down, reveal on scroll-up.
+  const [barHidden, setBarHidden] = useState(false);
 
   // Hide the mobile bottom nav while a drawer sheet is open.
   useEffect(() => {
@@ -523,9 +526,28 @@ function SearchPage() {
   }, [drawerOpen, sortOpen]);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
+  // Also track scroll DIRECTION so the sticky control bar collapses when the
+  // user scrolls down (maximising the grid) and reappears when scrolling up.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 280);
-    onScroll();
+    let lastY = window.scrollY;
+    let ticking = false;
+    const update = () => {
+      const y = window.scrollY;
+      setScrolled(y > 280);
+      const delta = y - lastY;
+      if (y < 160) setBarHidden(false); // always show near the top
+      else if (delta > 6) setBarHidden(true); // scrolling down
+      else if (delta < -6) setBarHidden(false); // scrolling up
+      lastY = y;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -642,7 +664,7 @@ function SearchPage() {
     let cancelled = false;
     const slugs = rawRows.map((p) => p.slug);
     fetchVariantFacets(slugs)
-      .then((map) => { if (!cancelled) setVariantFacets(map); })
+      .then((map) => { if (!cancelled) { setVariantFacets(map); primeVariantSummaries(map); } })
       .catch(() => { if (!cancelled) setVariantFacets(new Map()); });
     return () => { cancelled = true; };
   }, [rawRows]);
@@ -866,8 +888,12 @@ function SearchPage() {
           </div>
         )}
 
-        {/* Single control row — Filters (icon button) + Sort (dropdown pill) */}
-        <div className="flex items-center justify-between gap-3">
+        {/* Single control row — Filters (icon button) + Sort (dropdown pill).
+            On mobile it sticks to the top and auto-collapses on scroll-down,
+            reappearing on scroll-up to maximise the product grid. */}
+        <div
+          className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-3 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
+        >
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setDrawerOpen(true)}
@@ -900,6 +926,13 @@ function SearchPage() {
 
             {activeFilterCount > 0 && (
               <button onClick={clearAll} className="shrink-0 text-xs font-medium text-muted-foreground hover:text-accent">Clear all</button>
+            )}
+
+            {!loading && !isTrending && (
+              <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground">
+                <span className="font-bold text-foreground">{results.length.toLocaleString()}</span>{" "}
+                {results.length === 1 ? "product" : "products"}
+              </span>
             )}
 
           </div>

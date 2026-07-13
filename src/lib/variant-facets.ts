@@ -20,6 +20,10 @@ export type VariantRow = {
   override: number | null;
   /** Additive adjustment applied on top of the base price. */
   adjustment: number;
+  /** Per-colour cover image (first image of that colour, synced admin-side). */
+  imageUrl: string | null;
+  /** Low-stock threshold for this variant. */
+  lowStockThreshold: number;
 };
 
 export type VariantSummary = {
@@ -55,7 +59,7 @@ export function variantPriceRange(base: number, s: VariantSummary): [number, num
 }
 
 const CHUNK = 300;
-const SELECT = "product_slug,color,color_hex,size,stock_quantity,price_override,price_adjustment";
+const SELECT = "product_slug,color,color_hex,size,stock_quantity,low_stock_threshold,image_url,price_override,price_adjustment";
 
 /**
  * Fetch variant facet summaries for a set of product slugs. The payload stays
@@ -94,6 +98,8 @@ export async function fetchVariantFacets(slugs: string[]): Promise<VariantFacetM
         stock,
         override: r.price_override != null ? Number(r.price_override) : null,
         adjustment: r.price_adjustment != null ? Number(r.price_adjustment) : 0,
+        imageUrl: r.image_url ?? null,
+        lowStockThreshold: Number(r.low_stock_threshold ?? 5),
       });
       if (color && !s.colors.includes(color)) {
         s.colors.push(color);
