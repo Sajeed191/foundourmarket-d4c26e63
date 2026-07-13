@@ -62,6 +62,7 @@ import { Route as AdminSearchRouteImport } from './routes/admin-search'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminRegionRouteImport } from './routes/admin-region'
+import { Route as AdminRecommendationHealthRouteImport } from './routes/admin-recommendation-health'
 import { Route as AdminQualityRouteImport } from './routes/admin-quality'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPerformanceRouteImport } from './routes/admin-performance'
@@ -427,6 +428,12 @@ const AdminRegionRoute = AdminRegionRouteImport.update({
   path: '/admin-region',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRecommendationHealthRoute =
+  AdminRecommendationHealthRouteImport.update({
+    id: '/admin-recommendation-health',
+    path: '/admin-recommendation-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminQualityRoute = AdminQualityRouteImport.update({
   id: '/admin-quality',
   path: '/admin-quality',
@@ -990,6 +997,7 @@ export interface FileRoutesByFullPath {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1144,6 +1152,7 @@ export interface FileRoutesByTo {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1298,6 +1307,7 @@ export interface FileRoutesById {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1454,6 +1464,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-health'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1608,6 +1619,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-health'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1761,6 +1773,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-health'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1916,6 +1929,7 @@ export interface RootRouteChildren {
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminQualityRoute: typeof AdminQualityRoute
+  AdminRecommendationHealthRoute: typeof AdminRecommendationHealthRoute
   AdminRegionRoute: typeof AdminRegionRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
@@ -2378,6 +2392,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-region'
       fullPath: '/admin-region'
       preLoaderRoute: typeof AdminRegionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-recommendation-health': {
+      id: '/admin-recommendation-health'
+      path: '/admin-recommendation-health'
+      fullPath: '/admin-recommendation-health'
+      preLoaderRoute: typeof AdminRecommendationHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-quality': {
@@ -3198,6 +3219,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminQualityRoute: AdminQualityRoute,
+  AdminRecommendationHealthRoute: AdminRecommendationHealthRoute,
   AdminRegionRoute: AdminRegionRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
