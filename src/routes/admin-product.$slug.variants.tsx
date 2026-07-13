@@ -139,6 +139,9 @@ function VariantsPage() {
     setEnabled(v);
     try {
       await setHasVariants(slug, v);
+      // Re-point the storefront card image: to a variant cover when enabling
+      // (if media exists), or back to the original image when disabling.
+      await syncProductCardImage(slug);
       invalidateProducts();
       toast.success(v ? "Variants enabled" : "Variants disabled");
     } catch (e: any) {
