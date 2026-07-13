@@ -16,6 +16,7 @@ import {
 } from "@/lib/search-filters";
 import { useFacets } from "@/lib/search-facets";
 import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
+import { primeVariantSummaries } from "@/lib/variant-swatch-cache";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
