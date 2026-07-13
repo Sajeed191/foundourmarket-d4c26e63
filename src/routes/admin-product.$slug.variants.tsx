@@ -287,7 +287,37 @@ function VariantsPage() {
                 </div>
               )}
 
-              {/* Variant rows */}
+              {/* Default variant — drives storefront card image, initial PDP
+                  gallery, initial selected colour, and search/collection thumbnails. */}
+              {(() => {
+                const colours = [
+                  ...new Set(rows.map((r) => r.color?.trim()).filter(Boolean) as string[]),
+                ];
+                if (colours.length === 0) return null;
+                return (
+                  <div className="card-premium rounded-2xl p-4 sm:p-5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Check className="size-4 text-accent" />
+                      <h3 className="text-sm font-medium">Default variant</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      The colour shown by default on the product card, search, collections and the
+                      initial product page gallery. Leave on “First colour” to use the first colour automatically.
+                    </p>
+                    <select
+                      value={defaultColor ?? ""}
+                      onChange={(e) => setDefaultColor(e.target.value || null)}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent/40"
+                    >
+                      <option value="">First colour (automatic)</option>
+                      {colours.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
               <div className="space-y-3">
                 {rows.length === 0 && (
                   <div className="card-premium rounded-2xl p-8 text-center text-sm text-muted-foreground">
