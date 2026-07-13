@@ -43,6 +43,7 @@ export function runEngine(
     diversity = true,
     rotationSeed = 0,
     boosts,
+    ruleAdjust,
   } = config;
 
   const excludeSet = new Set<string>([
@@ -75,7 +76,17 @@ export function runEngine(
 
   const scored: RecommendationItem[] = candidates.map((p) => {
     const { score, reason, breakdown } = scoreProduct(p, strategy, model, signals, seedScores, seed);
-    return { product: p, score, confidence: 0, reason, source: strategy, breakdown };
+    // Admin business rules — additive per-slug boost/reduce, applied after scoring.
+    const delta = ruleAdjust?.get(p.slug) ?? 0;
+    if (delta && breakdown) breakdown.businessRule += delta;
+    return {
+      product: p,
+      score: score + delta,
+      confidence: 0,
+      reason: delta > 0 ? "promoted by store rule" : reason,
+      source: strategy,
+      breakdown,
+    };
   });
 
   scored.sort((a, b) => b.score - a.score);

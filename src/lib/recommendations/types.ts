@@ -122,4 +122,10 @@ export type EngineConfig = {
   rotationSeed?: number;
   /** Admin overrides. */
   boosts?: RecommendationBoosts;
+  /**
+   * Per-slug additive score deltas from admin business rules (boost/reduce).
+   * Applied after scoring, before the diversity/sort pass. Positive promotes,
+   * negative de-emphasizes. Purely additive — never rewrites the scorer.
+   */
+  ruleAdjust?: Map<string, number>;
 };

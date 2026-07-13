@@ -1561,6 +1561,33 @@ export type Database = {
         }
         Relationships: []
       }
+      experiment_assignments: {
+        Row: {
+          assigned_at: string
+          experiment_key: string
+          id: string
+          user_id: string | null
+          variant: string
+          visitor_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          experiment_key: string
+          id?: string
+          user_id?: string | null
+          variant: string
+          visitor_id: string
+        }
+        Update: {
+          assigned_at?: string
+          experiment_key?: string
+          id?: string
+          user_id?: string | null
+          variant?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       flash_deal_audit_log: {
         Row: {
           details: Json
@@ -2825,6 +2852,30 @@ export type Database = {
           },
         ]
       }
+      product_graph_edges: {
+        Row: {
+          edge_type: string
+          from_slug: string
+          to_slug: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          edge_type: string
+          from_slug: string
+          to_slug: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          edge_type?: string
+          from_slug?: string
+          to_slug?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           alt: string | null
@@ -3029,6 +3080,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           verified_purchase?: boolean
+        }
+        Relationships: []
+      }
+      product_scores: {
+        Row: {
+          aggregates: Json
+          conversion: number
+          fbt_strength: number
+          popularity: number
+          product_slug: string
+          trending: number
+          updated_at: string
+        }
+        Insert: {
+          aggregates?: Json
+          conversion?: number
+          fbt_strength?: number
+          popularity?: number
+          product_slug: string
+          trending?: number
+          updated_at?: string
+        }
+        Update: {
+          aggregates?: Json
+          conversion?: number
+          fbt_strength?: number
+          popularity?: number
+          product_slug?: string
+          trending?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3736,6 +3817,87 @@ export type Database = {
           query?: string | null
           session_id?: string | null
           user_id?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
+      recommendation_experiments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          metrics: Json
+          status: string
+          traffic_split: Json
+          updated_at: string
+          variants: Json
+          winner: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          metrics?: Json
+          status?: string
+          traffic_split?: Json
+          updated_at?: string
+          variants?: Json
+          winner?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          metrics?: Json
+          status?: string
+          traffic_split?: Json
+          updated_at?: string
+          variants?: Json
+          winner?: string | null
+        }
+        Relationships: []
+      }
+      recommendation_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          ends_at: string | null
+          id: string
+          priority: number
+          rule_kind: string
+          starts_at: string | null
+          target_type: string
+          target_value: string | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          priority?: number
+          rule_kind: string
+          starts_at?: string | null
+          target_type: string
+          target_value?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          priority?: number
+          rule_kind?: string
+          starts_at?: string | null
+          target_type?: string
+          target_value?: string | null
+          updated_at?: string
           weight?: number
         }
         Relationships: []

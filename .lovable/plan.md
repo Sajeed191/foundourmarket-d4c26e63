@@ -1,50 +1,69 @@
-# Phase 6C — Self-Learning Marketplace Intelligence
+# Phase 6D — Commerce Graph, Nightly Intelligence, Business Rules & Experiments
 
-Builds directly on the existing centralized engine (`src/lib/recommendations/`) and the deterministic `performance.ts` tracker. No changes to checkout, orders, inventory, auth, SEO, or product URLs. No new required DB schema for the core loop (localStorage-first, with an optional analytics-events read for the admin dashboard).
+Builds on the existing centralized engine (`src/lib/recommendations/`). No changes to checkout, orders, inventory, auth, SEO, or product URLs. All heavy computation moves to a nightly job; daytime reads stay cheap by reading precomputed rows.
 
-## Delivery order (each item ships and typechecks independently)
+## Priority 1 — Global Commerce Graph (foundation)
 
-### 6C-1 — Full-Funnel Quality Optimizer (foundation)
-Upgrade `performance.ts` from CTR-only to a weighted funnel per source:
-impression → click → quick_view → wishlist → add_to_cart → buy_now → checkout_started → purchase → return (negative).
-- New `recordFunnelEvent(source, stage)` API; existing `recordImpression`/`recordClick` delegate to it.
-- Derive a live 0–100 **quality score** per source from stage-weighted conversion (purchase weighted highest, return subtracts).
-- `priorityMultiplier(source)` reads the quality score instead of raw CTR; bounded, neutral until enough data.
-- Wire stage events at existing call sites: QuickViewDialog, wishlist toggle, add-to-cart, buy-now — passing the originating `source` already carried on rec items.
+A single typed relationship graph instead of one-off A→B tables.
 
-### 6C-2 — Seasonal Intelligence
-New `src/lib/recommendations/seasonal.ts`: deterministic date→season resolver (Ramadan/Eid via lunar table, Christmas, Back to School, Summer/Winter, Diwali) mapped to category/keyword boosts. No hardcoded product IDs — matches on category/tags. Feeds a `seasonalBoost` factor into the scorer.
+### Schema (one migration)
+```text
+product_graph_edges
+  from_slug   text
+  edge_type   text   -- bought_with | viewed_with | similar_to | upgrade_to |
+                     -- budget_alt | accessory_of | same_brand | same_category
+  to_slug     text
+  weight      numeric
+  updated_at  timestamptz
+  PK (from_slug, edge_type, to_slug)
+```
+- GRANT: `SELECT` to `anon, authenticated` (public read, non-PII product relationships); `ALL` to `service_role`. RLS on, public SELECT policy, admin/service write only.
+- Index on `(from_slug, edge_type, weight desc)` for fast top-N reads.
+- Client helper `src/lib/recommendations/graph.functions.ts` — `getGraphEdges(fromSlug, edgeType, limit)` server fn reading edges (publishable client, `TO anon` policy). Feeds `seedScores` + `restrictTo` in the existing engine — no engine rewrite.
+- Edge types map to existing strategies: `bought_with`→FBT/customers_also_bought, `accessory_of`→compatible_accessories, `upgrade_to`→upgrade, `budget_alt`→budget_alternative, `similar_to`→similar.
 
-### 6C-3 — Inventory Intelligence
-New scorer factor from existing product fields (stock level, restock date, shipping speed, margin if available). Boost healthy/fast/high-margin/newly-restocked; dampen near-sold-out (configurable urgency exception). Pure function over `Product`, no inventory writes.
+## Priority 2 — Nightly Intelligence Jobs (precompute)
 
-### 6C-4 — Customer Journey Intelligence
-New `strategies.ts` map: surface → ordered strategy stack (home=discovery, search=alternatives, PDP=complementary, cart=cross-sell, checkout=impulse/low-price, post-purchase=replenishment/accessories). Surfaces pass a `journeyStage` to `useRecommendationRail`; engine selects the right strategy preset.
+One server route `src/routes/api/public/hooks/recs-recompute.ts` (POST, `apikey` header auth), scheduled via pg_cron nightly. Recomputes from `orders`/`order_items`/`analytics_events`/`page_views` and writes lightweight outputs:
+- Co-purchase graph → `product_graph_edges` (bought_with, viewed_with).
+- Similarity/upgrade/budget/accessory edges from category + price bands + brand.
+- Popularity / trending / conversion scores → refresh `trending_products` inputs + a new `product_scores` table (slug, trending, popularity, conversion, fbt_strength, updated_at) for O(1) daytime reads.
+- Brand/category/variant/colour/size/seller popularity aggregates → `product_scores` JSON column `aggregates`.
+- Guardrail: pure reads + writes only to graph/score cache tables; wrapped in per-section try/catch so one failure doesn't abort the run; returns a JSON summary.
+- Migration adds `product_scores` with GRANTs (anon SELECT, service_role ALL).
 
-### 6C-5 — Diversity AI (brand fatigue)
-Strengthen `diversity.ts` with a stronger brand-run penalty and a "max N consecutive same-brand" guarantee while preserving relevance ordering.
+## Priority 3 — Admin Business Rules dashboard
 
-### 6C-6 — Smart Business Rules (admin, no code changes)
-Read merchandising config from existing `marketplace_settings`/`store_settings` (JSON column) — no new table: boost margin/new-arrivals/local/sustainable/verified, exclude brands/categories. Applied as scorer weights + hard filters via the existing `boosts` config path.
+New table `recommendation_rules`:
+```text
+id uuid, rule_kind text (boost|reduce|exclude), target_type text
+(new_arrivals|high_margin|fast_shipping|local_seller|featured|sustainable|
+ low_inventory|poor_reviews|high_returns|slow_delivery|brand|category|product|seller),
+target_value text null, weight numeric, priority int,
+enabled bool, starts_at timestamptz null, ends_at timestamptz null,
+created_at, updated_at
+```
+- GRANT: authenticated SELECT (engine needs rules), admin/service ALL; RLS: public/auth SELECT of enabled rules, admin write via `has_role`.
+- Admin UI route `admin-recommendation-rules.tsx` — grouped Boost / Reduce / Exclude cards, each rule with weight slider, priority, schedule (start/end), enable toggle. Added to `AdminShell` nav.
+- Engine wiring: a `resolveBusinessRules(rules, now)` helper converts active rules into the existing `boosts` (pinned/excluded) + additive scorer weights (`businessRule` breakdown factor already exists). Rules loaded once via a lightweight server fn and passed through `RecommendationProvider`.
 
-### 6C-7 — Explainable AI (debug expansion)
-Extend `RecommendationItem` reason into a structured `scoreBreakdown` (behaviour, similarity, trend, popularity, personalization, inventory, freshness, seasonal, businessRule, confidence). Dev-only overlay via existing `data-*` attributes + a `DebugPanel` section.
+## Priority 4 — Recommendation Experiments (A/B testing)
 
-### 6C-8 — Recommendation Health Dashboard (admin-only)
-New route `admin-recommendation-health.tsx` reading funnel snapshots (localStorage in dev, and aggregated `analytics_events` section stats already tracked) → top/low sources, most-clicked, highest-converting, ignored recs, CTR, funnel. Reuses `fetchSectionAnalytics` + `getPerformanceSnapshot`.
+New table `recommendation_experiments` (id, key, description, variants jsonb, traffic_split jsonb, status, winner, metrics jsonb, created_at, updated_at) + `experiment_assignments` (visitor_id/user_id, experiment_key, variant, assigned_at).
+- Deterministic client bucketing in `src/lib/recommendations/experiments.ts` — hash(visitorId+experimentKey) → variant by traffic split (no flicker, no server round-trip on read).
+- Rails read active experiment variant to pick strategy ordering; impressions/clicks/ATC/purchase already flow through `performance.ts` — extend `recordFunnelEvent` to tag the active variant so per-variant CTR/ATC/conversion accrue.
+- Admin surface: an Experiments panel inside `admin-recommendation-health.tsx` showing per-variant funnel metrics + a "promote winner" action (sets `winner`, flips status). Auto-promote is a nightly-job step comparing variant conversion once minimum sample reached.
+- GRANTs + RLS: authenticated SELECT active experiments, admin write.
 
-### 6C-9 — Nightly Continuous Learning (precompute)
-A `/api/public/hooks/recs-recompute` server route + pg_cron nightly job recalculating trending/popularity/affinity/brand+category relationships/FBT into existing cache tables (`recommendation_scores`, `trending_products`, `personalized_feed_cache`). Engine reads precomputed `seedScores`; real-time stays cheap.
-
-### 6C-10 — Global Recommendation Graph (co-purchase relationships)
-Build a category/brand co-occurrence graph from order history in the nightly job (item 9), stored in an existing cache table as adjacency JSON. Powers "complete the chain" complementary recommendations (phone→case→charger…).
+## Delivery order (each ships + typechecks independently)
+1. Commerce graph migration + `graph.functions.ts` + wire `accessory_of`/`bought_with` into PDP rails.
+2. `product_scores` migration + nightly `recs-recompute` route + pg_cron.
+3. `recommendation_rules` migration + admin dashboard + engine wiring.
+4. Experiments tables + bucketing lib + health-dashboard metrics + auto-promote step.
 
 ## Technical notes
-- Core scoring stays pure & deterministic; all new factors are additive weights in `scorer.ts` with a single `EngineConfig`/weights surface.
-- Learning signals live in `performance.ts` (localStorage, per-device, zero schema). The nightly job (6C-9/10) uses existing cache tables only — no new required tables; if a table is missing I'll confirm before adding one.
-- Every phase ends with a `tsgo` typecheck and a smoke check; guardrails (no checkout/inventory/auth/SEO/URL changes) enforced throughout.
-
-## Suggested start
-Ship **6C-1 (Full-Funnel Optimizer)** first — it's the backbone every other item feeds into — then 6C-4 (journey) and 6C-7 (explainability), which are pure frontend/engine wiring with no backend risk. Items 6C-9/6C-10 (nightly + graph) come last since they touch cron/cache.
-
-Want me to start with 6C-1, or reorder?
+- Core scoring stays pure/deterministic; graph, scores, and rules only feed the existing `seedScores` / `restrictTo` / `boosts` / `businessRule` surfaces — no rewrite of `scorer.ts`/`engine.ts` internals.
+- Nightly job is idempotent (upserts), per-section fault isolated, and reads only; never writes to orders/inventory.
+- Every new public table gets GRANTs in the same migration; every migration ends with a `tsgo` typecheck.
+</content>
+<parameter name="summary">Plan for the commerce graph, nightly precompute jobs, admin business rules, and A/B experiments — scaled for production on the existing engine.
