@@ -187,9 +187,21 @@ export function useRecommendationRail(options: RailOptions): {
   loading: boolean;
   personalized: boolean;
 } {
-  const { signals, rotationSeed, loading, personalized } = useRecommendationSignals();
+  const { signals, rotationSeed, loading, personalized, businessRules } = useRecommendationSignals();
 
-  const config: EngineConfig = { rotationSeed, ...options };
+  // Merge admin business rules into the engine config (additive deltas + hard
+  // excludes) without callers needing to know rules exist.
+  const config: EngineConfig = {
+    rotationSeed,
+    ...options,
+    ruleAdjust: businessRules.ruleAdjust.size ? businessRules.ruleAdjust : options.ruleAdjust,
+    boosts: businessRules.excludedSlugs.length
+      ? {
+          ...options.boosts,
+          excludedSlugs: [...(options.boosts?.excludedSlugs ?? []), ...businessRules.excludedSlugs],
+        }
+      : options.boosts,
+  };
 
   const signature = useMemo(
     () =>
