@@ -161,6 +161,7 @@ import { Route as ApiPublicWebhooksCourierRouteImport } from './routes/api/publi
 import { Route as ApiPublicTrackOpenRouteImport } from './routes/api/public/track.open'
 import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/track.click'
 import { Route as ApiPublicSupportInboundEmailRouteImport } from './routes/api/public/support/inbound-email'
+import { Route as ApiPublicHooksRecsRecomputeRouteImport } from './routes/api/public/hooks/recs-recompute'
 import { Route as AccountSupportTicketTicketIdRouteImport } from './routes/account_.support_.ticket.$ticketId'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -941,6 +942,12 @@ const ApiPublicSupportInboundEmailRoute =
     path: '/api/public/support/inbound-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRecsRecomputeRoute =
+  ApiPublicHooksRecsRecomputeRouteImport.update({
+    id: '/api/public/hooks/recs-recompute',
+    path: '/api/public/hooks/recs-recompute',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AccountSupportTicketTicketIdRoute =
   AccountSupportTicketTicketIdRouteImport.update({
     id: '/account_/support_/ticket/$ticketId',
@@ -1093,6 +1100,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
+  '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1247,6 +1255,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug': typeof AdminProductSlugIndexRoute
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
+  '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1403,6 +1412,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin-product/$slug/': typeof AdminProductSlugIndexRoute
   '/account_/support_/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
+  '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1560,6 +1570,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin-product/$slug/'
     | '/account/support/ticket/$ticketId'
+    | '/api/public/hooks/recs-recompute'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1714,6 +1725,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin-product/$slug'
     | '/account/support/ticket/$ticketId'
+    | '/api/public/hooks/recs-recompute'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1869,6 +1881,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin-product/$slug/'
     | '/account_/support_/ticket/$ticketId'
+    | '/api/public/hooks/recs-recompute'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -2010,6 +2023,7 @@ export interface RootRouteChildren {
   CategoryMainSubRoute: typeof CategoryMainSubRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   AccountSupportTicketTicketIdRoute: typeof AccountSupportTicketTicketIdRoute
+  ApiPublicHooksRecsRecomputeRoute: typeof ApiPublicHooksRecsRecomputeRoute
   ApiPublicSupportInboundEmailRoute: typeof ApiPublicSupportInboundEmailRoute
   ApiPublicTrackClickRoute: typeof ApiPublicTrackClickRoute
   ApiPublicTrackOpenRoute: typeof ApiPublicTrackOpenRoute
@@ -3087,6 +3101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupportInboundEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/recs-recompute': {
+      id: '/api/public/hooks/recs-recompute'
+      path: '/api/public/hooks/recs-recompute'
+      fullPath: '/api/public/hooks/recs-recompute'
+      preLoaderRoute: typeof ApiPublicHooksRecsRecomputeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/support_/ticket/$ticketId': {
       id: '/account_/support_/ticket/$ticketId'
       path: '/account/support/ticket/$ticketId'
@@ -3300,6 +3321,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoryMainSubRoute: CategoryMainSubRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   AccountSupportTicketTicketIdRoute: AccountSupportTicketTicketIdRoute,
+  ApiPublicHooksRecsRecomputeRoute: ApiPublicHooksRecsRecomputeRoute,
   ApiPublicSupportInboundEmailRoute: ApiPublicSupportInboundEmailRoute,
   ApiPublicTrackClickRoute: ApiPublicTrackClickRoute,
   ApiPublicTrackOpenRoute: ApiPublicTrackOpenRoute,
