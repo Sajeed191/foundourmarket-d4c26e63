@@ -179,6 +179,8 @@ export function MobileFilterDrawer({
 
   const set = (patch: Partial<Filters>) => setDraft({ ...draft, ...patch });
 
+  const activeCount = useMemo(() => countActive(draft), [draft]);
+
   /* ----- Category tree ----- */
   const [catSearch, setCatSearch] = useState("");
   const parents = useMemo(
