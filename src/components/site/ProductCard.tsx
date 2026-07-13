@@ -484,6 +484,37 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           )}
         </div>
 
+        {/* Colour swatches + live preview availability. Fixed min-height keeps
+            the card stable whether or not a colour is being previewed. */}
+        <div className="flex min-h-[26px] items-center justify-between gap-2 overflow-hidden">
+          <VariantSwatchStrip product={product} onPreview={setPreview} />
+          {preview ? (
+            <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 truncate text-[11px] sm:text-[13px] font-semibold">
+              <span
+                className={
+                  previewStock === "out"
+                    ? "text-muted-foreground"
+                    : previewStock === "low"
+                      ? "text-orange-300"
+                      : "text-emerald-400"
+                }
+              >
+                {previewStock === "out"
+                  ? "Out of Stock"
+                  : previewStock === "low"
+                    ? "Low Stock"
+                    : "In Stock"}
+              </span>
+              {previewPrice != null && previewStock !== "out" ? (
+                <span className="inline-flex items-center gap-1 text-white">
+                  <span className="text-muted-foreground">from</span>
+                  <Price value={previewPrice} className="text-[11px] sm:text-[13px] font-bold" />
+                </span>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
+
         {/* Button — sits directly below content, no filler gap. */}
         <div className="pt-1.5 sm:pt-4">
           <BuyNowButton product={product} />
