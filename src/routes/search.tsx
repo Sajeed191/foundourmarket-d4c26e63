@@ -1,17 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe, Check, ArrowUpDown, Sparkles, TrendingUp, Flame, Clock, ArrowDownWideNarrow, ArrowUpWideNarrow, Tag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, discountPercent, SELECT_COLS, type Product } from "@/lib/products";
 import { useCategories, useAllCategories } from "@/lib/use-categories";
 import { MobileFilterDrawer } from "@/components/site/MobileFilterDrawer";
+import { ActiveFilterBar } from "@/components/site/ActiveFilterBar";
+import { ResultCounter } from "@/components/site/ResultCounter";
 import {
   type Filters as ClientFilters,
+  type Facet,
   applyFilters as applyClientFilters,
-  brandFacets,
   countActive,
   basePriceOf,
 } from "@/lib/search-filters";
+import { useFacets } from "@/lib/search-facets";
+import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
@@ -26,6 +30,8 @@ type SearchParams = {
   cat?: string;
   sub?: string;
   brand?: string;
+  color?: string;
+  size?: string;
   sort?: string;
   min?: number;
   max?: number;
@@ -47,12 +53,23 @@ const PAGE_SIZE = 60;
 const str = (v: unknown) => (typeof v === "string" && v !== "" ? v : undefined);
 const num = (v: unknown) => (v != null && v !== "" ? Number(v) : undefined);
 
+// CSV multi-select helpers (brand / colour / size share the same encoding).
+const csvSet = (v?: string) =>
+  new Set((v ?? "").split(",").map((x) => x.trim()).filter(Boolean));
+const toggleInCsv = (v: string | undefined, name: string): string | undefined => {
+  const s = csvSet(v);
+  s.has(name) ? s.delete(name) : s.add(name);
+  return s.size ? [...s].join(",") : undefined;
+};
+
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
     q: str(s.q),
     cat: str(s.cat),
     sub: str(s.sub),
     brand: str(s.brand),
+    color: str(s.color),
+    size: str(s.size),
     sort: str(s.sort),
     min: num(s.min),
     max: num(s.max),
@@ -220,12 +237,18 @@ function FilterPanel({
   onChange,
   sort,
   onSortChange,
+  brands = [],
+  colors = [],
+  sizes = [],
 }: {
   value: Filters;
   onChange: (next: Filters) => void;
   /** When provided, an inline Sort section is rendered (mobile drawer). */
   sort?: string;
   onSortChange?: (sort: string) => void;
+  brands?: Facet[];
+  colors?: Facet[];
+  sizes?: Facet[];
 }) {
   const { categories } = useCategories();
   const { market, symbol } = useRegion();
@@ -272,6 +295,81 @@ function FilterPanel({
           ))}
         </div>
       </div>
+
+      {/* Brand (dynamic facet) */}
+      {brands.length > 0 && (
+        <div>
+          <SectionLabel>Brand</SectionLabel>
+          <div className="space-y-1 max-h-64 overflow-y-auto pr-1 [scrollbar-width:thin]">
+            {brands.map((b) => {
+              const sel = csvSet(value.brand);
+              const active = sel.has(b.name);
+              return (
+                <button
+                  key={b.name}
+                  onClick={() => set({ brand: toggleInCsv(value.brand, b.name) })}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-white/[0.04]"
+                >
+                  <span className={`grid size-4 place-items-center rounded-md border ${active ? "border-accent bg-accent text-accent-foreground" : "border-white/25"}`}>
+                    {active && <Check className="size-3" strokeWidth={3} />}
+                  </span>
+                  <span className={`flex-1 text-left ${active ? "text-accent font-medium" : "text-foreground"}`}>{b.name}</span>
+                  <span className="text-[11px] tabular-nums text-muted-foreground">{b.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Colour (variant-aware dynamic facet) */}
+      {colors.length > 0 && (
+        <div>
+          <SectionLabel>Colour</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {colors.map((c) => {
+              const active = csvSet(value.color).has(c.name);
+              return (
+                <button
+                  key={c.name}
+                  onClick={() => set({ color: toggleInCsv(value.color, c.name) })}
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.05] text-foreground ring-1 ring-white/10 hover:bg-white/[0.08]"}`}
+                >
+                  <span className="size-4 shrink-0 rounded-full ring-1 ring-white/25" style={{ backgroundColor: c.hex ?? "#888" }} aria-hidden />
+                  <span>{c.name}</span>
+                  <span className="tabular-nums text-[11px] text-muted-foreground">{c.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Size (variant-aware dynamic facet) */}
+      {sizes.length > 0 && (
+        <div>
+          <SectionLabel>Size</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((s) => {
+              const active = csvSet(value.size).has(s.name);
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => set({ size: toggleInCsv(value.size, s.name) })}
+                  aria-pressed={active}
+                  className={`min-w-11 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.05] text-foreground ring-1 ring-white/10 hover:bg-white/[0.08]"}`}
+                >
+                  {s.name}
+                  <span className="ml-1 tabular-nums text-[10px] text-muted-foreground">{s.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
 
       {/* Price range slider */}
       <div>
@@ -373,6 +471,7 @@ function SearchPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
+  const [variantFacets, setVariantFacets] = useState<VariantFacetMap>(() => new Map());
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Rotation bucket drives the every-2-hours reshuffle of the browse order.
   const [rotBucket, setRotBucket] = useState<number>(() => rotationSeed());
@@ -406,6 +505,8 @@ function SearchPage() {
       cat: search.cat,
       sub: search.sub,
       brand: search.brand,
+      color: search.color,
+      size: search.size,
       min: search.min,
       max: search.max,
       rating: search.rating,
@@ -419,7 +520,7 @@ function SearchPage() {
       feat: search.feat,
       dmin: search.dmin,
     }),
-    [search.cat, search.sub, search.brand, search.min, search.max, search.rating, search.stock, search.free, search.cod, search.sale, search.flash, search.hot, search.newx, search.feat, search.dmin],
+    [search.cat, search.sub, search.brand, search.color, search.size, search.min, search.max, search.rating, search.stock, search.free, search.cod, search.sale, search.flash, search.hot, search.newx, search.feat, search.dmin],
   );
 
   // Local draft for the mobile drawer (applied on "Show N Products").
@@ -499,6 +600,23 @@ function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.q, search.cat]);
 
+  // Lightweight variant facet layer: once the result set loads, fetch ONLY the
+  // colour/size/stock/price columns for those slugs (never full variants) and
+  // merge them into the filter engine. Payload stays tiny and variant sections
+  // simply stay hidden when no variants exist.
+  useEffect(() => {
+    if (rawRows.length === 0) {
+      setVariantFacets(new Map());
+      return;
+    }
+    let cancelled = false;
+    const slugs = rawRows.map((p) => p.slug);
+    fetchVariantFacets(slugs)
+      .then((map) => { if (!cancelled) setVariantFacets(map); })
+      .catch(() => { if (!cancelled) setVariantFacets(new Map()); });
+    return () => { cancelled = true; };
+  }, [rawRows]);
+
   // "Did you mean…?" — fetch the closest matching term when a query returns
   // no (or very few) results, so shoppers can recover from typos quickly.
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -516,7 +634,7 @@ function SearchPage() {
   // Full client-side filtered + sorted result set (drives the live count).
   const results = useMemo(() => {
     if (isTrending) return rawRows;
-    const filtered = applyClientFilters(rawRows, currentFilters, priceCtx);
+    const filtered = applyClientFilters(rawRows, currentFilters, priceCtx, variantFacets);
     const sorted = applyClientSort(
       filtered,
       sort,
@@ -526,27 +644,69 @@ function SearchPage() {
     const noActive = countActive(currentFilters) === 0;
     const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim() && noActive;
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
-  }, [rawRows, isTrending, currentFilters, priceCtx, sort, search.q, rotBucket, priceOf, compareOf]);
+  }, [rawRows, isTrending, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf]);
 
-  // Client-side pagination — reset the visible window when the result set changes.
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [results]);
+  // Client-side pagination with back-navigation state preservation. The
+  // scroll position + visible window are persisted per search key so returning
+  // from a product page restores scroll, pagination and the infinite-scroll
+  // window exactly. Changing filters/query (new key) resets to the first page.
+  const searchKey = useMemo(() => JSON.stringify(search), [search]);
+  const restoredKey = useRef<string | null>(null);
+  const posKey = `fom_search_pos:${searchKey}`;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+    restoredKey.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchKey]);
+
+  useEffect(() => {
+    if (loading || results.length === 0 || restoredKey.current === searchKey) return;
+    restoredKey.current = searchKey;
+    try {
+      const raw = sessionStorage.getItem(posKey);
+      if (!raw) return;
+      const { y, v } = JSON.parse(raw) as { y?: number; v?: number };
+      if (typeof v === "number" && v > PAGE_SIZE) setVisibleCount(Math.min(v, results.length));
+      if (typeof y === "number") requestAnimationFrame(() => window.scrollTo(0, y));
+    } catch { /* ignore */ }
+  }, [loading, results, searchKey, posKey]);
+
+  useEffect(() => {
+    const save = () => {
+      try {
+        sessionStorage.setItem(posKey, JSON.stringify({ y: window.scrollY, v: visibleCount }));
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("scroll", save, { passive: true });
+    window.addEventListener("pagehide", save);
+    return () => {
+      save();
+      window.removeEventListener("scroll", save);
+      window.removeEventListener("pagehide", save);
+    };
+  }, [posKey, visibleCount]);
+
   const visibleResults = useMemo(() => results.slice(0, visibleCount), [results, visibleCount]);
   const hasMore = visibleCount < results.length;
   function loadMore() { setVisibleCount((c) => c + PAGE_SIZE); }
 
-  // Brand facets + live draft count for the mobile drawer.
-  const brands = useMemo(
-    () => brandFacets(rawRows, currentFilters, priceCtx),
-    [rawRows, currentFilters, priceCtx],
+  // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
+  const liveFacets = useFacets(rawRows, currentFilters, priceCtx, variantFacets);
+  // Facets + live draft count for the mobile drawer (reflects the pending draft).
+  const draftFacets = useFacets(rawRows, draft, priceCtx, variantFacets);
+  const draftBrands = draftFacets.brands;
+  const draftColors = draftFacets.colors;
+  const draftSizes = draftFacets.sizes;
+  const draftCount = draftFacets.count;
+
+  // Empty-state recommendations: a few products from the unfiltered set for the
+  // current query/category, so shoppers always have something to explore.
+  const recommended = useMemo(
+    () => rawRows.filter((p) => !p.hideFromRecommendations).slice(0, 8),
+    [rawRows],
   );
-  const draftBrands = useMemo(
-    () => brandFacets(rawRows, draft, priceCtx),
-    [rawRows, draft, priceCtx],
-  );
-  const draftCount = useMemo(
-    () => applyClientFilters(rawRows, draft, priceCtx).length,
-    [rawRows, draft, priceCtx],
-  );
+
 
   function update(patch: Partial<SearchParams>) {
     nav({ search: (prev: SearchParams) => ({ ...prev, ...patch }), replace: true });
@@ -666,6 +826,8 @@ function SearchPage() {
               setSort={setDraftSort}
               allCategories={allCategories}
               brands={draftBrands}
+              colors={draftColors}
+              sizes={draftSizes}
               priceMax={PRICE_MAX}
               snapPoints={[0, 50, 200, 500, PRICE_MAX]}
               fmt={fmt}
@@ -771,11 +933,36 @@ function SearchPage() {
         {/* Desktop sidebar — hidden in Trending mode */}
         {!isTrending && (
           <aside className="hidden lg:block">
-            <FilterPanel value={currentFilters} onChange={applyFilters} />
+            <FilterPanel
+              value={currentFilters}
+              onChange={applyFilters}
+              brands={liveFacets.brands}
+              colors={liveFacets.colors}
+              sizes={liveFacets.sizes}
+            />
           </aside>
         )}
 
         <div key={isTrending ? "trending" : "feed"} className="animate-fade-up">
+
+          {!isTrending && (
+            <>
+              <ActiveFilterBar
+                filters={currentFilters}
+                allCategories={allCategories}
+                fmt={fmt}
+                priceMax={PRICE_MAX}
+                onChange={(patch) => update(patch as Partial<SearchParams>)}
+                onClear={clearAll}
+                className="mb-4"
+              />
+              {!loading && (
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <ResultCounter count={results.length} />
+                </div>
+              )}
+            </>
+          )}
 
           {loading ? (
             <ProductSkeletonGrid count={9} className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6" />
@@ -784,17 +971,35 @@ function SearchPage() {
               <div className="size-16 mx-auto mb-5 grid place-items-center rounded-full border border-border bg-card/40">
                 <Search className="size-6 text-muted-foreground" />
               </div>
-              <p className="text-base font-medium">{isTrending ? "No trending products right now" : "No products match your filters"}</p>
+              <p className="text-base font-medium">{isTrending ? "No trending products right now" : "No products match your filters."}</p>
               <p className="text-sm text-muted-foreground mt-1.5">{isTrending ? "Check back soon — trending updates in real time as shoppers browse and buy." : "Try adjusting or clearing your filters to see more results."}</p>
               <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-                {activeFilterCount > 0 && (
+                {!isTrending && activeFilterCount > 0 && (
                   <button onClick={clearAll}
                     className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground font-mono uppercase tracking-widest text-[11px] px-4 py-2 hover:brightness-110 transition-all">
                     Clear Filters
                   </button>
                 )}
-                <Link to="/" className="text-xs font-mono uppercase tracking-widest text-accent border-b border-accent pb-1">Browse all</Link>
+                <button onClick={() => window.history.back()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 font-mono uppercase tracking-widest text-[11px] px-4 py-2 hover:border-accent hover:text-accent transition-all">
+                  Back
+                </button>
+                <Link to="/categories" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 font-mono uppercase tracking-widest text-[11px] px-4 py-2 hover:border-accent hover:text-accent transition-all">
+                  Browse Categories
+                </Link>
               </div>
+
+              {/* Recommend similar products from the unfiltered result set */}
+              {!isTrending && recommended.length > 0 && (
+                <div className="mt-10 text-left">
+                  <p className="mb-4 text-center text-xs font-mono uppercase tracking-widest text-muted-foreground">You might also like</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+                    {recommended.map((p, i) => (
+                      <ProductCard key={p.id ?? p.slug} product={p} priority={i < 4} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <>

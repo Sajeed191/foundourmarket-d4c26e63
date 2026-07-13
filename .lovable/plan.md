@@ -1,58 +1,63 @@
-# Phase 4D — Rendering & INP Optimization
+## Enterprise Filter System — Phase 2
 
-## What already exists (verified in code)
+Builds on the existing client-side search pipeline (`search_products` RPC → full result set → client filter/sort/paginate). No DB schema, checkout, orders, inventory, SEO, auth, or product-URL changes.
 
-Much of Phase 4D was already built during Phases 4A–4C. I confirmed:
+### What already exists (keep)
+- Full-set fetch + client filtering/sorting (`src/routes/search.tsx`).
+- `src/lib/search-filters.ts` — `matchesFilters`, `applyFilters`, `brandFacets`, `countActive`, sort options.
+- `src/components/site/MobileFilterDrawer.tsx` — accordion drawer, price slider, offers, rating, discount tiers.
+- URL sync via TanStack search params.
 
-- **Virtualized grids** — `VirtualizedProductGrid` powers Home, Search, Category, Deals, and `ProductCollection` (windowed rendering + scroll restoration + decode-gated commit).
-- **Memoized cards** — `ProductCard` and its sub-parts (`ProductBadges`, `WishlistButton`, `QuickViewButton`, `BuyNowButton`) use `memo` with custom prop comparators.
-- **Stable context values** — `cart`, `wishlist`, `region` use `useSyncExternalStore` split selectors (`useCartQty`/`useCartActions`, `useWishlistSaved`/`useWishlistActions`) and `useMemo`/`useCallback` for provider values.
-- **Device-tier governor** — `runtime-capability.ts` measures live FPS + long tasks and flips `data-degrade-effects`, dropping blur/backdrop-filter/multi-layer shadows on struggling devices while preserving premium on capable ones. GPU compat gate (`gpu-compat`) handles weak Mali/PowerVR/Adreno.
-- **Image pipeline** — responsive srcset, in-memory decode warming, adjacent-only prefetch gated by capability (Phase 4B).
+### Key finding
+A lightweight variant facet source already exists: the `product_variants_public` view (columns: `product_slug, color, color_hex, size, stock_quantity, price_override, price_adjustment, compare_price`). We query ONLY these columns for the current result set — never full variant objects. (Currently 0 published variants, so variant sections auto-hide until variants exist — validates the intelligent-facet design.)
 
-So this phase is **targeted gap-closing**, not a rebuild. I will not duplicate the above.
+### 1. Variant facet layer (new)
+`src/lib/variant-facets.ts`:
+- `fetchVariantFacets(slugs: string[])` → queries `product_variants_public` selecting only `product_slug,color,color_hex,size,stock_quantity,price_override,price_adjustment,compare_price` where `product_slug IN (...)` (chunked to stay small).
+- Builds a `Map<slug, VariantSummary>`: available colours, sizes, min/max effective price, any-in-stock.
+- Pure, memoizable; payload minimal.
 
-## Remaining gaps to address
+`src/lib/search-facets.ts` (FacetEngine): given rows + variant map + current filters, compute dynamic facets with live counts for brand, colour, size, rating, discount, offers — each excluding its own dimension (same skip pattern as `brandFacets`). Hide zero-count values; hide whole sections with no values; auto-collapse single-value sections.
 
+### 2. Variant-aware filtering
+Extend `src/lib/search-filters.ts`:
+- Add `color` and `size` to `Filters` (+ `validateSearch` in `search.tsx`, back-compat preserved).
+- `matchesFilters` gains a variant map param. If a product has a variant summary: colour/size match against variant data, price band + stock use variant effective price/stock. If no variants: existing product-data path unchanged.
+
+### 3. Live counts + product count
+`ResultCounter` — always-visible "N Products", updates instantly. Drawer apply button already shows live draft count; extend counts to every facet chip via FacetEngine.
+
+### 4. Premium price slider
+Upgrade `PriceRangeSlider`: floating tooltip while dragging (already partial), animated handles, manual min/max numeric inputs with range validation + currency formatting, keyboard accessible (Radix already provides arrow-key support; add labels).
+
+### 5. Sticky applied-filter bar (new)
+`src/components/site/ActiveFilterBar.tsx` — sticky row of removable chips (category, brand, colour, size, price, rating, discount, offers) + "Clear All". Shown on both mobile results view and desktop. Each chip removes just its dimension via URL update.
+
+### 6. Empty state
+Replace current empty block with: message, Clear Filters / Back / Browse Categories buttons, and (when possible) a few recommended products from the unfiltered set.
+
+### 7. State preservation
+Filters/sort/search already in URL (restored on refresh, back, deep link). Add scroll-position + visibleCount restore on back-nav using `sessionStorage` keyed by search string, so returning from a product keeps scroll, pagination, and infinite-scroll window.
+
+### 8. Modular structure (future-ready)
 ```text
-1. Horizontal rails      ProductRail, RelatedProducts render items inline,
-   not memoized           no item memoization → re-render on parent state
-2. Idle deferral         No shared requestIdleCallback helper for non-critical
-                          post-interaction work (telemetry, prefetch triggers)
-3. INP on tap paths      Add-to-cart / qty / wishlist handlers should paint
-                          the optimistic UI before running async/toast work
-4. Layout-read batching   Any getBoundingClientRect/offset reads interleaved
-                          with writes in scroll/resize paths
-5. Low-end CSS trim      Confirm degrade-mode CSS covers rails + testimonials
-                          (shadows/blur) not just grids
+src/lib/
+  search-filters.ts   FilterState + predicates (extended)
+  search-facets.ts    FacetEngine (dynamic facets + counts)
+  variant-facets.ts   VariantFacetProvider (lightweight query)
+src/components/site/
+  MobileFilterDrawer.tsx   FilterDrawer (extended: colour/size sections)
+  ActiveFilterBar.tsx      sticky chips (new)
+  ResultCounter.tsx        product count (new)
 ```
+Adding a new facet = add a field to `Filters`, a predicate branch, and a facet descriptor — no refactor.
 
-## Implementation
+### 9. Performance & a11y
+Memoize facet/variant computations; virtualize long brand/colour lists inside the drawer; chunked variant query; ARIA labels, focus management, large touch targets, high-contrast tokens throughout.
 
-### 1. Memoize rail items
-- Wrap `ProductRail` and `RelatedProducts` item mapping so each card is a stable memoized child; ensure any passed callbacks are `useCallback`-stable. Rails are short, so no virtualization — memoization is the right tool.
+### Verification
+Build passes; run through the checklist (category/sub/brand/colour/size/price/variant price/variant stock/rating/availability/discount/offers/search/sort/pagination/infinite scroll/URL/back/refresh/chips/clear/live counts/empty/guest+logged-in/no duplicates). Confirm variant sections hide gracefully with 0 variants and appear once variants exist.
 
-### 2. Shared idle helper
-- Add `src/lib/idle.ts` exposing `runWhenIdle(fn)` (requestIdleCallback with setTimeout fallback) and use it to defer non-critical work already running eagerly after interactions (telemetry publish, non-visible prefetch). No behavior change, just scheduling.
-
-### 3. Paint-first interaction handlers
-- In cart/wishlist/qty handlers, commit the optimistic state update first, defer the `toast` and any analytics to a microtask/idle callback so the tap paints immediately. Keeps checkout/business logic identical.
-
-### 4. Read-before-write in layout paths
-- Audit `VirtualizedProductGrid` and any scroll/resize measurement for interleaved DOM read/write; batch reads via `requestAnimationFrame` where needed. Only if a real thrash is found.
-
-### 5. Degrade-mode CSS coverage
-- Ensure `[data-degrade-effects="true"]` rules in `src/styles.css` also trim heavy shadows/blur on rails, testimonials, and category cards — not just the product grid.
-
-## Explicitly out of scope (unchanged)
-Checkout, cart/order/invoice logic, variants, auth, SEO, DB schema, visual design, the image pipeline, and the cache layer. No new runtime experiments or placeholder code.
-
-## Verification
-- `tsgo` clean (zero TS errors).
-- Playwright run on Home + Search + a Category route: capture console for long-task warnings, confirm no visual regression via screenshots, confirm grid scroll position preserved.
-- Spot-check add-to-cart, qty change, wishlist toggle still work and toast still appears.
-- Confirm CLS unchanged (aspect-ratio boxes untouched).
-- Report: components optimized, re-renders eliminated, expected INP/FPS impact, memory/CPU notes, bundle delta (idle helper is ~1KB, no new deps).
-
-## Report deliverable
-A final summary with files modified, before/after render behavior per surface, and a compatibility note (2GB/4GB/6GB+ Android, iPhone, desktop) — mapped to the governor tiers already in place.
+### Technical notes
+- Variant query uses `product_variants_public` (RLS-safe, published+active only) — no service role, no schema change.
+- All new params optional with `fallback`-style defaults; legacy `disc=1` deep links still map to `sale`.

@@ -4,11 +4,10 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
 import type { Category } from "@/lib/use-categories";
 import {
+  type Facet,
   type Filters,
   SORT_OPTIONS,
 } from "@/lib/search-filters";
-
-type BrandFacet = { name: string; count: number };
 
 type Props = {
   open: boolean;
@@ -18,7 +17,9 @@ type Props = {
   sort: string;
   setSort: (s: string) => void;
   allCategories: Category[];
-  brands: BrandFacet[];
+  brands: Facet[];
+  colors: Facet[];
+  sizes: Facet[];
   priceMax: number;
   snapPoints: number[];
   fmt: (usd: number) => string;
@@ -155,6 +156,8 @@ export function MobileFilterDrawer({
   setSort,
   allCategories,
   brands,
+  colors,
+  sizes,
   priceMax,
   snapPoints,
   fmt,
@@ -225,6 +228,30 @@ export function MobileFilterDrawer({
     set({ brand: next.size ? [...next].join(",") : undefined });
   };
 
+  /* ----- Colour (variant-aware) ----- */
+  const selectedColors = useMemo(
+    () => new Set((draft.color ?? "").split(",").map((c) => c.trim()).filter(Boolean)),
+    [draft.color],
+  );
+  const toggleColor = (name: string) => {
+    const next = new Set(selectedColors);
+    next.has(name) ? next.delete(name) : next.add(name);
+    set({ color: next.size ? [...next].join(",") : undefined });
+  };
+
+  /* ----- Size (variant-aware) ----- */
+  const selectedSizes = useMemo(
+    () => new Set((draft.size ?? "").split(",").map((s) => s.trim()).filter(Boolean)),
+    [draft.size],
+  );
+  const toggleSize = (name: string) => {
+    const next = new Set(selectedSizes);
+    next.has(name) ? next.delete(name) : next.add(name);
+    set({ size: next.size ? [...next].join(",") : undefined });
+  };
+
+
+
   /* ----- Price manual inputs ----- */
   const priceLo = draft.min ?? 0;
   const priceHi = draft.max ?? priceMax;
@@ -254,6 +281,8 @@ export function MobileFilterDrawer({
       out.push({ label: c?.name ?? draft.cat, clear: () => set({ cat: undefined }) });
     }
     for (const b of selectedBrands) out.push({ label: b, clear: () => toggleBrand(b) });
+    for (const c of selectedColors) out.push({ label: c, clear: () => toggleColor(c) });
+    for (const s of selectedSizes) out.push({ label: `Size ${s}`, clear: () => toggleSize(s) });
     if (draft.min != null || draft.max != null)
       out.push({
         label: `${fmt(priceLo)} – ${fmt(priceHi)}${priceHi >= priceMax ? "+" : ""}`,
@@ -272,7 +301,7 @@ export function MobileFilterDrawer({
       out.push({ label: `${draft.dmin}%+ off`, clear: () => set({ dmin: undefined }) });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, allCategories, selectedBrands, priceLo, priceHi]);
+  }, [draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
 
   // Body scroll-lock while open.
   useEffect(() => {
@@ -447,6 +476,69 @@ export function MobileFilterDrawer({
             )}
           </Section>
         )}
+
+        {/* Colour (variant-aware) — only shown when variants expose colours */}
+        {colors.length > 0 && (
+          <Section
+            id="color"
+            title="Colour"
+            summary={selectedColors.size ? `${selectedColors.size} selected` : undefined}
+            openIds={openIds}
+            toggle={toggle}
+          >
+            <div className="flex flex-wrap gap-2">
+              {colors.map((c) => {
+                const active = selectedColors.has(c.name);
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => toggleColor(c.name)}
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-foreground ring-1 ring-white/10 hover:bg-white/[0.07]"}`}
+                  >
+                    <span
+                      className="size-4 shrink-0 rounded-full ring-1 ring-white/25"
+                      style={{ backgroundColor: c.hex ?? "#888" }}
+                      aria-hidden
+                    />
+                    <span>{c.name}</span>
+                    <span className="tabular-nums text-[11px] text-muted-foreground">{c.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+
+        {/* Size (variant-aware) — only shown when variants expose sizes */}
+        {sizes.length > 0 && (
+          <Section
+            id="size"
+            title="Size"
+            summary={selectedSizes.size ? `${selectedSizes.size} selected` : undefined}
+            openIds={openIds}
+            toggle={toggle}
+          >
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((s) => {
+                const active = selectedSizes.has(s.name);
+                return (
+                  <button
+                    key={s.name}
+                    onClick={() => toggleSize(s.name)}
+                    aria-pressed={active}
+                    className={`min-w-11 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-foreground ring-1 ring-white/10 hover:bg-white/[0.07]"}`}
+                  >
+                    {s.name}
+                    <span className="ml-1 tabular-nums text-[10px] text-muted-foreground">{s.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+
+
 
         {/* Price */}
         <Section
