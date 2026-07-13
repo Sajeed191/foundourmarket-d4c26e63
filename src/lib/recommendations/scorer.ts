@@ -128,6 +128,12 @@ const STRATEGY_WEIGHTS: Partial<Record<StrategyKey, Partial<Weights>>> = {
   wishlist_inspired: { affinity: 40, discount: 14, rating: 8, freshness: 8, brand: 10 },
   continue_shopping: { affinity: 20, discount: 12, freshness: 6, trending: 8 },
   popular_near_you: { location: 40, popularity: 25, bestseller: 12, rating: 6 },
+  complete_the_look: { affinity: 12, curated: 14, rating: 10, popularity: 16, colour: 10, price: 8, bestseller: 10 },
+  compatible_accessories: { affinity: 10, curated: 10, rating: 8, popularity: 20, bestseller: 14, price: 6, brand: 6 },
+  trending_in_category: { trending: 42, popularity: 24, bestseller: 12, rating: 6, freshness: 8 },
+  recently_viewed_alternatives: { similarity: 48, brand: 10, price: 12, rating: 6, popularity: 8 },
+  upgrade: { similarity: 40, rating: 18, bestseller: 14, popularity: 12, brand: 10 },
+  budget_alternative: { similarity: 42, price: 16, rating: 12, popularity: 10, discount: 10 },
   personalized: {},
   cold_start: { popularity: 25, rating: 16, bestseller: 12, trending: 10, freshness: 6 },
 };
