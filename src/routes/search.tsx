@@ -3,7 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe, Check, ArrowUpDown, Sparkles, TrendingUp, Flame, Clock, ArrowDownWideNarrow, ArrowUpWideNarrow, Tag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, discountPercent, SELECT_COLS, type Product } from "@/lib/products";
-import { useCategories } from "@/lib/use-categories";
+import { useCategories, useAllCategories } from "@/lib/use-categories";
+import { MobileFilterDrawer } from "@/components/site/MobileFilterDrawer";
+import {
+  type Filters as ClientFilters,
+  applyFilters as applyClientFilters,
+  brandFacets,
+  countActive,
+  basePriceOf,
+} from "@/lib/search-filters";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
@@ -16,29 +24,49 @@ import { Switch } from "@/components/ui/switch";
 type SearchParams = {
   q?: string;
   cat?: string;
+  sub?: string;
+  brand?: string;
   sort?: string;
   min?: number;
   max?: number;
   stock?: string;
   rating?: number;
   free?: string;
-  disc?: string;
+  cod?: string;
+  sale?: string;
+  flash?: string;
+  hot?: string;
+  newx?: string;
+  feat?: string;
+  dmin?: number;
 };
 
 const PRICE_MAX = 1000;
 const PAGE_SIZE = 60;
 
+const str = (v: unknown) => (typeof v === "string" && v !== "" ? v : undefined);
+const num = (v: unknown) => (v != null && v !== "" ? Number(v) : undefined);
+
 export const Route = createFileRoute("/search")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
-    q: typeof s.q === "string" ? s.q : undefined,
-    cat: typeof s.cat === "string" ? s.cat : undefined,
-    sort: typeof s.sort === "string" ? s.sort : undefined,
-    min: s.min != null && s.min !== "" ? Number(s.min) : undefined,
-    max: s.max != null && s.max !== "" ? Number(s.max) : undefined,
-    stock: typeof s.stock === "string" ? s.stock : undefined,
-    rating: s.rating != null && s.rating !== "" ? Number(s.rating) : undefined,
-    free: typeof s.free === "string" ? s.free : undefined,
-    disc: typeof s.disc === "string" ? s.disc : undefined,
+    q: str(s.q),
+    cat: str(s.cat),
+    sub: str(s.sub),
+    brand: str(s.brand),
+    sort: str(s.sort),
+    min: num(s.min),
+    max: num(s.max),
+    stock: str(s.stock),
+    rating: num(s.rating),
+    free: str(s.free),
+    cod: str(s.cod),
+    // Back-compat: legacy `disc=1` deep links map to the new `sale` flag.
+    sale: str(s.sale) ?? str(s.disc),
+    flash: str(s.flash),
+    hot: str(s.hot),
+    newx: str(s.newx),
+    feat: str(s.feat),
+    dmin: num(s.dmin),
   }),
   head: () => ({
     meta: [
@@ -64,18 +92,7 @@ const SORTS: { value: string; label: string; desc: string; icon: LucideIcon }[] 
   { value: "discount", label: "Biggest Discount", desc: "Best deals first", icon: Tag },
 ];
 
-// Sorts handled natively by the search_products RPC. Price sorts are handled
-// client-side because the DB `price` column is 0 for every product — real
-// prices live in region columns (price_inr / price_usd) resolved per-region,
-// so the RPC's ORDER BY p.price can never reorder anything.
-const RPC_SORTS = new Set(["relevance", "rating", "newest"]);
-
-// Price sorts require the full result set (client-side region-aware ordering),
-// so they are fetched in one shot with pagination disabled — like trending.
-const PRICE_SORTS = new Set(["price_asc", "price_desc"]);
-
-// Current 2-hour rotation bucket. Changes every 2 hours so the browse order
-// reshuffles on that cadence but stays stable for everyone within the window.
+// Rotation reshuffle cadence for the default browse feed (every 2 hours).
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 export function rotationSeed(): number {
   return Math.floor(Date.now() / TWO_HOURS_MS);
@@ -100,23 +117,25 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
 }
 
 function applyClientSort(
-
   rows: Product[],
   sort: string | undefined,
   discountOf: (p: Product) => number,
   priceOf: (p: Product) => number,
 ): Product[] {
   switch (sort) {
-    // "trending" is NOT a client sort — it is a fully separate, data-filtered
-    // dataset fetched from the trending_products RPC (real-time top 10).
     case "best_selling":
-      // Only products merchandised as Best Sellers, ordered by units sold.
-      return [...rows].filter((p) => Boolean(p.bestseller)).sort((a, b) => b.soldCount - a.soldCount);
+      return [...rows].sort((a, b) => b.soldCount - a.soldCount);
+    case "best_selling_reviews":
+      return [...rows].sort((a, b) => b.reviews - a.reviews);
+    case "rating":
+      return [...rows].sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+    case "newest":
+      return [...rows].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
     case "discount":
-      // Only products that actually have a discount, ordered by biggest first.
-      return [...rows].filter((p) => discountOf(p) > 0).sort((a, b) => discountOf(b) - discountOf(a));
+      return [...rows].sort((a, b) => discountOf(b) - discountOf(a));
     case "price_asc":
-      // Region-aware ascending: parse the resolved numeric price, never the DB 0.
       return [...rows].sort((a, b) => priceOf(a) - priceOf(b));
     case "price_desc":
       return [...rows].sort((a, b) => priceOf(b) - priceOf(a));
@@ -127,7 +146,8 @@ function applyClientSort(
 
 const RATINGS = [4, 3, 2];
 
-type Filters = Pick<SearchParams, "cat" | "min" | "max" | "stock" | "rating" | "free" | "disc">;
+type Filters = ClientFilters;
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -224,10 +244,9 @@ function FilterPanel({
   // rate (~83) these map to ₹0 · ₹4k · ₹16k · ₹41k · ₹41k+.
   const PRICE_SNAP = [0, 50, 200, 500, PRICE_MAX];
 
-  const toggles: { key: "stock" | "free" | "disc"; on: string; label: string; desc: string }[] = [
-    { key: "stock", on: "in", label: "In stock only", desc: "Hide sold-out items" },
+  const toggles: { key: "free" | "sale"; on: string; label: string; desc: string }[] = [
     { key: "free", on: "1", label: "Free shipping", desc: "No delivery charges" },
-    { key: "disc", on: "1", label: "On sale", desc: "Discounted products only" },
+    { key: "sale", on: "1", label: "On sale", desc: "Discounted products only" },
   ];
 
   return (
@@ -338,12 +357,23 @@ function SearchPage() {
   const search = Route.useSearch();
   const nav = useNavigate({ from: "/search" });
   const { categories } = useCategories();
+  const { categories: allCategories } = useAllCategories();
   const { priceOf, shippingFeeOf, compareOf, market, symbol } = useRegion();
+
+  const rate = market === "india" ? 83 : 1;
+  const fmt = useCallback(
+    (usd: number) =>
+      market === "india"
+        ? `${symbol}${Math.round(usd * rate).toLocaleString("en-IN")}`
+        : `${symbol}${usd}`,
+    [market, symbol, rate],
+  );
 
   const [query, setQuery] = useState(search.q ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Rotation bucket drives the every-2-hours reshuffle of the browse order.
   const [rotBucket, setRotBucket] = useState<number>(() => rotationSeed());
   useEffect(() => {
@@ -354,8 +384,6 @@ function SearchPage() {
     return () => clearInterval(id);
   }, []);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Hide the mobile bottom nav while a drawer sheet is open.
@@ -373,21 +401,37 @@ function SearchPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const currentFilters: Filters = useMemo(
+    () => ({
+      cat: search.cat,
+      sub: search.sub,
+      brand: search.brand,
+      min: search.min,
+      max: search.max,
+      rating: search.rating,
+      stock: search.stock,
+      free: search.free,
+      cod: search.cod,
+      sale: search.sale,
+      flash: search.flash,
+      hot: search.hot,
+      newx: search.newx,
+      feat: search.feat,
+      dmin: search.dmin,
+    }),
+    [search.cat, search.sub, search.brand, search.min, search.max, search.rating, search.stock, search.free, search.cod, search.sale, search.flash, search.hot, search.newx, search.feat, search.dmin],
+  );
 
-  const currentFilters: Filters = {
-    cat: search.cat,
-    min: search.min,
-    max: search.max,
-    stock: search.stock,
-    rating: search.rating,
-    free: search.free,
-    disc: search.disc,
-  };
-  // Local draft for the mobile drawer (applied on "Apply Filters").
+  // Local draft for the mobile drawer (applied on "Show N Products").
   const [draft, setDraft] = useState<Filters>(currentFilters);
   const [draftSort, setDraftSort] = useState<string>(search.sort ?? "relevance");
-  useEffect(() => { if (drawerOpen) { setDraft(currentFilters); setDraftSort(search.sort ?? "relevance"); } /* eslint-disable-next-line */ }, [drawerOpen]);
-  const activeDraftCount = [draft.cat, draft.stock, draft.min, draft.max, draft.rating, draft.free, draft.disc].filter(Boolean).length;
+  useEffect(() => {
+    if (drawerOpen) {
+      setDraft(currentFilters);
+      setDraftSort(search.sort ?? "relevance");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawerOpen]);
 
   useEffect(() => {
     const q = (search.q ?? "").trim();
@@ -403,16 +447,20 @@ function SearchPage() {
 
   const sort = search.sort ?? "relevance";
   const isTrending = sort === "trending";
-  const isPriceSort = PRICE_SORTS.has(sort);
 
-  // Reset and fetch the first page whenever the query / RPC-handled filters change.
-  // Trending is a special mode: it ignores query/filters and shows ALL products
-  // that carry the "trending" badge (not a capped top-N ranking).
+  // Fetch the full matching set for the current text query + parent category.
+  // All remaining filters (brand, price, rating, availability, offers,
+  // discount) and every sort are applied client-side so the live product
+  // count updates instantly with zero network round-trips.
+  const priceCtx = useMemo(
+    () => ({ priceOf, compareOf, shippingFeeOf }),
+    [priceOf, compareOf, shippingFeeOf],
+  );
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setRawRows([]);
-    setHasMore(false);
 
     if (isTrending) {
       (supabase as any)
@@ -422,40 +470,34 @@ function SearchPage() {
         .then(({ data }: { data: any[] | null }) => {
           if (cancelled) return;
           const rows = (data ?? []).map((r: any) => rowToProduct(r));
-          // Global dedupe by slug — never show duplicates in trending mode.
           const seen = new Set<string>();
           const deduped = rows.filter((p: Product) => (seen.has(p.slug) ? false : (seen.add(p.slug), true)));
-          setHasMore(false);
           setRawRows(deduped);
           setLoading(false);
         });
       return () => { cancelled = true; };
     }
 
-
-    // Price sorts need the whole matching set so the client-side region-aware
-    // ordering is correct across the full catalog (pagination is disabled).
-    const fetchLimit = isPriceSort ? 1000 : PAGE_SIZE;
     (supabase.rpc as any)("search_products", {
       q: search.q ?? null,
       category_filter: search.cat ?? null,
-      min_price: search.min ?? null,
-      max_price: search.max ?? null,
-      min_rating: search.rating ?? null,
-      sort_by: RPC_SORTS.has(sort) ? sort : "relevance",
-      page_limit: fetchLimit,
+      min_price: null,
+      max_price: null,
+      min_rating: null,
+      sort_by: "relevance",
+      page_limit: 1000,
       page_offset: 0,
     }).then(({ data }: { data: any[] | null }) => {
       if (cancelled) return;
       const rows = (data ?? []).map((r: any) => rowToProduct(r));
-      setHasMore(!isPriceSort && rows.length === PAGE_SIZE);
-      setRawRows(rows);
+      const seen = new Set<string>();
+      const deduped = rows.filter((p: Product) => (seen.has(p.slug) ? false : (seen.add(p.slug), true)));
+      setRawRows(deduped);
       setLoading(false);
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.q, search.cat, search.min, search.max, search.rating, sort]);
-
+  }, [search.q, search.cat]);
 
   // "Did you mean…?" — fetch the closest matching term when a query returns
   // no (or very few) results, so shoppers can recover from typos quickly.
@@ -471,53 +513,40 @@ function SearchPage() {
     return () => { cancelled = true; };
   }, [search.q, loading, rawRows.length]);
 
-  // Load the next page and append (deduped by slug) — preserves filters/sorting.
-  function loadMore() {
-    if (loading || loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    (supabase.rpc as any)("search_products", {
-      q: search.q ?? null,
-      category_filter: search.cat ?? null,
-      min_price: search.min ?? null,
-      max_price: search.max ?? null,
-      min_rating: search.rating ?? null,
-      sort_by: RPC_SORTS.has(sort) ? sort : "relevance",
-      page_limit: PAGE_SIZE,
-      page_offset: rawRows.length,
-    }).then(({ data }: { data: any[] | null }) => {
-      const rows = (data ?? []).map((r: any) => rowToProduct(r));
-      setHasMore(rows.length === PAGE_SIZE);
-      setRawRows((prev) => {
-        const seen = new Set(prev.map((p) => p.slug));
-        return [...prev, ...rows.filter((r: Product) => !seen.has(r.slug))];
-      });
-      setLoadingMore(false);
-    });
-  }
-
-  // Client-side filters / sorts that the RPC does not handle, applied to the
-  // accumulated raw rows so pagination stays consistent.
+  // Full client-side filtered + sorted result set (drives the live count).
   const results = useMemo(() => {
-    // Trending mode shows every product carrying the trending badge — no cap,
-    // no category/price/stock filters, no client re-sorting.
     if (isTrending) return rawRows;
-    let rows = rawRows;
-    if (search.stock === "in") rows = rows.filter((p) => p.inStock);
-    if (search.free === "1") rows = rows.filter((p) => shippingFeeOf(p) <= 0);
-    if (search.disc === "1") rows = rows.filter((p) => discountPercent(priceOf(p), compareOf(p)) != null);
+    const filtered = applyClientFilters(rawRows, currentFilters, priceCtx);
     const sorted = applyClientSort(
-      rows,
+      filtered,
       sort,
-      (p) => discountPercent(priceOf(p), compareOf(p)) ?? 0,
+      (p) => discountPercent(priceOf(p), compareOf(p)) ?? p.discount ?? 0,
       priceOf,
     );
-    // Default browse ordering (relevance, no active text search) reshuffles
-    // every 2 hours via the rotation bucket so the catalog stays fresh.
-    const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim();
+    const noActive = countActive(currentFilters) === 0;
+    const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim() && noActive;
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
-  }, [rawRows, isTrending, search.stock, search.free, search.disc, search.q, sort, rotBucket, shippingFeeOf, compareOf, priceOf]);
+  }, [rawRows, isTrending, currentFilters, priceCtx, sort, search.q, rotBucket, priceOf, compareOf]);
 
+  // Client-side pagination — reset the visible window when the result set changes.
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [results]);
+  const visibleResults = useMemo(() => results.slice(0, visibleCount), [results, visibleCount]);
+  const hasMore = visibleCount < results.length;
+  function loadMore() { setVisibleCount((c) => c + PAGE_SIZE); }
 
+  // Brand facets + live draft count for the mobile drawer.
+  const brands = useMemo(
+    () => brandFacets(rawRows, currentFilters, priceCtx),
+    [rawRows, currentFilters, priceCtx],
+  );
+  const draftBrands = useMemo(
+    () => brandFacets(rawRows, draft, priceCtx),
+    [rawRows, draft, priceCtx],
+  );
+  const draftCount = useMemo(
+    () => applyClientFilters(rawRows, draft, priceCtx).length,
+    [rawRows, draft, priceCtx],
+  );
 
   function update(patch: Partial<SearchParams>) {
     nav({ search: (prev: SearchParams) => ({ ...prev, ...patch }), replace: true });
@@ -528,15 +557,23 @@ function SearchPage() {
   function clearAll() {
     nav({ search: { q: search.q, sort: search.sort }, replace: true });
   }
+  function applyDraft() {
+    nav({ search: (prev: SearchParams) => ({ ...prev, ...draft, sort: draftSort }), replace: true });
+    setDrawerOpen(false);
+  }
+  function resetDraft() {
+    setDraft({});
+    setDraftSort("relevance");
+  }
 
-  const activeFilterCount = [search.cat, search.stock, search.min, search.max, search.rating, search.free, search.disc].filter(Boolean).length;
-
+  const activeFilterCount = countActive(currentFilters);
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
     (p: Product, i: number) => <ProductCard product={p} priority={i < 4} highlight={search.q} />,
     [search.q],
   );
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2 sm:py-12 sm:pb-16">
@@ -619,44 +656,25 @@ function SearchPage() {
               <SlidersHorizontal className="size-4" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
             </button>
 
-            {/* Dedicated full-page filter screen (mobile) */}
-            {drawerOpen && (
-              <div className="fixed inset-0 z-[100001] lg:hidden flex flex-col bg-background animate-fade-in">
-                {/* Sticky header */}
-                <div className="shrink-0 flex items-center justify-between gap-2 border-b border-white/10 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-                  <h2 className="text-base font-semibold">Filters</h2>
-                  <button
-                    onClick={() => setDrawerOpen(false)}
-                    aria-label="Close filters"
-                    className="grid place-items-center size-9 rounded-full bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-
-                {/* Scrollable body */}
-                <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <FilterPanel value={draft} onChange={setDraft} sort={draftSort} onSortChange={setDraftSort} />
-                </div>
-
-                {/* Sticky action bar (safe-area aware) */}
-                <div className="shrink-0 flex items-center gap-3 border-t border-white/10 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                  <button
-                    onClick={() => { setDraft({}); setDraftSort("relevance"); }}
-                    disabled={activeDraftCount === 0 && draftSort === "relevance"}
-                    className="rounded-full px-6 py-3.5 text-sm font-medium bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 active:scale-95 transition-all disabled:opacity-40"
-                  >
-                    Reset All
-                  </button>
-                  <button
-                    onClick={() => { applyFilters(draft); update({ sort: draftSort }); setDrawerOpen(false); }}
-                    className="flex-1 rounded-full bg-accent text-accent-foreground py-3.5 text-sm font-semibold shadow-[0_8px_24px_-8px_var(--accent)] hover:brightness-110 active:scale-[0.98] transition-all"
-                  >
-                    Apply Filters{activeDraftCount > 0 ? ` · ${activeDraftCount}` : ""}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Premium full-screen filter drawer (mobile) */}
+            <MobileFilterDrawer
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              draft={draft}
+              setDraft={setDraft}
+              sort={draftSort}
+              setSort={setDraftSort}
+              allCategories={allCategories}
+              brands={draftBrands}
+              priceMax={PRICE_MAX}
+              snapPoints={[0, 50, 200, 500, PRICE_MAX]}
+              fmt={fmt}
+              rate={rate}
+              symbol={symbol}
+              resultCount={draftCount}
+              onReset={resetDraft}
+              onApply={applyDraft}
+            />
 
             {activeFilterCount > 0 && (
               <button onClick={clearAll} className="shrink-0 text-xs font-medium text-muted-foreground hover:text-accent">Clear all</button>
@@ -781,7 +799,7 @@ function SearchPage() {
           ) : (
             <>
               <VirtualizedProductGrid
-                items={results}
+                items={visibleResults}
                 cols={{ base: 2, md: 3, xl: 4 }}
                 className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
                 getKey={getProductKey}
@@ -793,10 +811,9 @@ function SearchPage() {
                 <div className="mt-8 sm:mt-10 flex justify-center">
                   <button
                     onClick={loadMore}
-                    disabled={loadingMore}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-colors"
                   >
-                    {loadingMore ? "Loading…" : "Load More"}
+                    Load More
                   </button>
                 </div>
               )}
