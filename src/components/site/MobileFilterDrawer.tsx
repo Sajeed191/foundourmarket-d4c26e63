@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { X, Search, Check, Star, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
@@ -33,6 +33,7 @@ type Props = {
 
 const RATINGS = [4, 3, 2, 1];
 const DISCOUNTS = [10, 20, 30, 40, 50, 70];
+const DRAWER_HISTORY_KEY = "__fomMobileFilterDrawer";
 
 const OFFERS: { key: keyof Filters; label: string }[] = [
   { key: "free", label: "Free Shipping" },
@@ -148,7 +149,7 @@ function PriceSlider({
 /* ------------------------------------------------------------------ */
 /* Main drawer                                                         */
 /* ------------------------------------------------------------------ */
-export function MobileFilterDrawer({
+export const MobileFilterDrawer = memo(function MobileFilterDrawer({
   open,
   onClose,
   draft,
@@ -260,7 +261,7 @@ export function MobileFilterDrawer({
   const priceHi = draft.max ?? priceMax;
   const [minInput, setMinInput] = useState("");
   const [maxInput, setMaxInput] = useState("");
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMinInput(draft.min != null ? String(Math.round(draft.min * rate)) : "");
     setMaxInput(draft.max != null ? String(Math.round(draft.max * rate)) : "");
   }, [draft.min, draft.max, rate]);
@@ -273,8 +274,35 @@ export function MobileFilterDrawer({
     set({ max: v != null && v < priceMax ? Math.max(v, priceLo) : undefined });
   };
 
+  // Full-screen modal mount + open/close animation state. The shell mounts
+  // first; the heavy filter section tree is deferred one frame so tapping
+  // Filters never blocks on building every category/facet row.
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
+  const [contentReady, setContentReady] = useState(open);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setContentReady(false);
+      let contentRaf = 0;
+      const visibleRaf = requestAnimationFrame(() => {
+        setVisible(true);
+        contentRaf = requestAnimationFrame(() => setContentReady(true));
+      });
+      return () => {
+        cancelAnimationFrame(visibleRaf);
+        cancelAnimationFrame(contentRaf);
+      };
+    }
+    setVisible(false);
+    setContentReady(false);
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
+
   /* ----- Active chips ----- */
   const chips = useMemo(() => {
+    if (!contentReady) return [];
     const out: { label: string; clear: () => void }[] = [];
     if (draft.sub) {
       const c = allCategories.find((x) => x.slug === draft.sub);
@@ -304,21 +332,7 @@ export function MobileFilterDrawer({
       out.push({ label: `${draft.dmin}%+ off`, clear: () => set({ dmin: undefined }) });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
-
-  // Full-screen bottom-sheet mount + open/close animation state.
-  const [mounted, setMounted] = useState(open);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    if (open) {
-      setMounted(true);
-      const raf = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(raf);
-    }
-    setVisible(false);
-    const t = setTimeout(() => setMounted(false), 300);
-    return () => clearTimeout(t);
-  }, [open]);
+  }, [contentReady, draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
 
   // Lock background scrolling while the sheet is mounted (prevents layout shift).
   useEffect(() => {
@@ -339,17 +353,54 @@ export function MobileFilterDrawer({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  const historyTokenRef = useRef<string | null>(null);
+  const closedByPopRef = useRef(false);
+
   // Android/browser back button closes the drawer before leaving the page.
+  // Never call history.back() from this effect's cleanup: React StrictMode runs
+  // setup -> cleanup -> setup for effects, and a cleanup-triggered back() can
+  // race with the freshly-added popstate listener and close/reopen the sheet in
+  // a loop. History is pushed once per open session and popped only after the
+  // parent has actually closed the drawer.
   useEffect(() => {
     if (!open) return;
-    window.history.pushState({ filterDrawer: true }, "");
-    const onPop = () => onCloseRef.current();
+
+    if (!historyTokenRef.current) {
+      const token = `filter-drawer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      historyTokenRef.current = token;
+      closedByPopRef.current = false;
+      window.history.pushState({ ...(window.history.state ?? {}), [DRAWER_HISTORY_KEY]: token }, "", window.location.href);
+    }
+
+    const onPop = () => {
+      const token = historyTokenRef.current;
+      if (!token) return;
+      if (window.history.state?.[DRAWER_HISTORY_KEY] === token) return;
+      closedByPopRef.current = true;
+      historyTokenRef.current = null;
+      onCloseRef.current();
+    };
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);
-      // If closed by other means (button/backdrop/apply), drop our pushed entry.
-      if (window.history.state?.filterDrawer) window.history.back();
     };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (open) return;
+    const token = historyTokenRef.current;
+    if (!token) {
+      closedByPopRef.current = false;
+      return;
+    }
+
+    historyTokenRef.current = null;
+    const closedByPop = closedByPopRef.current;
+    closedByPopRef.current = false;
+
+    if (!closedByPop && window.history.state?.[DRAWER_HISTORY_KEY] === token) {
+      window.history.back();
+    }
   }, [open]);
 
 
@@ -422,6 +473,8 @@ export function MobileFilterDrawer({
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {contentReady ? (
+        <>
         {/* Category */}
         <Section id="category" title="Category" summary={catSummary} openIds={openIds} toggle={toggle}>
           <div className="relative mb-3">
@@ -788,6 +841,8 @@ export function MobileFilterDrawer({
             })}
           </div>
         </Section>
+        </>
+        ) : null}
       </div>
 
       {/* Sticky bottom bar */}
@@ -824,4 +879,4 @@ export function MobileFilterDrawer({
       </div>
     </div>
   );
-}
+});

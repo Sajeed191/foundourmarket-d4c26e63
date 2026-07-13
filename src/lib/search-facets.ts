@@ -28,19 +28,26 @@ export type FacetResult = {
   sizes: Facet[];
 };
 
+const EMPTY_FACETS: FacetResult = { count: 0, brands: [], colors: [], sizes: [] };
+
 export function useFacets(
   rows: Product[],
   filters: Filters,
   ctx: PriceCtx,
   variants?: VariantFacetMap,
+  enabled = true,
+  fallback?: FacetResult,
 ): FacetResult {
   return useMemo(
-    () => ({
-      count: applyFilters(rows, filters, ctx, variants).length,
-      brands: brandFacets(rows, filters, ctx, variants),
-      colors: colorFacets(rows, filters, ctx, variants),
-      sizes: sizeFacets(rows, filters, ctx, variants),
-    }),
-    [rows, filters, ctx, variants],
+    () => {
+      if (!enabled) return fallback ?? EMPTY_FACETS;
+      return {
+        count: applyFilters(rows, filters, ctx, variants).length,
+        brands: brandFacets(rows, filters, ctx, variants),
+        colors: colorFacets(rows, filters, ctx, variants),
+        sizes: sizeFacets(rows, filters, ctx, variants),
+      };
+    },
+    [rows, filters, ctx, variants, enabled, fallback],
   );
 }

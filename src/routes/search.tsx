@@ -3,13 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, SlidersHorizontal, X, Star, ShieldCheck, RefreshCw, BadgeCheck, Globe, Check, ArrowUpDown, Sparkles, TrendingUp, Flame, Clock, ArrowDownWideNarrow, ArrowUpWideNarrow, Tag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToProduct, discountPercent, SELECT_COLS, type Product } from "@/lib/products";
-import { useCategories, useAllCategories } from "@/lib/use-categories";
+import { useCategories, useAllCategories, type Category } from "@/lib/use-categories";
 import { MobileFilterDrawer } from "@/components/site/MobileFilterDrawer";
 import { ActiveFilterBar } from "@/components/site/ActiveFilterBar";
 import { ResultCounter } from "@/components/site/ResultCounter";
 import {
   type Filters as ClientFilters,
   type Facet,
+  type PriceCtx,
   applyFilters as applyClientFilters,
   countActive,
   basePriceOf,
@@ -49,6 +50,7 @@ type SearchParams = {
 };
 
 const PRICE_MAX = 1000;
+const FILTER_SNAP_POINTS = [0, 50, 200, 500, PRICE_MAX];
 const PAGE_SIZE = 60;
 
 const str = (v: unknown) => (typeof v === "string" && v !== "" ? v : undefined);
@@ -168,6 +170,135 @@ function applyClientSort(
 const RATINGS = [4, 3, 2];
 
 type Filters = ClientFilters;
+
+const FILTER_KEYS: (keyof Filters)[] = [
+  "cat",
+  "sub",
+  "brand",
+  "color",
+  "size",
+  "min",
+  "max",
+  "rating",
+  "stock",
+  "free",
+  "cod",
+  "sale",
+  "flash",
+  "hot",
+  "newx",
+  "feat",
+  "dmin",
+];
+
+function sameFilters(a: Filters, b: Filters): boolean {
+  return FILTER_KEYS.every((key) => a[key] === b[key]);
+}
+
+function MobileFilterLauncher({
+  currentFilters,
+  currentSort,
+  rawRows,
+  priceCtx,
+  variantFacets,
+  liveFacets,
+  allCategories,
+  activeFilterCount,
+  fmt,
+  rate,
+  symbol,
+  onApplyFilters,
+}: {
+  currentFilters: Filters;
+  currentSort: string;
+  rawRows: Product[];
+  priceCtx: PriceCtx;
+  variantFacets: VariantFacetMap;
+  liveFacets: { count: number; brands: Facet[]; colors: Facet[]; sizes: Facet[] };
+  allCategories: Category[];
+  activeFilterCount: number;
+  fmt: (usd: number) => string;
+  rate: number;
+  symbol: string;
+  onApplyFilters: (filters: Filters, sort: string) => void;
+}) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draft, setDraft] = useState<Filters>(currentFilters);
+  const [draftSort, setDraftSort] = useState<string>(currentSort);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (drawerOpen && !wasOpenRef.current) {
+      setDraft((prev) => (sameFilters(prev, currentFilters) ? prev : currentFilters));
+      setDraftSort((prev) => (prev === currentSort ? prev : currentSort));
+    }
+    wasOpenRef.current = drawerOpen;
+  }, [drawerOpen, currentFilters, currentSort]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    document.body.classList.add("hide-bottom-nav");
+    const feed = document.querySelector<HTMLElement>("[data-search-feed]");
+    const previousDisplay = feed?.style.display ?? "";
+    if (feed) feed.style.display = "none";
+    return () => {
+      document.body.classList.remove("hide-bottom-nav");
+      if (feed) feed.style.display = previousDisplay;
+    };
+  }, [drawerOpen]);
+
+  const draftMatchesCurrent = useMemo(() => sameFilters(draft, currentFilters), [draft, currentFilters]);
+  const draftFacets = useFacets(
+    rawRows,
+    draft,
+    priceCtx,
+    variantFacets,
+    drawerOpen && !draftMatchesCurrent,
+    liveFacets,
+  );
+
+  const applyDraft = useCallback(() => {
+    onApplyFilters(draft, draftSort);
+    setDrawerOpen(false);
+  }, [onApplyFilters, draft, draftSort]);
+
+  const resetDraft = useCallback(() => {
+    setDraft({});
+    setDraftSort("relevance");
+  }, []);
+
+  return (
+    <>
+      <button
+        onClick={() => setDrawerOpen(true)}
+        className="lg:hidden shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.05] ring-1 ring-white/10 text-xs font-medium hover:bg-white/[0.08] transition-all"
+      >
+        <SlidersHorizontal className="size-4" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+      </button>
+
+      <MobileFilterDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        draft={draft}
+        setDraft={setDraft}
+        sort={draftSort}
+        setSort={setDraftSort}
+        allCategories={allCategories}
+        brands={draftFacets.brands}
+        colors={draftFacets.colors}
+        sizes={draftFacets.sizes}
+        priceMax={PRICE_MAX}
+        snapPoints={FILTER_SNAP_POINTS}
+        fmt={fmt}
+        rate={rate}
+        symbol={symbol}
+        resultCount={draftFacets.count}
+        onReset={resetDraft}
+        onApply={applyDraft}
+      />
+    </>
+  );
+}
 
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -499,7 +630,6 @@ function SearchPage() {
   );
 
   const [query, setQuery] = useState(search.q ?? "");
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
   const [variantFacets, setVariantFacets] = useState<VariantFacetMap>(() => new Map());
@@ -518,12 +648,11 @@ function SearchPage() {
   // Sticky control bar visibility: collapse on scroll-down, reveal on scroll-up.
   const [barHidden, setBarHidden] = useState(false);
 
-  // Hide the mobile bottom nav while a drawer sheet is open.
+  // Hide the mobile bottom nav while the sort sheet is open.
   useEffect(() => {
-    const open = drawerOpen || sortOpen;
-    document.body.classList.toggle("hide-bottom-nav", open);
+    document.body.classList.toggle("hide-bottom-nav", sortOpen);
     return () => document.body.classList.remove("hide-bottom-nav");
-  }, [drawerOpen, sortOpen]);
+  }, [sortOpen]);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
   // Also track scroll DIRECTION so the sticky control bar collapses when the
@@ -574,17 +703,6 @@ function SearchPage() {
     }),
     [search.cat, search.sub, search.brand, search.color, search.size, search.min, search.max, search.rating, search.stock, search.free, search.cod, search.sale, search.flash, search.hot, search.newx, search.feat, search.dmin],
   );
-
-  // Local draft for the mobile drawer (applied on "Show N Products").
-  const [draft, setDraft] = useState<Filters>(currentFilters);
-  const [draftSort, setDraftSort] = useState<string>(search.sort ?? "relevance");
-  useEffect(() => {
-    if (drawerOpen) {
-      setDraft(currentFilters);
-      setDraftSort(search.sort ?? "relevance");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawerOpen]);
 
   useEffect(() => {
     const q = (search.q ?? "").trim();
@@ -745,12 +863,6 @@ function SearchPage() {
 
   // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
   const liveFacets = useFacets(rawRows, currentFilters, priceCtx, variantFacets);
-  // Facets + live draft count for the mobile drawer (reflects the pending draft).
-  const draftFacets = useFacets(rawRows, draft, priceCtx, variantFacets);
-  const draftBrands = draftFacets.brands;
-  const draftColors = draftFacets.colors;
-  const draftSizes = draftFacets.sizes;
-  const draftCount = draftFacets.count;
 
   // Empty-state recommendations: a few products from the unfiltered set for the
   // current query/category, so shoppers always have something to explore.
@@ -799,14 +911,9 @@ function SearchPage() {
   function clearAll() {
     nav({ search: { q: search.q, sort: search.sort }, replace: true });
   }
-  function applyDraft() {
-    nav({ search: (prev: SearchParams) => ({ ...prev, ...draft, sort: draftSort }), replace: true });
-    setDrawerOpen(false);
-  }
-  function resetDraft() {
-    setDraft({});
-    setDraftSort("relevance");
-  }
+  const applyMobileFilters = useCallback((filters: Filters, nextSort: string) => {
+    nav({ search: (prev: SearchParams) => ({ ...prev, ...filters, sort: nextSort }), replace: true });
+  }, [nav]);
 
   const activeFilterCount = countActive(currentFilters);
 
@@ -895,33 +1002,19 @@ function SearchPage() {
           className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-3 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="lg:hidden shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.05] ring-1 ring-white/10 text-xs font-medium hover:bg-white/[0.08] transition-all"
-            >
-              <SlidersHorizontal className="size-4" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-            </button>
-
-            {/* Premium full-screen filter drawer (mobile) */}
-            <MobileFilterDrawer
-              open={drawerOpen}
-              onClose={() => setDrawerOpen(false)}
-              draft={draft}
-              setDraft={setDraft}
-              sort={draftSort}
-              setSort={setDraftSort}
+            <MobileFilterLauncher
+              currentFilters={currentFilters}
+              currentSort={sort}
+              rawRows={rawRows}
+              priceCtx={priceCtx}
+              variantFacets={variantFacets}
+              liveFacets={liveFacets}
               allCategories={allCategories}
-              brands={draftBrands}
-              colors={draftColors}
-              sizes={draftSizes}
-              priceMax={PRICE_MAX}
-              snapPoints={[0, 50, 200, 500, PRICE_MAX]}
+              activeFilterCount={activeFilterCount}
               fmt={fmt}
               rate={rate}
               symbol={symbol}
-              resultCount={draftCount}
-              onReset={resetDraft}
-              onApply={applyDraft}
+              onApplyFilters={applyMobileFilters}
             />
 
             {activeFilterCount > 0 && (
@@ -1047,7 +1140,7 @@ function SearchPage() {
           </aside>
         )}
 
-        <div key={isTrending ? "trending" : "feed"} className="animate-fade-up">
+        <div data-search-feed key={isTrending ? "trending" : "feed"} className="animate-fade-up">
 
           {!isTrending && (
             <>
