@@ -39,6 +39,7 @@ export function QuickViewDialog({
   const [description, setDescription] = useState(product.description ?? "");
   useEffect(() => {
     if (!open) return;
+    import("@/lib/recommendations/performance").then((m) => m.attributeStage("quick_view")).catch(() => {});
     if (product.description) { setDescription(product.description); return; }
     let active = true;
     fetchProduct(product.slug).then((full) => {

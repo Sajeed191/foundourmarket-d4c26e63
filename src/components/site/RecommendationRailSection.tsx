@@ -3,7 +3,7 @@ import { ProductCard } from "./ProductCard";
 import { ProductRail } from "./ProductRail";
 import { LazyMount } from "./LazyMount";
 import type { RecommendationItem, RecommendationSource } from "@/lib/recommendations/types";
-import { recordImpression, recordClick } from "@/lib/recommendations/performance";
+import { recordImpression, markRecommendationClick } from "@/lib/recommendations/performance";
 
 type Props = {
   title: string;
@@ -43,7 +43,11 @@ export function RecommendationRailSection({
       <section
         className="py-6 sm:py-9"
         data-rec-source={source}
-        onClickCapture={() => recordClick(source)}
+        onClickCapture={(e) => {
+          const slug = (e.target as HTMLElement).closest<HTMLElement>("[data-product-slug]")
+            ?.dataset.productSlug;
+          markRecommendationClick(source, slug);
+        }}
       >
         <div className="mb-3 sm:mb-5">
           <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent mb-1.5">

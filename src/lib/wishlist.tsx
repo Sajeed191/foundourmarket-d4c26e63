@@ -72,6 +72,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
       runWhenIdle(() => {
         import("@/lib/personalization").then((m) => m.recordEvent({ type: "wishlist", productSlug: slug })).catch(() => {});
+        import("@/lib/recommendations/performance").then((m) => m.attributeStage("wishlist")).catch(() => {});
       });
     }
   }, [slugs, user]);

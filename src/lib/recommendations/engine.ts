@@ -74,8 +74,8 @@ export function runEngine(
   });
 
   const scored: RecommendationItem[] = candidates.map((p) => {
-    const { score, reason } = scoreProduct(p, strategy, model, signals, seedScores, seed);
-    return { product: p, score, confidence: 0, reason, source: strategy };
+    const { score, reason, breakdown } = scoreProduct(p, strategy, model, signals, seedScores, seed);
+    return { product: p, score, confidence: 0, reason, source: strategy, breakdown };
   });
 
   scored.sort((a, b) => b.score - a.score);

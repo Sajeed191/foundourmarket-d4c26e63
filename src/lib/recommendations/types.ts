@@ -45,6 +45,22 @@ export type RecommendationItem = {
   reason: string;
   /** Where this recommendation originated. */
   source: RecommendationSource;
+  /** Structured, explainable per-factor breakdown (debug / analytics only). */
+  breakdown?: ScoreBreakdown;
+};
+
+/** Explainable AI — per-factor contribution to a recommendation's score. */
+export type ScoreBreakdown = {
+  behaviour: number;
+  similarity: number;
+  trend: number;
+  popularity: number;
+  personalization: number;
+  inventory: number;
+  freshness: number;
+  seasonal: number;
+  businessRule: number;
+  seasonLabel?: string | null;
 };
 
 /** Coarse location signal — never personally identifying. */
