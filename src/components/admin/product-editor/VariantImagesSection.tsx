@@ -109,7 +109,24 @@ export function useColorGalleryManager(slug: string) {
     }
   }
 
-  return { slug, loading, max, commitMax, getMedia, setColorMedia, isDirty, savingColor, saveColor };
+  /**
+   * Flush every dirty colour gallery to the database. Called by the variants
+   * page's main Save so gallery edits persist alongside variant changes and the
+   * colour thumbnails re-sync into cart/checkout.
+   */
+  async function saveAll() {
+    const dirtyColors = Object.keys(galleries).filter((c) => isDirty(c));
+    for (const color of dirtyColors) {
+      await saveColorGallery(slug, color, galleries[color] ?? []);
+    }
+    if (dirtyColors.length) {
+      setSaved(
+        Object.fromEntries(Object.entries(galleries).map(([k, v]) => [k, JSON.stringify(v)])),
+      );
+    }
+  }
+
+  return { slug, loading, max, commitMax, getMedia, setColorMedia, isDirty, savingColor, saveColor, saveAll };
 }
 
 // ---------------------------------------------------------------------------

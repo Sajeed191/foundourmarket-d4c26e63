@@ -23,6 +23,7 @@ import {
   COMMON_COLORS,
   type AdminVariant,
 } from "@/lib/product-variants";
+import { cleanupOrphanColorGalleries, resyncColorThumbnails } from "@/lib/variant-images";
 
 export const Route = createFileRoute("/admin-product/$slug/variants")({ component: VariantsPage });
 
@@ -154,14 +155,33 @@ function VariantsPage() {
     if (dupWarning) { toast.error("Remove duplicate Size + Colour combinations first"); return; }
     setSaving(true);
     try {
+      // 1. Persist variant rows (inserts/updates + deletes removed variants).
       await saveVariants(
         slug,
         rows.map((r) => ({ ...r, id: isNew(r.id) ? undefined : r.id })),
       );
+      // 2. Flush any pending gallery edits.
+      await gallery.saveAll();
+      // 3. Lifecycle cleanup: delete galleries + storage for colours that no
+      //    longer have any variant (safe-delete keeps shared/copied media).
+      const keepColors = [...new Set(rows.map((r) => r.color?.trim()).filter(Boolean) as string[])];
+      const cleaned = await cleanupOrphanColorGalleries(slug, keepColors);
+      // 4. Re-sync colour thumbnails into cart/checkout for surviving colours.
+      await resyncColorThumbnails(slug);
+
       const fresh = await fetchAdminVariants(slug);
       setRows(fresh.map(({ productSlug: _p, ...r }) => r));
       invalidateProducts();
-      toast.success("Variants saved");
+      if (cleaned.length) {
+        const imgs = cleaned.reduce((n, c) => n + c.removedImages, 0);
+        const vids = cleaned.reduce((n, c) => n + c.removedVideos, 0);
+        const mb = Math.round((cleaned.reduce((n, c) => n + c.freedBytes, 0) / (1024 * 1024)) * 10) / 10;
+        toast.success("Variants saved", {
+          description: `Removed ${cleaned.length} colour${cleaned.length === 1 ? "" : "s"} · ${imgs} image${imgs === 1 ? "" : "s"}, ${vids} video${vids === 1 ? "" : "s"} · freed ${mb} MB`,
+        });
+      } else {
+        toast.success("Variants saved");
+      }
     } catch (e: any) {
       toast.error("Save failed", { description: e?.message });
     } finally {
