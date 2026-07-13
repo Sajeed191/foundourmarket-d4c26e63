@@ -7,6 +7,7 @@ import {
   type Facet,
   type Filters,
   SORT_OPTIONS,
+  countActive,
 } from "@/lib/search-filters";
 
 type Props = {
