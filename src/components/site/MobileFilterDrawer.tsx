@@ -274,8 +274,35 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
     set({ max: v != null && v < priceMax ? Math.max(v, priceLo) : undefined });
   };
 
+  // Full-screen modal mount + open/close animation state. The shell mounts
+  // first; the heavy filter section tree is deferred one frame so tapping
+  // Filters never blocks on building every category/facet row.
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
+  const [contentReady, setContentReady] = useState(open);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setContentReady(false);
+      let contentRaf = 0;
+      const visibleRaf = requestAnimationFrame(() => {
+        setVisible(true);
+        contentRaf = requestAnimationFrame(() => setContentReady(true));
+      });
+      return () => {
+        cancelAnimationFrame(visibleRaf);
+        cancelAnimationFrame(contentRaf);
+      };
+    }
+    setVisible(false);
+    setContentReady(false);
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
+
   /* ----- Active chips ----- */
   const chips = useMemo(() => {
+    if (!contentReady) return [];
     const out: { label: string; clear: () => void }[] = [];
     if (draft.sub) {
       const c = allCategories.find((x) => x.slug === draft.sub);
@@ -305,21 +332,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
       out.push({ label: `${draft.dmin}%+ off`, clear: () => set({ dmin: undefined }) });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
-
-  // Full-screen bottom-sheet mount + open/close animation state.
-  const [mounted, setMounted] = useState(open);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    if (open) {
-      setMounted(true);
-      const raf = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(raf);
-    }
-    setVisible(false);
-    const t = setTimeout(() => setMounted(false), 300);
-    return () => clearTimeout(t);
-  }, [open]);
+  }, [contentReady, draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
 
   // Lock background scrolling while the sheet is mounted (prevents layout shift).
   useEffect(() => {
@@ -460,6 +473,8 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {contentReady ? (
+        <>
         {/* Category */}
         <Section id="category" title="Category" summary={catSummary} openIds={openIds} toggle={toggle}>
           <div className="relative mb-3">
@@ -826,6 +841,8 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
             })}
           </div>
         </Section>
+        </>
+        ) : null}
       </div>
 
       {/* Sticky bottom bar */}
