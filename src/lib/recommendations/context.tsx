@@ -155,7 +155,7 @@ export function useRecommendationSignals(): SignalsContextValue {
       priceOf: fallbackRegion.priceOf,
     };
     const personalized = fallbackRecent.slugs.length + wishlist.length + cart.length + purchased.size > 0;
-    return { signals, rotationSeed: dayBucket(), loading: fallbackProducts.loading, personalized };
+    return { signals, rotationSeed: dayBucket(), loading: fallbackProducts.loading, personalized, businessRules: EMPTY_RULES };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     fallbackProducts.products,
