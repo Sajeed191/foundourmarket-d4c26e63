@@ -51,6 +51,13 @@ export function FrequentlyBoughtTogether({
   );
   const savings = Math.max(0, compareTotal - total);
 
+  const impressed = useRef(false);
+  useEffect(() => {
+    if (impressed.current || companions.length === 0) return;
+    impressed.current = true;
+    recordImpression("frequently_bought_together");
+  }, [companions.length]);
+
   if (companions.length === 0) return null;
 
   const toggle = (slug: string) => {
