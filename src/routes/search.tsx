@@ -630,7 +630,6 @@ function SearchPage() {
   );
 
   const [query, setQuery] = useState(search.q ?? "");
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [rawRows, setRawRows] = useState<Product[]>([]);
   const [variantFacets, setVariantFacets] = useState<VariantFacetMap>(() => new Map());
@@ -649,12 +648,11 @@ function SearchPage() {
   // Sticky control bar visibility: collapse on scroll-down, reveal on scroll-up.
   const [barHidden, setBarHidden] = useState(false);
 
-  // Hide the mobile bottom nav while a drawer sheet is open.
+  // Hide the mobile bottom nav while the sort sheet is open.
   useEffect(() => {
-    const open = drawerOpen || sortOpen;
-    document.body.classList.toggle("hide-bottom-nav", open);
+    document.body.classList.toggle("hide-bottom-nav", sortOpen);
     return () => document.body.classList.remove("hide-bottom-nav");
-  }, [drawerOpen, sortOpen]);
+  }, [sortOpen]);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
   // Also track scroll DIRECTION so the sticky control bar collapses when the
@@ -705,19 +703,6 @@ function SearchPage() {
     }),
     [search.cat, search.sub, search.brand, search.color, search.size, search.min, search.max, search.rating, search.stock, search.free, search.cod, search.sale, search.flash, search.hot, search.newx, search.feat, search.dmin],
   );
-
-  // Local draft for the mobile drawer (applied on "Show N Products").
-  const [draft, setDraft] = useState<Filters>(currentFilters);
-  const [draftSort, setDraftSort] = useState<string>(search.sort ?? "relevance");
-  const wasDrawerOpenRef = useRef(false);
-  useEffect(() => {
-    if (drawerOpen && !wasDrawerOpenRef.current) {
-      setDraft((prev) => (sameFilters(prev, currentFilters) ? prev : currentFilters));
-      const nextSort = search.sort ?? "relevance";
-      setDraftSort((prev) => (prev === nextSort ? prev : nextSort));
-    }
-    wasDrawerOpenRef.current = drawerOpen;
-  }, [drawerOpen, currentFilters, search.sort]);
 
   useEffect(() => {
     const q = (search.q ?? "").trim();
@@ -878,20 +863,6 @@ function SearchPage() {
 
   // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
   const liveFacets = useFacets(rawRows, currentFilters, priceCtx, variantFacets);
-  // Facets + live draft count for the mobile drawer (reflects the pending draft).
-  const draftMatchesCurrent = useMemo(() => sameFilters(draft, currentFilters), [draft, currentFilters]);
-  const draftFacets = useFacets(
-    rawRows,
-    draft,
-    priceCtx,
-    variantFacets,
-    drawerOpen && !draftMatchesCurrent,
-    liveFacets,
-  );
-  const draftBrands = draftFacets.brands;
-  const draftColors = draftFacets.colors;
-  const draftSizes = draftFacets.sizes;
-  const draftCount = draftFacets.count;
 
   // Empty-state recommendations: a few products from the unfiltered set for the
   // current query/category, so shoppers always have something to explore.
@@ -940,17 +911,9 @@ function SearchPage() {
   function clearAll() {
     nav({ search: { q: search.q, sort: search.sort }, replace: true });
   }
-  const applyDraft = useCallback(() => {
-    nav({ search: (prev: SearchParams) => ({ ...prev, ...draft, sort: draftSort }), replace: true });
-    setDrawerOpen(false);
-  }, [nav, draft, draftSort]);
-  const resetDraft = useCallback(() => {
-    setDraft({});
-    setDraftSort("relevance");
-  }, []);
-
-  const openFilterDrawer = useCallback(() => setDrawerOpen(true), []);
-  const closeFilterDrawer = useCallback(() => setDrawerOpen(false), []);
+  const applyMobileFilters = useCallback((filters: Filters, nextSort: string) => {
+    nav({ search: (prev: SearchParams) => ({ ...prev, ...filters, sort: nextSort }), replace: true });
+  }, [nav]);
 
   const activeFilterCount = countActive(currentFilters);
 
@@ -1039,33 +1002,19 @@ function SearchPage() {
           className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-3 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <button
-              onClick={openFilterDrawer}
-              className="lg:hidden shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.05] ring-1 ring-white/10 text-xs font-medium hover:bg-white/[0.08] transition-all"
-            >
-              <SlidersHorizontal className="size-4" /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-            </button>
-
-            {/* Premium full-screen filter drawer (mobile) */}
-            <MobileFilterDrawer
-              open={drawerOpen}
-              onClose={closeFilterDrawer}
-              draft={draft}
-              setDraft={setDraft}
-              sort={draftSort}
-              setSort={setDraftSort}
+            <MobileFilterLauncher
+              currentFilters={currentFilters}
+              currentSort={sort}
+              rawRows={rawRows}
+              priceCtx={priceCtx}
+              variantFacets={variantFacets}
+              liveFacets={liveFacets}
               allCategories={allCategories}
-              brands={draftBrands}
-              colors={draftColors}
-              sizes={draftSizes}
-              priceMax={PRICE_MAX}
-              snapPoints={FILTER_SNAP_POINTS}
+              activeFilterCount={activeFilterCount}
               fmt={fmt}
               rate={rate}
               symbol={symbol}
-              resultCount={draftCount}
-              onReset={resetDraft}
-              onApply={applyDraft}
+              onApplyFilters={applyMobileFilters}
             />
 
             {activeFilterCount > 0 && (
@@ -1191,7 +1140,7 @@ function SearchPage() {
           </aside>
         )}
 
-        <div key={isTrending ? "trending" : "feed"} className={`${drawerOpen ? "hidden lg:block" : ""} animate-fade-up`}>
+        <div data-search-feed key={isTrending ? "trending" : "feed"} className="animate-fade-up">
 
           {!isTrending && (
             <>
