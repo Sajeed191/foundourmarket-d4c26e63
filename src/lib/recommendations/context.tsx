@@ -12,6 +12,8 @@ import type {
   RecommendationSignals,
 } from "./types";
 import { runEngine } from "./engine";
+import { resolveBusinessRules, type ResolvedRules, type BusinessRule } from "./rules";
+import { listActiveRules } from "./rules.functions";
 
 /**
  * RecommendationProvider + hooks. Gathers every behaviour/context signal ONCE
