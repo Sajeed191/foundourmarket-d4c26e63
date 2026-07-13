@@ -90,6 +90,14 @@ export type EngineConfig = {
   seedScores?: Map<string, number>;
   /** Restrict candidate set to these slugs (e.g. FBT / also-bought results). */
   restrictTo?: string[];
+  /** Only candidates whose region price is >= this value. */
+  priceMin?: number;
+  /** Only candidates whose region price is <= this value. */
+  priceMax?: number;
+  /** Restrict candidates to the seed's category (trending-in-category, etc.). */
+  sameCategoryAsSeed?: boolean;
+  /** Restrict candidates to a DIFFERENT category than the seed (complementary). */
+  differentCategoryFromSeed?: boolean;
   /** Allow out-of-stock products (restock surfaces). Default false. */
   includeOutOfStock?: boolean;
   /** Apply the diversity pass (brand / price / colour spread). Default true. */
