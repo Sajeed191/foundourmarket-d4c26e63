@@ -179,7 +179,13 @@ function SwatchStripImpl({ product, onPreview, onAvailability, className }: Prop
     setRipple({ key: Date.now() });
   }, []);
 
-  if (!summary || options.length < 2) return null;
+  const hasSwatches = !!summary && options.length >= 2;
+
+  useEffect(() => {
+    onAvailability?.(hasSwatches);
+  }, [hasSwatches, onAvailability]);
+
+  if (!hasSwatches) return null;
 
   const extra = options.length - Math.min(options.length, 6);
 
