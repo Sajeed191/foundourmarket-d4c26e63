@@ -277,12 +277,23 @@ export function VariantMediaPanel({
   const imageCount = useMemo(() => media.filter((m) => m.mediaType === "image").length, [media]);
   const videoCount = media.length - imageCount;
 
+  // Always mirror the latest committed media so that concurrent uploads
+  // (MediaUploader runs several files in parallel) append onto the running
+  // list instead of each overwriting the stale prop captured at render time.
+  const mediaRef = useRef<VariantImageDraft[]>(media);
+  useEffect(() => {
+    mediaRef.current = media;
+  }, [media]);
+
   function addDraft(draft: VariantImageDraft): boolean {
-    if (max != null && media.length >= max) {
+    const current = mediaRef.current;
+    if (max != null && current.length >= max) {
       toast.error(`Limit reached — max ${max} media for ${color}`);
       return false;
     }
-    onChange([...media, draft]);
+    const next = [...current, draft];
+    mediaRef.current = next; // synchronous so parallel completions compound
+    onChange(next);
     return true;
   }
 
@@ -290,11 +301,12 @@ export function VariantMediaPanel({
     addDraft({ id: newImgId(), url, thumbUrl, mediumUrl, mediaType: "image", posterUrl: null });
   }
 
+
   async function onVideoFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setVideoBusy(true);
     try {
-      const next = [...media];
+      const next = [...mediaRef.current];
       for (const file of Array.from(files)) {
         const ext = (file.name.split(".").pop() || "").toLowerCase();
         if (!VIDEO_EXT.includes(ext)) {
@@ -308,6 +320,7 @@ export function VariantMediaPanel({
         const url = await uploadVariantVideo(slug, file);
         next.push({ id: newImgId(), url, thumbUrl: null, mediumUrl: null, mediaType: "video", posterUrl: null });
       }
+      mediaRef.current = next;
       onChange(next);
       toast.success("Video added");
     } catch (e: any) {
@@ -317,6 +330,7 @@ export function VariantMediaPanel({
       if (videoRef.current) videoRef.current.value = "";
     }
   }
+
 
   function addUrl(kind: MediaType) {
     const url = window.prompt(`Paste the ${kind} URL for ${color}`)?.trim();
