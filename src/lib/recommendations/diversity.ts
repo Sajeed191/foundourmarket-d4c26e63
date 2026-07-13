@@ -33,6 +33,11 @@ export function diversify(
   const bandSeen = new Map<string, number>();
   const colourSeen = new Map<string, number>();
 
+  // Guarantee no more than this many of the same brand in a row.
+  const MAX_BRAND_RUN = 2;
+  let lastBrand = "";
+  let runLength = 0;
+
   while (pool.length) {
     let bestIdx = 0;
     let bestAdjusted = -Infinity;
@@ -44,10 +49,15 @@ export function diversify(
       const brand = p.brand ?? "";
       const band = priceBand(priceOf(p));
       const colour = colourOf(p);
+      // Hard anti-fatigue: once a brand run hits the cap, any further same-brand
+      // candidate is pushed to the back of the window unless nothing else fits.
+      const runBlock =
+        brand === lastBrand && runLength >= MAX_BRAND_RUN ? 1000 : 0;
       const penalty =
-        (brandSeen.get(brand) ?? 0) * 3 +
+        (brandSeen.get(brand) ?? 0) * 4 +
         (bandSeen.get(band) ?? 0) * 1.5 +
-        (colourSeen.get(colour) ?? 0) * 1;
+        (colourSeen.get(colour) ?? 0) * 1 +
+        runBlock;
       // Rank inside the window is a proxy for score gap (pool is sorted).
       const adjusted = -i * 0.5 - penalty;
       if (adjusted > bestAdjusted) {
@@ -58,10 +68,14 @@ export function diversify(
     const [chosen] = pool.splice(bestIdx, 1);
     out.push(chosen);
     const p = chosen.product;
-    brandSeen.set(p.brand ?? "", (brandSeen.get(p.brand ?? "") ?? 0) + 1);
+    const chosenBrand = p.brand ?? "";
+    runLength = chosenBrand === lastBrand ? runLength + 1 : 1;
+    lastBrand = chosenBrand;
+    brandSeen.set(chosenBrand, (brandSeen.get(chosenBrand) ?? 0) + 1);
     bandSeen.set(priceBand(priceOf(p)), (bandSeen.get(priceBand(priceOf(p))) ?? 0) + 1);
     colourSeen.set(colourOf(p), (colourSeen.get(colourOf(p)) ?? 0) + 1);
   }
+
 
   return out;
 }

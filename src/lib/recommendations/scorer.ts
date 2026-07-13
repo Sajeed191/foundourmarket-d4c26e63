@@ -2,7 +2,32 @@ import type { Product } from "@/lib/products";
 import type {
   RecommendationSignals,
   StrategyKey,
+  ScoreBreakdown,
 } from "./types";
+import { seasonalRelevance } from "./seasonal";
+
+/**
+ * Inventory health in [-1, 1]. Healthy/fast/newly-restocked stock earns a
+ * positive boost; near-sold-out is dampened (unless it doubles as urgency).
+ * Pure — reads existing product fields only, never writes inventory.
+ */
+export function inventoryHealth(p: Product): number {
+  if (!p.inStock || p.status === "out_of_stock") return -1;
+  const qty = p.stockQuantity ?? 0;
+  const threshold = Math.max(1, p.lowStockThreshold ?? 5);
+  let h = 0;
+  if (qty <= 0) h -= 0.8;
+  else if (qty <= threshold) h -= 0.35; // almost sold out — soft dampen
+  else if (qty >= threshold * 4) h += 0.4; // healthy depth
+  else h += 0.15;
+  // Newly restocked / fresh inventory.
+  const restock = Date.parse(p.restockEta ?? "");
+  if (Number.isFinite(restock) && Date.now() - restock < 14 * 24 * 60 * 60 * 1000) h += 0.2;
+  // Fast-moving but well-stocked signals a reliable pick.
+  if ((p.soldCount ?? 0) > 30 && qty > threshold * 2) h += 0.15;
+  return Math.max(-1, Math.min(1, h));
+}
+
 
 /**
  * Deterministic scoring core. No randomness — every product earns a score from
@@ -96,6 +121,8 @@ type Weights = {
   seedScore: number;
   location: number;
   curated: number;
+  seasonal: number;
+  inventory: number;
 };
 
 const BASE: Weights = {
@@ -113,6 +140,8 @@ const BASE: Weights = {
   seedScore: 30,
   location: 0,
   curated: 4,
+  seasonal: 12,
+  inventory: 8,
 };
 
 const STRATEGY_WEIGHTS: Partial<Record<StrategyKey, Partial<Weights>>> = {
@@ -162,7 +191,7 @@ function similarity(a: Product, b: Product, priceOf: (p: Product) => number): nu
   return s;
 }
 
-/** Score one candidate. Returns the numeric score plus the dominant reason. */
+/** Score one candidate. Returns the score, dominant reason and a breakdown. */
 export function scoreProduct(
   p: Product,
   strategy: StrategyKey,
@@ -170,60 +199,96 @@ export function scoreProduct(
   signals: RecommendationSignals,
   seedScores?: Map<string, number>,
   seed?: Product,
-): { score: number; reason: string } {
+): { score: number; reason: string; breakdown: ScoreBreakdown } {
   const w = weightsFor(strategy);
   const reasons: Array<[string, number]> = [];
-  const add = (label: string, value: number) => {
+  const bd: ScoreBreakdown = {
+    behaviour: 0,
+    similarity: 0,
+    trend: 0,
+    popularity: 0,
+    personalization: 0,
+    inventory: 0,
+    freshness: 0,
+    seasonal: 0,
+    businessRule: 0,
+    seasonLabel: null,
+  };
+  const add = (label: string, value: number, bucket?: keyof ScoreBreakdown) => {
     if (value > 0) reasons.push([label, value]);
+    if (bucket && typeof bd[bucket] === "number") {
+      (bd[bucket] as number) += value;
+    }
     return value;
   };
 
   let score = 0;
   const affinity = (model.category.get(p.category) ?? 0) / model.maxCategory; // 0..1
-  score += add(`matches ${p.category}`, affinity * w.affinity);
+  score += add(`matches ${p.category}`, affinity * w.affinity, "personalization");
 
   if (p.brand) {
     const b = (model.brand.get(p.brand) ?? 0) / model.maxBrand;
-    score += add(`brand ${p.brand}`, b * w.brand);
+    score += add(`brand ${p.brand}`, b * w.brand, "personalization");
   }
   const col = colourOf(p);
   if (col) {
     const c = (model.colour.get(col) ?? 0) / model.maxColour;
-    score += add(`colour ${col}`, c * w.colour);
+    score += add(`colour ${col}`, c * w.colour, "personalization");
   }
   if (model.avgPrice > 0) {
     const gap = Math.abs(signals.priceOf(p) - model.avgPrice) / model.avgPrice;
-    score += add("in your price range", Math.max(0, w.price - gap * w.price));
+    score += add("in your price range", Math.max(0, w.price - gap * w.price), "personalization");
   }
 
-  if (p.trending) score += add("trending", w.trending * (0.6 + affinity * 0.4));
-  if (p.bestseller) score += add("best seller", w.bestseller * (0.6 + affinity * 0.4));
-  score += add("well rated", (p.rating ?? 0) * w.rating * 0.2);
-  score += add("popular", Math.min((p.soldCount ?? 0) / 50, 12) * (w.popularity / 12) * (0.4 + affinity));
-  if (isFresh(p)) score += add("new arrival", w.freshness * (0.6 + affinity * 0.4));
+  if (p.trending) score += add("trending", w.trending * (0.6 + affinity * 0.4), "trend");
+  if (p.bestseller) score += add("best seller", w.bestseller * (0.6 + affinity * 0.4), "popularity");
+  score += add("well rated", (p.rating ?? 0) * w.rating * 0.2, "popularity");
+  score += add("popular", Math.min((p.soldCount ?? 0) / 50, 12) * (w.popularity / 12) * (0.4 + affinity), "popularity");
+  if (isFresh(p)) score += add("new arrival", w.freshness * (0.6 + affinity * 0.4), "freshness");
   const disc = p.discount ?? 0;
-  if (disc > 0) score += add(`${disc}% off`, Math.min(disc / 10, 6) * (w.discount / 6));
+  if (disc > 0) score += add(`${disc}% off`, Math.min(disc / 10, 6) * (w.discount / 6), "businessRule");
 
-  if (seed) score += add("similar item", similarity(p, seed, signals.priceOf) * (w.similarity / 10));
+  if (seed) score += add("similar item", similarity(p, seed, signals.priceOf) * (w.similarity / 10), "similarity");
 
   const seedScore = seedScores?.get(p.slug);
   if (seedScore && seedScore > 0) {
-    score += add("bought together", Math.min(seedScore, 20) * (w.seedScore / 20));
+    score += add("bought together", Math.min(seedScore, 20) * (w.seedScore / 20), "behaviour");
   }
 
-  if (p.recommended) score += add("recommended", w.curated);
-  if (p.staffPick || p.editorsChoice) score += add("staff pick", w.curated * 0.75);
-  if (p.featured) score += add("featured", w.curated * 0.5);
-  if (typeof p.priorityScore === "number") score += (p.priorityScore / 100) * 3;
+  // Seasonal intelligence — boost products that fit the active season(s).
+  const season = seasonalRelevance(p);
+  if (season.score > 0) {
+    bd.seasonLabel = season.label;
+    score += add(`${season.label} pick`, season.score * w.seasonal, "seasonal");
+  }
+
+  // Inventory intelligence — reward healthy/fast/restocked, dampen near-sold-out.
+  const health = inventoryHealth(p);
+  const invContribution = health * w.inventory;
+  score += invContribution;
+  bd.inventory += invContribution;
+  if (health > 0.3) reasons.push(["in stock & shipping fast", invContribution]);
+
+  if (p.recommended) score += add("recommended", w.curated, "businessRule");
+  if (p.staffPick || p.editorsChoice) score += add("staff pick", w.curated * 0.75, "businessRule");
+  if (p.featured) score += add("featured", w.curated * 0.5, "businessRule");
+  if (typeof p.priorityScore === "number") {
+    const pv = (p.priorityScore / 100) * 3;
+    score += pv;
+    bd.businessRule += pv;
+  }
 
   // Popularity fallback keeps cold-start / thin-history rails full.
   if (!model.hasHistory) {
-    score += (p.rating ?? 0) * 2 + Math.min((p.soldCount ?? 0) / 40, 15);
+    const fb = (p.rating ?? 0) * 2 + Math.min((p.soldCount ?? 0) / 40, 15);
+    score += fb;
+    bd.popularity += fb;
   }
 
   // Deterministic tiebreak so equal scores keep a stable order.
   const tiebreak = (p.id ?? p.slug).charCodeAt(0) / 1000;
 
   const topReason = reasons.sort((a, b) => b[1] - a[1])[0]?.[0] ?? "popular pick";
-  return { score: score + tiebreak, reason: topReason };
+  return { score: score + tiebreak, reason: topReason, breakdown: bd };
 }
+

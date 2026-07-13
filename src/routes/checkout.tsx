@@ -611,6 +611,7 @@ function CheckoutPage() {
       m.trackEvent("checkout_start", { value: totalINR, metadata: { pay_method: payMethod } });
       m.trackEvent("order_attempted", { value: totalINR, metadata: { pay_method: payMethod } });
     }).catch(() => {});
+    import("@/lib/recommendations/performance").then((m) => m.attributeStage("checkout_started")).catch(() => {});
     if (payMethod === "cod") placeCod();
     else payWithRazorpay();
   };
@@ -621,6 +622,7 @@ function CheckoutPage() {
         m.trackEvent("purchase", { value: totalINR, metadata: { order_id: placedOrderId, pay_method: payMethod } });
         m.trackEvent("payment_success", { value: totalINR, metadata: { order_id: placedOrderId, pay_method: payMethod } });
       }).catch(() => {});
+      import("@/lib/recommendations/performance").then((m) => m.attributeStage("purchase")).catch(() => {});
       if (placedOrderId) {
         import("@/lib/ga4").then((m) => m.ga4Purchase({
           transaction_id: placedOrderId,

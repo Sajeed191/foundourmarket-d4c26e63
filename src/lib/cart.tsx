@@ -279,6 +279,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       import("@/lib/checkout-logger").then((m) => m.logCheckout("add_to_cart", { slug, qty, variantId })).catch(() => {});
       import("@/lib/personalization").then((m) => m.recordEvent({ type: "add_to_cart", productSlug: slug })).catch(() => {});
       import("@/lib/visitor").then((m) => m.trackEvent("add_to_cart", { productSlug: slug, value: qty })).catch(() => {});
+      import("@/lib/recommendations/performance").then((m) => m.attributeStage("add_to_cart")).catch(() => {});
       if (product) {
         import("@/lib/ga4").then((m) => m.ga4AddToCart({
           item_id: product.sku || product.slug,
