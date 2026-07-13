@@ -248,6 +248,7 @@ export function useRecommendationRail(options: RailOptions): {
       config.seedScores,
       config.boosts,
       signals,
+      businessRules,
     ],
   );
 
