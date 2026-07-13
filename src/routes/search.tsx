@@ -515,6 +515,8 @@ function SearchPage() {
   }, []);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  // Sticky control bar visibility: collapse on scroll-down, reveal on scroll-up.
+  const [barHidden, setBarHidden] = useState(false);
 
   // Hide the mobile bottom nav while a drawer sheet is open.
   useEffect(() => {
