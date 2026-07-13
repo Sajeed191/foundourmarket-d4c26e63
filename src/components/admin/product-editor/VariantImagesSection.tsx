@@ -277,18 +277,30 @@ export function VariantMediaPanel({
   const imageCount = useMemo(() => media.filter((m) => m.mediaType === "image").length, [media]);
   const videoCount = media.length - imageCount;
 
+  // Always mirror the latest committed media so that concurrent uploads
+  // (MediaUploader runs several files in parallel) append onto the running
+  // list instead of each overwriting the stale prop captured at render time.
+  const mediaRef = useRef<VariantImageDraft[]>(media);
+  useEffect(() => {
+    mediaRef.current = media;
+  }, [media]);
+
   function addDraft(draft: VariantImageDraft): boolean {
-    if (max != null && media.length >= max) {
+    const current = mediaRef.current;
+    if (max != null && current.length >= max) {
       toast.error(`Limit reached — max ${max} media for ${color}`);
       return false;
     }
-    onChange([...media, draft]);
+    const next = [...current, draft];
+    mediaRef.current = next; // synchronous so parallel completions compound
+    onChange(next);
     return true;
   }
 
   function onImageUploaded(url: string, thumbUrl: string | null, mediumUrl: string | null) {
     addDraft({ id: newImgId(), url, thumbUrl, mediumUrl, mediaType: "image", posterUrl: null });
   }
+
 
   async function onVideoFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
