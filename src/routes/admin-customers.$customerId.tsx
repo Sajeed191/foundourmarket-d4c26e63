@@ -421,7 +421,7 @@ function ProfileInner() {
           <button onClick={() => doStatus("banned")} className="qa-btn text-destructive"><Ban className="size-3.5" /> Ban</button>
           <button onClick={doRestore} className="qa-btn text-emerald-300"><ShieldCheck className="size-3.5" /> Restore</button>
           <Link to="/admin-orders-ops" className="qa-btn"><ShoppingBag className="size-3.5" /> View Orders</Link>
-          <Link to="/admin-shipments" className="qa-btn"><Truck className="size-3.5" /> View Shipments</Link>
+          <Link to="/admin-shipments" search={{}} className="qa-btn"><Truck className="size-3.5" /> View Shipments</Link>
         </div>
       </Section>
 
