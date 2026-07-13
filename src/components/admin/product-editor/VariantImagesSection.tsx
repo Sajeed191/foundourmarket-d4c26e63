@@ -306,7 +306,7 @@ export function VariantMediaPanel({
     if (!files || files.length === 0) return;
     setVideoBusy(true);
     try {
-      const next = [...media];
+      const next = [...mediaRef.current];
       for (const file of Array.from(files)) {
         const ext = (file.name.split(".").pop() || "").toLowerCase();
         if (!VIDEO_EXT.includes(ext)) {
@@ -320,6 +320,7 @@ export function VariantMediaPanel({
         const url = await uploadVariantVideo(slug, file);
         next.push({ id: newImgId(), url, thumbUrl: null, mediumUrl: null, mediaType: "video", posterUrl: null });
       }
+      mediaRef.current = next;
       onChange(next);
       toast.success("Video added");
     } catch (e: any) {
@@ -329,6 +330,7 @@ export function VariantMediaPanel({
       if (videoRef.current) videoRef.current.value = "";
     }
   }
+
 
   function addUrl(kind: MediaType) {
     const url = window.prompt(`Paste the ${kind} URL for ${color}`)?.trim();
