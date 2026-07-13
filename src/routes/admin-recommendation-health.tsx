@@ -152,6 +152,103 @@ function RecommendationHealthPage() {
           </div>
         )}
       </div>
+
+      <div className="mt-6">
+        <ExperimentsPanel />
+      </div>
     </AdminShell>
   );
 }
+
+type ExperimentRow = {
+  id: string;
+  key: string;
+  description: string | null;
+  variants: unknown;
+  traffic_split: unknown;
+  status: string;
+  winner: string | null;
+};
+
+function ExperimentsPanel() {
+  const load = useServerFn(listAllExperiments);
+  const loadStats = useServerFn(experimentStats);
+  const promote = useServerFn(promoteWinner);
+  const [rows, setRows] = useState<ExperimentRow[] | null>(null);
+  const [stats, setStats] = useState<Record<string, Record<string, number>>>({});
+
+  const refresh = () => {
+    load().then((r) => setRows(r as ExperimentRow[])).catch(() => setRows([]));
+    loadStats().then(setStats).catch(() => setStats({}));
+  };
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPromote = async (id: string, winner: string) => {
+    await promote({ data: { id, winner } });
+    refresh();
+  };
+
+  return (
+    <div className="card-premium rounded-2xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-border">
+        <h2 className="text-sm font-medium flex items-center gap-2">
+          <FlaskConical className="size-4 text-accent" /> Recommendation Experiments (A/B)
+        </h2>
+      </div>
+      {rows === null ? (
+        <div className="p-8"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+      ) : rows.length === 0 ? (
+        <div className="px-5 py-8 text-center text-xs text-muted-foreground">
+          No experiments yet. Create one to A/B test recommendation strategies.
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {rows.map((exp) => {
+            const variants = Array.isArray(exp.variants) ? (exp.variants as string[]) : [];
+            const counts = stats[exp.key] ?? {};
+            return (
+              <div key={exp.id} className="px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{exp.key}</p>
+                    {exp.description && <p className="text-[11px] text-muted-foreground truncate">{exp.description}</p>}
+                  </div>
+                  <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border ${exp.status === "running" ? "border-emerald-400/40 text-emerald-400" : exp.status === "completed" ? "border-accent/40 text-accent" : "border-border text-muted-foreground"}`}>
+                    {exp.status}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {variants.map((v) => {
+                    const isWinner = exp.winner === v;
+                    return (
+                      <div key={v} className={`rounded-xl border px-3 py-2 flex items-center justify-between ${isWinner ? "border-accent/50 bg-accent/5" : "border-border"}`}>
+                        <div>
+                          <p className="text-xs font-medium flex items-center gap-1">
+                            {isWinner && <Trophy className="size-3 text-accent" />} {v}
+                          </p>
+                          <p className="text-[10px] font-mono text-muted-foreground">{counts[v] ?? 0} assigned</p>
+                        </div>
+                        {exp.status === "running" && !exp.winner && (
+                          <button
+                            onClick={() => onPromote(exp.id, v)}
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-accent/40 text-accent hover:bg-accent/10 transition"
+                          >
+                            Promote
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
