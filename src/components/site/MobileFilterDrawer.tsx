@@ -546,11 +546,19 @@ export function MobileFilterDrawer({
                 return (
                   <button
                     key={s.name}
-                    onClick={() => toggleSize(s.name)}
+                    onClick={() => !s.disabled && toggleSize(s.name)}
+                    disabled={s.disabled}
                     aria-pressed={active}
-                    className={`min-w-11 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all active:scale-95 ${active ? "bg-accent/15 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-foreground ring-1 ring-white/10 hover:bg-white/[0.07]"}`}
+                    aria-disabled={s.disabled}
+                    className={`relative min-w-12 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                      s.disabled
+                        ? "text-muted-foreground/60 bg-white/[0.02] ring-1 ring-white/5 cursor-not-allowed"
+                        : active
+                          ? "bg-accent/15 text-accent ring-1 ring-accent/40 active:scale-95"
+                          : "bg-white/[0.04] text-foreground ring-1 ring-white/10 hover:bg-white/[0.07] active:scale-95"
+                    }`}
                   >
-                    {s.name}
+                    <span className={s.disabled ? "line-through" : ""}>{s.name}</span>
                     <span className="ml-1 tabular-nums text-[10px] text-muted-foreground">{s.count}</span>
                   </button>
                 );
