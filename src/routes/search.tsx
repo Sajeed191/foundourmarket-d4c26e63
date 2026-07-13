@@ -526,9 +526,28 @@ function SearchPage() {
   }, [drawerOpen, sortOpen]);
 
   // Reveal a compact sticky search bar once the user scrolls past the hero.
+  // Also track scroll DIRECTION so the sticky control bar collapses when the
+  // user scrolls down (maximising the grid) and reappears when scrolling up.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 280);
-    onScroll();
+    let lastY = window.scrollY;
+    let ticking = false;
+    const update = () => {
+      const y = window.scrollY;
+      setScrolled(y > 280);
+      const delta = y - lastY;
+      if (y < 160) setBarHidden(false); // always show near the top
+      else if (delta > 6) setBarHidden(true); // scrolling down
+      else if (delta < -6) setBarHidden(false); // scrolling up
+      lastY = y;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
