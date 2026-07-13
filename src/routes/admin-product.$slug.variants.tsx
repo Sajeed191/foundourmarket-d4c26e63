@@ -67,15 +67,17 @@ function VariantsPage() {
     let active = true;
     setLoading(true);
     (async () => {
-      const [{ data: prod }, hv, vars] = await Promise.all([
+      const [{ data: prod }, hv, vars, defColor] = await Promise.all([
         supabase.from("products").select("id,slug,name,image,sku,status,category").eq("slug", slug).maybeSingle(),
         fetchHasVariants(slug),
         fetchAdminVariants(slug),
+        fetchDefaultVariantColor(slug),
       ]);
       if (!active) return;
       setHeader((prod as any) ?? null);
       setEnabled(hv);
       setRows(vars.map(({ productSlug: _p, ...r }) => r));
+      setDefaultColor(defColor);
       setLoading(false);
     })().catch(() => { if (active) setLoading(false); });
     return () => { active = false; };
