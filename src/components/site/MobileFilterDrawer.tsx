@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { X, Search, Check, Star, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
@@ -261,7 +261,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
   const priceHi = draft.max ?? priceMax;
   const [minInput, setMinInput] = useState("");
   const [maxInput, setMaxInput] = useState("");
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMinInput(draft.min != null ? String(Math.round(draft.min * rate)) : "");
     setMaxInput(draft.max != null ? String(Math.round(draft.max * rate)) : "");
   }, [draft.min, draft.max, rate]);
@@ -369,7 +369,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
       const token = `filter-drawer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       historyTokenRef.current = token;
       closedByPopRef.current = false;
-      window.history.pushState({ [DRAWER_HISTORY_KEY]: token }, "", window.location.href);
+      window.history.pushState({ ...(window.history.state ?? {}), [DRAWER_HISTORY_KEY]: token }, "", window.location.href);
     }
 
     const onPop = () => {
@@ -386,7 +386,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
     };
   }, [open]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open) return;
     const token = historyTokenRef.current;
     if (!token) {
