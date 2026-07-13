@@ -61,7 +61,7 @@ function FallbackSection({ featured }: { featured: Product[] }) {
             New limited-time prices drop daily. Explore our full collection in the meantime.
           </p>
           <Link
-            to="/products"
+            to="/search"
             className="mt-1 inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-xs font-mono uppercase tracking-widest hover:opacity-90 transition shadow-[var(--shadow-ember)]"
           >
             Explore Products <ArrowRight className="size-3.5" />
