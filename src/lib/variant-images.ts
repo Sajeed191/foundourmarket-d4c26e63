@@ -302,3 +302,193 @@ export async function fetchPublicColorGalleries(
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Variant lifecycle cleanup (delete synchronization)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a Supabase Storage public-object URL into { bucket, path }. Returns
+ * null for non-storage URLs (external CDNs, bundled assets) — those are never
+ * touched by storage cleanup.
+ */
+function publicUrlToStoragePath(url: string): { bucket: string; path: string } | null {
+  if (typeof url !== "string") return null;
+  const marker = "/storage/v1/object/public/";
+  const i = url.indexOf(marker);
+  if (i === -1) return null;
+  const rest = url.slice(i + marker.length).split("?")[0].split("#")[0];
+  const slash = rest.indexOf("/");
+  if (slash === -1) return null;
+  try {
+    return { bucket: rest.slice(0, slash), path: decodeURIComponent(rest.slice(slash + 1)) };
+  } catch {
+    return { bucket: rest.slice(0, slash), path: rest.slice(slash + 1) };
+  }
+}
+
+/** Parent folder of a storage path (image variants all live in one folder). */
+function storageFolderOf(path: string): string {
+  const i = path.lastIndexOf("/");
+  return i === -1 ? "" : path.slice(0, i);
+}
+
+/** A reference key that groups all responsive variants of one asset together. */
+function refKey(url: string | null): string | null {
+  const p = publicUrlToStoragePath(url ?? "");
+  if (!p) return null;
+  const folder = storageFolderOf(p.path);
+  // Uploaded images live in a per-asset folder (thumb/medium/large/original);
+  // key on the folder so all responsive variants share one reference count.
+  // Standalone files (videos/posters) have no dedicated folder — key on path.
+  return folder ? `${p.bucket}::folder::${folder}` : `${p.bucket}::file::${p.path}`;
+}
+
+/** Remove a storage object with a couple of automatic retries. */
+async function removeStorageWithRetry(bucket: string, paths: string[]): Promise<void> {
+  if (paths.length === 0) return;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+    if (!error) return;
+    lastErr = error;
+    await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+  }
+  // Never throw — a failed storage delete must not roll back the DB cleanup or
+  // block the admin. It is logged and can be swept later.
+  console.error("[variant-cleanup] storage remove failed", bucket, paths, lastErr);
+}
+
+export type GalleryCleanupResult = {
+  color: string;
+  removedImages: number;
+  removedVideos: number;
+  freedBytes: number;
+};
+
+/**
+ * Delete synchronization: remove every colour gallery whose colour no longer
+ * exists among the product's variants. Deletes the media rows AND their storage
+ * objects (original + responsive variants + video posters), but only when the
+ * asset's reference count across ALL galleries and product images drops to
+ * zero — media shared/copied to another colour is never deleted. Writes an
+ * audit-log entry per removed colour.
+ *
+ * `keepColors` is the set of colours still present after the variant save.
+ */
+export async function cleanupOrphanColorGalleries(
+  slug: string,
+  keepColors: string[],
+): Promise<GalleryCleanupResult[]> {
+  const keep = new Set(keepColors.map((c) => c.trim().toLowerCase()).filter(Boolean));
+
+  // 1. Orphan gallery rows for this product (colour no longer present).
+  const { data: rows, error } = await supabase
+    .from("product_variant_images")
+    .select("id,color,image_url,poster_url,media_type")
+    .eq("product_slug", slug);
+  if (error) throw error;
+  const orphans = ((rows ?? []) as any[]).filter(
+    (r) => !keep.has(String(r.color ?? "").trim().toLowerCase()),
+  );
+  if (orphans.length === 0) return [];
+
+  const orphanIds = new Set(orphans.map((r) => r.id));
+
+  // 2. Build reference keys still used by everything we KEEP (other galleries
+  //    across every product + every product image). Safe-delete guard.
+  const keptRefs = new Set<string>();
+  const [{ data: remainImgs }, { data: prodImgs }] = await Promise.all([
+    supabase.from("product_variant_images").select("id,image_url,poster_url"),
+    supabase.from("product_images").select("url"),
+  ]);
+  for (const r of (remainImgs ?? []) as any[]) {
+    if (orphanIds.has(r.id)) continue;
+    for (const k of [refKey(r.image_url), refKey(r.poster_url)]) if (k) keptRefs.add(k);
+  }
+  for (const r of (prodImgs ?? []) as any[]) {
+    const k = refKey(r.url);
+    if (k) keptRefs.add(k);
+  }
+
+  // 3. Compute per-colour audit tallies + collect storage objects to remove.
+  const perColor = new Map<string, GalleryCleanupResult>();
+  // bucket -> set of object paths to remove
+  const toRemove = new Map<string, Set<string>>();
+  const queueRemoval = (bucket: string, path: string) => {
+    (toRemove.get(bucket) ?? toRemove.set(bucket, new Set()).get(bucket)!).add(path);
+  };
+  // Cache folder listings so we only list each folder once.
+  const folderCache = new Map<string, { path: string; size: number }[]>();
+
+  for (const r of orphans) {
+    const color = String(r.color ?? "");
+    const tally =
+      perColor.get(color) ??
+      perColor.set(color, { color, removedImages: 0, removedVideos: 0, freedBytes: 0 }).get(color)!;
+    if (r.media_type === "video") tally.removedVideos++;
+    else tally.removedImages++;
+
+    for (const url of [r.image_url, r.poster_url]) {
+      const key = refKey(url);
+      if (!key || keptRefs.has(key)) continue; // still referenced → keep file
+      const parsed = publicUrlToStoragePath(url ?? "");
+      if (!parsed) continue;
+      const folder = storageFolderOf(parsed.path);
+      if (folder) {
+        // Image asset folder: list & remove every responsive variant once.
+        if (!folderCache.has(`${parsed.bucket}::${folder}`)) {
+          const { data: listing } = await supabase.storage.from(parsed.bucket).list(folder);
+          const files = (listing ?? []).map((f: any) => ({
+            path: `${folder}/${f.name}`,
+            size: Number(f.metadata?.size ?? 0),
+          }));
+          folderCache.set(`${parsed.bucket}::${folder}`, files);
+          for (const f of files) {
+            queueRemoval(parsed.bucket, f.path);
+            tally.freedBytes += f.size;
+          }
+        }
+      } else {
+        // Standalone object (e.g. video / poster).
+        queueRemoval(parsed.bucket, parsed.path);
+      }
+      keptRefs.add(key); // don't double-count if two orphan rows share the asset
+    }
+  }
+
+  // 4. Delete DB rows FIRST (commit), then storage (so we never leave a live
+  //    row pointing at a deleted file). Storage failures are retried + logged.
+  const { error: delErr } = await supabase
+    .from("product_variant_images")
+    .delete()
+    .in("id", [...orphanIds]);
+  if (delErr) throw delErr;
+
+  for (const [bucket, paths] of toRemove) {
+    await removeStorageWithRetry(bucket, [...paths]);
+  }
+
+  // 5. Audit log — one entry per removed colour.
+  const { data: authData } = await supabase.auth.getUser();
+  const actorId = authData?.user?.id ?? null;
+  const results = [...perColor.values()];
+  const auditRows = results.map((res) => ({
+    action: "variant_color_delete",
+    entity_type: "product",
+    entity_ref: slug,
+    actor_id: actorId,
+    meta: {
+      color: res.color,
+      images_removed: res.removedImages,
+      videos_removed: res.removedVideos,
+      storage_freed_bytes: res.freedBytes,
+      storage_freed_mb: Math.round((res.freedBytes / (1024 * 1024)) * 100) / 100,
+    },
+  }));
+  if (auditRows.length) {
+    await supabase.from("media_audit_logs").insert(auditRows);
+  }
+
+  return results;
+}
