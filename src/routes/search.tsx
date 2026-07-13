@@ -888,8 +888,12 @@ function SearchPage() {
           </div>
         )}
 
-        {/* Single control row — Filters (icon button) + Sort (dropdown pill) */}
-        <div className="flex items-center justify-between gap-3">
+        {/* Single control row — Filters (icon button) + Sort (dropdown pill).
+            On mobile it sticks to the top and auto-collapses on scroll-down,
+            reappearing on scroll-up to maximise the product grid. */}
+        <div
+          className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-3 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
+        >
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setDrawerOpen(true)}
