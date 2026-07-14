@@ -30,5 +30,11 @@ export { buildOptimizerReport } from "./catalog-optimizer";
 export type { OptimizerProduct, OptimizerRow, OptimizerReport } from "./catalog-optimizer";
 export { recommendAction } from "./recommendation";
 export type { AiRecommendation, RecommendedActionKind } from "./recommendation";
+export { statusFromScore } from "./intelligence-module";
+export type { IntelligenceModule, IntelligenceStatus, Evidence, EvidenceSeverity } from "./intelligence-module";
+export { scoreProductCompleteness } from "./product-completeness";
+export type { CompletenessInput, ProductCompleteness } from "./product-completeness";
+
+
 
 
