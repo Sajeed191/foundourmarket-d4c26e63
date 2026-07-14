@@ -354,19 +354,6 @@ function hydrateV2Namespaces(a: ImageAnalysis, health: HealthScore): void {
   };
 }
 
-function baseAnalysis(
-  width: number, height: number, aspectRatio: number,
-  orientation: Orientation, megapixels: number,
-): ImageAnalysis {
-  return {
-    version: IMAGE_ANALYSIS_VERSION,
-    width, height, aspectRatio, orientation,
-    megapixels: Math.round(megapixels * 100) / 100,
-    occupancy: 0, emptyMarginPct: 0, hasTransparentBorder: false,
-    backgroundType: "photo", backgroundColorHex: null,
-    sharpness: 0, brightness: 0, normalized: false, healthScore: 0,
-  };
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Health score + suggestions
