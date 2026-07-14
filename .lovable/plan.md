@@ -1,69 +1,79 @@
-# Phase 6D — Commerce Graph, Nightly Intelligence, Business Rules & Experiments
+# Enterprise AI Duplicate Detection & Prevention
 
-Builds on the existing centralized engine (`src/lib/recommendations/`). No changes to checkout, orders, inventory, auth, SEO, or product URLs. All heavy computation moves to a nightly job; daytime reads stay cheap by reading precomputed rows.
+A new **intelligence module** inside the existing Marketplace Intelligence platform (`src/lib/recommendations/*`, admin analytics, `use-products` cache). No new/parallel AI engine — it reuses the deterministic explainable-scoring philosophy, the cached product catalog, and the admin analytics shell.
 
-## Priority 1 — Global Commerce Graph (foundation)
+## Architecture
 
-A single typed relationship graph instead of one-off A→B tables.
-
-### Schema (one migration)
 ```text
-product_graph_edges
-  from_slug   text
-  edge_type   text   -- bought_with | viewed_with | similar_to | upgrade_to |
-                     -- budget_alt | accessory_of | same_brand | same_category
-  to_slug     text
-  weight      numeric
-  updated_at  timestamptz
-  PK (from_slug, edge_type, to_slug)
+src/lib/duplicate-detection/
+  index.ts          public surface
+  types.ts          DupSignal, DupVerdict, DupMatch, DupScore
+  normalize.ts      title/brand/spec normalization + stopwords + transliteration
+  text-similarity.ts fuzzy (token-set + Levenshtein) matchers
+  image-hash.ts     aHash/dHash/avgHash from canvas + Hamming distance
+  engine.ts         multi-signal weighted confidence engine (pure, explainable)
+  candidates.ts     indexed prefilter over cached catalog (barcode/brand/token buckets)
+  events.functions.ts  ignore / merge / feedback (learning) via createServerFn
+src/hooks/use-duplicate-detection.ts   debounced live hook
+src/components/admin/duplicate/
+  DuplicateIntelligencePanel.tsx   right-side panel (score, reasons, match cards)
+  DuplicateMatchCard.tsx           thumbnail, badges, actions
+  DuplicateCompareDialog.tsx       side-by-side diff (same/different/missing/new)
+  ImageCompareDialog.tsx           current vs existing + overlay + similarity %
+src/routes/admin-duplicate-intelligence.tsx   dashboard
 ```
-- GRANT: `SELECT` to `anon, authenticated` (public read, non-PII product relationships); `ALL` to `service_role`. RLS on, public SELECT policy, admin/service write only.
-- Index on `(from_slug, edge_type, weight desc)` for fast top-N reads.
-- Client helper `src/lib/recommendations/graph.functions.ts` — `getGraphEdges(fromSlug, edgeType, limit)` server fn reading edges (publishable client, `TO anon` policy). Feeds `seedScores` + `restrictTo` in the existing engine — no engine rewrite.
-- Edge types map to existing strategies: `bought_with`→FBT/customers_also_bought, `accessory_of`→compatible_accessories, `upgrade_to`→upgrade, `budget_alt`→budget_alternative, `similar_to`→similar.
 
-## Priority 2 — Nightly Intelligence Jobs (precompute)
+## Confidence engine (0–100, explainable)
 
-One server route `src/routes/api/public/hooks/recs-recompute.ts` (POST, `apikey` header auth), scheduled via pg_cron nightly. Recomputes from `orders`/`order_items`/`analytics_events`/`page_views` and writes lightweight outputs:
-- Co-purchase graph → `product_graph_edges` (bought_with, viewed_with).
-- Similarity/upgrade/budget/accessory edges from category + price bands + brand.
-- Popularity / trending / conversion scores → refresh `trending_products` inputs + a new `product_scores` table (slug, trending, popularity, conversion, fbt_strength, updated_at) for O(1) daytime reads.
-- Brand/category/variant/colour/size/seller popularity aggregates → `product_scores` JSON column `aggregates`.
-- Guardrail: pure reads + writes only to graph/score cache tables; wrapped in per-section try/catch so one failure doesn't abort the run; returns a JSON summary.
-- Migration adds `product_scores` with GRANTs (anon SELECT, service_role ALL).
+Pure function `scoreDuplicate(draft, candidate) -> { score, verdict, signals[] }`. Each signal returns `{ key, weight, similarity, matched, label }`; final score is a weighted, capped blend. **Barcode/UPC/EAN exact match short-circuits to 100 (Exact Duplicate).** Signals: title (normalized fuzzy), brand, category, sku, variant, image (phash Hamming), description, specifications (key-by-key semantic-ish), price, attributes, keyword overlap, admin-history. Weights live in one config object (configurable). Verdict bands: Safe / Similar / Possible / High Confidence / Exact. Every match carries the reason list shown in the UI. Mirrors `recommendations/scorer.ts` — deterministic, no randomness.
 
-## Priority 3 — Admin Business Rules dashboard
+## Title & spec normalization
 
-New table `recommendation_rules`:
-```text
-id uuid, rule_kind text (boost|reduce|exclude), target_type text
-(new_arrivals|high_margin|fast_shipping|local_seller|featured|sustainable|
- low_inventory|poor_reviews|high_returns|slow_delivery|brand|category|product|seller),
-target_value text null, weight numeric, priority int,
-enabled bool, starts_at timestamptz null, ends_at timestamptz null,
-created_at, updated_at
-```
-- GRANT: authenticated SELECT (engine needs rules), admin/service ALL; RLS: public/auth SELECT of enabled rules, admin write via `has_role`.
-- Admin UI route `admin-recommendation-rules.tsx` — grouped Boost / Reduce / Exclude cards, each rule with weight slider, priority, schedule (start/end), enable toggle. Added to `AdminShell` nav.
-- Engine wiring: a `resolveBusinessRules(rules, now)` helper converts active rules into the existing `boosts` (pinned/excluded) + additive scorer weights (`businessRule` breakdown factor already exists). Rules loaded once via a lightweight server fn and passed through `RecommendationProvider`.
+Lowercase, strip punctuation/extra space, remove marketing/pack/unit/stop words, collapse model tokens, basic transliteration map. `"Apple iPhone 15 Pro Max"`, `"iPhone15ProMax"`, `"APPLE IPHONE 15 PRO MAX"` → near-identical token sets. Fuzzy = token-set ratio + Levenshtein fallback (typo tolerance).
 
-## Priority 4 — Recommendation Experiments (A/B testing)
+## Image AI (in-browser, no native deps)
 
-New table `recommendation_experiments` (id, key, description, variants jsonb, traffic_split jsonb, status, winner, metrics jsonb, created_at, updated_at) + `experiment_assignments` (visitor_id/user_id, experiment_key, variant, assigned_at).
-- Deterministic client bucketing in `src/lib/recommendations/experiments.ts` — hash(visitorId+experimentKey) → variant by traffic split (no flicker, no server round-trip on read).
-- Rails read active experiment variant to pick strategy ordering; impressions/clicks/ATC/purchase already flow through `performance.ts` — extend `recordFunnelEvent` to tag the active variant so per-variant CTR/ATC/conversion accrue.
-- Admin surface: an Experiments panel inside `admin-recommendation-health.tsx` showing per-variant funnel metrics + a "promote winner" action (sets `winner`, flips status). Auto-promote is a nightly-job step comparing variant conversion once minimum sample reached.
-- GRANTs + RLS: authenticated SELECT active experiments, admin write.
+On image add, draw to an offscreen canvas → compute **average hash + difference hash** (64-bit each) + a coarse 16-bin color histogram. Compare via Hamming distance → similarity %. Grayscale + resize before hashing gives resistance to resize/compression/brightness; dHash gives crop/edit tolerance. Stored per product in a new `image_phash` column so comparison is O(candidates), not image re-fetch. (Deep-embedding/rotation/watermark tolerance beyond hashes is noted as a phase-2 hook; the engine already accepts an optional embedding-similarity signal.)
 
-## Delivery order (each ships + typechecks independently)
-1. Commerce graph migration + `graph.functions.ts` + wire `accessory_of`/`bought_with` into PDP rails.
-2. `product_scores` migration + nightly `recs-recompute` route + pg_cron.
-3. `recommendation_rules` migration + admin dashboard + engine wiring.
-4. Experiments tables + bucketing lib + health-dashboard metrics + auto-promote step.
+## Variant intelligence
 
-## Technical notes
-- Core scoring stays pure/deterministic; graph, scores, and rules only feed the existing `seedScores` / `restrictTo` / `boosts` / `businessRule` surfaces — no rewrite of `scorer.ts`/`engine.ts` internals.
-- Nightly job is idempotent (upserts), per-section fault isolated, and reads only; never writes to orders/inventory.
-- Every new public table gets GRANTs in the same migration; every migration ends with a `tsgo` typecheck.
-</content>
-<parameter name="summary">Plan for the commerce graph, nightly precompute jobs, admin business rules, and A/B experiments — scaled for production on the existing engine.
+Red/Blue/Black are **not** duplicate products. When a high-confidence product match exists but the draft's variant axis differs, downgrade to a variant notice: *"You already have this Red variant"* vs *"Duplicate product"*. Variant comparison reads `product_variants`.
+
+## Live detection
+
+`use-duplicate-detection(draft)` — debounced (~350ms), runs candidate prefilter + engine against the already-cached catalog (`use-products`), never blocks typing. Recomputes on title/brand/category/barcode/sku/image/variant change.
+
+## Duplicate panel + actions
+
+Right-side panel in `ProductEditorModal`: risk %, verdict, reason checklist, "Found N similar products". Each match card: thumbnail (hover zoom), title, brand, price, status, stock, published date, category, variant count, rating, sales/popularity, quick badges (EXACT/SIMILAR/IMAGE/TITLE/SPEC/BARCODE MATCH), buttons: Preview, Compare, Open, Merge, Ignore, Create Anyway. **Never blocks** — publish is always allowed.
+
+## Compare + merge
+
+`DuplicateCompareDialog` side-by-side across images/gallery/variants/specs/description/attributes/price/stock/SEO/categories/tags/shipping/warranty with Same/Different/Missing/New highlighting. `ImageCompareDialog` shows both images + difference overlay + similarity %. Merge mode previews a merged record (media/variants/inventory/tags/SEO/collections/specs) before applying.
+
+## Ignore + learning
+
+New table `duplicate_detection_events` (draft signature, candidate slug, action: ignored|merged|created_anyway|confirmed, score, signals jsonb). Ignored pairs stop warning. Learning: aggregate feedback lightly adjusts confidence (repeat ignores on a pair → suppress; merges → reinforce) — additive adjustment layer, never rewrites the base scorer (same pattern as `recommendation_rules` ruleAdjust).
+
+## Dashboard
+
+`/admin-duplicate-intelligence` in `AdminShell`: duplicate rate, merge rate, ignored warnings, top duplicate categories/brands, recent attempts, false-positive rate, image-duplicate trend — from `duplicate_detection_events`.
+
+## Database (one migration)
+
+- `products.barcode text`, `products.image_phash text` (+ index on barcode).
+- `duplicate_detection_events` table with full GRANTs + RLS (staff read/write via `has_role`).
+- Add a `Barcode / UPC / EAN` field to the editor basic tab.
+
+## Guardrails
+
+Zero changes to checkout, orders, payments, SEO, auth, inventory writes, storefront perf, or the recommendation engine's public surface. All detection is admin-only and read-mostly; candidate prefilter keeps it O(candidates) for 100k+ catalogs. Mobile-responsive panel (collapses to a bottom sheet on small screens), accessible dialogs.
+
+## Phasing (delivered in order)
+
+1. Migration + editor barcode field + normalization/text/image-hash/engine/candidates libs.
+2. `use-duplicate-detection` + panel + match cards wired into `ProductEditorModal`.
+3. Compare + image-compare dialogs.
+4. Ignore + learning (events table wired) .
+5. Merge preview.
+6. Dashboard route.

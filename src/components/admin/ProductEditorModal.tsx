@@ -1,4 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDuplicateDetection } from "@/hooks/use-duplicate-detection";
+import { computeImagePhash } from "@/lib/duplicate-detection";
+import { DuplicateIntelligencePanel } from "@/components/admin/duplicate/DuplicateIntelligencePanel";
+import { resolveImage } from "@/lib/products";
 import { motion } from "framer-motion";
 import {
   X, Upload, Loader2, Package, IndianRupee, DollarSign, AlertTriangle,
@@ -252,6 +256,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     image: row?.image ?? "", description: row?.description ?? "",
     in_stock: row?.in_stock ?? true, featured: row?.featured ?? false,
     sku: row?.sku ?? "", stock_quantity: row?.stock_quantity ?? 0,
+    barcode: (row as any)?.barcode ?? "",
     low_stock_threshold: row?.low_stock_threshold ?? 5, sort_order: row?.sort_order ?? nextSort ?? 0,
     price_inr: row?.price_inr != null ? String(row.price_inr) : "",
     compare_price_inr: row?.compare_price_inr != null ? String(row.compare_price_inr) : "",
@@ -338,6 +343,45 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const [attrsRows, setAttrsRows] = useState<KV[]>(kvToArray(row?.attributes));
   // Stable slug used to group media (images/video) before the row is saved.
   const mediaSlug = form.slug.trim() || slugify(form.name);
+
+  // ---- Duplicate Detection (Marketplace Intelligence) ----
+  // Perceptual hash of the primary image, recomputed when the image changes.
+  const [draftPhash, setDraftPhash] = useState<string | null>(null);
+  useEffect(() => {
+    const src = form.image.trim();
+    if (!src) { setDraftPhash(null); return; }
+    let cancelled = false;
+    computeImagePhash(resolveImage(src)).then((fp) => { if (!cancelled) setDraftPhash(fp); });
+    return () => { cancelled = true; };
+  }, [form.image]);
+
+  const specsObj = useMemo(() => arrayToKv(specsRows), [specsRows]);
+  const attrsObj = useMemo(() => arrayToKv(attrsRows), [attrsRows]);
+  const duplicateDraft = useMemo(
+    () => ({
+      slug: form.slug.trim() || slugify(form.name),
+      name: form.name,
+      brand: form.brand || null,
+      category: form.category || null,
+      categories: extraCategories,
+      sku: form.sku || null,
+      barcode: form.barcode || null,
+      image: form.image || null,
+      imagePhash: draftPhash,
+      description: form.description || null,
+      specifications: specsObj as Record<string, string>,
+      attributes: attrsObj as Record<string, string>,
+      priceInr: form.price_inr ? Number(form.price_inr) : null,
+      priceUsd: form.price_usd ? Number(form.price_usd) : null,
+      variantKeys: [
+        ...Object.values(attrsObj as Record<string, string>),
+        ...specsRows.filter((r) => /colou?r|size/i.test(r.k)).map((r) => r.v),
+      ].filter(Boolean),
+    }),
+    [form.slug, form.name, form.brand, form.category, extraCategories, form.sku, form.barcode, form.image, draftPhash, form.description, specsObj, attrsObj, form.price_inr, form.price_usd, specsRows],
+  );
+  const duplicateResult = useDuplicateDetection(duplicateDraft);
+  const [dupTick, setDupTick] = useState(0);
 
   async function uploadImage(file: File) {
     setUploading(true); setError(null);
@@ -436,6 +480,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       discount: form.discount ? Number(form.discount) : null,
       image: form.image.trim() || null, description: form.description.trim() || null,
       in_stock: form.in_stock, featured: form.featured, sku: autoSku,
+      barcode: form.barcode.trim() || null, image_phash: draftPhash,
       rating: ratingNum ?? undefined, reviews: reviewsNum != null ? Math.round(reviewsNum) : undefined,
       initial_rating: initialRatingNum ?? undefined, rating_source: form.rating_source,
       stock_quantity: Number(form.stock_quantity) || 0, low_stock_threshold: Number(form.low_stock_threshold) || 0,
@@ -566,6 +611,19 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             ))}
           </div>
         </div>
+
+        {/* Marketplace Intelligence — live duplicate detection (never blocks) */}
+        {tab === "basic" && (
+          <DuplicateIntelligencePanel
+            key={dupTick}
+            draft={duplicateDraft}
+            result={duplicateResult}
+            draftPhash={draftPhash}
+            onIgnored={() => setDupTick((t) => t + 1)}
+          />
+        )}
+
+
 
         {tab === "basic" && (<>
         {/* Images — multiple, drag to reorder, first = primary */}
@@ -750,6 +808,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
             <EField label="SKU (auto if blank)" value={form.sku} onChange={(v) => set({ sku: v })} />
             <EField label="Brand" value={form.brand} onChange={(v) => set({ brand: v })} />
+            <EField label="Barcode / UPC / EAN" value={form.barcode} onChange={(v) => set({ barcode: v })} />
             <EField label="Product Type" value={form.product_type} onChange={(v) => set({ product_type: v })} />
             <EField label="Product Tags (comma separated)" value={form.tags} onChange={(v) => set({ tags: v })} className="col-span-2" />
             <div className="col-span-2">

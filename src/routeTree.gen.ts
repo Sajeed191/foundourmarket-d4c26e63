@@ -93,6 +93,7 @@ import { Route as AdminEmailOpsRouteImport } from './routes/admin-email-ops'
 import { Route as AdminEmailHealthRouteImport } from './routes/admin-email-health'
 import { Route as AdminEmailDiagnosticsRouteImport } from './routes/admin-email-diagnostics'
 import { Route as AdminEmailDeliveryRouteImport } from './routes/admin-email-delivery'
+import { Route as AdminDuplicateIntelligenceRouteImport } from './routes/admin-duplicate-intelligence'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCustomerIntelligenceRouteImport } from './routes/admin-customer-intelligence'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
@@ -589,6 +590,12 @@ const AdminEmailDeliveryRoute = AdminEmailDeliveryRouteImport.update({
   path: '/admin-email-delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDuplicateIntelligenceRoute =
+  AdminDuplicateIntelligenceRouteImport.update({
+    id: '/admin-duplicate-intelligence',
+    path: '/admin-duplicate-intelligence',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/admin-customers',
   path: '/admin-customers',
@@ -982,6 +989,7 @@ export interface FileRoutesByFullPath {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
+  '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
@@ -1139,6 +1147,7 @@ export interface FileRoutesByTo {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
+  '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
@@ -1296,6 +1305,7 @@ export interface FileRoutesById {
   '/admin-cms': typeof AdminCmsRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
+  '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
   '/admin-email-delivery': typeof AdminEmailDeliveryRoute
   '/admin-email-diagnostics': typeof AdminEmailDiagnosticsRoute
   '/admin-email-health': typeof AdminEmailHealthRoute
@@ -1455,6 +1465,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customer-intelligence'
     | '/admin-customers'
+    | '/admin-duplicate-intelligence'
     | '/admin-email-delivery'
     | '/admin-email-diagnostics'
     | '/admin-email-health'
@@ -1612,6 +1623,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customer-intelligence'
     | '/admin-customers'
+    | '/admin-duplicate-intelligence'
     | '/admin-email-delivery'
     | '/admin-email-diagnostics'
     | '/admin-email-health'
@@ -1768,6 +1780,7 @@ export interface FileRouteTypes {
     | '/admin-cms'
     | '/admin-customer-intelligence'
     | '/admin-customers'
+    | '/admin-duplicate-intelligence'
     | '/admin-email-delivery'
     | '/admin-email-diagnostics'
     | '/admin-email-health'
@@ -1926,6 +1939,7 @@ export interface RootRouteChildren {
   AdminCmsRoute: typeof AdminCmsRoute
   AdminCustomerIntelligenceRoute: typeof AdminCustomerIntelligenceRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
+  AdminDuplicateIntelligenceRoute: typeof AdminDuplicateIntelligenceRoute
   AdminEmailDeliveryRoute: typeof AdminEmailDeliveryRoute
   AdminEmailDiagnosticsRoute: typeof AdminEmailDiagnosticsRoute
   AdminEmailHealthRoute: typeof AdminEmailHealthRoute
@@ -2639,6 +2653,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailDeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-duplicate-intelligence': {
+      id: '/admin-duplicate-intelligence'
+      path: '/admin-duplicate-intelligence'
+      fullPath: '/admin-duplicate-intelligence'
+      preLoaderRoute: typeof AdminDuplicateIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-customers': {
       id: '/admin-customers'
       path: '/admin-customers'
@@ -3232,6 +3253,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCmsRoute: AdminCmsRoute,
   AdminCustomerIntelligenceRoute: AdminCustomerIntelligenceRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
+  AdminDuplicateIntelligenceRoute: AdminDuplicateIntelligenceRoute,
   AdminEmailDeliveryRoute: AdminEmailDeliveryRoute,
   AdminEmailDiagnosticsRoute: AdminEmailDiagnosticsRoute,
   AdminEmailHealthRoute: AdminEmailHealthRoute,
@@ -3357,13 +3379,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

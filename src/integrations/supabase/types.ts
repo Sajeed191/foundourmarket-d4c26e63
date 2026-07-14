@@ -1291,6 +1291,60 @@ export type Database = {
         }
         Relationships: []
       }
+      duplicate_detection_events: {
+        Row: {
+          action: string
+          admin_id: string | null
+          candidate_brand: string | null
+          candidate_category: string | null
+          candidate_name: string | null
+          candidate_slug: string | null
+          created_at: string
+          draft_brand: string | null
+          draft_category: string | null
+          draft_name: string | null
+          draft_signature: string
+          id: string
+          score: number
+          signals: Json
+          verdict: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          candidate_brand?: string | null
+          candidate_category?: string | null
+          candidate_name?: string | null
+          candidate_slug?: string | null
+          created_at?: string
+          draft_brand?: string | null
+          draft_category?: string | null
+          draft_name?: string | null
+          draft_signature: string
+          id?: string
+          score?: number
+          signals?: Json
+          verdict?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          candidate_brand?: string | null
+          candidate_category?: string | null
+          candidate_name?: string | null
+          candidate_slug?: string | null
+          created_at?: string
+          draft_brand?: string | null
+          draft_category?: string | null
+          draft_name?: string | null
+          draft_signature?: string
+          id?: string
+          score?: number
+          signals?: Json
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       editor_drafts: {
         Row: {
           base_snapshot: Json | null
@@ -3313,6 +3367,7 @@ export type Database = {
           hot_deal: boolean
           id: string
           image: string | null
+          image_phash: string | null
           in_stock: boolean
           india_visible: boolean
           initial_rating: number
@@ -3426,6 +3481,7 @@ export type Database = {
           hot_deal?: boolean
           id?: string
           image?: string | null
+          image_phash?: string | null
           in_stock?: boolean
           india_visible?: boolean
           initial_rating?: number
@@ -3539,6 +3595,7 @@ export type Database = {
           hot_deal?: boolean
           id?: string
           image?: string | null
+          image_phash?: string | null
           in_stock?: boolean
           india_visible?: boolean
           initial_rating?: number
@@ -6957,6 +7014,7 @@ export type Database = {
           hot_deal: boolean
           id: string
           image: string | null
+          image_phash: string | null
           in_stock: boolean
           india_visible: boolean
           initial_rating: number
@@ -7258,6 +7316,7 @@ export type Database = {
           hot_deal: boolean
           id: string
           image: string | null
+          image_phash: string | null
           in_stock: boolean
           india_visible: boolean
           initial_rating: number
