@@ -1013,14 +1013,14 @@ function SearchPage() {
             className="pointer-events-none absolute inset-0 sm:rounded-3xl bg-[radial-gradient(80%_100%_at_50%_0%,oklch(0.74_0.19_49/0.06),transparent_60%)]"
           />
 
-          <div className="relative space-y-3">
+          <div className="relative space-y-2.5">
             {/* Category chips — hidden in Trending mode (dedicated dataset) */}
             {!isTrending && categories.length > 0 && (
               <div className="-mx-4 sm:mx-0">
-                <div className="flex gap-2 overflow-x-auto px-4 sm:px-0 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex gap-1.5 overflow-x-auto px-4 sm:px-0 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   <button
                     onClick={() => update({ cat: undefined })}
-                    className={`shrink-0 min-h-[44px] inline-flex items-center rounded-full px-5 text-[13px] font-medium whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.98] ${!search.cat ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_24px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
+                    className={`shrink-0 h-9 inline-flex items-center rounded-full px-3.5 text-[12px] font-medium leading-none whitespace-nowrap transition-colors duration-150 active:scale-[0.97] ${!search.cat ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_18px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
                   >
                     All
                   </button>
@@ -1030,7 +1030,7 @@ function SearchPage() {
                       <button
                         key={c.slug}
                         onClick={() => update({ cat: active ? undefined : c.slug })}
-                        className={`shrink-0 min-h-[44px] inline-flex items-center rounded-full px-5 text-[13px] font-medium whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.98] ${active ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_24px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
+                        className={`shrink-0 h-9 inline-flex items-center rounded-full px-3.5 text-[12px] font-medium leading-none whitespace-nowrap transition-colors duration-150 active:scale-[0.97] ${active ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_18px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
                       >
                         {c.name}
                       </button>
@@ -1040,8 +1040,8 @@ function SearchPage() {
               </div>
             )}
 
-            {/* Filter + Sort — equal-width premium action cards */}
-            <div className="grid grid-cols-2 gap-2.5">
+            {/* Filter + Sort — compact premium pills */}
+            <div className="flex items-center gap-2">
               <MobileFilterLauncher
                 currentFilters={currentFilters}
                 currentSort={sort}
@@ -1058,39 +1058,34 @@ function SearchPage() {
                 renderTrigger={(open, count) => (
                   <button
                     onClick={open}
-                    className="group relative flex h-[58px] w-full items-center gap-3 rounded-[20px] bg-white/[0.04] ring-1 ring-white/[0.08] px-4 text-left transition-all duration-200 ease-out hover:bg-white/[0.06] hover:ring-white/[0.14] active:scale-[0.98]"
+                    aria-label={`Filter${count > 0 ? `, ${count} active` : ""}`}
+                    className="group inline-flex h-10 items-center gap-2 rounded-full bg-white/[0.05] ring-1 ring-white/[0.09] pl-3.5 pr-4 text-[12.5px] font-semibold text-foreground transition-colors duration-150 hover:bg-white/[0.075] active:scale-[0.97]"
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06] text-foreground/90 transition-transform duration-200 group-active:scale-90">
-                      <SlidersHorizontal className="size-[17px]" strokeWidth={2} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
-                        Filter
-                        {count > 0 && (
-                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold tabular-nums leading-none">
-                            {count}
-                          </span>
-                        )}
-                      </span>
-                      <span className="block truncate text-[11px] text-muted-foreground mt-0.5">
-                        {count > 0 ? `${count} active` : "Refine results"}
-                      </span>
-                    </span>
+                    <SlidersHorizontal className="size-4 text-foreground/80" strokeWidth={2} />
+                    <span>Filter</span>
+                    {count > 0 && (
+                      <>
+                        <span aria-hidden className="text-muted-foreground/50">•</span>
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold tabular-nums leading-none">
+                          {count}
+                        </span>
+                      </>
+                    )}
                   </button>
                 )}
               />
 
               <Drawer open={sortOpen} onOpenChange={setSortOpen}>
                 <DrawerTrigger asChild>
-                  <button className="group relative flex h-[58px] w-full items-center gap-3 rounded-[20px] bg-white/[0.04] ring-1 ring-white/[0.08] px-4 text-left transition-all duration-200 ease-out hover:bg-white/[0.06] hover:ring-white/[0.14] active:scale-[0.98]">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06] text-foreground/90 transition-transform duration-200 group-active:scale-90">
-                      <ArrowUpDown className="size-[17px]" strokeWidth={2} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] font-semibold text-foreground">Sort</span>
-                      <span className="block truncate text-[11px] text-muted-foreground mt-0.5">
-                        {(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}
-                      </span>
+                  <button
+                    aria-label={`Sort: ${(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}`}
+                    className="group inline-flex h-10 items-center gap-2 rounded-full bg-white/[0.05] ring-1 ring-white/[0.09] pl-3.5 pr-4 text-[12.5px] font-semibold text-foreground transition-colors duration-150 hover:bg-white/[0.075] active:scale-[0.97]"
+                  >
+                    <ArrowUpDown className="size-4 text-foreground/80" strokeWidth={2} />
+                    <span>Sort</span>
+                    <span aria-hidden className="text-muted-foreground/50">•</span>
+                    <span className="max-w-[9rem] truncate text-muted-foreground font-medium">
+                      {(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}
                     </span>
                   </button>
                 </DrawerTrigger>
@@ -1141,17 +1136,6 @@ function SearchPage() {
                 </DrawerContent>
               </Drawer>
             </div>
-
-            {activeFilterCount > 0 && (
-              <div className="flex justify-end">
-                <button
-                  onClick={clearAll}
-                  className="text-[11px] font-medium text-muted-foreground hover:text-accent underline-offset-4 hover:underline transition-colors"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
