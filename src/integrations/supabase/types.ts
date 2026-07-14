@@ -1917,6 +1917,99 @@ export type Database = {
         }
         Relationships: []
       }
+      image_intelligence_jobs: {
+        Row: {
+          analysis: Json
+          category_slug: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          health_score: number | null
+          id: string
+          image_url: string
+          mode: string
+          product_slug: string | null
+          recommendation: Json | null
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          analysis?: Json
+          category_slug?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          health_score?: number | null
+          id?: string
+          image_url: string
+          mode: string
+          product_slug?: string | null
+          recommendation?: Json | null
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          analysis?: Json
+          category_slug?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          health_score?: number | null
+          id?: string
+          image_url?: string
+          mode?: string
+          product_slug?: string | null
+          recommendation?: Json | null
+          requested_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      image_intelligence_settings: {
+        Row: {
+          allow_background_expansion: boolean
+          block_publish_on_low_quality: boolean
+          created_at: string
+          id: string
+          min_resolution: number
+          mode: string
+          scope_key: string | null
+          scope_kind: string
+          target_occupancy_max: number
+          target_occupancy_min: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allow_background_expansion?: boolean
+          block_publish_on_low_quality?: boolean
+          created_at?: string
+          id: string
+          min_resolution?: number
+          mode?: string
+          scope_key?: string | null
+          scope_kind?: string
+          target_occupancy_max?: number
+          target_occupancy_min?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allow_background_expansion?: boolean
+          block_publish_on_low_quality?: boolean
+          created_at?: string
+          id?: string
+          min_resolution?: number
+          mode?: string
+          scope_key?: string | null
+          scope_kind?: string
+          target_occupancy_max?: number
+          target_occupancy_min?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       inbox_placement_tests: {
         Row: {
           created_at: string
@@ -2939,24 +3032,36 @@ export type Database = {
       product_images: {
         Row: {
           alt: string | null
+          analysis_json: Json | null
+          analyzed_at: string | null
           created_at: string
           id: string
+          optimized_url: string | null
+          original_url: string | null
           product_slug: string
           sort_order: number
           url: string
         }
         Insert: {
           alt?: string | null
+          analysis_json?: Json | null
+          analyzed_at?: string | null
           created_at?: string
           id?: string
+          optimized_url?: string | null
+          original_url?: string | null
           product_slug: string
           sort_order?: number
           url: string
         }
         Update: {
           alt?: string | null
+          analysis_json?: Json | null
+          analyzed_at?: string | null
           created_at?: string
           id?: string
+          optimized_url?: string | null
+          original_url?: string | null
           product_slug?: string
           sort_order?: number
           url?: string
