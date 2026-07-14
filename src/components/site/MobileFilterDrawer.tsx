@@ -602,6 +602,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
                       {active && <Check className="size-3" strokeWidth={3} />}
                     </span>
                     <span className={`flex-1 text-left ${active ? "text-accent font-medium" : "text-foreground"}`}>{b.name}</span>
+                    <span className="text-[11px] tabular-nums text-muted-foreground">{b.count}</span>
                   </button>
                 );
               })}
@@ -664,7 +665,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
                       )}
                     </span>
                     <span className={`max-w-[4.5rem] truncate text-[11px] font-medium ${active ? "text-accent" : "text-foreground"}`}>{c.name}</span>
-                    
+                    <span className="-mt-1 tabular-nums text-[10px] text-muted-foreground">{c.count}</span>
                   </button>
                 );
               })}
@@ -700,6 +701,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
                     }`}
                   >
                     <span className={s.disabled ? "line-through" : ""}>{s.name}</span>
+                    <span className="ml-1 tabular-nums text-[10px] text-muted-foreground">{s.count}</span>
                   </button>
                 );
               })}
@@ -908,7 +910,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
             onClick={onApply}
             className="flex-1 rounded-full bg-accent text-accent-foreground py-3.5 text-sm font-semibold shadow-[0_8px_24px_-8px_var(--accent)] hover:brightness-110 active:scale-[0.98] transition-all"
           >
-            Show Products
+            Show {resultCount.toLocaleString()} Product{resultCount === 1 ? "" : "s"}
           </button>
         </div>
       </div>

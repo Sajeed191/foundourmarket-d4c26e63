@@ -6,6 +6,7 @@ import { rowToProduct, discountPercent, SELECT_COLS, type Product } from "@/lib/
 import { useCategories, useAllCategories, type Category } from "@/lib/use-categories";
 import { MobileFilterDrawer } from "@/components/site/MobileFilterDrawer";
 import { ActiveFilterBar } from "@/components/site/ActiveFilterBar";
+import { ResultCounter } from "@/components/site/ResultCounter";
 import {
   type Filters as ClientFilters,
   type Facet,
@@ -1152,6 +1153,11 @@ function SearchPage() {
                 onClear={clearAll}
                 className="mb-4"
               />
+              {!loading && (
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <ResultCounter count={results.length} />
+                </div>
+              )}
             </>
           )}
 
