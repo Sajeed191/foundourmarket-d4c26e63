@@ -150,6 +150,9 @@ export type ImageAnalysis = {
     galleryContribution: number | null;
     readinessScore: number | null;
     suggestions: HealthSuggestion[];
+    heroSuitability?: number | null;
+    isRecommendedPrimary?: boolean;
+    recommendationReason?: string[];
   };
 };
 
