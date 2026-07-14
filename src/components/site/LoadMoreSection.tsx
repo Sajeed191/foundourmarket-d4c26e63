@@ -314,10 +314,6 @@ function EndOfCatalog({ total }: { total: number }) {
         </div>
       </div>
 
-      {/* Recommendations tail — reuses the shared Marketplace Intelligence engine. */}
-      <div className="mt-10">
-        <SmartRecommendations />
-      </div>
     </div>
   );
 }
