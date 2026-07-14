@@ -3,16 +3,19 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2, Sparkles, RefreshCw, Gauge, Search, ShieldCheck, Image as ImageIcon,
-  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package, CheckCircle2, Wand2,
+  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package, CheckCircle2, Wand2, GitBranch,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import {
   buildOptimizerReport,
   scoreProductCompleteness,
+  analyzeVariantIntelligence,
   type OptimizerProduct,
   type OptimizerReport,
   type ProductCompleteness,
+  type VariantIntelligence,
+  type VariantRecord,
 } from "@/lib/catalog-intelligence";
 
 
@@ -62,19 +65,40 @@ function ring(v: number) {
   return v >= 85 ? "text-emerald-400" : v >= 60 ? "text-amber-400" : "text-destructive";
 }
 
+type VariantRow = {
+  product_slug: string;
+  name: string;
+  color: string | null;
+  color_hex: string | null;
+  size: string | null;
+  sku: string | null;
+  price_override: number | null;
+  price_adjustment: number | null;
+  compare_price: number | null;
+  stock_quantity: number | null;
+  active: boolean | null;
+  image_url: string | null;
+};
+
 function CatalogIntelligencePage() {
   const [products, setProducts] = useState<OptimizerProduct[] | null>(null);
+  const [variantsByProduct, setVariantsByProduct] = useState<Map<string, VariantRow[]>>(new Map());
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
     setRefreshing(true);
-    const { data } = await supabase
-      .from("products")
-      .select(COLS)
-      .is("deleted_at", null)
-      .order("sort_order", { ascending: true })
-      .limit(20000);
-    setProducts((data as unknown as OptimizerProduct[]) ?? []);
+    const [{ data: prodData }, { data: varData }] = await Promise.all([
+      supabase.from("products").select(COLS).is("deleted_at", null).order("sort_order", { ascending: true }).limit(20000),
+      supabase.from("product_variants").select("product_slug,name,color,color_hex,size,sku,price_override,price_adjustment,compare_price,stock_quantity,active,image_url").limit(50000),
+    ]);
+    setProducts((prodData as unknown as OptimizerProduct[]) ?? []);
+    const map = new Map<string, VariantRow[]>();
+    for (const v of (varData ?? []) as VariantRow[]) {
+      const list = map.get(v.product_slug) ?? [];
+      list.push(v);
+      map.set(v.product_slug, list);
+    }
+    setVariantsByProduct(map);
     setRefreshing(false);
   }
 
@@ -122,6 +146,47 @@ function CatalogIntelligencePage() {
     const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
     return { rows, avg, needs };
   }, [products]);
+
+  const variantIntel = useMemo(() => {
+    if (!products) return null;
+    const rows = products
+      .map((p) => {
+        const vs = variantsByProduct.get(p.slug) ?? [];
+        if (vs.length === 0) return null;
+        const basePrice = typeof p.price_inr === "number" ? p.price_inr : null;
+        const module = analyzeVariantIntelligence({
+          slug: p.slug,
+          productName: p.name,
+          productPrice: basePrice,
+          productImage: p.image ?? null,
+          variants: vs.map<VariantRecord>((v) => ({
+            title: v.name,
+            option1: v.color,
+            option2: v.size,
+            sku: v.sku,
+            price:
+              v.price_override != null
+                ? v.price_override
+                : basePrice != null
+                ? basePrice + (v.price_adjustment ?? 0)
+                : null,
+            compare_price: v.compare_price,
+            stock: v.stock_quantity,
+            is_active: v.active,
+            image_url: v.image_url,
+            swatch_color: v.color_hex,
+          })),
+        });
+        return { slug: p.slug, name: p.name, module };
+      })
+      .filter((r): r is { slug: string; name: string; module: VariantIntelligence } => r != null);
+    if (rows.length === 0) return { rows: [], avg: 100, needs: [] as typeof rows };
+    const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / rows.length);
+    const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
+    return { rows, avg, needs };
+  }, [products, variantsByProduct]);
+
+
 
 
   return (
@@ -263,6 +328,40 @@ function CatalogIntelligencePage() {
                 </ul>
               </div>
             )}
+
+            {/* Variant Intelligence — Catalog Intelligence 2.0, Phase 3 */}
+            {variantIntel && variantIntel.rows.length > 0 && (
+              <div className="rounded-3xl border border-border/60 bg-card/40 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+                    <GitBranch className="size-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent">Catalog Intelligence 2.0 · Phase 3</p>
+                    <p className="text-sm font-semibold">Variant Intelligence</p>
+                    <p className="text-xs text-muted-foreground">
+                      Matrix health, pricing anomalies, inventory consistency, and variant presentation — one recommendation per listing.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Avg</p>
+                    <p className={`font-display text-2xl font-semibold tabular-nums ${ring(variantIntel.avg)}`}>{variantIntel.avg}</p>
+                  </div>
+                </div>
+
+                <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Top variant issues</p>
+                <ul className="space-y-2">
+                  {variantIntel.needs.map((r) => (
+                    <VariantIntelRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
+                  ))}
+                  {variantIntel.needs.length === 0 && (
+                    <li className="flex items-center gap-2 text-xs text-emerald-400">
+                      <CheckCircle2 className="size-4" /> All variant sets look healthy.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </>
 
         )}
@@ -340,4 +439,55 @@ function CompletenessRow({ slug, name, module: m }: { slug: string; name: string
     </li>
   );
 }
+
+function VariantIntelRow({ slug, name, module: m }: { slug: string; name: string; module: VariantIntelligence }) {
+  return (
+    <li className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center gap-3">
+        <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[m.status]}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/admin-product/$slug/variants"
+            params={{ slug }}
+            className="block truncate text-sm font-medium hover:text-accent"
+          >
+            {name}
+          </Link>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.recommendation}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+            <span>{m.total} variant{m.total === 1 ? "" : "s"}</span>
+            {m.potentialImpact && (
+              <span className={`rounded-full px-1.5 py-0.5 ${
+                m.potentialImpact === "High" ? "bg-destructive/15 text-destructive" :
+                m.potentialImpact === "Medium" ? "bg-amber-500/15 text-amber-400" :
+                "bg-emerald-500/15 text-emerald-400"
+              }`}>
+                Impact · {m.potentialImpact}
+              </span>
+            )}
+            {m.matrix.duplicates > 0 && <span>{m.matrix.duplicates} dup</span>}
+            {m.matrix.missingCombinations.length > 0 && <span>{m.matrix.missingCombinations.length} gap{m.matrix.missingCombinations.length === 1 ? "" : "s"}</span>}
+            {m.pricing.outliers.length > 0 && <span>{m.pricing.outliers.length} price outlier{m.pricing.outliers.length === 1 ? "" : "s"}</span>}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`font-mono text-xs tabular-nums ${
+            m.score >= 85 ? "text-emerald-400" : m.score >= 60 ? "text-amber-400" : "text-destructive"
+          }`}>
+            {m.score}
+          </span>
+          {m.actionHref ? (
+            <a
+              href={m.actionHref}
+              className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition hover:opacity-90"
+            >
+              {m.action} <ArrowRight className="size-3" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 
