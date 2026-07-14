@@ -11,11 +11,14 @@ import {
   statusFromScore,
   type Evidence,
   type IntelligenceModule,
+  type PotentialImpact,
 } from "./intelligence-module";
+import { analyzeAttributes, type AttributeIntelligence } from "./attribute-intelligence";
 
 export type CompletenessInput = {
   slug?: string;
   name?: string | null;
+  category?: string | null;
   description?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -23,10 +26,16 @@ export type CompletenessInput = {
   imageCount: number;
   /** 0–100 from Image Intelligence. null if not yet analyzed. */
   imageQuality?: number | null;
-  attributeCount: number;
+  /** Raw attribute bag — Attribute Intelligence owns the analysis. */
+  attributes?: Record<string, unknown> | null;
+  /** Raw specifications bag — merged into attributes for coverage. */
+  specifications?: Record<string, unknown> | null;
+  /** Cheap fallback when caller has no attributes bag (e.g. legacy input). */
+  attributeCount?: number;
   specCount: number;
   variantCount: number;
 };
+
 
 type Dimension = {
   key: string;
