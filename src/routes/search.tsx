@@ -1001,161 +1001,161 @@ function SearchPage() {
         </div>
       </div>
 
-      {/* Controls — categories + unified control bar + marketplace intelligence */}
-      <div className="mb-5 space-y-3">
-        {/* Category chips — hidden in Trending mode (dedicated dataset) */}
-        {!isTrending && categories.length > 0 && (
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex gap-2 overflow-x-auto py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              <button
-                onClick={() => update({ cat: undefined })}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${!search.cat ? "bg-accent/15 text-accent ring-1 ring-accent/50 shadow-[0_0_20px_-6px_var(--accent)]" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/[0.08] hover:text-foreground hover:bg-white/[0.07]"}`}
-              >
-                All
-              </button>
-              {categories.map((c) => (
-                <button
-                  key={c.slug}
-                  onClick={() => update({ cat: search.cat === c.slug ? undefined : c.slug })}
-                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${search.cat === c.slug ? "bg-accent/15 text-accent ring-1 ring-accent/50 shadow-[0_0_20px_-6px_var(--accent)]" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/[0.08] hover:text-foreground hover:bg-white/[0.07]"}`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Premium unified control panel — categories + filter + sort in one
+          intelligent surface. Sticky on mobile with auto-collapse on scroll. */}
+      <div
+        className={`sticky top-0 z-30 -mx-4 sm:mx-0 mb-5 transition-transform duration-300 will-change-transform ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
+      >
+        <div className="relative px-4 py-3 sm:p-4 bg-[oklch(0.16_0.008_260/0.75)] sm:rounded-3xl border-b sm:border border-white/[0.06] backdrop-blur-2xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.6)]">
+          {/* Subtle ambient orange edge glow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 sm:rounded-3xl bg-[radial-gradient(80%_100%_at_50%_0%,oklch(0.74_0.19_49/0.06),transparent_60%)]"
+          />
 
-        {/* Unified premium control bar — Filters + Sort share identical height,
-            radius and elevation. On mobile it sticks to the top and auto-hides
-            on scroll-down, reappearing on scroll-up to maximise the grid. */}
-        <div
-          className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-2 bg-background/85 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <MobileFilterLauncher
-              currentFilters={currentFilters}
-              currentSort={sort}
-              rawRows={rawRows}
-              priceCtx={priceCtx}
-              variantFacets={variantFacets}
-              liveFacets={liveFacets}
-              allCategories={allCategories}
-              activeFilterCount={activeFilterCount}
-              fmt={fmt}
-              rate={rate}
-              symbol={symbol}
-              onApplyFilters={applyMobileFilters}
-            />
-
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearAll}
-                className="shrink-0 text-[11px] font-medium text-muted-foreground hover:text-accent underline-offset-4 hover:underline transition-colors"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-
-          <Drawer open={sortOpen} onOpenChange={setSortOpen}>
-            <DrawerTrigger asChild>
-              <button className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white/[0.05] ring-1 ring-white/10 px-4 py-2.5 text-xs font-medium hover:bg-white/[0.08] active:scale-95 transition-all">
-                <ArrowUpDown className="size-3.5" />
-                <span className="text-muted-foreground">Sort</span>
-                <span aria-hidden className="text-muted-foreground/40">·</span>
-                <span className="text-foreground">{(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}</span>
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="border-white/10 bg-background/80 backdrop-blur-2xl">
-              <div className="mx-auto w-full max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-                <div className="flex items-center gap-2 px-2 pt-1 pb-4">
-                  <ArrowUpDown className="size-4 text-accent" />
-                  <h2 className="text-base font-semibold text-foreground">Sort by</h2>
-                </div>
-                <div className="space-y-5">
-                  {SORT_GROUPS.map((group) => {
-                    const items = SORTS.filter((s) => s.group === group);
-                    if (items.length === 0) return null;
+          <div className="relative space-y-3">
+            {/* Category chips — hidden in Trending mode (dedicated dataset) */}
+            {!isTrending && categories.length > 0 && (
+              <div className="-mx-4 sm:mx-0">
+                <div className="flex gap-2 overflow-x-auto px-4 sm:px-0 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  <button
+                    onClick={() => update({ cat: undefined })}
+                    className={`shrink-0 min-h-[44px] inline-flex items-center rounded-full px-5 text-[13px] font-medium whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.98] ${!search.cat ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_24px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
+                  >
+                    All
+                  </button>
+                  {categories.map((c) => {
+                    const active = search.cat === c.slug;
                     return (
-                      <div key={group}>
-                        <p className="px-2 pb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">{group}</p>
-                        <div className="space-y-2">
-                          {items.map((s) => {
-                            const active = (search.sort ?? "relevance") === s.value;
-                            const Icon = s.icon;
-                            return (
-                              <button
-                                key={s.value}
-                                onClick={() => { update({ sort: s.value }); setSortOpen(false); }}
-                                className={`group flex w-full items-center gap-3.5 rounded-2xl px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.98] ${active ? "bg-accent/[0.12] ring-1 ring-accent/40 shadow-[0_8px_28px_-12px_var(--accent)]" : "ring-1 ring-white/[0.06] hover:bg-white/[0.05]"}`}
-                              >
-                                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors ${active ? "bg-accent/20 text-accent" : "bg-white/[0.05] text-muted-foreground group-hover:text-foreground"}`}>
-                                  <Icon className="size-[18px]" strokeWidth={2} />
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span className={`block text-sm font-semibold ${active ? "text-accent" : "text-foreground"}`}>{s.label}</span>
-                                  <span className="block truncate text-[11px] text-muted-foreground">{s.desc}</span>
-                                </span>
-                                {active && (
-                                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground animate-scale-in">
-                                    <Check className="size-3.5" strokeWidth={3} />
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      <button
+                        key={c.slug}
+                        onClick={() => update({ cat: active ? undefined : c.slug })}
+                        className={`shrink-0 min-h-[44px] inline-flex items-center rounded-full px-5 text-[13px] font-medium whitespace-nowrap transition-all duration-200 ease-out active:scale-[0.98] ${active ? "bg-accent/[0.14] text-accent ring-1 ring-accent/40 shadow-[0_0_24px_-8px_var(--accent)]" : "bg-white/[0.035] text-muted-foreground ring-1 ring-white/[0.07] hover:text-foreground hover:bg-white/[0.06]"}`}
+                      >
+                        {c.name}
+                      </button>
                     );
                   })}
                 </div>
               </div>
-            </DrawerContent>
-          </Drawer>
-        </div>
+            )}
 
-        {/* Marketplace Intelligence — real catalog data, no fake stats */}
-        {!loading && results.length > 0 && (() => {
-          const brandCount = new Set(results.map((p) => p.brand).filter(Boolean)).size;
-          const fastShip = results.some((p) => shippingFeeOf(p) === 0);
-          return (
-            <div
-              className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              aria-live="polite"
-            >
-              <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="tabular-nums font-semibold text-foreground">{results.length.toLocaleString()}</span>
-                {results.length === 1 ? "product" : "products"}
-              </span>
-              {brandCount > 1 && (
-                <>
-                  <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
-                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <BadgeCheck className="size-3 text-accent/80" />
-                    <span className="tabular-nums font-semibold text-foreground">{brandCount}</span>
-                    verified {brandCount === 1 ? "seller" : "sellers"}
-                  </span>
-                </>
-              )}
-              {fastShip && (
-                <>
-                  <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
-                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Globe className="size-3 text-accent/80" />
-                    Fast shipping
-                  </span>
-                </>
-              )}
-              <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
-              <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <Clock className="size-3 text-accent/80" />
-                Updated recently
-              </span>
+            {/* Filter + Sort — equal-width premium action cards */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <MobileFilterLauncher
+                currentFilters={currentFilters}
+                currentSort={sort}
+                rawRows={rawRows}
+                priceCtx={priceCtx}
+                variantFacets={variantFacets}
+                liveFacets={liveFacets}
+                allCategories={allCategories}
+                activeFilterCount={activeFilterCount}
+                fmt={fmt}
+                rate={rate}
+                symbol={symbol}
+                onApplyFilters={applyMobileFilters}
+                renderTrigger={(open, count) => (
+                  <button
+                    onClick={open}
+                    className="group relative flex h-[58px] w-full items-center gap-3 rounded-[20px] bg-white/[0.04] ring-1 ring-white/[0.08] px-4 text-left transition-all duration-200 ease-out hover:bg-white/[0.06] hover:ring-white/[0.14] active:scale-[0.98]"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06] text-foreground/90 transition-transform duration-200 group-active:scale-90">
+                      <SlidersHorizontal className="size-[17px]" strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
+                        Filter
+                        {count > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold tabular-nums leading-none">
+                            {count}
+                          </span>
+                        )}
+                      </span>
+                      <span className="block truncate text-[11px] text-muted-foreground mt-0.5">
+                        {count > 0 ? `${count} active` : "Refine results"}
+                      </span>
+                    </span>
+                  </button>
+                )}
+              />
+
+              <Drawer open={sortOpen} onOpenChange={setSortOpen}>
+                <DrawerTrigger asChild>
+                  <button className="group relative flex h-[58px] w-full items-center gap-3 rounded-[20px] bg-white/[0.04] ring-1 ring-white/[0.08] px-4 text-left transition-all duration-200 ease-out hover:bg-white/[0.06] hover:ring-white/[0.14] active:scale-[0.98]">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06] text-foreground/90 transition-transform duration-200 group-active:scale-90">
+                      <ArrowUpDown className="size-[17px]" strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-semibold text-foreground">Sort</span>
+                      <span className="block truncate text-[11px] text-muted-foreground mt-0.5">
+                        {(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}
+                      </span>
+                    </span>
+                  </button>
+                </DrawerTrigger>
+                <DrawerContent className="border-white/10 bg-background/80 backdrop-blur-2xl">
+                  <div className="mx-auto w-full max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                    <div className="flex items-center gap-2 px-2 pt-1 pb-4">
+                      <ArrowUpDown className="size-4 text-accent" />
+                      <h2 className="text-base font-semibold text-foreground">Sort by</h2>
+                    </div>
+                    <div className="space-y-5">
+                      {SORT_GROUPS.map((group) => {
+                        const items = SORTS.filter((s) => s.group === group);
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={group}>
+                            <p className="px-2 pb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">{group}</p>
+                            <div className="space-y-2">
+                              {items.map((s) => {
+                                const active = (search.sort ?? "relevance") === s.value;
+                                const Icon = s.icon;
+                                return (
+                                  <button
+                                    key={s.value}
+                                    onClick={() => { update({ sort: s.value }); setSortOpen(false); }}
+                                    className={`group flex w-full items-center gap-3.5 rounded-2xl px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.98] ${active ? "bg-accent/[0.12] ring-1 ring-accent/40 shadow-[0_8px_28px_-12px_var(--accent)]" : "ring-1 ring-white/[0.06] hover:bg-white/[0.05]"}`}
+                                  >
+                                    <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors ${active ? "bg-accent/20 text-accent" : "bg-white/[0.05] text-muted-foreground group-hover:text-foreground"}`}>
+                                      <Icon className="size-[18px]" strokeWidth={2} />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                      <span className={`block text-sm font-semibold ${active ? "text-accent" : "text-foreground"}`}>{s.label}</span>
+                                      <span className="block truncate text-[11px] text-muted-foreground">{s.desc}</span>
+                                    </span>
+                                    {active && (
+                                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground animate-scale-in">
+                                        <Check className="size-3.5" strokeWidth={3} />
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
             </div>
-          );
-        })()}
+
+            {activeFilterCount > 0 && (
+              <div className="flex justify-end">
+                <button
+                  onClick={clearAll}
+                  className="text-[11px] font-medium text-muted-foreground hover:text-accent underline-offset-4 hover:underline transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
 
 
 
