@@ -1921,9 +1921,11 @@ export type Database = {
         Row: {
           actions_json: Json
           analysis: Json
+          category_rules_version: string | null
           category_slug: string | null
           created_at: string
           duration_ms: number | null
+          engine_version: string | null
           error_message: string | null
           health_score: number | null
           id: string
@@ -1932,7 +1934,9 @@ export type Database = {
           job_type: string
           mode: string
           optimized_url: string | null
+          photon_version: string | null
           product_slug: string | null
+          quality_gate_version: string | null
           recommendation: Json | null
           rejection_reason: string | null
           requested_by: string | null
@@ -1941,9 +1945,11 @@ export type Database = {
         Insert: {
           actions_json?: Json
           analysis?: Json
+          category_rules_version?: string | null
           category_slug?: string | null
           created_at?: string
           duration_ms?: number | null
+          engine_version?: string | null
           error_message?: string | null
           health_score?: number | null
           id?: string
@@ -1952,7 +1958,9 @@ export type Database = {
           job_type?: string
           mode: string
           optimized_url?: string | null
+          photon_version?: string | null
           product_slug?: string | null
+          quality_gate_version?: string | null
           recommendation?: Json | null
           rejection_reason?: string | null
           requested_by?: string | null
@@ -1961,9 +1969,11 @@ export type Database = {
         Update: {
           actions_json?: Json
           analysis?: Json
+          category_rules_version?: string | null
           category_slug?: string | null
           created_at?: string
           duration_ms?: number | null
+          engine_version?: string | null
           error_message?: string | null
           health_score?: number | null
           id?: string
@@ -1972,7 +1982,9 @@ export type Database = {
           job_type?: string
           mode?: string
           optimized_url?: string | null
+          photon_version?: string | null
           product_slug?: string | null
+          quality_gate_version?: string | null
           recommendation?: Json | null
           rejection_reason?: string | null
           requested_by?: string | null
@@ -3052,14 +3064,18 @@ export type Database = {
           alt: string | null
           analysis_json: Json | null
           analyzed_at: string | null
+          category_rules_version: string | null
           created_at: string
+          engine_version: string | null
           id: string
           optimization_actions: Json | null
           optimization_applied_at: string | null
           optimized_meta: Json | null
           optimized_url: string | null
           original_url: string | null
+          photon_version: string | null
           product_slug: string
+          quality_gate_version: string | null
           sort_order: number
           url: string
         }
@@ -3067,14 +3083,18 @@ export type Database = {
           alt?: string | null
           analysis_json?: Json | null
           analyzed_at?: string | null
+          category_rules_version?: string | null
           created_at?: string
+          engine_version?: string | null
           id?: string
           optimization_actions?: Json | null
           optimization_applied_at?: string | null
           optimized_meta?: Json | null
           optimized_url?: string | null
           original_url?: string | null
+          photon_version?: string | null
           product_slug: string
+          quality_gate_version?: string | null
           sort_order?: number
           url: string
         }
@@ -3082,14 +3102,18 @@ export type Database = {
           alt?: string | null
           analysis_json?: Json | null
           analyzed_at?: string | null
+          category_rules_version?: string | null
           created_at?: string
+          engine_version?: string | null
           id?: string
           optimization_actions?: Json | null
           optimization_applied_at?: string | null
           optimized_meta?: Json | null
           optimized_url?: string | null
           original_url?: string | null
+          photon_version?: string | null
           product_slug?: string
+          quality_gate_version?: string | null
           sort_order?: number
           url?: string
         }
