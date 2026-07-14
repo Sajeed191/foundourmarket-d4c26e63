@@ -395,6 +395,43 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     return isDuplicateRisk(rel.kind) ? top.score : Math.round(top.score * 0.4);
   }, [duplicateResult.matches, duplicateDraft]);
 
+  // ---- AI Product Guard: publish protection + smart action handlers ----
+  // The top, non-ignored match that clears the warning threshold.
+  const topGuardMatch = useMemo(() => {
+    const m = duplicateResult.matches.find((x) => !x.ignored);
+    return m && m.score >= GUARD_THRESHOLD ? m : null;
+  }, [duplicateResult.matches]);
+
+  // Once the admin explicitly chooses "Publish Anyway" we don't re-prompt.
+  const [publishAck, setPublishAck] = useState(false);
+  const [guardConfirm, setGuardConfirm] = useState<typeof topGuardMatch>(null);
+
+  // Switch to the Variants tab (create the variant instead of a new product).
+  const onCreateVariant = () => {
+    setTab("variants");
+    setGuardConfirm(null);
+    toast.message("Add this as a variant", {
+      description: savedProduct || effectiveId
+        ? "Add the differing colour/size/storage as a variant of the existing product."
+        : "Save the base product first, then add colour/size/storage variants here.",
+    });
+  };
+
+  // Link the matched product into the appropriate relationship field.
+  const onLinkRelated = (
+    match: { product: { slug: string } },
+    relation: "related" | "accessory" | "successor" | "bundle",
+  ) => {
+    const slug = match.product.slug;
+    const field = relation === "successor" ? "upsell_products" : "related_products";
+    const current = (form[field] || "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (!current.includes(slug)) current.push(slug);
+    set({ [field]: current.join(", ") } as Partial<typeof form>);
+    setGuardConfirm(null);
+    toast.success("Linked", { description: `Added "${slug}" — open the Related tab to review.` });
+  };
+
+
   const galleryUrls = useMemo(
     () => (form.image ? [resolveImage(form.image)] : []),
     [form.image],
