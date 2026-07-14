@@ -656,6 +656,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       onClick={(e) => { if (e.target === e.currentTarget && backdropDownRef.current) onClose(); backdropDownRef.current = false; }}
     >
       <motion.form
+        ref={formRef}
         initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         onSubmit={save} onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl glass-strong border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 max-h-[94vh] overflow-y-auto space-y-3"
