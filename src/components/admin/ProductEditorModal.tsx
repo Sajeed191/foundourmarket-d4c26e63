@@ -650,6 +650,13 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
 
         {/* Marketplace Intelligence — live duplicate detection (never blocks) */}
         {tab === "basic" && (
+          <CatalogReadinessPanel
+            health={healthInput}
+            imageQuality={imageQuality}
+            duplicateRisk={realDuplicateRisk}
+          />
+        )}
+        {tab === "basic" && (
           <DuplicateIntelligencePanel
             key={dupTick}
             draft={duplicateDraft}
