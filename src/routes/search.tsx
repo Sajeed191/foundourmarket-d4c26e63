@@ -1021,12 +1021,6 @@ function SearchPage() {
               <button onClick={clearAll} className="shrink-0 text-xs font-medium text-muted-foreground hover:text-accent">Clear all</button>
             )}
 
-            {!loading && !isTrending && (
-              <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground">
-                <span className="font-bold text-foreground">{results.length.toLocaleString()}</span>{" "}
-                {results.length === 1 ? "product" : "products"}
-              </span>
-            )}
 
           </div>
           <Drawer open={sortOpen} onOpenChange={setSortOpen}>
@@ -1153,11 +1147,6 @@ function SearchPage() {
                 onClear={clearAll}
                 className="mb-4"
               />
-              {!loading && (
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <ResultCounter count={results.length} />
-                </div>
-              )}
             </>
           )}
 
