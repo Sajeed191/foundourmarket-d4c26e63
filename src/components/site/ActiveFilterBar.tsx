@@ -219,29 +219,68 @@ export function ActiveFilterBar({
 
   return (
     <div
-      className={`sticky top-0 z-30 -mx-4 px-4 py-2 sm:mx-0 sm:px-0 ${className ?? ""}`}
+      className={`${className ?? ""}`}
       role="region"
       aria-label="Active filters"
     >
-      {/* Ambient orange edge glow */}
       <div className="relative">
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-px rounded-[22px] bg-gradient-to-r from-accent/20 via-transparent to-accent/15 opacity-60 blur-[6px]"
+          className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-accent/15 via-transparent to-accent/10 opacity-50 blur-[4px]"
         />
         <div
-          className="relative rounded-[22px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(20,20,24,0.85),rgba(10,10,12,0.9))] px-3.5 py-3 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-2xl sm:px-4"
+          className="relative rounded-2xl border border-white/[0.06] bg-[linear-gradient(180deg,rgba(20,20,24,0.75),rgba(10,10,12,0.85))] px-3 py-2 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.03)]"
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-baseline gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/90">
-                Active Filters
-              </span>
-              <span aria-hidden className="text-muted-foreground/40">•</span>
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {count} Filter{count === 1 ? "" : "s"} Applied
-              </span>
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/80">
+              Active
+            </span>
+            <div
+              className="flex flex-1 min-w-0 items-center gap-1.5 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5"
+            >
+              {chips.map((chip) => {
+                const t = TONE_STYLES[chip.tone];
+                const { Icon } = chip;
+                return (
+                  <div
+                    key={chip.key}
+                    className={`group snap-start shrink-0 inline-flex h-8 items-center gap-1.5 rounded-full pl-1.5 pr-0.5 ring-1 ${t.ring} ${t.bg} transition-all duration-200 will-change-transform animate-[fmChipIn_220ms_cubic-bezier(0.2,0.8,0.2,1)_both]`}
+                  >
+                    <span className={`grid size-5 place-items-center rounded-full ${t.iconBg}`}>
+                      {chip.swatch ? (
+                        <span
+                          aria-hidden
+                          className="size-2.5 rounded-full ring-1 ring-white/20"
+                          style={{ background: chip.swatch }}
+                        />
+                      ) : (
+                        <Icon className="size-3" strokeWidth={2.25} />
+                      )}
+                    </span>
+                    <span className={`text-[11.5px] font-semibold ${t.text} max-w-[8rem] truncate`}>
+                      {chip.label}
+                    </span>
+                    <button
+                      onClick={chip.onClear}
+                      aria-label={`Remove filter ${chip.label}`}
+                      className="grid size-6 place-items-center rounded-full text-foreground/60 transition-all duration-150 hover:bg-white/10 hover:text-foreground active:scale-90"
+                    >
+                      <X className="size-3" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
+            <button
+              onClick={onClear}
+              className="shrink-0 inline-flex h-8 items-center rounded-full border border-accent/40 bg-transparent px-2.5 text-[10.5px] font-semibold uppercase tracking-wider text-accent transition-all duration-200 hover:bg-accent/10 hover:border-accent/60 active:scale-[0.96]"
+              aria-label="Clear all filters"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
             <button
               onClick={onClear}
               className="shrink-0 inline-flex h-8 items-center gap-1.5 rounded-full border border-accent/40 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-accent transition-all duration-200 hover:bg-accent/10 hover:border-accent/60 active:scale-[0.96]"
