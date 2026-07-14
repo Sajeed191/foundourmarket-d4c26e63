@@ -12,6 +12,7 @@ import {
   type MediaVariants,
   type MediaAsset,
 } from "@/lib/media-engine";
+import type { ImageAnalysis } from "@/lib/image-normalization";
 
 export type QueueStatus = "queued" | "uploading" | "success" | "error" | "cancelled";
 
@@ -28,6 +29,8 @@ export type QueueItem = {
   error?: string;
   variants?: MediaVariants;
   asset?: MediaAsset | null;
+  analysis?: ImageAnalysis | null;
+  normalizedUrl?: string | null;
 };
 
 export type UploadDone = {
@@ -36,6 +39,8 @@ export type UploadDone = {
   width: number;
   height: number;
   file: File;
+  analysis: ImageAnalysis;
+  normalizedUrl: string | null;
 };
 
 type Options = {
@@ -81,6 +86,8 @@ export function useMediaUpload(opts: Options = {}) {
           progress: 1,
           variants: res.variants,
           asset: res.asset,
+          analysis: res.analysis,
+          normalizedUrl: res.normalizedUrl,
         });
         await opts.onItemComplete?.({
           variants: res.variants,
@@ -88,6 +95,8 @@ export function useMediaUpload(opts: Options = {}) {
           width: res.width,
           height: res.height,
           file: item.file,
+          analysis: res.analysis,
+          normalizedUrl: res.normalizedUrl,
         });
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") {

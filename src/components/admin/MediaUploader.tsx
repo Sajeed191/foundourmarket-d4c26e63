@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatBytes, type MediaEntityType } from "@/lib/media-engine";
 import { useMediaUpload, type UploadDone } from "@/hooks/use-media-upload";
+import { ImageHealthBadge } from "@/components/admin/ImageHealthBadge";
 
 export function MediaUploader({
   entityType = "library",
@@ -191,6 +192,11 @@ export function MediaUploader({
                   </div>
                   {item.status === "error" && (
                     <p className="mt-1 truncate text-[10px] text-destructive">{item.error}</p>
+                  )}
+                  {item.status === "success" && item.analysis && (
+                    <div className="mt-1.5">
+                      <ImageHealthBadge analysis={item.analysis} compact />
+                    </div>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">

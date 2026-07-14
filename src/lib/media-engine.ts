@@ -6,6 +6,12 @@
 // progress-aware uploads, media-library recording, and audit logging.
 // ============================================================
 import { supabase } from "@/integrations/supabase/client";
+import {
+  analyzeImage,
+  generateNormalizedDerivative,
+  shouldNormalize,
+  type ImageAnalysis,
+} from "@/lib/image-normalization";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -214,6 +220,8 @@ export type ProcessedUpload = {
   width: number;
   height: number;
   size: number;
+  analysis: ImageAnalysis;
+  normalizedUrl: string | null;
 };
 
 export type UploadOptions = {
@@ -249,6 +257,11 @@ export async function processAndUpload(
   const width = img.naturalWidth;
   const height = img.naturalHeight;
 
+  // Phase A.5: run deterministic analysis on the source *before* uploads so
+  // metadata and any normalized derivative are ready to persist alongside the
+  // regular variants. Analysis is O(96²) — negligible next to the upload.
+  const analysis: ImageAnalysis = await analyzeImage(img);
+
   // Build variant blobs (skip upscaling: only generate sizes <= original)
   const variantBlobs: Record<string, Blob> = {};
   variantBlobs.original = file;
@@ -257,6 +270,20 @@ export async function processAndUpload(
     if (Math.max(width, height) <= dim && key !== "thumb") continue;
     variantBlobs[key] = await compressTo(img, dim, VARIANT_QUALITY[key]);
   }
+
+  // Phase A.5: optional padded/normalized derivative when the source will
+  // not sit cleanly in the fixed gallery viewport. Deterministic, no AI.
+  let normalizedBlob: Blob | null = null;
+  if (shouldNormalize(analysis)) {
+    try {
+      normalizedBlob = await generateNormalizedDerivative(img, analysis);
+      if (normalizedBlob) variantBlobs.normalized = normalizedBlob;
+    } catch {
+      // Normalization is best-effort — never block the upload.
+      normalizedBlob = null;
+    }
+  }
+  analysis.normalized = !!normalizedBlob;
 
   // Aggregate progress across all variant uploads
   const totals: Record<string, number> = {};
@@ -298,6 +325,7 @@ export async function processAndUpload(
     medium_url: urls.medium || urls.large || urls.original,
     large_url: urls.large || urls.original,
   };
+  const normalizedUrl = urls.normalized ?? null;
 
   let asset: MediaAsset | null = null;
   if (opts.recordLibrary !== false) {
@@ -318,6 +346,9 @@ export async function processAndUpload(
         size_bytes: file.size,
         entity_type: opts.entityType ?? "library",
         entity_ref: opts.entityRef ?? null,
+        // Phase A.5 metadata — versioned; gallery reads via getDisplayImage().
+        analysis: JSON.parse(JSON.stringify(analysis)),
+        normalized_url: normalizedUrl,
       })
       .select()
       .single();
@@ -327,13 +358,13 @@ export async function processAndUpload(
         assetId: asset.id,
         entityType: opts.entityType,
         entityRef: opts.entityRef,
-        meta: { size: file.size, width, height, variants: Object.keys(variantBlobs) },
+        meta: { size: file.size, width, height, variants: Object.keys(variantBlobs), healthScore: analysis.healthScore },
       });
     }
   }
 
   URL.revokeObjectURL(img.src);
-  return { asset, variants, width, height, size: file.size };
+  return { asset, variants, width, height, size: file.size, analysis, normalizedUrl };
 }
 
 // ------------------------------------------------------------
