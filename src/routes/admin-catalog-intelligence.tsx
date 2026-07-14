@@ -11,11 +11,13 @@ import {
   buildOptimizerReport,
   scoreProductCompleteness,
   analyzeVariantIntelligence,
+  analyzeSeoIntelligence,
   type OptimizerProduct,
   type OptimizerReport,
   type ProductCompleteness,
   type VariantIntelligence,
   type VariantRecord,
+  type SeoIntelligenceModule,
 } from "@/lib/catalog-intelligence";
 
 
@@ -185,6 +187,30 @@ function CatalogIntelligencePage() {
     const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
     return { rows, avg, needs };
   }, [products, variantsByProduct]);
+
+  const seoIntel = useMemo(() => {
+    if (!products) return null;
+    const rows = products.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      module: analyzeSeoIntelligence({
+        slug: p.slug,
+        name: p.name,
+        seoTitle: p.seo_title,
+        seoDescription: p.seo_description,
+        description: p.description,
+        keywords: p.meta_keywords ?? null,
+        imageAlt: null,
+        category: p.category ?? null,
+        hasFaq: false,
+        hasRelated: Array.isArray(p.related_products) && p.related_products.length > 0,
+        hasImage: !!p.image,
+      }),
+    }));
+    const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / (rows.length || 1));
+    const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
+    return { rows, avg, needs };
+  }, [products]);
 
 
 
@@ -362,6 +388,40 @@ function CatalogIntelligencePage() {
                 </ul>
               </div>
             )}
+
+            {/* SEO Intelligence — Catalog Intelligence 2.0, Phase 4 */}
+            {seoIntel && (
+              <div className="rounded-3xl border border-border/60 bg-card/40 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+                    <Search className="size-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent">Catalog Intelligence 2.0 · Phase 4</p>
+                    <p className="text-sm font-semibold">SEO Intelligence</p>
+                    <p className="text-xs text-muted-foreground">
+                      Consumes the existing SEO advisor. Prioritises one recommendation per listing across titles, meta, content, schema, alt text, and internal linking.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Avg</p>
+                    <p className={`font-display text-2xl font-semibold tabular-nums ${ring(seoIntel.avg)}`}>{seoIntel.avg}</p>
+                  </div>
+                </div>
+
+                <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Top SEO issues</p>
+                <ul className="space-y-2">
+                  {seoIntel.needs.map((r) => (
+                    <SeoIntelRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
+                  ))}
+                  {seoIntel.needs.length === 0 && (
+                    <li className="flex items-center gap-2 text-xs text-emerald-400">
+                      <CheckCircle2 className="size-4" /> All listings meet SEO standards.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </>
 
         )}
@@ -491,3 +551,53 @@ function VariantIntelRow({ slug, name, module: m }: { slug: string; name: string
 }
 
 
+
+function SeoIntelRow({ slug, name, module: m }: { slug: string; name: string; module: SeoIntelligenceModule }) {
+  const criticals = m.advisories.filter((a) => a.severity === "critical").length;
+  const warnings = m.advisories.filter((a) => a.severity === "warning").length;
+  return (
+    <li className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center gap-3">
+        <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[m.status]}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/admin-product/$slug/seo"
+            params={{ slug }}
+            className="block truncate text-sm font-medium hover:text-accent"
+          >
+            {name}
+          </Link>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.recommendation}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+            {m.potentialImpact && (
+              <span className={`rounded-full px-1.5 py-0.5 ${
+                m.potentialImpact === "High" ? "bg-destructive/15 text-destructive" :
+                m.potentialImpact === "Medium" ? "bg-amber-500/15 text-amber-400" :
+                "bg-emerald-500/15 text-emerald-400"
+              }`}>
+                Impact · {m.potentialImpact}
+              </span>
+            )}
+            {criticals > 0 && <span>{criticals} critical</span>}
+            {warnings > 0 && <span>{warnings} warning{warnings === 1 ? "" : "s"}</span>}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`font-mono text-xs tabular-nums ${
+            m.score >= 85 ? "text-emerald-400" : m.score >= 60 ? "text-amber-400" : "text-destructive"
+          }`}>
+            {m.score}
+          </span>
+          {m.actionHref ? (
+            <a
+              href={m.actionHref}
+              className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition hover:opacity-90"
+            >
+              {m.action} <ArrowRight className="size-3" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
