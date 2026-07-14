@@ -539,14 +539,12 @@ function ProductPage() {
     if (probe.complete) apply();
     return () => { active = false; };
   }, [activeUrl]);
-  // The container's aspect ratio is set to the image's *exact* natural aspect so
-  // it collapses to the real rendered image height — no fixed box, no letterbox,
-  // no reserved blank space. Video uses a standard 16:9; a square is used only as
-  // a first-paint placeholder before the natural aspect is known. A very tall
-  // portrait is capped by max-h below (which centers horizontally, never leaving
-  // a bottom gap).
-  const displayAspect =
-    activeMedia?.kind === "video" ? 16 / 9 : mediaAspect ?? 1;
+  // Phase A: gallery uses a FIXED premium viewport (mobile 340 / tablet 380 /
+  // desktop 480). Source aspect ratio no longer drives the container, so
+  // switching images cannot shift price/CTA/reviews. Images render with
+  // object-contain inside the reserved box — never stretched, never cropped.
+  // `mediaAspect` is preserved as telemetry only.
+  void mediaAspect;
 
   // The lightbox now renders videos too, so it receives the full media list and
   // shares the same active index as the inline gallery.
