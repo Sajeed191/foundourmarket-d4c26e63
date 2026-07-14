@@ -104,16 +104,19 @@ function CatalogIntelligencePage() {
       module: scoreProductCompleteness({
         slug: p.slug,
         name: p.name,
+        category: p.category ?? null,
         description: p.description,
         seoTitle: p.seo_title,
         seoDescription: p.seo_description,
         metaKeywords: p.meta_keywords ?? null,
         imageCount: p.image ? 1 : 0,
         imageQuality: null,
-        attributeCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
+        attributes: (p.attributes ?? null) as Record<string, unknown> | null,
+        specifications: (p.specifications ?? null) as Record<string, unknown> | null,
         specCount: Object.keys(p.specifications ?? {}).length,
         variantCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
       }),
+
     }));
     const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / (rows.length || 1));
     const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
