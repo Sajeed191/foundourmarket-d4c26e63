@@ -48,8 +48,8 @@ export function toImageIntelSummary(
   const occupancy =
     typeof product?.occupancy === "number"
       ? product.occupancy
-      : typeof analysis.occupancy === "number"
-        ? analysis.occupancy
+      : typeof a.occupancy === "number"
+        ? a.occupancy
         : null;
   const aiConfidence =
     typeof product?.confidence === "number" ? product.confidence : null;
