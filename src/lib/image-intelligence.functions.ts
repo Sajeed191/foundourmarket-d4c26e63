@@ -114,6 +114,7 @@ export const analyzeProductImage = createServerFn({ method: "POST" })
       duration_ms: result.durationMs,
       error_message: result.errorMessage ?? null,
       requested_by: userId,
+      ...ENGINE_VERSION_MANIFEST,
     });
 
     if (data.persist && data.imageId && result.intelligence) {
