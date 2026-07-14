@@ -104,12 +104,6 @@ export function SmartRecommendations() {
               strategy="continue_shopping"
             />
             <EngineRail
-              eyebrow="Right now"
-              title="Trending Today"
-              icon={<TrendingUp className="size-3" />}
-              strategy="trending"
-            />
-            <EngineRail
               eyebrow="In your region"
               title="Popular Near You"
               icon={<MapPin className="size-3" />}
@@ -119,22 +113,10 @@ export function SmartRecommendations() {
         ) : (
           <>
             <EngineRail
-              eyebrow="Right now"
-              title="Trending Today"
-              icon={<TrendingUp className="size-3" />}
-              strategy="trending"
-            />
-            <EngineRail
-              eyebrow="Loved by shoppers"
-              title="Most Popular"
-              icon={<Star className="size-3" />}
-              strategy="popular"
-            />
-            <EngineRail
-              eyebrow="Top rated"
-              title="Highly Rated"
-              icon={<Star className="size-3" />}
-              strategy="top_rated"
+              eyebrow="In your region"
+              title="Popular Near You"
+              icon={<MapPin className="size-3" />}
+              strategy="popular_near_you"
             />
           </>
         )}
