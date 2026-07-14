@@ -46,6 +46,13 @@ export { brokerRecommendations, topRecommendation } from "./recommendation-broke
 export type { Recommendation } from "./recommendation-broker";
 export { CATEGORY_PROFILES, GENERIC_PROFILE, profileFor } from "./category-profiles";
 export type { AttributeProfile } from "./category-profiles";
+export {
+  assessMarketplaceReadiness,
+  READINESS_LABEL,
+  READINESS_DOT,
+  READINESS_EMOJI,
+} from "./marketplace-readiness";
+export type { MarketplaceReadiness, ReadinessStatus } from "./marketplace-readiness";
 
 
 
