@@ -293,6 +293,8 @@ function ImageIntelligencePage() {
           </div>
         </section>
 
+        <UpgradeManagerSection />
+
         {/* Recent jobs */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
           <div className="flex items-center justify-between">
@@ -350,5 +352,164 @@ function ImageIntelligencePage() {
         </section>
       </div>
     </AdminShell>
+  );
+}
+
+type UpgradeGroup = "current" | "upgradeable" | "review" | "attention";
+
+const GROUP_META: Record<UpgradeGroup, { dot: string; label: string; hint: string }> = {
+  current:     { dot: "bg-emerald-400", label: "🟢 Current",           hint: "Latest engine · no action" },
+  upgradeable: { dot: "bg-sky-400",     label: "🔵 Upgradeable",       hint: "Older engine or never analyzed" },
+  review:      { dot: "bg-amber-400",   label: "🟡 Review recommended", hint: "Last optimization rejected by gate" },
+  attention:   { dot: "bg-rose-400",    label: "🔴 Requires attention", hint: "Original asset missing" },
+};
+
+function UpgradeManagerSection() {
+  const classifyFn = useServerFn(classifyCatalogImages);
+  const reprocessFn = useServerFn(reprocessCatalogImages);
+  const [category, setCategory] = useState("");
+  const [engineVersion, setEngineVersion] = useState("");
+  const [group, setGroup] = useState<UpgradeGroup>("upgradeable");
+  const [limit, setLimit] = useState(10);
+  const [lastRun, setLastRun] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  const classify = useQuery({
+    queryKey: ["intel-classify", category, engineVersion],
+    queryFn: () => classifyFn({ data: {
+      category: category || null,
+      engineVersion: engineVersion || null,
+    } }),
+  });
+
+  const reprocess = useMutation({
+    mutationFn: (dryRun: boolean) => reprocessFn({ data: {
+      group, category: category || null, engineVersion: engineVersion || null, limit, dryRun,
+    } }),
+    onSuccess: (res: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      setLastRun(res);
+      if (res.dryRun) toast.info(`Dry-run: ${res.wouldReprocess} image(s) would be reprocessed.`);
+      else toast.success(`Reprocessed ${res.processed} image(s).`);
+      classify.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const summary = classify.data;
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Upgrade manager</p>
+          <p className="mt-1 text-[11px] text-white/60">
+            Classify catalog images and reprocess assets built on older engine versions. Always dry-run first.
+          </p>
+        </div>
+        <button
+          onClick={() => classify.refetch()}
+          className="text-[10px] font-mono uppercase tracking-widest text-white/60 hover:text-white"
+        >Refresh</button>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {(Object.keys(GROUP_META) as UpgradeGroup[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setGroup(k)}
+            className={cn(
+              "text-left rounded-xl border p-3 transition",
+              group === k ? "border-accent/50 bg-accent/10" : "border-white/10 bg-white/[0.02] hover:border-white/20",
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <span className={cn("size-2 rounded-full", GROUP_META[k].dot)} />
+              <p className="text-[11px] font-medium text-white/90">{GROUP_META[k].label}</p>
+            </div>
+            <p className="mt-1 font-mono text-2xl tabular-nums text-white">
+              {summary ? summary[k] : "—"}
+            </p>
+            <p className="mt-0.5 text-[10px] text-white/50">{GROUP_META[k].hint}</p>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr,1fr,120px,auto,auto]">
+        <input
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="Filter by category (optional)"
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-accent/40"
+        />
+        <input
+          value={engineVersion}
+          onChange={(e) => setEngineVersion(e.target.value)}
+          placeholder="Filter by engine version (e.g. 2.0.0)"
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-accent/40"
+        />
+        <input
+          type="number" min={1} max={50}
+          value={limit}
+          onChange={(e) => setLimit(Math.max(1, Math.min(50, Number(e.target.value) || 1)))}
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-accent/40"
+        />
+        <button
+          type="button"
+          disabled={reprocess.isPending}
+          onClick={() => reprocess.mutate(true)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
+        >
+          {reprocess.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          Dry-run
+        </button>
+        <button
+          type="button"
+          disabled={reprocess.isPending || group === "current"}
+          onClick={() => {
+            if (!window.confirm(`Reprocess up to ${limit} '${group}' image(s)? This runs the full pipeline.`)) return;
+            reprocess.mutate(false);
+          }}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground transition hover:brightness-110 disabled:opacity-50"
+        >
+          {reprocess.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          Reprocess
+        </button>
+      </div>
+
+      {lastRun && (
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3 text-[11px] text-white/80">
+          {lastRun.dryRun ? (
+            <>
+              <p className="text-white/95">
+                <span className="font-mono text-white/60">dry-run</span> · would reprocess
+                <span className="ml-1 font-mono text-white">{lastRun.wouldReprocess}</span> image(s)
+              </p>
+              {lastRun.sample?.length > 0 && (
+                <ul className="mt-1.5 space-y-0.5 text-white/60">
+                  {lastRun.sample.map((s: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                    <li key={s.id} className="truncate">
+                      <span className="font-mono text-white/40">{s.productSlug ?? "—"}</span> · {s.url}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-white/95">
+                Processed <span className="font-mono text-white">{lastRun.processed}</span> image(s)
+                {lastRun.summary && (
+                  <span className="ml-2 text-white/60">
+                    {Object.entries(lastRun.summary).map(([k, v]) => (
+                      <span key={k} className="mr-2 font-mono">{k}:{String(v)}</span>
+                    ))}
+                  </span>
+                )}
+              </p>
+            </>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
