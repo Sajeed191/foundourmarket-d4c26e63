@@ -7,6 +7,7 @@ import { useCategories, useAllCategories, type Category } from "@/lib/use-catego
 import { MobileFilterDrawer } from "@/components/site/MobileFilterDrawer";
 import { ActiveFilterBar } from "@/components/site/ActiveFilterBar";
 import { ResultCounter } from "@/components/site/ResultCounter";
+import { LoadMoreSection } from "@/components/site/LoadMoreSection";
 import {
   type Filters as ClientFilters,
   type Facet,
@@ -858,7 +859,7 @@ function SearchPage() {
   }, [posKey, visibleCount]);
 
   const visibleResults = useMemo(() => results.slice(0, visibleCount), [results, visibleCount]);
-  const hasMore = visibleCount < results.length;
+  
   function loadMore() { setVisibleCount((c) => c + PAGE_SIZE); }
 
   // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
@@ -1217,16 +1218,16 @@ function SearchPage() {
                 renderItem={renderProduct}
               />
 
-              {hasMore && (
-                <div className="mt-8 sm:mt-10 flex justify-center">
-                  <button
-                    onClick={loadMore}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-[11px] font-mono uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-colors"
-                  >
-                    Load More
-                  </button>
-                </div>
-              )}
+              <LoadMoreSection
+                visible={visibleResults.length}
+                total={results.length}
+                pageSize={PAGE_SIZE}
+                onLoadMore={loadMore}
+                loading={false}
+                columnsClassName="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 mt-3 sm:mt-5 lg:mt-6"
+                analyticsSource="search"
+              />
+
             </>
           )}
         </div>
