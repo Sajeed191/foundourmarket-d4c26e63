@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2, Sparkles, RefreshCw, Gauge, Search, ShieldCheck, Image as ImageIcon,
-  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package, CheckCircle2, Wand2, GitBranch, DollarSign, Zap,
+  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package, CheckCircle2, Wand2, GitBranch, DollarSign, Zap, Rocket,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,10 @@ import {
   analyzeSeoIntelligence,
   analyzePricingIntelligence,
   brokerRecommendations,
+  assessMarketplaceReadiness,
+  READINESS_LABEL,
+  READINESS_DOT,
+  READINESS_EMOJI,
   type OptimizerProduct,
   type OptimizerReport,
   type ProductCompleteness,
@@ -22,6 +26,8 @@ import {
   type SeoIntelligenceModule,
   type PricingIntelligence,
   type Recommendation,
+  type MarketplaceReadiness,
+  type ReadinessStatus,
 } from "@/lib/catalog-intelligence";
 
 
