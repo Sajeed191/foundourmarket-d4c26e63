@@ -53,7 +53,7 @@ const VARIANT_KINDS: RelationshipKind[] = [
 
 function toRelated(m: CatalogMatch): RelatedProduct {
   return {
-    productId: m.product.id,
+    productId: m.product.id ?? m.product.slug,
     name: m.product.name ?? "Untitled product",
     kind: m.relationship.kind,
     confidence: m.relationship.confidence,
