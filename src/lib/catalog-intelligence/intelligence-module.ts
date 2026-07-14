@@ -22,6 +22,9 @@ export type Evidence = {
 
 export type IntelligenceStatus = "green" | "blue" | "amber" | "red";
 
+/** Qualitative impact level for a recommendation. Deliberately not a %. */
+export type PotentialImpact = "High" | "Medium" | "Low";
+
 export type IntelligenceModule = {
   /** Module identifier, e.g. "product_completeness". */
   moduleId: string;
@@ -37,6 +40,8 @@ export type IntelligenceModule = {
   action: string;
   /** Optional deep-link path for the action (route to open). */
   actionHref?: string;
+  /** Qualitative impact of the recommendation. */
+  potentialImpact?: PotentialImpact;
   /** All findings, ranked by impact. Powers "View details". */
   evidence: Evidence[];
 };
@@ -47,3 +52,4 @@ export function statusFromScore(score: number): IntelligenceStatus {
   if (score >= 45) return "amber";
   return "red";
 }
+
