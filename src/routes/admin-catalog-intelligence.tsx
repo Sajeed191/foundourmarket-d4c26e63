@@ -3,15 +3,18 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2, Sparkles, RefreshCw, Gauge, Search, ShieldCheck, Image as ImageIcon,
-  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package,
+  Boxes, Brain, Layers, Store, TrendingUp, ArrowRight, Package, CheckCircle2, Wand2,
 } from "lucide-react";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import {
   buildOptimizerReport,
+  scoreProductCompleteness,
   type OptimizerProduct,
   type OptimizerReport,
+  type ProductCompleteness,
 } from "@/lib/catalog-intelligence";
+
 
 export const Route = createFileRoute("/admin-catalog-intelligence")({
   head: () => ({
