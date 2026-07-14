@@ -910,3 +910,65 @@ function BrokerRow({ slug, name, rec }: { slug: string; name: string; rec: Recom
     </li>
   );
 }
+
+function ReadinessBucket({ status, count }: { status: ReadinessStatus; count: number }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center gap-2">
+        <span className={`size-2 rounded-full ${READINESS_DOT[status]}`} aria-hidden />
+        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+          {READINESS_LABEL[status]}
+        </span>
+      </div>
+      <p className="mt-1 font-display text-xl font-semibold tabular-nums">{count}</p>
+    </div>
+  );
+}
+
+function ReadinessRow({ slug, name, readiness: r }: { slug: string; name: string; readiness: MarketplaceReadiness }) {
+  return (
+    <li className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center gap-3">
+        <span className={`size-2 shrink-0 rounded-full ${READINESS_DOT[r.status]}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/admin-product/$slug"
+            params={{ slug }}
+            className="block truncate text-sm font-medium hover:text-accent"
+          >
+            {name}
+          </Link>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {r.topRecommendation?.recommendation ?? "Listing is Marketplace Ready."}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+            <span>{READINESS_EMOJI[r.status]} {READINESS_LABEL[r.status]}</span>
+            <span>Confidence · {r.confidence}%</span>
+            {r.blockers.length > 0 && (
+              <span className="rounded-full bg-destructive/15 px-1.5 py-0.5 text-destructive">
+                {r.blockers.length} blocker{r.blockers.length === 1 ? "" : "s"}
+              </span>
+            )}
+            {r.strengths.length > 0 && (
+              <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">
+                Strong: {r.strengths.slice(0, 3).join(", ")}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`font-mono text-xs tabular-nums ${ring(r.score)}`}>{r.score}</span>
+          {r.topRecommendation?.actionHref ? (
+            <a
+              href={r.topRecommendation.actionHref}
+              className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition hover:opacity-90"
+            >
+              {r.topRecommendation.action} <ArrowRight className="size-3" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
