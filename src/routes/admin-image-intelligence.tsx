@@ -11,9 +11,11 @@ import { ENGINE_VERSION_MANIFEST } from "@/lib/image-intelligence-versions";
 import type { ImageIntelligence, ImageRecommendation, IntelligenceMode } from "@/lib/image-intelligence-types";
 import {
   analyzeProductImage,
+  classifyCatalogImages,
   getIntelligenceSettings,
   listRecentIntelligenceJobs,
   normalizeProductImage,
+  reprocessCatalogImages,
   updateIntelligenceSettings,
 } from "@/lib/image-intelligence.functions";
 import { cn } from "@/lib/utils";
