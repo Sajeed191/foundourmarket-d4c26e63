@@ -280,54 +280,8 @@ export function ActiveFilterBar({
             </button>
           </div>
         </div>
-      </div>
-            <button
-              onClick={onClear}
-              className="shrink-0 inline-flex h-8 items-center gap-1.5 rounded-full border border-accent/40 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-accent transition-all duration-200 hover:bg-accent/10 hover:border-accent/60 active:scale-[0.96]"
-              aria-label="Clear all filters"
-            >
-              Clear All
-            </button>
-          </div>
 
-          <div
-            className="mt-2.5 flex items-center gap-2 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-0.5 px-0.5 py-0.5"
-          >
-            {chips.map((chip) => {
-              const t = TONE_STYLES[chip.tone];
-              const { Icon } = chip;
-              return (
-                <div
-                  key={chip.key}
-                  className={`group snap-start shrink-0 inline-flex h-10 items-center gap-2 rounded-full pl-2 pr-1 ring-1 ${t.ring} ${t.bg} shadow-[0_4px_14px_-8px_rgba(0,0,0,0.5)] transition-all duration-200 will-change-transform animate-[fmChipIn_240ms_cubic-bezier(0.2,0.8,0.2,1)_both]`}
-                >
-                  <span className={`grid size-6 place-items-center rounded-full ${t.iconBg}`}>
-                    {chip.swatch ? (
-                      <span
-                        aria-hidden
-                        className="size-3 rounded-full ring-1 ring-white/20"
-                        style={{ background: chip.swatch }}
-                      />
-                    ) : (
-                      <Icon className="size-3.5" strokeWidth={2.25} />
-                    )}
-                  </span>
-                  <span className={`text-[12px] font-semibold ${t.text} max-w-[10rem] truncate`}>
-                    {chip.label}
-                  </span>
-                  <button
-                    onClick={chip.onClear}
-                    aria-label={`Remove filter ${chip.label}`}
-                    className="grid size-7 place-items-center rounded-full bg-white/[0.04] text-foreground/70 transition-all duration-150 hover:bg-white/10 hover:text-foreground active:scale-90"
-                  >
-                    <X className="size-3.5" strokeWidth={2.5} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+
 
       <style>{`
         @keyframes fmChipIn {
