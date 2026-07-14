@@ -138,7 +138,7 @@ function ProductImageImpl({
     );
     io.observe(img);
     return () => io.disconnect();
-  }, [displaySrc, disableLazyLoading, forceEager, priority]);
+  }, [resolvedSrc, disableLazyLoading, forceEager, priority]);
 
   const withCacheBust = useCallback((url: string, n: number) => {
     if (n <= 0) return url;
@@ -292,7 +292,7 @@ function ProductImageImpl({
       alt={alt}
       width={width}
       height={height}
-      loading={priority || disableLazyLoading ? "eager" : "lazy"}
+      loading={forceEager ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "low"}
       decoding={disableAsyncDecoding ? "sync" : "async"}
       data-product-image
