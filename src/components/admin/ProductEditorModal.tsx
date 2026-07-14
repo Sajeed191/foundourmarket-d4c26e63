@@ -612,6 +612,19 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
+        {/* Marketplace Intelligence — live duplicate detection (never blocks) */}
+        {tab === "basic" && (
+          <DuplicateIntelligencePanel
+            key={dupTick}
+            draft={duplicateDraft}
+            result={duplicateResult}
+            draftPhash={draftPhash}
+            onIgnored={() => setDupTick((t) => t + 1)}
+          />
+        )}
+
+
+
         {tab === "basic" && (<>
         {/* Images — multiple, drag to reorder, first = primary */}
         <CollapsibleModule eyebrow="Step 0" title="Product Images" badge={<Sparkles className="size-3.5 text-accent" />}>
