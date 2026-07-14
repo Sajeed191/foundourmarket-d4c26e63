@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDuplicateDetection } from "@/hooks/use-duplicate-detection";
-import { computeImagePhash } from "@/lib/duplicate-detection";
+import { computeImagePhash, logDuplicateEvent, invalidateDetectionIndex } from "@/lib/duplicate-detection";
+import { useNavigate } from "@tanstack/react-router";
 import { DuplicateIntelligencePanel } from "@/components/admin/duplicate/DuplicateIntelligencePanel";
 import { CatalogReadinessPanel } from "@/components/admin/duplicate/CatalogReadinessPanel";
 import { ProductGuardBanner, GUARD_THRESHOLD } from "@/components/admin/duplicate/ProductGuardBanner";
