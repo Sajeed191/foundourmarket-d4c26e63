@@ -28,4 +28,7 @@ export { scoreVendor } from "./vendor-quality";
 export type { VendorSignals, VendorQuality } from "./vendor-quality";
 export { buildOptimizerReport } from "./catalog-optimizer";
 export type { OptimizerProduct, OptimizerRow, OptimizerReport } from "./catalog-optimizer";
+export { recommendAction } from "./recommendation";
+export type { AiRecommendation, RecommendedActionKind } from "./recommendation";
+
 

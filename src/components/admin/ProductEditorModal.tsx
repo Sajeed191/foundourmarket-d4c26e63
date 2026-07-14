@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useDuplicateDetection } from "@/hooks/use-duplicate-detection";
 import { computeImagePhash, logDuplicateEvent, invalidateDetectionIndex } from "@/lib/duplicate-detection";
 import { useNavigate } from "@tanstack/react-router";
-import { DuplicateIntelligencePanel } from "@/components/admin/duplicate/DuplicateIntelligencePanel";
-import { CatalogReadinessPanel } from "@/components/admin/duplicate/CatalogReadinessPanel";
 import { ProductGuardBanner, GUARD_THRESHOLD } from "@/components/admin/duplicate/ProductGuardBanner";
+import { MarketplaceAssistantPanel } from "@/components/admin/duplicate/MarketplaceAssistantPanel";
 import { useImageIntelligence } from "@/hooks/use-image-intelligence";
 import { classifyRelationship, isDuplicateRisk, RELATIONSHIP_LABEL } from "@/lib/catalog-intelligence";
 import { resolveImage } from "@/lib/products";
@@ -390,13 +389,6 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   const duplicateResult = useDuplicateDetection(duplicateDraft);
   const [dupTick, setDupTick] = useState(0);
 
-  // ---- Catalog Intelligence: real duplicate risk (exact only) + image + health ----
-  const realDuplicateRisk = useMemo(() => {
-    const top = duplicateResult.matches.find((m) => !m.ignored);
-    if (!top) return 0;
-    const rel = classifyRelationship(duplicateDraft, top);
-    return isDuplicateRisk(rel.kind) ? top.score : Math.round(top.score * 0.4);
-  }, [duplicateResult.matches, duplicateDraft]);
 
   // ---- AI Product Guard: publish protection + smart action handlers ----
   // The top, non-ignored match that clears the warning threshold.
@@ -459,6 +451,24 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     }),
     [form.name, form.description, form.seo_title, form.seo_description, form.meta_keywords, galleryUrls.length, form.video_url, specsRows, attrsObj, form.price_inr, form.price_usd, form.compare_price_inr, form.stock_quantity],
   );
+
+  // SEO advisory input for the Marketplace AI Assistant (reuses SEO engine).
+  const assistantSeoDraft = useMemo(
+    () => ({
+      name: form.name,
+      seoTitle: form.seo_title || null,
+      seoDescription: form.seo_description || null,
+      description: form.description || null,
+      keywords: form.meta_keywords || null,
+      imageAlt: form.name || null,
+      category: effectiveCategory || null,
+      hasFaq: pendingFaqs.length > 0,
+      hasRelated: !!(form.related_products || form.cross_sell_products || form.upsell_products),
+      hasImage: !!form.image.trim(),
+    }),
+    [form.name, form.seo_title, form.seo_description, form.description, form.meta_keywords, effectiveCategory, pendingFaqs.length, form.related_products, form.cross_sell_products, form.upsell_products, form.image],
+  );
+
 
   async function uploadImage(file: File) {
     setUploading(true); setError(null);
@@ -708,20 +718,19 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
-        {/* Marketplace Intelligence — live duplicate detection (never blocks) */}
+        {/* Marketplace AI Assistant — unified live intelligence (never blocks) */}
         {tab === "basic" && (
-          <CatalogReadinessPanel
-            health={healthInput}
-            imageQuality={imageQuality}
-            duplicateRisk={realDuplicateRisk}
-          />
-        )}
-        {tab === "basic" && (
-          <DuplicateIntelligencePanel
+          <MarketplaceAssistantPanel
             key={dupTick}
             draft={duplicateDraft}
             result={duplicateResult}
             draftPhash={draftPhash}
+            healthInput={healthInput}
+            imageQuality={imageQuality}
+            seoDraft={assistantSeoDraft}
+            variantRows={[]}
+            onCreateVariant={onCreateVariant}
+            onLinkRelated={onLinkRelated}
             onIgnored={() => setDupTick((t) => t + 1)}
           />
         )}
