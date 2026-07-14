@@ -7,6 +7,7 @@ import { Loader2, Sparkles, Play, Wand2, ShieldCheck, XCircle } from "lucide-rea
 import { AdminShell } from "@/components/admin/AdminShell";
 import { MarketplaceImageAssistant } from "@/components/admin/MarketplaceImageAssistant";
 import { CATEGORY_FRAMING } from "@/lib/image-intelligence-types";
+import { ENGINE_VERSION_MANIFEST } from "@/lib/image-intelligence-versions";
 import type { ImageIntelligence, ImageRecommendation, IntelligenceMode } from "@/lib/image-intelligence-types";
 import {
   analyzeProductImage,
