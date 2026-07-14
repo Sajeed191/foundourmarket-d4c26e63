@@ -216,6 +216,65 @@ function CatalogIntelligencePage() {
     return { rows, avg, needs };
   }, [products]);
 
+  const pricingIntel = useMemo(() => {
+    if (!products) return null;
+    const rows = products.map((p) => {
+      const vs = variantsByProduct.get(p.slug) ?? [];
+      const basePrice = typeof p.price_inr === "number" ? p.price_inr : null;
+      const comparePrice = typeof p.compare_price_inr === "number" ? p.compare_price_inr : null;
+      const module = analyzePricingIntelligence({
+        slug: p.slug,
+        productName: p.name,
+        price: basePrice,
+        comparePrice,
+        cost: null,
+        variants: vs.map<VariantRecord>((v) => ({
+          title: v.name,
+          option1: v.color,
+          option2: v.size,
+          sku: v.sku,
+          price:
+            v.price_override != null
+              ? v.price_override
+              : basePrice != null
+              ? basePrice + (v.price_adjustment ?? 0)
+              : null,
+          compare_price: v.compare_price,
+          stock: v.stock_quantity,
+          is_active: v.active,
+          image_url: v.image_url,
+          swatch_color: v.color_hex,
+        })),
+      });
+      return { slug: p.slug, name: p.name, module };
+    });
+    const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / (rows.length || 1));
+    const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
+    return { rows, avg, needs };
+  }, [products, variantsByProduct]);
+
+  /** Recommendation Broker preview — one prioritised recommendation across all modules. */
+  const brokerFeed = useMemo(() => {
+    if (!products || !completeness || !variantIntel || !seoIntel || !pricingIntel) return null;
+    const bySlug = new Map<string, { name: string; recs: Recommendation[] }>();
+    for (const p of products) {
+      const modules = [
+        completeness.rows.find((r) => r.slug === p.slug)?.module,
+        variantIntel.rows.find((r) => r.slug === p.slug)?.module,
+        seoIntel.rows.find((r) => r.slug === p.slug)?.module,
+        pricingIntel.rows.find((r) => r.slug === p.slug)?.module,
+      ].filter(Boolean) as Parameters<typeof brokerRecommendations>[0];
+      const recs = brokerRecommendations(modules);
+      if (recs.length > 0) bySlug.set(p.slug, { name: p.name, recs });
+    }
+    const flat = [...bySlug.entries()]
+      .map(([slug, { name, recs }]) => ({ slug, name, top: recs[0] }))
+      .sort((a, b) => b.top.priority - a.top.priority)
+      .slice(0, 6);
+    return flat;
+  }, [products, completeness, variantIntel, seoIntel, pricingIntel]);
+
+
 
 
 
