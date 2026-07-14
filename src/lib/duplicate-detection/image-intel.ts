@@ -27,10 +27,11 @@ type AnalysisLike = {
  * deterministic occupancy).
  */
 export function toImageIntelSummary(
-  analysis: AnalysisLike | null | undefined,
+  analysis: AnalysisLike | ImageAnalysis | null | undefined,
 ): ImageIntelSummary | null {
-  if (!analysis) return null;
-  const product = analysis.product ?? undefined;
+  const a = (analysis ?? null) as AnalysisLike | null;
+  if (!a) return null;
+  const product = a.product;
   const labels = Array.from(
     new Set(
       (product?.objects ?? [])
