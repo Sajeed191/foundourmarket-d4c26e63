@@ -31,9 +31,14 @@ export type { OptimizerProduct, OptimizerRow, OptimizerReport } from "./catalog-
 export { recommendAction } from "./recommendation";
 export type { AiRecommendation, RecommendedActionKind } from "./recommendation";
 export { statusFromScore } from "./intelligence-module";
-export type { IntelligenceModule, IntelligenceStatus, Evidence, EvidenceSeverity } from "./intelligence-module";
+export type { IntelligenceModule, IntelligenceStatus, Evidence, EvidenceSeverity, PotentialImpact } from "./intelligence-module";
 export { scoreProductCompleteness } from "./product-completeness";
 export type { CompletenessInput, ProductCompleteness } from "./product-completeness";
+export { analyzeAttributes } from "./attribute-intelligence";
+export type { AttributeInput, AttributeIntelligence } from "./attribute-intelligence";
+export { CATEGORY_PROFILES, GENERIC_PROFILE, profileFor } from "./category-profiles";
+export type { AttributeProfile } from "./category-profiles";
+
 
 
 

@@ -11,11 +11,14 @@ import {
   statusFromScore,
   type Evidence,
   type IntelligenceModule,
+  type PotentialImpact,
 } from "./intelligence-module";
+import { analyzeAttributes, type AttributeIntelligence } from "./attribute-intelligence";
 
 export type CompletenessInput = {
   slug?: string;
   name?: string | null;
+  category?: string | null;
   description?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -23,10 +26,16 @@ export type CompletenessInput = {
   imageCount: number;
   /** 0–100 from Image Intelligence. null if not yet analyzed. */
   imageQuality?: number | null;
-  attributeCount: number;
+  /** Raw attribute bag — Attribute Intelligence owns the analysis. */
+  attributes?: Record<string, unknown> | null;
+  /** Raw specifications bag — merged into attributes for coverage. */
+  specifications?: Record<string, unknown> | null;
+  /** Cheap fallback when caller has no attributes bag (e.g. legacy input). */
+  attributeCount?: number;
   specCount: number;
   variantCount: number;
 };
+
 
 type Dimension = {
   key: string;
@@ -81,13 +90,43 @@ function scoreDescription(input: CompletenessInput): Dimension {
   return { key: "description", label: "Description", weight: 15, score: clamp(s), evidence: ev, action: "Expand description", actionSubpath: "details" };
 }
 
-function scoreAttributes(input: CompletenessInput): Dimension {
-  const ev: Evidence[] = [];
-  let s = 100;
-  if (input.attributeCount === 0) { s = 20; ev.push({ key: "attrs_none", message: "No attributes set (brand, colour, material, …).", severity: "warning", impact: 12 }); }
-  else if (input.attributeCount < 3) { s = 60; ev.push({ key: "attrs_few", message: "Add more attributes to improve filtering & search.", severity: "info", impact: 6 }); }
-  return { key: "attributes", label: "Attributes", weight: 15, score: clamp(s), evidence: ev, action: "Add attributes", actionSubpath: "details" };
+/**
+ * Attribute dimension — delegates to the Attribute Intelligence module.
+ * Product Completeness is now an orchestrator over specialised subsystems.
+ */
+function scoreAttributes(input: CompletenessInput): { dim: Dimension; attr: AttributeIntelligence } {
+  const attr = analyzeAttributes({
+    slug: input.slug,
+    category: input.category,
+    attributes: input.attributes ?? null,
+    specifications: input.specifications ?? null,
+  });
+  const ev: Evidence[] = attr.evidence.filter((e) => e.severity !== "info");
+  // Fallback when caller passed no attributes bag but did pass a legacy count.
+  const hasBag = !!(input.attributes || input.specifications);
+  const score = hasBag
+    ? attr.score
+    : input.attributeCount == null
+    ? 60
+    : input.attributeCount === 0
+    ? 20
+    : input.attributeCount < 3
+    ? 60
+    : 100;
+  return {
+    dim: {
+      key: "attributes",
+      label: "Attributes",
+      weight: 15,
+      score: clamp(score),
+      evidence: ev,
+      action: "Add attributes",
+      actionSubpath: "details",
+    },
+    attr,
+  };
 }
+
 
 function scoreSpecs(input: CompletenessInput): Dimension {
   const ev: Evidence[] = [];
@@ -120,14 +159,25 @@ function scoreSeo(input: CompletenessInput): Dimension {
 
 export type ProductCompleteness = IntelligenceModule & {
   dimensions: { key: string; label: string; score: number; weight: number }[];
+  attributes: AttributeIntelligence;
 };
 
+function derivePotentialImpact(
+  weakestScore: number,
+  hasCritical: boolean,
+): PotentialImpact {
+  if (hasCritical || weakestScore < 45) return "High";
+  if (weakestScore < 70) return "Medium";
+  return "Low";
+}
+
 export function scoreProductCompleteness(input: CompletenessInput): ProductCompleteness {
+  const attributeDim = scoreAttributes(input);
   const dims: Dimension[] = [
     scoreImages(input),
     scoreTitle(input),
     scoreDescription(input),
-    scoreAttributes(input),
+    attributeDim.dim,
     scoreSpecs(input),
     scoreVariants(input),
     scoreSeo(input),
@@ -156,6 +206,11 @@ export function scoreProductCompleteness(input: CompletenessInput): ProductCompl
     ? `/admin-product/${input.slug}/${weakest.actionSubpath}`
     : undefined;
 
+  const potentialImpact = derivePotentialImpact(
+    weakest.score,
+    evidence.some((e) => e.severity === "critical"),
+  );
+
   return {
     moduleId: "product_completeness",
     score,
@@ -164,7 +219,10 @@ export function scoreProductCompleteness(input: CompletenessInput): ProductCompl
     recommendation,
     action,
     actionHref,
+    potentialImpact,
     evidence,
     dimensions: dims.map((d) => ({ key: d.key, label: d.label, score: d.score, weight: d.weight })),
+    attributes: attributeDim.attr,
   };
 }
+

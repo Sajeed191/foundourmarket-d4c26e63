@@ -104,16 +104,19 @@ function CatalogIntelligencePage() {
       module: scoreProductCompleteness({
         slug: p.slug,
         name: p.name,
+        category: p.category ?? null,
         description: p.description,
         seoTitle: p.seo_title,
         seoDescription: p.seo_description,
         metaKeywords: p.meta_keywords ?? null,
         imageCount: p.image ? 1 : 0,
         imageQuality: null,
-        attributeCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
+        attributes: (p.attributes ?? null) as Record<string, unknown> | null,
+        specifications: (p.specifications ?? null) as Record<string, unknown> | null,
         specCount: Object.keys(p.specifications ?? {}).length,
         variantCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
       }),
+
     }));
     const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / (rows.length || 1));
     const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
@@ -301,6 +304,22 @@ function CompletenessRow({ slug, name, module: m }: { slug: string; name: string
             {name}
           </Link>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.recommendation}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+            <span>{m.attributes.profile.label}</span>
+            {m.potentialImpact && (
+              <span className={`rounded-full px-1.5 py-0.5 ${
+                m.potentialImpact === "High" ? "bg-destructive/15 text-destructive" :
+                m.potentialImpact === "Medium" ? "bg-amber-500/15 text-amber-400" :
+                "bg-emerald-500/15 text-emerald-400"
+              }`}>
+                Impact · {m.potentialImpact}
+              </span>
+            )}
+            {m.attributes.missingRequired.length > 0 && (
+              <span>Missing {m.attributes.missingRequired.length} required attr{m.attributes.missingRequired.length === 1 ? "" : "s"}</span>
+            )}
+          </div>
+
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className={`font-mono text-xs tabular-nums ${
