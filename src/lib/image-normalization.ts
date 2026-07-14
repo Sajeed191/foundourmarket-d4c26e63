@@ -81,39 +81,76 @@ export function getDisplayImage(
 // Analysis schema (versioned — extend fields, never break the shape)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const IMAGE_ANALYSIS_VERSION = 1;
+export const IMAGE_ANALYSIS_VERSION = 2;
 
 export type Orientation = "portrait" | "landscape" | "square";
 export type BackgroundType = "solid" | "gradient" | "photo" | "transparent";
 
+/**
+ * v2 payload: flat v1 fields remain for back-compat; namespaced sections
+ * scope future intelligence without further schema migrations. Deterministic
+ * signals live under `image`/`product`/`background`; AI-derived signals live
+ * under `ai` and always carry confidence.
+ */
 export type ImageAnalysis = {
   version: number;
+  // ── v1 flat fields — every downstream reader still uses these ──
   width: number;
   height: number;
   aspectRatio: number;
   orientation: Orientation;
   megapixels: number;
-
-  /** % of canvas occupied by the product's bounding box (non-empty pixels). */
   occupancy: number;
-  /** % of canvas that is empty/transparent/near-uniform border. */
   emptyMarginPct: number;
   hasTransparentBorder: boolean;
-
-  /** Heuristic background classification. */
   backgroundType: BackgroundType;
-  /** Dominant edge color (hex) when background is solid/gradient. */
   backgroundColorHex: string | null;
-
-  /** Laplacian variance — higher = sharper. */
   sharpness: number;
-  /** Average luma 0-255. */
   brightness: number;
-  /** Whether image was normalized during upload (has a derivative). */
   normalized: boolean;
-
-  /** Overall image health 0-100. */
   healthScore: number;
+
+  // ── v2 namespaces (optional on read; populated by v2+ analyzers) ──
+  image?: {
+    width: number;
+    height: number;
+    aspectRatio: number;
+    orientation: Orientation;
+    megapixels: number;
+    sharpness: number;
+    brightness: number;
+  };
+  product?: {
+    analyzed: boolean;
+    occupancy: number;
+    emptyMarginPct: number;
+    objects: Array<{
+      id: number;
+      bbox: { x: number; y: number; width: number; height: number };
+      confidence: number;
+    }>;
+    confidence: number | null;
+  };
+  background?: {
+    type: BackgroundType;
+    colorHex: string | null;
+    hasTransparentBorder: boolean;
+    confidence: number | null;
+  };
+  ai?: {
+    provider: string | null;
+    model: string | null;
+    version: string | null;
+    analyzedAt: string | null;
+    cacheVersion: number;
+  };
+  quality?: {
+    healthScore: number;
+    band: HealthBand;
+    galleryContribution: number | null;
+    readinessScore: number | null;
+    suggestions: HealthSuggestion[];
+  };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
