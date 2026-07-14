@@ -834,3 +834,22 @@ export function recommendHeroImage(
     reasons,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI trigger heuristic (Tier 2 automatic gate for image-ai.functions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Deterministic gate — returns true when Tier 1 analysis is uncertain enough
+ * that Phase B AI vision would add real value. Callers should NEVER auto-run
+ * AI when this returns false; keep it cheap and predictable.
+ */
+export function shouldAutoRunAi(a: ImageAnalysis | null | undefined): boolean {
+  if (!a) return false;
+  if (a.product?.analyzed) return false; // already analyzed — cache wins
+  if (a.healthScore < 60) return true;
+  if (a.occupancy > 0 && a.occupancy < 40) return true;
+  if (a.backgroundType === "photo" && a.emptyMarginPct < 20) return true;
+  if (a.sharpness > 0 && a.sharpness < 40) return true;
+  return false;
+}
