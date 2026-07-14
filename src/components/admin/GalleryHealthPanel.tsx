@@ -40,17 +40,24 @@ export function GalleryHealthPanel({
   analyses,
   className,
   minImages = 1,
+  currentPrimaryIndex = 0,
+  onSetPrimary,
 }: {
   analyses: (ImageAnalysis | null | undefined)[];
   className?: string;
   /** Only render when at least this many analyzed images exist. */
   minImages?: number;
+  /** Index of the image currently used as hero (defaults to first). */
+  currentPrimaryIndex?: number;
+  /** When provided, renders a one-click "Set as Primary" action. */
+  onSetPrimary?: (index: number) => void;
 }) {
   const present = analyses.filter((a): a is ImageAnalysis => !!a);
   if (present.length < minImages) return null;
 
   const health: GalleryHealth = computeGalleryHealth(present);
   const overallBand = health.band;
+  const hero: HeroRecommendation = recommendHeroImage(present, Math.min(currentPrimaryIndex, present.length - 1));
 
   return (
     <div
