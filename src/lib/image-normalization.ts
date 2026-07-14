@@ -694,3 +694,143 @@ export function computeGalleryHealth(analyses: (ImageAnalysis | null | undefined
   };
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero Recommendation Engine — deterministic, explainable
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Centralized weights for Hero Suitability. Keep them here so Phase B AI
+ * signals can join later without touching call sites.
+ */
+export const HERO_SUITABILITY_WEIGHTS = {
+  occupancy: 0.30,
+  sharpness: 0.20,
+  framing: 0.15,
+  resolution: 0.10,
+  brightness: 0.10,
+  background: 0.10,
+  aspect: 0.05,
+} as const;
+
+/** Minimum score delta over the current hero required to recommend a swap. */
+export const HERO_RECOMMEND_THRESHOLD = 5;
+
+function clamp100(n: number): number {
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+/** Deterministic Hero Suitability score for a single image. */
+export function computeHeroSuitability(a: ImageAnalysis): number {
+  const occupancyScore = clamp100(100 - Math.abs(a.occupancy - 75) * 1.6);
+  const sharpnessScore = clamp100((Math.min(a.sharpness, 300) / 300) * 100);
+  const aspectDelta = Math.abs(a.aspectRatio - 1);
+  const framingScore = clamp100(100 - aspectDelta * 60 - Math.max(0, a.emptyMarginPct - 25) * 1.2);
+  const longEdge = Math.max(a.width, a.height);
+  const resolutionScore =
+    longEdge >= 1600 ? 100
+    : longEdge >= 1200 ? 88
+    : longEdge >= 1000 ? 72
+    : longEdge >= 700 ? 50
+    : 25;
+  const brightnessScore = clamp100(100 - Math.max(0, Math.abs(a.brightness - 155) - 25) * 1.4);
+  const backgroundScore =
+    a.backgroundType === "solid" ? 100
+    : a.backgroundType === "transparent" ? 96
+    : a.backgroundType === "gradient" ? 78
+    : 55;
+  const aspectScore = clamp100(100 - aspectDelta * 90);
+
+  const w = HERO_SUITABILITY_WEIGHTS;
+  const total =
+    occupancyScore * w.occupancy +
+    sharpnessScore * w.sharpness +
+    framingScore * w.framing +
+    resolutionScore * w.resolution +
+    brightnessScore * w.brightness +
+    backgroundScore * w.background +
+    aspectScore * w.aspect;
+
+  return clamp100(total);
+}
+
+export type HeroRecommendation = {
+  currentIndex: number;
+  recommendedIndex: number;
+  recommendedScore: number;
+  currentScore: number;
+  delta: number;
+  shouldRecommend: boolean;
+  perImage: number[];
+  reasons: string[];
+};
+
+function reasonsFor(candidate: ImageAnalysis, current: ImageAnalysis): string[] {
+  const out: string[] = [];
+  if (candidate.sharpness > current.sharpness + 30) out.push("Sharper than current hero");
+  if (Math.abs(candidate.occupancy - 75) < Math.abs(current.occupancy - 75) - 8)
+    out.push("Better product framing");
+  if (Math.max(candidate.width, candidate.height) > Math.max(current.width, current.height) * 1.2)
+    out.push("Higher resolution");
+  if (
+    (candidate.backgroundType === "solid" || candidate.backgroundType === "transparent") &&
+    current.backgroundType === "photo"
+  )
+    out.push("Cleaner background");
+  if (Math.abs(candidate.brightness - 155) < Math.abs(current.brightness - 155) - 20)
+    out.push("Better exposure");
+  if (Math.abs(candidate.aspectRatio - 1) < Math.abs(current.aspectRatio - 1) - 0.15)
+    out.push("More square-friendly aspect ratio");
+  if (out.length === 0) out.push("Higher overall Hero Suitability score");
+  return out;
+}
+
+/**
+ * Recommend the best hero image from a gallery. Deterministic; only flags a
+ * recommendation when the improvement is meaningful. Stamps per-image
+ * `quality.heroSuitability` / `isRecommendedPrimary` so downstream UIs can
+ * render badges without recomputing.
+ */
+export function recommendHeroImage(
+  analyses: (ImageAnalysis | null | undefined)[],
+  currentIndex = 0,
+): HeroRecommendation {
+  const items = analyses.map((a) => a ?? null);
+  const perImage = items.map((a) => (a ? computeHeroSuitability(a) : 0));
+
+  let bestIndex = currentIndex;
+  let bestScore = perImage[currentIndex] ?? 0;
+  perImage.forEach((s, i) => {
+    if (s > bestScore) {
+      bestScore = s;
+      bestIndex = i;
+    }
+  });
+
+  const currentScore = perImage[currentIndex] ?? 0;
+  const delta = bestScore - currentScore;
+  const shouldRecommend = bestIndex !== currentIndex && delta >= HERO_RECOMMEND_THRESHOLD;
+
+  const current = items[currentIndex];
+  const candidate = items[bestIndex];
+  const reasons =
+    shouldRecommend && current && candidate ? reasonsFor(candidate, current) : [];
+
+  items.forEach((a, i) => {
+    if (!a || !a.quality) return;
+    a.quality.heroSuitability = perImage[i];
+    a.quality.isRecommendedPrimary = shouldRecommend && i === bestIndex;
+    a.quality.recommendationReason = shouldRecommend && i === bestIndex ? reasons : [];
+  });
+
+  return {
+    currentIndex,
+    recommendedIndex: bestIndex,
+    recommendedScore: bestScore,
+    currentScore,
+    delta,
+    shouldRecommend,
+    perImage,
+    reasons,
+  };
+}
