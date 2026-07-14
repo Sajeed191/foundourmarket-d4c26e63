@@ -101,6 +101,7 @@ import { Route as AdminCheckoutFunnelRouteImport } from './routes/admin-checkout
 import { Route as AdminCheckoutAnalyticsRouteImport } from './routes/admin-checkout-analytics'
 import { Route as AdminCategoriesManageRouteImport } from './routes/admin-categories-manage'
 import { Route as AdminCategoriesRouteImport } from './routes/admin-categories'
+import { Route as AdminCatalogIntelligenceRouteImport } from './routes/admin-catalog-intelligence'
 import { Route as AdminBulkBadgesRouteImport } from './routes/admin-bulk-badges'
 import { Route as AdminBadgesBulkRouteImport } from './routes/admin-badges-bulk'
 import { Route as AdminBadgesAnalyticsRouteImport } from './routes/admin-badges-analytics'
@@ -632,6 +633,12 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   path: '/admin-categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCatalogIntelligenceRoute =
+  AdminCatalogIntelligenceRouteImport.update({
+    id: '/admin-catalog-intelligence',
+    path: '/admin-catalog-intelligence',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminBulkBadgesRoute = AdminBulkBadgesRouteImport.update({
   id: '/admin-bulk-badges',
   path: '/admin-bulk-badges',
@@ -982,6 +989,7 @@ export interface FileRoutesByFullPath {
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
   '/admin-badges-bulk': typeof AdminBadgesBulkRoute
   '/admin-bulk-badges': typeof AdminBulkBadgesRoute
+  '/admin-catalog-intelligence': typeof AdminCatalogIntelligenceRoute
   '/admin-categories': typeof AdminCategoriesRoute
   '/admin-categories-manage': typeof AdminCategoriesManageRoute
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
@@ -1140,6 +1148,7 @@ export interface FileRoutesByTo {
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
   '/admin-badges-bulk': typeof AdminBadgesBulkRoute
   '/admin-bulk-badges': typeof AdminBulkBadgesRoute
+  '/admin-catalog-intelligence': typeof AdminCatalogIntelligenceRoute
   '/admin-categories': typeof AdminCategoriesRoute
   '/admin-categories-manage': typeof AdminCategoriesManageRoute
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
@@ -1298,6 +1307,7 @@ export interface FileRoutesById {
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
   '/admin-badges-bulk': typeof AdminBadgesBulkRoute
   '/admin-bulk-badges': typeof AdminBulkBadgesRoute
+  '/admin-catalog-intelligence': typeof AdminCatalogIntelligenceRoute
   '/admin-categories': typeof AdminCategoriesRoute
   '/admin-categories-manage': typeof AdminCategoriesManageRoute
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
@@ -1458,6 +1468,7 @@ export interface FileRouteTypes {
     | '/admin-badges-analytics'
     | '/admin-badges-bulk'
     | '/admin-bulk-badges'
+    | '/admin-catalog-intelligence'
     | '/admin-categories'
     | '/admin-categories-manage'
     | '/admin-checkout-analytics'
@@ -1616,6 +1627,7 @@ export interface FileRouteTypes {
     | '/admin-badges-analytics'
     | '/admin-badges-bulk'
     | '/admin-bulk-badges'
+    | '/admin-catalog-intelligence'
     | '/admin-categories'
     | '/admin-categories-manage'
     | '/admin-checkout-analytics'
@@ -1773,6 +1785,7 @@ export interface FileRouteTypes {
     | '/admin-badges-analytics'
     | '/admin-badges-bulk'
     | '/admin-bulk-badges'
+    | '/admin-catalog-intelligence'
     | '/admin-categories'
     | '/admin-categories-manage'
     | '/admin-checkout-analytics'
@@ -1932,6 +1945,7 @@ export interface RootRouteChildren {
   AdminBadgesAnalyticsRoute: typeof AdminBadgesAnalyticsRoute
   AdminBadgesBulkRoute: typeof AdminBadgesBulkRoute
   AdminBulkBadgesRoute: typeof AdminBulkBadgesRoute
+  AdminCatalogIntelligenceRoute: typeof AdminCatalogIntelligenceRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCategoriesManageRoute: typeof AdminCategoriesManageRoute
   AdminCheckoutAnalyticsRoute: typeof AdminCheckoutAnalyticsRoute
@@ -2709,6 +2723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-catalog-intelligence': {
+      id: '/admin-catalog-intelligence'
+      path: '/admin-catalog-intelligence'
+      fullPath: '/admin-catalog-intelligence'
+      preLoaderRoute: typeof AdminCatalogIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-bulk-badges': {
       id: '/admin-bulk-badges'
       path: '/admin-bulk-badges'
@@ -3246,6 +3267,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBadgesAnalyticsRoute: AdminBadgesAnalyticsRoute,
   AdminBadgesBulkRoute: AdminBadgesBulkRoute,
   AdminBulkBadgesRoute: AdminBulkBadgesRoute,
+  AdminCatalogIntelligenceRoute: AdminCatalogIntelligenceRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCategoriesManageRoute: AdminCategoriesManageRoute,
   AdminCheckoutAnalyticsRoute: AdminCheckoutAnalyticsRoute,

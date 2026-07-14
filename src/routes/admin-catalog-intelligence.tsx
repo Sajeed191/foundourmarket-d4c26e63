@@ -94,7 +94,7 @@ function CatalogIntelligencePage() {
   );
 
   return (
-    <AdminShell>
+    <AdminShell title="Catalog Intelligence">
       <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
         <div className="flex items-center gap-3">
           <span className="grid size-11 place-items-center rounded-2xl bg-accent/15 text-accent">
