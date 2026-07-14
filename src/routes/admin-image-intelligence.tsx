@@ -307,23 +307,40 @@ function ImageIntelligencePage() {
                   <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">Product</th>
                   <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">Category</th>
                   <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">Recommendation</th>
+                  <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">Engine</th>
                   <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">Duration</th>
                   <th className="pb-2 pr-2 text-left font-mono uppercase tracking-widest">When</th>
                 </tr>
               </thead>
               <tbody>
-                {(jobs.data ?? []).map((j: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-                  <tr key={j.id} className="border-b border-white/[0.03]">
-                    <td className="py-1.5 pr-2 font-mono tabular-nums text-white/85">{j.health_score ?? "—"}</td>
-                    <td className="py-1.5 pr-2 text-white/70">{j.product_slug ?? "—"}</td>
-                    <td className="py-1.5 pr-2 text-white/70">{j.category_slug ?? "—"}</td>
-                    <td className="py-1.5 pr-2 text-white/85">{j.recommendation?.headline ?? (j.status === "failed" ? "Analysis failed" : "—")}</td>
-                    <td className="py-1.5 pr-2 font-mono tabular-nums text-white/60">{j.duration_ms ?? 0}ms</td>
-                    <td className="py-1.5 pr-2 text-white/50">{new Date(j.created_at).toLocaleString()}</td>
-                  </tr>
-                ))}
+                {(jobs.data ?? []).map((j: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                  const stale = j.engine_version && j.engine_version !== ENGINE_VERSION_MANIFEST.engine_version;
+                  return (
+                    <tr key={j.id} className="border-b border-white/[0.03]">
+                      <td className="py-1.5 pr-2 font-mono tabular-nums text-white/85">{j.health_score ?? "—"}</td>
+                      <td className="py-1.5 pr-2 text-white/70">{j.product_slug ?? "—"}</td>
+                      <td className="py-1.5 pr-2 text-white/70">{j.category_slug ?? "—"}</td>
+                      <td className="py-1.5 pr-2 text-white/85">{j.recommendation?.headline ?? (j.status === "failed" ? "Analysis failed" : "—")}</td>
+                      <td className="py-1.5 pr-2 font-mono text-[10px] text-white/60">
+                        {j.engine_version ? (
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
+                              stale ? "border-amber-400/40 bg-amber-400/10 text-amber-200" : "border-white/10 text-white/60",
+                            )}
+                            title={`Engine ${j.engine_version} · Photon ${j.photon_version ?? "?"} · Gate ${j.quality_gate_version ?? "?"} · Rules ${j.category_rules_version ?? "?"}`}
+                          >
+                            v{j.engine_version}{stale ? " · stale" : ""}
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="py-1.5 pr-2 font-mono tabular-nums text-white/60">{j.duration_ms ?? 0}ms</td>
+                      <td className="py-1.5 pr-2 text-white/50">{new Date(j.created_at).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
                 {jobs.data?.length === 0 && (
-                  <tr><td colSpan={6} className="py-6 text-center text-white/50">No analyses yet. Use the tester above.</td></tr>
+                  <tr><td colSpan={7} className="py-6 text-center text-white/50">No analyses yet. Use the tester above.</td></tr>
                 )}
               </tbody>
             </table>
