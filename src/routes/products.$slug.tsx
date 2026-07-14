@@ -747,7 +747,7 @@ function ProductPage() {
                             el.src = product.image;
                           }
                         }}
-                        className="absolute inset-0 w-full h-full object-contain cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-105"
+                        className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-[900ms] group-hover:scale-105"
                       />
                     );
                   })()
