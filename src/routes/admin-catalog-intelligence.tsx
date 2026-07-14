@@ -485,6 +485,63 @@ function CatalogIntelligencePage() {
                 </ul>
               </div>
             )}
+
+            {/* Pricing Intelligence — Catalog Intelligence 2.0, Phase 5 */}
+            {pricingIntel && (
+              <div className="rounded-3xl border border-border/60 bg-card/40 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+                    <DollarSign className="size-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent">Catalog Intelligence 2.0 · Phase 5</p>
+                    <p className="text-sm font-semibold">Pricing Intelligence</p>
+                    <p className="text-xs text-muted-foreground">
+                      Variant outliers, broken compare-at prices, missing base prices, margin anomalies. Advisory only — never mutates prices.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Avg</p>
+                    <p className={`font-display text-2xl font-semibold tabular-nums ${ring(pricingIntel.avg)}`}>{pricingIntel.avg}</p>
+                  </div>
+                </div>
+
+                <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Top pricing issues</p>
+                <ul className="space-y-2">
+                  {pricingIntel.needs.map((r) => (
+                    <PricingIntelRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
+                  ))}
+                  {pricingIntel.needs.length === 0 && (
+                    <li className="flex items-center gap-2 text-xs text-emerald-400">
+                      <CheckCircle2 className="size-4" /> Pricing looks consistent across the catalog.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendation Broker — cross-module prioritised feed */}
+            {brokerFeed && brokerFeed.length > 0 && (
+              <div className="rounded-3xl border border-accent/40 bg-accent/5 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-accent/15 text-accent">
+                    <Zap className="size-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent">Marketplace AI Assistant · preview</p>
+                    <p className="text-sm font-semibold">Top recommendations across all modules</p>
+                    <p className="text-xs text-muted-foreground">
+                      Broker merges Completeness, Attributes, Variants, SEO, and Pricing. One prioritised recommendation per listing — highest impact wins.
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-2">
+                  {brokerFeed.map((r) => (
+                    <BrokerRow key={r.slug} slug={r.slug} name={r.name} rec={r.top} />
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
 
         )}
