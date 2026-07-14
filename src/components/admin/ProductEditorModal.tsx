@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDuplicateDetection } from "@/hooks/use-duplicate-detection";
-import { computeImagePhash } from "@/lib/duplicate-detection";
+import { computeImagePhash, logDuplicateEvent, invalidateDetectionIndex } from "@/lib/duplicate-detection";
+import { useNavigate } from "@tanstack/react-router";
 import { DuplicateIntelligencePanel } from "@/components/admin/duplicate/DuplicateIntelligencePanel";
 import { CatalogReadinessPanel } from "@/components/admin/duplicate/CatalogReadinessPanel";
+import { ProductGuardBanner, GUARD_THRESHOLD } from "@/components/admin/duplicate/ProductGuardBanner";
 import { useImageIntelligence } from "@/hooks/use-image-intelligence";
-import { classifyRelationship, isDuplicateRisk } from "@/lib/catalog-intelligence";
+import { classifyRelationship, isDuplicateRisk, RELATIONSHIP_LABEL } from "@/lib/catalog-intelligence";
 import { resolveImage } from "@/lib/products";
 import { motion } from "framer-motion";
 import {
@@ -196,6 +198,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
   onRefresh?: () => void;
 }) {
   const { settings } = useStoreSettings();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,7 +206,8 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
    // Only close on a backdrop click whose press *started* on the backdrop.
    // Prevents ghost/synthetic clicks (e.g. after a native file/video picker
    // closes on mobile) from accidentally dismissing the editor.
-   const backdropDownRef = useRef(false);
+  const backdropDownRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
   // Pending badge assignments for a not-yet-saved product (flushed after insert).
   const [pendingBadges, setPendingBadges] = useState<string[]>([]);
   const [pendingFaqs, setPendingFaqs] = useState<{ question: string; answer: string }[]>([]);
@@ -394,6 +398,43 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     return isDuplicateRisk(rel.kind) ? top.score : Math.round(top.score * 0.4);
   }, [duplicateResult.matches, duplicateDraft]);
 
+  // ---- AI Product Guard: publish protection + smart action handlers ----
+  // The top, non-ignored match that clears the warning threshold.
+  const topGuardMatch = useMemo(() => {
+    const m = duplicateResult.matches.find((x) => !x.ignored);
+    return m && m.score >= GUARD_THRESHOLD ? m : null;
+  }, [duplicateResult.matches]);
+
+  // Once the admin explicitly chooses "Publish Anyway" we don't re-prompt.
+  const [publishAck, setPublishAck] = useState(false);
+  const [guardConfirm, setGuardConfirm] = useState<typeof topGuardMatch>(null);
+
+  // Switch to the Variants tab (create the variant instead of a new product).
+  const onCreateVariant = () => {
+    setTab("variants");
+    setGuardConfirm(null);
+    toast.message("Add this as a variant", {
+      description: savedProduct || effectiveId
+        ? "Add the differing colour/size/storage as a variant of the existing product."
+        : "Save the base product first, then add colour/size/storage variants here.",
+    });
+  };
+
+  // Link the matched product into the appropriate relationship field.
+  const onLinkRelated = (
+    match: { product: { slug: string } },
+    relation: "related" | "accessory" | "successor" | "bundle",
+  ) => {
+    const slug = match.product.slug;
+    const field = relation === "successor" ? "upsell_products" : "related_products";
+    const current = (form[field] || "").split(",").map((s: string) => s.trim()).filter(Boolean);
+    if (!current.includes(slug)) current.push(slug);
+    set({ [field]: current.join(", ") } as Partial<typeof form>);
+    setGuardConfirm(null);
+    toast.success("Linked", { description: `Added "${slug}" — open the Related tab to review.` });
+  };
+
+
   const galleryUrls = useMemo(
     () => (form.image ? [resolveImage(form.image)] : []),
     [form.image],
@@ -493,6 +534,15 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     if (validation.length) { setError(validation[0]); return; }
     if (!mainCat) { setError("Select a main category."); return; }
     if (subs.length > 0 && !subCat) { setError("This category has subcategories — selecting a subcategory is required."); return; }
+    // AI Product Guard — never blocks, but confirms before creating an obvious
+    // duplicate. Only prompts for genuine duplicate risk, and only once.
+    if (!publishAck && topGuardMatch) {
+      const rel = classifyRelationship(duplicateDraft, topGuardMatch);
+      if (isDuplicateRisk(rel.kind) || topGuardMatch.score >= 90) {
+        setGuardConfirm(topGuardMatch);
+        return;
+      }
+    }
     setSaving(true); setError(null);
     const finalSlug = form.slug.trim() || slugify(form.name);
     // Auto SKU / SEO — generated automatically when left blank.
@@ -606,6 +656,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       onClick={(e) => { if (e.target === e.currentTarget && backdropDownRef.current) onClose(); backdropDownRef.current = false; }}
     >
       <motion.form
+        ref={formRef}
         initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         onSubmit={save} onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl glass-strong border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 max-h-[94vh] overflow-y-auto space-y-3"
@@ -633,7 +684,16 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
-        {/* Product Health (Phase 3) */}
+        {/* AI Product Guard — sticky, cross-tab real-time duplicate warning */}
+        <ProductGuardBanner
+          draft={duplicateDraft}
+          result={duplicateResult}
+          draftPhash={draftPhash}
+          onCreateVariant={onCreateVariant}
+          onLinkRelated={onLinkRelated}
+          onIgnored={() => setDupTick((t) => t + 1)}
+        />
+
         <div className={`rounded-2xl border p-3 flex items-center gap-4 ${health.tone}`}>
           <div className="flex flex-col items-center justify-center shrink-0 pr-3 border-r border-white/10">
             <span className="text-2xl font-display font-semibold tabular-nums leading-none">{health.score}%</span>
@@ -1319,7 +1379,75 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             {saving ? <Loader2 className="size-4 animate-spin" /> : null} {effectiveId ? "Save changes" : "Create product"}
           </button>
         </div>
+
+        {/* Publish Protection — never blocks; the admin always decides. */}
+        {guardConfirm && (() => {
+          const gc = guardConfirm;
+          const rel = classifyRelationship(duplicateDraft, gc);
+          const proceed = () => {
+            setPublishAck(true);
+            setGuardConfirm(null);
+            // Re-submit now that the admin acknowledged the duplicate.
+            setTimeout(() => formRef.current?.requestSubmit(), 0);
+          };
+          return (
+            <div
+              className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+              onClick={(e) => { if (e.target === e.currentTarget) setGuardConfirm(null); }}
+            >
+              <div className="w-full max-w-md glass-strong border border-red-500/30 rounded-3xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-5 text-red-400" />
+                  <h3 className="text-base font-display font-semibold">This product may already exist</h3>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-background/40 p-3">
+                  {gc.product.image
+                    ? <img src={resolveImage(gc.product.image)} alt={gc.product.name} className="size-14 shrink-0 rounded-xl object-cover" />
+                    : <div className="grid size-14 shrink-0 place-items-center rounded-xl bg-white/5"><Package className="size-5 text-muted-foreground" /></div>}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{gc.product.name}</p>
+                    <p className="text-xs text-muted-foreground">{RELATIONSHIP_LABEL[rel.kind]} · {gc.product.brand || "—"}</p>
+                    <p className="font-mono text-sm font-bold text-red-400">Confidence {gc.score}%</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">{rel.message} You decide what happens next.</p>
+                <ul className="space-y-0.5">
+                  {gc.signals.filter((s) => s.matched).slice(0, 4).map((s) => (
+                    <li key={s.key} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="text-emerald-400">✓</span> {s.reason}
+                    </li>
+                  ))}
+                </ul>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button type="button" onClick={() => navigate({ to: "/admin-product/$slug", params: { slug: gc.product.slug } })}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-medium hover:bg-white/5">Open Existing</button>
+                  <button type="button" onClick={async () => {
+                      await logDuplicateEvent({ draft: duplicateDraft, match: gc, action: "merged" });
+                      invalidateDetectionIndex();
+                      setGuardConfirm(null);
+                      navigate({ to: "/admin-product/$slug", params: { slug: gc.product.slug } });
+                    }}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-medium hover:bg-white/5">Merge</button>
+                  <button type="button" onClick={onCreateVariant}
+                    className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20">Convert to Variant</button>
+                  <button type="button" onClick={async () => {
+                      await logDuplicateEvent({ draft: duplicateDraft, match: gc, action: "ignored" });
+                      gc.ignored = true;
+                      setDupTick((t) => t + 1);
+                      setGuardConfirm(null);
+                    }}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-medium hover:bg-white/5">Ignore</button>
+                  <button type="button" onClick={proceed}
+                    className="col-span-2 rounded-xl bg-gradient-to-r from-accent to-primary px-3 py-2 text-xs font-semibold text-accent-foreground hover:brightness-110">
+                    Publish Anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </motion.form>
+
     </div>
   );
 }
