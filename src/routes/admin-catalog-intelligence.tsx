@@ -11,11 +11,13 @@ import {
   buildOptimizerReport,
   scoreProductCompleteness,
   analyzeVariantIntelligence,
+  analyzeSeoIntelligence,
   type OptimizerProduct,
   type OptimizerReport,
   type ProductCompleteness,
   type VariantIntelligence,
   type VariantRecord,
+  type SeoIntelligenceModule,
 } from "@/lib/catalog-intelligence";
 
 
