@@ -74,6 +74,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     group: "Catalog",
     items: [
       { to: "/admin-products", label: "Products", icon: Package },
+      { to: "/admin-catalog-intelligence", label: "Catalog Intelligence", icon: Sparkles, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-duplicate-intelligence", label: "Duplicate Intelligence", icon: ShieldCheck, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-categories", label: "Category Intelligence", icon: BarChart3, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-merchandising", label: "Merchandising Center", icon: Images, roles: ["admin", "super_admin", "manager"] },
