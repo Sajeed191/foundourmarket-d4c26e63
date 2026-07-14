@@ -699,7 +699,7 @@ function ProductPage() {
               <div aria-hidden className="absolute left-1/2 top-1/2 -z-10 size-2/3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: "radial-gradient(circle, oklch(0.74 0.19 49 / 0.5), transparent 70%)", filter: "blur(50px)" }} />
               <div
                 data-product-image
-                className="relative mx-auto w-full h-[340px] sm:h-[380px] lg:h-[480px] card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]"
+                className="relative mx-auto w-full aspect-square sm:h-[520px] lg:h-[620px] card-premium rounded-2xl sm:rounded-3xl overflow-hidden group border border-white/10 shadow-[0_30px_60px_-28px_oklch(0_0_0/0.7)]"
               >
                 {/* Main media — plain <img>/<video>, always opacity:1.
                     Previously wrapped in AnimatePresence + motion.img with
