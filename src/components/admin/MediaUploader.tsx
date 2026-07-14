@@ -239,6 +239,12 @@ export function MediaUploader({
               </motion.div>
             ))}
           </AnimatePresence>
+          <GalleryHealthPanel
+            analyses={queue
+              .filter((q) => q.status === "success")
+              .map((q) => q.analysis ?? null)}
+            minImages={2}
+          />
         </div>
       )}
       {busy && (
