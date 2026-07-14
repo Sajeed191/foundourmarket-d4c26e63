@@ -6,7 +6,8 @@
  * inventing values. Suggestions are clearly marked and carry the evidence
  * (how many similar products define the field). Deterministic and pure.
  */
-import { normalizeText, normalizeSpecKey } from "@/lib/duplicate-detection";
+import { normalizeText } from "@/lib/duplicate-detection";
+import { normalizeSpecKey } from "@/lib/duplicate-detection/normalize";
 
 export type SpecSuggestion = {
   key: string;
