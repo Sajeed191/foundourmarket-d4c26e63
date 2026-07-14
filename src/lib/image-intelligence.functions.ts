@@ -196,6 +196,7 @@ export const normalizeProductImage = createServerFn({ method: "POST" })
         analysis: analysis.intelligence, actions_json: norm.actions,
         error_message: `Normalization skipped: ${norm.skipReason ?? "unknown"}`,
         duration_ms: Date.now() - started, requested_by: userId,
+        ...ENGINE_VERSION_MANIFEST,
       });
       return { status: "failed" as const, reason: norm.skipReason ?? "Normalization failed." };
     }
@@ -220,6 +221,7 @@ export const normalizeProductImage = createServerFn({ method: "POST" })
           reversible: true, aiTouchesProduct: false,
         },
         duration_ms: Date.now() - started, requested_by: userId,
+        ...ENGINE_VERSION_MANIFEST,
       });
       return { status: "rejected" as const, reason: gate.reason ?? "Quality gate failed.", checks: gate.checks };
     }
@@ -238,6 +240,7 @@ export const normalizeProductImage = createServerFn({ method: "POST" })
         analysis: analysis.intelligence, actions_json: norm.actions,
         error_message: `Upload failed: ${uploadErr.message}`,
         duration_ms: Date.now() - started, requested_by: userId,
+        ...ENGINE_VERSION_MANIFEST,
       });
       return { status: "failed" as const, reason: uploadErr.message };
     }
@@ -252,6 +255,7 @@ export const normalizeProductImage = createServerFn({ method: "POST" })
       optimized_url: optimizedUrl,
       health_score: analysis.intelligence.qualityScore,
       duration_ms: Date.now() - started, requested_by: userId,
+      ...ENGINE_VERSION_MANIFEST,
     });
 
     // Auto-apply if setting is on
@@ -262,6 +266,7 @@ export const normalizeProductImage = createServerFn({ method: "POST" })
           optimized_url: optimizedUrl,
           optimization_actions: norm.actions,
           optimization_applied_at: new Date().toISOString(),
+          ...ENGINE_VERSION_MANIFEST,
         })
         .eq("id", data.imageId);
       if (!applyErr) applied = true;
