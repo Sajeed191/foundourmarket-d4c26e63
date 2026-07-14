@@ -96,6 +96,31 @@ function CatalogIntelligencePage() {
     [report],
   );
 
+  const completeness = useMemo(() => {
+    if (!products) return null;
+    const rows = products.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      module: scoreProductCompleteness({
+        slug: p.slug,
+        name: p.name,
+        description: p.description,
+        seoTitle: p.seo_title,
+        seoDescription: p.seo_description,
+        metaKeywords: p.meta_keywords ?? null,
+        imageCount: p.image ? 1 : 0,
+        imageQuality: null,
+        attributeCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
+        specCount: Object.keys(p.specifications ?? {}).length,
+        variantCount: Object.values(p.attributes ?? {}).filter(Boolean).length,
+      }),
+    }));
+    const avg = Math.round(rows.reduce((a, r) => a + r.module.score, 0) / (rows.length || 1));
+    const needs = [...rows].sort((a, b) => a.module.score - b.module.score).slice(0, 6);
+    return { rows, avg, needs };
+  }, [products]);
+
+
   return (
     <AdminShell title="Catalog Intelligence">
       <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
