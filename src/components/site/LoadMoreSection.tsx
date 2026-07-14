@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, Loader2, Check, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { trackEvent } from "@/lib/visitor";
-import { SmartRecommendations } from "@/components/site/SmartRecommendations";
+
 
 /**
  * Premium "Load More" continuation experience.
