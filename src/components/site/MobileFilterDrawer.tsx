@@ -1,4 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Search, Check, Star, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
@@ -334,13 +335,34 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentReady, draft, allCategories, selectedBrands, selectedColors, selectedSizes, priceLo, priceHi]);
 
-  // Lock background scrolling while the sheet is mounted (prevents layout shift).
+  // Lock background scrolling while the sheet is mounted (prevents layout shift,
+  // rubber-band, scroll chaining and background momentum scroll on mobile).
   useEffect(() => {
     if (!mounted) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const html = document.documentElement;
+    const scrollBarGap = window.innerWidth - html.clientWidth;
+    const prev = {
+      bodyOverflow: body.style.overflow,
+      bodyTouch: body.style.touchAction,
+      bodyOverscroll: body.style.overscrollBehavior,
+      bodyPadRight: body.style.paddingRight,
+      htmlOverflow: html.style.overflow,
+      htmlOverscroll: html.style.overscrollBehavior,
+    };
+    body.style.overflow = "hidden";
+    body.style.touchAction = "none";
+    body.style.overscrollBehavior = "none";
+    if (scrollBarGap > 0) body.style.paddingRight = `${scrollBarGap}px`;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
     return () => {
-      document.body.style.overflow = prev;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.touchAction = prev.bodyTouch;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+      body.style.paddingRight = prev.bodyPadRight;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
     };
   }, [mounted]);
 
@@ -409,7 +431,17 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
     if (open) closeRef.current?.focus();
   }, [open]);
 
-  if (!mounted) return null;
+  // Escape closes the drawer.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!mounted || typeof document === "undefined") return null;
 
 
   const catSummary = draft.sub
@@ -419,13 +451,19 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
       : undefined;
   const sortSummary = SORT_OPTIONS.find((s) => s.value === sort)?.label;
 
-  return (
-    <div className="fixed inset-0 z-[100001] lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[2147483000] lg:hidden"
+      style={{ height: "100dvh", width: "100vw" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Filters"
+    >
       {/* Semi-transparent backdrop (tap to close) */}
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/[0.65] backdrop-blur-[10px] transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
       />
       {/* Full-screen bottom-sheet */}
       <div
@@ -877,6 +915,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
         </div>
       </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 });
