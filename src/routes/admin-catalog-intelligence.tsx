@@ -279,3 +279,46 @@ function StatCard({ label, value, icon: Icon, tone }: { label: string; value: st
     </div>
   );
 }
+
+const STATUS_DOT: Record<ProductCompleteness["status"], string> = {
+  green: "bg-emerald-400",
+  blue: "bg-sky-400",
+  amber: "bg-amber-400",
+  red: "bg-destructive",
+};
+
+function CompletenessRow({ slug, name, module: m }: { slug: string; name: string; module: ProductCompleteness }) {
+  return (
+    <li className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center gap-3">
+        <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[m.status]}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/admin-product/$slug"
+            params={{ slug }}
+            className="block truncate text-sm font-medium hover:text-accent"
+          >
+            {name}
+          </Link>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.recommendation}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={`font-mono text-xs tabular-nums ${
+            m.score >= 85 ? "text-emerald-400" : m.score >= 60 ? "text-amber-400" : "text-destructive"
+          }`}>
+            {m.score}
+          </span>
+          {m.actionHref ? (
+            <a
+              href={m.actionHref}
+              className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition hover:opacity-90"
+            >
+              {m.action} <ArrowRight className="size-3" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
