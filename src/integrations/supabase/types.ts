@@ -1919,6 +1919,7 @@ export type Database = {
       }
       image_intelligence_jobs: {
         Row: {
+          actions_json: Json
           analysis: Json
           category_slug: string | null
           created_at: string
@@ -1926,14 +1927,19 @@ export type Database = {
           error_message: string | null
           health_score: number | null
           id: string
+          image_id: string | null
           image_url: string
+          job_type: string
           mode: string
+          optimized_url: string | null
           product_slug: string | null
           recommendation: Json | null
+          rejection_reason: string | null
           requested_by: string | null
           status: string
         }
         Insert: {
+          actions_json?: Json
           analysis?: Json
           category_slug?: string | null
           created_at?: string
@@ -1941,14 +1947,19 @@ export type Database = {
           error_message?: string | null
           health_score?: number | null
           id?: string
+          image_id?: string | null
           image_url: string
+          job_type?: string
           mode: string
+          optimized_url?: string | null
           product_slug?: string | null
           recommendation?: Json | null
+          rejection_reason?: string | null
           requested_by?: string | null
           status?: string
         }
         Update: {
+          actions_json?: Json
           analysis?: Json
           category_slug?: string | null
           created_at?: string
@@ -1956,10 +1967,14 @@ export type Database = {
           error_message?: string | null
           health_score?: number | null
           id?: string
+          image_id?: string | null
           image_url?: string
+          job_type?: string
           mode?: string
+          optimized_url?: string | null
           product_slug?: string | null
           recommendation?: Json | null
+          rejection_reason?: string | null
           requested_by?: string | null
           status?: string
         }
@@ -1968,6 +1983,7 @@ export type Database = {
       image_intelligence_settings: {
         Row: {
           allow_background_expansion: boolean
+          auto_apply_safe: boolean
           block_publish_on_low_quality: boolean
           created_at: string
           id: string
@@ -1982,6 +1998,7 @@ export type Database = {
         }
         Insert: {
           allow_background_expansion?: boolean
+          auto_apply_safe?: boolean
           block_publish_on_low_quality?: boolean
           created_at?: string
           id: string
@@ -1996,6 +2013,7 @@ export type Database = {
         }
         Update: {
           allow_background_expansion?: boolean
+          auto_apply_safe?: boolean
           block_publish_on_low_quality?: boolean
           created_at?: string
           id?: string
@@ -3036,6 +3054,9 @@ export type Database = {
           analyzed_at: string | null
           created_at: string
           id: string
+          optimization_actions: Json | null
+          optimization_applied_at: string | null
+          optimized_meta: Json | null
           optimized_url: string | null
           original_url: string | null
           product_slug: string
@@ -3048,6 +3069,9 @@ export type Database = {
           analyzed_at?: string | null
           created_at?: string
           id?: string
+          optimization_actions?: Json | null
+          optimization_applied_at?: string | null
+          optimized_meta?: Json | null
           optimized_url?: string | null
           original_url?: string | null
           product_slug: string
@@ -3060,6 +3084,9 @@ export type Database = {
           analyzed_at?: string | null
           created_at?: string
           id?: string
+          optimization_actions?: Json | null
+          optimization_applied_at?: string | null
+          optimized_meta?: Json | null
           optimized_url?: string | null
           original_url?: string | null
           product_slug?: string
