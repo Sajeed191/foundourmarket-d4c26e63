@@ -65,19 +65,40 @@ function ring(v: number) {
   return v >= 85 ? "text-emerald-400" : v >= 60 ? "text-amber-400" : "text-destructive";
 }
 
+type VariantRow = {
+  product_slug: string;
+  name: string;
+  color: string | null;
+  color_hex: string | null;
+  size: string | null;
+  sku: string | null;
+  price_override: number | null;
+  price_adjustment: number | null;
+  compare_price: number | null;
+  stock_quantity: number | null;
+  active: boolean | null;
+  image_url: string | null;
+};
+
 function CatalogIntelligencePage() {
   const [products, setProducts] = useState<OptimizerProduct[] | null>(null);
+  const [variantsByProduct, setVariantsByProduct] = useState<Map<string, VariantRow[]>>(new Map());
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
     setRefreshing(true);
-    const { data } = await supabase
-      .from("products")
-      .select(COLS)
-      .is("deleted_at", null)
-      .order("sort_order", { ascending: true })
-      .limit(20000);
-    setProducts((data as unknown as OptimizerProduct[]) ?? []);
+    const [{ data: prodData }, { data: varData }] = await Promise.all([
+      supabase.from("products").select(COLS).is("deleted_at", null).order("sort_order", { ascending: true }).limit(20000),
+      supabase.from("product_variants").select("product_slug,name,color,color_hex,size,sku,price_override,price_adjustment,compare_price,stock_quantity,active,image_url").limit(50000),
+    ]);
+    setProducts((prodData as unknown as OptimizerProduct[]) ?? []);
+    const map = new Map<string, VariantRow[]>();
+    for (const v of (varData ?? []) as VariantRow[]) {
+      const list = map.get(v.product_slug) ?? [];
+      list.push(v);
+      map.set(v.product_slug, list);
+    }
+    setVariantsByProduct(map);
     setRefreshing(false);
   }
 
