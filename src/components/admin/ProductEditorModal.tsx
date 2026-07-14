@@ -3,6 +3,7 @@ import { useDuplicateDetection } from "@/hooks/use-duplicate-detection";
 import { computeImagePhash } from "@/lib/duplicate-detection";
 import { DuplicateIntelligencePanel } from "@/components/admin/duplicate/DuplicateIntelligencePanel";
 import { CatalogReadinessPanel } from "@/components/admin/duplicate/CatalogReadinessPanel";
+import { ProductGuardBanner, GUARD_THRESHOLD } from "@/components/admin/duplicate/ProductGuardBanner";
 import { useImageIntelligence } from "@/hooks/use-image-intelligence";
 import { classifyRelationship, isDuplicateRisk } from "@/lib/catalog-intelligence";
 import { resolveImage } from "@/lib/products";
