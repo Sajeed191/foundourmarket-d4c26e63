@@ -475,3 +475,219 @@ export async function generateNormalizedDerivative(
     canvas.toBlob((b) => resolve(b), "image/webp", opts.quality ?? 0.86);
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gallery consistency — deterministic, cross-image quality analysis
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type GalleryDimensionKey =
+  | "consistency"
+  | "lighting"
+  | "background"
+  | "framing"
+  | "resolution"
+  | "primary";
+
+export type GalleryDimension = {
+  key: GalleryDimensionKey;
+  label: string;
+  score: number;      // 0-100
+  band: HealthBand;
+};
+
+export type GalleryRecommendation = {
+  key: string;
+  label: string;
+  severity: "info" | "warning";
+  imageIndex?: number;
+};
+
+export type GalleryHealth = {
+  overall: number;    // 0-100
+  band: HealthBand;
+  count: number;
+  dimensions: Record<GalleryDimensionKey, GalleryDimension>;
+  recommendations: GalleryRecommendation[];
+};
+
+function bandOf(score: number): HealthBand {
+  return score >= 90 ? "excellent" : score >= 75 ? "good" : score >= 55 ? "needs-work" : "poor";
+}
+
+function stddev(xs: number[]): number {
+  if (xs.length < 2) return 0;
+  const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const variance = xs.reduce((a, b) => a + (b - mean) ** 2, 0) / xs.length;
+  return Math.sqrt(variance);
+}
+
+function pctFromDeviation(dev: number, tolerant: number, strict: number): number {
+  // dev ≤ strict → 100; dev ≥ tolerant → 0; linear between.
+  if (dev <= strict) return 100;
+  if (dev >= tolerant) return 0;
+  return Math.round(100 - ((dev - strict) / (tolerant - strict)) * 100);
+}
+
+/**
+ * Cross-image quality score for a whole gallery. Deterministic — uses only
+ * signals already collected per-image (Tier 1). AI signals plug into the
+ * same reducer later without changing the surface.
+ */
+export function computeGalleryHealth(analyses: (ImageAnalysis | null | undefined)[]): GalleryHealth {
+  const items = analyses.filter((a): a is ImageAnalysis => !!a);
+  const count = items.length;
+
+  if (count === 0) {
+    const empty: GalleryDimension = { key: "consistency", label: "Image consistency", score: 0, band: "poor" };
+    return {
+      overall: 0,
+      band: "poor",
+      count: 0,
+      dimensions: {
+        consistency: empty,
+        lighting: { ...empty, key: "lighting", label: "Lighting" },
+        background: { ...empty, key: "background", label: "Background" },
+        framing: { ...empty, key: "framing", label: "Framing" },
+        resolution: { ...empty, key: "resolution", label: "Resolution" },
+        primary: { ...empty, key: "primary", label: "Primary image quality" },
+      },
+      recommendations: [{ key: "empty", label: "No images uploaded yet.", severity: "info" }],
+    };
+  }
+
+  const brightnessArr = items.map((a) => a.brightness);
+  const aspectArr = items.map((a) => a.aspectRatio);
+  const occupancyArr = items.map((a) => a.occupancy);
+  const longEdges = items.map((a) => Math.max(a.width, a.height));
+  const bgTypes = items.map((a) => a.backgroundType);
+  const bgColors = items.map((a) => a.backgroundColorHex ?? "");
+
+  // Consistency = blend of framing + background + lighting spread.
+  const brightnessDev = stddev(brightnessArr);
+  const aspectDev = stddev(aspectArr);
+  const occupancyDev = stddev(occupancyArr);
+
+  const lighting = pctFromDeviation(brightnessDev, 60, 8);
+  const framing = Math.round(
+    (pctFromDeviation(aspectDev, 0.35, 0.03) + pctFromDeviation(occupancyDev, 30, 4)) / 2,
+  );
+
+  // Background: same type + similar color.
+  const uniqTypes = new Set(bgTypes).size;
+  const uniqColors = new Set(bgColors.filter(Boolean)).size;
+  let background = 100;
+  if (uniqTypes > 1) background -= (uniqTypes - 1) * 20;
+  if (uniqColors > 1) background -= Math.min(30, (uniqColors - 1) * 10);
+  const photoCount = bgTypes.filter((t) => t === "photo").length;
+  if (photoCount > 0) background -= Math.min(20, photoCount * 8);
+  background = Math.max(0, Math.min(100, background));
+
+  // Resolution: penalize small min edge, reward consistent high resolution.
+  const minEdge = Math.min(...longEdges);
+  const edgeDev = stddev(longEdges);
+  let resolution = 100;
+  if (minEdge < 600) resolution -= 40;
+  else if (minEdge < 1000) resolution -= 20;
+  else if (minEdge < 1600) resolution -= 8;
+  resolution -= Math.min(20, Math.round(edgeDev / 200));
+  resolution = Math.max(0, Math.min(100, resolution));
+
+  // Primary image quality = health of index 0.
+  const primaryScore = items[0]?.healthScore ?? 0;
+
+  // Consistency dimension = weighted blend.
+  const consistency = Math.round(lighting * 0.3 + framing * 0.35 + background * 0.35);
+
+  // Overall
+  const overall = Math.round(
+    consistency * 0.28 +
+      lighting * 0.14 +
+      background * 0.16 +
+      framing * 0.16 +
+      resolution * 0.14 +
+      primaryScore * 0.12,
+  );
+
+  // Recommendations (actionable, per-image where possible).
+  const recs: GalleryRecommendation[] = [];
+  if (primaryScore < 80) {
+    recs.push({
+      key: "primary_weak",
+      label: "Hero image is below premium quality — consider a brighter, cleaner shot.",
+      severity: "warning",
+      imageIndex: 0,
+    });
+  }
+  if (lighting < 75) {
+    const brightest = brightnessArr.indexOf(Math.max(...brightnessArr));
+    const darkest = brightnessArr.indexOf(Math.min(...brightnessArr));
+    recs.push({
+      key: "lighting_spread",
+      label: `Lighting varies between image ${darkest + 1} and image ${brightest + 1}.`,
+      severity: "warning",
+    });
+  }
+  if (background < 75) {
+    if (photoCount > 0) {
+      const idx = bgTypes.findIndex((t) => t === "photo");
+      recs.push({
+        key: "bg_busy",
+        label: `Image ${idx + 1} has a busy background — plain backgrounds look more premium.`,
+        severity: "warning",
+        imageIndex: idx,
+      });
+    } else if (uniqColors > 1) {
+      recs.push({
+        key: "bg_color_mismatch",
+        label: "Background colors differ across the gallery.",
+        severity: "info",
+      });
+    }
+  }
+  if (framing < 75) {
+    const outlier = occupancyArr.indexOf(Math.min(...occupancyArr));
+    recs.push({
+      key: "framing_off",
+      label: `Image ${outlier + 1} has inconsistent framing — reshoot at a similar zoom.`,
+      severity: "warning",
+      imageIndex: outlier,
+    });
+  }
+  if (resolution < 75) {
+    const idx = longEdges.indexOf(Math.min(...longEdges));
+    recs.push({
+      key: "res_low",
+      label: `Image ${idx + 1} is lower resolution than the rest of the gallery.`,
+      severity: "warning",
+      imageIndex: idx,
+    });
+  }
+  if (count === 1) {
+    recs.push({
+      key: "single_image",
+      label: "Only one image — add 3-5 angles for a premium listing.",
+      severity: "info",
+    });
+  }
+
+  // Also stamp per-image galleryContribution back into v2.quality when present.
+  for (const a of items) {
+    if (a.quality) a.quality.galleryContribution = overall;
+  }
+
+  return {
+    overall,
+    band: bandOf(overall),
+    count,
+    dimensions: {
+      consistency: { key: "consistency", label: "Image consistency", score: consistency, band: bandOf(consistency) },
+      lighting: { key: "lighting", label: "Lighting", score: lighting, band: bandOf(lighting) },
+      background: { key: "background", label: "Background", score: background, band: bandOf(background) },
+      framing: { key: "framing", label: "Framing", score: framing, band: bandOf(framing) },
+      resolution: { key: "resolution", label: "Resolution", score: resolution, band: bandOf(resolution) },
+      primary: { key: "primary", label: "Primary image quality", score: primaryScore, band: bandOf(primaryScore) },
+    },
+    recommendations: recs,
+  };
+}
+
