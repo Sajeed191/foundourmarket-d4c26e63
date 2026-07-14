@@ -79,7 +79,6 @@ function variantOverlap(draftKeys: string[] | undefined, candidate: DetectionPro
   const candVals = new Set<string>();
   for (const v of Object.values(candidate.attributes ?? {})) candVals.add(normalizeText(v));
   for (const v of Object.values(candidate.specifications ?? {})) candVals.add(normalizeText(v));
-  if (candidate.defaultVariantHint) candVals.add(normalizeText(candidate.defaultVariantHint));
   let inter = 0;
   for (const k of dk) if (candVals.has(k)) inter++;
   return inter / dk.size;
