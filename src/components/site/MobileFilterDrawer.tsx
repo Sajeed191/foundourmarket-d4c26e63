@@ -664,7 +664,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
                       )}
                     </span>
                     <span className={`max-w-[4.5rem] truncate text-[11px] font-medium ${active ? "text-accent" : "text-foreground"}`}>{c.name}</span>
-                    <span className="-mt-1 tabular-nums text-[10px] text-muted-foreground">{c.count}</span>
+                    
                   </button>
                 );
               })}
