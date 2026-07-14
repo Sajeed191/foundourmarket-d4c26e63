@@ -10,9 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   buildOptimizerReport,
   scoreProductCompleteness,
+  analyzeVariantIntelligence,
   type OptimizerProduct,
   type OptimizerReport,
   type ProductCompleteness,
+  type VariantIntelligence,
+  type VariantRecord,
 } from "@/lib/catalog-intelligence";
 
 
