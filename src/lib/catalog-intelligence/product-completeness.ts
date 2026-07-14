@@ -159,14 +159,25 @@ function scoreSeo(input: CompletenessInput): Dimension {
 
 export type ProductCompleteness = IntelligenceModule & {
   dimensions: { key: string; label: string; score: number; weight: number }[];
+  attributes: AttributeIntelligence;
 };
 
+function derivePotentialImpact(
+  weakestScore: number,
+  hasCritical: boolean,
+): PotentialImpact {
+  if (hasCritical || weakestScore < 45) return "High";
+  if (weakestScore < 70) return "Medium";
+  return "Low";
+}
+
 export function scoreProductCompleteness(input: CompletenessInput): ProductCompleteness {
+  const attributeDim = scoreAttributes(input);
   const dims: Dimension[] = [
     scoreImages(input),
     scoreTitle(input),
     scoreDescription(input),
-    scoreAttributes(input),
+    attributeDim.dim,
     scoreSpecs(input),
     scoreVariants(input),
     scoreSeo(input),
@@ -195,6 +206,11 @@ export function scoreProductCompleteness(input: CompletenessInput): ProductCompl
     ? `/admin-product/${input.slug}/${weakest.actionSubpath}`
     : undefined;
 
+  const potentialImpact = derivePotentialImpact(
+    weakest.score,
+    evidence.some((e) => e.severity === "critical"),
+  );
+
   return {
     moduleId: "product_completeness",
     score,
@@ -203,7 +219,10 @@ export function scoreProductCompleteness(input: CompletenessInput): ProductCompl
     recommendation,
     action,
     actionHref,
+    potentialImpact,
     evidence,
     dimensions: dims.map((d) => ({ key: d.key, label: d.label, score: d.score, weight: d.weight })),
+    attributes: attributeDim.attr,
   };
 }
+
