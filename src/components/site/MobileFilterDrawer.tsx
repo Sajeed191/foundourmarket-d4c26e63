@@ -441,7 +441,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  if (!mounted) return null;
+  if (!mounted || typeof document === "undefined") return null;
 
 
   const catSummary = draft.sub
@@ -451,13 +451,19 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
       : undefined;
   const sortSummary = SORT_OPTIONS.find((s) => s.value === sort)?.label;
 
-  return (
-    <div className="fixed inset-0 z-[100001] lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[2147483000] lg:hidden"
+      style={{ height: "100dvh", width: "100vw" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Filters"
+    >
       {/* Semi-transparent backdrop (tap to close) */}
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/[0.65] backdrop-blur-[10px] transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
       />
       {/* Full-screen bottom-sheet */}
       <div
