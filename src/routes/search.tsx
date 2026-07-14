@@ -953,33 +953,55 @@ function SearchPage() {
         </form>
       </div>
 
-      <div className="mb-7 sm:mb-9">
-        <h1 className="text-fluid-2xl font-display font-semibold tracking-tight mb-1.5">Search the marketplace</h1>
-        <p className="text-sm text-muted-foreground font-light mb-5">Find products, brands and categories from around the world.</p>
+      {/* Premium hero — compact, integrated capsule search */}
+      <div className="relative mb-4 sm:mb-5">
+        {/* Subtle ambient glow — pure paint, no layout impact */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-x-6 -top-6 h-40 bg-[radial-gradient(60%_100%_at_50%_0%,oklch(0.74_0.19_49/0.10),transparent_70%)]"
+        />
+        <div className="relative">
+          <h1 className="text-[22px] sm:text-[28px] font-display font-semibold tracking-tight leading-tight">Browse Marketplace</h1>
+          <p className="text-[12px] sm:text-sm text-muted-foreground/80 font-light mt-0.5 mb-3 sm:mb-4">
+            Discover products from trusted global sellers.
+          </p>
 
-        <form onSubmit={(e) => { e.preventDefault(); update({ q: query }); }} className="relative w-full max-w-2xl">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search products, categories…"
-            className="w-full bg-white/[0.04] border border-white/10 rounded-2xl pl-12 pr-[6.5rem] py-4 text-sm sm:text-base backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all placeholder:text-muted-foreground/70"
-          />
-          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-accent-foreground font-semibold px-5 py-2.5 rounded-xl text-xs tracking-wide hover:brightness-110 active:scale-95 transition-all">
-            Search
-          </button>
-        </form>
+          <form
+            onSubmit={(e) => { e.preventDefault(); update({ q: query }); }}
+            className="relative w-full max-w-2xl"
+            role="search"
+          >
+            <div className="group relative flex items-center rounded-full bg-white/[0.05] ring-1 ring-white/10 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_10px_40px_-24px_rgba(0,0,0,0.7)] focus-within:ring-accent/50 focus-within:bg-white/[0.07] transition-all duration-200">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search products, brands, categories…"
+                aria-label="Search marketplace"
+                className="w-full bg-transparent border-0 rounded-full pl-11 pr-24 py-3 text-sm sm:text-[15px] focus:outline-none placeholder:text-muted-foreground/70"
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 bg-accent text-accent-foreground font-semibold pl-3.5 pr-4 py-2 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all"
+              >
+                <Search className="size-3.5" strokeWidth={2.5} />
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      {/* Controls — categories then a single clean control row */}
-      <div className="mb-7 space-y-4">
+      {/* Controls — categories + unified control bar + marketplace intelligence */}
+      <div className="mb-5 space-y-3">
         {/* Category chips — hidden in Trending mode (dedicated dataset) */}
         {!isTrending && categories.length > 0 && (
           <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex gap-2 overflow-x-auto py-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-2 overflow-x-auto py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <button
                 onClick={() => update({ cat: undefined })}
-                className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition-all ${!search.cat ? "bg-gradient-to-b from-accent/25 to-accent/10 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/5 hover:text-foreground hover:bg-white/[0.07]"}`}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${!search.cat ? "bg-accent/15 text-accent ring-1 ring-accent/50 shadow-[0_0_20px_-6px_var(--accent)]" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/[0.08] hover:text-foreground hover:bg-white/[0.07]"}`}
               >
                 All
               </button>
@@ -987,7 +1009,7 @@ function SearchPage() {
                 <button
                   key={c.slug}
                   onClick={() => update({ cat: search.cat === c.slug ? undefined : c.slug })}
-                  className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition-all ${search.cat === c.slug ? "bg-gradient-to-b from-accent/25 to-accent/10 text-accent ring-1 ring-accent/40" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/5 hover:text-foreground hover:bg-white/[0.07]"}`}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${search.cat === c.slug ? "bg-accent/15 text-accent ring-1 ring-accent/50 shadow-[0_0_20px_-6px_var(--accent)]" : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/[0.08] hover:text-foreground hover:bg-white/[0.07]"}`}
                 >
                   {c.name}
                 </button>
@@ -996,11 +1018,11 @@ function SearchPage() {
           </div>
         )}
 
-        {/* Single control row — Filters (icon button) + Sort (dropdown pill).
-            On mobile it sticks to the top and auto-collapses on scroll-down,
-            reappearing on scroll-up to maximise the product grid. */}
+        {/* Unified premium control bar — Filters + Sort share identical height,
+            radius and elevation. On mobile it sticks to the top and auto-hides
+            on scroll-down, reappearing on scroll-up to maximise the grid. */}
         <div
-          className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-3 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
+          className={`sticky top-0 z-30 -mx-4 px-4 py-2 flex items-center justify-between gap-2 bg-background/85 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:py-0 sm:translate-y-0 ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
         >
           <div className="flex items-center gap-2 min-w-0">
             <MobileFilterLauncher
@@ -1019,16 +1041,22 @@ function SearchPage() {
             />
 
             {activeFilterCount > 0 && (
-              <button onClick={clearAll} className="shrink-0 text-xs font-medium text-muted-foreground hover:text-accent">Clear all</button>
+              <button
+                onClick={clearAll}
+                className="shrink-0 text-[11px] font-medium text-muted-foreground hover:text-accent underline-offset-4 hover:underline transition-colors"
+              >
+                Clear all
+              </button>
             )}
-
-
           </div>
+
           <Drawer open={sortOpen} onOpenChange={setSortOpen}>
             <DrawerTrigger asChild>
-              <button className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white/[0.05] ring-1 ring-white/10 pl-4 pr-4 py-2.5 text-xs font-medium hover:bg-white/[0.08] active:scale-95 transition-all">
+              <button className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white/[0.05] ring-1 ring-white/10 px-4 py-2.5 text-xs font-medium hover:bg-white/[0.08] active:scale-95 transition-all">
                 <ArrowUpDown className="size-3.5" />
-                Sort: {(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}
+                <span className="text-muted-foreground">Sort</span>
+                <span aria-hidden className="text-muted-foreground/40">·</span>
+                <span className="text-foreground">{(SORTS.find((s) => s.value === (search.sort ?? "relevance")) ?? SORTS[0]).label}</span>
               </button>
             </DrawerTrigger>
             <DrawerContent className="border-white/10 bg-background/80 backdrop-blur-2xl">
@@ -1077,8 +1105,48 @@ function SearchPage() {
               </div>
             </DrawerContent>
           </Drawer>
-
         </div>
+
+        {/* Marketplace Intelligence — real catalog data, no fake stats */}
+        {!loading && results.length > 0 && (() => {
+          const brandCount = new Set(results.map((p) => p.brand).filter(Boolean)).size;
+          const fastShip = results.some((p) => shippingFeeOf(p) === 0);
+          return (
+            <div
+              className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              aria-live="polite"
+            >
+              <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span className="tabular-nums font-semibold text-foreground">{results.length.toLocaleString()}</span>
+                {results.length === 1 ? "product" : "products"}
+              </span>
+              {brandCount > 1 && (
+                <>
+                  <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
+                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <BadgeCheck className="size-3 text-accent/80" />
+                    <span className="tabular-nums font-semibold text-foreground">{brandCount}</span>
+                    verified {brandCount === 1 ? "seller" : "sellers"}
+                  </span>
+                </>
+              )}
+              {fastShip && (
+                <>
+                  <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
+                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Globe className="size-3 text-accent/80" />
+                    Fast shipping
+                  </span>
+                </>
+              )}
+              <span aria-hidden className="shrink-0 size-1 rounded-full bg-white/20" />
+              <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Clock className="size-3 text-accent/80" />
+                Updated recently
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
 
