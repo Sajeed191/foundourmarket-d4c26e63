@@ -1153,11 +1153,6 @@ function SearchPage() {
                 onClear={clearAll}
                 className="mb-4"
               />
-              {!loading && (
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <ResultCounter count={results.length} />
-                </div>
-              )}
             </>
           )}
 
