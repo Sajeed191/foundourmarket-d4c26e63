@@ -859,7 +859,7 @@ function SearchPage() {
   }, [posKey, visibleCount]);
 
   const visibleResults = useMemo(() => results.slice(0, visibleCount), [results, visibleCount]);
-  const hasMore = visibleCount < results.length;
+  void (visibleCount < results.length);
   function loadMore() { setVisibleCount((c) => c + PAGE_SIZE); }
 
   // Dynamic facets (brand/colour/size) + live counts for the desktop sidebar.
