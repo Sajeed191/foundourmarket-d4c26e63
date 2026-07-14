@@ -708,20 +708,19 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
-        {/* Marketplace Intelligence — live duplicate detection (never blocks) */}
+        {/* Marketplace AI Assistant — unified live intelligence (never blocks) */}
         {tab === "basic" && (
-          <CatalogReadinessPanel
-            health={healthInput}
-            imageQuality={imageQuality}
-            duplicateRisk={realDuplicateRisk}
-          />
-        )}
-        {tab === "basic" && (
-          <DuplicateIntelligencePanel
+          <MarketplaceAssistantPanel
             key={dupTick}
             draft={duplicateDraft}
             result={duplicateResult}
             draftPhash={draftPhash}
+            healthInput={healthInput}
+            imageQuality={imageQuality}
+            seoDraft={assistantSeoDraft}
+            variantRows={[]}
+            onCreateVariant={onCreateVariant}
+            onLinkRelated={onLinkRelated}
             onIgnored={() => setDupTick((t) => t + 1)}
           />
         )}
