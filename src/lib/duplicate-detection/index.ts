@@ -8,6 +8,7 @@
  */
 export * from "./types";
 export { scoreDuplicate, uniqueBadges } from "./engine";
+export { toImageIntelSummary } from "./image-intel";
 export {
   normalizeText,
   tokenize,
