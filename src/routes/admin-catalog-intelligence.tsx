@@ -388,6 +388,40 @@ function CatalogIntelligencePage() {
                 </ul>
               </div>
             )}
+
+            {/* SEO Intelligence — Catalog Intelligence 2.0, Phase 4 */}
+            {seoIntel && (
+              <div className="rounded-3xl border border-border/60 bg-card/40 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+                    <Search className="size-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent">Catalog Intelligence 2.0 · Phase 4</p>
+                    <p className="text-sm font-semibold">SEO Intelligence</p>
+                    <p className="text-xs text-muted-foreground">
+                      Consumes the existing SEO advisor. Prioritises one recommendation per listing across titles, meta, content, schema, alt text, and internal linking.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Avg</p>
+                    <p className={`font-display text-2xl font-semibold tabular-nums ${ring(seoIntel.avg)}`}>{seoIntel.avg}</p>
+                  </div>
+                </div>
+
+                <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Top SEO issues</p>
+                <ul className="space-y-2">
+                  {seoIntel.needs.map((r) => (
+                    <SeoIntelRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
+                  ))}
+                  {seoIntel.needs.length === 0 && (
+                    <li className="flex items-center gap-2 text-xs text-emerald-400">
+                      <CheckCircle2 className="size-4" /> All listings meet SEO standards.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </>
 
         )}
