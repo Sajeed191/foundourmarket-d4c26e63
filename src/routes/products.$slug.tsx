@@ -686,13 +686,13 @@ function ProductPage() {
 
 
         <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12 xl:gap-16">
-          {/* Gallery */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:sticky lg:top-28 lg:self-start"
-          >
+          {/* Gallery — plain div (no motion wrapper). A motion.div with
+              initial opacity:0 previously hid the ENTIRE gallery container
+              on devices with Reduced Motion or Android GPU Safe Mode, where
+              the framer-motion tween never advances past initial. Thumbnails
+              still rendered (they live outside this wrapper), which matched
+              the reported symptom: thumbs visible, main viewport blank. */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <div className="relative">
               {/* Cinematic ambient backlight */}
               <div aria-hidden className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 animate-pulse" style={{ background: "var(--gradient-ember-soft)", filter: "blur(80px)" }} />
@@ -892,7 +892,7 @@ function ProductPage() {
               onIndexChange={handleLightboxIndexChange}
               alt={product.name}
             />
-          </motion.div>
+          </div>
 
 
           {/* Info */}
