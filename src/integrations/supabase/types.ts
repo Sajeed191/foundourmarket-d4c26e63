@@ -2236,6 +2236,7 @@ export type Database = {
       media_assets: {
         Row: {
           alt: string | null
+          analysis: Json | null
           bucket: string
           created_at: string
           entity_ref: string | null
@@ -2245,6 +2246,7 @@ export type Database = {
           large_url: string | null
           medium_url: string | null
           mime: string | null
+          normalized_url: string | null
           original_name: string | null
           path: string
           size_bytes: number | null
@@ -2258,6 +2260,7 @@ export type Database = {
         }
         Insert: {
           alt?: string | null
+          analysis?: Json | null
           bucket?: string
           created_at?: string
           entity_ref?: string | null
@@ -2267,6 +2270,7 @@ export type Database = {
           large_url?: string | null
           medium_url?: string | null
           mime?: string | null
+          normalized_url?: string | null
           original_name?: string | null
           path: string
           size_bytes?: number | null
@@ -2280,6 +2284,7 @@ export type Database = {
         }
         Update: {
           alt?: string | null
+          analysis?: Json | null
           bucket?: string
           created_at?: string
           entity_ref?: string | null
@@ -2289,6 +2294,7 @@ export type Database = {
           large_url?: string | null
           medium_url?: string | null
           mime?: string | null
+          normalized_url?: string | null
           original_name?: string | null
           path?: string
           size_bytes?: number | null
@@ -6828,6 +6834,7 @@ export type Database = {
         }
         Returns: {
           alt: string | null
+          analysis: Json | null
           bucket: string
           created_at: string
           entity_ref: string | null
@@ -6837,6 +6844,7 @@ export type Database = {
           large_url: string | null
           medium_url: string | null
           mime: string | null
+          normalized_url: string | null
           original_name: string | null
           path: string
           size_bytes: number | null
