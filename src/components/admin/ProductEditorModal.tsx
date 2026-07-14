@@ -256,6 +256,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     image: row?.image ?? "", description: row?.description ?? "",
     in_stock: row?.in_stock ?? true, featured: row?.featured ?? false,
     sku: row?.sku ?? "", stock_quantity: row?.stock_quantity ?? 0,
+    barcode: (row as any)?.barcode ?? "",
     low_stock_threshold: row?.low_stock_threshold ?? 5, sort_order: row?.sort_order ?? nextSort ?? 0,
     price_inr: row?.price_inr != null ? String(row.price_inr) : "",
     compare_price_inr: row?.compare_price_inr != null ? String(row.compare_price_inr) : "",
