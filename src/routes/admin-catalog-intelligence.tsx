@@ -352,7 +352,7 @@ function CatalogIntelligencePage() {
                 <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">Top variant issues</p>
                 <ul className="space-y-2">
                   {variantIntel.needs.map((r) => (
-                    <VariantRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
+                    <VariantIntelRow key={r.slug} slug={r.slug} name={r.name} module={r.module} />
                   ))}
                   {variantIntel.needs.length === 0 && (
                     <li className="flex items-center gap-2 text-xs text-emerald-400">
