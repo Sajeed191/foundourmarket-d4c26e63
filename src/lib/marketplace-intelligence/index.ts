@@ -24,3 +24,10 @@ export type {
   VendorListingSnapshot,
   VendorSignals,
 } from "./vendor-intelligence";
+export { buildMarketplaceOptimization } from "./marketplace-optimization";
+export type {
+  MarketplaceOptimization,
+  OptimizationListing,
+  CategoryRollup,
+  EvidenceRollup,
+} from "./marketplace-optimization";
