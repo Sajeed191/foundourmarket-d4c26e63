@@ -107,6 +107,7 @@ import { Route as AdminBadgesBulkRouteImport } from './routes/admin-badges-bulk'
 import { Route as AdminBadgesAnalyticsRouteImport } from './routes/admin-badges-analytics'
 import { Route as AdminBadgesRouteImport } from './routes/admin-badges'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
+import { Route as AdminAiValidationRouteImport } from './routes/admin-ai-validation'
 import { Route as AdminAiOperationsRouteImport } from './routes/admin-ai-operations'
 import { Route as AdminActivityRouteImport } from './routes/admin-activity'
 import { Route as AdminAcquisitionIntelligenceRouteImport } from './routes/admin-acquisition-intelligence'
@@ -664,6 +665,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/admin-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAiValidationRoute = AdminAiValidationRouteImport.update({
+  id: '/admin-ai-validation',
+  path: '/admin-ai-validation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAiOperationsRoute = AdminAiOperationsRouteImport.update({
   id: '/admin-ai-operations',
   path: '/admin-ai-operations',
@@ -984,6 +990,7 @@ export interface FileRoutesByFullPath {
   '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
+  '/admin-ai-validation': typeof AdminAiValidationRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-badges': typeof AdminBadgesRoute
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
@@ -1143,6 +1150,7 @@ export interface FileRoutesByTo {
   '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
+  '/admin-ai-validation': typeof AdminAiValidationRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-badges': typeof AdminBadgesRoute
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
@@ -1302,6 +1310,7 @@ export interface FileRoutesById {
   '/admin-acquisition-intelligence': typeof AdminAcquisitionIntelligenceRoute
   '/admin-activity': typeof AdminActivityRoute
   '/admin-ai-operations': typeof AdminAiOperationsRoute
+  '/admin-ai-validation': typeof AdminAiValidationRoute
   '/admin-analytics': typeof AdminAnalyticsRoute
   '/admin-badges': typeof AdminBadgesRoute
   '/admin-badges-analytics': typeof AdminBadgesAnalyticsRoute
@@ -1463,6 +1472,7 @@ export interface FileRouteTypes {
     | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
+    | '/admin-ai-validation'
     | '/admin-analytics'
     | '/admin-badges'
     | '/admin-badges-analytics'
@@ -1622,6 +1632,7 @@ export interface FileRouteTypes {
     | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
+    | '/admin-ai-validation'
     | '/admin-analytics'
     | '/admin-badges'
     | '/admin-badges-analytics'
@@ -1780,6 +1791,7 @@ export interface FileRouteTypes {
     | '/admin-acquisition-intelligence'
     | '/admin-activity'
     | '/admin-ai-operations'
+    | '/admin-ai-validation'
     | '/admin-analytics'
     | '/admin-badges'
     | '/admin-badges-analytics'
@@ -1940,6 +1952,7 @@ export interface RootRouteChildren {
   AdminAcquisitionIntelligenceRoute: typeof AdminAcquisitionIntelligenceRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminAiOperationsRoute: typeof AdminAiOperationsRoute
+  AdminAiValidationRoute: typeof AdminAiValidationRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBadgesRoute: typeof AdminBadgesRoute
   AdminBadgesAnalyticsRoute: typeof AdminBadgesAnalyticsRoute
@@ -2765,6 +2778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-ai-validation': {
+      id: '/admin-ai-validation'
+      path: '/admin-ai-validation'
+      fullPath: '/admin-ai-validation'
+      preLoaderRoute: typeof AdminAiValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-ai-operations': {
       id: '/admin-ai-operations'
       path: '/admin-ai-operations'
@@ -3262,6 +3282,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAcquisitionIntelligenceRoute: AdminAcquisitionIntelligenceRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminAiOperationsRoute: AdminAiOperationsRoute,
+  AdminAiValidationRoute: AdminAiValidationRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBadgesRoute: AdminBadgesRoute,
   AdminBadgesAnalyticsRoute: AdminBadgesAnalyticsRoute,

@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { analyzeMediaAssetWithAi } from "@/lib/image-ai.functions";
 import type { ImageAnalysis } from "@/lib/image-normalization";
 import { cn } from "@/lib/utils";
+import { timedAiCall, confidenceBand, CONFIDENCE_BAND_LABEL } from "@/lib/ai-observability";
+import { AiFeedbackControls } from "@/components/admin/AiFeedbackControls";
 
 /**
  * Manual "Analyze with AI" trigger. Deterministic Tier 1 already ran; this
@@ -28,13 +30,16 @@ export function AnalyzeWithAiButton({
 
   const alreadyAnalyzed = !!analysis?.product?.analyzed;
   const confidence = analysis?.product?.confidence ?? null;
-  const lowConfidence = confidence !== null && confidence < 0.7;
+  const band = confidence !== null ? confidenceBand(confidence) : null;
+  const lowConfidence = band === "low" || band === "moderate";
 
   async function run(force: boolean) {
     setBusy(true);
     setError(null);
     try {
-      const res = await analyze({ data: { mediaAssetId, force } });
+      const res = await timedAiCall(mediaAssetId, "manual", () =>
+        analyze({ data: { mediaAssetId, force } }),
+      );
       onAnalyzed?.(res.analysis as Partial<ImageAnalysis>);
     } catch (e) {
       setError(e instanceof Error ? e.message : "AI request failed.");
@@ -59,23 +64,36 @@ export function AnalyzeWithAiButton({
         {alreadyAnalyzed ? "Re-analyze" : "Analyze with AI"}
       </button>
 
-      {alreadyAnalyzed && confidence !== null && (
+      {alreadyAnalyzed && confidence !== null && band && (
         <span
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-mono",
-            lowConfidence ? "text-amber-300" : "text-emerald-300",
+            band === "high" && "text-emerald-300",
+            band === "good" && "text-lime-300",
+            band === "moderate" && "text-amber-300",
+            band === "low" && "text-destructive",
           )}
+          title={CONFIDENCE_BAND_LABEL[band]}
         >
           {lowConfidence && <ShieldAlert className="size-3" />}
-          Detection {Math.round(confidence * 100)}% confidence
+          {Math.round(confidence * 100)}% · {band}
         </span>
       )}
-      {lowConfidence && (
+      {band === "low" && (
+        <span className="text-[10px] text-destructive/90">
+          Low confidence — manual review required.
+        </span>
+      )}
+      {band === "moderate" && (
         <span className="text-[10px] text-amber-300/80">
-          AI is uncertain — manual review recommended.
+          Moderate confidence — recommend admin review.
         </span>
       )}
       {error && <span className="text-[10px] text-destructive">{error}</span>}
+
+      {alreadyAnalyzed && (
+        <AiFeedbackControls mediaAssetId={mediaAssetId} analysis={analysis} className="mt-1" />
+      )}
     </div>
   );
 }
