@@ -17,6 +17,7 @@ import type {
   DupSignalKey,
   DupVerdict,
   DupWeights,
+  ImageIntelSummary,
 } from "./types";
 import { DEFAULT_WEIGHTS } from "./types";
 import {
