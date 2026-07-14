@@ -16,6 +16,7 @@ const BADGE_STYLES: Record<DupBadge, string> = {
   EXACT: "bg-red-500/15 text-red-400 border-red-500/30",
   SIMILAR: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   "IMAGE MATCH": "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  "SUBJECT MATCH": "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
   "TITLE MATCH": "bg-sky-500/15 text-sky-300 border-sky-500/30",
   "SPEC MATCH": "bg-teal-500/15 text-teal-300 border-teal-500/30",
   "BARCODE MATCH": "bg-rose-500/15 text-rose-300 border-rose-500/30",
