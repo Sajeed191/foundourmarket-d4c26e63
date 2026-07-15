@@ -13,6 +13,7 @@ import { MarketingAutomationCard } from "@/components/admin/MarketingAutomationC
 import { CustomerMarketingCard } from "@/components/admin/CustomerMarketingCard";
 import { FinancialMarketingCard } from "@/components/admin/FinancialMarketingCard";
 import { ExecutiveSummaryPanel } from "@/components/admin/ExecutiveSummaryPanel";
+import { AdminHomeCommandCenter } from "@/components/admin/AdminHomeCommandCenter";
 import { ExecutiveQuickCard } from "@/components/admin/ExecutiveQuickCard";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { AdminCustomersTab } from "@/components/admin/AdminCustomersTab";
@@ -304,6 +305,7 @@ function AdminPage() {
       >
       {tab === "overview" && (
         <>
+          <div className="mb-8"><AdminHomeCommandCenter /></div>
           <DashboardOverview orders={orders} products={products} customersCount={customers.length} />
           <div className="my-8"><ExecutiveQuickCard /></div>
           <div className="my-8"><ExecutiveSummaryPanel source="dashboard" /></div>
