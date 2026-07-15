@@ -748,6 +748,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
           </div>
         </div>
 
+        {/* Inline Recommendation — one message, one action (Platform v1.0 embedding) */}
+        {tab === "basic" && (
+          <ProductInlineRecommendation
+            input={inlineRecInput}
+            onGoToTab={(t) => setTab(t)}
+          />
+        )}
+
         {/* Marketplace AI Assistant — unified live intelligence (never blocks) */}
         {tab === "basic" && (
           <MarketplaceAssistantPanel
