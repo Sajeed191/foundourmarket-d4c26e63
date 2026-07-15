@@ -251,11 +251,11 @@ function VendorDashboard() {
               ) : (
                 <ul className="divide-y">
                   {vendorListings.slice(0, 10).map((l) => (
-                    <li key={l.productId}>
+                    <li key={l.productId} className="flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-white/[0.03]">
                       <Link
                         to="/vendor-product/$slug"
                         params={{ slug: l.productSlug }}
-                        className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-white/[0.03]"
+                        className="flex min-w-0 flex-1 items-center gap-3"
                       >
                         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
                           {l.productImage ? (
@@ -271,10 +271,18 @@ function VendorDashboard() {
                         <div className={cn("text-xs font-semibold tabular-nums", scoreTint(l.readiness.score))}>
                           {statusEmoji(l.readiness.score)} {l.readiness.score}
                         </div>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Link>
+                      <Link
+                        to="/vendor-publish/$slug"
+                        params={{ slug: l.productSlug }}
+                        className="shrink-0 rounded-md border bg-background px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground hover:text-foreground"
+                        title="Publish Assistant"
+                      >
+                        Publish
                       </Link>
                     </li>
                   ))}
+
                 </ul>
               )}
             </section>

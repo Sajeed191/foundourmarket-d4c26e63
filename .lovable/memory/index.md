@@ -26,3 +26,4 @@ Composition-first: every new feature must first try to compose existing frozen c
 - [Platform v1.0 manifest](mem://constraints/platform-v1-manifest) — Frozen layers, allowed changes, future track boundaries, stabilization cycle
 - [Experience layers — presentation only](mem://constraints/experience-layers) — Admin / Vendor / Customer / Mobile share the same frozen contracts; never fork scoring or intelligence
 - [Composition-first contracts](mem://constraints/composition-first) — Compose existing contracts before introducing new ones; prevents contract sprawl
+- [Publish is presentation over Marketplace Readiness](mem://constraints/publish-presentation-only) — Publish surfaces present readiness; they never add validation, scoring, or duplicate checks
