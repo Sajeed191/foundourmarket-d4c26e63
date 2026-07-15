@@ -62,3 +62,21 @@ export type {
   RecommendationLifecycleState,
   LifecycleRecommendation,
 } from "./marketplace-health";
+export {
+  buildRecommendationAnalytics,
+  updateRecommendationHistory,
+  emptyRecommendationHistory,
+  formatDurationShort,
+} from "./recommendation-analytics";
+export type {
+  RecommendationAnalytics,
+  RecommendationHistory,
+  RecommendationHistoryEntry,
+  ModuleAnalytics,
+  CategoryAnalytics,
+  VendorAnalytics,
+  ImpactBucket,
+  LifecycleFunnel,
+  AnalyticsTrend,
+  Impact,
+} from "./recommendation-analytics";

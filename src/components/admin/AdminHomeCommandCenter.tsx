@@ -335,6 +335,12 @@ export function AdminHomeCommandCenter() {
             count={0}
           />
           <QueueLink
+            to="/admin-recommendation-analytics"
+            icon={<Activity className="size-3.5 text-accent" />}
+            label="Recommendation Analytics"
+            count={health.lifecycle.length}
+          />
+          <QueueLink
             to="/admin-marketplace-quality"
             icon={<ListChecks className="size-3.5 text-accent" />}
             label="Recommendation Backlog"

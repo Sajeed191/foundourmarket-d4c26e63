@@ -64,6 +64,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminRegionRouteImport } from './routes/admin-region'
 import { Route as AdminRecommendationRulesRouteImport } from './routes/admin-recommendation-rules'
 import { Route as AdminRecommendationHealthRouteImport } from './routes/admin-recommendation-health'
+import { Route as AdminRecommendationAnalyticsRouteImport } from './routes/admin-recommendation-analytics'
 import { Route as AdminQualityRouteImport } from './routes/admin-quality'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPerformanceRouteImport } from './routes/admin-performance'
@@ -444,6 +445,12 @@ const AdminRecommendationHealthRoute =
   AdminRecommendationHealthRouteImport.update({
     id: '/admin-recommendation-health',
     path: '/admin-recommendation-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminRecommendationAnalyticsRoute =
+  AdminRecommendationAnalyticsRouteImport.update({
+    id: '/admin-recommendation-analytics',
+    path: '/admin-recommendation-analytics',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AdminQualityRoute = AdminQualityRouteImport.update({
@@ -1041,6 +1048,7 @@ export interface FileRoutesByFullPath {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
@@ -1202,6 +1210,7 @@ export interface FileRoutesByTo {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
@@ -1363,6 +1372,7 @@ export interface FileRoutesById {
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
+  '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-region': typeof AdminRegionRoute
@@ -1526,6 +1536,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
     | '/admin-region'
@@ -1687,6 +1698,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
     | '/admin-region'
@@ -1847,6 +1859,7 @@ export interface FileRouteTypes {
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
+    | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
     | '/admin-region'
@@ -2009,6 +2022,7 @@ export interface RootRouteChildren {
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminQualityRoute: typeof AdminQualityRoute
+  AdminRecommendationAnalyticsRoute: typeof AdminRecommendationAnalyticsRoute
   AdminRecommendationHealthRoute: typeof AdminRecommendationHealthRoute
   AdminRecommendationRulesRoute: typeof AdminRecommendationRulesRoute
   AdminRegionRoute: typeof AdminRegionRoute
@@ -2488,6 +2502,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-recommendation-health'
       fullPath: '/admin-recommendation-health'
       preLoaderRoute: typeof AdminRecommendationHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-recommendation-analytics': {
+      id: '/admin-recommendation-analytics'
+      path: '/admin-recommendation-analytics'
+      fullPath: '/admin-recommendation-analytics'
+      preLoaderRoute: typeof AdminRecommendationAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-quality': {
@@ -3347,6 +3368,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminQualityRoute: AdminQualityRoute,
+  AdminRecommendationAnalyticsRoute: AdminRecommendationAnalyticsRoute,
   AdminRecommendationHealthRoute: AdminRecommendationHealthRoute,
   AdminRecommendationRulesRoute: AdminRecommendationRulesRoute,
   AdminRegionRoute: AdminRegionRoute,
