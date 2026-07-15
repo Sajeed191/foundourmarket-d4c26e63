@@ -65,8 +65,19 @@ function evalBudget(value, { target, label }) {
 }
 
 function healthScore(budgets) {
-  const w = { largestRouteGz: 20, largestSharedGz: 20, customerInitialGz: 20,
-    vendorInitialGz: 10, adminInitialGz: 10, ssrBuildTimeSec: 10, heapTrend: 10 };
+  // v1.1 weights: user-experience weighted, not evenly spread.
+  //   40% entry eager   — the shell every user pays
+  //   30% route-only    — what feature teams control
+  //   15% SSR time      — build ergonomics
+  //   10% heap trend    — build reliability
+  //    5% async growth  — advisory
+  const w = {
+    entryEagerGz: 40,
+    routeOnlyGz: 30,
+    ssrBuildTimeSec: 15,
+    heapTrend: 10,
+    asyncGrowth: 5,
+  };
   let earned = 0, possible = 0;
   for (const [k, weight] of Object.entries(w)) {
     const b = budgets[k]; if (!b || b.status === "Skip") continue;
@@ -79,6 +90,7 @@ function healthScore(budgets) {
   const band = score >= 90 ? "Good" : score >= 70 ? "Fair" : score >= 50 ? "Poor" : "Critical";
   return { score, band };
 }
+
 
 function latestSnapshot() {
   if (!existsSync(SNAPSHOT_DIR)) return null;
