@@ -234,7 +234,7 @@ export async function runBenchmark(
   stages.push({
     label: "Vendor + Optimization + Trust",
     ms: now() - rollupStart,
-    extra: { vendors: vendors.length, optimizationRows: optimization.rows.length },
+    extra: { vendors: vendors.length, listings: optimization.listingCount },
   });
 
   await new Promise((r) => setTimeout(r, 0));
