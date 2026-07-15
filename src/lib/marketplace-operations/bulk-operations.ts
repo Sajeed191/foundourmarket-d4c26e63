@@ -112,7 +112,8 @@ async function runMarketplaceReadiness(
     audit: `Readiness ${readiness.score} · ${readiness.status}`,
     counters: {
       ready: readiness.status === "ready" ? 1 : 0,
-      needs_work: readiness.status === "needs_work" ? 1 : 0,
+      almost_ready: readiness.status === "almost_ready" ? 1 : 0,
+      needs_attention: readiness.status === "needs_attention" ? 1 : 0,
       not_ready: readiness.status === "not_ready" ? 1 : 0,
     },
   };
