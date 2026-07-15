@@ -21,6 +21,8 @@ import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
 import { primeVariantSummaries } from "@/lib/variant-swatch-cache";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
+import { BrowseCard } from "@/components/site/BrowseCard";
+import { buildBrowsePresentation } from "@/lib/browse";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
