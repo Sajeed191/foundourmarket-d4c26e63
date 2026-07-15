@@ -21,6 +21,8 @@ import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
 import { primeVariantSummaries } from "@/lib/variant-swatch-cache";
 import { useRegion } from "@/lib/region";
 import { ProductCard } from "@/components/site/ProductCard";
+import { BrowseCard } from "@/components/site/BrowseCard";
+import { buildBrowsePresentation } from "@/lib/browse";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
@@ -927,10 +929,22 @@ function SearchPage() {
   const activeFilterCount = countActive(currentFilters);
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
-  const renderProduct = useCallback(
-    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} highlight={search.q} />,
-    [search.q],
+  const browsePresentation = useMemo(
+    () => buildBrowsePresentation({ products: results, surface: "search" }),
+    [results],
   );
+  const renderProduct = useCallback(
+    (p: Product, i: number) => (
+      <BrowseCard
+        product={p}
+        presentation={browsePresentation.get(p.id ?? p.slug)}
+        priority={i < 4}
+        highlight={search.q}
+      />
+    ),
+    [search.q, browsePresentation],
+  );
+
 
 
   return (

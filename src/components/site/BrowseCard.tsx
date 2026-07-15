@@ -20,15 +20,17 @@ type BrowseCardProps = {
   product: Product;
   presentation?: BrowsePresentation;
   priority?: boolean;
+  highlight?: string;
 };
 
-function BrowseCardImpl({ product, presentation, priority }: BrowseCardProps) {
+function BrowseCardImpl({ product, presentation, priority, highlight }: BrowseCardProps) {
   const badges = presentation?.badges ?? [];
   const reason = presentation?.reason;
 
   return (
     <div className="relative">
-      <ProductCard product={product} priority={priority} />
+      <ProductCard product={product} priority={priority} highlight={highlight} />
+
 
       {(badges.length > 0 || reason) && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex items-end justify-between gap-2 p-2 sm:p-2.5">
