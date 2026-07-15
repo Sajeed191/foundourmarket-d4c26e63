@@ -204,14 +204,17 @@ function VendorDashboard() {
                     <span>Confidence <strong className="text-foreground">{topRecommendation.confidence}%</strong></span>
                     <span className="text-muted-foreground/70">via {topRecommendation.module}</span>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
                     <Link
-                      to="/admin-work-queue"
+                      to="/vendor-work-queue"
                       className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
                     >
-                      {topRecommendation.action}
+                      Start My Queue
                       <ArrowRight className="h-4 w-4" />
                     </Link>
+                    <span className="text-[11px] text-muted-foreground">
+                      Next action: {topRecommendation.action}
+                    </span>
                   </div>
                 </>
               ) : (
