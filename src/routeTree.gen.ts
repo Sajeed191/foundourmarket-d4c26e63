@@ -63,6 +63,7 @@ import { Route as AdminSearchRouteImport } from './routes/admin-search'
 import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminRegionRouteImport } from './routes/admin-region'
+import { Route as AdminRecommendationValidationRouteImport } from './routes/admin-recommendation-validation'
 import { Route as AdminRecommendationRulesRouteImport } from './routes/admin-recommendation-rules'
 import { Route as AdminRecommendationHealthRouteImport } from './routes/admin-recommendation-health'
 import { Route as AdminRecommendationAnalyticsRouteImport } from './routes/admin-recommendation-analytics'
@@ -443,6 +444,12 @@ const AdminRegionRoute = AdminRegionRouteImport.update({
   path: '/admin-region',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRecommendationValidationRoute =
+  AdminRecommendationValidationRouteImport.update({
+    id: '/admin-recommendation-validation',
+    path: '/admin-recommendation-validation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminRecommendationRulesRoute =
   AdminRecommendationRulesRouteImport.update({
     id: '/admin-recommendation-rules',
@@ -1071,6 +1078,7 @@ export interface FileRoutesByFullPath {
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
+  '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1236,6 +1244,7 @@ export interface FileRoutesByTo {
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
+  '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1401,6 +1410,7 @@ export interface FileRoutesById {
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
   '/admin-recommendation-health': typeof AdminRecommendationHealthRoute
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
+  '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-returns': typeof AdminReturnsRoute
@@ -1568,6 +1578,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
+    | '/admin-recommendation-validation'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1733,6 +1744,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
+    | '/admin-recommendation-validation'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -1897,6 +1909,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-analytics'
     | '/admin-recommendation-health'
     | '/admin-recommendation-rules'
+    | '/admin-recommendation-validation'
     | '/admin-region'
     | '/admin-reports'
     | '/admin-returns'
@@ -2063,6 +2076,7 @@ export interface RootRouteChildren {
   AdminRecommendationAnalyticsRoute: typeof AdminRecommendationAnalyticsRoute
   AdminRecommendationHealthRoute: typeof AdminRecommendationHealthRoute
   AdminRecommendationRulesRoute: typeof AdminRecommendationRulesRoute
+  AdminRecommendationValidationRoute: typeof AdminRecommendationValidationRoute
   AdminRegionRoute: typeof AdminRegionRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
@@ -2534,6 +2548,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-region'
       fullPath: '/admin-region'
       preLoaderRoute: typeof AdminRegionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-recommendation-validation': {
+      id: '/admin-recommendation-validation'
+      path: '/admin-recommendation-validation'
+      fullPath: '/admin-recommendation-validation'
+      preLoaderRoute: typeof AdminRecommendationValidationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-recommendation-rules': {
@@ -3433,6 +3454,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRecommendationAnalyticsRoute: AdminRecommendationAnalyticsRoute,
   AdminRecommendationHealthRoute: AdminRecommendationHealthRoute,
   AdminRecommendationRulesRoute: AdminRecommendationRulesRoute,
+  AdminRecommendationValidationRoute: AdminRecommendationValidationRoute,
   AdminRegionRoute: AdminRegionRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
