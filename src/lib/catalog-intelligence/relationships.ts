@@ -34,8 +34,114 @@ const BUNDLE_WORDS = new Set(["bundle", "combo", "pack", "set", "kit", "bundled"
 const STORAGE_RE = /\b(\d+)\s?(gb|tb|mb)\b/i;
 const NUM_MODEL_RE = /\b(\d{1,4})\b/;
 
+/**
+ * Structured attribute/spec keys that carry *deterministic* compatibility
+ * meaning. When two products share a normalized value on any of these keys
+ * we can safely emit a `compatible` edge — no title heuristics, no
+ * co-purchase inference, no embeddings.
+ *
+ * Grouped by domain so the reason string can name the shared standard
+ * (e.g. "Shared connector: USB-C" rather than a generic "attribute match").
+ */
+const COMPAT_KEY_GROUPS: Array<{ label: string; keys: string[] }> = [
+  { label: "connector", keys: ["connector", "connector_type", "interface", "port", "port_type", "cable_type"] },
+  { label: "mount", keys: ["mount", "lens_mount", "camera_mount", "tripod_mount"] },
+  { label: "lug width", keys: ["lug_width", "band_width", "strap_width"] },
+  { label: "battery", keys: ["battery_type", "battery_model", "battery_size"] },
+  { label: "ecosystem", keys: ["ecosystem", "platform", "operating_system", "os"] },
+  { label: "socket", keys: ["socket", "cpu_socket", "chipset"] },
+  { label: "form factor", keys: ["form_factor", "memory_type", "ram_type", "drive_interface"] },
+];
+
+/**
+ * Attribute/spec keys whose value is an *explicit* compatibility list —
+ * "compatible with iPhone 15", "fits Galaxy Watch 44mm", supported device
+ * lists, etc. Highest-confidence compatibility signal.
+ */
+const EXPLICIT_COMPAT_KEYS = [
+  "compatible_with",
+  "compatibility",
+  "fits",
+  "fits_with",
+  "supported_devices",
+  "supported_models",
+  "works_with",
+  "designed_for",
+];
+
 function tokenSet(s: string | null | undefined): Set<string> {
   return new Set(tokenize(s));
+}
+
+/** Case-insensitive key lookup across attributes + specifications. */
+function readAttr(
+  p: { attributes?: Record<string, string> | null; specifications?: Record<string, string> | null },
+  key: string,
+): string | null {
+  const target = key.toLowerCase().replace(/[\s_-]+/g, "");
+  for (const bag of [p.attributes ?? {}, p.specifications ?? {}]) {
+    for (const [k, v] of Object.entries(bag)) {
+      if (k.toLowerCase().replace(/[\s_-]+/g, "") === target && v) return String(v);
+    }
+  }
+  return null;
+}
+
+/**
+ * Compatibility detector — pure structured evidence. Returns the reason
+ * string when the pair is compatible, `null` otherwise.
+ *
+ * Priority (highest confidence first):
+ *   1. Explicit compatibility metadata (compatible_with / fits / supported_devices)
+ *      shares a token with the other product's name or model.
+ *   2. Both products expose the same normalized value on a compatibility key
+ *      (connector, mount, lug width, battery, ecosystem, socket, form factor).
+ */
+function detectCompatibility(
+  draft: DraftProduct,
+  candidate: DetectionProduct,
+): { reason: string; confidence: number } | null {
+  // 1. Explicit compatibility metadata — highest confidence.
+  const candTokens = tokenSet(candidate.name);
+  const candModel = candidate.name?.match(NUM_MODEL_RE)?.[0]?.toLowerCase();
+  for (const key of EXPLICIT_COMPAT_KEYS) {
+    const raw = readAttr(draft, key);
+    if (!raw) continue;
+    const listed = tokenize(raw);
+    const brandHit = candidate.brand && listed.includes(normalizeText(candidate.brand));
+    const nameHit = listed.some((t) => candTokens.has(t) && t.length > 2);
+    const modelHit = candModel && listed.includes(candModel);
+    if (brandHit || nameHit || modelHit) {
+      return { reason: `Explicit compatibility: "${raw}"`, confidence: 90 };
+    }
+  }
+  // Reverse direction — candidate declares compatibility with draft.
+  const draftTokens = tokenSet(draft.name);
+  const draftModel = draft.name?.match(NUM_MODEL_RE)?.[0]?.toLowerCase();
+  for (const key of EXPLICIT_COMPAT_KEYS) {
+    const raw = readAttr(candidate, key);
+    if (!raw) continue;
+    const listed = tokenize(raw);
+    const brandHit = draft.brand && listed.includes(normalizeText(draft.brand));
+    const nameHit = listed.some((t) => draftTokens.has(t) && t.length > 2);
+    const modelHit = draftModel && listed.includes(draftModel);
+    if (brandHit || nameHit || modelHit) {
+      return { reason: `Explicit compatibility: "${raw}"`, confidence: 90 };
+    }
+  }
+
+  // 2. Shared normalized compatibility attribute (e.g. connector = USB-C).
+  for (const group of COMPAT_KEY_GROUPS) {
+    for (const key of group.keys) {
+      const dv = readAttr(draft, key);
+      const cv = readAttr(candidate, key);
+      if (!dv || !cv) continue;
+      if (normalizeText(dv) === normalizeText(cv)) {
+        return { reason: `Shared ${group.label}: ${dv}`, confidence: 75 };
+      }
+    }
+  }
+  return null;
 }
 
 /** Values in a set that the other set does not contain. */
@@ -107,6 +213,21 @@ export function classifyRelationship(draft: DraftProduct, match: DupMatch): Rela
     };
   }
 
+  // 1b. Explicit compatibility metadata — highest-confidence compatibility
+  //     signal, evaluated before variant/accessory heuristics so an admin-
+  //     maintained "compatible_with" list is honoured deterministically.
+  const explicitCompat = detectCompatibility(draft, candidate);
+  if (explicitCompat && explicitCompat.confidence >= 90) {
+    return {
+      kind: "compatible",
+      confidence: explicitCompat.confidence,
+      message: `Compatible with "${candidate.name}".`,
+      reasons: [...reasons, explicitCompat.reason],
+    };
+  }
+
+
+
   // 2. Variant of the same product (colour / size / storage / other).
   if (strongProduct) {
     const axis = detectAxis(draft, candidate);
@@ -150,6 +271,19 @@ export function classifyRelationship(draft: DraftProduct, match: DupMatch): Rela
       confidence: Math.max(40, match.score),
       message: `This is likely an accessory for "${candidate.name}".`,
       reasons: [...reasons, "Title indicates an accessory"],
+    };
+  }
+
+  // 4b. Structured compatibility — shared connector / mount / ecosystem / etc.
+  //     Runs after accessory (which is more specific) so a titled "case" stays
+  //     an accessory; a USB-C cable paired with a USB-C phone becomes compatible.
+  const compat = detectCompatibility(draft, candidate);
+  if (compat) {
+    return {
+      kind: "compatible",
+      confidence: compat.confidence,
+      message: `Compatible with "${candidate.name}".`,
+      reasons: [...reasons, compat.reason],
     };
   }
 
