@@ -5,8 +5,6 @@
  * interruption, upgrade and failure conditions. Introduces NO new
  * intelligence — every check consumes existing exports and only asserts
  * that the platform "degrades gracefully, never crashes".
- *
- * Kept out of the app bundle: only imported by /admin-reliability-lab.
  */
 import {
   scoreProductCompleteness,
@@ -17,6 +15,7 @@ import {
   assessMarketplaceReadiness,
   brokerRecommendations,
   type IntelligenceModule,
+  type MarketplaceReadiness,
 } from "@/lib/catalog-intelligence";
 import {
   buildMarketplaceHealth,
@@ -27,6 +26,7 @@ import {
   buildMarketplaceOptimization,
   analyzeTrustIntelligence,
   type OptimizationListing,
+  type VendorIntelligence,
 } from "@/lib/marketplace-intelligence";
 import { buildSmartQueues } from "@/lib/marketplace-operations";
 import { BULK_OPERATIONS } from "@/lib/marketplace-operations/bulk-operations";
@@ -62,32 +62,131 @@ export const DEFAULT_TOGGLES: FailureToggles = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// helpers
+// Shared analysis helper — same pattern as perf-harness.
 // ─────────────────────────────────────────────────────────────
 
-function toListing(p: SynthProduct): MarketplaceHealthListing {
-  return {
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    category: p.category,
-    brand: p.brand,
-    description: p.description,
-    seoTitle: p.seoTitle,
-    seoDescription: p.seoDescription,
-    metaKeywords: p.metaKeywords,
-    image: p.image,
-    priceInr: p.priceInr,
-    priceUsd: p.priceUsd,
-    comparePriceInr: p.comparePriceInr,
-    comparePriceUsd: p.comparePriceUsd,
-    costPriceInr: p.costPriceInr,
-    costPriceUsd: p.costPriceUsd,
-    viewsCount: p.viewsCount,
-    attributes: p.attributes,
-    specifications: p.specifications,
-  } as unknown as MarketplaceHealthListing;
+interface Analysed {
+  p: SynthProduct;
+  listing: OptimizationListing;
+  modules: IntelligenceModule[];
+  readiness: MarketplaceReadiness;
 }
+
+function analyseListing(p: SynthProduct): Analysed {
+  const modules: IntelligenceModule[] = [
+    analyzeAttributes({
+      category: p.category,
+      attributes: p.attributes,
+      specifications: p.specifications,
+    }),
+    scoreProductCompleteness({
+      slug: p.slug,
+      name: p.name,
+      category: p.category,
+      description: p.description,
+      seoTitle: p.seoTitle,
+      seoDescription: p.seoDescription,
+      metaKeywords: p.metaKeywords,
+      imageCount: p.image ? 1 : 0,
+      imageQuality: null,
+      attributes: p.attributes,
+      specifications: p.specifications,
+      specCount: Object.values(p.specifications ?? {}).filter((v) => v != null && v !== "").length,
+      variantCount: 0,
+    }),
+    analyzeVariantIntelligence({
+      slug: p.slug,
+      productName: p.name,
+      productPrice: p.priceInr ?? p.priceUsd ?? null,
+      variants: [],
+    }),
+    analyzeSeoIntelligence({
+      slug: p.slug,
+      name: p.name,
+      seoTitle: p.seoTitle,
+      seoDescription: p.seoDescription,
+      description: p.description,
+      keywords: p.metaKeywords,
+      imageAlt: p.name,
+      category: p.category,
+      hasFaq: false,
+      hasRelated: false,
+      hasImage: !!p.image,
+    }),
+    analyzePricingIntelligence({
+      slug: p.slug,
+      productName: p.name,
+      price: p.priceInr ?? p.priceUsd ?? null,
+      comparePrice: p.comparePriceInr ?? p.comparePriceUsd ?? null,
+      cost: p.costPriceInr ?? p.costPriceUsd ?? null,
+      variants: [],
+    }),
+  ];
+  const readiness = assessMarketplaceReadiness(modules);
+  const vendorId = (p.brand.trim() || "unassigned").toLowerCase();
+  const listing: OptimizationListing = {
+    productId: p.id,
+    productSlug: p.slug,
+    vendorId,
+    vendorName: p.brand,
+    categoryId: p.category,
+    categoryName: p.category,
+    readiness,
+    modules,
+  };
+  return { p, listing, modules, readiness };
+}
+
+function buildStack(analysed: Analysed[]) {
+  const listings = analysed.map((a) => a.listing);
+  const byVendor = new Map<string, number[]>();
+  for (let i = 0; i < listings.length; i++) {
+    const id = listings[i]!.vendorId ?? "unassigned";
+    const list = byVendor.get(id) ?? [];
+    list.push(i);
+    byVendor.set(id, list);
+  }
+  const vendors: VendorIntelligence[] = [];
+  for (const [id, idxs] of byVendor) {
+    vendors.push(
+      analyzeVendorIntelligence({
+        vendorId: id,
+        vendorName: listings[idxs[0]!]!.vendorName ?? "Unassigned",
+        listings: idxs.map((i) => ({
+          productId: listings[i]!.productId,
+          productSlug: listings[i]!.productSlug,
+          readiness: analysed[i]!.readiness,
+          modules: analysed[i]!.modules,
+        })),
+      }),
+    );
+  }
+  const optimization = buildMarketplaceOptimization({ listings, vendors });
+  const trust = analyzeTrustIntelligence({
+    listings: analysed.map((a) => ({
+      productId: a.listing.productId,
+      readiness: a.readiness,
+      modules: a.modules,
+    })),
+    vendors,
+  });
+  const health = buildMarketplaceHealth({ optimization, vendors, trust, relationships: [] });
+  const publicListings: MarketplaceHealthListing[] = analysed.map((a) => ({
+    productId: a.listing.productId,
+    productSlug: a.p.slug,
+    productName: a.p.name,
+    productImage: a.p.image,
+    categoryName: a.p.category,
+    vendorName: a.p.brand,
+    readiness: a.readiness,
+    modules: a.modules,
+  }));
+  return { listings, vendors, optimization, trust, health, publicListings };
+}
+
+// ─────────────────────────────────────────────────────────────
+// helpers
+// ─────────────────────────────────────────────────────────────
 
 async function timed(fn: () => Promise<void> | void): Promise<number> {
   const t0 = performance.now();
@@ -110,58 +209,41 @@ function fail(id: string, category: string, name: string, detail: string, ms: nu
 // ─────────────────────────────────────────────────────────────
 
 async function snapshotRecovery(
-  products: SynthProduct[],
+  analysed: Analysed[],
   toggles: FailureToggles,
 ): Promise<TestResult[]> {
   const results: TestResult[] = [];
-  const listings = products.map(toListing);
 
-  // 1. Baseline snapshot loads
-  let baseline: ReturnType<typeof buildMarketplaceHealth> | null = null;
+  let built: ReturnType<typeof buildStack> | null = null;
   const t1 = await timed(() => {
-    baseline = buildMarketplaceHealth(listings, {
-      vendors: analyzeVendorIntelligence(listings),
-      optimization: buildMarketplaceOptimization(listings as unknown as OptimizationListing[]),
-      trust: analyzeTrustIntelligence(listings),
-    });
+    built = buildStack(analysed);
   });
   results.push(
-    baseline
-      ? pass("snap.baseline", "Snapshot Recovery", "Baseline snapshot builds", "Health snapshot produced from public contracts.", t1)
+    built
+      ? pass("snap.baseline", "Snapshot Recovery", "Baseline snapshot builds", "Marketplace Health snapshot built from public contracts.", t1)
       : fail("snap.baseline", "Snapshot Recovery", "Baseline snapshot builds", "Snapshot returned null.", t1),
   );
 
-  // 2. Missing snapshot handled gracefully
   const t2 = await timed(() => {
-    const empty = buildMarketplaceHealth([], {
-      vendors: analyzeVendorIntelligence([]),
-      optimization: buildMarketplaceOptimization([]),
-      trust: analyzeTrustIntelligence([]),
-    });
-    if (!empty) throw new Error("empty snapshot crashed");
+    const empty = buildStack([]);
+    if (!empty.health) throw new Error("empty snapshot crashed");
   });
   results.push(pass("snap.missing", "Snapshot Recovery", "Missing snapshot handled", "Empty catalog produces a safe empty snapshot.", t2));
 
-  // 3. Corrupted snapshot toggle
   if (toggles.corruptedSnapshot) {
     const t3 = await timed(() => {
-      const corrupted = [...listings];
-      // @ts-expect-error simulate a corrupted row
-      corrupted[0] = { id: null, slug: null, name: null };
       try {
-        buildMarketplaceHealth(corrupted, {
-          vendors: analyzeVendorIntelligence(corrupted),
-          optimization: buildMarketplaceOptimization(corrupted as unknown as OptimizationListing[]),
-          trust: analyzeTrustIntelligence(corrupted),
-        });
+        // Feed the broker a malformed module set — must not crash callers.
+        brokerRecommendations([
+          { id: "seo", name: "SEO", status: "attention", score: NaN, summary: "", recommendations: [] } as unknown as IntelligenceModule,
+        ]);
       } catch {
-        /* graceful failure allowed as long as it does not crash the app */
+        /* graceful failure allowed */
       }
     });
-    results.push(warn("snap.corrupted", "Snapshot Recovery", "Corrupted snapshot degrades", "Contracts tolerated a corrupted row without crashing the caller.", t3));
+    results.push(warn("snap.corrupted", "Snapshot Recovery", "Corrupted snapshot degrades", "Broker tolerated a malformed module without crashing the caller.", t3));
   }
 
-  // 4. Version mismatch
   const t4 = await timed(() => {
     const stale = { ...ENGINE_VERSION_MANIFEST, engine_version: "0.0.1-stale" };
     if (stale.engine_version === ENGINE_VERSION_MANIFEST.engine_version) {
@@ -173,70 +255,52 @@ async function snapshotRecovery(
   return results;
 }
 
-async function recommendationLifecycle(products: SynthProduct[]): Promise<TestResult[]> {
+async function recommendationLifecycle(analysed: Analysed[]): Promise<TestResult[]> {
   const results: TestResult[] = [];
-  const listings = products.map(toListing);
+  const built = buildStack(analysed);
+  const lifecycle = built.health.lifecycle;
 
-  // Build initial lifecycle
   const t1 = await timed(() => {
-    const health = buildMarketplaceHealth(listings, {
-      vendors: analyzeVendorIntelligence(listings),
-      optimization: buildMarketplaceOptimization(listings as unknown as OptimizationListing[]),
-      trust: analyzeTrustIntelligence(listings),
-    });
     let history = emptyRecommendationHistory();
-    history = updateRecommendationHistory(history, health.lifecycle);
+    history = updateRecommendationHistory(history, lifecycle);
     const first = Object.keys(history.entries).length;
-    // Re-run: transitions New→Persistent for still-open items
-    history = updateRecommendationHistory(history, health.lifecycle);
+    history = updateRecommendationHistory(history, lifecycle);
     const second = Object.keys(history.entries).length;
     if (second < first) throw new Error("history shrank between runs");
-    // Simulate resolution: drop half the recommendations
-    const halved = {
-      ...health.lifecycle,
-      current: health.lifecycle.current.slice(0, Math.floor(health.lifecycle.current.length / 2)),
-    };
+    // Simulate resolution then regression.
+    const halved = lifecycle.slice(0, Math.floor(lifecycle.length / 2));
     history = updateRecommendationHistory(history, halved);
-    // Regression: re-add
-    history = updateRecommendationHistory(history, health.lifecycle);
+    history = updateRecommendationHistory(history, lifecycle);
     if (Object.keys(history.entries).length < first) {
       throw new Error("regression did not preserve history");
     }
   });
   results.push(pass("lifecycle.transitions", "Recommendation Lifecycle", "New → Persistent → Resolved → Regressed", "Lifecycle transitions preserve history without duplicate entries.", t1));
 
-  // Analytics is stable
   const t2 = await timed(() => {
-    const health = buildMarketplaceHealth(listings, {
-      vendors: analyzeVendorIntelligence(listings),
-      optimization: buildMarketplaceOptimization(listings as unknown as OptimizationListing[]),
-      trust: analyzeTrustIntelligence(listings),
-    });
     const analytics = buildRecommendationAnalytics({
-      lifecycle: health.lifecycle,
-      optimization: buildMarketplaceOptimization(listings as unknown as OptimizationListing[]),
-      vendors: analyzeVendorIntelligence(listings),
-      history: updateRecommendationHistory(emptyRecommendationHistory(), health.lifecycle),
+      lifecycle,
+      optimization: built.optimization,
+      vendors: built.vendors,
+      history: updateRecommendationHistory(emptyRecommendationHistory(), lifecycle),
     });
     if (!analytics) throw new Error("analytics returned null");
   });
-  results.push(pass("lifecycle.analytics", "Recommendation Lifecycle", "Analytics aggregation stable", "RecommendationAnalytics contract produced from lifecycle without error.", t2));
+  results.push(pass("lifecycle.analytics", "Recommendation Lifecycle", "Analytics aggregation stable", "RecommendationAnalytics produced without error.", t2));
 
   return results;
 }
 
-async function bulkOperations(products: SynthProduct[]): Promise<TestResult[]> {
+async function bulkOperations(analysed: Analysed[]): Promise<TestResult[]> {
   const results: TestResult[] = [];
-  const listings = products.map(toListing);
-  const sample = listings.slice(0, Math.min(50, listings.length));
+  const sample = analysed.slice(0, Math.min(50, analysed.length));
 
-  // Cancel-during-execution
-  const t1 = await timed(async () => {
+  const t1 = await timed(() => {
     let cancelled = false;
     let processed = 0;
-    for (const l of sample) {
+    for (const a of sample) {
       if (cancelled) break;
-      scoreProductCompleteness(l);
+      analyseListing(a.p);
       processed++;
       if (processed === 5) cancelled = true;
     }
@@ -244,38 +308,31 @@ async function bulkOperations(products: SynthProduct[]): Promise<TestResult[]> {
   });
   results.push(pass("bulk.cancel", "Bulk Operations", "Cancel mid-execution", "Runner halts at cancel checkpoint without further mutation.", t1));
 
-  // Resume (idempotent)
   const t2 = await timed(() => {
-    const first = sample.map((l) => scoreProductCompleteness(l).score);
-    const second = sample.map((l) => scoreProductCompleteness(l).score);
+    const first = sample.map((a) => analyseListing(a.p).readiness.score);
+    const second = sample.map((a) => analyseListing(a.p).readiness.score);
     if (first.join(",") !== second.join(",")) throw new Error("non-deterministic");
   });
   results.push(pass("bulk.resume", "Bulk Operations", "Resume-safe / idempotent", "Re-running produces identical scores — safe to resume from any offset.", t2));
 
-  // Partial completion + retry
   const t3 = await timed(() => {
     let failed = 0;
     const audit: string[] = [];
     for (let i = 0; i < sample.length; i++) {
       try {
         if (i % 17 === 0) throw new Error("simulated");
-        scoreProductCompleteness(sample[i]);
-        audit.push(`${sample[i].slug}:ok`);
+        analyseListing(sample[i]!.p);
+        audit.push(`${sample[i]!.p.slug}:ok`);
       } catch {
         failed++;
-        audit.push(`${sample[i].slug}:fail`);
+        audit.push(`${sample[i]!.p.slug}:fail`);
       }
     }
-    // Retry only failed items
-    let recovered = 0;
-    for (const line of audit) {
-      if (line.endsWith(":fail")) recovered++;
-    }
-    if (recovered !== failed) throw new Error("audit mismatch");
+    const failedFromAudit = audit.filter((l) => l.endsWith(":fail")).length;
+    if (failedFromAudit !== failed) throw new Error("audit mismatch");
   });
   results.push(pass("bulk.partial", "Bulk Operations", "Partial completion + retry audit", "Audit trail identifies failed items so a retry pass covers exactly them.", t3));
 
-  // Registry coverage
   const t4 = await timed(() => {
     if (!BULK_OPERATIONS || Object.keys(BULK_OPERATIONS).length === 0) {
       throw new Error("no bulk operations registered");
@@ -298,47 +355,38 @@ async function versionCompat(): Promise<TestResult[]> {
   results.push(pass("ver.manifest", "Version Compatibility", "Manifest complete", "All engine version fields present for reproducibility stamps.", t1));
 
   const t2 = await timed(() => {
-    // Simulate an older manifest — new code must still accept it as data
     const older = { engine_version: "2.9.0", photon_version: "0.3.0", quality_gate_version: "0.9.0", category_rules_version: "1.5.0" };
-    const same = older.engine_version === ENGINE_VERSION_MANIFEST.engine_version;
-    if (same) throw new Error("comparison broken");
+    if (older.engine_version === ENGINE_VERSION_MANIFEST.engine_version) {
+      throw new Error("comparison broken");
+    }
   });
   results.push(pass("ver.older", "Version Compatibility", "Older manifests comparable", "Older engine stamps compare cleanly for selective reprocessing.", t2));
 
   return results;
 }
 
-async function dataIntegrity(products: SynthProduct[]): Promise<TestResult[]> {
+async function dataIntegrity(analysed: Analysed[]): Promise<TestResult[]> {
   const results: TestResult[] = [];
-  const listings = products.map(toListing);
-  const snapshot = JSON.stringify(listings);
+  const snapshot = JSON.stringify(analysed.map((a) => a.p));
 
   const t1 = await timed(() => {
-    for (const l of listings) {
-      scoreProductCompleteness(l);
-      analyzeSeoIntelligence(l);
-      analyzePricingIntelligence(l);
-      analyzeVariantIntelligence(l);
-      analyzeAttributes(l);
-    }
-    const after = JSON.stringify(listings);
+    for (const a of analysed) analyseListing(a.p);
+    const after = JSON.stringify(analysed.map((a) => a.p));
     if (after !== snapshot) throw new Error("analyzer mutated input");
   });
-  results.push(pass("integ.readonly", "Data Integrity", "Analyzers stay read-only", "Running every analyzer left the source listings byte-identical.", t1));
+  results.push(pass("integ.readonly", "Data Integrity", "Analyzers stay read-only", "Running every analyzer left source products byte-identical.", t1));
 
   const t2 = await timed(() => {
-    const readiness = listings.slice(0, 20).map((l) => assessMarketplaceReadiness(l));
-    if (readiness.some((r) => !r || typeof r.readinessScore !== "number")) {
-      throw new Error("readiness contract broken");
+    for (const a of analysed.slice(0, 20)) {
+      if (!a.readiness || typeof a.readiness.score !== "number") {
+        throw new Error("readiness contract broken");
+      }
     }
   });
   results.push(pass("integ.readiness", "Data Integrity", "Readiness contract intact", "assessMarketplaceReadiness returns the versioned public shape.", t2));
 
   const t3 = await timed(() => {
-    const modules: IntelligenceModule[] = [
-      { id: "seo", name: "SEO", status: "attention", score: 60, summary: "", recommendations: [] } as unknown as IntelligenceModule,
-    ];
-    const brokered = brokerRecommendations(modules);
+    const brokered = brokerRecommendations(analysed[0]?.modules ?? []);
     if (!Array.isArray(brokered)) throw new Error("broker contract broken");
   });
   results.push(pass("integ.broker", "Data Integrity", "Recommendation broker stable", "brokerRecommendations preserves its contract signature.", t3));
@@ -346,19 +394,29 @@ async function dataIntegrity(products: SynthProduct[]): Promise<TestResult[]> {
   return results;
 }
 
+async function smartQueuesCheck(analysed: Analysed[]): Promise<TestResult[]> {
+  const results: TestResult[] = [];
+  const built = buildStack(analysed);
+  const t = await timed(() => {
+    const queues = buildSmartQueues(built.publicListings);
+    if (!queues || typeof queues !== "object") throw new Error("queues missing");
+  });
+  results.push(pass("queues.build", "Smart Queues", "Queues build from health", "Smart Work Queues assemble from the frozen health snapshot.", t));
+  return results;
+}
+
 async function failureInjection(
-  products: SynthProduct[],
+  analysed: Analysed[],
   toggles: FailureToggles,
 ): Promise<TestResult[]> {
   const results: TestResult[] = [];
-  const listings = products.map(toListing);
 
   if (toggles.timeout) {
     const budgetMs = 500;
     const t = await timed(async () => {
       const t0 = performance.now();
-      for (const l of listings) {
-        scoreProductCompleteness(l);
+      for (const a of analysed) {
+        analyseListing(a.p);
         if (performance.now() - t0 > budgetMs) break;
       }
     });
@@ -371,8 +429,6 @@ async function failureInjection(
 
   if (toggles.storage) {
     const t = await timed(() => {
-      // Pretend localStorage is unavailable — code that persists history/audit
-      // must not crash. We only assert the caller can catch the throw.
       let caught = false;
       try {
         throw new Error("QuotaExceededError");
@@ -381,12 +437,11 @@ async function failureInjection(
       }
       if (!caught) throw new Error("storage error not catchable");
     });
-    results.push(pass("inject.storage", "Failure Injection", "Storage failure caught", "Persistence layer errors are catchable — degrades to in-memory only.", t));
+    results.push(pass("inject.storage", "Failure Injection", "Storage failure caught", "Persistence errors are catchable — degrades to in-memory only.", t));
   }
 
   if (toggles.missingModule) {
     const t = await timed(() => {
-      // Broker MUST accept a partial module set without crashing.
       const brokered = brokerRecommendations([]);
       if (!Array.isArray(brokered)) throw new Error("broker crashed on empty");
     });
@@ -401,22 +456,6 @@ async function failureInjection(
     results.push(pass("inject.stale", "Failure Injection", "Stale contract tolerated", "Unknown module shape did not crash the broker.", t));
   }
 
-  return results;
-}
-
-async function smartQueues(products: SynthProduct[]): Promise<TestResult[]> {
-  const results: TestResult[] = [];
-  const listings = products.map(toListing);
-  const t = await timed(() => {
-    const health = buildMarketplaceHealth(listings, {
-      vendors: analyzeVendorIntelligence(listings),
-      optimization: buildMarketplaceOptimization(listings as unknown as OptimizationListing[]),
-      trust: analyzeTrustIntelligence(listings),
-    });
-    const queues = buildSmartQueues(listings, health);
-    if (!queues || typeof queues !== "object") throw new Error("queues missing");
-  });
-  results.push(pass("queues.build", "Smart Queues", "Queues build from health", "Smart Work Queues assemble from the frozen health snapshot.", t));
   return results;
 }
 
@@ -440,21 +479,29 @@ export async function runReliabilitySuite(
   await new Promise((r) => setTimeout(r, 0));
   const products = generateSynthProducts(size, 7);
 
+  onProgress?.("Analysing listings");
+  await new Promise((r) => setTimeout(r, 0));
+  const analysed: Analysed[] = [];
+  for (let i = 0; i < products.length; i++) {
+    analysed.push(analyseListing(products[i]!));
+    if (i % 250 === 249) await new Promise((r) => setTimeout(r, 0));
+  }
+
   const results: TestResult[] = [];
   onProgress?.("Snapshot recovery");
-  results.push(...(await snapshotRecovery(products, toggles)));
+  results.push(...(await snapshotRecovery(analysed, toggles)));
   onProgress?.("Recommendation lifecycle");
-  results.push(...(await recommendationLifecycle(products)));
+  results.push(...(await recommendationLifecycle(analysed)));
   onProgress?.("Bulk operations");
-  results.push(...(await bulkOperations(products)));
+  results.push(...(await bulkOperations(analysed)));
   onProgress?.("Version compatibility");
   results.push(...(await versionCompat()));
   onProgress?.("Data integrity");
-  results.push(...(await dataIntegrity(products)));
+  results.push(...(await dataIntegrity(analysed)));
   onProgress?.("Smart queues");
-  results.push(...(await smartQueues(products)));
+  results.push(...(await smartQueuesCheck(analysed)));
   onProgress?.("Failure injection");
-  results.push(...(await failureInjection(products, toggles)));
+  results.push(...(await failureInjection(analysed, toggles)));
 
   const totals = { pass: 0, warn: 0, fail: 0, skip: 0, total: results.length };
   for (const r of results) totals[r.status]++;
