@@ -183,7 +183,7 @@ function VendorDashboard() {
                     {vendor.distribution.ready ?? 0}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
-                    {vendor.distribution.almost ?? 0} almost · {vendor.distribution.needs_work ?? 0} needs work
+                    {vendor.distribution.almost_ready ?? 0} almost · {(vendor.distribution.needs_attention ?? 0) + (vendor.distribution.not_ready ?? 0)} needs work
                   </div>
                 </div>
               </div>
