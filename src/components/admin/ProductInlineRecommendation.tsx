@@ -151,7 +151,9 @@ export function ProductInlineRecommendation({
     // Variants.
     list.push(
       analyzeVariantIntelligence({
-        category: input.category ?? null,
+        slug: input.slug,
+        productName: input.name,
+        productPrice: input.priceInr ?? input.priceUsd ?? null,
         variants: input.variants,
       }),
     );
@@ -176,13 +178,12 @@ export function ProductInlineRecommendation({
     // Pricing.
     list.push(
       analyzePricingIntelligence({
-        priceInr: input.priceInr,
-        priceUsd: input.priceUsd,
-        comparePriceInr: input.comparePriceInr,
-        comparePriceUsd: input.comparePriceUsd,
-        costInr: input.costInr,
-        costUsd: input.costUsd,
-        stockQuantity: input.stockQuantity,
+        slug: input.slug,
+        productName: input.name,
+        price: input.priceInr ?? input.priceUsd ?? null,
+        comparePrice: input.comparePriceInr ?? input.comparePriceUsd ?? null,
+        cost: input.costInr ?? input.costUsd ?? null,
+        variants: input.variants,
       }),
     );
 
