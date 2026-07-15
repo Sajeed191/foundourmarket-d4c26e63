@@ -8,6 +8,7 @@
     "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build && node scripts/build-summary.mjs",
     "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development && node scripts/build-summary.mjs",
     "build:report": "open dist/build-report.html || xdg-open dist/build-report.html",
+    "build:diff": "node scripts/build-diff.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
