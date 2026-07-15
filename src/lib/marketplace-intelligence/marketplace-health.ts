@@ -207,7 +207,7 @@ function rollupRelationships(rel: RelationshipIntelligence[]): RelationshipRollu
 }
 
 function recommendationKey(r: Recommendation): string {
-  return `${r.moduleId}::${r.action}`;
+  return `${r.module}::${r.action}`;
 }
 
 function assignLifecycle(
