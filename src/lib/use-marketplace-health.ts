@@ -154,11 +154,23 @@ function analyseListing(p: Product): {
   return { listing, modules, readiness };
 }
 
+export type MarketplaceHealthListing = {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  productImage: string | null;
+  categoryName: string | null;
+  vendorName: string | null;
+  readiness: MarketplaceReadiness;
+  modules: IntelligenceModule[];
+};
+
 export type MarketplaceHealthBundle = {
   health: MarketplaceHealth | null;
   optimization: ReturnType<typeof buildMarketplaceOptimization> | null;
   vendors: VendorIntelligence[];
   trust: TrustIntelligence | null;
+  listings: MarketplaceHealthListing[];
   totalProducts: number;
   analysedProducts: number;
   loading: boolean;
