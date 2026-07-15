@@ -1106,9 +1106,9 @@ function ShipmentCard({ order, ship, delay, selected, onToggleSelect, creating, 
                 <ActionBtn onClick={() => onStatus("cancelled")} disabled={busy} icon={<Ban className="size-3" />} tone="destructive">Cancel</ActionBtn>
               </div>
               <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
-                <ActionBtn onClick={() => runDoc("slip", () => downloadPackingSlip(order.id))} disabled={docBusy === "slip"} icon={<FileText className="size-3" />}>Packing Slip</ActionBtn>
-                <ActionBtn onClick={() => runDoc("inv", () => downloadInvoice(order.id))} disabled={docBusy === "inv"} icon={<Receipt className="size-3" />}>Invoice</ActionBtn>
-                <ActionBtn onClick={() => runDoc("label", () => downloadShippingLabel(order.id))} disabled={docBusy === "label"} icon={<Printer className="size-3" />}>Print Label</ActionBtn>
+                <ActionBtn onClick={() => runDoc("slip", async () => (await loadPacking()).downloadPackingSlip(order.id))} disabled={docBusy === "slip"} icon={<FileText className="size-3" />}>Packing Slip</ActionBtn>
+                <ActionBtn onClick={() => runDoc("inv", async () => (await loadInvoice()).downloadInvoice(order.id))} disabled={docBusy === "inv"} icon={<Receipt className="size-3" />}>Invoice</ActionBtn>
+                <ActionBtn onClick={() => runDoc("label", async () => (await loadPacking()).downloadShippingLabel(order.id))} disabled={docBusy === "label"} icon={<Printer className="size-3" />}>Print Label</ActionBtn>
                 <ActionBtn onClick={copyTracking} icon={<Copy className="size-3" />}>Copy Tracking</ActionBtn>
               </div>
             </div>
