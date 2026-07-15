@@ -44,3 +44,21 @@ export type {
   Risk,
   RiskArea,
 } from "./trust-intelligence";
+export {
+  buildMarketplaceHealth,
+  HEALTH_STATUS_LABEL,
+  TREND_LABEL,
+} from "./marketplace-health";
+export type {
+  MarketplaceHealth,
+  MarketplaceHealthPrevious,
+  HealthStatus,
+  Trend,
+  TrendBlock,
+  VendorRollup,
+  CatalogRollup,
+  TrustRollup,
+  RelationshipRollup,
+  RecommendationLifecycleState,
+  LifecycleRecommendation,
+} from "./marketplace-health";
