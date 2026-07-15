@@ -224,7 +224,7 @@ export function buildRecommendationAnalytics(
       score: v.score,
       tier: v.tier,
       listingCount: v.listingCount,
-      topAction: v.topRecommendation?.action ?? null,
+      topAction: v.action ?? null,
     }));
 
   // ---------------- Trend: 7d vs prior 7d resolution rate
