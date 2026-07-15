@@ -154,11 +154,23 @@ function analyseListing(p: Product): {
   return { listing, modules, readiness };
 }
 
+export type MarketplaceHealthListing = {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  productImage: string | null;
+  categoryName: string | null;
+  vendorName: string | null;
+  readiness: MarketplaceReadiness;
+  modules: IntelligenceModule[];
+};
+
 export type MarketplaceHealthBundle = {
   health: MarketplaceHealth | null;
   optimization: ReturnType<typeof buildMarketplaceOptimization> | null;
   vendors: VendorIntelligence[];
   trust: TrustIntelligence | null;
+  listings: MarketplaceHealthListing[];
   totalProducts: number;
   analysedProducts: number;
   loading: boolean;
@@ -178,6 +190,7 @@ export function useMarketplaceHealth(): MarketplaceHealthBundle {
         optimization: null,
         vendors: [],
         trust: null,
+        listings: [],
         totalProducts: products.length,
         analysedProducts: 0,
         loading,
@@ -189,7 +202,7 @@ export function useMarketplaceHealth(): MarketplaceHealthBundle {
       .sort((a, b) => (b.viewsCount ?? 0) - (a.viewsCount ?? 0))
       .slice(0, MAX_ANALYSED);
 
-    const analyses = sample.map(analyseListing);
+    const analyses = sample.map((p) => ({ product: p, ...analyseListing(p) }));
     const listings = analyses.map((a) => a.listing);
 
     // Vendor rollups by brand.
@@ -235,11 +248,23 @@ export function useMarketplaceHealth(): MarketplaceHealthBundle {
       previous: prevRef.current,
     });
 
+    const publicListings: MarketplaceHealthListing[] = analyses.map((a) => ({
+      productId: a.listing.productId,
+      productSlug: a.listing.productSlug ?? a.product.slug,
+      productName: a.product.name,
+      productImage: a.product.image ?? null,
+      categoryName: a.listing.categoryName ?? a.product.category ?? null,
+      vendorName: a.listing.vendorName ?? null,
+      readiness: a.readiness,
+      modules: a.modules,
+    }));
+
     return {
       health,
       optimization,
       vendors,
       trust,
+      listings: publicListings,
       totalProducts: products.length,
       analysedProducts: analyses.length,
       loading: false,
