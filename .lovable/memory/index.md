@@ -8,6 +8,7 @@ NEVER add: loyalty points, rewards, coins, gamification, cheap cyberpunk/neon ov
 Use semantic tokens in src/styles.css (oklch); never hardcode colors in components.
 AI UX rule: every AI feature shows ONE prioritized recommendation, plain language, traffic-light status (🟢🔵🟡🔴), one-click action, progressive disclosure. No raw scores/JSON/jargon by default. AI recommends, humans decide.
 Platform v1.0 FROZEN: Image v3, Catalog v2, Marketplace v3, Health v1, Operations v1. Only bug fixes / perf / UX polish / new bulk-op adapters over existing analyzers / new queue filters. No changes to public contracts. New work goes in Track A (Vendor), B (Customer), C (Growth), D (Platform).
+Composition-first: every new feature must first try to compose existing frozen contracts before any new contract is introduced.
 
 ## Memories
 - [AI UX principles](mem://design/ai-ux-principles) — Permanent rules for every AI surface: one message, simple language, traffic lights, explain decisions, one-click fix, unified Marketplace AI Assistant
@@ -24,3 +25,4 @@ Platform v1.0 FROZEN: Image v3, Catalog v2, Marketplace v3, Health v1, Operation
 - [Intelligence vs Operations separation](mem://constraints/intelligence-vs-operations) — Permanent rule: Intelligence produces decisions, Operations execute decisions
 - [Platform v1.0 manifest](mem://constraints/platform-v1-manifest) — Frozen layers, allowed changes, future track boundaries, stabilization cycle
 - [Experience layers — presentation only](mem://constraints/experience-layers) — Admin / Vendor / Customer / Mobile share the same frozen contracts; never fork scoring or intelligence
+- [Composition-first contracts](mem://constraints/composition-first) — Compose existing contracts before introducing new ones; prevents contract sprawl
