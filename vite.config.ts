@@ -7,6 +7,7 @@
 import path from "node:path";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { imagetools } from "vite-imagetools";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
@@ -32,6 +33,18 @@ export default defineConfig({
       // Build-time responsive image generation (WebP + multiple widths).
       // Enabled for imports that opt in via the `?responsive` query flag.
       imagetools(),
+      // Phase 2 (Build Observability): emits dist/build-report.html with a
+      // treemap of every chunk + its modules. Pure observability — the
+      // plugin does not touch the shipped bundle. `emitFile: false` keeps
+      // the report out of the client asset manifest so it is not shipped
+      // to end users; it is written directly to dist/.
+      visualizer({
+        filename: "dist/build-report.html",
+        template: "treemap",
+        gzipSize: true,
+        brotliSize: true,
+        emitFile: false,
+      }),
     ],
     resolve: {
       alias: {
