@@ -470,6 +470,35 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     [form.name, form.seo_title, form.seo_description, form.description, form.meta_keywords, effectiveCategory, pendingFaqs.length, form.related_products, form.cross_sell_products, form.upsell_products, form.image],
   );
 
+  // ---- Inline Recommendation input (Catalog Intelligence 2.0 embedding) ----
+  const inlineRecInput = useMemo(
+    () => ({
+      slug: form.slug.trim() || slugify(form.name),
+      name: form.name,
+      category: effectiveCategory || null,
+      description: form.description || null,
+      seoTitle: form.seo_title || null,
+      seoDescription: form.seo_description || null,
+      metaKeywords: form.meta_keywords ?? null,
+      imageCount: galleryUrls.length,
+      imageQuality: imageQuality.images.length ? imageQuality.score : null,
+      hasVideo: !!form.video_url?.trim(),
+      attributes: attrsObj as Record<string, unknown>,
+      specifications: specsObj as Record<string, unknown>,
+      variants: [],
+      priceInr: form.price_inr ? Number(form.price_inr) : null,
+      priceUsd: form.price_usd ? Number(form.price_usd) : null,
+      comparePriceInr: form.compare_price_inr ? Number(form.compare_price_inr) : null,
+      comparePriceUsd: form.compare_price_usd ? Number(form.compare_price_usd) : null,
+      costInr: form.cost_price_inr ? Number(form.cost_price_inr) : null,
+      costUsd: form.cost_price_usd ? Number(form.cost_price_usd) : null,
+      stockQuantity: Number(form.stock_quantity) || 0,
+    }),
+    [form.slug, form.name, effectiveCategory, form.description, form.seo_title, form.seo_description, form.meta_keywords, galleryUrls.length, imageQuality.images.length, imageQuality.score, form.video_url, attrsObj, specsObj, form.price_inr, form.price_usd, form.compare_price_inr, form.compare_price_usd, form.cost_price_inr, form.cost_price_usd, form.stock_quantity],
+  );
+
+
+
 
   async function uploadImage(file: File) {
     setUploading(true); setError(null);
