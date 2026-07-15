@@ -70,6 +70,7 @@ import { Route as AdminRecommendationHealthRouteImport } from './routes/admin-re
 import { Route as AdminRecommendationAnalyticsRouteImport } from './routes/admin-recommendation-analytics'
 import { Route as AdminQualityRouteImport } from './routes/admin-quality'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
+import { Route as AdminPlatformDocsRouteImport } from './routes/admin-platform-docs'
 import { Route as AdminPerformanceRouteImport } from './routes/admin-performance'
 import { Route as AdminPerfHarnessRouteImport } from './routes/admin-perf-harness'
 import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
@@ -482,6 +483,11 @@ const AdminQualityRoute = AdminQualityRouteImport.update({
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/admin-products',
   path: '/admin-products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPlatformDocsRoute = AdminPlatformDocsRouteImport.update({
+  id: '/admin-platform-docs',
+  path: '/admin-platform-docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
@@ -1079,6 +1085,7 @@ export interface FileRoutesByFullPath {
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
+  '/admin-platform-docs': typeof AdminPlatformDocsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
@@ -1246,6 +1253,7 @@ export interface FileRoutesByTo {
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
+  '/admin-platform-docs': typeof AdminPlatformDocsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
@@ -1413,6 +1421,7 @@ export interface FileRoutesById {
   '/admin-payments': typeof AdminPaymentsRoute
   '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
+  '/admin-platform-docs': typeof AdminPlatformDocsRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
   '/admin-recommendation-analytics': typeof AdminRecommendationAnalyticsRoute
@@ -1582,6 +1591,7 @@ export interface FileRouteTypes {
     | '/admin-payments'
     | '/admin-perf-harness'
     | '/admin-performance'
+    | '/admin-platform-docs'
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-analytics'
@@ -1749,6 +1759,7 @@ export interface FileRouteTypes {
     | '/admin-payments'
     | '/admin-perf-harness'
     | '/admin-performance'
+    | '/admin-platform-docs'
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-analytics'
@@ -1915,6 +1926,7 @@ export interface FileRouteTypes {
     | '/admin-payments'
     | '/admin-perf-harness'
     | '/admin-performance'
+    | '/admin-platform-docs'
     | '/admin-products'
     | '/admin-quality'
     | '/admin-recommendation-analytics'
@@ -2083,6 +2095,7 @@ export interface RootRouteChildren {
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPerfHarnessRoute: typeof AdminPerfHarnessRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPlatformDocsRoute: typeof AdminPlatformDocsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminQualityRoute: typeof AdminQualityRoute
   AdminRecommendationAnalyticsRoute: typeof AdminRecommendationAnalyticsRoute
@@ -2610,6 +2623,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-products'
       fullPath: '/admin-products'
       preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-platform-docs': {
+      id: '/admin-platform-docs'
+      path: '/admin-platform-docs'
+      fullPath: '/admin-platform-docs'
+      preLoaderRoute: typeof AdminPlatformDocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-performance': {
@@ -3469,6 +3489,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPerfHarnessRoute: AdminPerfHarnessRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPlatformDocsRoute: AdminPlatformDocsRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminQualityRoute: AdminQualityRoute,
   AdminRecommendationAnalyticsRoute: AdminRecommendationAnalyticsRoute,
