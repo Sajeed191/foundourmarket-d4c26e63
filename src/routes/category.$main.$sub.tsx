@@ -3,11 +3,12 @@ import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
-import { ProductCard } from "@/components/site/ProductCard";
+import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
 import { titleizeSlug } from "@/lib/category-path";
 import { Loader2 } from "lucide-react";
+import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
 
 export const Route = createFileRoute("/category/$main/$sub")({
   head: ({ params }) => {
@@ -53,9 +54,20 @@ function SubcategoryPage() {
   const cat = categories.find((c) => c.slug === sub);
   const parent = categories.find((c) => c.slug === main);
 
-  const items = useMemo(
+  const rawItems = useMemo(
     () => products.filter((p) => p.category === sub || (p.categories ?? []).includes(sub)),
     [products, sub],
+  );
+
+  // Browse Presentation Adapter — pure composition over public contracts.
+  // Drives default "Recommended" ordering, badges, and the "Why?" disclosure.
+  const presentation = useMemo(
+    () => buildBrowsePresentation({ products: rawItems, surface: "category" }),
+    [rawItems],
+  );
+  const items = useMemo(
+    () => sortProductsForBrowse(rawItems, presentation, "recommended"),
+    [rawItems, presentation],
   );
 
   useEffect(() => {
@@ -64,8 +76,10 @@ function SubcategoryPage() {
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
-    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
-    [],
+    (p: Product, i: number) => (
+      <BrowseCard product={p} presentation={presentation.get(p.id ?? p.slug)} priority={i < 4} />
+    ),
+    [presentation],
   );
 
   // If the slug isn't actually a subcategory of `main`, send to the flat page so

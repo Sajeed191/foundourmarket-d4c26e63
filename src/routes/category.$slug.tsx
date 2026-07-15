@@ -3,10 +3,11 @@ import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
-import { ProductCard } from "@/components/site/ProductCard";
+import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
 import { Loader2, ArrowRight } from "lucide-react";
+import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
 
 function titleize(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -70,9 +71,19 @@ function CategoryPage() {
 
   // Direct products of this main category (only used as a fallback when there
   // are no subcategories — never lose products).
-  const ownItems = useMemo(
+  const ownItemsRaw = useMemo(
     () => products.filter((p) => matches(p, slug)),
     [products, slug],
+  );
+
+  // Browse Presentation Adapter — only exercised on the fallback grid.
+  const presentation = useMemo(
+    () => buildBrowsePresentation({ products: ownItemsRaw, surface: "category" }),
+    [ownItemsRaw],
+  );
+  const ownItems = useMemo(
+    () => sortProductsForBrowse(ownItemsRaw, presentation, "recommended"),
+    [ownItemsRaw, presentation],
   );
 
   useEffect(() => {
@@ -82,8 +93,10 @@ function CategoryPage() {
   const parent = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
-    (p: Product, i: number) => <ProductCard product={p} priority={i < 4} />,
-    [],
+    (p: Product, i: number) => (
+      <BrowseCard product={p} presentation={presentation.get(p.id ?? p.slug)} priority={i < 4} />
+    ),
+    [presentation],
   );
 
   // Old flat URL for a subcategory → redirect to the nested /category/main/sub.
