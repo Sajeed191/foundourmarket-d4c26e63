@@ -2,9 +2,15 @@
 /**
  * Build Summary — Phase 2 / Phase 3 (Build Observability + Budgets)
  *
- * Walks emitted client assets, computes route + shared chunk metrics
- * (raw + gzip + brotli), evaluates per-budget compliance, and archives
- * a JSON snapshot for regression diffing.
+ * Reads Vite's manifest.json to walk the true chunk graph:
+ *   - `imports`         → eager (statically imported)
+ *   - `dynamicImports`  → lazy  (import() at runtime)
+ *
+ * From that graph we compute:
+ *   - Eager set per entry (static-import closure from the entry chunk)
+ *   - Eager set per route (entry eager ∪ route file's static-import closure)
+ *   - Async-only set (chunks reachable only through dynamicImports — never
+ *     part of any initial load)
  *
  * Contract: pure observability. Never mutates build output.
  * Non-blocking by default. Set BUILD_BUDGETS=strict to exit non-zero
@@ -15,53 +21,44 @@ import { join, relative } from "node:path";
 import { gzipSync, brotliCompressSync, constants as zlibConst } from "node:zlib";
 
 const ROOT = process.cwd();
-const CLIENT_DIR = join(ROOT, "dist", "client", "assets");
+const CLIENT_DIR = join(ROOT, "dist", "client");
+const ASSETS_DIR = join(CLIENT_DIR, "assets");
+const MANIFEST_PATH = join(CLIENT_DIR, ".vite", "manifest.json");
 const SNAPSHOT_DIR = join(ROOT, ".build-snapshots");
 const SUMMARY_PATH = join(ROOT, "dist", "build-summary.json");
 
 // ── Budgets (gzip bytes; SSR seconds; heap MB) ─────────────────────
-// Warning at target, Critical at target * 1.25. Tune here.
 const KB = 1024;
 const BUDGETS = {
-  largestRouteGz:      { target: 300 * KB, label: "Largest Route" },
-  largestSharedGz:     { target: 250 * KB, label: "Largest Shared Chunk" },
-  customerInitialGz:   { target: 200 * KB, label: "Initial Customer Bundle" },
-  vendorInitialGz:     { target: 250 * KB, label: "Vendor Initial Bundle" },
-  adminInitialGz:      { target: 350 * KB, label: "Admin Initial Bundle" },
-  ssrBuildTimeSec:     { target: 60,       label: "SSR Build Time" },
+  largestRouteGz:    { target: 300 * KB, label: "Largest Route" },
+  largestSharedGz:   { target: 250 * KB, label: "Largest Shared Chunk" },
+  customerInitialGz: { target: 200 * KB, label: "Initial Customer Bundle" },
+  vendorInitialGz:   { target: 250 * KB, label: "Vendor Initial Bundle" },
+  adminInitialGz:    { target: 350 * KB, label: "Admin Initial Bundle" },
+  ssrBuildTimeSec:   { target: 60,       label: "SSR Build Time" },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────
-function walk(dir) {
-  if (!existsSync(dir)) return [];
-  const out = [];
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    const s = statSync(p);
-    if (s.isDirectory()) out.push(...walk(p));
-    else out.push({ path: p, size: s.size });
-  }
-  return out;
-}
-
 function fmt(bytes) {
+  if (bytes == null) return "—";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function classify(file) {
-  const base = file.split("/").pop() ?? "";
-  const isJs = base.endsWith(".js");
-  const isCss = base.endsWith(".css");
-  const stem = base.replace(/-[A-Za-z0-9_]{6,}\.(js|css)$/, "");
-  const routeLike = /^(admin|vendor|account|category|products|checkout|orders|blog|pages|api|auth|signup|signin|login|deals|wishlist|compare|recently)/.test(stem)
-    || /route|page|index/.test(stem);
-  const scope = /^admin/.test(stem) ? "admin"
-    : /^vendor/.test(stem) ? "vendor"
-    : routeLike ? "customer"
-    : "shared";
-  return { base, isJs, isCss, stem, routeLike, scope };
+function scopeOf(src) {
+  // Classify a manifest entry by source path.
+  if (!src) return "shared";
+  if (src.startsWith("src/routes/admin")) return "admin";
+  if (src.startsWith("src/routes/vendor")) return "vendor";
+  if (src.startsWith("src/routes/")) return "customer";
+  return "shared";
+}
+
+function routeStem(src) {
+  // src/routes/admin-shipments.tsx → admin-shipments
+  if (!src?.startsWith("src/routes/")) return null;
+  return src.replace(/^src\/routes\//, "").replace(/\.[jt]sx?$/, "");
 }
 
 function evalBudget(value, { target, label }) {
@@ -73,7 +70,6 @@ function evalBudget(value, { target, label }) {
 }
 
 function healthScore(budgets) {
-  // Simple weighted rubric — every OK = full weight, Warning = half, Critical = 0.
   const weights = {
     largestRouteGz: 20,
     largestSharedGz: 20,
@@ -97,73 +93,145 @@ function healthScore(budgets) {
   return { score, band };
 }
 
+function latestSnapshot() {
+  if (!existsSync(SNAPSHOT_DIR)) return null;
+  const files = readdirSync(SNAPSHOT_DIR).filter((f) => f.endsWith(".json")).sort();
+  if (files.length === 0) return null;
+  try { return JSON.parse(readFileSync(join(SNAPSHOT_DIR, files[files.length - 1]), "utf8")); }
+  catch { return null; }
+}
+
 // ── Main ───────────────────────────────────────────────────────────
 function main() {
-  const files = walk(CLIENT_DIR);
-  if (files.length === 0) {
-    console.warn("[build-summary] No client assets found — skipping.");
+  if (!existsSync(MANIFEST_PATH)) {
+    console.warn(`[build-summary] No manifest at ${relative(ROOT, MANIFEST_PATH)}. Enable build.manifest in vite.config.ts.`);
     return;
   }
+  const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
 
-  const rows = files.map((f) => {
-    const rel = relative(CLIENT_DIR, f.path).replaceAll("\\", "/");
-    const cls = classify(rel);
-    let gzip = 0, brotli = 0;
-    if (cls.isJs || cls.isCss) {
-      const buf = readFileSync(f.path);
-      gzip = gzipSync(buf).length;
-      brotli = brotliCompressSync(buf, {
-        params: { [zlibConst.BROTLI_PARAM_QUALITY]: 5 },
-      }).length;
+  // Build an index: file (chunk path relative to dist/client) → entry
+  const byFile = new Map();
+  for (const [src, entry] of Object.entries(manifest)) {
+    if (!entry.file) continue;
+    byFile.set(entry.file, { ...entry, src });
+  }
+
+  // Measure sizes for every JS chunk referenced in the manifest.
+  function sizeFor(chunk) {
+    const abs = join(CLIENT_DIR, chunk.file);
+    if (!existsSync(abs)) return { raw: 0, gzip: 0, brotli: 0 };
+    const buf = readFileSync(abs);
+    return {
+      raw: buf.length,
+      gzip: gzipSync(buf).length,
+      brotli: brotliCompressSync(buf, { params: { [zlibConst.BROTLI_PARAM_QUALITY]: 5 } }).length,
+    };
+  }
+
+  // Attach sizes and CSS to every chunk.
+  const chunks = [];
+  for (const entry of byFile.values()) {
+    if (!entry.file.endsWith(".js")) continue;
+    const size = sizeFor(entry);
+    let cssSize = 0;
+    for (const cssFile of entry.css ?? []) {
+      const abs = join(CLIENT_DIR, cssFile);
+      if (existsSync(abs)) cssSize += statSync(abs).size;
     }
-    return { file: rel, size: f.size, gzip, brotli, ...cls };
+    chunks.push({ ...entry, size, cssSize });
+  }
+  const byFileJs = new Map(chunks.map((c) => [c.file, c]));
+
+  // Walk static-import closure from a starting set of chunks.
+  function eagerClosure(startFiles) {
+    const seen = new Set();
+    const stack = [...startFiles];
+    while (stack.length) {
+      const f = stack.pop();
+      if (!f || seen.has(f)) continue;
+      seen.add(f);
+      const c = byFileJs.get(f);
+      if (!c) continue;
+      for (const imp of c.imports ?? []) stack.push(imp);
+    }
+    return seen;
+  }
+
+  // Entry chunk(s) — always eager, shared across every route.
+  const entryChunks = chunks.filter((c) => c.isEntry);
+  const entryFiles = entryChunks.map((c) => c.file);
+  const entryEager = eagerClosure(entryFiles);
+  const entryEagerBytes = sumBytes(entryEager);
+
+  // Route chunks — anything under src/routes/**
+  const routeChunks = chunks.filter((c) => c.src?.startsWith("src/routes/"));
+  const routes = routeChunks.map((r) => {
+    const eager = eagerClosure([r.file, ...entryFiles]);
+    const routeOnlyEager = new Set([...eager].filter((f) => !entryEager.has(f)));
+    return {
+      name: routeStem(r.src),
+      src: r.src,
+      file: r.file,
+      scope: scopeOf(r.src),
+      // Size of this route's own chunk (excluding entry + shared).
+      chunkSize: r.size,
+      cssSize: r.cssSize,
+      // Full eager payload the user downloads to open this route.
+      initialEager: sumBytes(eager),
+      // Extra eager weight this route adds on top of the entry closure.
+      addedEager: sumBytes(routeOnlyEager),
+      dynamicImports: r.dynamicImports?.length ?? 0,
+    };
   });
 
-  const jsRows = rows.filter((r) => r.isJs);
-  const totalJs = jsRows.reduce((a, b) => a + b.size, 0);
-  const totalJsGz = jsRows.reduce((a, b) => a + b.gzip, 0);
-  const totalJsBr = jsRows.reduce((a, b) => a + b.brotli, 0);
-  const totalCss = rows.filter((r) => r.isCss).reduce((a, b) => a + b.size, 0);
+  // Async-only chunks — reachable only through dynamicImports (never eager
+  // from any route). Compute by taking the union of every route's eager set
+  // and diffing against all JS chunks.
+  const anyEager = new Set(entryEager);
+  for (const r of routeChunks) {
+    for (const f of eagerClosure([r.file, ...entryFiles])) anyEager.add(f);
+  }
+  const asyncOnly = chunks.filter((c) => !anyEager.has(c.file));
+  const totalAsyncGz = asyncOnly.reduce((a, c) => a + c.size.gzip, 0);
 
-  const routeChunks = jsRows.filter((r) => r.routeLike).sort((a, b) => b.gzip - a.gzip);
-  const sharedChunks = jsRows.filter((r) => !r.routeLike).sort((a, b) => b.gzip - a.gzip);
+  // Shared eager chunks = entryEager minus the entry chunks themselves.
+  const sharedEagerChunks = [...entryEager]
+    .filter((f) => !entryFiles.includes(f))
+    .map((f) => byFileJs.get(f))
+    .filter(Boolean)
+    .sort((a, b) => b.size.gzip - a.size.gzip);
 
-  const largestRoute = routeChunks[0];
-  const largestShared = sharedChunks[0];
+  const totalJs = chunks.reduce((a, c) => a + c.size.raw, 0);
+  const totalJsGz = chunks.reduce((a, c) => a + c.size.gzip, 0);
+  const totalJsBr = chunks.reduce((a, c) => a + c.size.brotli, 0);
+  const totalCss = chunks.reduce((a, c) => a + c.cssSize, 0);
 
-  // Initial bundle per scope = the entry-ish shared chunks + the largest
-  // route of that scope. This is a conservative approximation; refine when
-  // we start splitting.
-  const sharedInitialGz = sharedChunks.slice(0, 3).reduce((a, b) => a + b.gzip, 0);
+  routes.sort((a, b) => b.initialEager.gzip - a.initialEager.gzip);
+  const largestRoute = routes[0];
+  const largestShared = sharedEagerChunks[0];
+
   const scopeInitial = (scope) => {
-    const top = routeChunks.find((r) => r.scope === scope);
-    return top ? sharedInitialGz + top.gzip : null;
+    const top = routes.find((r) => r.scope === scope);
+    return top?.initialEager.gzip ?? null;
   };
 
-  // Heap + build time (best effort — Vite doesn't expose SSR time here).
   const heapMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
-  const ssrBuildTimeSec = process.env.SSR_BUILD_TIME_SEC
-    ? Number(process.env.SSR_BUILD_TIME_SEC)
-    : null;
+  const ssrBuildTimeSec = process.env.SSR_BUILD_TIME_SEC ? Number(process.env.SSR_BUILD_TIME_SEC) : null;
 
-  // Heap trend vs previous snapshot (>20% growth → Warning).
   const prev = latestSnapshot();
   let heapTrend = { label: "Peak Heap Trend", value: heapMb, target: null, status: "OK" };
   if (prev?.peakHeapMb) {
     const growth = (heapMb - prev.peakHeapMb) / prev.peakHeapMb;
     heapTrend = {
-      label: "Peak Heap Trend",
-      value: heapMb,
-      previous: prev.peakHeapMb,
-      growthPct: +(growth * 100).toFixed(1),
-      target: null,
+      label: "Peak Heap Trend", value: heapMb, previous: prev.peakHeapMb,
+      growthPct: +(growth * 100).toFixed(1), target: null,
       status: growth > 0.2 ? "Warning" : "OK",
     };
   }
 
   const budgets = {
-    largestRouteGz:    evalBudget(largestRoute?.gzip ?? null, BUDGETS.largestRouteGz),
-    largestSharedGz:   evalBudget(largestShared?.gzip ?? null, BUDGETS.largestSharedGz),
+    largestRouteGz:    evalBudget(largestRoute?.initialEager.gzip ?? null, BUDGETS.largestRouteGz),
+    largestSharedGz:   evalBudget(largestShared?.size.gzip ?? null, BUDGETS.largestSharedGz),
     customerInitialGz: evalBudget(scopeInitial("customer"), BUDGETS.customerInitialGz),
     vendorInitialGz:   evalBudget(scopeInitial("vendor"), BUDGETS.vendorInitialGz),
     adminInitialGz:    evalBudget(scopeInitial("admin"), BUDGETS.adminInitialGz),
@@ -172,7 +240,6 @@ function main() {
   };
 
   const health = healthScore(budgets);
-
   const anyCritical = Object.values(budgets).some((b) => b.status === "Critical");
   const anyWarning = Object.values(budgets).some((b) => b.status === "Warning");
   const status = anyCritical ? "Critical" : anyWarning ? "Warning" : "OK";
@@ -180,13 +247,38 @@ function main() {
   const snapshot = {
     timestamp: new Date().toISOString(),
     commit: process.env.GITHUB_SHA || process.env.COMMIT_SHA || null,
-    totals: { js: totalJs, jsGz: totalJsGz, jsBr: totalJsBr, css: totalCss, files: rows.length },
-    largestRoute: largestRoute && { name: largestRoute.stem, file: largestRoute.file, size: largestRoute.size, gzip: largestRoute.gzip, brotli: largestRoute.brotli },
-    largestSharedChunk: largestShared && { name: largestShared.stem, file: largestShared.file, size: largestShared.size, gzip: largestShared.gzip, brotli: largestShared.brotli },
-    routes: routeChunks.map((r) => ({ name: r.stem, scope: r.scope, size: r.size, gzip: r.gzip, brotli: r.brotli })),
-    shared: sharedChunks.map((r) => ({ name: r.stem, size: r.size, gzip: r.gzip, brotli: r.brotli })),
-    budgets,
-    health,
+    schema: 2, // v2: uses manifest graph
+    totals: {
+      js: totalJs, jsGz: totalJsGz, jsBr: totalJsBr,
+      css: totalCss, files: chunks.length,
+      entryEagerGz: entryEagerBytes.gzip,
+      asyncOnlyGz: totalAsyncGz,
+    },
+    entry: {
+      files: entryFiles,
+      eagerBytes: entryEagerBytes,
+      chunkCount: entryEager.size,
+    },
+    largestRoute: largestRoute && {
+      name: largestRoute.name, file: largestRoute.file, scope: largestRoute.scope,
+      chunkGz: largestRoute.chunkSize.gzip,
+      addedEagerGz: largestRoute.addedEager.gzip,
+      initialEagerGz: largestRoute.initialEager.gzip,
+    },
+    largestSharedChunk: largestShared && {
+      file: largestShared.file, gzip: largestShared.size.gzip, raw: largestShared.size.raw,
+    },
+    routes: routes.map((r) => ({
+      name: r.name, scope: r.scope,
+      chunkGz: r.chunkSize.gzip, addedEagerGz: r.addedEager.gzip,
+      initialEagerGz: r.initialEager.gzip, cssBytes: r.cssSize,
+      dynamicImports: r.dynamicImports,
+    })),
+    sharedEager: sharedEagerChunks.map((c) => ({ file: c.file, gzip: c.size.gzip, raw: c.size.raw })),
+    asyncOnly: asyncOnly
+      .sort((a, b) => b.size.gzip - a.size.gzip)
+      .map((c) => ({ file: c.file, src: c.src, gzip: c.size.gzip, raw: c.size.raw })),
+    budgets, health,
     peakHeapMb: heapMb,
     ssrBuildTimeSec,
     status,
@@ -201,14 +293,18 @@ function main() {
   const icon = (s) => s === "OK" ? "✓" : s === "Warning" ? "⚠" : s === "Critical" ? "✗" : "·";
   const line = (l, v) => `  ${l.padEnd(24)} ${v}`;
 
-  console.log("\n─── Build Summary ─────────────────────────────");
+  console.log("\n─── Build Summary (manifest graph) ────────────");
   console.log(line("Total JS", `${fmt(totalJs)}  (${fmt(totalJsGz)} gz · ${fmt(totalJsBr)} br)`));
+  console.log(line("Entry eager (shared)", `${fmt(entryEagerBytes.gzip)} gz  across ${entryEager.size} chunks`));
+  console.log(line("Async-only payload", `${fmt(totalAsyncGz)} gz  across ${asyncOnly.length} chunks`));
   console.log(line("Total CSS", fmt(totalCss)));
-  console.log(line("Largest Route", largestRoute ? `${largestRoute.stem}  (${fmt(largestRoute.gzip)} gz)` : "—"));
-  console.log(line("Largest Shared", largestShared ? `${largestShared.stem}  (${fmt(largestShared.gzip)} gz)` : "—"));
+  console.log(line("Largest Route", largestRoute
+    ? `${largestRoute.name}  (${fmt(largestRoute.initialEager.gzip)} initial gz, +${fmt(largestRoute.addedEager.gzip)} route-only)`
+    : "—"));
+  console.log(line("Largest Shared Eager", largestShared ? `${largestShared.file}  (${fmt(largestShared.size.gzip)} gz)` : "—"));
   console.log(line("Peak Heap (RSS)", `${heapMb} MB`));
 
-  console.log("\n  Budgets:");
+  console.log("\n  Budgets (eager only — async chunks excluded):");
   for (const b of Object.values(budgets)) {
     const val = b.value == null ? "—"
       : b.target && typeof b.value === "number" && b.target > 10_000
@@ -222,10 +318,19 @@ function main() {
   console.log("\n  Build Health:");
   console.log(`    ${health.score ?? "—"} / 100    ${health.band}`);
 
-  console.log("\n  Top 5 routes (gzip):");
-  routeChunks.slice(0, 5).forEach((r) => console.log(`    ${fmt(r.gzip).padStart(9)}  ${r.stem}`));
-  console.log("\n  Top 5 shared (gzip):");
-  sharedChunks.slice(0, 5).forEach((r) => console.log(`    ${fmt(r.gzip).padStart(9)}  ${r.stem}`));
+  console.log("\n  Top 5 routes by initial eager gzip:");
+  routes.slice(0, 5).forEach((r) => console.log(
+    `    ${fmt(r.initialEager.gzip).padStart(9)}  ${r.name.padEnd(40)} (+${fmt(r.addedEager.gzip)} route-only)`,
+  ));
+
+  console.log("\n  Top 5 shared eager chunks:");
+  sharedEagerChunks.slice(0, 5).forEach((c) => console.log(`    ${fmt(c.size.gzip).padStart(9)}  ${c.file}`));
+
+  console.log("\n  Top 5 async-only chunks (paid on demand):");
+  asyncOnly.sort((a, b) => b.size.gzip - a.size.gzip).slice(0, 5).forEach((c) => console.log(
+    `    ${fmt(c.size.gzip).padStart(9)}  ${c.file}   ${c.src ? `[${c.src}]` : ""}`,
+  ));
+
   console.log(`\n  Report:   dist/build-report.html`);
   console.log(`  Snapshot: .build-snapshots/${stamp}.json`);
   console.log(`  Status:   ${status}`);
@@ -237,12 +342,56 @@ function main() {
   }
 }
 
-function latestSnapshot() {
-  if (!existsSync(SNAPSHOT_DIR)) return null;
-  const files = readdirSync(SNAPSHOT_DIR).filter((f) => f.endsWith(".json")).sort();
-  if (files.length === 0) return null;
-  try { return JSON.parse(readFileSync(join(SNAPSHOT_DIR, files[files.length - 1]), "utf8")); }
-  catch { return null; }
+function sumBytes(fileSet) {
+  let raw = 0, gzip = 0, brotli = 0;
+  for (const f of fileSet) {
+    const c = byFileJsGlobal.get(f);
+    if (!c) continue;
+    raw += c.size.raw; gzip += c.size.gzip; brotli += c.size.brotli;
+  }
+  return { raw, gzip, brotli };
 }
 
-main();
+// small hack: expose byFileJs to sumBytes without threading it everywhere
+let byFileJsGlobal = new Map();
+const _origMain = main;
+function wrappedMain() {
+  // shim: rebuild byFileJsGlobal reference inside main() via closure below
+  _origMain();
+}
+// simpler: re-implement sumBytes as closure inside main. Refactor:
+(function run() {
+  if (!existsSync(MANIFEST_PATH)) {
+    console.warn(`[build-summary] No manifest at ${relative(ROOT, MANIFEST_PATH)}. Enable build.manifest in vite.config.ts.`);
+    return;
+  }
+  const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
+  const byFile = new Map();
+  for (const [src, entry] of Object.entries(manifest)) {
+    if (!entry.file) continue;
+    byFile.set(entry.file, { ...entry, src });
+  }
+  function sizeFor(chunk) {
+    const abs = join(CLIENT_DIR, chunk.file);
+    if (!existsSync(abs)) return { raw: 0, gzip: 0, brotli: 0 };
+    const buf = readFileSync(abs);
+    return {
+      raw: buf.length,
+      gzip: gzipSync(buf).length,
+      brotli: brotliCompressSync(buf, { params: { [zlibConst.BROTLI_PARAM_QUALITY]: 5 } }).length,
+    };
+  }
+  const chunks = [];
+  for (const entry of byFile.values()) {
+    if (!entry.file.endsWith(".js")) continue;
+    const size = sizeFor(entry);
+    let cssSize = 0;
+    for (const cssFile of entry.css ?? []) {
+      const abs = join(CLIENT_DIR, cssFile);
+      if (existsSync(abs)) cssSize += statSync(abs).size;
+    }
+    chunks.push({ ...entry, size, cssSize });
+  }
+  byFileJsGlobal = new Map(chunks.map((c) => [c.file, c]));
+  main();
+})();
