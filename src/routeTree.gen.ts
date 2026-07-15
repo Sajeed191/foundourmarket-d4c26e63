@@ -124,6 +124,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VendorProductSlugRouteImport } from './routes/vendor-product.$slug'
 import { Route as ProductsTrendingRouteImport } from './routes/products.trending'
 import { Route as ProductsNewArrivalsRouteImport } from './routes/products.new-arrivals'
 import { Route as ProductsBestSellersRouteImport } from './routes/products.best-sellers'
@@ -762,6 +763,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VendorProductSlugRoute = VendorProductSlugRouteImport.update({
+  id: '/vendor-product/$slug',
+  path: '/vendor-product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsTrendingRoute = ProductsTrendingRouteImport.update({
   id: '/products/trending',
   path: '/products/trending',
@@ -1179,6 +1185,7 @@ export interface FileRoutesByFullPath {
   '/products/best-sellers': typeof ProductsBestSellersRoute
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
+  '/vendor-product/$slug': typeof VendorProductSlugRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/account/support/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
@@ -1347,6 +1354,7 @@ export interface FileRoutesByTo {
   '/products/best-sellers': typeof ProductsBestSellersRoute
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
+  '/vendor-product/$slug': typeof VendorProductSlugRoute
   '/account/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/account/support/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
@@ -1517,6 +1525,7 @@ export interface FileRoutesById {
   '/products/best-sellers': typeof ProductsBestSellersRoute
   '/products/new-arrivals': typeof ProductsNewArrivalsRoute
   '/products/trending': typeof ProductsTrendingRoute
+  '/vendor-product/$slug': typeof VendorProductSlugRoute
   '/account_/payment-methods/add': typeof AccountPaymentMethodsAddRoute
   '/account_/support_/new': typeof AccountSupportNewRoute
   '/admin-product/$slug/analytics': typeof AdminProductSlugAnalyticsRoute
@@ -1688,6 +1697,7 @@ export interface FileRouteTypes {
     | '/products/best-sellers'
     | '/products/new-arrivals'
     | '/products/trending'
+    | '/vendor-product/$slug'
     | '/account/payment-methods/add'
     | '/account/support/new'
     | '/admin-product/$slug/analytics'
@@ -1856,6 +1866,7 @@ export interface FileRouteTypes {
     | '/products/best-sellers'
     | '/products/new-arrivals'
     | '/products/trending'
+    | '/vendor-product/$slug'
     | '/account/payment-methods/add'
     | '/account/support/new'
     | '/admin-product/$slug/analytics'
@@ -2025,6 +2036,7 @@ export interface FileRouteTypes {
     | '/products/best-sellers'
     | '/products/new-arrivals'
     | '/products/trending'
+    | '/vendor-product/$slug'
     | '/account_/payment-methods/add'
     | '/account_/support_/new'
     | '/admin-product/$slug/analytics'
@@ -2191,6 +2203,7 @@ export interface RootRouteChildren {
   ProductsBestSellersRoute: typeof ProductsBestSellersRoute
   ProductsNewArrivalsRoute: typeof ProductsNewArrivalsRoute
   ProductsTrendingRoute: typeof ProductsTrendingRoute
+  VendorProductSlugRoute: typeof VendorProductSlugRoute
   AccountPaymentMethodsAddRoute: typeof AccountPaymentMethodsAddRoute
   AccountSupportNewRoute: typeof AccountSupportNewRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
@@ -3016,6 +3029,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vendor-product/$slug': {
+      id: '/vendor-product/$slug'
+      path: '/vendor-product/$slug'
+      fullPath: '/vendor-product/$slug'
+      preLoaderRoute: typeof VendorProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/trending': {
       id: '/products/trending'
       path: '/products/trending'
@@ -3593,6 +3613,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsBestSellersRoute: ProductsBestSellersRoute,
   ProductsNewArrivalsRoute: ProductsNewArrivalsRoute,
   ProductsTrendingRoute: ProductsTrendingRoute,
+  VendorProductSlugRoute: VendorProductSlugRoute,
   AccountPaymentMethodsAddRoute: AccountPaymentMethodsAddRoute,
   AccountSupportNewRoute: AccountSupportNewRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,

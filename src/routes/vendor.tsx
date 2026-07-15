@@ -14,7 +14,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Store, Sparkles, ArrowRight, Package, TrendingUp, TrendingDown, Minus, Loader2,
+  Store, Sparkles, ArrowRight, Package, Loader2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
@@ -75,11 +75,6 @@ function scoreTint(score: number): string {
   return "text-rose-400";
 }
 
-function TrendIcon({ delta }: { delta: number }) {
-  if (delta > 1) return <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />;
-  if (delta < -1) return <TrendingDown className="h-3.5 w-3.5 text-rose-400" />;
-  return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
-}
 
 function VendorDashboard() {
   const bundle = useMarketplaceHealth();
@@ -241,22 +236,28 @@ function VendorDashboard() {
               ) : (
                 <ul className="divide-y">
                   {vendorListings.slice(0, 10).map((l) => (
-                    <li key={l.productId} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
-                        {l.productImage ? (
-                          <img src={l.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        ) : null}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm">{l.productName}</div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {l.categoryName ?? "Uncategorised"}
+                    <li key={l.productId}>
+                      <Link
+                        to="/vendor-product/$slug"
+                        params={{ slug: l.productSlug }}
+                        className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-white/[0.03]"
+                      >
+                        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
+                          {l.productImage ? (
+                            <img src={l.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
+                          ) : null}
                         </div>
-                      </div>
-                      <div className={cn("text-xs font-semibold tabular-nums", scoreTint(l.readiness.score))}>
-                        {statusEmoji(l.readiness.score)} {l.readiness.score}
-                      </div>
-                      <TrendIcon delta={0} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm">{l.productName}</div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {l.categoryName ?? "Uncategorised"}
+                          </div>
+                        </div>
+                        <div className={cn("text-xs font-semibold tabular-nums", scoreTint(l.readiness.score))}>
+                          {statusEmoji(l.readiness.score)} {l.readiness.score}
+                        </div>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Link>
                     </li>
                   ))}
                 </ul>
