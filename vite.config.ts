@@ -54,6 +54,10 @@ export default defineConfig({
       },
     },
     build: {
+      // Emit dist/client/.vite/manifest.json so build-summary.mjs can walk
+      // the true eager (`imports`) vs lazy (`dynamicImports`) chunk graph
+      // and calculate initial-load budgets accurately.
+      manifest: true,
       rollupOptions: {
         output: {
           // Keep framer-motion out of the shared entry chunk. It is imported by
