@@ -27,3 +27,5 @@ Composition-first: every new feature must first try to compose existing frozen c
 - [Experience layers — presentation only](mem://constraints/experience-layers) — Admin / Vendor / Customer / Mobile share the same frozen contracts; never fork scoring or intelligence
 - [Composition-first contracts](mem://constraints/composition-first) — Compose existing contracts before introducing new ones; prevents contract sprawl
 - [Publish is presentation over Marketplace Readiness](mem://constraints/publish-presentation-only) — Publish surfaces present readiness; they never add validation, scoring, or duplicate checks
+- [Vendor Portal v1 (FROZEN)](mem://constraints/vendor-portal-v1) — Dashboard, Product Editor, Work Queue, Analytics, Publish Assistant — no new intelligence, presentation only
+- [Track B — Customer Experience](mem://features/customer-experience) — Buyer-facing layer. Phase 1 AI Marketplace Search shipped; roadmap: Browse, PDP relationships, Personalization
