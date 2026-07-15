@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VendorWorkQueueRouteImport } from './routes/vendor-work-queue'
+import { Route as VendorAnalyticsRouteImport } from './routes/vendor-analytics'
 import { Route as VendorRouteImport } from './routes/vendor'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TrackRouteImport } from './routes/track'
@@ -187,6 +188,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const VendorWorkQueueRoute = VendorWorkQueueRouteImport.update({
   id: '/vendor-work-queue',
   path: '/vendor-work-queue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorAnalyticsRoute = VendorAnalyticsRouteImport.update({
+  id: '/vendor-analytics',
+  path: '/vendor-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorRoute = VendorRouteImport.update({
@@ -1165,6 +1171,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/vendor': typeof VendorRoute
+  '/vendor-analytics': typeof VendorAnalyticsRoute
   '/vendor-work-queue': typeof VendorWorkQueueRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
@@ -1336,6 +1343,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/vendor': typeof VendorRoute
+  '/vendor-analytics': typeof VendorAnalyticsRoute
   '/vendor-work-queue': typeof VendorWorkQueueRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
@@ -1507,6 +1515,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/vendor': typeof VendorRoute
+  '/vendor-analytics': typeof VendorAnalyticsRoute
   '/vendor-work-queue': typeof VendorWorkQueueRoute
   '/wishlist': typeof WishlistRoute
   '/account_/addresses': typeof AccountAddressesRoute
@@ -1680,6 +1689,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/vendor'
+    | '/vendor-analytics'
     | '/vendor-work-queue'
     | '/wishlist'
     | '/account/addresses'
@@ -1851,6 +1861,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/vendor'
+    | '/vendor-analytics'
     | '/vendor-work-queue'
     | '/wishlist'
     | '/account/addresses'
@@ -2021,6 +2032,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/unsubscribe'
     | '/vendor'
+    | '/vendor-analytics'
     | '/vendor-work-queue'
     | '/wishlist'
     | '/account_/addresses'
@@ -2193,6 +2205,7 @@ export interface RootRouteChildren {
   TrackRoute: typeof TrackRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   VendorRoute: typeof VendorRoute
+  VendorAnalyticsRoute: typeof VendorAnalyticsRoute
   VendorWorkQueueRoute: typeof VendorWorkQueueRoute
   WishlistRoute: typeof WishlistRoute
   AccountAddressesRoute: typeof AccountAddressesRoute
@@ -2249,6 +2262,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor-work-queue'
       fullPath: '/vendor-work-queue'
       preLoaderRoute: typeof VendorWorkQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-analytics': {
+      id: '/vendor-analytics'
+      path: '/vendor-analytics'
+      fullPath: '/vendor-analytics'
+      preLoaderRoute: typeof VendorAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendor': {
@@ -3611,6 +3631,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRoute: TrackRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   VendorRoute: VendorRoute,
+  VendorAnalyticsRoute: VendorAnalyticsRoute,
   VendorWorkQueueRoute: VendorWorkQueueRoute,
   WishlistRoute: WishlistRoute,
   AccountAddressesRoute: AccountAddressesRoute,
