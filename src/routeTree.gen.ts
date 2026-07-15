@@ -69,6 +69,7 @@ import { Route as AdminRecommendationAnalyticsRouteImport } from './routes/admin
 import { Route as AdminQualityRouteImport } from './routes/admin-quality'
 import { Route as AdminProductsRouteImport } from './routes/admin-products'
 import { Route as AdminPerformanceRouteImport } from './routes/admin-performance'
+import { Route as AdminPerfHarnessRouteImport } from './routes/admin-perf-harness'
 import { Route as AdminPaymentsRouteImport } from './routes/admin-payments'
 import { Route as AdminOrdersOpsRouteImport } from './routes/admin-orders-ops'
 import { Route as AdminOrdersAnalyticsRouteImport } from './routes/admin-orders-analytics'
@@ -473,6 +474,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/admin-performance',
   path: '/admin-performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPerfHarnessRoute = AdminPerfHarnessRouteImport.update({
+  id: '/admin-perf-harness',
+  path: '/admin-perf-harness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
@@ -1058,6 +1064,7 @@ export interface FileRoutesByFullPath {
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
+  '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
@@ -1222,6 +1229,7 @@ export interface FileRoutesByTo {
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
+  '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
@@ -1386,6 +1394,7 @@ export interface FileRoutesById {
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
   '/admin-orders-ops': typeof AdminOrdersOpsRoute
   '/admin-payments': typeof AdminPaymentsRoute
+  '/admin-perf-harness': typeof AdminPerfHarnessRoute
   '/admin-performance': typeof AdminPerformanceRoute
   '/admin-products': typeof AdminProductsRoute
   '/admin-quality': typeof AdminQualityRoute
@@ -1552,6 +1561,7 @@ export interface FileRouteTypes {
     | '/admin-orders-analytics'
     | '/admin-orders-ops'
     | '/admin-payments'
+    | '/admin-perf-harness'
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
@@ -1716,6 +1726,7 @@ export interface FileRouteTypes {
     | '/admin-orders-analytics'
     | '/admin-orders-ops'
     | '/admin-payments'
+    | '/admin-perf-harness'
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
@@ -1879,6 +1890,7 @@ export interface FileRouteTypes {
     | '/admin-orders-analytics'
     | '/admin-orders-ops'
     | '/admin-payments'
+    | '/admin-perf-harness'
     | '/admin-performance'
     | '/admin-products'
     | '/admin-quality'
@@ -2044,6 +2056,7 @@ export interface RootRouteChildren {
   AdminOrdersAnalyticsRoute: typeof AdminOrdersAnalyticsRoute
   AdminOrdersOpsRoute: typeof AdminOrdersOpsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminPerfHarnessRoute: typeof AdminPerfHarnessRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminQualityRoute: typeof AdminQualityRoute
@@ -2563,6 +2576,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-performance'
       fullPath: '/admin-performance'
       preLoaderRoute: typeof AdminPerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-perf-harness': {
+      id: '/admin-perf-harness'
+      path: '/admin-perf-harness'
+      fullPath: '/admin-perf-harness'
+      preLoaderRoute: typeof AdminPerfHarnessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-payments': {
@@ -3406,6 +3426,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminOrdersAnalyticsRoute: AdminOrdersAnalyticsRoute,
   AdminOrdersOpsRoute: AdminOrdersOpsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminPerfHarnessRoute: AdminPerfHarnessRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminQualityRoute: AdminQualityRoute,
