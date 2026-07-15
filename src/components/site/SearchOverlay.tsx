@@ -145,12 +145,36 @@ export function SearchOverlay({ open, onClose, query, onQueryChange }: Props) {
     { label: "In Stock", search: { stock: "in" } as Record<string, unknown> },
   ];
 
+  // AI Marketplace Search — Track B Phase 1. Parses the current query into
+  // the frozen `/search` filter contract; presentation-only, no scoring.
+  const aiContext = useMemo(() => {
+    const brands = Array.from(
+      new Set(products.map((p) => p.brand).filter((b): b is string => !!b)),
+    );
+    const cats = categories
+      .filter((c) => !c.parent_id)
+      .map((c) => ({ slug: c.slug, name: c.name }));
+    return { brands, categories: cats };
+  }, [products, categories]);
+
+  const aiIntent = useMemo(() => parseAiQuery(debounced, aiContext), [debounced, aiContext]);
+
   if (!render) return null;
 
   const submit = (q: string) => {
     const term = q.trim();
     onClose();
-    nav({ to: "/search", search: term ? { q: term } : { q: "" } });
+    if (!term) {
+      nav({ to: "/search", search: { q: "" } });
+      return;
+    }
+    // Re-parse on the raw submit value so a fast "Enter" before debounce still routes correctly.
+    const parsed = parseAiQuery(term, aiContext);
+    if (parsed.hasIntent) {
+      nav({ to: "/search", search: toSearchParams(parsed.query || term, parsed.filters) });
+    } else {
+      nav({ to: "/search", search: { q: term } });
+    }
   };
 
   const showEmpty = debounced === "" && !pending;
