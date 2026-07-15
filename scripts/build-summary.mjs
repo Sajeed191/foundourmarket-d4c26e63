@@ -195,11 +195,14 @@ function main() {
   const largestRoute = routes[0];
   const largestShared = sharedEager[0];
 
-  const scopeInitial = (scope) => routes.find((r) => r.scope === scope)?.initialEager.gzip ?? null;
+  // Worst route-only weight — the actionable feature-team knob.
+  const worstRouteOnly = routes.reduce((max, r) =>
+    r.addedEager.gzip > (max?.addedEager.gzip ?? -1) ? r : max, null);
 
   const heapMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
   const ssrBuildTimeSec = process.env.SSR_BUILD_TIME_SEC ? Number(process.env.SSR_BUILD_TIME_SEC) : null;
   const prev = latestSnapshot();
+
   let heapTrend = { label: "Peak Heap Trend", value: heapMb, target: null, status: "OK" };
   if (prev?.peakHeapMb) {
     const growth = (heapMb - prev.peakHeapMb) / prev.peakHeapMb;
@@ -208,15 +211,26 @@ function main() {
       status: growth > 0.2 ? "Warning" : "OK" };
   }
 
+  // Async payload — advisory only. Warns when it grows > ASYNC_GROWTH_WARN_PCT
+  // between snapshots. No hard budget: lazy code doesn't affect first paint.
+  let asyncGrowth = { label: "Async Payload Growth", value: asyncOnlyGz, previous: null,
+    growthPct: null, target: null, status: "OK" };
+  if (prev?.totals?.asyncOnlyGz) {
+    const growthPct = +(((asyncOnlyGz - prev.totals.asyncOnlyGz) / prev.totals.asyncOnlyGz) * 100).toFixed(1);
+    asyncGrowth = { label: "Async Payload Growth", value: asyncOnlyGz,
+      previous: prev.totals.asyncOnlyGz, growthPct, target: null,
+      status: growthPct > ASYNC_GROWTH_WARN_PCT ? "Warning" : "OK" };
+  }
+
   const budgets = {
-    largestRouteGz:    evalBudget(largestRoute?.initialEager.gzip ?? null, BUDGETS.largestRouteGz),
-    largestSharedGz:   evalBudget(largestShared?.size.gzip ?? null, BUDGETS.largestSharedGz),
-    customerInitialGz: evalBudget(scopeInitial("customer"), BUDGETS.customerInitialGz),
-    vendorInitialGz:   evalBudget(scopeInitial("vendor"), BUDGETS.vendorInitialGz),
-    adminInitialGz:    evalBudget(scopeInitial("admin"), BUDGETS.adminInitialGz),
-    ssrBuildTimeSec:   evalBudget(ssrBuildTimeSec, BUDGETS.ssrBuildTimeSec),
+    entryEagerGz:    evalBudget(entryEagerBytes.gzip, BUDGETS.entryEagerGz),
+    routeOnlyGz:     evalBudget(worstRouteOnly?.addedEager.gzip ?? null, BUDGETS.routeOnlyGz),
+    largestRouteGz:  evalBudget(largestRoute?.initialEager.gzip ?? null, BUDGETS.largestRouteGz),
+    ssrBuildTimeSec: evalBudget(ssrBuildTimeSec, BUDGETS.ssrBuildTimeSec),
     heapTrend,
+    asyncGrowth,
   };
+
 
   const health = healthScore(budgets);
   const anyCritical = Object.values(budgets).some((b) => b.status === "Critical");
