@@ -78,4 +78,5 @@ export type {
   ImpactBucket,
   LifecycleFunnel,
   AnalyticsTrend,
+  Impact,
 } from "./recommendation-analytics";

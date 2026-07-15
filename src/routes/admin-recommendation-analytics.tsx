@@ -120,12 +120,12 @@ function RecommendationAnalyticsPage() {
               right={<TrendPill trend={analytics.trend} />}
             />
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-              <KpiCard label="Active" value={analytics.active} hint="Open recommendations" />
-              <KpiCard label="Resolved today" value={analytics.resolvedToday} hint="Cleared in last 24h" />
-              <KpiCard label="Avg. resolution" value={formatDurationShort(analytics.averageResolutionMs)} hint="Time to close" />
-              <KpiCard label="Resolution rate 7d" value={`${analytics.resolutionRate7d}%`} hint="Closed / seen" />
-              <KpiCard label="Regressed" value={analytics.regressed} hint="Returned after closing" />
-              <KpiCard label="Persistent" value={analytics.persistent} hint="Open ≥ 3 snapshots" />
+              <KpiCard label="Active" value={analytics.active} sub="Open recommendations" />
+              <KpiCard label="Resolved today" value={analytics.resolvedToday} sub="Cleared in last 24h" />
+              <KpiCard label="Avg. resolution" value={formatDurationShort(analytics.averageResolutionMs)} sub="Time to close" />
+              <KpiCard label="Resolution rate 7d" value={`${analytics.resolutionRate7d}%`} sub="Closed / seen" />
+              <KpiCard label="Regressed" value={analytics.regressed} sub="Returned after closing" />
+              <KpiCard label="Persistent" value={analytics.persistent} sub="Open ≥ 3 snapshots" />
             </div>
             <div className="mt-2 text-[11px] text-muted-foreground">
               History: {analytics.generated} distinct recommendations tracked · resolution rate 30d {analytics.resolutionRate30d}% · analysing {bundle.analysedProducts}/{bundle.totalProducts} products
