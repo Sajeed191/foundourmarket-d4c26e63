@@ -10,6 +10,7 @@ AI UX rule: every AI feature shows ONE prioritized recommendation, plain languag
 Platform v1.0 FROZEN: Image v3, Catalog v2, Marketplace v3, Health v1, Operations v1. Only bug fixes / perf / UX polish / new bulk-op adapters over existing analyzers / new queue filters. No changes to public contracts. New work goes in Track A (Vendor), B (Customer), C (Growth), D (Platform).
 Composition-first: every new feature must first try to compose existing frozen contracts before any new contract is introduced.
 Customer Experience rule (permanent): every browse recommendation is optional and non-blocking. Users can always switch sort/filter away from Recommended. Browse Intelligence enhances discovery, never dictates it.
+PDP recommendations rule (permanent): additive, never interruptive. They never block/replace the purchase flow, never shift Buy Now / Add to Cart, and only render below the main purchase area.
 
 ## Memories
 - [AI UX principles](mem://design/ai-ux-principles) — Permanent rules for every AI surface: one message, simple language, traffic lights, explain decisions, one-click fix, unified Marketplace AI Assistant
@@ -31,3 +32,4 @@ Customer Experience rule (permanent): every browse recommendation is optional an
 - [Vendor Portal v1 (FROZEN)](mem://constraints/vendor-portal-v1) — Dashboard, Product Editor, Work Queue, Analytics, Publish Assistant — no new intelligence, presentation only
 - [Track B — Customer Experience](mem://features/customer-experience) — Buyer-facing layer. Phase 1 AI Marketplace Search shipped; roadmap: Browse, PDP relationships, Personalization
 - [Browse Presentation Adapter v1 (FROZEN)](mem://features/browse-adapter) — Single composition layer for /category, /deals, search. Approved badges, one-sentence reasons, no per-surface forks
+- [PDP Experience v2 Stage 1 (FROZEN)](mem://features/pdp-experience) — Relationship Presentation Adapter + FBT. Canonical PDP relationship path. Section order centralized in adapter; PDP imports only `@/lib/pdp`; BrowseCard everywhere

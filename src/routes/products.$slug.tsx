@@ -32,9 +32,9 @@ import { RecommendationStrip } from "@/components/site/RecommendationStrip";
 import { RecommendedForYou } from "@/components/site/RecommendedForYou";
 import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { PDPRecommendations } from "@/components/site/PDPRecommendations";
-const PDPFrequentlyBoughtTogether = lazy(() =>
-  import("@/components/site/PDPFrequentlyBoughtTogether").then((m) => ({
-    default: m.PDPFrequentlyBoughtTogether,
+const PDPRelationshipSections = lazy(() =>
+  import("@/components/site/PDPRelationshipSections").then((m) => ({
+    default: m.PDPRelationshipSections,
   })),
 );
 import { fetchProductsBySlugs, type Product } from "@/lib/products";
@@ -1228,11 +1228,12 @@ function ProductPage() {
           deferred until near the viewport so core product info paints first. */}
       <ProductLayoutDiagnostics phase="final" />
 
-      {fbtProducts.length > 0 && fbtSlugs.length > 0 && (
+      {(fbtProducts.length > 0 && fbtSlugs.length > 0) && (
         <Suspense fallback={null}>
-          <PDPFrequentlyBoughtTogether
-            companionIds={fbtSlugs}
-            companions={fbtProducts}
+          <PDPRelationshipSections
+            hydratedProducts={fbtProducts}
+            frequentlyBoughtTogetherIds={fbtSlugs}
+            allowedSections={["frequently_bought_together", "compatible"]}
           />
         </Suspense>
       )}
