@@ -47,6 +47,7 @@ import { Route as BuyerProtectionRouteImport } from './routes/buyer-protection'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminWorkQueueRouteImport } from './routes/admin-work-queue'
 import { Route as AdminVendorsRouteImport } from './routes/admin-vendors'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
@@ -358,6 +359,11 @@ const BlogRoute = BlogRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWorkQueueRoute = AdminWorkQueueRouteImport.update({
+  id: '/admin-work-queue',
+  path: '/admin-work-queue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminVendorsRoute = AdminVendorsRouteImport.update({
@@ -1066,6 +1072,7 @@ export interface FileRoutesByFullPath {
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
+  '/admin-work-queue': typeof AdminWorkQueueRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -1228,6 +1235,7 @@ export interface FileRoutesByTo {
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
+  '/admin-work-queue': typeof AdminWorkQueueRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -1390,6 +1398,7 @@ export interface FileRoutesById {
   '/admin-traffic': typeof AdminTrafficRoute
   '/admin-users': typeof AdminUsersRoute
   '/admin-vendors': typeof AdminVendorsRoute
+  '/admin-work-queue': typeof AdminWorkQueueRoute
   '/auth': typeof AuthRouteWithChildren
   '/blog': typeof BlogRouteWithChildren
   '/builder': typeof BuilderRoute
@@ -1554,6 +1563,7 @@ export interface FileRouteTypes {
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
+    | '/admin-work-queue'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -1716,6 +1726,7 @@ export interface FileRouteTypes {
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
+    | '/admin-work-queue'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -1877,6 +1888,7 @@ export interface FileRouteTypes {
     | '/admin-traffic'
     | '/admin-users'
     | '/admin-vendors'
+    | '/admin-work-queue'
     | '/auth'
     | '/blog'
     | '/builder'
@@ -2040,6 +2052,7 @@ export interface RootRouteChildren {
   AdminTrafficRoute: typeof AdminTrafficRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
+  AdminWorkQueueRoute: typeof AdminWorkQueueRoute
   AuthRoute: typeof AuthRouteWithChildren
   BlogRoute: typeof BlogRouteWithChildren
   BuilderRoute: typeof BuilderRoute
@@ -2383,6 +2396,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-work-queue': {
+      id: '/admin-work-queue'
+      path: '/admin-work-queue'
+      fullPath: '/admin-work-queue'
+      preLoaderRoute: typeof AdminWorkQueueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-vendors': {
@@ -3386,6 +3406,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTrafficRoute: AdminTrafficRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVendorsRoute: AdminVendorsRoute,
+  AdminWorkQueueRoute: AdminWorkQueueRoute,
   AuthRoute: AuthRouteWithChildren,
   BlogRoute: BlogRouteWithChildren,
   BuilderRoute: BuilderRoute,
