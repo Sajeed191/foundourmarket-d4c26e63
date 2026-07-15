@@ -25,6 +25,7 @@ import {
   ShieldAlert, ListChecks, Loader2, Crown, Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DailyDigestCard } from "./DailyDigestCard";
 import { useMarketplaceHealth } from "@/lib/use-marketplace-health";
 import {
   HEALTH_STATUS_LABEL,
@@ -192,6 +193,9 @@ export function AdminHomeCommandCenter() {
       transition={{ duration: 0.35 }}
       className="space-y-4"
     >
+      {/* 0. Daily Digest — Marketplace Operations 1.0 */}
+      <DailyDigestCard />
+
       {/* 1. Hero — Marketplace Health */}
       <div className={cn("rounded-2xl border p-5 backdrop-blur-xl bg-gradient-to-br from-white/[0.04] to-transparent", STATUS_TONE[health.status])}>
         <div className="flex flex-wrap items-center justify-between gap-3">
