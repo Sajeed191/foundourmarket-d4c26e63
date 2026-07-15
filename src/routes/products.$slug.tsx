@@ -1233,7 +1233,14 @@ function ProductPage() {
           <PDPRelationshipSections
             hydratedProducts={fbtProducts}
             frequentlyBoughtTogetherIds={fbtSlugs}
-            allowedSections={["frequently_bought_together", "compatible"]}
+            allowedSections={[
+              "frequently_bought_together",
+              "compatible",
+              "accessories",
+              "bundle",
+              "alternatives",
+              "replacement",
+            ]}
           />
         </Suspense>
       )}
