@@ -47,7 +47,7 @@ const scopeOf = (src) => !src ? "shared"
   : "shared";
 
 const routeStem = (src) => src?.startsWith("src/routes/")
-  ? src.replace(/^src\/routes\//, "").replace(/\.[jt]sx?$/, "")
+  ? src.replace(/^src\/routes\//, "").replace(/\?.*$/, "").replace(/\.[jt]sx?$/, "")
   : null;
 
 function evalBudget(value, { target, label }) {
