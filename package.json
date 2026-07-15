@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build",
-    "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build && node scripts/build-summary.mjs",
+    "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development && node scripts/build-summary.mjs",
+    "build:report": "open dist/build-report.html || xdg-open dist/build-report.html",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
