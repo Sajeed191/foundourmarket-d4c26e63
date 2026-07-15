@@ -293,17 +293,21 @@ function main() {
   console.log(line("Largest Route", largestRoute
     ? `${largestRoute.name}  (${fmt(largestRoute.initialEager.gzip)} initial · +${fmt(largestRoute.addedEager.gzip)} route-only)`
     : "—"));
-  console.log(line("Largest Shared Eager", largestShared ? `${largestShared.file}  (${fmt(largestShared.size.gzip)} gz)` : "—"));
+  console.log(line("Worst Route-Only", worstRouteOnly
+    ? `${worstRouteOnly.name}  (+${fmt(worstRouteOnly.addedEager.gzip)} on top of shell)`
+    : "—"));
   console.log(line("Peak Heap (RSS)", `${heapMb} MB`));
 
-  console.log("\n  Budgets (eager-only — async chunks excluded):");
+  console.log("\n  Budgets (v1.1 — eager payloads only; async is advisory):");
   for (const b of Object.values(budgets)) {
     const val = b.value == null ? "—"
       : b.target && typeof b.value === "number" && b.target > 10_000 ? `${fmt(b.value)} / ${fmt(b.target)} gz`
       : b.target ? `${b.value} / ${b.target}`
+      : b.growthPct != null ? `${fmt(b.value)}  (${b.growthPct >= 0 ? "+" : ""}${b.growthPct}%)`
       : `${b.value}`;
     console.log(`    ${icon(b.status)}  ${b.label.padEnd(24)} ${val}`);
   }
+
 
   console.log("\n  Build Health:");
   console.log(`    ${health.score ?? "—"} / 100    ${health.band}`);
