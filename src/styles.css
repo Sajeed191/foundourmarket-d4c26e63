@@ -3364,3 +3364,14 @@ html[data-low-end="true"] .motion-in {
 html[data-low-end="true"] .motion-card:hover {
   transform: none !important;
 }
+
+/* Product badge color-lock: runtime GPU/render-safe modes may neutralise
+   backdrop-filter surfaces by matching inline backdrop styles. Badges own their
+   color through the registry-provided CSS variables, so those safety rules must
+   never replace badge backgrounds with the app surface. Animation/transition is
+   limited to opacity + transform to prevent color flashes during hydration. */
+html [data-product-badge][style*="--badge-color"][style*="--badge-text"] {
+  background-color: var(--badge-color) !important;
+  color: var(--badge-text) !important;
+  transition-property: opacity, transform !important;
+}

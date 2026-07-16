@@ -139,6 +139,7 @@ const BADGE_BACKDROP = "blur(10px) saturate(140%)";
 const BADGE_BORDER = "1px solid rgba(255,255,255,0.10)";
 
 type BadgePalette = { background: string; color: string; extraShadow?: string };
+type BadgeStyle = CSSProperties & { "--badge-color": string; "--badge-text": string };
 
 const BADGE_PALETTE: Record<string, BadgePalette> = {
   "FLASH DEAL": { background: "#FF7A00", color: "#111111", extraShadow: "0 0 20px rgba(255,122,0,0.40)" },
@@ -155,25 +156,30 @@ const BADGE_PALETTE: Record<string, BadgePalette> = {
   "POPULAR CHOICE": { background: "#0891B2", color: "#FFFFFF" },
 };
 
-function badgeStyle(label: string): CSSProperties {
-  const key = label.trim().toUpperCase();
-  const p = BADGE_PALETTE[key];
-  if (!p) {
-    return {
-      background: "rgba(20,20,20,0.82)",
-      color: "#FFFFFF",
-      backdropFilter: BADGE_BACKDROP,
-      border: BADGE_BORDER,
-      boxShadow: BADGE_SHADOW,
-    };
-  }
+function createBadgeStyle(p: BadgePalette): BadgeStyle {
   return {
-    background: p.background,
-    color: p.color,
+    "--badge-color": p.background,
+    "--badge-text": p.color,
+    backgroundColor: "var(--badge-color)",
+    color: "var(--badge-text)",
     backdropFilter: BADGE_BACKDROP,
     border: BADGE_BORDER,
     boxShadow: p.extraShadow ? `${BADGE_SHADOW}, ${p.extraShadow}` : BADGE_SHADOW,
   };
+}
+
+const BADGE_STYLE_REGISTRY = Object.fromEntries(
+  Object.entries(BADGE_PALETTE).map(([label, palette]) => [label, createBadgeStyle(palette)]),
+) as Record<string, BadgeStyle>;
+
+const BADGE_FALLBACK_STYLE: BadgeStyle = createBadgeStyle({
+  background: "rgba(20,20,20,0.82)",
+  color: "#FFFFFF",
+});
+
+function badgeStyle(label: string): BadgeStyle {
+  const key = label.trim().toUpperCase();
+  return BADGE_STYLE_REGISTRY[key] ?? BADGE_FALLBACK_STYLE;
 }
 
 
@@ -206,7 +212,7 @@ function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?
   // v3 Premium pill: 28-32px tall, 14px horizontal padding, fully rounded,
   // glass background, no emoji, no per-label border color.
   const pillBase =
-    "inline-flex h-[30px] min-w-[72px] max-w-[160px] items-center justify-center whitespace-nowrap rounded-full py-[7px] px-[14px] text-[12px] font-bold uppercase leading-none tracking-[0.6px] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
+    "inline-flex h-[30px] min-w-[72px] max-w-[160px] items-center justify-center whitespace-nowrap rounded-full py-[7px] px-[14px] text-[12px] font-bold uppercase leading-none tracking-[0.6px] transition-[opacity,transform] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
 
 
 
