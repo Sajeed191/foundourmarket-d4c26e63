@@ -189,12 +189,15 @@ function Pill({ active, onClick, children }: { active?: boolean; onClick: () => 
   );
 }
 
-function FormPane({ kind, categories, onRun, onExport }: {
+function FormPane({ kind, categories, rows, onRun, onExport, onDone }: {
   kind: Exclude<FormKind, null>;
   categories: { slug: string; name: string }[];
+  rows: SelRow[];
   onRun: (a: BulkAction, p?: Record<string, unknown>) => void;
   onExport: (fmt: "csv" | "json") => void;
+  onDone: () => void;
 }) {
+
   const [val, setVal] = useState("");
   const [val2, setVal2] = useState("");
   const [val3, setVal3] = useState("");
