@@ -1062,6 +1062,7 @@ function SearchPage() {
     () => buildBrowsePresentation({ products: results, surface: "search" }),
     [results],
   );
+  const { flashBadgeBySlug } = useBadgeEngine();
   const collectionBadge = useMemo<
     ((p: Product) => import("@/lib/badges").BadgeKey | null) | null
   >(() => {
