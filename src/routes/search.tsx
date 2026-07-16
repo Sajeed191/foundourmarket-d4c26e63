@@ -107,17 +107,18 @@ export const Route = createFileRoute("/search")({
 
 const SORTS: { value: string; label: string; desc: string; icon: LucideIcon; group: string }[] = [
   { value: "relevance", label: "Relevance", desc: "Best match for your search", icon: Sparkles, group: "Recommended" },
+  { value: "flash_deals", label: "Flash Deals", desc: "Limited-time offers first", icon: Zap, group: "Recommended" },
   { value: "trending", label: "Trending", desc: "Rising in views & sales", icon: TrendingUp, group: "Recommended" },
   { value: "best_selling", label: "Best Selling", desc: "Most orders overall", icon: Flame, group: "Recommended" },
   { value: "price_asc", label: "Price: Low → High", desc: "Cheapest first", icon: ArrowDownWideNarrow, group: "Price" },
   { value: "price_desc", label: "Price: High → Low", desc: "Premium first", icon: ArrowUpWideNarrow, group: "Price" },
   { value: "discount", label: "Biggest Discount", desc: "Best deals first", icon: Tag, group: "Price" },
   { value: "rating", label: "Highest Rated", desc: "Top review scores first", icon: Star, group: "Customer" },
-  { value: "newest", label: "Newest", desc: "Latest arrivals", icon: Clock, group: "Newest" },
+  { value: "newest", label: "Newest", desc: "Latest arrivals", icon: Clock, group: "New" },
 ];
 
 // Sort options grouped for a premium, scannable sort sheet.
-const SORT_GROUPS: string[] = ["Recommended", "Price", "Customer", "Newest"];
+const SORT_GROUPS: string[] = ["Recommended", "Price", "Customer", "New"];
 
 // Rotation reshuffle cadence for the default browse feed (every 2 hours).
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
@@ -143,29 +144,119 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   return arr;
 }
 
+/**
+ * Deterministic multi-key sort. Every branch uses stable tiebreakers so the
+ * same input always produces the same output — no randomness after sort.
+ * Final fallback is a stable key (id/slug) to keep order identical across
+ * re-renders and virtualization windows.
+ */
 function applyClientSort(
   rows: Product[],
   sort: string | undefined,
   discountOf: (p: Product) => number,
   priceOf: (p: Product) => number,
+  flashEndAt: Map<string, string> = new Map(),
 ): Product[] {
+  const stableKey = (p: Product) => p.id ?? p.slug ?? "";
+  const cmpStable = (a: Product, b: Product) => stableKey(a).localeCompare(stableKey(b));
+  const cmpBy =
+    (...keys: Array<(p: Product) => number>) =>
+    (a: Product, b: Product) => {
+      for (const k of keys) {
+        const d = k(b) - k(a); // higher first
+        if (d !== 0) return d;
+      }
+      return cmpStable(a, b);
+    };
+  const ts = (s?: string | null) => (s ? Date.parse(s) || 0 : 0);
+  const isFlash = (p: Product) => (p.flashDeal || p.hotDeal ? 1 : 0);
+
   switch (sort) {
+    case "flash_deals": {
+      // Active deals first; within deals: ending-soonest, then highest discount,
+      // then popularity. Non-deal products fall through to relevance-ish order.
+      const now = Date.now();
+      return [...rows].sort((a, b) => {
+        const af = isFlash(a), bf = isFlash(b);
+        if (af !== bf) return bf - af;
+        if (af && bf) {
+          const ae = flashEndAt.get(a.id ?? "") ? ts(flashEndAt.get(a.id ?? "")) : Infinity;
+          const be = flashEndAt.get(b.id ?? "") ? ts(flashEndAt.get(b.id ?? "")) : Infinity;
+          // Only consider future end times for "ending soon".
+          const aend = ae > now ? ae : Infinity;
+          const bend = be > now ? be : Infinity;
+          if (aend !== bend) return aend - bend;
+          const dd = discountOf(b) - discountOf(a);
+          if (dd !== 0) return dd;
+        }
+        const pop = (b.soldCount - a.soldCount) || (b.viewsCount - a.viewsCount);
+        if (pop !== 0) return pop;
+        return cmpStable(a, b);
+      });
+    }
+    case "trending":
+      // Trending flag first, then recent views + sales, then recency.
+      return [...rows].sort(
+        cmpBy(
+          (p) => (p.trending ? 1 : 0),
+          (p) => p.viewsCount,
+          (p) => p.soldCount,
+          (p) => ts(p.createdAt),
+        ),
+      );
     case "best_selling":
-      return [...rows].sort((a, b) => b.soldCount - a.soldCount);
+      // Total completed orders → sales velocity proxy (sold / age days) → rating → reviews.
+      return [...rows].sort(
+        cmpBy(
+          (p) => p.ordersCount || p.soldCount,
+          (p) => {
+            const ageDays = Math.max(1, (Date.now() - ts(p.createdAt)) / 86_400_000);
+            return p.soldCount / ageDays;
+          },
+          (p) => p.rating,
+          (p) => p.reviews,
+        ),
+      );
     case "best_selling_reviews":
-      return [...rows].sort((a, b) => b.reviews - a.reviews);
-    case "rating":
-      return [...rows].sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+      return [...rows].sort(cmpBy((p) => p.reviews, (p) => p.rating));
+    case "rating": {
+      // Bayesian-ish rating to avoid 1–2 review products dominating.
+      const C = 4.0; // prior mean
+      const m = 10; // prior weight (min reviews to matter)
+      const score = (p: Product) => (p.rating * p.reviews + C * m) / (p.reviews + m);
+      return [...rows].sort(
+        cmpBy(score, (p) => p.reviews, (p) => p.soldCount, (p) => ts(p.createdAt)),
+      );
+    }
     case "newest":
       return [...rows].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        cmpBy(
+          (p) => ts(p.scheduledPublishAt),
+          (p) => ts(p.createdAt),
+        ),
       );
-    case "discount":
-      return [...rows].sort((a, b) => discountOf(b) - discountOf(a));
+    case "discount": {
+      // Only products with a real discount rank; zero-discount fall to popularity.
+      return [...rows].sort((a, b) => {
+        const da = discountOf(a), db = discountOf(b);
+        const ha = da > 0 ? 1 : 0, hb = db > 0 ? 1 : 0;
+        if (ha !== hb) return hb - ha;
+        if (db !== da) return db - da;
+        // Larger absolute saving next
+        const savingA = Math.max(0, priceOf(a) * (da / 100));
+        const savingB = Math.max(0, priceOf(b) * (db / 100));
+        if (savingB !== savingA) return savingB - savingA;
+        const pa = priceOf(a), pb = priceOf(b);
+        if (pa !== pb) return pa - pb;
+        const pop = (b.soldCount - a.soldCount);
+        if (pop !== 0) return pop;
+        return cmpStable(a, b);
+      });
+    }
     case "price_asc":
-      return [...rows].sort((a, b) => priceOf(a) - priceOf(b));
+      return [...rows].sort((a, b) => priceOf(a) - priceOf(b) || cmpStable(a, b));
     case "price_desc":
-      return [...rows].sort((a, b) => priceOf(b) - priceOf(a));
+      return [...rows].sort((a, b) => priceOf(b) - priceOf(a) || cmpStable(a, b));
     default:
       return rows;
   }
