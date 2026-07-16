@@ -162,25 +162,65 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
   };
 }
 
-function ProductBadgesImpl({ badge }: { badge: CardBadge | null }) {
+function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?: string }) {
   if (!badge) return null;
   // v3 Premium pill: 28-32px tall, 14px horizontal padding, fully rounded,
   // glass background, no emoji, no per-label border color.
   const pillBase =
     "inline-flex h-[28px] sm:h-[32px] max-w-[60%] items-center whitespace-nowrap rounded-full px-3.5 sm:px-4 text-[10.5px] sm:text-[11.5px] font-semibold uppercase leading-none tracking-[0.9px]";
+
+  // Section-forced / no-reason surfaces: badge is presentation only.
+  if (!reason) {
+    return (
+      <div className="absolute left-3 top-3 z-10">
+        <span
+          data-product-badge
+          className={`${pillBase} ${badge.className ?? ""}`}
+          style={badge.style ?? badgeStyle()}
+        >
+          <span className="truncate">{badge.label}</span>
+        </span>
+      </div>
+    );
+  }
+
+  // Intelligence-driven surfaces: badge is the trigger for "Why you're
+  // seeing this". Reuses the existing Popover component — no new dialog.
   return (
     <div className="absolute left-3 top-3 z-10">
-      <span
-        data-product-badge
-        className={`${pillBase} ${badge.className ?? ""}`}
-        style={badge.style ?? badgeStyle()}
-      >
-        <span className="truncate">{badge.label}</span>
-      </span>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            data-product-badge
+            aria-label="Why this product is recommended"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className={`${pillBase} ${badge.className ?? ""} cursor-pointer transition-transform duration-150 active:scale-95`}
+            style={badge.style ?? badgeStyle()}
+          >
+            <span className="truncate">{badge.label}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          className="w-64 text-xs leading-relaxed"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-mono text-[10px] uppercase tracking-widest text-accent mb-1.5">
+            Why you're seeing this
+          </p>
+          <p className="text-foreground/90">{reason}</p>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
 const ProductBadges = memo(ProductBadgesImpl);
+
 
 
 function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
