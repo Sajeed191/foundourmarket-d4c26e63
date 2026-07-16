@@ -154,48 +154,33 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
 
 function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?: string }) {
   if (!badge) return null;
-  // v4 Premium pill: elegant, compact, corner-anchored. Never dominates the
-  // product image. Compact size on <400px viewports auto-applied via arbitrary
-  // media-query variant. Colors/priority unchanged.
-  const pillBase =
-    "inline-flex h-[24px] max-[400px]:h-[22px] sm:h-[26px] min-w-[64px] max-w-[110px] max-[400px]:max-w-[95px] w-fit items-center justify-center whitespace-nowrap rounded-full px-[10px] py-[4px] max-[400px]:px-[8px] max-[400px]:py-[3px] text-[11px] max-[400px]:text-[10px] font-semibold uppercase leading-none tracking-[0.4px] transition-[opacity,transform] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
-
-  const shortLabel = shortBadgeLabel(badge.label);
 
   // Section-forced / no-reason surfaces: badge is presentation only.
   if (!reason) {
     return (
-      <div className="absolute left-[10px] top-[10px] z-10">
-        <span
-          data-product-badge
-          className={`${pillBase} ${badge.className ?? ""}`}
-          style={badge.style ?? badgeStyle(badge.label)}
-        >
-          <span className="truncate">{shortLabel}</span>
-        </span>
-      </div>
+      <ProductBadgeAnchor>
+        <ProductBadge label={badge.label} className={badge.className ?? ""} />
+      </ProductBadgeAnchor>
     );
   }
 
   // Intelligence-driven surfaces: badge is the trigger for "Why you're
   // seeing this". Reuses the existing Popover component — no new dialog.
   return (
-    <div className="absolute left-[10px] top-[10px] z-10">
+    <ProductBadgeAnchor>
       <Popover>
         <PopoverTrigger asChild>
-          <button
+          <ProductBadge
+            label={badge.label}
+            as="button"
             type="button"
-            data-product-badge
             aria-label="Why this product is recommended"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               e.stopPropagation();
             }}
-            className={`${pillBase} ${badge.className ?? ""} cursor-pointer transition-transform duration-150 active:scale-95`}
-            style={badge.style ?? badgeStyle(badge.label)}
-          >
-            <span className="truncate">{shortLabel}</span>
-          </button>
+            className={`${badge.className ?? ""} cursor-pointer active:scale-95`}
+          />
         </PopoverTrigger>
         <PopoverContent
           side="bottom"
@@ -209,7 +194,7 @@ function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?
           <p className="text-foreground/90">{reason}</p>
         </PopoverContent>
       </Popover>
-    </div>
+    </ProductBadgeAnchor>
   );
 }
 const ProductBadges = memo(ProductBadgesImpl);
