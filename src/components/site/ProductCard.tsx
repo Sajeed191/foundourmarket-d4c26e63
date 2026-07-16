@@ -582,6 +582,11 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.compact === b.compact &&
     a.priority === b.priority &&
     a.highlight === b.highlight &&
-    a.hideBadges === b.hideBadges
+    a.hideBadges === b.hideBadges &&
+    // Shallow compare browseBadges array (small, stable ordering upstream).
+    (a.browseBadges === b.browseBadges ||
+      (Array.isArray(a.browseBadges) && Array.isArray(b.browseBadges) &&
+        a.browseBadges.length === b.browseBadges.length &&
+        a.browseBadges.every((v, i) => v === b.browseBadges![i])))
   );
 });
