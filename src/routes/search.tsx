@@ -917,10 +917,38 @@ function SearchPage() {
     return () => { cancelled = true; };
   }, [search.q, loading, rawRows.length]);
 
+  // Exclusive-collection sorts: Flash Deals, Best Selling, Trending, Newest.
+  // These narrow the pool to products holding the matching badge, then sort
+  // deterministically. Other sorts continue to sort the full visible set.
+  const flashEligibleIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of flashItems) if (it.product.id) s.add(it.product.id);
+    return s;
+  }, [flashItems]);
+
+  const daysSinceIso = (iso?: string) => {
+    if (!iso) return Infinity;
+    const t = Date.parse(iso);
+    return Number.isNaN(t) ? Infinity : (Date.now() - t) / 86_400_000;
+  };
+  const isBestsellerBadge = (p: Product) => Boolean(p.bestseller) || (p.soldCount ?? 0) >= 50;
+  const isTrendingBadge = (p: Product) =>
+    Boolean(p.trending) || (p.viewsCount ?? 0) >= 200 || (p.wishlistCount ?? 0) >= 15;
+  const isNewBadge = (p: Product) => Boolean(p.newArrival) || daysSinceIso(p.createdAt) <= 14;
+
   // Full client-side filtered + sorted result set (drives the live count).
   const results = useMemo(() => {
-    if (isTrending) return rawRows;
-    const filtered = applyClientFilters(rawRows, currentFilters, priceCtx, variantFacets);
+    let pool = rawRows;
+    if (sort === "flash_deals") {
+      pool = rawRows.filter((p) => p.id && flashEligibleIds.has(p.id));
+    } else if (sort === "best_selling") {
+      pool = rawRows.filter(isBestsellerBadge);
+    } else if (sort === "trending") {
+      pool = rawRows.filter(isTrendingBadge);
+    } else if (sort === "newest") {
+      pool = rawRows.filter(isNewBadge);
+    }
+    const filtered = applyClientFilters(pool, currentFilters, priceCtx, variantFacets);
     const sorted = applyClientSort(
       filtered,
       sort,
@@ -928,10 +956,13 @@ function SearchPage() {
       priceOf,
       flashEndAt,
     );
+    if (sort === "flash_deals") return sorted.slice(0, 10);
+    if (sort === "newest") return sorted.slice(0, 30);
     const noActive = countActive(currentFilters) === 0;
     const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim() && noActive;
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
-  }, [rawRows, isTrending, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf, flashEndAt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawRows, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf, flashEndAt, flashEligibleIds]);
 
   // Client-side pagination with back-navigation state preservation. The
   // scroll position + visible window are persisted per search key so returning
