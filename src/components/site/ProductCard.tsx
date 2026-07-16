@@ -618,6 +618,8 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.priority === b.priority &&
     a.highlight === b.highlight &&
     a.hideBadges === b.hideBadges &&
+    a.badgeReason === b.badgeReason &&
+
     // Shallow compare browseBadges array (small, stable ordering upstream).
     (a.browseBadges === b.browseBadges ||
       (Array.isArray(a.browseBadges) && Array.isArray(b.browseBadges) &&
