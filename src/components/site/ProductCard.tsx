@@ -33,7 +33,43 @@ type ProductCardProps = {
    * the card communicates the user's own activity, not promotional context.
    */
   hideBadges?: boolean;
+  /**
+   * Optional plain-language browse badges from the Browse Presentation Adapter
+   * ("Recommended", "Best Value", "Popular Choice", "Ready to Ship"). Folded
+   * into the single-badge priority ladder — never rendered as extras.
+   */
+  browseBadges?: readonly string[];
 };
+
+/**
+ * Unified card marketing-badge priority. The card renders exactly ONE badge —
+ * whichever candidate (admin-assigned, engine-computed, or browse presentation)
+ * ranks highest here. Labels outside this ladder never render on the image.
+ * "Ready to Ship" is intentionally NOT here — it renders under the price as
+ * an operational cue, not a marketing pill.
+ */
+const CARD_BADGE_PRIORITY: string[] = [
+  "FLASH DEAL",
+  "FLASH SALE",
+  "HOT DEAL",
+  "BEST SELLER",
+  "BESTSELLER",
+  "TRENDING",
+  "NEW",
+  "NEW ARRIVAL",
+  "RECOMMENDED",
+  "BEST VALUE",
+  "POPULAR CHOICE",
+];
+const READY_TO_SHIP_LABEL = "READY TO SHIP";
+const normalizeBadgeLabel = (s: string) => s.trim().toUpperCase();
+function pickWinningBadge(candidates: CardBadge[]): CardBadge | null {
+  for (const key of CARD_BADGE_PRIORITY) {
+    const hit = candidates.find((c) => normalizeBadgeLabel(c.label) === key);
+    if (hit) return hit;
+  }
+  return null;
+}
 
 /** Highlight matched search terms within a piece of text. */
 function HighlightText({ text, query }: { text: string; query?: string }) {
@@ -133,34 +169,19 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
   };
 }
 
-function ProductBadgesImpl({ badges }: { badges: CardBadge[] }) {
-  if (badges.length === 0) return null;
-  const visible = badges.slice(0, 2);
-  const extra = badges.length - visible.length;
+function ProductBadgesImpl({ badge }: { badge: CardBadge | null }) {
+  if (!badge) return null;
   const pillBase =
-    "inline-flex h-[22px] sm:h-[28px] w-full max-w-full items-center gap-1 whitespace-nowrap rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] shadow-[0_2px_8px_rgba(0,0,0,0.3)]";
+    "inline-flex h-[22px] sm:h-[26px] max-w-[42%] items-center gap-1 whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase leading-none tracking-[0.4px] shadow-[0_2px_8px_rgba(0,0,0,0.35)]";
   return (
-    <div className="absolute left-2.5 top-2.5 z-10 flex w-[42%] max-w-[calc(100%-3.5rem)] flex-col items-start gap-1.5">
-      {visible.map((b) => (
-        <span
-          key={b.id}
-          data-product-badge
-          className={`${pillBase} ${b.className ?? ""}`}
-          style={b.style ?? badgeStyle(b.label)}
-        >
-          
-          <span className="truncate">{b.label}</span>
-        </span>
-      ))}
-      {extra > 0 && (
-        <span
-          data-product-badge
-          aria-label={`${extra} more badge${extra > 1 ? "s" : ""}`}
-          className={`${pillBase} justify-center bg-accent text-accent-foreground`}
-        >
-          +{extra}
-        </span>
-      )}
+    <div className="absolute left-2.5 top-2.5 z-10">
+      <span
+        data-product-badge
+        className={`${pillBase} ${badge.className ?? ""}`}
+        style={badge.style ?? badgeStyle(badge.label)}
+      >
+        <span className="truncate">{badge.label}</span>
+      </span>
     </div>
   );
 }
@@ -315,7 +336,7 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
 const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
 
 
-function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false }: ProductCardProps) {
+function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false, browseBadges }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const [preview, setPreview] = useState<SwatchPreview | null>(null);
@@ -331,9 +352,20 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
   const identity = productIdentity(product);
 
-  const badges = useMemo<CardBadge[]>(() => {
-    // Discount percentage badge removed sitewide per design decision.
-    const discountBadge: CardBadge | null = null;
+  // Ready to Ship is an operational cue — never renders on the image, only
+  // appears as a small check-row above the shipping line when the browse
+  // presentation flags it.
+  const readyToShip = useMemo(
+    () => (browseBadges ?? []).some((b) => normalizeBadgeLabel(b) === READY_TO_SHIP_LABEL),
+    [browseBadges],
+  );
+
+  // Collect ALL badge candidates from every source, then pick the single
+  // highest-priority winner. Any label outside CARD_BADGE_PRIORITY (Premium,
+  // Featured, Editor's Choice, Staff Pick, Gift Idea, Fast Selling, Limited
+  // Stock, …) is intentionally dropped from the card image.
+  const winningBadge = useMemo<CardBadge | null>(() => {
+    if (hideBadges) return null;
 
     const computed: CardBadge[] = labels.map((b) => ({
       id: b.key,
@@ -342,34 +374,31 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
       className: b.className,
     }));
 
-    if (forceBadge || assigned.length === 0) {
-      return discountBadge ? [discountBadge, ...computed] : computed;
+    if (forceBadge) {
+      return pickWinningBadge(computed) ?? computed[0] ?? null;
     }
 
     // Flash/Hot promotional badges are exclusive to the currently-selected
-    // Flash Deal rotation — hide them for non-selected products. Every OTHER
-    // admin-assigned badge is always shown.
+    // Flash Deal rotation — hide them for non-selected products.
     const flashActive = engine.activeFlashSlugs.has(product.slug);
     const chosenFlash = engine.flashBadgeBySlug.get(product.slug) ?? null;
-    const gated = assigned.filter((b) => {
+    const gatedAssigned = assigned.filter((b) => {
       if (!isAssignedFlashBadge(b)) return true;
       if (!flashActive || !chosenFlash) return false;
       return assignedFlashKey(b) === chosenFlash;
     });
 
-    // Merge assigned badges with computed ones so all valid badges surface,
-    // deduping by normalized label. ProductBadges caps display at 2.
-    const merged: CardBadge[] = discountBadge ? [discountBadge] : [];
-    merged.push(...gated.map(toAssignedBadge));
-    const seen = new Set(merged.map((b) => b.label.trim().toUpperCase()));
-    for (const c of computed) {
-      const key = c.label.trim().toUpperCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(c);
-    }
-    return merged;
-  }, [assigned, forceBadge, labels, engine, product.slug, discount]);
+    const browsePool: CardBadge[] = (browseBadges ?? [])
+      .filter((label) => normalizeBadgeLabel(label) !== READY_TO_SHIP_LABEL)
+      .map((label) => ({ id: `browse:${label}`, label }));
+
+    const candidates: CardBadge[] = [
+      ...gatedAssigned.map(toAssignedBadge),
+      ...computed,
+      ...browsePool,
+    ];
+    return pickWinningBadge(candidates);
+  }, [hideBadges, labels, forceBadge, engine, product.slug, assigned, browseBadges]);
 
 
 
@@ -415,7 +444,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
         >
-          <ProductBadges badges={hideBadges ? [] : badges} />
+          <ProductBadges badge={winningBadge} />
           <WishlistButton slug={product.slug} name={product.name} />
           {/* Variant colour preview — fades a colour's cover image over the
               base image. Overlaid (never swaps the base src) so palette,
@@ -462,6 +491,16 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
             </div>
           ) : null}
         </div>
+
+        {/* Ready to Ship — operational cue, moved off the image per v2 badge
+            spec. Only appears when the browse presentation flags it. */}
+        {readyToShip && (
+          <span data-product-text className="product-typography inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-[13px] font-medium text-emerald-400">
+            <Check className="size-3 sm:size-4 shrink-0" strokeWidth={2.5} /> Ready to Ship
+          </span>
+        )}
+
+
 
         {/* Shipping row — one line, never wraps. */}
         <div className="flex min-w-0 items-center justify-between gap-2 overflow-hidden">
@@ -543,6 +582,11 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.compact === b.compact &&
     a.priority === b.priority &&
     a.highlight === b.highlight &&
-    a.hideBadges === b.hideBadges
+    a.hideBadges === b.hideBadges &&
+    // Shallow compare browseBadges array (small, stable ordering upstream).
+    (a.browseBadges === b.browseBadges ||
+      (Array.isArray(a.browseBadges) && Array.isArray(b.browseBadges) &&
+        a.browseBadges.length === b.browseBadges.length &&
+        a.browseBadges.every((v, i) => v === b.browseBadges![i])))
   );
 });

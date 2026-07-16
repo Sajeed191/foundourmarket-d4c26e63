@@ -1,91 +1,75 @@
-## Turn 2: Safe Deterministic Normalization
+## Product Card Badge System v2 — One Badge, AI-Driven
 
-Extend the Image Intelligence Engine with real pixel analysis, Photon-WASM normalization, a mandatory quality gate, admin preview UI, and background job processing. No new AI features.
+Collapse the current stacked badge system (Trending + Premium + Recommended + Ready to Ship, etc.) into a single AI-selected marketing badge per card, following strict priority + section rules. Operational info (Ready to Ship, Free Shipping, Stock) moves out of the image and under the price.
 
-### 1. WASM Pixel Analysis (`src/lib/image-intelligence.server.ts`)
+### Scope
 
-Add `@cf-wasm/photon` pixel decode path (activated when `analysis_depth = 'full'`). Replace `null` fields with real measurements:
+**Frontend/presentation only.** No changes to Catalog Intelligence, Marketplace Intelligence, Recommendation Broker, or badge computation engines. AI already ranks — we just stop rendering multiple visible badges on top of it.
 
-- **occupancy** — bounding box of non-background pixels ÷ total pixels
-- **empty_margins** — top/right/bottom/left whitespace ratios
-- **brightness** — mean luminance (0–1)
-- **sharpness** — Laplacian variance proxy over downsampled grayscale
-- **background_uniformity** — stdev of corner-sampled swatches
-- **transparency** — alpha channel presence + % transparent pixels
-- **centering** — bbox center offset from image center (dx, dy)
-- **aspect_ratio** — width/height (already present via header, keep)
+### The One-Badge Rule
 
-Downsample large images to ≤512px longest edge before pixel work to keep Worker CPU under budget.
-
-### 2. Deterministic Normalization (`src/lib/image-normalization.server.ts` — new)
-
-Photon-WASM only. Pipeline steps, each optional, driven by analysis + category rules:
-
-1. Empty-border crop (only trim uniform background pixels, never product pixels)
-2. Canvas expansion / safe padding to reach category target aspect ratio
-3. Product centering (translate within expanded canvas)
-4. Background fill — sampled solid, 2-stop gradient, or edge-blur continuation
-5. Resize to target long-edge (e.g. 1600px)
-6. WebP encode (quality 82)
-
-Every step records `{op, params, reason}` into `actions[]` for explainability. No recolor, no outpaint, no sharpen, no denoise.
-
-### 3. Mandatory Quality Gate (`src/lib/image-quality-gate.server.ts` — new)
-
-Runs after normalization, before `optimized_url` is written. Checks:
-
-| Check | Rule |
-|---|---|
-| Original preserved | `original_url` still points to untouched bytes |
-| Product fully visible | Post-crop occupancy bbox fully inside canvas with ≥2% margin |
-| Product pixels unchanged | Pixel diff of bbox region vs. original bbox ≤ 0.5% |
-| Resolution acceptable | Output long-edge ≥ 800px |
-| No excessive blur | Output sharpness ≥ 85% of original |
-| Safe occupancy | Category-target min ≤ occupancy ≤ max |
-| Background uniform | uniformity ≥ threshold when fill applied |
-
-Any failure → discard optimized bytes, keep original, log `rejection_reason` on the job row, expose it in the assistant recommendation.
-
-### 4. Background Job Processing
-
-- Add `job_type` (`analyze` | `normalize`) and `status` (`queued` | `running` | `succeeded` | `failed` | `rejected`) to `image_intelligence_jobs`.
-- Upload flow: original stored immediately, `analyze` job enqueued, then chains to `normalize` job when mode is `analyze+normalize`.
-- Server fn `runPendingImageJobs` processes a small batch per invocation; called from admin panel button and from a `/api/public/hooks/image-jobs` route driven by pg_cron every minute.
-- `optimized_url` stays `null` until the quality gate passes.
-
-### 5. Admin Preview UI (`src/routes/admin-image-intelligence.tsx`)
-
-Add a per-image review panel:
+Single priority ladder used everywhere a card renders:
 
 ```text
-┌──────────────┬──────────────┐
-│  Original    │  Optimized   │
-│  [preview]   │  [preview]   │
-└──────────────┴──────────────┘
-  Actions taken: center, pad 8%, gradient bg
-  Quality gate:  ✅ passed
-  [ Keep Original ]  [ Apply Optimized ]
+1. Flash Deal / Hot Deal
+2. Best Seller
+3. Trending
+4. New Arrival
+5. Recommended         (from browse presentation)
+6. Best Value          (from browse presentation)
+7. Popular Choice      (from browse presentation)
+8. Ready to Ship       (from browse presentation) ← only if nothing above wins
+9. (no badge)
 ```
 
-Global setting adds `auto_apply_safe` toggle:
-- **On** — quality-gate-passing optimizations auto-swap the displayed URL.
-- **Off** — always require admin click to apply.
+Higher priority wins; lower badges never render on the image. `Premium`, `Featured`, `Editor's Choice`, `Staff Pick`, `Gift Idea`, `Fast Selling`, `Limited Stock` are removed from card display entirely (still computed, just not shown as marketing pills).
 
-### 6. Assistant Integration
+### Section-Aware Behavior
 
-`MarketplaceImageAssistant.tsx` consumes the richer `analysis_json` — no API changes for other consumers (Gallery Health, Hero Recommendation, Duplicate Detection 2.0). Traffic light logic gains `rejected` → 🟡 amber with rejection reason.
+| Surface | Badge shown |
+|---|---|
+| Flash Deals section / `/deals` | Flash Deal or Hot Deal only |
+| Best Sellers section / `/products/best-sellers` | Best Seller only |
+| Trending section / `/products/trending` | Trending only |
+| New Arrivals section / `/products/new-arrivals` | New Arrival only |
+| Category, Search, Recently Viewed, Related, PDP rails, Home personalized | AI-selected single badge via priority ladder |
 
-### Technical notes
+### Ready to Ship Relocation
 
-- New dep: `@cf-wasm/photon` (Worker-safe, ~1MB WASM). Loaded lazily inside handlers only.
-- All pixel work stays server-side in `*.server.ts` behind `createServerFn`, so nothing ships to the client bundle.
-- Migration adds `job_type`, `status`, `rejection_reason`, `actions_json` to `image_intelligence_jobs`; adds `auto_apply_safe` bool to `image_intelligence_settings`.
-- Cron: `*/1 * * * *` calling `/api/public/hooks/image-jobs` with the anon key.
-- Safety contract unchanged: originals immutable, every action reversible, everything explainable, product pixels never modified.
+`Ready to Ship` stops being an image badge. Show as an inline check row under price alongside existing shipping/stock lines. Discount `-60%` pill stays where it is (already handled separately, `DiscountBadge` is already a no-op).
 
-### Out of scope (deferred)
+### Visual Treatment
 
-- AI outpainting / generative fill
-- Category rule editor UI (rules stay code-defined)
-- Bulk re-processing of historical catalog (one-off script later)
-- Any change to Gallery Health / Hero / Duplicate Detection surfaces
+- Position: **top-left** of image (currently badges live bottom-inside via `BrowseCard`; this moves them).
+- Style: single rounded capsule, dark translucent bg, subtle shadow, max ~30% image width, uppercase 10–11px tracked label with emoji.
+- The "Why?" `ⓘ` button (progressive disclosure reason) stays — bottom-right corner of image, one-sentence copy, no AI wording, no scores. Already conforms.
+
+### Technical Changes
+
+Files touched (all presentation-layer):
+
+1. **`src/lib/badge-visibility.tsx`** — Add a `pickPrimaryBadge(product, context, engine, browsePresentation?)` that returns a single `Badge | null` following the unified priority ladder. Fold browse presentation badges (`Recommended`, `Best Value`, `Popular Choice`, `Ready to Ship`) into the same ladder so the browse adapter contract remains untouched but only one wins visually. Keep `useVisibleBadges` for back-compat but have it return at most one badge; deprecate `MAX_VISIBLE_BADGES` usage in cards.
+
+2. **`src/components/site/BrowseCard.tsx`** — Render exactly one top-left capsule from the unified picker. Drop the bottom-row multi-badge strip. Filter `Ready to Ship` out of the image overlay so it can render below price instead. `ⓘ` stays bottom-right.
+
+3. **`src/components/site/ProductCard.tsx`** (need to read first) — Switch its badge slot to the new single-badge picker; add the "Ready to Ship" check row under price when the browse presentation includes it OR the product is in-stock with fast shipping metadata.
+
+4. **`src/lib/browse/`** adapter — No contract change. `presentation.badges` stays an array (frozen contract, additive only), but consumer components pick the highest-priority one. Section surfaces (`surface: "deals"` etc.) already select the correct badge upstream.
+
+5. **Section grids** using `forceBadge` (`products.trending.tsx`, `products.new-arrivals.tsx`, `products.best-sellers.tsx`, Flash Deals section) — no change needed; `forceBadge` already collapses to one.
+
+6. **Remove from card display**: `premium`, `featured`, `staff_pick`, `editors_choice`, `gift_idea`, `fast_selling`, `limited_stock` from the priority ladder used by `pickPrimaryBadge`. These stay computable for admin/analytics but never render as the winning card badge.
+
+### Non-Goals
+
+- No changes to admin badge settings UI.
+- No changes to `computeBadges` core logic or `BadgeSettings` schema.
+- No changes to Recommendation Broker, Marketplace Readiness, or any intelligence module.
+- No changes to `ProductCard`'s image, layout metrics, virtualization, or CLS.
+- Discount `-%` pill stays a no-op (already removed sitewide).
+
+### Verification
+
+- Build passes.
+- Visit `/`, `/deals`, `/products/trending`, `/products/best-sellers`, `/products/new-arrivals`, `/category/<slug>` — confirm exactly one badge per card, correct per-section badge, `Ready to Ship` never on image, `ⓘ` still works.
+- Snapshot check on category grid: no card has >1 image badge.
