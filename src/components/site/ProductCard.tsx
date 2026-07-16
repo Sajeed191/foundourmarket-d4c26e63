@@ -33,7 +33,43 @@ type ProductCardProps = {
    * the card communicates the user's own activity, not promotional context.
    */
   hideBadges?: boolean;
+  /**
+   * Optional plain-language browse badges from the Browse Presentation Adapter
+   * ("Recommended", "Best Value", "Popular Choice", "Ready to Ship"). Folded
+   * into the single-badge priority ladder — never rendered as extras.
+   */
+  browseBadges?: readonly string[];
 };
+
+/**
+ * Unified card marketing-badge priority. The card renders exactly ONE badge —
+ * whichever candidate (admin-assigned, engine-computed, or browse presentation)
+ * ranks highest here. Labels outside this ladder never render on the image.
+ * "Ready to Ship" is intentionally NOT here — it renders under the price as
+ * an operational cue, not a marketing pill.
+ */
+const CARD_BADGE_PRIORITY: string[] = [
+  "FLASH DEAL",
+  "FLASH SALE",
+  "HOT DEAL",
+  "BEST SELLER",
+  "BESTSELLER",
+  "TRENDING",
+  "NEW",
+  "NEW ARRIVAL",
+  "RECOMMENDED",
+  "BEST VALUE",
+  "POPULAR CHOICE",
+];
+const READY_TO_SHIP_LABEL = "READY TO SHIP";
+const normalizeBadgeLabel = (s: string) => s.trim().toUpperCase();
+function pickWinningBadge(candidates: CardBadge[]): CardBadge | null {
+  for (const key of CARD_BADGE_PRIORITY) {
+    const hit = candidates.find((c) => normalizeBadgeLabel(c.label) === key);
+    if (hit) return hit;
+  }
+  return null;
+}
 
 /** Highlight matched search terms within a piece of text. */
 function HighlightText({ text, query }: { text: string; query?: string }) {
