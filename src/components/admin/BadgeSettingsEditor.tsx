@@ -44,25 +44,11 @@ const ROWS: BadgeRow[] = [
     ],
   },
   {
-    emoji: "⚡",
-    title: "Fast Selling",
-    desc: "Shown when daily sales velocity is high.",
-    enabledKey: "fastSellingEnabled",
-    fields: [{ key: "fastSellingPerDayMin", label: "Min sold / day", min: 0.1, step: 0.1, suffix: "/day" }],
-  },
-  {
     emoji: "🔥",
     title: "Hot Deal",
     desc: "Shown when the discount is large enough.",
     enabledKey: "hotDealEnabled",
     fields: [{ key: "hotDealDiscountMin", label: "Min discount", min: 1, max: 90, suffix: "%" }],
-  },
-  {
-    emoji: "⚠️",
-    title: "Limited Stock",
-    desc: "Shown when remaining stock is low.",
-    enabledKey: "limitedStockEnabled",
-    fields: [{ key: "limitedStockMax", label: "Max stock left", min: 1, suffix: "units" }],
   },
   {
     emoji: "🆕",

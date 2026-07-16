@@ -1,75 +1,65 @@
-## Product Card Badge System v2 — One Badge, AI-Driven
+## Goal
+Make the Badge Manager (`badge_types` table) the single source of truth for every badge shown in the marketplace. Delete the legacy hardcoded catalog and route every surface through one component.
 
-Collapse the current stacked badge system (Trending + Premium + Recommended + Ready to Ship, etc.) into a single AI-selected marketing badge per card, following strict priority + section rules. Operational info (Ready to Ship, Free Shipping, Stock) moves out of the image and under the price.
+## Current State
+Two parallel badge systems exist:
 
-### Scope
+1. **Legacy (to delete)** — `src/lib/badges.ts` defines a hardcoded catalog (`flash_deal, featured, staff_pick, editors_choice, gift_idea, bestseller, trending, fast_selling, premium, hot_deal, limited_stock, new`) with baked-in colors (`BADGE_STYLES`), priorities (`PRIORITY`), and computes badges from product flags via `computeBadges()`. `src/components/ui/ProductBadge.tsx` has its own hardcoded `BADGE_PALETTE`. Product cards, PDP, browse presentation, badge-visibility helper, and admin merchandising all reference these constants.
 
-**Frontend/presentation only.** No changes to Catalog Intelligence, Marketplace Intelligence, Recommendation Broker, or badge computation engines. AI already ranks — we just stop rendering multiple visible badges on top of it.
+2. **Badge Manager (keep, becomes canonical)** — `badge_types` table + `product_badges` assignments, driven by `src/lib/use-product-badges.ts`. Admin UI at `admin-badges.tsx`, bulk at `admin-badges-bulk.tsx`, analytics at `admin-badges-analytics.tsx`. Already has: name, slug (`badge_key`), priority, colors, animation, schedule, live realtime sync.
 
-### The One-Badge Rule
+## Plan
 
-Single priority ladder used everywhere a card renders:
+### 1. Canonical catalog (DB seed)
+Migration to ensure `badge_types` contains exactly the 8 v4 badges with priorities and default colors:
 
-```text
-1. Flash Deal / Hot Deal
-2. Best Seller
-3. Trending
-4. New Arrival
-5. Recommended         (from browse presentation)
-6. Best Value          (from browse presentation)
-7. Popular Choice      (from browse presentation)
-8. Ready to Ship       (from browse presentation) ← only if nothing above wins
-9. (no badge)
+```
+flash_deal (95), hot_deal (90), bestseller (85), trending (80),
+new (70), recommended (60), best_value (50), popular (40)
 ```
 
-Higher priority wins; lower badges never render on the image. `Premium`, `Featured`, `Editor's Choice`, `Staff Pick`, `Gift Idea`, `Fast Selling`, `Limited Stock` are removed from card display entirely (still computed, just not shown as marketing pills).
+Delete/archive any row whose `badge_key` is not in this list (fast_selling, editors_choice, staff_pick, premium, featured, gift_idea, limited_stock, plus any custom rows the admin created). Cascade removes their `product_badges` assignments.
 
-### Section-Aware Behavior
+### 2. One shared component: `MarketplaceBadge`
+Rewrite `src/components/ui/ProductBadge.tsx` → `MarketplaceBadge.tsx` (keep a shim export for now). Component takes a `BadgeType` row (or `slug`) and renders inline styles built ONLY from that row's `backgroundColor`/`textColor`/`borderColor`/`glowColor`/`radius`/`fontSize`/`fontWeight`/`animation`. No color maps, no palette constants, no per-slug switch. Delete `BADGE_PALETTE`, `badgeStyle()`, `BADGE_LABEL_SHORT` in that file.
 
-| Surface | Badge shown |
-|---|---|
-| Flash Deals section / `/deals` | Flash Deal or Hot Deal only |
-| Best Sellers section / `/products/best-sellers` | Best Seller only |
-| Trending section / `/products/trending` | Trending only |
-| New Arrivals section / `/products/new-arrivals` | New Arrival only |
-| Category, Search, Recently Viewed, Related, PDP rails, Home personalized | AI-selected single badge via priority ladder |
+### 3. Delete legacy code
+- Delete `src/lib/badges.ts` entirely (`BADGE_STYLES`, `PRIORITY`, `computeBadges`, `singleBadge`, `BadgeKey`, `BadgeSettings`, `MAX_CARD_BADGES`).
+- Delete `src/lib/use-badge-settings.ts` and `badge_settings` usage in code (leave DB table alone; unused).
+- Delete `src/routes/admin-bulk-badges.tsx` (legacy; keep only `admin-badges-bulk.tsx`).
+- Prune legacy computed-badge branches from `src/lib/badge-visibility.tsx`, `src/lib/browse/presentation-adapter.ts`, `src/lib/merchandising.ts`, `src/lib/inventory-marketing.ts`, `src/lib/product-marketing.ts`. Anything that assigned old keys (`fast_selling`, `staff_pick`, `premium`, etc.) either maps to the nearest v4 slug (`fast_selling`→`trending`, `hot_deal` stays, `limited_stock`→drop, `featured`/`staff_pick`/`editors_choice`/`gift_idea`/`premium`→drop) or is removed.
 
-### Ready to Ship Relocation
+### 4. Rewrite the resolver
+Replace `computeBadges` with a single `resolveProductBadge(productSlug, ctx?)` in `use-product-badges.ts` that:
+- reads the live `badge_types` snapshot + `product_badges` assignments (already loaded and realtime-synced)
+- optionally consumes auto-rules (`auto_rule` on the badge_type) against product metrics for slugs like `bestseller`, `trending`, `new` when there is no manual assignment
+- returns the single highest-priority live badge (respecting `enabled`, `archived`, `startAt`/`endAt`)
 
-`Ready to Ship` stops being an image badge. Show as an inline check row under price alongside existing shipping/stock lines. Discount `-60%` pill stays where it is (already handled separately, `DiscountBadge` is already a no-op).
+Every surface calls this. There is no other badge selection.
 
-### Visual Treatment
+### 5. Storefront surfaces
+Refactor to consume the resolver + `MarketplaceBadge` only:
+- `src/components/site/ProductCard.tsx` (removes inline `assignedFlashKey`, `isAssignedFlashBadge`, `ProductBadgesImpl` custom palette work)
+- `src/components/site/BrowseCard.tsx` (`forceBadge` prop stays but is now a `badge_key` string, not a `BadgeKey` enum)
+- `src/routes/products.$slug.tsx` (PDP hero badge)
+- `src/routes/search.tsx` (`collectionBadge`, exclusive-collection filters — now match by `badge_key`)
+- `src/components/site/RecommendationStrip.tsx`, `RecommendedForYou.tsx`, `RelatedProducts.tsx`, `WishlistCard.tsx`, `RecentlyViewed.tsx`, `PDPRecommendations.tsx`, `FlashDeals.tsx`, `FlashSaleStrip.tsx`, `SmartRecommendations.tsx`, `QuickViewDialog.tsx`, carousels
+- `src/components/site/DiscountBadge.tsx` already returns null — leave.
 
-- Position: **top-left** of image (currently badges live bottom-inside via `BrowseCard`; this moves them).
-- Style: single rounded capsule, dark translucent bg, subtle shadow, max ~30% image width, uppercase 10–11px tracked label with emoji.
-- The "Why?" `ⓘ` button (progressive disclosure reason) stays — bottom-right corner of image, one-sentence copy, no AI wording, no scores. Already conforms.
+### 6. Admin surfaces
+- `admin-badges.tsx` — preview pill uses `MarketplaceBadge` (removes local `badgePreviewStyle`).
+- `admin-badges-bulk.tsx` — verify bulk assign / remove / replace / schedule / activate / deactivate / priority all call `assignBadge`/`unassignBadge`/`updateBadgeTypeFull`; add any missing action. Confirm changes propagate (already realtime-subscribed).
+- `admin-merchandising.tsx` and per-product merchandising editor — remove the toggles for deleted flags (`fast_selling`, `editors_choice`, `staff_pick`, `premium`, `featured`, `gift_idea`) from the UI. Keep DB columns; just stop displaying/writing them.
 
-### Technical Changes
+### 7. Live sync verification
+Everything already flows: Badge Manager write → `badge_types`/`product_badges` → Supabase realtime → `useProductBadges` snapshot → `MarketplaceBadge`. No caches to bust.
 
-Files touched (all presentation-layer):
+### 8. Cleanup pass
+Grep-remove references to: `computeBadges`, `singleBadge`, `BadgeKey`, `BADGE_STYLES`, `BADGE_PALETTE`, `BADGE_LABEL_SHORT`, `useBadgeSettings`, `MAX_CARD_BADGES`, `badgeStyle(`, `ProductBadge` (rename to `MarketplaceBadge`), `use-badge-settings`. Delete `admin-bulk-badges.tsx`. Typecheck must pass.
 
-1. **`src/lib/badge-visibility.tsx`** — Add a `pickPrimaryBadge(product, context, engine, browsePresentation?)` that returns a single `Badge | null` following the unified priority ladder. Fold browse presentation badges (`Recommended`, `Best Value`, `Popular Choice`, `Ready to Ship`) into the same ladder so the browse adapter contract remains untouched but only one wins visually. Keep `useVisibleBadges` for back-compat but have it return at most one badge; deprecate `MAX_VISIBLE_BADGES` usage in cards.
+## Out of scope
+- Backend column removal (keeping `products.featured`, `.staff_pick`, etc. for now — they'll just no longer feed badges).
+- Recommendation scoring rules that internally use `featured`/`bestseller` numeric signals (untouched; presentation-only refactor).
 
-2. **`src/components/site/BrowseCard.tsx`** — Render exactly one top-left capsule from the unified picker. Drop the bottom-row multi-badge strip. Filter `Ready to Ship` out of the image overlay so it can render below price instead. `ⓘ` stays bottom-right.
-
-3. **`src/components/site/ProductCard.tsx`** (need to read first) — Switch its badge slot to the new single-badge picker; add the "Ready to Ship" check row under price when the browse presentation includes it OR the product is in-stock with fast shipping metadata.
-
-4. **`src/lib/browse/`** adapter — No contract change. `presentation.badges` stays an array (frozen contract, additive only), but consumer components pick the highest-priority one. Section surfaces (`surface: "deals"` etc.) already select the correct badge upstream.
-
-5. **Section grids** using `forceBadge` (`products.trending.tsx`, `products.new-arrivals.tsx`, `products.best-sellers.tsx`, Flash Deals section) — no change needed; `forceBadge` already collapses to one.
-
-6. **Remove from card display**: `premium`, `featured`, `staff_pick`, `editors_choice`, `gift_idea`, `fast_selling`, `limited_stock` from the priority ladder used by `pickPrimaryBadge`. These stay computable for admin/analytics but never render as the winning card badge.
-
-### Non-Goals
-
-- No changes to admin badge settings UI.
-- No changes to `computeBadges` core logic or `BadgeSettings` schema.
-- No changes to Recommendation Broker, Marketplace Readiness, or any intelligence module.
-- No changes to `ProductCard`'s image, layout metrics, virtualization, or CLS.
-- Discount `-%` pill stays a no-op (already removed sitewide).
-
-### Verification
-
-- Build passes.
-- Visit `/`, `/deals`, `/products/trending`, `/products/best-sellers`, `/products/new-arrivals`, `/category/<slug>` — confirm exactly one badge per card, correct per-section badge, `Ready to Ship` never on image, `ⓘ` still works.
-- Snapshot check on category grid: no card has >1 image badge.
+## Risk & confirmation
+This deletes ~5 badge types the admin may have real product assignments for. On migration, those `product_badges` rows are removed. Merchandising flags for deprecated badges disappear from the admin UI but remain in the DB. Confirm before I proceed — this is a large, cross-cutting change (~30+ files edited, 2 files deleted, 1 migration).
