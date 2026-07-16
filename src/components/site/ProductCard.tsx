@@ -444,7 +444,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
         >
-          <ProductBadges badges={hideBadges ? [] : badges} />
+          <ProductBadges badge={winningBadge} />
           <WishlistButton slug={product.slug} name={product.name} />
           {/* Variant colour preview — fades a colour's cover image over the
               base image. Overlaid (never swaps the base src) so palette,
