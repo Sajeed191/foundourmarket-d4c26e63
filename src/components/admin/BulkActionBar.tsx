@@ -148,8 +148,9 @@ export function BulkActionBar({ ids, rows, categories, mode = "normal", onDone, 
                   </div>
                 )
               ) : (
-                <FormPane kind={form} categories={categories}
-                  onRun={run} onExport={doExport} />
+                <FormPane kind={form} categories={categories} rows={rows}
+                  onRun={run} onExport={doExport} onDone={onDone} />
+
               )}
             </motion.div>
           </motion.div>
