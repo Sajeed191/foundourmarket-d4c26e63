@@ -16,8 +16,10 @@ import { DiscountBadge } from "@/components/site/DiscountBadge";
 import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { QuickViewDialog } from "@/components/site/QuickViewDialog";
 import { VariantSwatchStrip, type SwatchPreview } from "@/components/site/VariantSwatchStrip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { resizedStorageImage } from "@/lib/storage-image";
 import { formatSold } from "@/lib/format-sold";
+
 
 type ProductCardProps = {
   product: Product;
@@ -39,7 +41,16 @@ type ProductCardProps = {
    * into the single-badge priority ladder — never rendered as extras.
    */
   browseBadges?: readonly string[];
+  /**
+   * Plain-language explanation of why this product surfaced ("Recommended
+   * because …"). When provided AND no `forceBadge`, the marketing badge
+   * becomes the interactive trigger that reveals this sentence in a popover.
+   * Section-forced surfaces (Flash Deals, Best Sellers, …) pass no reason,
+   * so the badge stays presentation-only.
+   */
+  badgeReason?: string;
 };
+
 
 /**
  * Unified card marketing-badge priority. The card renders exactly ONE badge —
@@ -151,25 +162,65 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
   };
 }
 
-function ProductBadgesImpl({ badge }: { badge: CardBadge | null }) {
+function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?: string }) {
   if (!badge) return null;
   // v3 Premium pill: 28-32px tall, 14px horizontal padding, fully rounded,
   // glass background, no emoji, no per-label border color.
   const pillBase =
     "inline-flex h-[28px] sm:h-[32px] max-w-[60%] items-center whitespace-nowrap rounded-full px-3.5 sm:px-4 text-[10.5px] sm:text-[11.5px] font-semibold uppercase leading-none tracking-[0.9px]";
+
+  // Section-forced / no-reason surfaces: badge is presentation only.
+  if (!reason) {
+    return (
+      <div className="absolute left-3 top-3 z-10">
+        <span
+          data-product-badge
+          className={`${pillBase} ${badge.className ?? ""}`}
+          style={badge.style ?? badgeStyle()}
+        >
+          <span className="truncate">{badge.label}</span>
+        </span>
+      </div>
+    );
+  }
+
+  // Intelligence-driven surfaces: badge is the trigger for "Why you're
+  // seeing this". Reuses the existing Popover component — no new dialog.
   return (
     <div className="absolute left-3 top-3 z-10">
-      <span
-        data-product-badge
-        className={`${pillBase} ${badge.className ?? ""}`}
-        style={badge.style ?? badgeStyle()}
-      >
-        <span className="truncate">{badge.label}</span>
-      </span>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            data-product-badge
+            aria-label="Why this product is recommended"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className={`${pillBase} ${badge.className ?? ""} cursor-pointer transition-transform duration-150 active:scale-95`}
+            style={badge.style ?? badgeStyle()}
+          >
+            <span className="truncate">{badge.label}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          className="w-64 text-xs leading-relaxed"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-mono text-[10px] uppercase tracking-widest text-accent mb-1.5">
+            Why you're seeing this
+          </p>
+          <p className="text-foreground/90">{reason}</p>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
 const ProductBadges = memo(ProductBadgesImpl);
+
 
 
 function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
@@ -320,7 +371,7 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
 const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
 
 
-function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false, browseBadges }: ProductCardProps) {
+function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false, browseBadges, badgeReason }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const [preview, setPreview] = useState<SwatchPreview | null>(null);
@@ -428,7 +479,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
         >
-          <ProductBadges badge={winningBadge} />
+          <ProductBadges badge={winningBadge} reason={forceBadge ? undefined : badgeReason} />
           <WishlistButton slug={product.slug} name={product.name} />
           {/* Variant colour preview — fades a colour's cover image over the
               base image. Overlaid (never swaps the base src) so palette,
@@ -567,6 +618,8 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.priority === b.priority &&
     a.highlight === b.highlight &&
     a.hideBadges === b.hideBadges &&
+    a.badgeReason === b.badgeReason &&
+
     // Shallow compare browseBadges array (small, stable ordering upstream).
     (a.browseBadges === b.browseBadges ||
       (Array.isArray(a.browseBadges) && Array.isArray(b.browseBadges) &&
