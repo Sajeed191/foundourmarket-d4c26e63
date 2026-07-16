@@ -373,3 +373,62 @@ function FormPane({ kind, categories, rows, onRun, onExport, onDone }: {
 
   return null;
 }
+
+/** Realtime badge bulk assign/remove — reads catalog live from Badge Manager. */
+function BadgesPane({ rows, onDone }: { rows: SelRow[]; onDone: () => void }) {
+  const { types, map, loading } = useBadgeCatalog();
+  const [busy, setBusy] = useState<string | null>(null);
+  const slugs = rows.map((r) => r.slug).filter((s): s is string => Boolean(s));
+  const active = types.filter((t) => !t.archived).sort((a, b) => b.priority - a.priority);
+
+  async function toggle(id: string, on: boolean) {
+    if (slugs.length === 0) { toast.error("No products selected"); return; }
+    setBusy(`${id}:${on}`);
+    try {
+      if (on) {
+        const n = await bulkAssign(slugs, id);
+        toast.success(`Badge applied to ${n} product${n === 1 ? "" : "s"}`);
+      } else {
+        await bulkUnassign(slugs, id);
+        toast.success(`Badge removed from ${slugs.length} product${slugs.length === 1 ? "" : "s"}`);
+      }
+      onDone();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Action failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (loading) return <div className="grid place-items-center py-6"><Loader2 className="size-4 animate-spin text-accent" /></div>;
+  if (active.length === 0) return <p className="text-sm text-muted-foreground">No badges available. Create one in Badge Manager.</p>;
+
+  return (
+    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+      {active.map((b) => {
+        // Count how many selected products already carry this badge.
+        const assignedCount = slugs.reduce((n, s) => n + ((map.get(s) ?? []).some((x) => x.id === b.id) ? 1 : 0), 0);
+        const allAssigned = assignedCount === slugs.length && slugs.length > 0;
+        return (
+          <div key={b.id} className={cn("flex items-center gap-2 rounded-xl border p-2 transition-colors", b.enabled ? "border-border/50" : "border-dashed border-border/40 opacity-70")}>
+            <ProductBadge label={b.label} className={badgeAnimationClass(b.animation)} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
+                <span className="uppercase tracking-widest">P{b.priority}</span>
+                {!b.enabled && <span className="text-amber-400">inactive</span>}
+                {assignedCount > 0 && <span>· {assignedCount}/{slugs.length} have it</span>}
+              </div>
+            </div>
+            <Button size="sm" variant="outline" disabled={busy !== null || allAssigned || !b.enabled} onClick={() => toggle(b.id, true)}>
+              {busy === `${b.id}:true` ? <Loader2 className="size-3 animate-spin" /> : "Add"}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy !== null || assignedCount === 0} onClick={() => toggle(b.id, false)}>
+              {busy === `${b.id}:false` ? <Loader2 className="size-3 animate-spin" /> : "Remove"}
+            </Button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
