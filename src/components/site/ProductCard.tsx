@@ -657,7 +657,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         )}
 
         {/* Button — sits directly below content, no filler gap. */}
-        <div className="pt-1.5 sm:pt-4">
+        <div className="pt-2.5 sm:pt-5">
           <BuyNowButton product={product} />
         </div>
       </div>
