@@ -926,11 +926,12 @@ function SearchPage() {
       sort,
       (p) => discountPercent(priceOf(p), compareOf(p)) ?? p.discount ?? 0,
       priceOf,
+      flashEndAt,
     );
     const noActive = countActive(currentFilters) === 0;
     const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim() && noActive;
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
-  }, [rawRows, isTrending, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf]);
+  }, [rawRows, isTrending, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf, flashEndAt]);
 
   // Client-side pagination with back-navigation state preservation. The
   // scroll position + visible window are persisted per search key so returning
