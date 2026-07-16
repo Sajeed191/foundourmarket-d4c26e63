@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Loader2, Eye, EyeOff, Archive, Trash2, Copy, FolderTree, Boxes,
   IndianRupee, Tag, Star, Globe, Truck, CalendarClock, Download, RotateCcw,
-  ChevronRight, ArrowLeft, DollarSign, Percent, Flame, TrendingUp, Sparkles, ShoppingBag,
+  ChevronRight, ArrowLeft, DollarSign, Percent, TrendingUp, ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
