@@ -226,25 +226,24 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
 
 function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?: string }) {
   if (!badge) return null;
-  // v3 Premium pill: 28-32px tall, 14px horizontal padding, fully rounded,
-  // glass background, no emoji, no per-label border color.
+  // v4 Premium pill: elegant, compact, corner-anchored. Never dominates the
+  // product image. Compact size on <400px viewports auto-applied via arbitrary
+  // media-query variant. Colors/priority unchanged.
   const pillBase =
-    "inline-flex h-[30px] min-w-[72px] max-w-[160px] items-center justify-center whitespace-nowrap rounded-full py-[7px] px-[14px] text-[12px] font-bold uppercase leading-none tracking-[0.6px] transition-[opacity,transform] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
+    "inline-flex h-[24px] max-[400px]:h-[22px] sm:h-[26px] min-w-[64px] max-w-[110px] max-[400px]:max-w-[95px] w-fit items-center justify-center whitespace-nowrap rounded-full px-[10px] py-[4px] max-[400px]:px-[8px] max-[400px]:py-[3px] text-[11px] max-[400px]:text-[10px] font-semibold uppercase leading-none tracking-[0.4px] transition-[opacity,transform] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
 
-
-
+  const shortLabel = shortBadgeLabel(badge.label);
 
   // Section-forced / no-reason surfaces: badge is presentation only.
   if (!reason) {
     return (
-      <div className="absolute left-3 top-3 z-10">
+      <div className="absolute left-[10px] top-[10px] z-10">
         <span
           data-product-badge
           className={`${pillBase} ${badge.className ?? ""}`}
           style={badge.style ?? badgeStyle(badge.label)}
-
         >
-          <span className="truncate">{badge.label}</span>
+          <span className="truncate">{shortLabel}</span>
         </span>
       </div>
     );
@@ -253,7 +252,7 @@ function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?
   // Intelligence-driven surfaces: badge is the trigger for "Why you're
   // seeing this". Reuses the existing Popover component — no new dialog.
   return (
-    <div className="absolute left-3 top-3 z-10">
+    <div className="absolute left-[10px] top-[10px] z-10">
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -267,7 +266,7 @@ function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?
             className={`${pillBase} ${badge.className ?? ""} cursor-pointer transition-transform duration-150 active:scale-95`}
             style={badge.style ?? badgeStyle(badge.label)}
           >
-            <span className="truncate">{badge.label}</span>
+            <span className="truncate">{shortLabel}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent
