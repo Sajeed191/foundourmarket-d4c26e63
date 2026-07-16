@@ -25,6 +25,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
 import { fetchPublicColorGalleries, type VariantImage } from "@/lib/variant-images";
 import { computeBadges, DEFAULT_BADGE_SETTINGS } from "@/lib/badges";
+import { ProductBadge, ProductBadgeAnchor } from "@/components/ui/ProductBadge";
 import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { recordViewedPrice } from "@/lib/viewed-prices";
@@ -768,44 +769,12 @@ function ProductPage() {
                 )}
                 {/* premium glass overlay gradient */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                {/* badges — max 2 visible, rest collapse into a "+N" pill so
-                    they never overlap or clip on any image */}
-        <div className="absolute top-3.5 left-3.5 flex flex-col items-start gap-2 z-10 max-w-[70%] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 duration-500">
-                  {visibleBadges.map((b) => (
-                    <span
-                      key={b.key}
-                      style={{ width: "fit-content" }}
-                      className={`inline-flex h-7 sm:h-9 max-w-full items-center gap-1.5 sm:gap-2 rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold uppercase leading-none tracking-wide whitespace-nowrap ring-1 ring-black/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] drop-shadow-[0_1px_2px_oklch(0_0_0/0.6)] ${b.className}`}
-                    >
-                      {b.emoji && <span aria-hidden className="shrink-0 text-[11px] sm:text-[13px] leading-none">{b.emoji}</span>}
-                      <span className="whitespace-nowrap">{b.label}</span>
-                    </span>
-                  ))}
-                  {hiddenBadgeCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllBadges(true)}
-                      aria-label={`Show ${hiddenBadgeCount} more badges`}
-                      style={{ width: "fit-content", background: "oklch(0.18 0.01 260 / 0.85)" }}
-                      className="inline-flex h-7 sm:h-9 items-center rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold font-mono uppercase tracking-wide leading-none text-white ring-1 ring-white/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] backdrop-blur-md transition-transform hover:scale-105"
-                    >
-                      +{hiddenBadgeCount}
-                    </button>
-                  )}
-                  {showAllBadges && heroBadges.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllBadges(false)}
-                      aria-label="Show fewer badges"
-                      style={{ width: "fit-content", background: "oklch(0.18 0.01 260 / 0.85)" }}
-                      className="inline-flex h-7 sm:h-9 items-center rounded-full px-2.5 sm:px-4 text-[10px] sm:text-[12px] font-semibold font-mono uppercase tracking-wide leading-none text-white ring-1 ring-white/15 shadow-[0_6px_20px_oklch(0_0_0/0.45)] backdrop-blur-md transition-transform hover:scale-105"
-                    >
-                      Less
-                    </button>
-                  )}
-
-
-                </div>
+                {/* Single canonical badge — same component as Product Cards. */}
+                {heroBadges[0] && (
+                  <ProductBadgeAnchor>
+                    <ProductBadge label={heroBadges[0].label} />
+                  </ProductBadgeAnchor>
+                )}
 
 
 

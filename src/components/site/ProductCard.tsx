@@ -127,79 +127,7 @@ export function productIdentity(product: Product): string {
 const TITLE_CLASS =
   "product-typography product-title-text block h-[2.6em] overflow-hidden break-words text-[14px] font-bold leading-[1.3] text-white sm:text-[16px]";
 
-/**
- * Badge v3 (Premium Marketplace): each label has its own identity — a distinct
- * color, keyed to its purpose — while sharing one capsule shape, weight, and
- * typography so the set still reads as a single system. No emoji, no gradients,
- * no thick borders. The badge whispers; the product image stays the hero.
- */
-const BADGE_SHADOW = "0 2px 8px rgba(0,0,0,0.18)";
-const BADGE_BACKDROP = "blur(10px) saturate(140%)";
-const BADGE_BORDER = "1px solid rgba(255,255,255,0.10)";
-
-/**
- * v4 label shortener: keep labels tight so pills stay under ~35% of image width
- * on mobile. Colors, priority, and selection logic are untouched — only the
- * rendered text is shortened.
- */
-const BADGE_LABEL_SHORT: Record<string, string> = {
-  "BEST SELLER": "BESTSELLER",
-  "FLASH DEAL": "FLASH",
-  "FLASH SALE": "FLASH",
-  "HOT DEAL": "HOT",
-  "BEST VALUE": "VALUE",
-  "NEW ARRIVAL": "NEW",
-  "POPULAR CHOICE": "POPULAR",
-};
-function shortBadgeLabel(label: string): string {
-  return BADGE_LABEL_SHORT[label.trim().toUpperCase()] ?? label;
-}
-
-type BadgePalette = { background: string; color: string; extraShadow?: string };
-type BadgeStyle = CSSProperties & { "--badge-color": string; "--badge-text": string };
-
-const BADGE_PALETTE: Record<string, BadgePalette> = {
-  "FLASH DEAL": { background: "#FF7A00", color: "#111111", extraShadow: "0 0 20px rgba(255,122,0,0.40)" },
-  "FLASH SALE": { background: "#FF7A00", color: "#111111", extraShadow: "0 0 20px rgba(255,122,0,0.40)" },
-  "HOT DEAL": { background: "#F97316", color: "#FFFFFF" },
-  "BEST SELLER": { background: "#FBBF24", color: "#111111" },
-  "BESTSELLER": { background: "#FBBF24", color: "#111111" },
-  "TRENDING": { background: "#2563EB", color: "#FFFFFF" },
-  "NEW": { background: "#10B981", color: "#FFFFFF" },
-  "NEW ARRIVAL": { background: "#10B981", color: "#FFFFFF" },
-  "RECOMMENDED": { background: "#4F46E5", color: "#FFFFFF" },
-  "BEST VALUE": { background: "#7C3AED", color: "#FFFFFF" },
-  "POPULAR": { background: "#0891B2", color: "#FFFFFF" },
-  "POPULAR CHOICE": { background: "#0891B2", color: "#FFFFFF" },
-};
-
-function createBadgeStyle(p: BadgePalette): BadgeStyle {
-  return {
-    "--badge-color": p.background,
-    "--badge-text": p.color,
-    backgroundColor: "var(--badge-color)",
-    color: "var(--badge-text)",
-    backdropFilter: BADGE_BACKDROP,
-    border: BADGE_BORDER,
-    boxShadow: p.extraShadow ? `${BADGE_SHADOW}, ${p.extraShadow}` : BADGE_SHADOW,
-  };
-}
-
-const BADGE_STYLE_REGISTRY = Object.fromEntries(
-  Object.entries(BADGE_PALETTE).map(([label, palette]) => [label, createBadgeStyle(palette)]),
-) as Record<string, BadgeStyle>;
-
-const BADGE_FALLBACK_STYLE: BadgeStyle = createBadgeStyle({
-  background: "rgba(20,20,20,0.82)",
-  color: "#FFFFFF",
-});
-
-function badgeStyle(label: string): BadgeStyle {
-  const key = label.trim().toUpperCase();
-  return BADGE_STYLE_REGISTRY[key] ?? BADGE_FALLBACK_STYLE;
-}
-
-
+import { ProductBadge, ProductBadgeAnchor, badgeStyle } from "@/components/ui/ProductBadge";
 
 /** Detects whether an admin-assigned badge is a Flash Deal / Hot Deal promo. */
 function assignedFlashKey(b: RenderBadge): "flash_deal" | "hot_deal" | null {
@@ -226,48 +154,33 @@ function toAssignedBadge(b: RenderBadge): CardBadge {
 
 function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?: string }) {
   if (!badge) return null;
-  // v4 Premium pill: elegant, compact, corner-anchored. Never dominates the
-  // product image. Compact size on <400px viewports auto-applied via arbitrary
-  // media-query variant. Colors/priority unchanged.
-  const pillBase =
-    "inline-flex h-[24px] max-[400px]:h-[22px] sm:h-[26px] min-w-[64px] max-w-[110px] max-[400px]:max-w-[95px] w-fit items-center justify-center whitespace-nowrap rounded-full px-[10px] py-[4px] max-[400px]:px-[8px] max-[400px]:py-[3px] text-[11px] max-[400px]:text-[10px] font-semibold uppercase leading-none tracking-[0.4px] transition-[opacity,transform] animate-in fade-in slide-in-from-top-1 zoom-in-95 duration-150";
-
-  const shortLabel = shortBadgeLabel(badge.label);
 
   // Section-forced / no-reason surfaces: badge is presentation only.
   if (!reason) {
     return (
-      <div className="absolute left-[10px] top-[10px] z-10">
-        <span
-          data-product-badge
-          className={`${pillBase} ${badge.className ?? ""}`}
-          style={badge.style ?? badgeStyle(badge.label)}
-        >
-          <span className="truncate">{shortLabel}</span>
-        </span>
-      </div>
+      <ProductBadgeAnchor>
+        <ProductBadge label={badge.label} className={badge.className ?? ""} />
+      </ProductBadgeAnchor>
     );
   }
 
   // Intelligence-driven surfaces: badge is the trigger for "Why you're
   // seeing this". Reuses the existing Popover component — no new dialog.
   return (
-    <div className="absolute left-[10px] top-[10px] z-10">
+    <ProductBadgeAnchor>
       <Popover>
         <PopoverTrigger asChild>
-          <button
+          <ProductBadge
+            label={badge.label}
+            as="button"
             type="button"
-            data-product-badge
             aria-label="Why this product is recommended"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               e.stopPropagation();
             }}
-            className={`${pillBase} ${badge.className ?? ""} cursor-pointer transition-transform duration-150 active:scale-95`}
-            style={badge.style ?? badgeStyle(badge.label)}
-          >
-            <span className="truncate">{shortLabel}</span>
-          </button>
+            className={`${badge.className ?? ""} cursor-pointer active:scale-95`}
+          />
         </PopoverTrigger>
         <PopoverContent
           side="bottom"
@@ -281,7 +194,7 @@ function ProductBadgesImpl({ badge, reason }: { badge: CardBadge | null; reason?
           <p className="text-foreground/90">{reason}</p>
         </PopoverContent>
       </Popover>
-    </div>
+    </ProductBadgeAnchor>
   );
 }
 const ProductBadges = memo(ProductBadgesImpl);
