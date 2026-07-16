@@ -133,24 +133,26 @@ const TITLE_CLASS =
  * typography so the set still reads as a single system. No emoji, no gradients,
  * no thick borders. The badge whispers; the product image stays the hero.
  */
-const BADGE_SHADOW = "0 4px 12px rgba(0,0,0,0.18)";
-const BADGE_BACKDROP = "blur(8px) saturate(140%)";
+const BADGE_SHADOW =
+  "0 6px 16px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04)";
+const BADGE_BACKDROP = "blur(10px) saturate(140%)";
+const BADGE_BORDER = "1px solid rgba(255,255,255,0.10)";
 
 type BadgePalette = { background: string; color: string; extraShadow?: string };
 
 const BADGE_PALETTE: Record<string, BadgePalette> = {
-  "FLASH DEAL": { background: "#FF6A00", color: "#111111", extraShadow: "0 0 18px rgba(255,106,0,0.35)" },
-  "FLASH SALE": { background: "#FF6A00", color: "#111111", extraShadow: "0 0 18px rgba(255,106,0,0.35)" },
-  "HOT DEAL": { background: "#C2410C", color: "#FFFFFF" },
-  "BEST SELLER": { background: "#C9A24A", color: "#1A1A1A" },
-  "BESTSELLER": { background: "#C9A24A", color: "#1A1A1A" },
-  "TRENDING": { background: "#1E3A8A", color: "#FFFFFF" },
-  "NEW": { background: "#059669", color: "#FFFFFF" },
-  "NEW ARRIVAL": { background: "#059669", color: "#FFFFFF" },
+  "FLASH DEAL": { background: "#FF7A00", color: "#111111", extraShadow: "0 0 20px rgba(255,122,0,0.40)" },
+  "FLASH SALE": { background: "#FF7A00", color: "#111111", extraShadow: "0 0 20px rgba(255,122,0,0.40)" },
+  "HOT DEAL": { background: "#F97316", color: "#FFFFFF" },
+  "BEST SELLER": { background: "#FBBF24", color: "#111111" },
+  "BESTSELLER": { background: "#FBBF24", color: "#111111" },
+  "TRENDING": { background: "#2563EB", color: "#FFFFFF" },
+  "NEW": { background: "#10B981", color: "#FFFFFF" },
+  "NEW ARRIVAL": { background: "#10B981", color: "#FFFFFF" },
   "RECOMMENDED": { background: "#4F46E5", color: "#FFFFFF" },
   "BEST VALUE": { background: "#7C3AED", color: "#FFFFFF" },
-  "POPULAR": { background: "#0D9488", color: "#FFFFFF" },
-  "POPULAR CHOICE": { background: "#0D9488", color: "#FFFFFF" },
+  "POPULAR": { background: "#0891B2", color: "#FFFFFF" },
+  "POPULAR CHOICE": { background: "#0891B2", color: "#FFFFFF" },
 };
 
 function badgeStyle(label: string): CSSProperties {
@@ -158,10 +160,10 @@ function badgeStyle(label: string): CSSProperties {
   const p = BADGE_PALETTE[key];
   if (!p) {
     return {
-      background: "rgba(20,20,20,0.72)",
+      background: "rgba(20,20,20,0.82)",
       color: "#FFFFFF",
       backdropFilter: BADGE_BACKDROP,
-      border: "1px solid rgba(255,255,255,0.08)",
+      border: BADGE_BORDER,
       boxShadow: BADGE_SHADOW,
     };
   }
@@ -169,9 +171,11 @@ function badgeStyle(label: string): CSSProperties {
     background: p.background,
     color: p.color,
     backdropFilter: BADGE_BACKDROP,
+    border: BADGE_BORDER,
     boxShadow: p.extraShadow ? `${BADGE_SHADOW}, ${p.extraShadow}` : BADGE_SHADOW,
   };
 }
+
 
 
 /** Detects whether an admin-assigned badge is a Flash Deal / Hot Deal promo. */
