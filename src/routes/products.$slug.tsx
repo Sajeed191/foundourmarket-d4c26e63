@@ -670,7 +670,7 @@ function ProductPage() {
                 const next = dx < 0 ? activeImg + 1 : activeImg - 1;
                 setActiveImg(Math.max(0, Math.min(galleryMedia.length - 1, next)));
               }}
-              className="relative w-full aspect-[4/5] sm:aspect-square sm:rounded-sm overflow-hidden bg-white/[0.02] group touch-pan-y"
+              className="relative w-full aspect-[4/5] sm:aspect-square overflow-hidden bg-white/[0.02] group touch-pan-y rounded-none sm:rounded-b-md"
             >
 
               {activeMedia?.kind === "video" ? (
