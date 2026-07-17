@@ -1109,68 +1109,36 @@ function ProductPage() {
         </div>
       </LazyMount>
 
-      <PDPRecommendations
-        product={product}
-        alsoBoughtSlugs={alsoViewed}
-      />
-
-      <LazyMount minHeight={160}>
-        <RecommendedForYou excludeSlug={product.slug} />
-      </LazyMount>
-      <LazyMount minHeight={160}>
-        <RecentlyViewed excludeSlug={product.slug} />
-      </LazyMount>
-      <LazyMount minHeight={160}>
-        <ProductComparison product={product} />
-      </LazyMount>
-
-      <LazyMount minHeight={120}>
-        <TrustGuarantee />
-      </LazyMount>
-      
-
-      {/* Sticky mobile purchase dock — only mounts once the page is fully
-          initialized and the user has scrolled past the hero. */}
+      {/* Sticky mobile purchase dock — compact: Price + Add to Cart + Buy Now. */}
       {showPurchaseDock && (
-      <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out will-change-transform" style={{ bottom: "var(--product-dock-bottom)", transform: navHidden ? "translateY(calc(var(--product-dock-bottom) - var(--mobile-safe-bottom)))" : "translateY(0)", transition: "transform 200ms ease-out", transitionDuration: "200ms" }}>
-        <div className="flex h-full items-center gap-2.5 rounded-[24px] border border-white/10 px-3" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
-          <button
-            onClick={() => toggleWishlist(product.slug)}
-            aria-label={inWishlist(product.slug) ? "Remove from wishlist" : "Add to wishlist"}
-            className={`size-12 grid place-items-center rounded-full border shrink-0 transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/20 border-accent/50 text-accent" : "bg-white/[0.03] border-white/10 text-white/60 hover:text-accent"}`}
-          >
-            <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
-          </button>
-          <img
-            src={thumbDisplaySrc(activeMedia?.url || product.image)}
-            alt=""
-            aria-hidden
-            className="size-12 shrink-0 rounded-xl object-cover border border-white/10"
-          />
-          <div className="flex flex-col justify-center leading-none min-w-0 shrink">
-            <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground/70">Total</span>
+      <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out will-change-transform" style={{ bottom: "var(--product-dock-bottom)", transform: navHidden ? "translateY(calc(var(--product-dock-bottom) - var(--mobile-safe-bottom)))" : "translateY(0)", transition: "transform 200ms ease-out" }}>
+        <div className="flex h-full items-center gap-2 rounded-[24px] border border-white/10 px-3" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
+          <div className="flex flex-col justify-center leading-none min-w-0 pr-1">
             {currencyReady ? (
-              <span className="flex items-baseline gap-1.5">
-                <span className="fom-price-current text-base font-display whitespace-nowrap">{format(effectivePrice * Math.max(1, cartQty))}</span>
-              </span>
+              <>
+                <span className="fom-price-current text-[17px] font-display whitespace-nowrap leading-tight">{format(effectivePrice * Math.max(1, cartQty))}</span>
+                {originalPrice && originalPrice > effectivePrice && (
+                  <span className="text-[11px] font-mono line-through text-muted-foreground/70 leading-tight">{format(originalPrice * Math.max(1, cartQty))}</span>
+                )}
+              </>
             ) : (
-              <span aria-hidden className="mt-0.5 h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
+              <span aria-hidden className="h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
             )}
           </div>
-
           <button
             onClick={handleAdd}
             disabled={isOOS}
-            className="size-12 shrink-0 grid place-items-center bg-white/[0.04] border border-white/10 text-white/70 rounded-full transition-all active:scale-90 disabled:opacity-40 hover:text-accent"
+            className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-transparent text-foreground font-semibold text-[13px] transition-all active:scale-[0.97] disabled:opacity-40"
             aria-label={isOOS ? "Notify me" : "Add to cart"}
           >
-            <ShoppingBagIcon className="size-[18px]" />
+            <ShoppingCart className="size-4" strokeWidth={2.5} />
+            <span>Add</span>
           </button>
           <Link
             to="/cart"
             onClick={handleBuyNow}
             aria-disabled={isOOS}
-            className={`flex-1 grid place-items-center min-h-[52px] bg-accent text-accent-foreground font-bold rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
+            className={`flex-1 grid place-items-center min-h-[48px] bg-accent text-accent-foreground font-bold rounded-2xl text-[13px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
           >
             {isOOS ? "Notify Me" : "Buy Now"}
           </Link>
