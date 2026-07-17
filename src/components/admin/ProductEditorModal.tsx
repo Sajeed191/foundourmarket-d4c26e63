@@ -823,7 +823,14 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
               giftIdea: form.gift_idea, recommended: form.recommended, homepageHero: form.homepage_hero,
               premium: false, fastSelling: false, editorsChoice: false,
             } as unknown as Product;
-            const badges = computeBadges(previewProduct, DEFAULT_BADGE_SETTINGS, MAX_CARD_BADGES);
+            const badges = previewAssignedBadges.map((b) => ({
+              key: b.badgeKey,
+              label: b.label,
+              emoji: b.emoji,
+              backgroundColor: b.backgroundColor || b.color,
+              textColor: b.textColor,
+              borderColor: b.borderColor,
+            }));
             const cardWidth = previewDevice === "mobile" ? "w-44" : "w-64";
 
             return (
