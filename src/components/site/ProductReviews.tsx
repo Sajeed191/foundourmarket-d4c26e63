@@ -444,20 +444,13 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const visible = sorted.slice(0, visibleCount);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-14 sm:pb-20 border-t border-border/60">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-display tracking-tight">Customer Reviews</h2>
-
+    <section className="max-w-7xl mx-auto pt-2 pb-14 sm:pb-20">
+      {trust !== null && hasReviews && (
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.07] px-3.5 py-1.5">
+          <ShieldCheck className="size-4 text-accent" />
+          <span className="text-[11px] font-mono uppercase tracking-widest text-accent">Trust score {trust}/100</span>
         </div>
-        {trust !== null && hasReviews && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.07] px-3.5 py-2">
-            <ShieldCheck className="size-4 text-accent" />
-            <span className="text-xs font-mono uppercase tracking-widest text-accent">Trust score {trust}/100</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {loading ? (
         <ReviewsSkeleton />
