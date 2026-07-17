@@ -788,7 +788,7 @@ function ProductPage() {
                     onClick={() => setActiveImg(i)}
                     aria-label={item.kind === "video" ? "Play video" : `View image ${i + 1}`}
                     aria-current={i === activeImg}
-                    className={`relative size-16 shrink-0 rounded-2xl overflow-hidden transition-all duration-200 active:scale-95 bg-white/[0.03] ${i === activeImg ? "ring-2 ring-accent opacity-100" : "opacity-55 hover:opacity-100"}`}
+                    className={`relative size-16 shrink-0 rounded-sm overflow-hidden transition-all duration-200 active:scale-95 bg-white/[0.03] ${i === activeImg ? "ring-2 ring-accent opacity-100" : "opacity-55 hover:opacity-100"}`}
                   >
                     {item.kind === "video" ? (
                       item.poster ? (
