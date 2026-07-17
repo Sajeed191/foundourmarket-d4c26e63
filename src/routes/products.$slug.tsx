@@ -241,12 +241,6 @@ function ProductPage() {
   // element's viewport visibility (only one purchase section shows at a time).
   const inlinePurchaseRef = useRef<HTMLDivElement>(null);
   const [titleExpanded, setTitleExpanded] = useState(false);
-  const [showAllBadges, setShowAllBadges] = useState(false);
-  // Single-open accordion group for the detail sections below the fold.
-  const [openSection, setOpenSection] = useState<string | null>("specs");
-  const toggleSection = (id: string) => setOpenSection((cur) => (cur === id ? null : id));
-  // Premium Information Hub — one tabbed card for Delivery / Offers / Seller / Warranty.
-  const [infoTab, setInfoTab] = useState<"delivery" | "offers" | "seller" | "warranty">("delivery");
 
 
 
