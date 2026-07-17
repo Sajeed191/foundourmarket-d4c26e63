@@ -15,7 +15,6 @@ import { useCart } from "@/lib/cart";
 import { useBuyNow } from "@/lib/use-buy-now";
 import { useLayoutMetrics } from "@/lib/layout-metrics";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
-import { RelatedProducts } from "@/components/site/RelatedProducts";
 
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
@@ -26,13 +25,8 @@ import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent
 import { fetchPublicColorGalleries, type VariantImage } from "@/lib/variant-images";
 import { useProductBadges } from "@/lib/use-product-badges";
 import { ProductBadge, ProductBadgeAnchor } from "@/components/ui/ProductBadge";
-import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import { recordEvent, fetchFBT, fetchAlsoViewed } from "@/lib/personalization";
 import { recordViewedPrice } from "@/lib/viewed-prices";
-import { RecommendationStrip } from "@/components/site/RecommendationStrip";
-import { RecommendedForYou } from "@/components/site/RecommendedForYou";
-import { RecentlyViewed } from "@/components/site/RecentlyViewed";
-import { PDPRecommendations } from "@/components/site/PDPRecommendations";
 const PDPRelationshipSections = lazy(() =>
   import("@/components/site/PDPRelationshipSections").then((m) => ({
     default: m.PDPRelationshipSections,
@@ -53,10 +47,7 @@ import { resizedStorageImage } from "@/lib/storage-image";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
-import { ProductInfoPanel } from "@/components/site/ProductInfoPanel";
-import { TrustGuarantee } from "@/components/site/ProductTrustBlocks";
 import { formatSold } from "@/lib/format-sold";
-import { SellerTrustCard, ProductComparison } from "@/components/site/ProductSellerTrust";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/products/$slug")({
