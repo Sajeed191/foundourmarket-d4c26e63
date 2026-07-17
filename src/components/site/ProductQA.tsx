@@ -195,16 +195,12 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     : items;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-border">
-      <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
-        <div>
-          
-          <h2 className="text-2xl sm:text-3xl font-display tracking-tight inline-flex items-center gap-3">
-            <MessageCircleQuestion className="size-6 text-accent" /> Questions & Answers
-          </h2>
+    <section className="max-w-7xl mx-auto pt-2 pb-16">
+      {items.length > 0 && (
+        <div className="mb-6 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+          {items.length} {items.length === 1 ? "question" : "questions"} · {answeredCount} answered
         </div>
-        <span className="text-xs font-mono text-muted-foreground">{items.length} {items.length === 1 ? "question" : "questions"} · {answeredCount} answered</span>
-      </div>
+      )}
 
       <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-8">
         <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Ask a question</label>

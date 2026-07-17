@@ -670,7 +670,7 @@ function ProductPage() {
                 const next = dx < 0 ? activeImg + 1 : activeImg - 1;
                 setActiveImg(Math.max(0, Math.min(galleryMedia.length - 1, next)));
               }}
-              className="relative w-full aspect-[4/5] sm:aspect-square sm:rounded-sm overflow-hidden bg-white/[0.02] group touch-pan-y"
+              className="relative w-full aspect-[4/5] sm:aspect-square overflow-hidden bg-white/[0.02] group touch-pan-y rounded-none sm:rounded-b-md"
             >
 
               {activeMedia?.kind === "video" ? (
@@ -973,12 +973,12 @@ function ProductPage() {
               })}
             </div>
 
-            {/* Description — premium heading with accent line */}
-            <section className="mt-12">
-              <PdpSectionHeading title="Description" eyebrow="About this product" />
+            {/* Product Overview — description component owns its own subsection titles */}
+            <section className="mt-14">
+              <PdpSectionHeading title="Product Overview" subtitle="Everything you need to know" />
               <ProductDescription description={product.description} />
               {product.features?.length > 0 && (
-                <ul className="mt-4 space-y-2">
+                <ul className="mt-6 space-y-2.5">
                   {product.features.map((feat: string, i: number) => (
                     <li key={i} className="flex items-start gap-2.5 text-[15px] text-muted-foreground leading-relaxed">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
@@ -989,13 +989,13 @@ function ProductPage() {
               )}
             </section>
 
-            {/* Specifications — clean divided table with premium heading */}
+            {/* Specifications — only when description didn't already render a specs section */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <section className="mt-12">
-                <PdpSectionHeading title="Specifications" eyebrow="Technical details" />
+              <section className="mt-14">
+                <PdpSectionHeading title="Specifications" subtitle="Technical details at a glance" />
                 <dl className="divide-y divide-border/50">
                   {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
-                    <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3 text-[14px]">
+                    <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3.5 text-[14px]">
                       <dt className="text-muted-foreground">{k}</dt>
                       <dd className="text-foreground">{v}</dd>
                     </div>
@@ -1033,14 +1033,14 @@ function ProductPage() {
       )}
 
       <LazyMount minHeight={120} className="scroll-mt-24" id="reviews">
-        <div data-product-reviews className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-          <PdpSectionHeading title="Customer Reviews" eyebrow="What buyers say" />
+        <div data-product-reviews className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+          <PdpSectionHeading title="Customer Reviews" subtitle="Real feedback from real shoppers" />
           <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
         </div>
       </LazyMount>
       <LazyMount minHeight={120} className="scroll-mt-24" id="questions">
-        <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-          <PdpSectionHeading title="Questions & Answers" eyebrow="Ask the community" />
+        <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+          <PdpSectionHeading title="Questions & Answers" subtitle="Ask anything about this product" />
           <ProductQA productSlug={product.slug} />
         </div>
       </LazyMount>
@@ -1089,18 +1089,21 @@ function ProductPage() {
   );
 }
 
-function PdpSectionHeading({ title, eyebrow }: { title: string; eyebrow?: string }) {
+function PdpSectionHeading({ title, subtitle, eyebrow }: { title: string; subtitle?: string; eyebrow?: string }) {
   return (
-    <div className="mb-6 flex items-center gap-3">
-      <span aria-hidden className="h-6 w-[3px] rounded-full bg-accent" />
-      <div className="flex flex-col leading-tight">
+    <div className="mb-8 sm:mb-10">
+      <div className="flex items-center gap-2.5">
+        <span aria-hidden className="size-1.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)]" />
         {eyebrow && (
-          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-accent/80">
             {eyebrow}
           </span>
         )}
-        <h2 className="text-[20px] sm:text-[22px] font-semibold tracking-tight">{title}</h2>
       </div>
+      <h2 className="mt-2 text-[22px] sm:text-[26px] font-semibold tracking-tight text-foreground">{title}</h2>
+      {subtitle && (
+        <p className="mt-1.5 text-[13px] sm:text-[14px] text-muted-foreground/90 leading-relaxed">{subtitle}</p>
+      )}
     </div>
   );
 }
