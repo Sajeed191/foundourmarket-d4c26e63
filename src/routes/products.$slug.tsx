@@ -661,8 +661,18 @@ function ProductPage() {
           <div className="lg:sticky lg:top-24 lg:self-start -mx-4 sm:mx-0">
             <div
               data-product-image
-              className="relative w-full aspect-[4/5] sm:aspect-square sm:rounded-3xl overflow-hidden bg-white/[0.02] group"
+              onTouchStart={(e) => { (e.currentTarget as unknown as { _sx: number })._sx = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                const start = (e.currentTarget as unknown as { _sx?: number })._sx;
+                if (start == null || galleryMedia.length < 2) return;
+                const dx = e.changedTouches[0].clientX - start;
+                if (Math.abs(dx) < 40) return;
+                const next = dx < 0 ? activeImg + 1 : activeImg - 1;
+                setActiveImg(Math.max(0, Math.min(galleryMedia.length - 1, next)));
+              }}
+              className="relative w-full aspect-[4/5] sm:aspect-square sm:rounded-sm overflow-hidden bg-white/[0.02] group touch-pan-y"
             >
+
               {activeMedia?.kind === "video" ? (
                 <video
                   key={activeMedia.id}
