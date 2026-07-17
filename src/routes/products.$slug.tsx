@@ -653,32 +653,8 @@ function ProductPage() {
   return (
     <>
       <div data-product-page data-product-phase="final" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-6 product-page-clearance sm:pb-24 lg:pb-16">
-        {/* Breadcrumb — quiet, single line */}
-        <nav aria-label="Breadcrumb" className="text-[11px] text-muted-foreground/70 mb-4 sm:mb-6 truncate">
-          <Link to="/" className="hover:text-foreground transition-colors">Shop</Link>
-          {breadcrumbCat && breadcrumbParent && (
-            <>
-              <span className="mx-2 text-muted-foreground/40">/</span>
-              <Link to="/category/$slug" params={{ slug: breadcrumbParent.slug }} className="hover:text-foreground transition-colors">{breadcrumbParent.name}</Link>
-              <span className="mx-2 text-muted-foreground/40">/</span>
-              <Link to="/category/$main/$sub" params={{ main: breadcrumbParent.slug, sub: breadcrumbCat.slug }} className="hover:text-foreground transition-colors">{breadcrumbCat.name}</Link>
-            </>
-          )}
-          {breadcrumbCat && !breadcrumbParent && (
-            <>
-              <span className="mx-2 text-muted-foreground/40">/</span>
-              <Link to="/category/$slug" params={{ slug: breadcrumbCat.slug }} className="hover:text-foreground transition-colors">{breadcrumbCat.name}</Link>
-            </>
-          )}
-          {!breadcrumbCat && (
-            <>
-              <span className="mx-2 text-muted-foreground/40">/</span>
-              <Link to="/category/$slug" params={{ slug: product.category }} className="hover:text-foreground transition-colors capitalize">{product.category}</Link>
-            </>
-          )}
-          <span className="mx-2 text-muted-foreground/40">/</span>
-          <span className="text-foreground/80">{product.name}</span>
-        </nav>
+        {/* Breadcrumb removed for v5.1 — gallery leads the page. */}
+
 
         <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
           {/* ─────── Gallery — edge-to-edge on mobile, no card ─────── */}
