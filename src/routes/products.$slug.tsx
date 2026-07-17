@@ -743,22 +743,25 @@ function ProductPage() {
                 </span>
               )}
 
-              {/* Image indicator — minimalist dots (mobile-first pattern) */}
+              {/* Image indicator — dots + "1/N" counter */}
               {galleryMedia.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/35 backdrop-blur-md px-2.5 py-1.5">
-                  {galleryMedia.slice(0, 8).map((m, i) => (
-                    <button
-                      key={m.id}
-                      onClick={() => setActiveImg(i)}
-                      aria-label={`View image ${i + 1}`}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${i === activeImg ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
-                    />
-                  ))}
-                  {galleryMedia.length > 8 && (
-                    <span className="ml-1 text-[10px] font-mono text-white/70 tabular-nums">+{galleryMedia.length - 8}</span>
-                  )}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md px-3 py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    {galleryMedia.slice(0, 6).map((m, i) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setActiveImg(i)}
+                        aria-label={`View image ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-200 ${i === activeImg ? "w-5 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-mono text-white/80 tabular-nums pl-1 border-l border-white/20">
+                    {activeImg + 1}/{galleryMedia.length}
+                  </span>
                 </div>
               )}
+
 
               {isAdmin && (
                 <Suspense fallback={null}>
