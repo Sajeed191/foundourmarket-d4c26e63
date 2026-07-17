@@ -973,29 +973,15 @@ function ProductPage() {
               })}
             </div>
 
-            {/* Highlight chips — subtle, low contrast */}
-            {highlightChips.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-2">
-                {highlightChips.map((c, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center rounded-full bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 text-[12px] text-foreground/80"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Description — 18px heading, no card, collapse handled inside */}
-            <section className="mt-10">
-              <h2 className="mb-4 text-[18px] font-semibold tracking-tight">Description</h2>
+            {/* Description — premium heading with accent line */}
+            <section className="mt-12">
+              <PdpSectionHeading title="Description" eyebrow="About this product" />
               <ProductDescription description={product.description} />
               {product.features?.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {product.features.map((feat: string, i: number) => (
                     <li key={i} className="flex items-start gap-2.5 text-[15px] text-muted-foreground leading-relaxed">
-                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -1003,10 +989,10 @@ function ProductPage() {
               )}
             </section>
 
-            {/* Specifications — clean divided table, no card */}
+            {/* Specifications — clean divided table with premium heading */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <section className="mt-10">
-                <h2 className="mb-4 text-[18px] font-semibold tracking-tight">Specifications</h2>
+              <section className="mt-12">
+                <PdpSectionHeading title="Specifications" eyebrow="Technical details" />
                 <dl className="divide-y divide-border/50">
                   {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
                     <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3 text-[14px]">
@@ -1017,6 +1003,7 @@ function ProductPage() {
                 </dl>
               </section>
             )}
+
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />
           </div>
