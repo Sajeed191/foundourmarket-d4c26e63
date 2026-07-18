@@ -825,32 +825,30 @@ function PremiumSupportCard({
       whileHover={lowMotion ? undefined : { y: -2 }}
       whileTap={lowMotion ? undefined : { scale: 0.99 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={`group relative h-full flex flex-col text-left rounded-[24px] p-4 sm:p-5 bg-white/[0.02] border border-white/[0.06] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.4)] transition-[border-color,box-shadow] duration-200 ${t.border} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50`}
+      className={`group relative h-full flex flex-col text-left rounded-[22px] p-3.5 sm:p-5 bg-white/[0.02] border border-white/[0.06] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.4)] transition-[border-color,box-shadow] duration-200 ${t.border} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50`}
     >
-      {/* Header: icon + title/desc */}
-      <div className="flex items-start gap-3">
-        <span aria-hidden className={`grid place-items-center size-12 shrink-0 rounded-2xl ring-1 ${t.text} ${t.ring} ${t.bg} transition-[transform,box-shadow] duration-200 group-hover:scale-[1.03] ${t.glow}`}>
-          <Icon className="size-[22px]" strokeWidth={1.7} />
+      {/* Header: icon row + title, desc spans full width */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <span aria-hidden className={`grid place-items-center size-10 sm:size-12 shrink-0 rounded-[14px] sm:rounded-2xl ring-1 ${t.text} ${t.ring} ${t.bg} transition-[transform,box-shadow] duration-200 group-hover:scale-[1.03] ${t.glow}`}>
+          <Icon className="size-[18px] sm:size-[22px]" strokeWidth={1.7} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold leading-tight tracking-tight text-foreground">{title}</p>
-          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{desc}</p>
-        </div>
+        <p className="min-w-0 flex-1 text-[13px] sm:text-[15px] font-semibold leading-tight tracking-tight text-foreground truncate">{title}</p>
       </div>
+      <p className="mt-2 text-[11px] sm:text-[12px] leading-snug text-muted-foreground line-clamp-2">{desc}</p>
 
       {/* Divider */}
-      <div className="my-4 h-px w-full bg-white/[0.06]" />
+      <div className="my-3 sm:my-4 h-px w-full bg-white/[0.06]" />
 
       {/* Metadata rows */}
       {rows && rows.length > 0 && (
         <ul className="space-y-2">
           {rows.map((r) => (
-            <li key={r.label} className="flex items-center justify-between text-[12px]">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <r.icon className="size-3.5" strokeWidth={1.6} />
-                <span className="text-foreground/85">{r.label}</span>
+            <li key={r.label} className="flex items-center justify-between text-[11.5px] sm:text-[12px] gap-2">
+              <span className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground min-w-0">
+                <r.icon className="size-3.5 shrink-0" strokeWidth={1.6} />
+                <span className="text-foreground/85 truncate">{r.label}</span>
               </span>
-              <span className={`font-medium ${r.valueClass ?? "text-foreground"}`}>{r.value}</span>
+              <span className={`font-medium whitespace-nowrap ${r.valueClass ?? "text-foreground"}`}>{r.value}</span>
             </li>
           ))}
         </ul>
@@ -858,9 +856,9 @@ function PremiumSupportCard({
 
       {/* Chips row */}
       {chips && chips.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
           {chips.map((c) => (
-            <span key={c} className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10.5px] font-medium text-foreground/80">
+            <span key={c} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-foreground/80">
               {c}
             </span>
           ))}
@@ -869,12 +867,12 @@ function PremiumSupportCard({
 
       {/* Pills grid (contact channels) */}
       {pills && pills.length > 0 && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
           {pills.map((p) => {
             const pt = TONE[p.tone];
             return (
-              <span key={p.label} className={`flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2 text-[11.5px] font-medium ${pt.text}`}>
-                <p.icon className="size-3.5" strokeWidth={1.7} />
+              <span key={p.label} className="flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] px-1.5 py-1.5 text-[10.5px] font-medium whitespace-nowrap">
+                <p.icon className={`size-3 shrink-0 ${pt.text}`} strokeWidth={1.8} />
                 <span className="text-foreground/90">{p.label}</span>
               </span>
             );
@@ -883,7 +881,7 @@ function PremiumSupportCard({
       )}
 
       {/* CTA */}
-      <span className={`mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl border ${t.ctaBorder} ${t.ctaHover} px-3 py-2 text-[12.5px] font-semibold transition-colors`}>
+      <span className={`mt-3 sm:mt-4 inline-flex items-center justify-center gap-1 rounded-lg border ${t.ctaBorder} ${t.ctaHover} px-2.5 py-1.5 text-[11.5px] sm:text-[12.5px] font-semibold transition-colors whitespace-nowrap`}>
         {cta}
         <ChevronRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
       </span>
