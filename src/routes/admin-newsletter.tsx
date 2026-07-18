@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { NewsletterSecurityPanel } from "@/components/admin/NewsletterSecurityPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin-newsletter")({
@@ -570,6 +571,8 @@ function NewsletterAdmin() {
           </>
         )}
       </div>
+
+      <NewsletterSecurityPanel />
 
       {/* Audit log — collapsible, lazy-loaded */}
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02]">
