@@ -25,7 +25,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
       GET: async ({ request }) => {
         const url = new URL(request.url)
         const token = (url.searchParams.get('token') ?? '').trim()
-        if (!token || token.length < 16 || token.length > 128) done('invalid')
+        if (!token || token.length < 16 || token.length > 128) return done('invalid')
 
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
 
@@ -35,7 +35,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
           .eq('verification_token', token)
           .maybeSingle()
 
-        if (!row) done('invalid')
+        if (!row) return done('invalid')
         const r = row as any
 
         if (r.status === 'subscribed' && r.verified_at) {
@@ -44,7 +44,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
         }
 
         const expiresAt = r.verification_expires_at ? new Date(r.verification_expires_at) : null
-        if (!expiresAt || expiresAt.getTime() < Date.now()) done('expired')
+        if (!expiresAt || expiresAt.getTime() < Date.now()) return done('expired')
 
         const nowIso = new Date().toISOString()
         const { error: updateErr } = await supabaseAdmin
@@ -58,7 +58,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
           } as never)
           .eq('id', r.id)
 
-        if (updateErr) done('invalid')
+        if (updateErr) return done('invalid')
 
         try {
           await supabaseAdmin.from('newsletter_audit_log').insert({
