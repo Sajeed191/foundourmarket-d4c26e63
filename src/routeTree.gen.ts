@@ -178,6 +178,7 @@ import { Route as ApiPublicWebhooksCourierRouteImport } from './routes/api/publi
 import { Route as ApiPublicTrackOpenRouteImport } from './routes/api/public/track.open'
 import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/track.click'
 import { Route as ApiPublicSupportInboundEmailRouteImport } from './routes/api/public/support/inbound-email'
+import { Route as ApiPublicNewsletterVerifyRouteImport } from './routes/api/public/newsletter/verify'
 import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 import { Route as ApiPublicHooksRecsRecomputeRouteImport } from './routes/api/public/hooks/recs-recompute'
 import { Route as AccountSupportTicketTicketIdRouteImport } from './routes/account_.support_.ticket.$ticketId'
@@ -1050,6 +1051,12 @@ const ApiPublicSupportInboundEmailRoute =
     path: '/api/public/support/inbound-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicNewsletterVerifyRoute =
+  ApiPublicNewsletterVerifyRouteImport.update({
+    id: '/api/public/newsletter/verify',
+    path: '/api/public/newsletter/verify',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNewsletterSubscribeRoute =
   ApiPublicNewsletterSubscribeRouteImport.update({
     id: '/api/public/newsletter/subscribe',
@@ -1233,6 +1240,7 @@ export interface FileRoutesByFullPath {
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1406,6 +1414,7 @@ export interface FileRoutesByTo {
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1581,6 +1590,7 @@ export interface FileRoutesById {
   '/account_/support_/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1757,6 +1767,7 @@ export interface FileRouteTypes {
     | '/account/support/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1930,6 +1941,7 @@ export interface FileRouteTypes {
     | '/account/support/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -2104,6 +2116,7 @@ export interface FileRouteTypes {
     | '/account_/support_/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -2264,6 +2277,7 @@ export interface RootRouteChildren {
   AccountSupportTicketTicketIdRoute: typeof AccountSupportTicketTicketIdRoute
   ApiPublicHooksRecsRecomputeRoute: typeof ApiPublicHooksRecsRecomputeRoute
   ApiPublicNewsletterSubscribeRoute: typeof ApiPublicNewsletterSubscribeRoute
+  ApiPublicNewsletterVerifyRoute: typeof ApiPublicNewsletterVerifyRoute
   ApiPublicSupportInboundEmailRoute: typeof ApiPublicSupportInboundEmailRoute
   ApiPublicTrackClickRoute: typeof ApiPublicTrackClickRoute
   ApiPublicTrackOpenRoute: typeof ApiPublicTrackOpenRoute
@@ -3460,6 +3474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupportInboundEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/newsletter/verify': {
+      id: '/api/public/newsletter/verify'
+      path: '/api/public/newsletter/verify'
+      fullPath: '/api/public/newsletter/verify'
+      preLoaderRoute: typeof ApiPublicNewsletterVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/newsletter/subscribe': {
       id: '/api/public/newsletter/subscribe'
       path: '/api/public/newsletter/subscribe'
@@ -3706,6 +3727,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSupportTicketTicketIdRoute: AccountSupportTicketTicketIdRoute,
   ApiPublicHooksRecsRecomputeRoute: ApiPublicHooksRecsRecomputeRoute,
   ApiPublicNewsletterSubscribeRoute: ApiPublicNewsletterSubscribeRoute,
+  ApiPublicNewsletterVerifyRoute: ApiPublicNewsletterVerifyRoute,
   ApiPublicSupportInboundEmailRoute: ApiPublicSupportInboundEmailRoute,
   ApiPublicTrackClickRoute: ApiPublicTrackClickRoute,
   ApiPublicTrackOpenRoute: ApiPublicTrackOpenRoute,

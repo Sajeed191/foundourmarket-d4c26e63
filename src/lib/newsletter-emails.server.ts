@@ -39,9 +39,7 @@ export async function enqueueNewsletterVerifyEmail(
     })
     html = await render(el)
     text = await render(el, { plainText: true })
-    subject = typeof newsletterVerifyTemplate.subject === 'function'
-      ? newsletterVerifyTemplate.subject({ verifyUrl, expiresInHours })
-      : newsletterVerifyTemplate.subject
+    subject = newsletterVerifyTemplate.subject as string
   } catch (err: any) {
     console.error('[newsletter-verify] render failed', err)
     return { ok: false, reason: 'render_failed' }
