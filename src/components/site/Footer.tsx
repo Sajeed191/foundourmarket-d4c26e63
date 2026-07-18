@@ -423,7 +423,7 @@ export function Footer() {
                 <span
                   key={label}
                   aria-label={label}
-                  className="inline-flex h-8 w-[54px] items-center justify-center rounded-md bg-white/[0.05] px-1.5 text-white/85 ring-1 ring-white/[0.08]"
+                  className={`inline-flex h-8 w-[54px] items-center justify-center rounded-md bg-white/[0.05] px-1.5 text-white/85 ring-1 ring-white/[0.06] transition-all ${EASE} hover:text-accent hover:ring-accent/40 hover:shadow-[0_0_14px_-4px] hover:shadow-accent/60`}
                 >
                   <Logo className="h-4 w-full" />
                 </span>
