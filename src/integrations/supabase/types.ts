@@ -2503,36 +2503,134 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_ip_blocks: {
+        Row: {
+          cleared_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          ip_hash: string
+          reason: string
+          score: number
+        }
+        Insert: {
+          cleared_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_hash: string
+          reason: string
+          score?: number
+        }
+        Update: {
+          cleared_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_hash?: string
+          reason?: string
+          score?: number
+        }
+        Relationships: []
+      }
+      newsletter_security_settings: {
+        Row: {
+          abuse_threshold: number
+          auto_block_enabled: boolean
+          block_minutes: number
+          burst_limit: number
+          burst_seconds: number
+          day_limit: number
+          disposable_check_enabled: boolean
+          fingerprint_enabled: boolean
+          honeypot_enabled: boolean
+          hour_limit: number
+          id: number
+          min_submit_ms: number
+          rate_limit_enabled: boolean
+          timing_floor_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          abuse_threshold?: number
+          auto_block_enabled?: boolean
+          block_minutes?: number
+          burst_limit?: number
+          burst_seconds?: number
+          day_limit?: number
+          disposable_check_enabled?: boolean
+          fingerprint_enabled?: boolean
+          honeypot_enabled?: boolean
+          hour_limit?: number
+          id?: number
+          min_submit_ms?: number
+          rate_limit_enabled?: boolean
+          timing_floor_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          abuse_threshold?: number
+          auto_block_enabled?: boolean
+          block_minutes?: number
+          burst_limit?: number
+          burst_seconds?: number
+          day_limit?: number
+          disposable_check_enabled?: boolean
+          fingerprint_enabled?: boolean
+          honeypot_enabled?: boolean
+          hour_limit?: number
+          id?: number
+          min_submit_ms?: number
+          rate_limit_enabled?: boolean
+          timing_floor_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       newsletter_submission_attempts: {
         Row: {
+          abuse_score: number
+          accept_language: string | null
           created_at: string
           email_hash: string | null
           id: string
           ip_hash: string
           outcome: string
           reason: string | null
+          timezone: string | null
         }
         Insert: {
+          abuse_score?: number
+          accept_language?: string | null
           created_at?: string
           email_hash?: string | null
           id?: string
           ip_hash: string
           outcome: string
           reason?: string | null
+          timezone?: string | null
         }
         Update: {
+          abuse_score?: number
+          accept_language?: string | null
           created_at?: string
           email_hash?: string | null
           id?: string
           ip_hash?: string
           outcome?: string
           reason?: string | null
+          timezone?: string | null
         }
         Relationships: []
       }
       newsletter_subscribers: {
         Row: {
+          abuse_score: number
           abuse_status: string
+          accept_language: string | null
           browser: string | null
           country: string | null
           created_at: string
@@ -2547,12 +2645,15 @@ export type Database = {
           source_page: string | null
           status: string
           subscribed_at: string | null
+          timezone: string | null
           ua_hash: string | null
           unsubscribed_at: string | null
           updated_at: string
         }
         Insert: {
+          abuse_score?: number
           abuse_status?: string
+          accept_language?: string | null
           browser?: string | null
           country?: string | null
           created_at?: string
@@ -2567,12 +2668,15 @@ export type Database = {
           source_page?: string | null
           status?: string
           subscribed_at?: string | null
+          timezone?: string | null
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
         }
         Update: {
+          abuse_score?: number
           abuse_status?: string
+          accept_language?: string | null
           browser?: string | null
           country?: string | null
           created_at?: string
@@ -2587,6 +2691,7 @@ export type Database = {
           source_page?: string | null
           status?: string
           subscribed_at?: string | null
+          timezone?: string | null
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
