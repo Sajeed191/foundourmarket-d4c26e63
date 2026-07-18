@@ -136,6 +136,7 @@ import { Route as PagesShippingRouteImport } from './routes/pages.shipping'
 import { Route as PagesReturnsRouteImport } from './routes/pages.returns'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
+import { Route as NewsletterVerifiedRouteImport } from './routes/newsletter.verified'
 import { Route as HelpSellerAssistanceRouteImport } from './routes/help.seller-assistance'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -178,6 +179,7 @@ import { Route as ApiPublicWebhooksCourierRouteImport } from './routes/api/publi
 import { Route as ApiPublicTrackOpenRouteImport } from './routes/api/public/track.open'
 import { Route as ApiPublicTrackClickRouteImport } from './routes/api/public/track.click'
 import { Route as ApiPublicSupportInboundEmailRouteImport } from './routes/api/public/support/inbound-email'
+import { Route as ApiPublicNewsletterVerifyRouteImport } from './routes/api/public/newsletter/verify'
 import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 import { Route as ApiPublicHooksRecsRecomputeRouteImport } from './routes/api/public/hooks/recs-recompute'
 import { Route as AccountSupportTicketTicketIdRouteImport } from './routes/account_.support_.ticket.$ticketId'
@@ -827,6 +829,11 @@ const OrdersIdRoute = OrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsletterVerifiedRoute = NewsletterVerifiedRouteImport.update({
+  id: '/newsletter/verified',
+  path: '/newsletter/verified',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpSellerAssistanceRoute = HelpSellerAssistanceRouteImport.update({
   id: '/seller-assistance',
   path: '/seller-assistance',
@@ -1050,6 +1057,12 @@ const ApiPublicSupportInboundEmailRoute =
     path: '/api/public/support/inbound-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicNewsletterVerifyRoute =
+  ApiPublicNewsletterVerifyRouteImport.update({
+    id: '/api/public/newsletter/verify',
+    path: '/api/public/newsletter/verify',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNewsletterSubscribeRoute =
   ApiPublicNewsletterSubscribeRouteImport.update({
     id: '/api/public/newsletter/subscribe',
@@ -1204,6 +1217,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
+  '/newsletter/verified': typeof NewsletterVerifiedRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -1233,6 +1247,7 @@ export interface FileRoutesByFullPath {
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1377,6 +1392,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
+  '/newsletter/verified': typeof NewsletterVerifiedRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -1406,6 +1422,7 @@ export interface FileRoutesByTo {
   '/account/support/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1552,6 +1569,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/help/seller-assistance': typeof HelpSellerAssistanceRoute
+  '/newsletter/verified': typeof NewsletterVerifiedRoute
   '/orders/$id': typeof OrdersIdRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/pages/returns': typeof PagesReturnsRoute
@@ -1581,6 +1599,7 @@ export interface FileRoutesById {
   '/account_/support_/ticket/$ticketId': typeof AccountSupportTicketTicketIdRoute
   '/api/public/hooks/recs-recompute': typeof ApiPublicHooksRecsRecomputeRoute
   '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
+  '/api/public/newsletter/verify': typeof ApiPublicNewsletterVerifyRoute
   '/api/public/support/inbound-email': typeof ApiPublicSupportInboundEmailRoute
   '/api/public/track/click': typeof ApiPublicTrackClickRoute
   '/api/public/track/open': typeof ApiPublicTrackOpenRoute
@@ -1728,6 +1747,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/email/unsubscribe'
     | '/help/seller-assistance'
+    | '/newsletter/verified'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -1757,6 +1777,7 @@ export interface FileRouteTypes {
     | '/account/support/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -1901,6 +1922,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/email/unsubscribe'
     | '/help/seller-assistance'
+    | '/newsletter/verified'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -1930,6 +1952,7 @@ export interface FileRouteTypes {
     | '/account/support/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -2075,6 +2098,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/email/unsubscribe'
     | '/help/seller-assistance'
+    | '/newsletter/verified'
     | '/orders/$id'
     | '/pages/$slug'
     | '/pages/returns'
@@ -2104,6 +2128,7 @@ export interface FileRouteTypes {
     | '/account_/support_/ticket/$ticketId'
     | '/api/public/hooks/recs-recompute'
     | '/api/public/newsletter/subscribe'
+    | '/api/public/newsletter/verify'
     | '/api/public/support/inbound-email'
     | '/api/public/track/click'
     | '/api/public/track/open'
@@ -2246,6 +2271,7 @@ export interface RootRouteChildren {
   AdminProductSlugRoute: typeof AdminProductSlugRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  NewsletterVerifiedRoute: typeof NewsletterVerifiedRoute
   OrdersIdRoute: typeof OrdersIdRoute
   PagesSlugRoute: typeof PagesSlugRoute
   PagesReturnsRoute: typeof PagesReturnsRoute
@@ -2264,6 +2290,7 @@ export interface RootRouteChildren {
   AccountSupportTicketTicketIdRoute: typeof AccountSupportTicketTicketIdRoute
   ApiPublicHooksRecsRecomputeRoute: typeof ApiPublicHooksRecsRecomputeRoute
   ApiPublicNewsletterSubscribeRoute: typeof ApiPublicNewsletterSubscribeRoute
+  ApiPublicNewsletterVerifyRoute: typeof ApiPublicNewsletterVerifyRoute
   ApiPublicSupportInboundEmailRoute: typeof ApiPublicSupportInboundEmailRoute
   ApiPublicTrackClickRoute: typeof ApiPublicTrackClickRoute
   ApiPublicTrackOpenRoute: typeof ApiPublicTrackOpenRoute
@@ -3166,6 +3193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/newsletter/verified': {
+      id: '/newsletter/verified'
+      path: '/newsletter/verified'
+      fullPath: '/newsletter/verified'
+      preLoaderRoute: typeof NewsletterVerifiedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/help/seller-assistance': {
       id: '/help/seller-assistance'
       path: '/seller-assistance'
@@ -3460,6 +3494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSupportInboundEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/newsletter/verify': {
+      id: '/api/public/newsletter/verify'
+      path: '/api/public/newsletter/verify'
+      fullPath: '/api/public/newsletter/verify'
+      preLoaderRoute: typeof ApiPublicNewsletterVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/newsletter/subscribe': {
       id: '/api/public/newsletter/subscribe'
       path: '/api/public/newsletter/subscribe'
@@ -3688,6 +3729,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProductSlugRoute: AdminProductSlugRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  NewsletterVerifiedRoute: NewsletterVerifiedRoute,
   OrdersIdRoute: OrdersIdRoute,
   PagesSlugRoute: PagesSlugRoute,
   PagesReturnsRoute: PagesReturnsRoute,
@@ -3706,6 +3748,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSupportTicketTicketIdRoute: AccountSupportTicketTicketIdRoute,
   ApiPublicHooksRecsRecomputeRoute: ApiPublicHooksRecsRecomputeRoute,
   ApiPublicNewsletterSubscribeRoute: ApiPublicNewsletterSubscribeRoute,
+  ApiPublicNewsletterVerifyRoute: ApiPublicNewsletterVerifyRoute,
   ApiPublicSupportInboundEmailRoute: ApiPublicSupportInboundEmailRoute,
   ApiPublicTrackClickRoute: ApiPublicTrackClickRoute,
   ApiPublicTrackOpenRoute: ApiPublicTrackOpenRoute,
@@ -3719,13 +3762,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

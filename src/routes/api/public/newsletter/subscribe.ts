@@ -82,6 +82,8 @@ type Settings = {
   min_submit_ms: number;
   abuse_threshold: number;
   block_minutes: number;
+  double_opt_in_enabled: boolean;
+  verification_ttl_hours: number;
 };
 
 const DEFAULTS: Settings = {
@@ -98,6 +100,8 @@ const DEFAULTS: Settings = {
   min_submit_ms: 750,
   abuse_threshold: 50,
   block_minutes: 60,
+  double_opt_in_enabled: false,
+  verification_ttl_hours: 24,
 };
 
 async function loadAdmin() {
@@ -329,16 +333,34 @@ export const Route = createFileRoute("/api/public/newsletter/subscribe")({
           timezone,
         } : {};
 
+        // Stage 3 — Double Opt-In. When enabled, new subscribers are created
+        // as `pending` with a single-use, expiring verification token; a
+        // verification email is enqueued. When disabled, behavior is unchanged.
+        const doubleOptIn = settings.double_opt_in_enabled;
+        const ttlHours = Math.max(1, Math.min(168, settings.verification_ttl_hours || 24));
+        const verificationToken = doubleOptIn
+          ? createHash("sha256")
+              .update(`${email}::${Date.now()}::${Math.random()}::${salt}`)
+              .digest("base64url")
+              .slice(0, 48)
+          : null;
+        const verificationExpiresAt = doubleOptIn
+          ? new Date(Date.now() + ttlHours * 3600 * 1000).toISOString()
+          : null;
+
         const row = {
           email,
           source: safeSource,
           source_page: payload.source_page ?? null,
           device: payload.device ?? null,
           country: payload.country ?? null,
-          status: "subscribed",
+          status: doubleOptIn ? "pending" : "subscribed",
           abuse_status: "normal",
           abuse_score: abuseScore,
-          subscribed_at: nowIso,
+          subscribed_at: doubleOptIn ? null : nowIso,
+          verification_token: verificationToken,
+          verification_sent_at: doubleOptIn ? nowIso : null,
+          verification_expires_at: verificationExpiresAt,
           ...fpFields,
         };
 
@@ -361,6 +383,24 @@ export const Route = createFileRoute("/api/public/newsletter/subscribe")({
           await logAttempt("duplicate", null, email);
           await logAudit("duplicate_attempt", { source: safeSource }, email);
           return json(200, { ok: true, duplicate: true });
+        }
+
+        if (doubleOptIn && verificationToken) {
+          try {
+            const { enqueueNewsletterVerifyEmail } = await import(
+              "@/lib/newsletter-emails.server"
+            );
+            await enqueueNewsletterVerifyEmail(email, verificationToken, ttlHours);
+          } catch (err) {
+            console.error("[newsletter] verify email enqueue failed", err);
+          }
+          await logAttempt("pending", null, email);
+          await logAudit(
+            "verification_sent",
+            { source: safeSource, ttl_hours: ttlHours },
+            email,
+          );
+          return json(200, { ok: true, duplicate: false, pending: true });
         }
 
         await logAttempt("accepted", null, email);

@@ -2542,6 +2542,7 @@ export type Database = {
           burst_seconds: number
           day_limit: number
           disposable_check_enabled: boolean
+          double_opt_in_enabled: boolean
           fingerprint_enabled: boolean
           honeypot_enabled: boolean
           hour_limit: number
@@ -2551,6 +2552,7 @@ export type Database = {
           timing_floor_enabled: boolean
           updated_at: string
           updated_by: string | null
+          verification_ttl_hours: number
         }
         Insert: {
           abuse_threshold?: number
@@ -2560,6 +2562,7 @@ export type Database = {
           burst_seconds?: number
           day_limit?: number
           disposable_check_enabled?: boolean
+          double_opt_in_enabled?: boolean
           fingerprint_enabled?: boolean
           honeypot_enabled?: boolean
           hour_limit?: number
@@ -2569,6 +2572,7 @@ export type Database = {
           timing_floor_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
+          verification_ttl_hours?: number
         }
         Update: {
           abuse_threshold?: number
@@ -2578,6 +2582,7 @@ export type Database = {
           burst_seconds?: number
           day_limit?: number
           disposable_check_enabled?: boolean
+          double_opt_in_enabled?: boolean
           fingerprint_enabled?: boolean
           honeypot_enabled?: boolean
           hour_limit?: number
@@ -2587,6 +2592,7 @@ export type Database = {
           timing_floor_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
+          verification_ttl_hours?: number
         }
         Relationships: []
       }
@@ -2649,6 +2655,10 @@ export type Database = {
           ua_hash: string | null
           unsubscribed_at: string | null
           updated_at: string
+          verification_expires_at: string | null
+          verification_sent_at: string | null
+          verification_token: string | null
+          verified_at: string | null
         }
         Insert: {
           abuse_score?: number
@@ -2672,6 +2682,10 @@ export type Database = {
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
+          verification_expires_at?: string | null
+          verification_sent_at?: string | null
+          verification_token?: string | null
+          verified_at?: string | null
         }
         Update: {
           abuse_score?: number
@@ -2695,6 +2709,10 @@ export type Database = {
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
+          verification_expires_at?: string | null
+          verification_sent_at?: string | null
+          verification_token?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }

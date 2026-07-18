@@ -17,6 +17,7 @@ type Settings = {
   auto_block_enabled: boolean;
   timing_floor_enabled: boolean;
   fingerprint_enabled: boolean;
+  double_opt_in_enabled: boolean;
   burst_seconds: number;
   burst_limit: number;
   hour_limit: number;
@@ -24,6 +25,7 @@ type Settings = {
   min_submit_ms: number;
   abuse_threshold: number;
   block_minutes: number;
+  verification_ttl_hours: number;
 };
 
 type BlockRow = {
@@ -45,6 +47,7 @@ const DEFAULTS: Settings = {
   auto_block_enabled: true,
   timing_floor_enabled: true,
   fingerprint_enabled: true,
+  double_opt_in_enabled: false,
   burst_seconds: 10,
   burst_limit: 1,
   hour_limit: 3,
@@ -52,6 +55,7 @@ const DEFAULTS: Settings = {
   min_submit_ms: 750,
   abuse_threshold: 50,
   block_minutes: 60,
+  verification_ttl_hours: 24,
 };
 
 const FLAGS: { key: keyof Settings; label: string; hint: string }[] = [
@@ -61,6 +65,7 @@ const FLAGS: { key: keyof Settings; label: string; hint: string }[] = [
   { key: "auto_block_enabled", label: "Auto IP block", hint: "Temporary block on abuse threshold." },
   { key: "timing_floor_enabled", label: "Submit-timing floor", hint: "Reject sub-750ms submissions." },
   { key: "fingerprint_enabled", label: "Fingerprint capture", hint: "Log IP-hash, UA, language, timezone." },
+  { key: "double_opt_in_enabled", label: "Double opt-in", hint: "Require email confirmation before activating a subscription." },
 ];
 
 const NUMBERS: { key: keyof Settings; label: string; suffix?: string; min?: number; max?: number }[] = [
@@ -71,6 +76,7 @@ const NUMBERS: { key: keyof Settings; label: string; suffix?: string; min?: numb
   { key: "min_submit_ms", label: "Min submit", suffix: "ms", min: 0, max: 10000 },
   { key: "abuse_threshold", label: "Abuse threshold", min: 10, max: 500 },
   { key: "block_minutes", label: "Block duration", suffix: "min", min: 1, max: 10080 },
+  { key: "verification_ttl_hours", label: "Verify link TTL", suffix: "h", min: 1, max: 168 },
 ];
 
 export function NewsletterSecurityPanel() {

@@ -59,6 +59,7 @@ import {
   accountLockedTemplate,
   suspiciousActivityTemplate,
 } from './security-emails'
+import { newsletterVerifyTemplate } from './newsletter-verify'
 import {
   returnRequestedTemplate,
   returnApprovedTemplate,
@@ -106,4 +107,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'login-new-device': loginNewDeviceTemplate,
   'account-locked': accountLockedTemplate,
   'suspicious-activity': suspiciousActivityTemplate,
+  // Newsletter
+  'newsletter-verify': newsletterVerifyTemplate,
 }
