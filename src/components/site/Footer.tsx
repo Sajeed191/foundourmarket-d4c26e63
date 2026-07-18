@@ -254,14 +254,14 @@ export function Footer() {
               Global Marketplace for Trusted Shopping
             </p>
 
-            {/* Trust chips — larger, better padding */}
+            {/* Trust chips — 36px, softer border, orange glow on hover/tap */}
             <div className="mt-4 grid w-full grid-cols-3 gap-2">
               {TRUST_CHIPS.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className={`inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-white/[0.035] px-3 py-2 text-[11px] font-medium text-white/85 ring-1 ring-white/[0.08] whitespace-nowrap transition-all ${EASE} active:ring-accent/40 active:shadow-[0_0_14px_-4px] active:shadow-accent/60`}
+                  className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-white/[0.035] px-4 text-[11px] font-medium text-white/85 ring-1 ring-white/[0.06] whitespace-nowrap transition-all ${EASE} hover:ring-accent/40 hover:shadow-[0_0_16px_-4px] hover:shadow-accent/60 active:ring-accent/50 active:shadow-[0_0_18px_-4px] active:shadow-accent/70`}
                 >
-                  <Icon className="size-3.5 text-accent shrink-0" strokeWidth={2} />
+                  <Icon className="size-4 text-accent shrink-0" strokeWidth={2} />
                   <span className="leading-none">{label}</span>
                 </span>
               ))}
