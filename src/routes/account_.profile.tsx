@@ -333,7 +333,7 @@ function EditProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05, duration: 0.5 }}
-            className="border-glow glass-strong rounded-3xl p-5 sm:p-6 mb-6 relative overflow-hidden"
+            className="glass-strong rounded-3xl p-5 sm:p-6 mb-6 relative overflow-hidden border border-white/10"
           >
             
             <div className="relative flex items-center gap-4 sm:gap-5">
