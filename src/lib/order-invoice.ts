@@ -244,16 +244,16 @@ export function buildInvoiceHTML(d: InvoiceData): string {
 
     <div class="foot">
       <div>
-        <strong>FoundOurMarket</strong><br/>
+        <strong>FoundOurMarket&#8482;</strong><br/>
         Support: support@foundourmarket.com
       </div>
-      <div class="ret">Return requests must follow FoundOurMarket return policy.</div>
+      <div class="ret">Return requests must follow FoundOurMarket&#8482; return policy.</div>
     </div>
   </section>
 
   <!-- ===== PACKING SLIP ===== -->
   <section class="slip">
-    <div class="top">FOUNDOURMARKET</div>
+    <div class="top">FoundOurMarket&#8482;</div>
     <div class="ps">PACKING SLIP</div>
 
     <div class="big-label">Customer</div>
