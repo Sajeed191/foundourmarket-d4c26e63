@@ -827,16 +827,14 @@ function PremiumSupportCard({
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={`group relative h-full flex flex-col text-left rounded-[22px] p-3.5 sm:p-5 bg-white/[0.02] border border-white/[0.06] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.4)] transition-[border-color,box-shadow] duration-200 ${t.border} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50`}
     >
-      {/* Header: icon + title/desc */}
-      <div className="flex items-start gap-2.5 sm:gap-3">
+      {/* Header: icon row + title, desc spans full width */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
         <span aria-hidden className={`grid place-items-center size-10 sm:size-12 shrink-0 rounded-[14px] sm:rounded-2xl ring-1 ${t.text} ${t.ring} ${t.bg} transition-[transform,box-shadow] duration-200 group-hover:scale-[1.03] ${t.glow}`}>
           <Icon className="size-[18px] sm:size-[22px]" strokeWidth={1.7} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13.5px] sm:text-[15px] font-semibold leading-tight tracking-tight text-foreground truncate">{title}</p>
-          <p className="mt-1 text-[11px] sm:text-[12px] leading-snug text-muted-foreground line-clamp-2">{desc}</p>
-        </div>
+        <p className="text-[13.5px] sm:text-[15px] font-semibold leading-tight tracking-tight text-foreground truncate">{title}</p>
       </div>
+      <p className="mt-2 text-[11px] sm:text-[12px] leading-snug text-muted-foreground line-clamp-2">{desc}</p>
 
       {/* Divider */}
       <div className="my-3 sm:my-4 h-px w-full bg-white/[0.06]" />
