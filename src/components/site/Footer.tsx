@@ -335,16 +335,16 @@ export function Footer() {
                 onSubmit={(e) => e.preventDefault()}
                 className="flex w-full max-w-md flex-col gap-1.5"
               >
-                <div className={`flex h-12 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1 ring-1 ring-white/[0.06] transition-colors ${EASE} focus-within:ring-accent/50`}>
+                <div className={`flex h-[52px] items-center gap-2 rounded-full bg-black/40 pl-5 pr-1.5 ring-1 ring-white/[0.06] shadow-[0_2px_10px_-6px_rgba(0,0,0,0.6)] transition-all ${EASE} focus-within:ring-accent/50 focus-within:shadow-[0_0_20px_-6px] focus-within:shadow-accent/50`}>
                   <input
                     type="email"
                     required
                     placeholder="Enter your email"
-                    className="min-w-0 flex-1 bg-transparent text-[13px] text-white placeholder:text-white/45 focus:outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-[13.5px] text-white placeholder:text-white/60 focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className={`inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[13px] font-semibold text-accent-foreground shadow-[0_6px_18px_-6px] shadow-accent/60 transition-all ${EASE} hover:brightness-110 active:scale-[0.97]`}
+                    className={`inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-accent via-accent to-accent/85 px-6 text-[13px] font-semibold text-accent-foreground shadow-[0_6px_18px_-6px] shadow-accent/60 transition-all ${EASE} hover:brightness-110 hover:shadow-[0_10px_26px_-8px] hover:shadow-accent/70 active:scale-[0.97]`}
                   >
                     Subscribe
                   </button>
