@@ -42,7 +42,7 @@ const canonicalHostMiddleware = createMiddleware().server(async ({ next, request
   if (method !== "GET" && method !== "HEAD") return next();
 
   const url = new URL(request.url);
-  // Leave API endpoints and Lovable internals untouched (webhooks/cron rely on
+  // Leave API endpoints and platform internals untouched (webhooks/cron rely on
   // the exact host they were configured with).
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/lovable/")) {
     return next();

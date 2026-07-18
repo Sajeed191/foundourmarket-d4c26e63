@@ -2,7 +2,7 @@
 //
 // Used ONLY when the primary delivery provider has exhausted its retries.
 // Sends through the approved backup identity foundourmarket@gmail.com via the
-// Lovable connector gateway. Reply-To is ALWAYS the official support mailbox so
+// hosted connector gateway. Reply-To is ALWAYS the official support mailbox so
 // every customer reply returns to support@foundourmarket.com.
 //
 // Import only from server code (queue processor / *.server.ts handlers).

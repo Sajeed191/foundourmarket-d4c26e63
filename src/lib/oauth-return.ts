@@ -104,7 +104,7 @@ export async function completeOAuthReturn(
   }
 
   if (code) {
-    // The Lovable OAuth broker can return a transient `code` that is not a
+    // The hosted OAuth broker can return a transient `code` that is not a
     // Supabase PKCE code. Exchanging it without the matching verifier causes a
     // 400 and sends users back to the sign-in screen, so ignore it safely.
     stripAuthParamsFromUrl();
