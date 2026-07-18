@@ -281,20 +281,36 @@ export function LiveChat() {
 
   return (
     <>
-      {/* Floating support orb */}
+      {/* Premium floating support orb — expands on idle, live status pulse */}
       {!open && !isProductPage && (
         <button
           type="button"
           data-floating-control
           aria-label="Open live support chat"
           onClick={() => setOpen(true)}
-          className={`group fixed right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground animate-orb-breathe transition-all duration-300 active:scale-90 ${orbHidden ? "orb-hidden" : ""}`}
+          className={`group fixed right-4 z-[60] flex items-center gap-2.5 h-14 rounded-full pl-4 pr-5 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-[0_10px_30px_-8px_var(--color-primary,theme(colors.orange.500))] ring-1 ring-white/15 backdrop-blur-sm transition-[transform,box-shadow,padding,width] duration-300 ease-out active:scale-95 hover:shadow-[0_14px_44px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-breathe ${orbHidden ? "orb-hidden" : ""} w-14 [&_.orb-label]:hidden hover:w-auto hover:[&_.orb-label]:inline`}
           style={{ bottom: "calc(var(--floating-bottom-offset))" }}
         >
-          <Headset className="h-6 w-6" />
+          <span className="relative grid place-items-center size-6 shrink-0">
+            <Headset className="size-6" />
+            {/* Live availability pulse dot */}
+            <span
+              aria-hidden
+              className={`absolute -bottom-0.5 -right-1 flex size-2.5 rounded-full ring-2 ring-primary ${
+                availability === "online" ? "bg-emerald-400" : availability === "away" ? "bg-amber-400" : "bg-muted-foreground"
+              }`}
+            >
+              {availability === "online" && (
+                <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-70 animate-ping" />
+              )}
+            </span>
+          </span>
+          <span className="orb-label whitespace-nowrap text-[13px] font-semibold tracking-tight">
+            {unread > 0 ? "New reply" : "Need help?"}
+          </span>
           {unread > 0 && (
             <span
-              className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border-2 border-background bg-red-500 px-1 text-[11px] font-bold leading-none text-white"
+              className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border-2 border-background bg-gradient-to-br from-red-500 to-orange-500 px-1 text-[11px] font-bold leading-none text-white shadow-lg motion-safe:animate-bounce"
               aria-label={`${unread} unread messages`}
             >
               {unread > 9 ? "9+" : unread}
@@ -302,6 +318,8 @@ export function LiveChat() {
           )}
         </button>
       )}
+
+
 
       {open && (
         <div

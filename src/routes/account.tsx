@@ -7,7 +7,7 @@ import {
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
   HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
-  CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
+  CheckCircle2, Box, Home, X, Plus, Minus, CreditCard,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
   BookOpen, Bell,
 
@@ -494,9 +494,8 @@ function AccountPage() {
           </motion.section>
         )}
 
-        {/* 5 — ACCOUNT UTILITIES */}
+        {/* 5 — SUPPORT & ACCOUNT (premium hub) */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }} className="pt-1">
-          <SectionHeader title="Support & account" eyebrow="Utilities" />
           <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} />
         </motion.section>
 
@@ -793,6 +792,136 @@ function UtilityCard({
   );
 }
 
+/* Premium support hub card — richer content, live intelligence */
+type PremiumRow = { label: string; value: string; tone?: "good" | "neutral" };
+type PremiumPill = { icon: typeof Package; label: string };
+function PremiumSupportCard({
+  icon: Icon, title, accent, rows, chips, pills, cta, statusDot, statusText, score, onClick, lowMotion,
+}: {
+  icon: typeof Package;
+  title: string;
+  accent: string;
+  rows?: PremiumRow[];
+  chips?: string[];
+  pills?: PremiumPill[];
+  cta: string;
+  statusDot?: "emerald" | "amber" | "muted";
+  statusText?: string;
+  score?: number; // 0-5
+  onClick: () => void;
+  lowMotion: boolean;
+}) {
+  const dotClass =
+    statusDot === "emerald" ? "bg-emerald-400" :
+    statusDot === "amber" ? "bg-amber-400" :
+    statusDot === "muted" ? "bg-muted-foreground" : "";
+  const dotRingClass =
+    statusDot === "emerald" ? "text-emerald-400 ring-emerald-500/25 bg-emerald-500/10" :
+    statusDot === "amber" ? "text-amber-400 ring-amber-500/25 bg-amber-500/10" :
+    "text-muted-foreground ring-white/10 bg-white/[0.04]";
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={lowMotion ? undefined : { scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      className="group relative h-full min-h-[190px] flex flex-col text-left rounded-3xl p-4 sm:p-[18px] overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.015] border border-white/10 shadow-[0_10px_30px_-16px_rgba(0,0,0,0.7)] transition-all duration-300 hover:border-white/20 hover:shadow-[0_18px_44px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      style={{ ["--card-accent" as string]: accent }}
+    >
+      {/* Radial accent glow */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full opacity-40 blur-2xl transition-opacity duration-300 group-hover:opacity-70"
+        style={{ background: `radial-gradient(closest-side, ${accent} 0%, transparent 70%)` }}
+      />
+      {/* Gradient border sheen on hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: `linear-gradient(135deg, ${accent}22, transparent 55%)` }}
+      />
+
+      {/* Header row: icon + status */}
+      <div className="relative flex items-start justify-between gap-2">
+        <span
+          className="size-12 rounded-2xl grid place-items-center ring-1 shadow-[0_6px_18px_-6px_var(--card-accent)]"
+          style={{ background: `color-mix(in oklab, ${accent} 14%, transparent)`, color: accent, boxShadow: `0 0 24px -10px ${accent}`, borderColor: `${accent}55` } as React.CSSProperties}
+        >
+          <Icon className="size-[22px]" style={{ color: accent }} />
+        </span>
+        {statusText && (
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ring-1 ${dotRingClass}`}>
+            <span className="relative flex size-1.5">
+              {statusDot === "emerald" && <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
+              <span className={`relative inline-flex size-1.5 rounded-full ${dotClass}`} />
+            </span>
+            {statusText}
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <p className="relative mt-3 text-sm font-semibold leading-tight truncate">{title}</p>
+
+      {/* Body — rows / pills / chips / score */}
+      <div className="relative mt-2.5 flex-1 space-y-2">
+        {score !== undefined && (
+          <div className="flex items-center gap-1.5">
+            <div className="flex gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className={`size-3 ${i < score ? "fill-current" : "opacity-25"}`} style={{ color: i < score ? accent : undefined }} />
+              ))}
+            </div>
+            <span className="text-[10px] text-muted-foreground">Excellent</span>
+          </div>
+        )}
+        {rows && (
+          <ul className="space-y-1">
+            {rows.map((r) => (
+              <li key={r.label} className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="text-muted-foreground">{r.label}</span>
+                <span className={`font-medium tabular-nums truncate ${r.tone === "good" ? "text-emerald-400" : "text-foreground/90"}`}>{r.value}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {pills && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {pills.map((p) => (
+              <span
+                key={p.label}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ring-1 bg-white/[0.04] ring-white/10 text-foreground/85 transition-colors group-hover:ring-white/20"
+              >
+                <p.icon className="size-3" style={{ color: accent }} />
+                {p.label}
+              </span>
+            ))}
+          </div>
+        )}
+        {chips && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {chips.map((c) => (
+              <span key={c} className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[9.5px] font-medium text-muted-foreground ring-1 ring-white/10">{c}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CTA */}
+      <div
+        className="relative mt-3 pt-3 flex items-center justify-between gap-1 text-[11px] font-semibold border-t border-white/5"
+        style={{ color: accent }}
+      >
+        <span className="truncate">{cta}</span>
+        <ArrowRight className="size-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
+      </div>
+    </motion.button>
+  );
+}
+
+
+
 
 function Sheet({ open, onClose, children, lowMotion }: { open: boolean; onClose: () => void; children: ReactNode; lowMotion: boolean }) {
   return (
@@ -878,43 +1007,71 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <UtilityCard
-          icon={LifeBuoy} title="Help & Support"
-          glow="var(--gradient-ember)" accent="var(--color-accent)"
-          lowMotion={lowMotion}
-          desc="Get live assistance from our support team."
-          badge={online ? "Online" : "Offline"} badgeTone={online ? "online" : "offline"}
-          hint="Open Support"
-          onClick={() => setSupportOpen(true)}
-        />
-        <UtilityCard
-          icon={BookOpen} title="Help Articles"
-          glow="linear-gradient(135deg, oklch(0.7 0.16 240 / 0.5), transparent 65%)" accent="oklch(0.7 0.16 240)"
-          lowMotion={lowMotion}
-          desc="Browse guides, tutorials and FAQs."
-          badge={`${HELP_ARTICLE_COUNT} Articles`} badgeTone="accent"
-          hint="Browse Articles"
-          onClick={() => nav({ to: "/help", hash: "faqs" })}
-        />
-        <UtilityCard
-          icon={MessageCircle} title="Contact Us"
-          glow="linear-gradient(135deg, oklch(0.72 0.16 160 / 0.5), transparent 65%)" accent="oklch(0.72 0.16 160)"
-          lowMotion={lowMotion}
-          desc="Choose how you'd like to reach us."
-          chips={[hasWhatsApp ? "WhatsApp" : "Chat", "Email", "Callback"]}
-          hint="Choose Channel"
-          onClick={() => setContactOpen(true)}
-        />
-        <UtilityCard
-          icon={UserCog} title="Profile & Security"
-          glow="linear-gradient(135deg, oklch(0.7 0.2 18 / 0.5), transparent 65%)" accent="oklch(0.7 0.2 18)"
-          lowMotion={lowMotion}
-          desc="Manage your account, privacy and devices."
-          hint="Manage Account"
-          onClick={() => setAccountOpen(true)}
-        />
+      {/* Premium section header — live status + response time */}
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-1">Support &amp; Account</p>
+          <h2 className="text-base sm:text-lg font-display font-semibold leading-tight">Need help? We're here 24/7.</h2>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ring-1 ${
+            online ? "bg-emerald-500/10 text-emerald-400 ring-emerald-500/25" : "bg-amber-500/10 text-amber-400 ring-amber-500/25"
+          }`}>
+            <span className={`relative flex size-1.5`}>
+              {online && <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
+              <span className={`relative inline-flex size-1.5 rounded-full ${online ? "bg-emerald-400" : "bg-amber-400"}`} />
+            </span>
+            {online ? "Online now" : "Away"}
+          </span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">Avg reply · &lt; {minutes} min</span>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <PremiumSupportCard
+          icon={LifeBuoy} title="Help & Support" accent="var(--color-accent)"
+          statusDot={online ? "emerald" : "amber"} statusText={online ? "Online" : "Away"}
+          rows={[
+            { label: "Queue", value: online ? "0 waiting" : "—" },
+            { label: "Avg wait", value: `< ${minutes} min` },
+            { label: "Hours", value: "24/7" },
+          ]}
+          cta="Start Conversation"
+          lowMotion={lowMotion} onClick={() => setSupportOpen(true)}
+        />
+        <PremiumSupportCard
+          icon={BookOpen} title="Knowledge Base" accent="oklch(0.72 0.16 240)"
+          rows={[
+            { label: "Articles", value: `${HELP_ARTICLE_COUNT}` },
+            { label: "Guides", value: "3" },
+            { label: "Updated", value: "This week" },
+          ]}
+          chips={["Shipping", "Payments", "Returns", "Security"]}
+          cta="Browse Knowledge Base"
+          lowMotion={lowMotion} onClick={() => nav({ to: "/help", hash: "faqs" })}
+        />
+        <PremiumSupportCard
+          icon={MessageCircle} title="Contact Options" accent="oklch(0.72 0.16 160)"
+          pills={[
+            { icon: Smartphone, label: "WhatsApp" },
+            { icon: Mail, label: "Email" },
+            { icon: MessageCircle, label: "Live Chat" },
+            { icon: PhoneCall, label: "Callback" },
+          ]}
+          cta="Choose Contact Method"
+          lowMotion={lowMotion} onClick={() => setContactOpen(true)}
+        />
+        <PremiumSupportCard
+          icon={ShieldCheck} title="Account Security" accent="oklch(0.7 0.2 18)"
+          score={4}
+          rows={[
+            { label: "Verified", value: "100%" },
+            { label: "2FA", value: "Enabled", tone: "good" },
+            { label: "Device", value: "Trusted", tone: "good" },
+          ]}
+          cta="Manage Security"
+          lowMotion={lowMotion} onClick={() => setAccountOpen(true)}
+        />
       </div>
 
       {/* Support hub sheet */}
