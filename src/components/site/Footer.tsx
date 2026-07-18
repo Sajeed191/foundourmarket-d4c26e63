@@ -103,7 +103,7 @@ export function Footer() {
   }
 
   return (
-    <footer className="relative px-6 sm:px-8 pt-20 mobile-page-clearance md:py-24 bg-[#0b0b0f]">
+    <footer className="relative px-6 sm:px-8 pt-8 mobile-page-clearance md:py-24 bg-[#0b0b0f]">
       <div className="relative max-w-6xl mx-auto">
         {/* ── 1. Brand identity — minimal ── */}
         <div>
