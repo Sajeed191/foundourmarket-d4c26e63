@@ -4,7 +4,7 @@ import {
   Instagram, Facebook, Youtube, Send, MessageCircle,
   ShoppingBag, Package, Tag, MessageSquare, HelpCircle,
   Lock, Truck, CreditCard, ShieldCheck, Globe2, ChevronDown,
-  Search, ArrowUp,
+  ArrowUp,
 } from "lucide-react";
 import { BrandName } from "@/components/site/BrandName";
 
@@ -18,8 +18,8 @@ const TRUST_CHIPS = [
 
 const QUICK_ACTIONS = [
   { icon: ShoppingBag,   label: "Shop All",    to: "/" },
-  { icon: Package,       label: "Track Order", to: "/track" },
   { icon: Tag,           label: "Deals",       to: "/deals" },
+  { icon: Package,       label: "Track Order", to: "/track" },
   { icon: MessageSquare, label: "Contact Us",  to: "/contact" },
   { icon: HelpCircle,    label: "Help Center", to: "/help" },
 ];
@@ -58,13 +58,23 @@ const SOCIALS = [
 ];
 
 const TRUST_FEATURES = [
-  { icon: Lock,        title: "Secure Checkout",    desc: "Your payments are encrypted." },
-  { icon: Truck,       title: "Fast Delivery",      desc: "Fast shipping across India." },
-  { icon: CreditCard,  title: "Safe Payments",      desc: "Trusted payment partners." },
-  { icon: ShieldCheck, title: "Buyer Protection",   desc: "Easy returns & protection." },
+  { icon: Lock,        title: "Secure Checkout",  desc: "Encrypted payments." },
+  { icon: Truck,       title: "Fast Delivery",    desc: "Across India, fast." },
+  { icon: CreditCard,  title: "Safe Payments",    desc: "Trusted partners." },
+  { icon: ShieldCheck, title: "Buyer Protection", desc: "Easy returns always." },
 ];
 
-const PAYMENT_METHODS = ["UPI", "Visa", "Mastercard", "RuPay", "Paytm", "GPay", "PhonePe"];
+/* Monochrome inline SVG payment marks (crisp on any bg) */
+const PayMark = ({ label }: { label: string }) => (
+  <span
+    className="inline-flex h-7 min-w-[46px] items-center justify-center rounded-md bg-white/[0.05] px-2.5 text-[10px] font-bold tracking-[0.04em] text-white/75 ring-1 ring-white/[0.07]"
+    aria-label={label}
+  >
+    {label}
+  </span>
+);
+
+const PAYMENTS = ["UPI", "VISA", "Mastercard", "RuPay", "Paytm", "GPay", "PhonePe"];
 
 /* ---------- Primitives ---------- */
 
@@ -72,7 +82,7 @@ function TextLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to as never}
-      className="text-[14px] text-white/60 transition-colors duration-[180ms] hover:text-accent"
+      className="block py-1.5 text-[14px] text-white/65 transition-colors duration-[180ms] hover:text-accent"
     >
       {label}
     </Link>
@@ -94,25 +104,25 @@ function LinkColumn({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between py-3.5 md:hidden"
+        className="flex w-full items-center justify-between py-3 md:hidden"
         aria-expanded={open}
       >
-        <span className="text-[15px] font-semibold tracking-tight text-white">{title}</span>
+        <span className="text-[14.5px] font-semibold tracking-tight text-white">{title}</span>
         <ChevronDown
           className={`size-4 text-white/50 transition-transform duration-[200ms] ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       <div className="hidden md:block">
-        <h5 className="text-[16px] font-semibold tracking-tight text-white">{title}</h5>
+        <h5 className="text-[15px] font-semibold tracking-tight text-white">{title}</h5>
       </div>
 
       <ul
-        className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-[220ms] ease-out md:mt-4 md:block ${
-          open ? "grid-rows-[1fr] opacity-100 pb-4" : "grid-rows-[0fr] opacity-0 md:grid-rows-[1fr] md:opacity-100 md:pb-0"
+        className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-[220ms] ease-out md:mt-3 md:block ${
+          open ? "grid-rows-[1fr] opacity-100 pb-2" : "grid-rows-[0fr] opacity-0 md:grid-rows-[1fr] md:opacity-100 md:pb-0"
         }`}
       >
-        <div className="min-h-0 space-y-2.5">
+        <div className="min-h-0">
           {links.map((l) => (
             <li key={l.label} className="list-none">
               <TextLink to={l.to} label={l.label} />
@@ -129,16 +139,20 @@ function BackToTop() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   return (
-    <div className="flex justify-center -mb-5 relative z-10">
-      <button
-        type="button"
-        onClick={scroll}
-        aria-label="Back to top"
-        className="group inline-flex items-center gap-2 rounded-full bg-[#0b0b0f] px-5 py-2.5 ring-1 ring-white/10 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-all duration-[180ms] hover:ring-accent/50 active:scale-[0.98]"
-      >
-        <ArrowUp className="size-4 text-accent transition-transform duration-[180ms] group-hover:-translate-y-0.5" strokeWidth={2.25} />
-        <span className="text-[12px] font-medium text-white/80 group-hover:text-white">Back to top</span>
-      </button>
+    <div className="mx-auto max-w-6xl px-6 sm:px-8">
+      <div className="flex items-center gap-4 py-5">
+        <span aria-hidden className="h-px flex-1 bg-white/10" />
+        <button
+          type="button"
+          onClick={scroll}
+          aria-label="Back to top"
+          className="group inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-medium text-white/70 transition-all duration-[180ms] hover:text-white active:scale-[0.98]"
+        >
+          <ArrowUp className="size-3.5 text-accent transition-transform duration-[180ms] group-hover:-translate-y-0.5" strokeWidth={2.5} />
+          Back to Top
+        </button>
+        <span aria-hidden className="h-px flex-1 bg-white/10" />
+      </div>
     </div>
   );
 }
@@ -151,7 +165,6 @@ export function Footer() {
   const [hasAndroidApp, setHasAndroidApp] = useState(false);
 
   useEffect(() => {
-    // Only render Play Store button when an app URL is configured.
     const url = (import.meta.env.VITE_ANDROID_APP_URL as string | undefined)?.trim();
     if (url) setHasAndroidApp(true);
   }, []);
@@ -176,66 +189,50 @@ export function Footer() {
     <>
       <BackToTop />
       <footer className="relative bg-[#0b0b0f] text-white mobile-page-clearance">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
-
-        <div className="mx-auto max-w-6xl px-6 pt-10 pb-8 sm:px-8 md:pt-14">
+        <div className="mx-auto max-w-6xl px-6 pt-8 pb-6 sm:px-8 md:pt-10">
           {/* ── 1 · Brand ─────────────────────────────────────── */}
-          <section className="flex flex-col items-start gap-3">
-            <Link to="/" aria-label="FoundOurMarket home" className="text-2xl font-display font-medium tracking-tight">
+          <section className="flex flex-col items-start gap-2.5">
+            <Link to="/" aria-label="FoundOurMarket home" className="text-[26px] font-display font-semibold tracking-tight leading-none">
               <BrandName />
             </Link>
-            <p className="text-[13.5px] text-white/75">
+            <p className="text-[13.5px] text-white/70 leading-snug">
               Global Marketplace for Trusted Shopping
             </p>
-            <div className="mt-1 grid w-full grid-cols-3 gap-2">
+
+            {/* Trust chips */}
+            <div className="mt-2 grid w-full grid-cols-3 gap-1.5">
               {TRUST_CHIPS.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-white/[0.04] px-2 text-[11px] font-medium text-white/85 ring-1 ring-white/[0.06]"
+                  className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white/[0.03] px-2 text-[10.5px] font-medium text-white/85 ring-1 ring-white/[0.07] whitespace-nowrap"
                 >
-                  <Icon className="size-3.5 text-accent shrink-0" strokeWidth={2} />
-                  <span className="truncate">{label}</span>
+                  <Icon className="size-3.5 text-accent shrink-0" strokeWidth={1.75} />
+                  {label}
                 </span>
               ))}
             </div>
           </section>
 
-          {/* ── 2 · Footer Search ────────────────────────────── */}
-          <section className="mt-9">
-            <label className="mb-2 block text-[12px] font-medium text-white/60">
-              What are you looking for?
-            </label>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = new FormData(e.currentTarget).get("q")?.toString().trim();
-                if (q) window.location.href = `/help?q=${encodeURIComponent(q)}`;
-              }}
-              className="flex h-11 items-center gap-2 rounded-full bg-black/40 px-4 ring-1 ring-white/[0.08] focus-within:ring-accent/40"
-            >
-              <Search className="size-4 shrink-0 text-white/40" />
-              <input
-                name="q"
-                type="search"
-                placeholder="Search help articles..."
-                className="min-w-0 flex-1 bg-transparent text-[14px] text-white placeholder:text-white/35 focus:outline-none"
-              />
-            </form>
+          {/* ── 2 · Quick help header ─────────────────────────── */}
+          <section className="mt-7">
+            <p className="text-[13px] text-white/60">
+              Need help finding something? Choose one of the options below.
+            </p>
           </section>
 
           {/* ── 3 · Quick Actions ────────────────────────────── */}
-          <section className="mt-8">
+          <section className="mt-3">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
               {QUICK_ACTIONS.map(({ icon: Icon, label, to }) => (
                 <Link
                   key={label}
                   to={to as never}
-                  className="group flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2.5 ring-1 ring-white/[0.06] transition-all duration-[150ms] hover:bg-white/[0.06] hover:ring-accent/30 active:scale-[0.98]"
+                  className="group flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2 ring-1 ring-white/[0.06] transition-all duration-[180ms] hover:-translate-y-0.5 hover:bg-white/[0.05] hover:ring-accent/30 active:scale-[0.98]"
                 >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent ring-1 ring-accent/20">
-                    <Icon className="size-4" strokeWidth={2} />
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20">
+                    <Icon className="size-3.5" strokeWidth={2} />
                   </span>
-                  <span className="text-[13.5px] font-medium text-white/90 group-hover:text-white">
+                  <span className="text-[13px] font-medium text-white/90 group-hover:text-white truncate">
                     {label}
                   </span>
                 </Link>
@@ -244,35 +241,33 @@ export function Footer() {
           </section>
 
           {/* ── 4 · Link columns ─────────────────────────────── */}
-          <section className="mt-9 md:mt-12 md:grid md:grid-cols-3 md:gap-10">
-            <LinkColumn title="Need Help?" links={SUPPORT_LINKS} />
-            <LinkColumn title="Company"    links={COMPANY_LINKS} />
-            <LinkColumn title="Legal"      links={LEGAL_LINKS} />
+          <section className="mt-6 md:mt-10 md:grid md:grid-cols-3 md:gap-10">
+            <LinkColumn title="Need Help" links={SUPPORT_LINKS} />
+            <LinkColumn title="Company"   links={COMPANY_LINKS} />
+            <LinkColumn title="Legal"     links={LEGAL_LINKS} />
           </section>
 
           {/* ── 5 · Newsletter ───────────────────────────────── */}
-          <section className="mt-10 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/[0.06]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <section className="mt-7 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h5 className="text-[16px] font-semibold tracking-tight text-white">Stay Updated</h5>
-                <p className="mt-1 text-[12.5px] text-white/55">
-                  Exclusive deals, flash sales and new arrivals.
-                </p>
+                <h5 className="text-[15px] font-semibold tracking-tight text-white leading-tight">Stay Updated</h5>
+                <p className="mt-0.5 text-[12px] text-white/55">Exclusive deals & new arrivals.</p>
               </div>
               <form
                 onSubmit={(e) => e.preventDefault()}
                 className="flex w-full max-w-md flex-col gap-1.5"
               >
-                <div className="flex h-11 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1.5 ring-1 ring-white/[0.08] focus-within:ring-accent/40">
+                <div className="flex h-10 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1 ring-1 ring-white/[0.08] focus-within:ring-accent/50 transition-colors">
                   <input
                     type="email"
                     required
                     placeholder="Enter your email"
-                    className="min-w-0 flex-1 bg-transparent text-[13.5px] text-white placeholder:text-white/35 focus:outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-[13px] text-white placeholder:text-white/35 focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className="h-8 shrink-0 rounded-full bg-accent px-4 text-[12.5px] font-semibold text-accent-foreground transition-all duration-[150ms] hover:brightness-110 active:scale-[0.98]"
+                    className="h-8 shrink-0 rounded-full bg-accent px-5 text-[12.5px] font-semibold text-accent-foreground transition-all duration-[180ms] hover:brightness-110 active:scale-[0.98]"
                   >
                     Subscribe
                   </button>
@@ -282,10 +277,10 @@ export function Footer() {
             </div>
           </section>
 
-          {/* ── 6 · Socials (lazy content, only paints when in view) ── */}
-          <section className="mt-10 flex flex-col items-center gap-3 content-visibility-auto">
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">Follow us</p>
-            <div className="flex flex-wrap justify-center gap-2.5">
+          {/* ── 6 · Socials ──────────────────────────────────── */}
+          <section className="mt-7 flex flex-col items-center gap-2.5 content-visibility-auto">
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.22em] text-white/40">Follow us</p>
+            <div className="flex flex-wrap justify-center gap-2">
               {SOCIALS.map(({ icon: Icon, label, href, isX }) => (
                 <a
                   key={label}
@@ -293,14 +288,14 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="grid size-10 place-items-center rounded-full bg-white/[0.04] text-white/75 ring-1 ring-white/[0.06] transition-all duration-[180ms] hover:-translate-y-0.5 hover:scale-[1.05] hover:text-accent hover:ring-accent/40 hover:shadow-[0_0_20px_-4px] hover:shadow-accent/50"
+                  className="grid size-9 place-items-center rounded-full bg-white/[0.03] text-white/75 ring-1 ring-white/[0.08] transition-all duration-[180ms] hover:-translate-y-0.5 hover:scale-[1.05] hover:text-accent hover:ring-accent/40 hover:shadow-[0_0_18px_-4px] hover:shadow-accent/60"
                 >
                   {isX ? (
-                    <svg viewBox="0 0 24 24" className="size-[16px] fill-current" aria-hidden>
+                    <svg viewBox="0 0 24 24" className="size-[15px] fill-current" aria-hidden>
                       <path d="M18.244 2H21l-6.52 7.45L22 22h-6.86l-4.77-6.24L4.8 22H2l7.02-8.02L2 2h6.94l4.31 5.7L18.24 2Zm-1.2 18h1.9L7.06 4H5.06l11.98 16Z" />
                     </svg>
                   ) : (
-                    Icon ? <Icon className="size-[17px]" strokeWidth={1.75} /> : null
+                    Icon ? <Icon className="size-[16px]" strokeWidth={1.75} /> : null
                   )}
                 </a>
               ))}
@@ -308,62 +303,55 @@ export function Footer() {
           </section>
 
           {/* ── 7 · Trust features 2×2 ───────────────────────── */}
-          <section className="mt-10 grid grid-cols-2 gap-2.5">
+          <section className="mt-7 grid grid-cols-2 gap-2">
             {TRUST_FEATURES.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="flex items-start gap-2.5 rounded-xl bg-white/[0.03] px-3 py-3 ring-1 ring-white/[0.06]"
+                className="flex items-center gap-2.5 rounded-lg bg-white/[0.03] px-2.5 py-2.5 ring-1 ring-white/[0.06]"
               >
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/10 text-accent ring-1 ring-accent/20">
-                  <Icon className="size-4" strokeWidth={2} />
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20">
+                  <Icon className="size-[15px]" strokeWidth={2} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold text-white/90 leading-tight">{title}</p>
-                  <p className="mt-0.5 text-[11px] text-white/50 leading-snug">{desc}</p>
+                  <p className="text-[12.5px] font-semibold text-white/90 leading-tight truncate">{title}</p>
+                  <p className="mt-0.5 text-[11px] text-white/50 leading-tight truncate">{desc}</p>
                 </div>
               </div>
             ))}
           </section>
 
           {/* ── 8 · Payment methods ──────────────────────────── */}
-          <section className="mt-9">
-            <p className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">
+          <section className="mt-7">
+            <p className="mb-2.5 text-center text-[10.5px] font-medium uppercase tracking-[0.22em] text-white/40">
               We accept
             </p>
             <div className="flex flex-wrap justify-center gap-1.5">
-              {PAYMENT_METHODS.map((p) => (
-                <span
-                  key={p}
-                  className="inline-flex h-7 items-center rounded-md bg-white/[0.05] px-2.5 text-[10.5px] font-semibold tracking-wide text-white/70 ring-1 ring-white/[0.06]"
-                >
-                  {p}
-                </span>
-              ))}
+              {PAYMENTS.map((p) => <PayMark key={p} label={p} />)}
             </div>
           </section>
 
           {/* ── 9 · Country & Language ───────────────────────── */}
-          <section className="mt-9 flex justify-center">
+          <section className="mt-6 flex justify-center">
             <button
               type="button"
-              className="inline-flex min-w-[220px] items-center justify-center gap-2 rounded-full bg-white/[0.04] px-5 py-2.5 text-[13px] text-white/85 ring-1 ring-white/[0.08] transition-colors duration-[180ms] hover:text-white hover:ring-white/20"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.03] px-5 py-2 text-[12.5px] text-white/85 ring-1 ring-white/[0.08] transition-colors duration-[180ms] hover:text-white hover:ring-white/20"
             >
-              <Globe2 className="size-4 text-accent" />
+              <Globe2 className="size-3.5 text-accent" strokeWidth={2} />
               <span className="font-medium">India</span>
               <span className="text-white/25">·</span>
               <span>English</span>
-              <ChevronDown className="size-3.5 text-white/40" />
+              <ChevronDown className="size-3 text-white/40" />
             </button>
           </section>
 
           {/* ── 10 · Android app (conditional) ───────────────── */}
           {hasAndroidApp && (
-            <section className="mt-8 flex justify-center">
+            <section className="mt-5 flex justify-center">
               <a
                 href={(import.meta.env.VITE_ANDROID_APP_URL as string) || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-xl bg-white/[0.05] px-4 py-2.5 ring-1 ring-white/[0.08] transition-all hover:ring-accent/30"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-4 py-2 ring-1 ring-white/[0.08] transition-all hover:ring-accent/30"
               >
                 <svg viewBox="0 0 24 24" className="size-5 fill-accent" aria-hidden>
                   <path d="M3 20.5V3.5c0-.4.1-.7.3-.9l10.6 9.4L3.3 21.4c-.2-.2-.3-.5-.3-.9zm12.5-8.5 3.6-2c.7-.4.7-1.4 0-1.8l-3.2-1.8L12.8 9l2.7 3zm-1 1.5-11.2 9.9c.2.1.5.1.7 0l12.4-6.9-1.9-3zM4 2.6l11 9.9 2-2.2L4.7 2.5c-.2-.1-.5-.1-.7.1z"/>
@@ -377,13 +365,16 @@ export function Footer() {
           )}
 
           {/* ── 11 · Copyright ───────────────────────────────── */}
-          <section className="mt-8 flex flex-col items-center gap-2.5 border-t border-white/[0.05] pt-6 text-center">
-            <p className="text-[11px] text-white/50">
-              © 2026 <BrandName /> · Made with <span className="text-accent">♥</span> for Global Shopping
+          <section className="mt-7 flex flex-col items-center gap-1.5 border-t border-white/[0.05] pt-5 text-center">
+            <p className="text-[12px] text-white/80">
+              © 2026 <BrandName />
             </p>
-            <nav className="flex gap-4 text-[11px] text-white/40">
+            <p className="text-[11px] text-white/45">Trusted Marketplace for Everyone.</p>
+            <nav className="mt-1 flex gap-3 text-[11px] text-white/45">
               <Link to="/privacy" className="transition-colors duration-[180ms] hover:text-white">Privacy</Link>
+              <span className="text-white/20">•</span>
               <Link to="/terms" className="transition-colors duration-[180ms] hover:text-white">Terms</Link>
+              <span className="text-white/20">•</span>
               <Link to="/privacy" className="transition-colors duration-[180ms] hover:text-white">Cookies</Link>
             </nav>
           </section>
