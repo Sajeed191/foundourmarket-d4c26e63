@@ -325,12 +325,16 @@ export function LiveChat() {
       {/* Minimal floating support orb — 56px, orange gradient, gentle pulse. */}
       {!open && !isProductPage && (
         <DraggableOrb
-          orbHidden={orbHidden}
+          peek={orbHidden}
           availability={availability}
           unread={unread}
-          onTap={() => setMenuOpen(true)}
+          onTap={() => { dismissGreeting(); setMenuOpen(true); }}
+          onDragChange={(d) => { draggingRef.current = d; if (d) dismissGreeting(); }}
+          greetVisible={greetVisible}
+          onDismissGreeting={dismissGreeting}
         />
       )}
+
 
 
       {/* Premium bottom sheet — support quick actions */}
