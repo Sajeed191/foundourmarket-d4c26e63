@@ -1,26 +1,8 @@
 import * as React from 'react'
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components'
+import { EmailShell, InfoList, type Tone } from './_ui'
 import type { TemplateEntry } from './registry'
 
-/* FoundOurMarket™ cyber-dark email system — shared shell + per-event content. */
-
-const BG = '#070a12'
-const PANEL = '#0d1322'
-const BORDER = '#1c2740'
-const TEXT = '#e7ecf6'
-const MUTED = '#8a96ad'
-const ACCENT = '#ff8a3d'
+/* FoundOurMarket™ order emails — all consume the shared premium EmailShell. */
 
 export interface OrderEmailProps {
   orderNumber?: string
@@ -29,226 +11,175 @@ export interface OrderEmailProps {
   trackingNumber?: string
   carrier?: string
   refundAmount?: string
+  trackingUrl?: string
+  orderUrl?: string
+  payUrl?: string
   unsubscribeUrl?: string
 }
 
-function Shell({
-  badge,
-  heading,
-  intro,
-  children,
-  unsubscribeUrl,
-}: {
-  badge: string
-  heading: string
-  intro: string
-  children?: React.ReactNode
-  unsubscribeUrl?: string
-}) {
-  return (
-    <Html>
-      <Head />
-      <Preview>{heading}</Preview>
-      <Body style={{ backgroundColor: BG, margin: 0, padding: '32px 0', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
-        <Container style={{ width: '100%', maxWidth: '560px', margin: '0 auto', padding: '0 16px' }}>
-          <Section style={{ textAlign: 'center', padding: '8px 0 20px' }}>
-            <Text style={{ margin: 0, fontSize: '11px', letterSpacing: '4px', textTransform: 'uppercase', color: ACCENT, fontWeight: 700 }}>
-              FoundOurMarket™
-            </Text>
-            <Text style={{ margin: '6px 0 0', fontSize: '12px', color: MUTED }}>
-              Everything You Need — All in One Place 🌍
-            </Text>
-          </Section>
-
-          <Section
-            style={{
-              backgroundColor: PANEL,
-              border: `1px solid ${BORDER}`,
-              borderRadius: '20px',
-              padding: '36px 32px',
-              boxShadow: '0 24px 60px -24px rgba(255,138,61,0.35)',
-            }}
-          >
-            <Section
-              style={{
-                display: 'inline-block',
-                backgroundColor: 'rgba(255,138,61,0.14)',
-                border: '1px solid rgba(255,138,61,0.3)',
-                borderRadius: '999px',
-                padding: '6px 14px',
-                marginBottom: '20px',
-              }}
-            >
-              <Text style={{ margin: 0, fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: ACCENT, fontWeight: 700 }}>
-                {badge}
-              </Text>
-            </Section>
-
-            <Heading style={{ margin: '0 0 14px', fontSize: '24px', lineHeight: '1.25', color: TEXT, fontWeight: 700 }}>
-              {heading}
-            </Heading>
-            <Text style={{ margin: '0 0 22px', fontSize: '15px', lineHeight: '1.65', color: MUTED }}>
-              {intro}
-            </Text>
-            {children}
-          </Section>
-
-          <Hr style={{ borderColor: BORDER, margin: '24px 0 16px' }} />
-          <Section style={{ textAlign: 'center', padding: '0 0 8px' }}>
-            <Text style={{ margin: 0, fontSize: '11px', color: MUTED }}>
-              Need help? Reach us at support@foundourmarket.com
-            </Text>
-            <Text style={{ margin: '6px 0 0', fontSize: '11px', color: '#5a6a7d' }}>
-              © {new Date().getFullYear()} FoundOurMarket™. All rights reserved.
-            </Text>
-            {unsubscribeUrl && (
-              <Text style={{ margin: '10px 0 0', fontSize: '11px', color: '#5a6a7d' }}>
-                Don't want these emails?{' '}
-                <Link href={unsubscribeUrl} style={{ color: MUTED, textDecoration: 'underline' }}>
-                  Unsubscribe
-                </Link>
-              </Text>
-            )}
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  )
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <Section style={{ marginBottom: '8px' }}>
-      <Text style={{ margin: 0, fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', color: MUTED }}>
-        {label}
-      </Text>
-      <Text style={{ margin: '2px 0 0', fontSize: '15px', color: TEXT, fontWeight: 600 }}>{value}</Text>
-    </Section>
-  )
-}
-
-function DetailCard({ children }: { children: React.ReactNode }) {
-  return (
-    <Section
-      style={{
-        backgroundColor: 'rgba(255,138,61,0.06)',
-        border: `1px solid ${BORDER}`,
-        borderRadius: '14px',
-        padding: '18px 20px',
-      }}
-    >
-      {children}
-    </Section>
-  )
-}
-
-const greet = (name?: string) => (name ? `Hi ${name}, ` : '')
+const greet = (n?: string) => (n ? `Hi ${n}, ` : '')
 const ref = (n?: string) => (n ? `#${n}` : 'your order')
 
-/* ---------- Order confirmed ---------- */
-function OrderConfirmedEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Order Confirmed"
-      heading="Your order is confirmed."
-      intro={`${greet(customerName)}thanks for shopping with FoundOurMarket™. We've received order ${ref(orderNumber)} and our team is preparing it for dispatch.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {amount && <DetailRow label="Order total" value={amount} />}
-      </DetailCard>
-    </Shell>
-  )
+function build(opts: {
+  badge: string
+  tone?: Tone
+  heading: string
+  intro: (p: OrderEmailProps) => string
+  actionLabel?: string
+  actionKey?: 'orderUrl' | 'trackingUrl' | 'payUrl'
+  items: (p: OrderEmailProps) => Array<{ label: string; value?: React.ReactNode }>
+  note?: string
+}) {
+  return function Email(p: OrderEmailProps) {
+    const actionUrl = opts.actionKey ? p[opts.actionKey] : undefined
+    return (
+      <EmailShell
+        preview={opts.heading}
+        badge={opts.badge}
+        badgeTone={opts.tone ?? 'accent'}
+        heading={opts.heading}
+        intro={opts.intro(p)}
+        actionUrl={actionUrl}
+        actionLabel={actionUrl ? opts.actionLabel : undefined}
+        actionTone={opts.tone ?? 'accent'}
+        unsubscribeUrl={p.unsubscribeUrl}
+        note={opts.note}
+      >
+        <InfoList items={opts.items(p)} />
+      </EmailShell>
+    )
+  }
 }
 
-/* ---------- Payment verified ---------- */
-function PaymentVerifiedEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Payment Verified"
-      heading="Payment received."
-      intro={`${greet(customerName)}we've securely verified your payment for order ${ref(orderNumber)}. Your order is now fully paid and moving to fulfilment.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {amount && <DetailRow label="Amount paid" value={amount} />}
-      </DetailCard>
-    </Shell>
-  )
-}
+const OrderConfirmedEmail = build({
+  badge: 'Order Confirmed',
+  tone: 'accent',
+  heading: 'Your order is confirmed',
+  intro: (p) => `${greet(p.customerName)}thanks for shopping with FoundOurMarket™. We've received order ${ref(p.orderNumber)} and our team is preparing it for dispatch.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Order total', value: p.amount },
+  ],
+})
 
-/* ---------- Shipped ---------- */
-function ShippedEmail({ orderNumber, customerName, trackingNumber, carrier, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Shipped"
-      heading="Your order is on its way."
-      intro={`${greet(customerName)}great news — order ${ref(orderNumber)} has been shipped and is now in transit.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {carrier && <DetailRow label="Carrier" value={carrier} />}
-        {trackingNumber && <DetailRow label="Tracking number" value={trackingNumber} />}
-      </DetailCard>
-    </Shell>
-  )
-}
+const PaymentVerifiedEmail = build({
+  badge: 'Payment Verified',
+  tone: 'success',
+  heading: 'Payment received',
+  intro: (p) => `${greet(p.customerName)}we've securely verified your payment for order ${ref(p.orderNumber)}. Your order is now fully paid and moving to fulfilment.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Amount paid', value: p.amount },
+  ],
+})
 
-/* ---------- Out for delivery ---------- */
-function OutForDeliveryEmail({ orderNumber, customerName, trackingNumber, carrier, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Out for Delivery"
-      heading="Arriving today."
-      intro={`${greet(customerName)}order ${ref(orderNumber)} is out for delivery and should reach you soon. Please keep an eye out.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {carrier && <DetailRow label="Carrier" value={carrier} />}
-        {trackingNumber && <DetailRow label="Tracking number" value={trackingNumber} />}
-      </DetailCard>
-    </Shell>
-  )
-}
+const ShippedEmail = build({
+  badge: 'Shipped',
+  tone: 'info',
+  heading: 'Your order is on its way',
+  intro: (p) => `${greet(p.customerName)}great news — order ${ref(p.orderNumber)} has been shipped and is now in transit.`,
+  actionLabel: 'Track shipment',
+  actionKey: 'trackingUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Carrier', value: p.carrier },
+    { label: 'Tracking number', value: p.trackingNumber },
+  ],
+})
 
-/* ---------- Delivered ---------- */
-function DeliveredEmail({ orderNumber, customerName, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Delivered"
-      heading="Delivered. Enjoy!"
-      intro={`${greet(customerName)}order ${ref(orderNumber)} has been delivered. We hope you love it — thank you for choosing FoundOurMarket™.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-      </DetailCard>
-    </Shell>
-  )
-}
+const OutForDeliveryEmail = build({
+  badge: 'Out for Delivery',
+  tone: 'info',
+  heading: 'Arriving today',
+  intro: (p) => `${greet(p.customerName)}order ${ref(p.orderNumber)} is out for delivery and should reach you soon. Please keep an eye out.`,
+  actionLabel: 'Track shipment',
+  actionKey: 'trackingUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Carrier', value: p.carrier },
+    { label: 'Tracking number', value: p.trackingNumber },
+  ],
+})
 
-/* ---------- Refund processed ---------- */
-function RefundProcessedEmail({ orderNumber, customerName, refundAmount, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Refund Processed"
-      heading="Your refund is on the way."
-      intro={`${greet(customerName)}we've processed your refund for order ${ref(orderNumber)}. Depending on your bank, it may take 5–7 business days to reflect.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {refundAmount && <DetailRow label="Refund amount" value={refundAmount} />}
-      </DetailCard>
-    </Shell>
-  )
-}
+const DeliveredEmail = build({
+  badge: 'Delivered',
+  tone: 'success',
+  heading: 'Delivered — enjoy!',
+  intro: (p) => `${greet(p.customerName)}order ${ref(p.orderNumber)} has been delivered. We hope you love it — thank you for choosing FoundOurMarket™.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [{ label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined }],
+})
 
-const sampleTracking = { orderNumber: '8F3A21C9', customerName: 'Alex', trackingNumber: 'FOM1234567890', carrier: 'BlueDart' }
+const RefundProcessedEmail = build({
+  badge: 'Refund Processed',
+  tone: 'success',
+  heading: 'Your refund is on the way',
+  intro: (p) => `${greet(p.customerName)}we've processed your refund for order ${ref(p.orderNumber)}. Depending on your bank, it may take 5–7 business days to reflect.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Refund amount', value: p.refundAmount },
+  ],
+})
+
+const PaymentFailedEmail = build({
+  badge: 'Payment Failed',
+  tone: 'danger',
+  heading: "We couldn't process your payment",
+  intro: (p) => `${greet(p.customerName)}unfortunately your payment for order ${ref(p.orderNumber)} didn't go through. Your order is on hold until payment is completed.`,
+  actionLabel: 'Retry payment',
+  actionKey: 'payUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Amount due', value: p.amount },
+  ],
+})
+
+const OrderProcessingEmail = build({
+  badge: 'Processing',
+  tone: 'accent',
+  heading: "We're preparing your order",
+  intro: (p) => `${greet(p.customerName)}order ${ref(p.orderNumber)} is now being processed. We'll let you know as soon as it's packed and ready to ship.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [{ label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined }],
+})
+
+const OrderPackedEmail = build({
+  badge: 'Packed',
+  tone: 'accent',
+  heading: 'Your order is packed',
+  intro: (p) => `${greet(p.customerName)}order ${ref(p.orderNumber)} has been packed and is ready for dispatch. It'll be on its way to you very soon.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [{ label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined }],
+})
+
+const OrderCancelledEmail = build({
+  badge: 'Order Cancelled',
+  tone: 'warning',
+  heading: 'Your order has been cancelled',
+  intro: (p) => `${greet(p.customerName)}order ${ref(p.orderNumber)} has been cancelled. If a payment was made, any eligible refund will be processed automatically.`,
+  actionLabel: 'View order',
+  actionKey: 'orderUrl',
+  items: (p) => [
+    { label: 'Order number', value: p.orderNumber ? `#${p.orderNumber}` : undefined },
+    { label: 'Order total', value: p.amount },
+  ],
+})
+
+const sampleTracking = {
+  orderNumber: '8F3A21C9',
+  customerName: 'Alex',
+  trackingNumber: 'FOM1234567890',
+  carrier: 'BlueDart',
+}
 
 export const orderConfirmedTemplate = {
   component: OrderConfirmedEmail,
@@ -291,72 +222,6 @@ export const refundProcessedTemplate = {
   displayName: 'Refund processed',
   previewData: { orderNumber: '8F3A21C9', customerName: 'Alex', refundAmount: '₹2,499' },
 } satisfies TemplateEntry
-
-/* ---------- Payment failed ---------- */
-function PaymentFailedEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Payment Failed"
-      heading="We couldn't process your payment."
-      intro={`${greet(customerName)}unfortunately your payment for order ${ref(orderNumber)} didn't go through. Your order is on hold until payment is completed.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {amount && <DetailRow label="Amount due" value={amount} />}
-      </DetailCard>
-    </Shell>
-  )
-}
-
-/* ---------- Order processing ---------- */
-function OrderProcessingEmail({ orderNumber, customerName, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Processing"
-      heading="We're preparing your order."
-      intro={`${greet(customerName)}order ${ref(orderNumber)} is now being processed. We'll let you know as soon as it's packed and ready to ship.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-      </DetailCard>
-    </Shell>
-  )
-}
-
-/* ---------- Order packed ---------- */
-function OrderPackedEmail({ orderNumber, customerName, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Packed"
-      heading="Your order is packed."
-      intro={`${greet(customerName)}order ${ref(orderNumber)} has been packed and is ready for dispatch. It'll be on its way to you very soon.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-      </DetailCard>
-    </Shell>
-  )
-}
-
-/* ---------- Order cancelled ---------- */
-function OrderCancelledEmail({ orderNumber, customerName, amount, unsubscribeUrl }: OrderEmailProps) {
-  return (
-    <Shell
-      unsubscribeUrl={unsubscribeUrl}
-      badge="✦ Order Cancelled"
-      heading="Your order has been cancelled."
-      intro={`${greet(customerName)}order ${ref(orderNumber)} has been cancelled. If a payment was made, any eligible refund will be processed automatically.`}
-    >
-      <DetailCard>
-        {orderNumber && <DetailRow label="Order number" value={`#${orderNumber}`} />}
-        {amount && <DetailRow label="Order total" value={amount} />}
-      </DetailCard>
-    </Shell>
-  )
-}
 
 export const paymentFailedTemplate = {
   component: PaymentFailedEmail,
