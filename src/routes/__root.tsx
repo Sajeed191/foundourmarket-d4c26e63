@@ -874,7 +874,7 @@ function AppRoot() {
                             <DeferredShell
                               isAuthRoute={isAuthRoute}
                               isAdminRoute={isAdminRoute}
-                              hideLiveChat={isCheckoutRoute || isTicketRoute}
+                              hideLiveChat={!(isHomeRoute || (pathname === "/account" || pathname.startsWith("/account/"))) || isTicketRoute}
                             />
                             <Toaster position="bottom-center" richColors />
                             <GpuCompatBanner />
