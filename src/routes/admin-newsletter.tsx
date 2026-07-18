@@ -177,11 +177,19 @@ function NewsletterAdmin() {
     },
   });
 
+  const sourceOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of subs ?? []) if (r.source) set.add(r.source);
+    return Array.from(set).sort();
+  }, [subs]);
+
   const filtered = useMemo(() => {
     const rows = subs ?? [];
     const q = query.trim().toLowerCase();
     const base = rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (abuseFilter !== "all" && (r.abuse_status ?? "normal") !== abuseFilter) return false;
+      if (sourceFilter !== "all" && (r.source ?? "") !== sourceFilter) return false;
       if (!q) return true;
       return (
         r.email.toLowerCase().includes(q) ||
@@ -197,7 +205,7 @@ function NewsletterAdmin() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [subs, query, statusFilter, sortKey, sortDir]);
+  }, [subs, query, statusFilter, abuseFilter, sourceFilter, sortKey, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
