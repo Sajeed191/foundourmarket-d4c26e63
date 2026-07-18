@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactElement } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Instagram, Facebook, Youtube, Send, MessageCircle,
@@ -64,25 +64,66 @@ const TRUST_FEATURES = [
   { icon: ShieldCheck, title: "Buyer Protection", desc: "Easy returns always." },
 ];
 
-/* Monochrome inline SVG payment marks (crisp on any bg) */
-const PayMark = ({ label }: { label: string }) => (
-  <span
-    className="inline-flex h-7 min-w-[46px] items-center justify-center rounded-md bg-white/[0.05] px-2.5 text-[10px] font-bold tracking-[0.04em] text-white/75 ring-1 ring-white/[0.07]"
-    aria-label={label}
-  >
-    {label}
-  </span>
+/* ---------- Monochrome payment logos (inline SVG) ---------- */
+
+type LogoProps = { className?: string };
+
+const UPILogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="13" letterSpacing="0.5" fill="currentColor">UPI</text>
+  </svg>
+);
+const VisaLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontWeight="900" fontSize="14" letterSpacing="1" fill="currentColor">VISA</text>
+  </svg>
+);
+const MastercardLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <circle cx="24" cy="12" r="7" fill="currentColor" opacity="0.85" />
+    <circle cx="36" cy="12" r="7" fill="currentColor" opacity="0.45" />
+  </svg>
+);
+const RupayLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="11" letterSpacing="0.3" fill="currentColor">RuPay</text>
+  </svg>
+);
+const PaytmLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="11" letterSpacing="0.2" fill="currentColor">Paytm</text>
+  </svg>
+);
+const GPayLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="700" fontSize="11" letterSpacing="0.2" fill="currentColor">G Pay</text>
+  </svg>
+);
+const PhonePeLogo = ({ className }: LogoProps) => (
+  <svg viewBox="0 0 60 24" className={className} aria-hidden>
+    <text x="30" y="17" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="10" letterSpacing="0.2" fill="currentColor">PhonePe</text>
+  </svg>
 );
 
-const PAYMENTS = ["UPI", "VISA", "Mastercard", "RuPay", "Paytm", "GPay", "PhonePe"];
+const PAYMENTS: { label: string; Logo: (p: LogoProps) => ReactElement }[] = [
+  { label: "UPI",        Logo: UPILogo },
+  { label: "Visa",       Logo: VisaLogo },
+  { label: "Mastercard", Logo: MastercardLogo },
+  { label: "RuPay",      Logo: RupayLogo },
+  { label: "Paytm",      Logo: PaytmLogo },
+  { label: "Google Pay", Logo: GPayLogo },
+  { label: "PhonePe",    Logo: PhonePeLogo },
+];
 
 /* ---------- Primitives ---------- */
+
+const EASE = "duration-[180ms] ease-out";
 
 function TextLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to as never}
-      className="block py-1.5 text-[14px] text-white/65 transition-colors duration-[180ms] hover:text-accent"
+      className={`block py-2 text-[14px] text-white/65 transition-colors ${EASE} hover:text-accent`}
     >
       {label}
     </Link>
@@ -104,12 +145,12 @@ function LinkColumn({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between py-3 md:hidden"
+        className={`flex w-full items-center justify-between py-3.5 md:hidden transition-colors ${EASE} active:text-accent`}
         aria-expanded={open}
       >
         <span className="text-[14.5px] font-semibold tracking-tight text-white">{title}</span>
         <ChevronDown
-          className={`size-4 text-white/50 transition-transform duration-[200ms] ${open ? "rotate-180" : ""}`}
+          className={`size-4 text-white/50 transition-transform ${EASE} ${open ? "rotate-180 text-accent" : ""}`}
         />
       </button>
 
@@ -118,7 +159,7 @@ function LinkColumn({
       </div>
 
       <ul
-        className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-[220ms] ease-out md:mt-3 md:block ${
+        className={`grid overflow-hidden transition-[grid-template-rows,opacity] ${EASE} md:mt-3 md:block ${
           open ? "grid-rows-[1fr] opacity-100 pb-2" : "grid-rows-[0fr] opacity-0 md:grid-rows-[1fr] md:opacity-100 md:pb-0"
         }`}
       >
@@ -140,18 +181,18 @@ function BackToTop() {
   };
   return (
     <div className="mx-auto max-w-6xl px-6 sm:px-8">
-      <div className="flex items-center gap-4 py-5">
-        <span aria-hidden className="h-px flex-1 bg-white/10" />
+      <div className="flex items-center gap-4 py-6">
+        <span aria-hidden className="h-px flex-1 bg-white/[0.08]" />
         <button
           type="button"
           onClick={scroll}
           aria-label="Back to top"
-          className="group inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-medium text-white/70 transition-all duration-[180ms] hover:text-white active:scale-[0.98]"
+          className={`group inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12.5px] font-medium text-white/80 transition-all ${EASE} hover:text-white active:scale-[0.98]`}
         >
-          <ArrowUp className="size-3.5 text-accent transition-transform duration-[180ms] group-hover:-translate-y-0.5" strokeWidth={2.5} />
+          <ArrowUp className={`size-3.5 text-accent transition-transform ${EASE} group-hover:-translate-y-0.5`} strokeWidth={2.5} />
           Back to Top
         </button>
-        <span aria-hidden className="h-px flex-1 bg-white/10" />
+        <span aria-hidden className="h-px flex-1 bg-white/[0.08]" />
       </div>
     </div>
   );
@@ -175,10 +216,10 @@ export function Footer() {
         <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
           <p className="text-[11px] text-white/50 tracking-wide">© 2026 <BrandName /></p>
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[11px] text-white/50">
-            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link to="/returns" className="hover:text-white transition-colors">Refunds</Link>
-            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link to="/privacy" className={`hover:text-white transition-colors ${EASE}`}>Privacy</Link>
+            <Link to="/terms" className={`hover:text-white transition-colors ${EASE}`}>Terms</Link>
+            <Link to="/returns" className={`hover:text-white transition-colors ${EASE}`}>Refunds</Link>
+            <Link to="/contact" className={`hover:text-white transition-colors ${EASE}`}>Contact</Link>
           </nav>
         </div>
       </footer>
@@ -189,32 +230,36 @@ export function Footer() {
     <>
       <BackToTop />
       <footer className="relative bg-[#0b0b0f] text-white mobile-page-clearance">
-        <div className="mx-auto max-w-6xl px-6 pt-8 pb-6 sm:px-8 md:pt-10">
+        <div className="mx-auto max-w-6xl px-6 pt-9 pb-6 sm:px-8 md:pt-11">
           {/* ── 1 · Brand ─────────────────────────────────────── */}
-          <section className="flex flex-col items-start gap-2.5">
-            <Link to="/" aria-label="FoundOurMarket home" className="text-[26px] font-display font-semibold tracking-tight leading-none">
+          <section className="flex flex-col items-start gap-1.5">
+            <Link
+              to="/"
+              aria-label="FoundOurMarket home"
+              className="text-[28px] font-display font-bold tracking-tight leading-none"
+            >
               <BrandName />
             </Link>
-            <p className="text-[13.5px] text-white/70 leading-snug">
+            <p className="text-[13.5px] text-white/80 leading-snug">
               Global Marketplace for Trusted Shopping
             </p>
 
             {/* Trust chips */}
-            <div className="mt-2 grid w-full grid-cols-3 gap-1.5">
+            <div className="mt-3 grid w-full grid-cols-3 gap-1.5">
               {TRUST_CHIPS.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white/[0.03] px-2 text-[10.5px] font-medium text-white/85 ring-1 ring-white/[0.07] whitespace-nowrap"
+                  className={`group inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-white/[0.035] px-2.5 text-[10.5px] font-medium text-white/85 ring-1 ring-white/[0.05] whitespace-nowrap transition-all ${EASE} active:ring-accent/40 active:shadow-[0_0_14px_-4px] active:shadow-accent/60`}
                 >
                   <Icon className="size-3.5 text-accent shrink-0" strokeWidth={1.75} />
-                  {label}
+                  <span className="leading-none">{label}</span>
                 </span>
               ))}
             </div>
           </section>
 
           {/* ── 2 · Quick help header ─────────────────────────── */}
-          <section className="mt-7">
+          <section className="mt-10">
             <p className="text-[13px] text-white/60">
               Need help finding something? Choose one of the options below.
             </p>
@@ -227,7 +272,7 @@ export function Footer() {
                 <Link
                   key={label}
                   to={to as never}
-                  className="group flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2 ring-1 ring-white/[0.06] transition-all duration-[180ms] hover:-translate-y-0.5 hover:bg-white/[0.05] hover:ring-accent/30 active:scale-[0.98]"
+                  className={`group flex w-full items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2 ring-1 ring-white/[0.06] transition-all ${EASE} hover:bg-white/[0.05] hover:ring-accent/30 active:-translate-y-0.5 active:shadow-[0_6px_18px_-8px] active:shadow-accent/50`}
                 >
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20">
                     <Icon className="size-3.5" strokeWidth={2} />
@@ -241,14 +286,14 @@ export function Footer() {
           </section>
 
           {/* ── 4 · Link columns ─────────────────────────────── */}
-          <section className="mt-6 md:mt-10 md:grid md:grid-cols-3 md:gap-10">
+          <section className="mt-9 md:mt-11 md:grid md:grid-cols-3 md:gap-10">
             <LinkColumn title="Need Help" links={SUPPORT_LINKS} />
             <LinkColumn title="Company"   links={COMPANY_LINKS} />
             <LinkColumn title="Legal"     links={LEGAL_LINKS} />
           </section>
 
           {/* ── 5 · Newsletter ───────────────────────────────── */}
-          <section className="mt-7 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+          <section className="mt-10 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/[0.05]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h5 className="text-[15px] font-semibold tracking-tight text-white leading-tight">Stay Updated</h5>
@@ -258,7 +303,7 @@ export function Footer() {
                 onSubmit={(e) => e.preventDefault()}
                 className="flex w-full max-w-md flex-col gap-1.5"
               >
-                <div className="flex h-10 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1 ring-1 ring-white/[0.08] focus-within:ring-accent/50 transition-colors">
+                <div className={`flex h-11 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1 ring-1 ring-white/[0.06] transition-colors ${EASE} focus-within:ring-accent/50`}>
                   <input
                     type="email"
                     required
@@ -267,7 +312,7 @@ export function Footer() {
                   />
                   <button
                     type="submit"
-                    className="h-8 shrink-0 rounded-full bg-accent px-5 text-[12.5px] font-semibold text-accent-foreground transition-all duration-[180ms] hover:brightness-110 active:scale-[0.98]"
+                    className={`h-9 shrink-0 rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[13px] font-semibold text-accent-foreground shadow-[0_4px_14px_-4px] shadow-accent/50 transition-all ${EASE} hover:brightness-110 active:scale-[0.98]`}
                   >
                     Subscribe
                   </button>
@@ -278,9 +323,9 @@ export function Footer() {
           </section>
 
           {/* ── 6 · Socials ──────────────────────────────────── */}
-          <section className="mt-7 flex flex-col items-center gap-2.5 content-visibility-auto">
+          <section className="mt-10 flex flex-col items-center gap-3 content-visibility-auto">
             <p className="text-[10.5px] font-medium uppercase tracking-[0.22em] text-white/40">Follow us</p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2.5">
               {SOCIALS.map(({ icon: Icon, label, href, isX }) => (
                 <a
                   key={label}
@@ -288,14 +333,14 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="grid size-9 place-items-center rounded-full bg-white/[0.03] text-white/75 ring-1 ring-white/[0.08] transition-all duration-[180ms] hover:-translate-y-0.5 hover:scale-[1.05] hover:text-accent hover:ring-accent/40 hover:shadow-[0_0_18px_-4px] hover:shadow-accent/60"
+                  className={`grid size-10 place-items-center rounded-full bg-white/[0.035] text-white/80 ring-1 ring-white/[0.07] transition-all ${EASE} hover:scale-110 hover:text-accent hover:ring-accent/50 hover:shadow-[0_0_22px_-4px] hover:shadow-accent/70 active:scale-[0.96]`}
                 >
                   {isX ? (
-                    <svg viewBox="0 0 24 24" className="size-[15px] fill-current" aria-hidden>
+                    <svg viewBox="0 0 24 24" className="size-[17px] fill-current" aria-hidden>
                       <path d="M18.244 2H21l-6.52 7.45L22 22h-6.86l-4.77-6.24L4.8 22H2l7.02-8.02L2 2h6.94l4.31 5.7L18.24 2Zm-1.2 18h1.9L7.06 4H5.06l11.98 16Z" />
                     </svg>
                   ) : (
-                    Icon ? <Icon className="size-[16px]" strokeWidth={1.75} /> : null
+                    Icon ? <Icon className="size-[17px]" strokeWidth={1.75} /> : null
                   )}
                 </a>
               ))}
@@ -303,11 +348,11 @@ export function Footer() {
           </section>
 
           {/* ── 7 · Trust features 2×2 ───────────────────────── */}
-          <section className="mt-7 grid grid-cols-2 gap-2">
+          <section className="mt-10 grid grid-cols-2 gap-2">
             {TRUST_FEATURES.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="flex items-center gap-2.5 rounded-lg bg-white/[0.03] px-2.5 py-2.5 ring-1 ring-white/[0.06]"
+                className="flex items-center gap-2.5 rounded-lg bg-white/[0.045] px-2.5 py-2 ring-1 ring-white/[0.06]"
               >
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20">
                   <Icon className="size-[15px]" strokeWidth={2} />
@@ -321,37 +366,45 @@ export function Footer() {
           </section>
 
           {/* ── 8 · Payment methods ──────────────────────────── */}
-          <section className="mt-7">
-            <p className="mb-2.5 text-center text-[10.5px] font-medium uppercase tracking-[0.22em] text-white/40">
+          <section className="mt-10">
+            <p className="mb-3 text-center text-[10.5px] font-medium uppercase tracking-[0.22em] text-white/40">
               We accept
             </p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {PAYMENTS.map((p) => <PayMark key={p} label={p} />)}
+            <div className="flex flex-wrap justify-center gap-2">
+              {PAYMENTS.map(({ label, Logo }) => (
+                <span
+                  key={label}
+                  aria-label={label}
+                  className="inline-flex h-8 w-[54px] items-center justify-center rounded-md bg-white/[0.05] px-1.5 text-white/80 ring-1 ring-white/[0.07]"
+                >
+                  <Logo className="h-4 w-full" />
+                </span>
+              ))}
             </div>
           </section>
 
           {/* ── 9 · Country & Language ───────────────────────── */}
-          <section className="mt-6 flex justify-center">
+          <section className="mt-10 flex justify-center">
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.03] px-5 py-2 text-[12.5px] text-white/85 ring-1 ring-white/[0.08] transition-colors duration-[180ms] hover:text-white hover:ring-white/20"
+              className={`inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/[0.035] px-5 text-[12.5px] text-white/85 ring-1 ring-white/[0.07] transition-all ${EASE} hover:text-white hover:ring-accent/40 hover:shadow-[0_0_18px_-6px] hover:shadow-accent/60 active:scale-[0.98]`}
             >
               <Globe2 className="size-3.5 text-accent" strokeWidth={2} />
               <span className="font-medium">India</span>
               <span className="text-white/25">·</span>
               <span>English</span>
-              <ChevronDown className="size-3 text-white/40" />
+              <ChevronDown className={`size-3 text-white/40 transition-transform ${EASE} group-hover:rotate-180`} />
             </button>
           </section>
 
           {/* ── 10 · Android app (conditional) ───────────────── */}
           {hasAndroidApp && (
-            <section className="mt-5 flex justify-center">
+            <section className="mt-6 flex justify-center">
               <a
                 href={(import.meta.env.VITE_ANDROID_APP_URL as string) || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-4 py-2 ring-1 ring-white/[0.08] transition-all hover:ring-accent/30"
+                className={`inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-4 py-2 ring-1 ring-white/[0.08] transition-all ${EASE} hover:ring-accent/30`}
               >
                 <svg viewBox="0 0 24 24" className="size-5 fill-accent" aria-hidden>
                   <path d="M3 20.5V3.5c0-.4.1-.7.3-.9l10.6 9.4L3.3 21.4c-.2-.2-.3-.5-.3-.9zm12.5-8.5 3.6-2c.7-.4.7-1.4 0-1.8l-3.2-1.8L12.8 9l2.7 3zm-1 1.5-11.2 9.9c.2.1.5.1.7 0l12.4-6.9-1.9-3zM4 2.6l11 9.9 2-2.2L4.7 2.5c-.2-.1-.5-.1-.7.1z"/>
@@ -365,17 +418,17 @@ export function Footer() {
           )}
 
           {/* ── 11 · Copyright ───────────────────────────────── */}
-          <section className="mt-7 flex flex-col items-center gap-1.5 border-t border-white/[0.05] pt-5 text-center">
-            <p className="text-[12px] text-white/80">
-              © 2026 <BrandName />
+          <section className="mt-8 flex flex-col items-center gap-1.5 border-t border-white/[0.05] pt-5 text-center">
+            <p className="text-[12.5px] text-white/45">
+              © 2026 <span className="font-semibold text-white/90"><BrandName /></span>
             </p>
-            <p className="text-[11px] text-white/45">Trusted Marketplace for Everyone.</p>
-            <nav className="mt-1 flex gap-3 text-[11px] text-white/45">
-              <Link to="/privacy" className="transition-colors duration-[180ms] hover:text-white">Privacy</Link>
+            <p className="text-[11px] text-white/40">Trusted Marketplace for Everyone.</p>
+            <nav className="mt-1 flex gap-3 text-[11px] text-white/40">
+              <Link to="/privacy" className={`transition-colors ${EASE} hover:text-white`}>Privacy</Link>
               <span className="text-white/20">•</span>
-              <Link to="/terms" className="transition-colors duration-[180ms] hover:text-white">Terms</Link>
+              <Link to="/terms" className={`transition-colors ${EASE} hover:text-white`}>Terms</Link>
               <span className="text-white/20">•</span>
-              <Link to="/privacy" className="transition-colors duration-[180ms] hover:text-white">Cookies</Link>
+              <Link to="/privacy" className={`transition-colors ${EASE} hover:text-white`}>Cookies</Link>
             </nav>
           </section>
         </div>
