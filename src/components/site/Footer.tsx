@@ -105,7 +105,7 @@ const PhonePeLogo = ({ className }: LogoProps) => (
   </svg>
 );
 
-const PAYMENTS: { label: string; Logo: (p: LogoProps) => React.ReactElement }[] = [
+const PAYMENTS: { label: string; Logo: (p: LogoProps) => ReactElement }[] = [
   { label: "UPI",        Logo: UPILogo },
   { label: "Visa",       Logo: VisaLogo },
   { label: "Mastercard", Logo: MastercardLogo },
