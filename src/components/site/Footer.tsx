@@ -254,14 +254,14 @@ export function Footer() {
               Global Marketplace for Trusted Shopping
             </p>
 
-            {/* Trust chips — larger, better padding */}
+            {/* Trust chips — 36px, softer border, orange glow on hover/tap */}
             <div className="mt-4 grid w-full grid-cols-3 gap-2">
               {TRUST_CHIPS.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className={`inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-white/[0.035] px-3 py-2 text-[11px] font-medium text-white/85 ring-1 ring-white/[0.08] whitespace-nowrap transition-all ${EASE} active:ring-accent/40 active:shadow-[0_0_14px_-4px] active:shadow-accent/60`}
+                  className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-white/[0.035] px-4 text-[11px] font-medium text-white/85 ring-1 ring-white/[0.06] whitespace-nowrap transition-all ${EASE} hover:ring-accent/40 hover:shadow-[0_0_16px_-4px] hover:shadow-accent/60 active:ring-accent/50 active:shadow-[0_0_18px_-4px] active:shadow-accent/70`}
                 >
-                  <Icon className="size-3.5 text-accent shrink-0" strokeWidth={2} />
+                  <Icon className="size-4 text-accent shrink-0" strokeWidth={2} />
                   <span className="leading-none">{label}</span>
                 </span>
               ))}
@@ -284,13 +284,13 @@ export function Footer() {
                 <Link
                   key={label}
                   to={to as never}
-                  className={`group flex h-12 w-full items-center gap-2.5 rounded-2xl bg-white/[0.03] px-3 ring-1 ring-white/[0.06] shadow-[0_2px_8px_-4px_rgba(0,0,0,0.4)] transition-all ${EASE} hover:bg-white/[0.05] hover:ring-accent/30 active:-translate-y-0.5 active:shadow-[0_8px_20px_-8px] active:shadow-accent/60 active:ring-accent/50`}
+                  className={`group flex h-12 w-full items-center gap-2.5 rounded-2xl bg-white/[0.03] px-3 ring-1 ring-white/[0.06] shadow-[0_2px_8px_-4px_rgba(0,0,0,0.4)] transition-all ${EASE} hover:bg-white/[0.05] hover:ring-accent/30 active:-translate-y-0.5 active:bg-white/[0.07] active:ring-accent/50 active:shadow-[0_10px_22px_-8px] active:shadow-accent/60`}
                   style={{ borderRadius: 16 }}
                 >
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20">
                     <Icon className="size-3.5" strokeWidth={2} />
                   </span>
-                  <span className="text-[13px] font-medium text-white/90 group-hover:text-white truncate">
+                  <span className="text-[13px] font-medium text-white/90 group-hover:text-white truncate leading-none">
                     {label}
                   </span>
                 </Link>
@@ -335,16 +335,16 @@ export function Footer() {
                 onSubmit={(e) => e.preventDefault()}
                 className="flex w-full max-w-md flex-col gap-1.5"
               >
-                <div className={`flex h-12 items-center gap-2 rounded-full bg-black/40 pl-4 pr-1 ring-1 ring-white/[0.06] transition-colors ${EASE} focus-within:ring-accent/50`}>
+                <div className={`flex h-[52px] items-center gap-2 rounded-full bg-black/40 pl-5 pr-1.5 ring-1 ring-white/[0.06] shadow-[0_2px_10px_-6px_rgba(0,0,0,0.6)] transition-all ${EASE} focus-within:ring-accent/50 focus-within:shadow-[0_0_20px_-6px] focus-within:shadow-accent/50`}>
                   <input
                     type="email"
                     required
                     placeholder="Enter your email"
-                    className="min-w-0 flex-1 bg-transparent text-[13px] text-white placeholder:text-white/45 focus:outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-[13.5px] text-white placeholder:text-white/60 focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className={`inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[13px] font-semibold text-accent-foreground shadow-[0_6px_18px_-6px] shadow-accent/60 transition-all ${EASE} hover:brightness-110 active:scale-[0.97]`}
+                    className={`inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-accent via-accent to-accent/85 px-6 text-[13px] font-semibold text-accent-foreground shadow-[0_6px_18px_-6px] shadow-accent/60 transition-all ${EASE} hover:brightness-110 hover:shadow-[0_10px_26px_-8px] hover:shadow-accent/70 active:scale-[0.97]`}
                   >
                     Subscribe
                   </button>
@@ -367,14 +367,14 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`grid size-11 place-items-center rounded-full bg-white/[0.04] text-white/85 ring-1 ring-white/[0.08] transition-all ${EASE} hover:scale-110 hover:text-accent hover:ring-accent/50 hover:shadow-[0_0_24px_-4px] hover:shadow-accent/70 active:scale-[0.96]`}
+                  className={`grid size-11 place-items-center rounded-full bg-white/[0.04] text-white/95 ring-1 ring-white/[0.08] transition-all ${EASE} hover:text-accent hover:ring-accent/50 hover:shadow-[0_0_24px_-4px] hover:shadow-accent/70 active:scale-[1.08]`}
                 >
                   {isX ? (
-                    <svg viewBox="0 0 24 24" className="size-[18px] fill-current" aria-hidden>
+                    <svg viewBox="0 0 24 24" className="size-5 fill-current" aria-hidden>
                       <path d="M18.244 2H21l-6.52 7.45L22 22h-6.86l-4.77-6.24L4.8 22H2l7.02-8.02L2 2h6.94l4.31 5.7L18.24 2Zm-1.2 18h1.9L7.06 4H5.06l11.98 16Z" />
                     </svg>
                   ) : (
-                    Icon ? <Icon className="size-[18px]" strokeWidth={1.9} /> : null
+                    Icon ? <Icon className="size-5" strokeWidth={1.9} /> : null
                   )}
                 </a>
               ))}
@@ -384,11 +384,11 @@ export function Footer() {
           <Divider />
 
           {/* ── 7 · Trust features 2×2 — 2 line clamp ────────── */}
-          <section className="grid grid-cols-2 gap-2">
+          <section className="grid grid-cols-2 gap-2 auto-rows-fr">
             {TRUST_FEATURES.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="flex items-start gap-2.5 rounded-2xl bg-white/[0.045] px-3 py-2.5 ring-1 ring-white/[0.06]"
+                className={`flex h-full items-start gap-3 rounded-2xl bg-white/[0.045] px-3 py-3 ring-1 ring-white/[0.05] transition-all ${EASE} hover:ring-accent/30 hover:shadow-[0_0_18px_-8px] hover:shadow-accent/50`}
                 style={{ borderRadius: 16 }}
               >
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/20 mt-0.5">
@@ -397,7 +397,7 @@ export function Footer() {
                 <div className="min-w-0 flex-1">
                   <p className="text-[12.5px] font-semibold text-white/95 leading-tight">{title}</p>
                   <p
-                    className="mt-0.5 text-[11px] text-white/55 leading-snug overflow-hidden"
+                    className="mt-1 text-[11px] text-white/65 leading-snug overflow-hidden"
                     style={{
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
@@ -423,7 +423,7 @@ export function Footer() {
                 <span
                   key={label}
                   aria-label={label}
-                  className="inline-flex h-8 w-[54px] items-center justify-center rounded-md bg-white/[0.05] px-1.5 text-white/85 ring-1 ring-white/[0.08]"
+                  className={`inline-flex h-8 w-[54px] items-center justify-center rounded-md bg-white/[0.05] px-1.5 text-white/85 ring-1 ring-white/[0.06] transition-all ${EASE} hover:text-accent hover:ring-accent/40 hover:shadow-[0_0_14px_-4px] hover:shadow-accent/60`}
                 >
                   <Logo className="h-4 w-full" />
                 </span>
@@ -469,11 +469,11 @@ export function Footer() {
           )}
 
           {/* ── 11 · Copyright ───────────────────────────────── */}
-          <section className="mt-6 flex flex-col items-center gap-1 border-t border-white/[0.05] pt-4 text-center">
+          <section className="mt-4 flex flex-col items-center gap-1 border-t border-white/[0.05] pt-4 pb-2 text-center">
             <p className="text-[12.5px] text-white/40">
               © 2026 <span className="font-semibold text-white/95"><BrandName /></span>
             </p>
-            <p className="text-[11px] text-white/35">Trusted Marketplace for Everyone.</p>
+            <p className="text-[11px] text-white/40">Connecting Buyers &amp; Sellers Worldwide.</p>
             <nav className="mt-1 flex gap-3 text-[11px] text-white/40">
               <Link to="/privacy" className={`transition-colors ${EASE} hover:text-white`}>Privacy</Link>
               <span className="text-white/20">•</span>
