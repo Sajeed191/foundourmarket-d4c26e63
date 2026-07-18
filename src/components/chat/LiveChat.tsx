@@ -813,3 +813,199 @@ function ChatMenuOption({
   );
 }
 
+// Draggable Messenger-style chat head. Position is NEVER persisted — resets
+// to the default (bottom-right, above bottom nav) on every mount / refresh.
+// Snaps half-hidden to the nearest screen edge on release.
+const ORB_SIZE = 56;
+const EDGE_MARGIN = 16;
+const HIDDEN_RATIO = 0.4; // 40% of the orb sits off-screen after snap
+const TAP_THRESHOLD = 8;
+
+function DraggableOrb({
+  orbHidden,
+  availability,
+  unread,
+  onTap,
+}: {
+  orbHidden: boolean;
+  availability: Availability;
+  unread: number;
+  onTap: () => void;
+}) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const posRef = useRef({ x: 0, y: 0 });
+  const dragRef = useRef({
+    active: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    baseX: 0,
+    baseY: 0,
+    pointerId: 0,
+    rafId: 0,
+    nextX: 0,
+    nextY: 0,
+  });
+
+  const getBounds = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cs = getComputedStyle(document.documentElement);
+    const headerH = parseFloat(cs.getPropertyValue("--app-header-height")) || 64;
+    const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
+    // Fallback nav clearance ~ 104px
+    let navH = 104;
+    if (navRaw) {
+      // Rough parse — if it's a plain px value use it; otherwise measure below
+      const n = parseFloat(navRaw);
+      if (Number.isFinite(n) && !navRaw.includes("calc")) navH = n;
+    }
+    const safeTop = headerH + EDGE_MARGIN;
+    const safeBottom = vh - navH - ORB_SIZE;
+    const minX = EDGE_MARGIN;
+    const maxX = vw - ORB_SIZE - EDGE_MARGIN;
+    return { vw, vh, minX, maxX, minY: safeTop, maxY: Math.max(safeTop, safeBottom) };
+  }, []);
+
+  const applyTransform = useCallback((x: number, y: number, scale = 1, withTransition = false) => {
+    const el = wrapRef.current;
+    if (!el) return;
+    el.style.transition = withTransition
+      ? "transform 260ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "none";
+    el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+  }, []);
+
+  // Initial default position: bottom-right, above bottom nav.
+  useEffect(() => {
+    const place = () => {
+      const b = getBounds();
+      posRef.current = { x: b.maxX, y: b.maxY };
+      applyTransform(b.maxX, b.maxY, 1, false);
+    };
+    place();
+    const onResize = () => {
+      const b = getBounds();
+      const x = Math.min(Math.max(posRef.current.x, b.minX), b.maxX);
+      const y = Math.min(Math.max(posRef.current.y, b.minY), b.maxY);
+      posRef.current = { x, y };
+      applyTransform(x, y, 1, false);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [applyTransform, getBounds]);
+
+  const flushFrame = useCallback(() => {
+    dragRef.current.rafId = 0;
+    applyTransform(dragRef.current.nextX, dragRef.current.nextY, 1.05, false);
+  }, [applyTransform]);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      const d = dragRef.current;
+      d.active = true;
+      d.moved = false;
+      d.pointerId = e.pointerId;
+      d.startX = e.clientX;
+      d.startY = e.clientY;
+      d.baseX = posRef.current.x;
+      d.baseY = posRef.current.y;
+      d.nextX = posRef.current.x;
+      d.nextY = posRef.current.y;
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        /* noop */
+      }
+    },
+    [],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      const d = dragRef.current;
+      if (!d.active) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (!d.moved && Math.hypot(dx, dy) < TAP_THRESHOLD) return;
+      d.moved = true;
+      const b = getBounds();
+      const x = Math.min(Math.max(d.baseX + dx, b.minX), b.maxX);
+      const y = Math.min(Math.max(d.baseY + dy, b.minY), b.maxY);
+      d.nextX = x;
+      d.nextY = y;
+      if (!d.rafId) d.rafId = requestAnimationFrame(flushFrame);
+    },
+    [flushFrame, getBounds],
+  );
+
+  const endDrag = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      const d = dragRef.current;
+      if (!d.active) return;
+      d.active = false;
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        /* noop */
+      }
+      if (d.rafId) {
+        cancelAnimationFrame(d.rafId);
+        d.rafId = 0;
+      }
+
+      if (!d.moved) {
+        // Treat as tap — restore scale, fire onTap.
+        applyTransform(posRef.current.x, posRef.current.y, 1, true);
+        onTap();
+        return;
+      }
+
+      // Snap half-hidden to nearest edge.
+      const b = getBounds();
+      const centerX = d.nextX + ORB_SIZE / 2;
+      const hiddenPx = ORB_SIZE * HIDDEN_RATIO;
+      const snapX =
+        centerX < b.vw / 2 ? -hiddenPx : b.vw - ORB_SIZE + hiddenPx;
+      const snapY = Math.min(Math.max(d.nextY, b.minY), b.maxY);
+      posRef.current = { x: snapX, y: snapY };
+      applyTransform(snapX, snapY, 1, true);
+    },
+    [applyTransform, getBounds, onTap],
+  );
+
+  return (
+    <div
+      ref={wrapRef}
+      className={`fixed left-0 top-0 z-[60] flex items-end gap-2 transition-opacity duration-200 ${orbHidden ? "orb-hidden" : ""}`}
+      style={{ willChange: "transform", touchAction: "none" }}
+    >
+      <button
+        type="button"
+        data-floating-control
+        aria-label="Support options"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        className="group relative grid place-items-center size-14 rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/10 transition-[box-shadow] duration-200 hover:shadow-[0_12px_32px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-breathe touch-none select-none"
+      >
+        <Headset className="size-6" strokeWidth={1.8} />
+        {unread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </button>
+      {/* availability marker retained for a11y parity; visual pill removed while draggable */}
+      <span className="sr-only">
+        {availability === "online" ? "Live chat online" : "Live chat away"}
+      </span>
+    </div>
+  );
+}
+
