@@ -877,43 +877,71 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <UtilityCard
-          icon={LifeBuoy} title="Help & Support"
-          glow="var(--gradient-ember)" accent="var(--color-accent)"
-          lowMotion={lowMotion}
-          desc="Get live assistance from our support team."
-          badge={online ? "Online" : "Offline"} badgeTone={online ? "online" : "offline"}
-          hint="Open Support"
-          onClick={() => setSupportOpen(true)}
-        />
-        <UtilityCard
-          icon={BookOpen} title="Help Articles"
-          glow="linear-gradient(135deg, oklch(0.7 0.16 240 / 0.5), transparent 65%)" accent="oklch(0.7 0.16 240)"
-          lowMotion={lowMotion}
-          desc="Browse guides, tutorials and FAQs."
-          badge={`${HELP_ARTICLE_COUNT} Articles`} badgeTone="accent"
-          hint="Browse Articles"
-          onClick={() => nav({ to: "/help", hash: "faqs" })}
-        />
-        <UtilityCard
-          icon={MessageCircle} title="Contact Us"
-          glow="linear-gradient(135deg, oklch(0.72 0.16 160 / 0.5), transparent 65%)" accent="oklch(0.72 0.16 160)"
-          lowMotion={lowMotion}
-          desc="Choose how you'd like to reach us."
-          chips={[hasWhatsApp ? "WhatsApp" : "Chat", "Email", "Callback"]}
-          hint="Choose Channel"
-          onClick={() => setContactOpen(true)}
-        />
-        <UtilityCard
-          icon={UserCog} title="Profile & Security"
-          glow="linear-gradient(135deg, oklch(0.7 0.2 18 / 0.5), transparent 65%)" accent="oklch(0.7 0.2 18)"
-          lowMotion={lowMotion}
-          desc="Manage your account, privacy and devices."
-          hint="Manage Account"
-          onClick={() => setAccountOpen(true)}
-        />
+      {/* Premium section header — live status + response time */}
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-1">Support &amp; Account</p>
+          <h2 className="text-base sm:text-lg font-display font-semibold leading-tight">Need help? We're here 24/7.</h2>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ring-1 ${
+            online ? "bg-emerald-500/10 text-emerald-400 ring-emerald-500/25" : "bg-amber-500/10 text-amber-400 ring-amber-500/25"
+          }`}>
+            <span className={`relative flex size-1.5`}>
+              {online && <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
+              <span className={`relative inline-flex size-1.5 rounded-full ${online ? "bg-emerald-400" : "bg-amber-400"}`} />
+            </span>
+            {online ? "Online now" : "Away"}
+          </span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">Avg reply · &lt; {minutes} min</span>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <PremiumSupportCard
+          icon={LifeBuoy} title="Help & Support" accent="var(--color-accent)"
+          statusDot={online ? "emerald" : "amber"} statusText={online ? "Online" : "Away"}
+          rows={[
+            { label: "Queue", value: online ? "0 waiting" : "—" },
+            { label: "Avg wait", value: `< ${minutes} min` },
+            { label: "Hours", value: "24/7" },
+          ]}
+          cta="Start Conversation"
+          lowMotion={lowMotion} onClick={() => setSupportOpen(true)}
+        />
+        <PremiumSupportCard
+          icon={BookOpen} title="Knowledge Base" accent="oklch(0.72 0.16 240)"
+          rows={[
+            { label: "Articles", value: `${HELP_ARTICLE_COUNT}` },
+            { label: "Guides", value: "3" },
+            { label: "Updated", value: "This week" },
+          ]}
+          chips={["Shipping", "Payments", "Returns", "Security"]}
+          cta="Browse Knowledge Base"
+          lowMotion={lowMotion} onClick={() => nav({ to: "/help", hash: "faqs" })}
+        />
+        <PremiumSupportCard
+          icon={MessageCircle} title="Contact Options" accent="oklch(0.72 0.16 160)"
+          pills={[
+            { icon: Smartphone, label: "WhatsApp" },
+            { icon: Mail, label: "Email" },
+            { icon: MessageCircle, label: "Live Chat" },
+            { icon: PhoneCall, label: "Callback" },
+          ]}
+          cta="Choose Contact Method"
+          lowMotion={lowMotion} onClick={() => setContactOpen(true)}
+        />
+        <PremiumSupportCard
+          icon={ShieldCheck} title="Account Security" accent="oklch(0.7 0.2 18)"
+          score={4}
+          rows={[
+            { label: "Verified", value: "100%" },
+            { label: "2FA", value: "Enabled", tone: "good" },
+            { label: "Device", value: "Trusted", tone: "good" },
+          ]}
+          cta="Manage Security"
+          lowMotion={lowMotion} onClick={() => setAccountOpen(true)}
+        />
       </div>
 
       {/* Support hub sheet */}
