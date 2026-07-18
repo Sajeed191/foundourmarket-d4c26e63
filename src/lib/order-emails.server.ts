@@ -11,7 +11,7 @@ import type { OrderEmailProps } from '@/lib/email-templates/order-emails'
 import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const SITE_NAME = 'FoundOurMarket'
-const SENDER_DOMAIN = 'notify.mail.foundourmarket.com'
+const SENDER_DOMAIN = 'ou.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
 
 export type OrderEmailEvent =

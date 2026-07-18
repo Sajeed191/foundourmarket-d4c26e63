@@ -92,7 +92,7 @@ function detectRejection(email: InboundEmail, fromEmail: string | null, body: st
   if (body.length < 1 && subject.length < 2) return 'empty_email'
 
   // Mail loop: inbound from one of our own support addresses.
-  if (SUPPORT_ADDRESSES.includes(fromEmail) || fromEmail.endsWith('@notify.mail.foundourmarket.com')) {
+  if (SUPPORT_ADDRESSES.includes(fromEmail) || fromEmail.endsWith('@ou.foundourmarket.com')) {
     return 'mail_loop'
   }
 

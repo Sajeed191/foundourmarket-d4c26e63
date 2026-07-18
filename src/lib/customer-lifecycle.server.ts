@@ -11,7 +11,7 @@ import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
 
 const SITE_NAME = 'FoundOurMarket'
-const SENDER_DOMAIN = 'notify.mail.foundourmarket.com'
+const SENDER_DOMAIN = 'ou.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
 const FROM = PRIMARY_FROM
 
