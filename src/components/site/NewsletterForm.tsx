@@ -91,6 +91,9 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
     const safeSource = source.replace(/[^a-z0-9_.:-]/gi, "_").slice(0, 80) || "site";
     const path = typeof window !== "undefined" ? window.location.pathname : null;
 
+    let tz: string | undefined;
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { /* ignore */ }
+
     try {
       const { status: httpStatus, data } = await postWithTimeout({
         email: normalized,
@@ -98,6 +101,7 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
         source_page: path,
         device: deviceType(),
         country: currentRegion() === "india" ? "IN" : "INTL",
+        timezone: tz,
         website,           // honeypot
         company,           // honeypot
         ts: Date.now() - mountedAtRef.current,
