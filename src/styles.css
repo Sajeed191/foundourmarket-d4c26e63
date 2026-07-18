@@ -360,6 +360,14 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 }
 .animate-orb-breathe { animation: orb-breathe 3.2s ease-in-out infinite; }
 
+/* Live chat: subtle periodic pulse (one 600ms pulse every 10s). */
+@keyframes orb-pulse-periodic {
+  0%, 92%, 100% { transform: scale(1); box-shadow: 0 0 0 0 oklch(0.74 0.19 49 / 0), var(--shadow-ember); }
+  95% { transform: scale(1.05); box-shadow: 0 0 0 10px oklch(0.74 0.19 49 / 0.28), var(--shadow-ember); }
+  98% { transform: scale(1); box-shadow: 0 0 0 16px oklch(0.74 0.19 49 / 0), var(--shadow-ember); }
+}
+.animate-orb-pulse-periodic { animation: orb-pulse-periodic 10s ease-in-out infinite; }
+
 /* Live chat: typing dots */
 @keyframes typing-bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
