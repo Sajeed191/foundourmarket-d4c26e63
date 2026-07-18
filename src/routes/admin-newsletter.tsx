@@ -29,6 +29,19 @@ type Subscriber = {
   updated_at: string;
   subscribed_at: string | null;
   unsubscribed_at: string | null;
+  abuse_status: string | null;
+  flag_reason: string | null;
+  browser: string | null;
+};
+
+type AuditRow = {
+  id: string;
+  action: string;
+  target_email: string | null;
+  reason: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  actor_email: string | null;
 };
 
 type SortKey = "created_at" | "email" | "status";
@@ -39,11 +52,23 @@ const PAGE_SIZE = 25;
 async function fetchSubscribers(): Promise<Subscriber[]> {
   const { data, error } = await supabase
     .from("newsletter_subscribers")
-    .select("id,email,status,source,source_page,device,country,created_at,updated_at,subscribed_at,unsubscribed_at")
+    // Use a broad select so newly-added columns are picked up without regenerating types.
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(5000);
   if (error) throw error;
-  return (data as Subscriber[]) ?? [];
+  return (data as unknown as Subscriber[]) ?? [];
+}
+
+async function fetchAudit(): Promise<AuditRow[]> {
+  const { data, error } = await supabase
+    // Not in generated types yet — cast through unknown.
+    .from("newsletter_audit_log" as never)
+    .select("id,action,target_email,reason,metadata,created_at,actor_email")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return (data as unknown as AuditRow[]) ?? [];
 }
 
 function toCSV(rows: Subscriber[]): string {
@@ -79,17 +104,46 @@ function NewsletterAdmin() {
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "subscribed" | "unsubscribed">("all");
+  const [abuseFilter, setAbuseFilter] = useState<"all" | "normal" | "flagged" | "blocked">("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showAudit, setShowAudit] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "newsletter-subscribers"] });
 
+  const auditQ = useQuery({
+    queryKey: ["admin", "newsletter-audit"],
+    queryFn: fetchAudit,
+    enabled: showAudit,
+    staleTime: 30_000,
+  });
+
+  const writeAudit = async (action: string, ids: string[], emails: string[]) => {
+    try {
+      const { data: session } = await supabase.auth.getUser();
+      const actorId = session.user?.id ?? null;
+      const actorEmail = session.user?.email ?? null;
+      const rows = ids.map((id, i) => ({
+        actor_id: actorId,
+        actor_email: actorEmail,
+        action,
+        target_email: emails[i] ?? null,
+        target_id: id,
+        metadata: {} as Record<string, unknown>,
+      }));
+      await supabase.from("newsletter_audit_log" as never).insert(rows as never);
+    } catch { /* audit failure never blocks admin action */ }
+  };
+
   const deleteMut = useMutation({
     mutationFn: async (ids: string[]) => {
+      const emails = (subs ?? []).filter((s) => ids.includes(s.id)).map((s) => s.email);
       const { error } = await supabase.from("newsletter_subscribers").delete().in("id", ids);
       if (error) throw error;
+      await writeAudit("admin_deleted", ids, emails);
     },
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
@@ -108,16 +162,19 @@ function NewsletterAdmin() {
     onSuccess: (_d, ids) => {
       toast.success(ids.length > 1 ? `${ids.length} subscribers deleted.` : "Subscriber deleted.");
       setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin", "newsletter-audit"] });
     },
   });
 
   const unsubMut = useMutation({
     mutationFn: async (ids: string[]) => {
+      const emails = (subs ?? []).filter((s) => ids.includes(s.id)).map((s) => s.email);
       const { error } = await supabase
         .from("newsletter_subscribers")
         .update({ status: "unsubscribed", unsubscribed_at: new Date().toISOString() })
         .in("id", ids);
       if (error) throw error;
+      await writeAudit("admin_unsubscribed", ids, emails);
     },
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
@@ -139,14 +196,23 @@ function NewsletterAdmin() {
     onSuccess: (_d, ids) => {
       toast.success(ids.length > 1 ? `${ids.length} subscribers unsubscribed.` : "Subscriber unsubscribed.");
       setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin", "newsletter-audit"] });
     },
   });
+
+  const sourceOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of subs ?? []) if (r.source) set.add(r.source);
+    return Array.from(set).sort();
+  }, [subs]);
 
   const filtered = useMemo(() => {
     const rows = subs ?? [];
     const q = query.trim().toLowerCase();
     const base = rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (abuseFilter !== "all" && (r.abuse_status ?? "normal") !== abuseFilter) return false;
+      if (sourceFilter !== "all" && (r.source ?? "") !== sourceFilter) return false;
       if (!q) return true;
       return (
         r.email.toLowerCase().includes(q) ||
@@ -162,7 +228,7 @@ function NewsletterAdmin() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [subs, query, statusFilter, sortKey, sortDir]);
+  }, [subs, query, statusFilter, abuseFilter, sourceFilter, sortKey, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -313,11 +379,32 @@ function NewsletterAdmin() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(0); }}
+          aria-label="Filter by status"
           className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
         >
           <option value="all">All statuses</option>
           <option value="subscribed">Subscribed</option>
           <option value="unsubscribed">Unsubscribed</option>
+        </select>
+        <select
+          value={abuseFilter}
+          onChange={(e) => { setAbuseFilter(e.target.value as typeof abuseFilter); setPage(0); }}
+          aria-label="Filter by abuse status"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="all">All safety</option>
+          <option value="normal">Normal</option>
+          <option value="flagged">Flagged</option>
+          <option value="blocked">Blocked</option>
+        </select>
+        <select
+          value={sourceFilter}
+          onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
+          aria-label="Filter by source"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="all">All sources</option>
+          {sourceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
@@ -481,6 +568,62 @@ function NewsletterAdmin() {
               </div>
             </div>
           </>
+        )}
+      </div>
+
+      {/* Audit log — collapsible, lazy-loaded */}
+      <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02]">
+        <button
+          onClick={() => setShowAudit((v) => !v)}
+          aria-expanded={showAudit}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold"
+        >
+          <span>Audit log</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            {showAudit ? "Hide" : "Show"} · last 200 events
+          </span>
+        </button>
+        {showAudit && (
+          <div className="border-t border-white/5 max-h-[420px] overflow-auto">
+            {auditQ.isLoading ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                <Loader2 className="mx-auto mb-2 size-4 animate-spin" /> Loading events…
+              </div>
+            ) : auditQ.isError ? (
+              <div className="p-6 text-center text-xs text-destructive">
+                Couldn't load audit log.
+              </div>
+            ) : (auditQ.data ?? []).length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">No events yet.</div>
+            ) : (
+              <table className="w-full text-xs">
+                <thead className="bg-white/[0.02] text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-4 py-2">When</th>
+                    <th className="text-left px-4 py-2">Action</th>
+                    <th className="text-left px-4 py-2">Target</th>
+                    <th className="text-left px-4 py-2">Actor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(auditQ.data ?? []).map((r) => (
+                    <tr key={r.id} className="border-t border-white/5">
+                      <td className="px-4 py-2 text-muted-foreground whitespace-nowrap">
+                        {new Date(r.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2 font-mono text-[11px]">{r.action}</td>
+                      <td className="px-4 py-2 text-muted-foreground max-w-[280px] truncate">
+                        {r.target_email ?? "—"}
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {r.actor_email ?? "system"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         )}
       </div>
     </AdminShell>

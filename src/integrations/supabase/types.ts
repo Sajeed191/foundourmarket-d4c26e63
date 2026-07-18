@@ -2464,43 +2464,130 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          reason: string | null
+          target_email: string | null
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          target_email?: string | null
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          target_email?: string | null
+          target_id?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_submission_attempts: {
+        Row: {
+          created_at: string
+          email_hash: string | null
+          id: string
+          ip_hash: string
+          outcome: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_hash?: string | null
+          id?: string
+          ip_hash: string
+          outcome: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string | null
+          id?: string
+          ip_hash?: string
+          outcome?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
+          abuse_status: string
+          browser: string | null
           country: string | null
           created_at: string
           device: string | null
           email: string
+          flag_reason: string | null
           id: string
+          ip_hash: string | null
+          landing_page: string | null
+          referrer: string | null
           source: string | null
           source_page: string | null
           status: string
           subscribed_at: string | null
+          ua_hash: string | null
           unsubscribed_at: string | null
           updated_at: string
         }
         Insert: {
+          abuse_status?: string
+          browser?: string | null
           country?: string | null
           created_at?: string
           device?: string | null
           email: string
+          flag_reason?: string | null
           id?: string
+          ip_hash?: string | null
+          landing_page?: string | null
+          referrer?: string | null
           source?: string | null
           source_page?: string | null
           status?: string
           subscribed_at?: string | null
+          ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
         }
         Update: {
+          abuse_status?: string
+          browser?: string | null
           country?: string | null
           created_at?: string
           device?: string | null
           email?: string
+          flag_reason?: string | null
           id?: string
+          ip_hash?: string | null
+          landing_page?: string | null
+          referrer?: string | null
           source?: string | null
           source_page?: string | null
           status?: string
           subscribed_at?: string | null
+          ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
         }

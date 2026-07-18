@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { trackEvent, deviceType, currentRegion } from "@/lib/visitor";
+
+/**
+ * Newsletter subscribe form.
+ * Stage 1 Security update: posts to /api/public/newsletter/subscribe which
+ * enforces honeypot, tri-layer rate limit, disposable-email block, and
+ * spam fingerprinting. Client-side responsibilities stay tiny: validate,
+ * include the honeypot fields, and translate server responses into toasts.
+ */
 
 const emailSchema = z
   .string()
@@ -14,27 +21,24 @@ const emailSchema = z
   .email("Enter a valid email address.");
 
 const REQUEST_TIMEOUT_MS = 12000;
+const SUBSCRIBE_URL = "/api/public/newsletter/subscribe";
 
 type Status = "idle" | "loading" | "success";
 
-function friendlyError(err: unknown): string {
-  const msg = err instanceof Error ? err.message : String(err ?? "");
-  const lower = msg.toLowerCase();
-  if (lower.includes("timeout") || lower.includes("aborted")) return "Network is slow. Please try again.";
-  if (lower.includes("failed to fetch") || lower.includes("network")) return "You appear to be offline.";
-  if (lower.includes("permission") || lower.includes("row-level")) return "Server unavailable. Try again later.";
-  return "Something went wrong. Please try again.";
-}
-
-async function insertWithTimeout(payload: Record<string, unknown>) {
+async function postWithTimeout(body: Record<string, unknown>) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const { error } = await supabase
-      .from("newsletter_subscribers")
-      .insert(payload as never)
-      .abortSignal(controller.signal);
-    return { error };
+    const res = await fetch(SUBSCRIBE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+      credentials: "same-origin",
+    });
+    let data: { ok?: boolean; duplicate?: boolean; error?: string; message?: string } = {};
+    try { data = await res.json(); } catch { /* non-JSON error */ }
+    return { status: res.status, data };
   } finally {
     clearTimeout(timer);
   }
@@ -47,9 +51,14 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
   const [successPulse, setSuccessPulse] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
-  const trackedRef = useRef<string | null>(null); // dedupe analytics per email
+  const trackedRef = useRef<string | null>(null);
+  const mountedAtRef = useRef<number>(Date.now());
+  // Honeypot state — must stay empty. Real users never see these inputs.
+  const [website, setWebsite] = useState("");
+  const [company, setCompany] = useState("");
 
-  // Live validation (debounced-lite: only after user typed something reasonable)
+  useEffect(() => { mountedAtRef.current = Date.now(); }, []);
+
   useEffect(() => {
     if (!email) { setError(null); return; }
     if (email.length < 4) return;
@@ -60,21 +69,6 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
       setError(null);
     }
   }, [email]);
-
-  const doInsert = async (payload: Record<string, unknown>) => {
-    let attempt = await insertWithTimeout(payload);
-    // Retry once on network/timeout failures (not on duplicate / logical errors)
-    const err = attempt.error;
-    const retriable =
-      !!err &&
-      err.code !== "23505" &&
-      /network|fetch|timeout|abort/i.test(err.message ?? "");
-    if (retriable) {
-      await new Promise((r) => setTimeout(r, 600));
-      attempt = await insertWithTimeout(payload);
-    }
-    return attempt;
-  };
 
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -98,51 +92,67 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
     const path = typeof window !== "undefined" ? window.location.pathname : null;
 
     try {
-      const { error: insertError } = await doInsert({
+      const { status: httpStatus, data } = await postWithTimeout({
         email: normalized,
         source: safeSource,
         source_page: path,
         device: deviceType(),
         country: currentRegion() === "india" ? "IN" : "INTL",
-        status: "subscribed",
+        website,           // honeypot
+        company,           // honeypot
+        ts: Date.now() - mountedAtRef.current,
       });
 
-      const isDuplicate =
-        !!insertError &&
-        (insertError.code === "23505" ||
-          (insertError.message ?? "").toLowerCase().includes("duplicate"));
-
-      if (insertError && !isDuplicate) {
-        const msg = friendlyError(insertError.message);
-        setError(msg);
-        toast.error(msg);
-        if (trackedRef.current !== `fail:${normalized}`) {
-          trackedRef.current = `fail:${normalized}`;
-          void trackEvent("newsletter_failed", {
-            metadata: { source: safeSource, reason: insertError.code ?? "unknown" },
+      // Success / duplicate
+      if (httpStatus === 200 && data.ok) {
+        setEmail("");
+        setStatus("success");
+        setSuccessPulse(true);
+        window.setTimeout(() => setSuccessPulse(false), 1400);
+        const isDuplicate = !!data.duplicate;
+        toast.success(isDuplicate ? "You're already subscribed. 🎉" : "Subscribed! Watch your inbox.");
+        inputRef.current?.blur();
+        const key = `ok:${normalized}:${isDuplicate ? "dup" : "new"}`;
+        if (trackedRef.current !== key) {
+          trackedRef.current = key;
+          void trackEvent(isDuplicate ? "newsletter_duplicate" : "newsletter_subscribed", {
+            metadata: { source: safeSource, duplicate: isDuplicate },
           });
         }
-        setStatus("idle");
         return;
       }
 
-      // Success (new or already-subscribed)
-      setEmail("");
-      setStatus("success");
-      setSuccessPulse(true);
-      window.setTimeout(() => setSuccessPulse(false), 1400);
-      toast.success(isDuplicate ? "You're already subscribed. 🎉" : "Subscribed! Watch your inbox.");
-      inputRef.current?.blur();
-
-      const key = `ok:${normalized}:${isDuplicate ? "dup" : "new"}`;
-      if (trackedRef.current !== key) {
-        trackedRef.current = key;
-        void trackEvent("newsletter_subscribed", {
-          metadata: { source: safeSource, duplicate: isDuplicate },
-        });
+      // Structured error responses
+      if (httpStatus === 429) {
+        const msg = data.message ?? "Too many attempts. Please try again later.";
+        setError(msg); toast.error(msg);
+        if (trackedRef.current !== `rl:${normalized}`) {
+          trackedRef.current = `rl:${normalized}`;
+          void trackEvent("newsletter_rate_limited", { metadata: { source: safeSource } });
+        }
+      } else if (data.error === "disposable_email") {
+        const msg = data.message ?? "Please use a permanent email address.";
+        setError(msg); toast.error(msg);
+        if (trackedRef.current !== `dp:${normalized}`) {
+          trackedRef.current = `dp:${normalized}`;
+          void trackEvent("newsletter_disposable_blocked", { metadata: { source: safeSource } });
+        }
+      } else if (data.error === "invalid_email" || data.error === "invalid_request") {
+        const msg = "Enter a valid email address.";
+        setError(msg); toast.error(msg);
+      } else {
+        const msg = "Something went wrong. Please try again.";
+        setError(msg); toast.error(msg);
+        if (trackedRef.current !== `fail:${normalized}`) {
+          trackedRef.current = `fail:${normalized}`;
+          void trackEvent("newsletter_failed", {
+            metadata: { source: safeSource, reason: data.error ?? String(httpStatus) },
+          });
+        }
       }
-    } catch (err) {
-      const msg = friendlyError(err);
+      setStatus("idle");
+    } catch {
+      const msg = "Network is slow. Please try again.";
       setError(msg);
       toast.error(msg);
       setStatus("idle");
@@ -152,9 +162,7 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Escape") {
-      (e.currentTarget as HTMLInputElement).blur();
-    }
+    if (e.key === "Escape") (e.currentTarget as HTMLInputElement).blur();
   };
 
   if (status === "success") {
@@ -199,6 +207,32 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
           disabled={status === "loading"}
           className="flex-1 min-w-0 w-full bg-card/50 border border-border rounded-full px-5 sm:px-6 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60 truncate"
         />
+
+        {/* Honeypot fields — invisible to humans, catnip for bots.
+            aria-hidden + tabIndex=-1 keeps screen readers away. */}
+        <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+          <label htmlFor="nl-website">Website</label>
+          <input
+            id="nl-website"
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+          <label htmlFor="nl-company">Company</label>
+          <input
+            id="nl-company"
+            type="text"
+            name="company"
+            tabIndex={-1}
+            autoComplete="off"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
+        </div>
+
         <button
           type="submit"
           disabled={status === "loading"}
