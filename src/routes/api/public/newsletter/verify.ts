@@ -5,12 +5,18 @@
  *   Consumes a single-use, expiring verification token.
  *   Redirects to a friendly result page (?state=ok|expired|invalid|already).
  */
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 const RESULT_BASE = '/newsletter/verified'
 
-function done(state: 'ok' | 'expired' | 'invalid' | 'already') {
-  throw redirect({ to: `${RESULT_BASE}?state=${state}` } as never)
+function done(state: 'ok' | 'expired' | 'invalid' | 'already'): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: `${RESULT_BASE}?state=${state}`,
+      'Cache-Control': 'no-store',
+    },
+  })
 }
 
 export const Route = createFileRoute('/api/public/newsletter/verify')({
@@ -19,7 +25,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
       GET: async ({ request }) => {
         const url = new URL(request.url)
         const token = (url.searchParams.get('token') ?? '').trim()
-        if (!token || token.length < 16 || token.length > 128) done('invalid')
+        if (!token || token.length < 16 || token.length > 128) return done('invalid')
 
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
 
@@ -29,16 +35,16 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
           .eq('verification_token', token)
           .maybeSingle()
 
-        if (!row) done('invalid')
+        if (!row) return done('invalid')
         const r = row as any
 
         if (r.status === 'subscribed' && r.verified_at) {
           // Token already consumed; still show friendly success.
-          done('already')
+          return done('already')
         }
 
         const expiresAt = r.verification_expires_at ? new Date(r.verification_expires_at) : null
-        if (!expiresAt || expiresAt.getTime() < Date.now()) done('expired')
+        if (!expiresAt || expiresAt.getTime() < Date.now()) return done('expired')
 
         const nowIso = new Date().toISOString()
         const { error: updateErr } = await supabaseAdmin
@@ -52,7 +58,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
           } as never)
           .eq('id', r.id)
 
-        if (updateErr) done('invalid')
+        if (updateErr) return done('invalid')
 
         try {
           await supabaseAdmin.from('newsletter_audit_log').insert({
@@ -65,7 +71,7 @@ export const Route = createFileRoute('/api/public/newsletter/verify')({
           } as never)
         } catch { /* never break */ }
 
-        done('ok')
+        return done('ok')
       },
     },
   },

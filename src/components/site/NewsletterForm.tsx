@@ -23,7 +23,7 @@ const emailSchema = z
 const REQUEST_TIMEOUT_MS = 12000;
 const SUBSCRIBE_URL = "/api/public/newsletter/subscribe";
 
-type Status = "idle" | "loading" | "success";
+type Status = "idle" | "loading" | "success" | "pending";
 
 async function postWithTimeout(body: Record<string, unknown>) {
   const controller = new AbortController();
@@ -110,17 +110,28 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
       // Success / duplicate
       if (httpStatus === 200 && data.ok) {
         setEmail("");
-        setStatus("success");
+        setStatus(((data as { pending?: boolean }).pending) ? "pending" : "success");
         setSuccessPulse(true);
         window.setTimeout(() => setSuccessPulse(false), 1400);
         const isDuplicate = !!data.duplicate;
-        toast.success(isDuplicate ? "You're already subscribed. 🎉" : "Subscribed! Watch your inbox.");
+        const isPending = !!(data as { pending?: boolean }).pending;
+        const successMsg = isDuplicate
+          ? "You're already subscribed. 🎉"
+          : isPending
+            ? "Almost there — check your inbox to confirm."
+            : "Subscribed! Watch your inbox.";
+        toast.success(successMsg);
         inputRef.current?.blur();
-        const key = `ok:${normalized}:${isDuplicate ? "dup" : "new"}`;
+        const evt = isDuplicate
+          ? "newsletter_duplicate"
+          : isPending
+            ? "newsletter_pending"
+            : "newsletter_subscribed";
+        const key = `ok:${normalized}:${evt}`;
         if (trackedRef.current !== key) {
           trackedRef.current = key;
-          void trackEvent(isDuplicate ? "newsletter_duplicate" : "newsletter_subscribed", {
-            metadata: { source: safeSource, duplicate: isDuplicate },
+          void trackEvent(evt, {
+            metadata: { source: safeSource, duplicate: isDuplicate, pending: isPending },
           });
         }
         return;
@@ -169,7 +180,10 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
     if (e.key === "Escape") (e.currentTarget as HTMLInputElement).blur();
   };
 
-  if (status === "success") {
+  if (status === "success" || status === "pending") {
+    const msg = status === "pending"
+      ? "Almost there — check your inbox to confirm."
+      : "You're in. Watch your inbox.";
     return (
       <div
         role="status"
@@ -177,7 +191,7 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
         className="max-w-md mx-auto flex items-center justify-center gap-3 px-6 py-4 rounded-full border border-accent/40 bg-accent/10 text-sm"
       >
         <Check className="size-4 text-accent shrink-0" />
-        <span className="truncate">You're in. Watch your inbox.</span>
+        <span className="truncate">{msg}</span>
       </div>
     );
   }
