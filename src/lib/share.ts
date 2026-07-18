@@ -12,7 +12,7 @@ const SHARE_EVENT = "fom:open-share";
 export const SITE_URL = "https://foundourmarket.com";
 
 /**
- * Rewrites any link (including private preview/lovableproject.com URLs) to the
+ * Rewrites any link (including private preview/staging URLs) to the
  * public production domain so shared previews unfurl with FoundOurMarket
  * branding and the product image — never an "internal project" placeholder.
  */

@@ -187,7 +187,7 @@ function EmailsPage() {
             </span>
           </div>
           <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
-            DNS authentication records are provisioned and managed automatically through Lovable's nameservers.
+            DNS authentication records are provisioned and managed automatically through FoundOurMarket™'s hosting nameservers.
             Verification can take up to 72 hours to propagate. Once active, transactional and auth emails send from
             your branded domain.
           </p>

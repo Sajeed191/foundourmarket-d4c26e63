@@ -1,6 +1,6 @@
 // Manifest-only PWA: the app is installable (Add to Home Screen, standalone
 // display, themed status bar) but we deliberately do NOT register a service
-// worker. Service workers caused stale shells in the Lovable preview iframe.
+// worker. Service workers caused stale shells in the hosted preview iframe.
 //
 // This helper actively unregisters any service worker that was registered by
 // a previous build, so returning users get a clean state.

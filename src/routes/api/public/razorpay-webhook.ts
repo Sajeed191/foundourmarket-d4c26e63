@@ -5,7 +5,7 @@ import { enqueueOrderEmail } from "@/lib/order-emails.server";
 
 /**
  * Razorpay webhook receiver. Configure this URL in the Razorpay dashboard:
- *   https://foundourmarket.lovable.app/api/public/razorpay-webhook
+ *   https://foundourmarket.com/api/public/razorpay-webhook
  * and set the same secret you saved as RAZORPAY_WEBHOOK_SECRET.
  *
  * Handles: payment.captured, payment.failed, refund.processed, order.paid

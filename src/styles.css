@@ -3040,7 +3040,7 @@ body.hide-bottom-nav [data-app-header] {
    governors (`data-degrade-effects` from the live FPS/long-task governor,
    and `data-gpu-unsafe` from the boot GPU gate) toggle <html> attributes at
    runtime and the global kill-switch rules above strip these cards' hover
-   glow shadow and blurred corner glow. In Lovable Preview (fast desktop,
+   glow shadow and blurred corner glow. In the hosted preview (fast desktop,
    high FPS, no weak-GPU match) those attributes never turn on, so the cards
    render full-effect. On a real phone (e.g. Vivo Z10R: weak-GPU match or
    sub-45fps) the attributes flip on and the SAME code + SAME CSS bundle

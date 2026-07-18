@@ -10,7 +10,7 @@ import {
 
 /**
  * Unified courier webhook receiver. Configure each courier to POST to:
- *   https://foundourmarket.lovable.app/api/public/webhooks/<courier>
+ *   https://foundourmarket.com/api/public/webhooks/<courier>
  * e.g. /api/public/webhooks/delhivery, /shiprocket, /bluedart, /dhl ...
  *
  * Security: per-courier HMAC-SHA256 signature (header `x-courier-signature`),
