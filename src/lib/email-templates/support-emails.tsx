@@ -200,7 +200,7 @@ export const supportAdminTemplate: TemplateEntry = {
     ticketShort: 'a1b2c3d4',
     priority: 'high',
     category: 'refund',
-    customerEmail: 'customer@example.com',
+    customerEmail: 'customer@foundourmarket.com',
     replyPreview: "I'd like a refund for my last order, it arrived damaged.",
     ctaUrl: 'https://foundourmarket.com/admin-support',
   } satisfies SupportAdminEmailProps,
