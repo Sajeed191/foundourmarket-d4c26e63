@@ -792,6 +792,136 @@ function UtilityCard({
   );
 }
 
+/* Premium support hub card — richer content, live intelligence */
+type PremiumRow = { label: string; value: string; tone?: "good" | "neutral" };
+type PremiumPill = { icon: typeof Package; label: string };
+function PremiumSupportCard({
+  icon: Icon, title, accent, rows, chips, pills, cta, statusDot, statusText, score, onClick, lowMotion,
+}: {
+  icon: typeof Package;
+  title: string;
+  accent: string;
+  rows?: PremiumRow[];
+  chips?: string[];
+  pills?: PremiumPill[];
+  cta: string;
+  statusDot?: "emerald" | "amber" | "muted";
+  statusText?: string;
+  score?: number; // 0-5
+  onClick: () => void;
+  lowMotion: boolean;
+}) {
+  const dotClass =
+    statusDot === "emerald" ? "bg-emerald-400" :
+    statusDot === "amber" ? "bg-amber-400" :
+    statusDot === "muted" ? "bg-muted-foreground" : "";
+  const dotRingClass =
+    statusDot === "emerald" ? "text-emerald-400 ring-emerald-500/25 bg-emerald-500/10" :
+    statusDot === "amber" ? "text-amber-400 ring-amber-500/25 bg-amber-500/10" :
+    "text-muted-foreground ring-white/10 bg-white/[0.04]";
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={lowMotion ? undefined : { scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      className="group relative h-full min-h-[190px] flex flex-col text-left rounded-3xl p-4 sm:p-[18px] overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.015] border border-white/10 shadow-[0_10px_30px_-16px_rgba(0,0,0,0.7)] transition-all duration-300 hover:border-white/20 hover:shadow-[0_18px_44px_-18px_rgba(0,0,0,0.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      style={{ ["--card-accent" as string]: accent }}
+    >
+      {/* Radial accent glow */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full opacity-40 blur-2xl transition-opacity duration-300 group-hover:opacity-70"
+        style={{ background: `radial-gradient(closest-side, ${accent} 0%, transparent 70%)` }}
+      />
+      {/* Gradient border sheen on hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: `linear-gradient(135deg, ${accent}22, transparent 55%)` }}
+      />
+
+      {/* Header row: icon + status */}
+      <div className="relative flex items-start justify-between gap-2">
+        <span
+          className="size-12 rounded-2xl grid place-items-center ring-1 shadow-[0_6px_18px_-6px_var(--card-accent)]"
+          style={{ background: `color-mix(in oklab, ${accent} 14%, transparent)`, color: accent, boxShadow: `0 0 24px -10px ${accent}`, borderColor: `${accent}55` } as React.CSSProperties}
+        >
+          <Icon className="size-[22px]" style={{ color: accent }} />
+        </span>
+        {statusText && (
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ring-1 ${dotRingClass}`}>
+            <span className="relative flex size-1.5">
+              {statusDot === "emerald" && <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
+              <span className={`relative inline-flex size-1.5 rounded-full ${dotClass}`} />
+            </span>
+            {statusText}
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <p className="relative mt-3 text-sm font-semibold leading-tight truncate">{title}</p>
+
+      {/* Body — rows / pills / chips / score */}
+      <div className="relative mt-2.5 flex-1 space-y-2">
+        {score !== undefined && (
+          <div className="flex items-center gap-1.5">
+            <div className="flex gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className={`size-3 ${i < score ? "fill-current" : "opacity-25"}`} style={{ color: i < score ? accent : undefined }} />
+              ))}
+            </div>
+            <span className="text-[10px] text-muted-foreground">Excellent</span>
+          </div>
+        )}
+        {rows && (
+          <ul className="space-y-1">
+            {rows.map((r) => (
+              <li key={r.label} className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="text-muted-foreground">{r.label}</span>
+                <span className={`font-medium tabular-nums truncate ${r.tone === "good" ? "text-emerald-400" : "text-foreground/90"}`}>{r.value}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {pills && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {pills.map((p) => (
+              <span
+                key={p.label}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ring-1 bg-white/[0.04] ring-white/10 text-foreground/85 transition-colors group-hover:ring-white/20"
+              >
+                <p.icon className="size-3" style={{ color: accent }} />
+                {p.label}
+              </span>
+            ))}
+          </div>
+        )}
+        {chips && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {chips.map((c) => (
+              <span key={c} className="rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[9.5px] font-medium text-muted-foreground ring-1 ring-white/10">{c}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CTA */}
+      <div
+        className="relative mt-3 pt-3 flex items-center justify-between gap-1 text-[11px] font-semibold border-t border-white/5"
+        style={{ color: accent }}
+      >
+        <span className="truncate">{cta}</span>
+        <ArrowRight className="size-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
+      </div>
+    </motion.button>
+  );
+}
+
+
+
 
 function Sheet({ open, onClose, children, lowMotion }: { open: boolean; onClose: () => void; children: ReactNode; lowMotion: boolean }) {
   return (
