@@ -80,8 +80,173 @@ export function AdminFloatingToolbar() {
 
   if (loading || !isAdmin) return null;
 
+  // --- Draggable Messenger-style chat-head behavior (mirrors LiveChat orb) ---
+  // Position is NEVER persisted; resets to default (bottom-right) on every mount.
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const posRef = useRef({ x: 0, y: 0 });
+  const dragRef = useRef({
+    active: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    baseX: 0,
+    baseY: 0,
+    rafId: 0,
+    nextX: 0,
+    nextY: 0,
+  });
+
+  const EDGE_MARGIN = 12;
+  const HIDDEN_RATIO = 0.4;
+  const TAP_THRESHOLD = 8;
+
+  const getBounds = useCallback(() => {
+    const el = wrapRef.current;
+    const rect = el?.getBoundingClientRect();
+    const w = rect?.width || 120;
+    const h = rect?.height || 48;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cs = getComputedStyle(document.documentElement);
+    const headerH = parseFloat(cs.getPropertyValue("--app-header-height")) || 64;
+    const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
+    let navH = 104;
+    const n = parseFloat(navRaw);
+    if (Number.isFinite(n) && !navRaw.includes("calc")) navH = n;
+    return {
+      w,
+      h,
+      vw,
+      vh,
+      minX: EDGE_MARGIN,
+      maxX: vw - w - EDGE_MARGIN,
+      minY: headerH + EDGE_MARGIN,
+      maxY: Math.max(headerH + EDGE_MARGIN, vh - navH - h),
+    };
+  }, []);
+
+  const applyTransform = useCallback(
+    (x: number, y: number, scale = 1, withTransition = false) => {
+      const el = wrapRef.current;
+      if (!el) return;
+      el.style.transition = withTransition
+        ? "transform 260ms cubic-bezier(0.22, 1, 0.36, 1)"
+        : "none";
+      el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+    },
+    [],
+  );
+
+  const resetToDefault = useCallback(
+    (withTransition = true) => {
+      const b = getBounds();
+      posRef.current = { x: b.maxX, y: b.maxY };
+      applyTransform(b.maxX, b.maxY, 1, withTransition);
+    },
+    [applyTransform, getBounds],
+  );
+
+  useEffect(() => {
+    // Measure after layout so we know the actual pill width.
+    const raf = requestAnimationFrame(() => resetToDefault(false));
+    const onResize = () => {
+      const b = getBounds();
+      const x = Math.min(Math.max(posRef.current.x, b.minX - b.w * HIDDEN_RATIO), b.maxX + b.w * HIDDEN_RATIO);
+      const y = Math.min(Math.max(posRef.current.y, b.minY), b.maxY);
+      posRef.current = { x, y };
+      applyTransform(x, y, 1, false);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [applyTransform, getBounds, resetToDefault]);
+
+  // When the panel opens, ensure the toolbar is fully on-screen so the popover is reachable.
+  useEffect(() => {
+    if (open) resetToDefault(true);
+  }, [open, resetToDefault]);
+
+  const flushFrame = useCallback(() => {
+    dragRef.current.rafId = 0;
+    applyTransform(dragRef.current.nextX, dragRef.current.nextY, 1.05, false);
+  }, [applyTransform]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (open) return; // don't drag while panel is open
+    const d = dragRef.current;
+    d.active = true;
+    d.moved = false;
+    d.startX = e.clientX;
+    d.startY = e.clientY;
+    d.baseX = posRef.current.x;
+    d.baseY = posRef.current.y;
+    d.nextX = posRef.current.x;
+    d.nextY = posRef.current.y;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* noop */
+    }
+  }, [open]);
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      const d = dragRef.current;
+      if (!d.active) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (!d.moved && Math.hypot(dx, dy) < TAP_THRESHOLD) return;
+      d.moved = true;
+      const b = getBounds();
+      const x = Math.min(Math.max(d.baseX + dx, b.minX), b.maxX);
+      const y = Math.min(Math.max(d.baseY + dy, b.minY), b.maxY);
+      d.nextX = x;
+      d.nextY = y;
+      if (!d.rafId) d.rafId = requestAnimationFrame(flushFrame);
+    },
+    [flushFrame, getBounds],
+  );
+
+  const endDrag = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      const d = dragRef.current;
+      if (!d.active) return;
+      d.active = false;
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        /* noop */
+      }
+      if (d.rafId) {
+        cancelAnimationFrame(d.rafId);
+        d.rafId = 0;
+      }
+      if (!d.moved) {
+        applyTransform(posRef.current.x, posRef.current.y, 1, true);
+        return; // click handler will fire and toggle the panel
+      }
+      const b = getBounds();
+      const centerX = d.nextX + b.w / 2;
+      const hiddenPx = b.w * HIDDEN_RATIO;
+      const snapX = centerX < b.vw / 2 ? -hiddenPx : b.vw - b.w + hiddenPx;
+      const snapY = Math.min(Math.max(d.nextY, b.minY), b.maxY);
+      posRef.current = { x: snapX, y: snapY };
+      applyTransform(snapX, snapY, 1, true);
+    },
+    [applyTransform, getBounds],
+  );
+
   return (
-    <div data-floating-control className="fixed right-3 z-[var(--z-floating-controls)] bottom-[var(--floating-bottom-offset)] md:bottom-6 md:right-6 print:hidden">
+    <div
+      ref={wrapRef}
+      data-floating-control
+      className="fixed left-0 top-0 z-[var(--z-floating-controls)] print:hidden"
+      style={{ willChange: "transform", touchAction: "none" }}
+    >
       <AnimatePresence>
         {open && (
           <motion.div
