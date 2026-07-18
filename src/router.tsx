@@ -19,7 +19,10 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreload: "intent",
-    defaultPreloadDelay: 40,
+    // Perf: 40ms was firing on every hover, spamming Supabase from grids and
+    // burning main-thread on incidental cursor moves. 150ms filters out
+    // accidental hovers while still feeling instant on deliberate intent.
+    defaultPreloadDelay: 150,
     defaultPreloadStaleTime: 0,
   });
 

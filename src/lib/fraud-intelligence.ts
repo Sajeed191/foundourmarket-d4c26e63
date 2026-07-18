@@ -95,7 +95,9 @@ export async function fetchFraudData(): Promise<FraudData> {
     seedFilter(supabase.from("orders").select("id,user_id,status,payment_status,payment_method,market_region,total,promo_code,contact_email,shipping_address,created_at").order("created_at", { ascending: false }).limit(50000)),
     supabase.from("refunds").select("order_id,amount,status").limit(50000),
     seedFilter(supabase.from("returns").select("user_id,status").limit(50000)),
-    seedFilter(supabase.from("analytics_events").select("user_id,session_id,event,path,metadata,created_at").gte("created_at", since).limit(80000)),
+    // Perf: capped from 80k → 10k. Fraud signals key on recency + patterns,
+    // not exhaustive history; the 90-day window is preserved.
+    seedFilter(supabase.from("analytics_events").select("user_id,session_id,event,path,metadata,created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(10000)),
   ]);
 
   return {

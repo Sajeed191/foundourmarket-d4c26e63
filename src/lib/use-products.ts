@@ -33,28 +33,56 @@ export function refreshProducts(force = true) {
 function bindRealtime() {
   if (realtimeBound || typeof window === "undefined") return;
   realtimeBound = true;
-  // Admins (who can read the base tables) get instant realtime invalidation
-  // whenever any catalog-affecting table changes: product create/update/delete,
-  // pricing/inventory edits (products), variants, images, badges, categories,
-  // shipping and store settings. Customer sessions (which read the *_public
-  // views) fall back to focus/visibility refresh below.
-  const onCatalogChange = (detail: string) => () => {
-    recordCacheEvent("invalidate", "products", { detail });
-    invalidateProducts();
+  // Every visitor previously opened 8 postgres_changes channels against the
+  // base catalog tables. Customer sessions can't read those tables (RLS), so
+  // they NEVER received an event — the subscriptions were pure overhead:
+  // Realtime connection cost, extra WebSocket frames per session, and a
+  // constant server-side channel-management tax. We now bind the admin
+  // channels only when the current session is actually admin. Every other
+  // session refreshes on focus/visibility, which is what triggered virtually
+  // all customer-side catalog updates anyway.
+  const bindAdminChannels = () => {
+    const onCatalogChange = (detail: string) => () => {
+      recordCacheEvent("invalidate", "products", { detail });
+      invalidateProducts();
+    };
+    supabase
+      .channel("rt-products-public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, onCatalogChange("products"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "product_variants" }, onCatalogChange("product_variants"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "product_images" }, onCatalogChange("product_images"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "product_badges" }, onCatalogChange("product_badges"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "badge_settings" }, onCatalogChange("badge_settings"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "shipping_state" }, onCatalogChange("shipping_state"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, onCatalogChange("store_settings"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, onCatalogChange("categories"))
+      .subscribe();
   };
-  supabase
-    .channel("rt-products-public")
-    .on("postgres_changes", { event: "*", schema: "public", table: "products" }, onCatalogChange("products"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "product_variants" }, onCatalogChange("product_variants"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "product_images" }, onCatalogChange("product_images"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "product_badges" }, onCatalogChange("product_badges"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "badge_settings" }, onCatalogChange("badge_settings"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "shipping_state" }, onCatalogChange("shipping_state"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, onCatalogChange("store_settings"))
-    .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, onCatalogChange("categories"))
-    .subscribe();
-  // Customers read the products_public VIEW and never receive base-table
-  // realtime events (RLS blocks it), so refresh on focus/visibility instead.
+
+  // Best-effort admin detection: any session with an admin/super_admin/staff
+  // user_roles row gets realtime; everyone else (including anonymous visitors)
+  // falls back to focus/visibility refresh. RLS on user_roles ensures each
+  // user only sees their own row, so this query is cheap and safe.
+  void (async () => {
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      if (!uid) return;
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      const isPrivileged = (roles ?? []).some((r: { role: string }) =>
+        r.role === "admin" || r.role === "super_admin" || r.role === "staff",
+      );
+      if (isPrivileged) bindAdminChannels();
+    } catch {
+      /* silent — fall through to focus/visibility refresh */
+    }
+  })();
+
+  // All sessions (customer + admin) refresh on focus/visibility, so a
+  // customer returning from a background tab always sees fresh pricing.
   const refreshFromBrowserEvent = () => refreshIfStale(false);
   window.addEventListener("focus", refreshFromBrowserEvent);
   document.addEventListener("visibilitychange", refreshFromBrowserEvent);

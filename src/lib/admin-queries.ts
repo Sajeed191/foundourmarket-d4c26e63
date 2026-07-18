@@ -34,7 +34,13 @@ export type ProductRow = {
 };
 
 export async function fetchProducts(): Promise<ProductRow[]> {
-  const { data } = await supabase.from("products").select("*").order("sort_order");
+  // Perf: project only the columns ProductRow declares. `products` has 112
+  // columns and admin dashboards previously downloaded every one of them
+  // just to render a summary table.
+  const { data } = await supabase
+    .from("products")
+    .select("id,slug,name,category,price,cost,rating,reviews,image,in_stock,discount,stock_quantity,reserved_quantity,low_stock_threshold,views_count,sku,featured")
+    .order("sort_order");
   return (data as ProductRow[]) ?? [];
 }
 

@@ -558,8 +558,9 @@ export async function fetchTrafficSummary(days = 14): Promise<Omit<TrafficSummar
     supabase.from("visitor_sessions").select("session_id", { count: "exact", head: true }).gte("last_seen", liveCut),
     supabase.from("page_views").select("id", { count: "exact", head: true }).gte("created_at", since),
     supabase.from("visitor_sessions").select("session_id", { count: "exact", head: true }).gte("started_at", since),
-    supabase.from("orders").select("total,status,payment_status").gte("created_at", since).limit(20000),
-    supabase.from("analytics_events").select("metadata").eq("event", "page_view").gte("created_at", since).limit(20000),
+    // Perf: capped 20k → 5k; dashboards summarise, they don't paginate raw rows.
+    supabase.from("orders").select("total,status,payment_status").gte("created_at", since).order("created_at", { ascending: false }).limit(5000),
+    supabase.from("analytics_events").select("metadata").eq("event", "page_view").gte("created_at", since).order("created_at", { ascending: false }).limit(5000),
   ]);
 
   const orders = (ordR.data as { total: number | null; status: string | null; payment_status: string | null }[] | null) ?? [];
