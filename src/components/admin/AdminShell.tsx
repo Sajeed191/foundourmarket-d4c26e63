@@ -101,7 +101,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-seo-intelligence", label: "SEO Intelligence", icon: Search, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-seo-health", label: "SEO Health", icon: ShieldCheck, roles: ["admin", "super_admin", "manager", "editor"] },
       { to: "/admin-search", label: "Search trends", icon: Search, roles: ["admin", "super_admin", "manager"] },
-      { to: "/admin", search: { tab: "subscribers" }, label: "Subscribers", icon: ShoppingBag },
+      { to: "/admin-newsletter", label: "Newsletter", icon: Mail, roles: ["admin", "super_admin", "manager", "support", "editor"] },
     ],
   },
   {

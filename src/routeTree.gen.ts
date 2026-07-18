@@ -81,6 +81,7 @@ import { Route as AdminOrdersOpsRouteImport } from './routes/admin-orders-ops'
 import { Route as AdminOrdersAnalyticsRouteImport } from './routes/admin-orders-analytics'
 import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
+import { Route as AdminNewsletterRouteImport } from './routes/admin-newsletter'
 import { Route as AdminMerchandisingRouteImport } from './routes/admin-merchandising'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
 import { Route as AdminMarketplaceQualityRouteImport } from './routes/admin-marketplace-quality'
@@ -542,6 +543,11 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   id: '/admin-notifications',
   path: '/admin-notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
+  id: '/admin-newsletter',
+  path: '/admin-newsletter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMerchandisingRoute = AdminMerchandisingRouteImport.update({
@@ -1101,6 +1107,7 @@ export interface FileRoutesByFullPath {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
@@ -1273,6 +1280,7 @@ export interface FileRoutesByTo {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
@@ -1445,6 +1453,7 @@ export interface FileRoutesById {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-orders-analytics': typeof AdminOrdersAnalyticsRoute
@@ -1619,6 +1628,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
     | '/admin-orders-analytics'
@@ -1791,6 +1801,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
     | '/admin-orders-analytics'
@@ -1962,6 +1973,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
     | '/admin-orders-analytics'
@@ -2135,6 +2147,7 @@ export interface RootRouteChildren {
   AdminMarketplaceQualityRoute: typeof AdminMarketplaceQualityRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminMerchandisingRoute: typeof AdminMerchandisingRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminOrdersAnalyticsRoute: typeof AdminOrdersAnalyticsRoute
@@ -2752,6 +2765,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-notifications'
       fullPath: '/admin-notifications'
       preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-newsletter': {
+      id: '/admin-newsletter'
+      path: '/admin-newsletter'
+      fullPath: '/admin-newsletter'
+      preLoaderRoute: typeof AdminNewsletterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-merchandising': {
@@ -3561,6 +3581,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMarketplaceQualityRoute: AdminMarketplaceQualityRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminMerchandisingRoute: AdminMerchandisingRoute,
+  AdminNewsletterRoute: AdminNewsletterRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminOrdersAnalyticsRoute: AdminOrdersAnalyticsRoute,

@@ -2466,27 +2466,39 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          country: string | null
           created_at: string
+          device: string | null
           email: string
           id: string
           source: string | null
+          source_page: string | null
           status: string
+          unsubscribed_at: string | null
           updated_at: string
         }
         Insert: {
+          country?: string | null
           created_at?: string
+          device?: string | null
           email: string
           id?: string
           source?: string | null
+          source_page?: string | null
           status?: string
+          unsubscribed_at?: string | null
           updated_at?: string
         }
         Update: {
+          country?: string | null
           created_at?: string
+          device?: string | null
           email?: string
           id?: string
           source?: string | null
+          source_page?: string | null
           status?: string
+          unsubscribed_at?: string | null
           updated_at?: string
         }
         Relationships: []
