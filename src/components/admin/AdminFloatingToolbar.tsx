@@ -496,9 +496,19 @@ export function AdminFloatingToolbar() {
 
       <motion.button
         whileTap={{ scale: 0.94 }}
-        onClick={() => setOpen((v) => !v)}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClick={() => {
+          if (dragRef.current.moved) {
+            dragRef.current.moved = false;
+            return;
+          }
+          setOpen((v) => !v);
+        }}
         className={cn(
-          "flex items-center gap-2 rounded-full border border-accent/40 bg-background/70 px-4 py-3 backdrop-blur-2xl transition-all",
+          "flex items-center gap-2 rounded-full border border-accent/40 bg-background/70 px-4 py-3 backdrop-blur-2xl transition-all touch-none select-none",
           "shadow-[0_10px_40px_-10px_oklch(0.74_0.19_49/0.55)] hover:brightness-110",
         )}
         aria-label="Open admin tools"
