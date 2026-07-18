@@ -104,12 +104,22 @@ function NewsletterAdmin() {
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "subscribed" | "unsubscribed">("all");
+  const [abuseFilter, setAbuseFilter] = useState<"all" | "normal" | "flagged" | "blocked">("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showAudit, setShowAudit] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "newsletter-subscribers"] });
+
+  const auditQ = useQuery({
+    queryKey: ["admin", "newsletter-audit"],
+    queryFn: fetchAudit,
+    enabled: showAudit,
+    staleTime: 30_000,
+  });
 
   const deleteMut = useMutation({
     mutationFn: async (ids: string[]) => {
