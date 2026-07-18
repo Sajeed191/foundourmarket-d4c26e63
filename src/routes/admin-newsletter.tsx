@@ -121,10 +121,29 @@ function NewsletterAdmin() {
     staleTime: 30_000,
   });
 
+  const writeAudit = async (action: string, ids: string[], emails: string[]) => {
+    try {
+      const { data: session } = await supabase.auth.getUser();
+      const actorId = session.user?.id ?? null;
+      const actorEmail = session.user?.email ?? null;
+      const rows = ids.map((id, i) => ({
+        actor_id: actorId,
+        actor_email: actorEmail,
+        action,
+        target_email: emails[i] ?? null,
+        target_id: id,
+        metadata: {} as Record<string, unknown>,
+      }));
+      await supabase.from("newsletter_audit_log" as never).insert(rows as never);
+    } catch { /* audit failure never blocks admin action */ }
+  };
+
   const deleteMut = useMutation({
     mutationFn: async (ids: string[]) => {
+      const emails = (subs ?? []).filter((s) => ids.includes(s.id)).map((s) => s.email);
       const { error } = await supabase.from("newsletter_subscribers").delete().in("id", ids);
       if (error) throw error;
+      await writeAudit("admin_deleted", ids, emails);
     },
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
@@ -143,6 +162,7 @@ function NewsletterAdmin() {
     onSuccess: (_d, ids) => {
       toast.success(ids.length > 1 ? `${ids.length} subscribers deleted.` : "Subscriber deleted.");
       setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin", "newsletter-audit"] });
     },
   });
 
