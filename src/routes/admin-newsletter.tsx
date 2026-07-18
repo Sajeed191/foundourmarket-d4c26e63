@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Search, Download, Trash2, MailX, Users, CalendarDays, Loader2, ChevronUp, ChevronDown,
+  Search, Download, Trash2, MailX, Users, UserCheck, UserX, CalendarDays,
+  Loader2, ChevronUp, ChevronDown, Copy, AlertTriangle,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -26,6 +27,7 @@ type Subscriber = {
   country: string | null;
   created_at: string;
   updated_at: string;
+  subscribed_at: string | null;
   unsubscribed_at: string | null;
 };
 
@@ -37,7 +39,7 @@ const PAGE_SIZE = 25;
 async function fetchSubscribers(): Promise<Subscriber[]> {
   const { data, error } = await supabase
     .from("newsletter_subscribers")
-    .select("id,email,status,source,source_page,device,country,created_at,updated_at,unsubscribed_at")
+    .select("id,email,status,source,source_page,device,country,created_at,updated_at,subscribed_at,unsubscribed_at")
     .order("created_at", { ascending: false })
     .limit(5000);
   if (error) throw error;
@@ -45,7 +47,7 @@ async function fetchSubscribers(): Promise<Subscriber[]> {
 }
 
 function toCSV(rows: Subscriber[]): string {
-  const headers = ["email", "status", "source", "source_page", "device", "country", "created_at", "unsubscribed_at"];
+  const headers = ["email", "status", "source", "source_page", "device", "country", "subscribed_at", "unsubscribed_at", "created_at"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   return [
     headers.join(","),
@@ -69,7 +71,7 @@ function StatusPill({ status }: { status: string }) {
 
 function NewsletterAdmin() {
   const qc = useQueryClient();
-  const { data: subs, isLoading } = useQuery({
+  const { data: subs, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "newsletter-subscribers"],
     queryFn: fetchSubscribers,
     staleTime: 30_000,
@@ -80,52 +82,64 @@ function NewsletterAdmin() {
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "newsletter-subscribers"] });
 
   const deleteMut = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("newsletter_subscribers").delete().eq("id", id);
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("newsletter_subscribers").delete().in("id", ids);
       if (error) throw error;
     },
-    onMutate: async (id) => {
+    onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
       const prev = qc.getQueryData<Subscriber[]>(["admin", "newsletter-subscribers"]);
+      const set = new Set(ids);
       qc.setQueryData<Subscriber[]>(
         ["admin", "newsletter-subscribers"],
-        (curr) => (curr ?? []).filter((s) => s.id !== id),
+        (curr) => (curr ?? []).filter((s) => !set.has(s.id)),
       );
       return { prev };
     },
-    onError: (_e, _id, ctx) => {
+    onError: (_e, _ids, ctx) => {
       if (ctx?.prev) qc.setQueryData(["admin", "newsletter-subscribers"], ctx.prev);
-      toast.error("Failed to delete subscriber.");
+      toast.error("Failed to delete. Please try again.");
     },
-    onSuccess: () => toast.success("Subscriber deleted."),
+    onSuccess: (_d, ids) => {
+      toast.success(ids.length > 1 ? `${ids.length} subscribers deleted.` : "Subscriber deleted.");
+      setSelected(new Set());
+    },
   });
 
   const unsubMut = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (ids: string[]) => {
       const { error } = await supabase
         .from("newsletter_subscribers")
         .update({ status: "unsubscribed", unsubscribed_at: new Date().toISOString() })
-        .eq("id", id);
+        .in("id", ids);
       if (error) throw error;
     },
-    onMutate: async (id) => {
+    onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
       const prev = qc.getQueryData<Subscriber[]>(["admin", "newsletter-subscribers"]);
+      const set = new Set(ids);
+      const now = new Date().toISOString();
       qc.setQueryData<Subscriber[]>(
         ["admin", "newsletter-subscribers"],
         (curr) => (curr ?? []).map((s) =>
-          s.id === id ? { ...s, status: "unsubscribed", unsubscribed_at: new Date().toISOString() } : s,
+          set.has(s.id) ? { ...s, status: "unsubscribed", unsubscribed_at: now } : s,
         ),
       );
       return { prev };
     },
-    onError: (_e, _id, ctx) => {
+    onError: (_e, _ids, ctx) => {
       if (ctx?.prev) qc.setQueryData(["admin", "newsletter-subscribers"], ctx.prev);
-      toast.error("Failed to unsubscribe.");
+      toast.error("Failed to unsubscribe. Please try again.");
     },
-    onSuccess: () => toast.success("Subscriber unsubscribed."),
+    onSuccess: (_d, ids) => {
+      toast.success(ids.length > 1 ? `${ids.length} subscribers unsubscribed.` : "Subscriber unsubscribed.");
+      setSelected(new Set());
+    },
   });
 
   const filtered = useMemo(() => {
@@ -156,10 +170,10 @@ function NewsletterAdmin() {
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
-    const active = rows.filter((r) => r.status === "subscribed");
+    const active = rows.filter((r) => r.status === "subscribed").length;
+    const unsubscribed = rows.filter((r) => r.status === "unsubscribed").length;
     const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
     const today = rows.filter((r) => new Date(r.created_at) >= startOfToday).length;
-    // 12-month growth
     const months = new Map<string, number>();
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
@@ -174,7 +188,7 @@ function NewsletterAdmin() {
       month: new Date(k + "-01").toLocaleDateString(undefined, { month: "short" }),
       subscribers: v,
     }));
-    return { total: rows.length, active: active.length, today, chart };
+    return { total: rows.length, active, unsubscribed, today, chart };
   }, [subs]);
 
   const toggleSort = (k: SortKey) => {
@@ -196,6 +210,49 @@ function NewsletterAdmin() {
     toast.success(`Exported ${filtered.length} subscribers.`);
   };
 
+  const copyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      toast.success("Email copied.");
+    } catch {
+      toast.error("Copy failed.");
+    }
+  };
+
+  const toggleRow = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const togglePage = () => {
+    const ids = pageRows.map((r) => r.id);
+    const allSelected = ids.every((id) => selected.has(id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach((id) => next.delete(id));
+      else ids.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+  const pageAllSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
+
+  const bulkDelete = () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (confirm(`Delete ${ids.length} subscriber${ids.length > 1 ? "s" : ""}? This cannot be undone.`)) {
+      deleteMut.mutate(ids);
+    }
+  };
+  const bulkUnsubscribe = () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (confirm(`Unsubscribe ${ids.length} subscriber${ids.length > 1 ? "s" : ""}?`)) {
+      unsubMut.mutate(ids);
+    }
+  };
+
   const SortIcon = ({ k }: { k: SortKey }) =>
     sortKey !== k ? null : sortDir === "asc" ? <ChevronUp className="inline size-3" /> : <ChevronDown className="inline size-3" />;
 
@@ -214,9 +271,10 @@ function NewsletterAdmin() {
       }
     >
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <StatCard label="Total subscribers" value={stats.total} icon={Users} />
-        <StatCard label="Active" value={stats.active} icon={Users} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <StatCard label="Total" value={stats.total} icon={Users} />
+        <StatCard label="Active" value={stats.active} icon={UserCheck} />
+        <StatCard label="Unsubscribed" value={stats.unsubscribed} icon={UserX} />
         <StatCard label="Today" value={stats.today} icon={CalendarDays} />
       </div>
 
@@ -242,7 +300,7 @@ function NewsletterAdmin() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-3">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <input
@@ -263,20 +321,67 @@ function NewsletterAdmin() {
         </select>
       </div>
 
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-accent/30 bg-accent/5 px-3 py-2 text-xs">
+          <span className="font-medium">{selected.size} selected</span>
+          <div className="flex-1" />
+          <button
+            onClick={bulkUnsubscribe}
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1"
+          >
+            <MailX className="size-3" /> Unsubscribe
+          </button>
+          <button
+            onClick={bulkDelete}
+            className="inline-flex items-center gap-1 rounded-full border border-destructive/30 text-destructive hover:bg-destructive/10 px-3 py-1"
+          >
+            <Trash2 className="size-3" /> Delete
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="rounded-full border border-white/10 px-3 py-1 hover:bg-white/10"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-2xl border border-white/10 overflow-hidden">
         {isLoading ? (
-          <div className="p-10 grid place-items-center text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" />
+          <TableSkeleton />
+        ) : isError ? (
+          <div className="p-10 text-center text-sm">
+            <AlertTriangle className="mx-auto mb-2 size-5 text-destructive" />
+            <p className="text-destructive font-medium">Couldn't load subscribers</p>
+            <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message ?? "Please retry."}</p>
+            <button
+              onClick={() => refetch()}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-1.5 text-xs"
+            >
+              Try again
+            </button>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">No subscribers found.</div>
+          <div className="p-10 text-center text-sm text-muted-foreground">
+            {(subs ?? []).length === 0 ? "No subscribers yet." : "No subscribers match your filters."}
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-white/[0.02] text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   <tr>
+                    <th className="px-3 py-3 w-8">
+                      <input
+                        type="checkbox"
+                        checked={pageAllSelected}
+                        onChange={togglePage}
+                        aria-label="Select all on page"
+                        className="accent-accent"
+                      />
+                    </th>
                     <th className="text-left px-4 py-3 cursor-pointer" onClick={() => toggleSort("email")}>
                       Email <SortIcon k="email" />
                     </th>
@@ -295,7 +400,28 @@ function NewsletterAdmin() {
                 <tbody>
                   {pageRows.map((s) => (
                     <tr key={s.id} className="border-t border-white/5 hover:bg-white/[0.02]">
-                      <td className="px-4 py-3 max-w-[260px] truncate">{s.email}</td>
+                      <td className="px-3 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(s.id)}
+                          onChange={() => toggleRow(s.id)}
+                          aria-label={`Select ${s.email}`}
+                          className="accent-accent"
+                        />
+                      </td>
+                      <td className="px-4 py-3 max-w-[260px]">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">{s.email}</span>
+                          <button
+                            onClick={() => copyEmail(s.email)}
+                            className="opacity-60 hover:opacity-100 shrink-0"
+                            title="Copy email"
+                            aria-label={`Copy ${s.email}`}
+                          >
+                            <Copy className="size-3" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-4 py-3"><StatusPill status={s.status} /></td>
                       <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{s.source_page ?? s.source ?? "—"}</td>
                       <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{s.country ?? "—"}</td>
@@ -307,7 +433,7 @@ function NewsletterAdmin() {
                         <div className="flex items-center justify-end gap-2">
                           {s.status === "subscribed" && (
                             <button
-                              onClick={() => unsubMut.mutate(s.id)}
+                              onClick={() => unsubMut.mutate([s.id])}
                               className="inline-flex items-center gap-1 rounded-full border border-white/10 hover:bg-white/10 px-2.5 py-1 text-[11px]"
                               title="Unsubscribe"
                             >
@@ -316,7 +442,7 @@ function NewsletterAdmin() {
                           )}
                           <button
                             onClick={() => {
-                              if (confirm(`Delete ${s.email}?`)) deleteMut.mutate(s.id);
+                              if (confirm(`Delete ${s.email}?`)) deleteMut.mutate([s.id]);
                             }}
                             className="inline-flex items-center gap-1 rounded-full border border-destructive/30 text-destructive hover:bg-destructive/10 px-2.5 py-1 text-[11px]"
                             title="Delete"
@@ -332,7 +458,7 @@ function NewsletterAdmin() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between border-t border-white/5 px-4 py-3 text-xs text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-white/5 px-4 py-3 text-xs text-muted-foreground">
               <span>
                 {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
               </span>
@@ -371,6 +497,20 @@ function StatCard({
         <Icon className="size-4 text-accent" />
       </div>
       <div className="mt-2 text-2xl font-semibold tabular-nums">{value.toLocaleString()}</div>
+    </div>
+  );
+}
+
+function TableSkeleton() {
+  return (
+    <div className="p-4 space-y-2" role="status" aria-label="Loading subscribers">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-10 rounded-lg bg-white/[0.03] animate-pulse" />
+      ))}
+      <span className="sr-only">Loading…</span>
+      <div className="pt-2 flex justify-center">
+        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+      </div>
     </div>
   );
 }

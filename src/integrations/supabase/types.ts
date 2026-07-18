@@ -2474,6 +2474,7 @@ export type Database = {
           source: string | null
           source_page: string | null
           status: string
+          subscribed_at: string | null
           unsubscribed_at: string | null
           updated_at: string
         }
@@ -2486,6 +2487,7 @@ export type Database = {
           source?: string | null
           source_page?: string | null
           status?: string
+          subscribed_at?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
         }
@@ -2498,6 +2500,7 @@ export type Database = {
           source?: string | null
           source_page?: string | null
           status?: string
+          subscribed_at?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
         }
