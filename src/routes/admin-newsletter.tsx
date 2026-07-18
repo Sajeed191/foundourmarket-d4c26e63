@@ -356,11 +356,32 @@ function NewsletterAdmin() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(0); }}
+          aria-label="Filter by status"
           className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
         >
           <option value="all">All statuses</option>
           <option value="subscribed">Subscribed</option>
           <option value="unsubscribed">Unsubscribed</option>
+        </select>
+        <select
+          value={abuseFilter}
+          onChange={(e) => { setAbuseFilter(e.target.value as typeof abuseFilter); setPage(0); }}
+          aria-label="Filter by abuse status"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="all">All safety</option>
+          <option value="normal">Normal</option>
+          <option value="flagged">Flagged</option>
+          <option value="blocked">Blocked</option>
+        </select>
+        <select
+          value={sourceFilter}
+          onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
+          aria-label="Filter by source"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+        >
+          <option value="all">All sources</option>
+          {sourceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
