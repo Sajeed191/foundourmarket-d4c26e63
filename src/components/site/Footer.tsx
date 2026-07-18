@@ -367,14 +367,14 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`grid size-11 place-items-center rounded-full bg-white/[0.04] text-white/85 ring-1 ring-white/[0.08] transition-all ${EASE} hover:scale-110 hover:text-accent hover:ring-accent/50 hover:shadow-[0_0_24px_-4px] hover:shadow-accent/70 active:scale-[0.96]`}
+                  className={`grid size-11 place-items-center rounded-full bg-white/[0.04] text-white/95 ring-1 ring-white/[0.08] transition-all ${EASE} hover:text-accent hover:ring-accent/50 hover:shadow-[0_0_24px_-4px] hover:shadow-accent/70 active:scale-[1.08]`}
                 >
                   {isX ? (
-                    <svg viewBox="0 0 24 24" className="size-[18px] fill-current" aria-hidden>
+                    <svg viewBox="0 0 24 24" className="size-5 fill-current" aria-hidden>
                       <path d="M18.244 2H21l-6.52 7.45L22 22h-6.86l-4.77-6.24L4.8 22H2l7.02-8.02L2 2h6.94l4.31 5.7L18.24 2Zm-1.2 18h1.9L7.06 4H5.06l11.98 16Z" />
                     </svg>
                   ) : (
-                    Icon ? <Icon className="size-[18px]" strokeWidth={1.9} /> : null
+                    Icon ? <Icon className="size-5" strokeWidth={1.9} /> : null
                   )}
                 </a>
               ))}
