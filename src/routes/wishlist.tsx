@@ -316,7 +316,7 @@ function WishlistPage() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 mobile-page-clearance sm:px-6 sm:py-14 md:pb-16">
+    <div className="mx-auto max-w-7xl px-4 pt-10 pb-4 sm:px-6 sm:py-14 sm:pb-14 md:pb-16">
       {/* Header */}
       <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
         Wishlist · {stats.count} {stats.count === 1 ? "Item" : "Items"}
