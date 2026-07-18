@@ -114,13 +114,24 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
         setSuccessPulse(true);
         window.setTimeout(() => setSuccessPulse(false), 1400);
         const isDuplicate = !!data.duplicate;
-        toast.success(isDuplicate ? "You're already subscribed. 🎉" : "Subscribed! Watch your inbox.");
+        const isPending = !!(data as { pending?: boolean }).pending;
+        const successMsg = isDuplicate
+          ? "You're already subscribed. 🎉"
+          : isPending
+            ? "Almost there — check your inbox to confirm."
+            : "Subscribed! Watch your inbox.";
+        toast.success(successMsg);
         inputRef.current?.blur();
-        const key = `ok:${normalized}:${isDuplicate ? "dup" : "new"}`;
+        const evt = isDuplicate
+          ? "newsletter_duplicate"
+          : isPending
+            ? "newsletter_pending"
+            : "newsletter_subscribed";
+        const key = `ok:${normalized}:${evt}`;
         if (trackedRef.current !== key) {
           trackedRef.current = key;
-          void trackEvent(isDuplicate ? "newsletter_duplicate" : "newsletter_subscribed", {
-            metadata: { source: safeSource, duplicate: isDuplicate },
+          void trackEvent(evt, {
+            metadata: { source: safeSource, duplicate: isDuplicate, pending: isPending },
           });
         }
         return;
