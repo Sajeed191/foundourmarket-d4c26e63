@@ -283,17 +283,42 @@ export function LiveChat() {
     <>
       {/* Minimal floating support orb — 56px, orange gradient, gentle pulse. */}
       {!open && !isProductPage && (
-        <button
-          type="button"
-          data-floating-control
-          aria-label="Support options"
-          onClick={() => setMenuOpen(true)}
-          className={`group fixed right-4 z-[60] grid place-items-center size-14 rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/10 transition-[transform,box-shadow] duration-200 active:scale-95 hover:shadow-[0_12px_32px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-breathe ${orbHidden ? "orb-hidden" : ""}`}
+        <div
+          className={`fixed right-4 z-[60] flex items-end gap-2 transition-opacity duration-200 ${orbHidden ? "orb-hidden" : ""}`}
           style={{ bottom: "calc(var(--floating-bottom-offset))" }}
         >
-          <Headset className="size-6" strokeWidth={1.8} />
-        </button>
+          {/* Live status pill (only when online / has unread) */}
+          {(availability === "online" || unread > 0) && (
+            <div className="mb-1 hidden sm:flex sm:flex-col sm:items-end animate-in fade-in slide-in-from-right-2 duration-300">
+              <div className="rounded-2xl bg-card/85 backdrop-blur-xl border border-white/10 px-3 py-1.5 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.5)]">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground leading-none">
+                  <span className={`size-1.5 rounded-full ${availability === "online" ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
+                  Live Chat
+                </p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground leading-none">
+                  {unread > 0 ? `${unread} new reply` : "We're online"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            data-floating-control
+            aria-label="Support options"
+            onClick={() => setMenuOpen(true)}
+            className="group relative grid place-items-center size-14 rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/10 transition-[transform,box-shadow] duration-200 active:scale-95 hover:shadow-[0_12px_32px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-breathe"
+          >
+            <Headset className="size-6" strokeWidth={1.8} />
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </button>
+        </div>
       )}
+
 
       {/* Premium bottom sheet — support quick actions */}
       {menuOpen && !open && (
