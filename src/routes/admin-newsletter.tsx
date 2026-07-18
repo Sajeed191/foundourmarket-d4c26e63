@@ -168,11 +168,13 @@ function NewsletterAdmin() {
 
   const unsubMut = useMutation({
     mutationFn: async (ids: string[]) => {
+      const emails = (subs ?? []).filter((s) => ids.includes(s.id)).map((s) => s.email);
       const { error } = await supabase
         .from("newsletter_subscribers")
         .update({ status: "unsubscribed", unsubscribed_at: new Date().toISOString() })
         .in("id", ids);
       if (error) throw error;
+      await writeAudit("admin_unsubscribed", ids, emails);
     },
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ["admin", "newsletter-subscribers"] });
@@ -194,6 +196,7 @@ function NewsletterAdmin() {
     onSuccess: (_d, ids) => {
       toast.success(ids.length > 1 ? `${ids.length} subscribers unsubscribed.` : "Subscriber unsubscribed.");
       setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin", "newsletter-audit"] });
     },
   });
 
