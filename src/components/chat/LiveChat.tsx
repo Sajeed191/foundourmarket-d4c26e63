@@ -281,97 +281,17 @@ export function LiveChat() {
 
   return (
     <>
-      {/* Minimal floating support orb — 56px, orange gradient, gentle pulse. */}
+      {/* Premium floating support widget — draggable for admins, safe-area aware. */}
       {!open && !isProductPage && (
-        <div
-          className={`fixed right-4 z-[60] flex items-end gap-2 transition-opacity duration-200 ${orbHidden ? "orb-hidden" : ""}`}
-          style={{ bottom: "calc(var(--floating-bottom-offset))" }}
-        >
-          {/* Live status pill (only when online / has unread) */}
-          {(availability === "online" || unread > 0) && (
-            <div className="mb-1 hidden sm:flex sm:flex-col sm:items-end animate-in fade-in slide-in-from-right-2 duration-300">
-              <div className="rounded-2xl bg-card/85 backdrop-blur-xl border border-white/10 px-3 py-1.5 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.5)]">
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground leading-none">
-                  <span className={`size-1.5 rounded-full ${availability === "online" ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
-                  Live Chat
-                </p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground leading-none">
-                  {unread > 0 ? `${unread} new reply` : "We're online"}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <button
-            type="button"
-            data-floating-control
-            aria-label="Support options"
-            onClick={() => setMenuOpen(true)}
-            className="group relative grid place-items-center size-14 rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/10 transition-[transform,box-shadow] duration-200 active:scale-95 hover:shadow-[0_12px_32px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-breathe"
-          >
-            <Headset className="size-6" strokeWidth={1.8} />
-            {unread > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
-                {unread > 9 ? "9+" : unread}
-              </span>
-            )}
-          </button>
-        </div>
+        <FloatingSupportOrb
+          availability={availability}
+          unread={unread}
+          hidden={orbHidden}
+          onStartChat={() => setOpen(true)}
+        />
       )}
 
 
-      {/* Premium bottom sheet — support quick actions */}
-      {menuOpen && !open && (
-        <div
-          className="fixed inset-0 z-[65] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setMenuOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Support options"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-xl p-5 shadow-2xl animate-in slide-in-from-bottom duration-300"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--mobile-nav-clearance, 0px) + 1.25rem)" }}
-          >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/15" aria-hidden />
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display font-semibold text-base leading-tight">How can we help?</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">Support hours · Mon–Sun · 9 AM–9 PM</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(false)}
-                aria-label="Close"
-                className="size-8 grid place-items-center rounded-full text-muted-foreground hover:bg-white/10"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <div className="mt-4 space-y-2">
-              <ChatMenuOption
-                icon={Headset}
-                label="Start Live Chat"
-                desc="Chat with our support team"
-                onClick={() => { setMenuOpen(false); setOpen(true); }}
-              />
-              <ChatMenuOption
-                icon={FileText}
-                label="Email"
-                desc="support@foundourmarket.com"
-                onClick={() => { setMenuOpen(false); window.location.href = "mailto:support@foundourmarket.com"; }}
-              />
-              <ChatMenuOption
-                icon={LifeBuoy}
-                label="Call Me Back"
-                desc="We'll reach out shortly"
-                onClick={() => { setMenuOpen(false); window.location.href = "/contact"; }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
 
 
