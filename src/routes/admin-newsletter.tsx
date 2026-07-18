@@ -547,6 +547,62 @@ function NewsletterAdmin() {
           </>
         )}
       </div>
+
+      {/* Audit log — collapsible, lazy-loaded */}
+      <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02]">
+        <button
+          onClick={() => setShowAudit((v) => !v)}
+          aria-expanded={showAudit}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold"
+        >
+          <span>Audit log</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            {showAudit ? "Hide" : "Show"} · last 200 events
+          </span>
+        </button>
+        {showAudit && (
+          <div className="border-t border-white/5 max-h-[420px] overflow-auto">
+            {auditQ.isLoading ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                <Loader2 className="mx-auto mb-2 size-4 animate-spin" /> Loading events…
+              </div>
+            ) : auditQ.isError ? (
+              <div className="p-6 text-center text-xs text-destructive">
+                Couldn't load audit log.
+              </div>
+            ) : (auditQ.data ?? []).length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">No events yet.</div>
+            ) : (
+              <table className="w-full text-xs">
+                <thead className="bg-white/[0.02] text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-4 py-2">When</th>
+                    <th className="text-left px-4 py-2">Action</th>
+                    <th className="text-left px-4 py-2">Target</th>
+                    <th className="text-left px-4 py-2">Actor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(auditQ.data ?? []).map((r) => (
+                    <tr key={r.id} className="border-t border-white/5">
+                      <td className="px-4 py-2 text-muted-foreground whitespace-nowrap">
+                        {new Date(r.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2 font-mono text-[11px]">{r.action}</td>
+                      <td className="px-4 py-2 text-muted-foreground max-w-[280px] truncate">
+                        {r.target_email ?? "—"}
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {r.actor_email ?? "system"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
     </AdminShell>
   );
 }
