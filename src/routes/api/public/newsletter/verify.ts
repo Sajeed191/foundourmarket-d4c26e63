@@ -5,12 +5,18 @@
  *   Consumes a single-use, expiring verification token.
  *   Redirects to a friendly result page (?state=ok|expired|invalid|already).
  */
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 const RESULT_BASE = '/newsletter/verified'
 
-function done(state: 'ok' | 'expired' | 'invalid' | 'already') {
-  throw redirect({ to: `${RESULT_BASE}?state=${state}` } as never)
+function done(state: 'ok' | 'expired' | 'invalid' | 'already'): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: `${RESULT_BASE}?state=${state}`,
+      'Cache-Control': 'no-store',
+    },
+  })
 }
 
 export const Route = createFileRoute('/api/public/newsletter/verify')({
