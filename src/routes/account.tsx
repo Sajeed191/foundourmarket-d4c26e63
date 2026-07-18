@@ -7,7 +7,7 @@ import {
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
   HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
-  CheckCircle2, Box, Home, X, Plus, Minus, CreditCard, UserCog,
+  CheckCircle2, Box, Home, X, Plus, Minus, CreditCard,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
   BookOpen, Bell,
 
