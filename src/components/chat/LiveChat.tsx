@@ -57,7 +57,7 @@ import {
 import { BrandName } from "@/components/site/BrandName";
 import { waitForLayoutReady, isHeaderLayoutReady } from "@/lib/wait-for-layout";
 import { useSupportSettings } from "@/lib/use-support-settings";
-import { registerFloating, updateFloating, subscribeFloating, setChatActive, getFooterLift, isContextHidden } from "@/lib/floating-stack";
+import { registerFloating, subscribeFloating, setChatActive, getFooterLift, isContextHidden } from "@/lib/floating-stack";
 
 type Msg = CrispMessage;
 
@@ -140,28 +140,33 @@ export function LiveChat() {
   // can visually recede while the chat surface or quick-actions menu is open.
   useEffect(() => { setChatActive(open || menuOpen); return () => setChatActive(false); }, [open, menuOpen]);
   const [activeOrder, setActiveOrder] = useState<ChatOrder | null>(null);
-  // Peek the floating orb ~80% off-screen while the user scrolls down, and
-  // restore after they scroll up OR pause scrolling for 600ms. Suppressed
-  // while the user is actively dragging the orb.
+  // Fixed floating orb — smart scroll hide. While the user scrolls DOWN the
+  // orb slides out (translateY(120%) + opacity 0). Scrolling UP or pausing
+  // scroll for 300ms restores it. Fully fixed position; not draggable.
   const [orbHidden, setOrbHidden] = useState(false);
-  const draggingRef = useRef(false);
   useEffect(() => {
     let ticking = false;
     let idleTimer: number | undefined;
+    let lastY = typeof window !== "undefined" ? window.scrollY : 0;
+    const THRESH = 6;
     const scheduleRestore = () => {
       if (idleTimer) window.clearTimeout(idleTimer);
-      idleTimer = window.setTimeout(() => {
-        if (!draggingRef.current) setOrbHidden(false);
-      }, 700);
+      idleTimer = window.setTimeout(() => setOrbHidden(false), 300);
     };
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        if (!draggingRef.current) {
-          setOrbHidden(true);
-          // Also dismiss the greeting bubble while scrolling.
-          dismissGreetingRef.current();
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (Math.abs(dy) >= THRESH) {
+          if (dy > 0 && y > 40) {
+            setOrbHidden(true);
+            dismissGreetingRef.current();
+          } else if (dy < 0) {
+            setOrbHidden(false);
+          }
+          lastY = y;
         }
         ticking = false;
         scheduleRestore();
@@ -174,15 +179,15 @@ export function LiveChat() {
     };
   }, []);
 
-  // First-visit greeting bubble — shown once per browser session, 800ms after
-  // mount, auto-dismissed after 4s or as soon as the widget is opened/scrolled.
+  // "Need help?" tooltip — first-time visitors only. Appears 4s after mount,
+  // auto-hides 4s later. Persisted in localStorage so it never returns.
   const [greetVisible, setGreetVisible] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      if (sessionStorage.getItem("fom_chat_greet_seen") === "1") return;
+      if (localStorage.getItem("fom_chat_greet_seen") === "1") return;
     } catch { /* noop */ }
-    const showT = window.setTimeout(() => setGreetVisible(true), 800);
+    const showT = window.setTimeout(() => setGreetVisible(true), 4000);
     return () => window.clearTimeout(showT);
   }, []);
   useEffect(() => {
@@ -192,7 +197,7 @@ export function LiveChat() {
   }, [greetVisible]);
   const dismissGreeting = useCallback(() => {
     setGreetVisible(false);
-    try { sessionStorage.setItem("fom_chat_greet_seen", "1"); } catch { /* noop */ }
+    try { localStorage.setItem("fom_chat_greet_seen", "1"); } catch { /* noop */ }
   }, []);
   useEffect(() => { dismissGreetingRef.current = dismissGreeting; }, [dismissGreeting]);
 
@@ -324,22 +329,19 @@ export function LiveChat() {
     <>
       {/* Premium floating support orb — draggable, status ring, long-press menu. */}
       {!open && (
-        <DraggableOrb
-          peek={orbHidden}
+        <FixedOrb
+          hidden={orbHidden}
           availability={availability}
           unread={unread}
           onTap={() => {
             dismissGreeting();
-            // Offline → route straight to the contact form instead of live chat.
             if (availability === "offline") {
               window.location.href = "/contact";
               return;
             }
-            // Tap opens the chat directly (morph animation via chat-slide-up).
             setOpen(true);
           }}
           onLongPress={() => { dismissGreeting(); setMenuOpen(true); }}
-          onDragChange={(d) => { draggingRef.current = d; if (d) dismissGreeting(); }}
           greetVisible={greetVisible}
           onDismissGreeting={dismissGreeting}
         />
@@ -879,19 +881,14 @@ function ChatMenuOption({
   );
 }
 
-// Draggable Messenger-style chat head. Dock side persists per browser tab
-// (module-level, resets on refresh). Snaps ~40% off the nearest edge on
-// release. Scroll-shrinks to ~80% (never disappears).
+// Fixed floating support orb — never draggable, never repositioned by the
+// user. Dock: bottom-right, 20px inset, above the mobile bottom nav, respects
+// safe-area insets and the software keyboard (visualViewport). Hides while
+// the user scrolls down and restores on scroll-up or 300ms of idle scroll.
 const ORB_SIZE = 56;
-const EDGE_MARGIN = 24;
-const NAV_CLEARANCE_FALLBACK = 110;
-const HIDDEN_RATIO = 0.35; // 35% of the orb sits off-screen after snap
-const PEEK_SCALE = 0.8;    // shrink while scrolling
+const EDGE_INSET = 20;
+const LONG_PRESS_MS = 500;
 const TAP_THRESHOLD = 8;
-const LONG_PRESS_MS = 450;
-
-// Module-level: survives client-side nav within the same tab, resets on refresh.
-let sessionDockSide: "left" | "right" | null = null;
 
 function ringClass(a: Availability): { color: string; anim: string } {
   switch (a) {
@@ -902,180 +899,102 @@ function ringClass(a: Availability): { color: string; anim: string } {
   }
 }
 
-function DraggableOrb({
-  peek,
+function FixedOrb({
+  hidden,
   availability,
   unread,
   onTap,
   onLongPress,
-  onDragChange,
   greetVisible,
   onDismissGreeting,
 }: {
-  peek: boolean;
+  hidden: boolean;
   availability: Availability;
   unread: number;
   onTap: () => void;
   onLongPress: () => void;
-  onDragChange: (dragging: boolean) => void;
   greetVisible: boolean;
   onDismissGreeting: () => void;
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
-  const posRef = useRef({ x: 0, y: 0 });
-  const peekRef = useRef(false);
   const longPressTimer = useRef<number | undefined>(undefined);
   const longPressedRef = useRef(false);
-  const dragRef = useRef({
-    active: false, moved: false, startX: 0, startY: 0,
-    baseX: 0, baseY: 0, pointerId: 0, rafId: 0, nextX: 0, nextY: 0,
-  });
+  const downRef = useRef({ active: false, moved: false, x: 0, y: 0 });
+  const [placed, setPlaced] = useState(false);
 
-  const getBounds = useCallback(() => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const vv = window.visualViewport;
-    const visibleBottom = vv ? vv.height + vv.offsetTop : vh;
-    const cs = getComputedStyle(document.documentElement);
-    const headerH = parseFloat(cs.getPropertyValue("--app-header-height")) || 64;
-    const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
-    let navH = NAV_CLEARANCE_FALLBACK;
-    if (navRaw) {
-      const n = parseFloat(navRaw);
-      if (Number.isFinite(n) && !navRaw.includes("calc")) navH = Math.max(n, NAV_CLEARANCE_FALLBACK);
-    }
-    const safeTop = headerH + EDGE_MARGIN;
-    // 16px extra clearance above keyboard / bottom nav.
-    const safeBottom = Math.min(vh, visibleBottom) - navH - ORB_SIZE - 16;
-    const minX = EDGE_MARGIN;
-    const maxX = vw - ORB_SIZE - EDGE_MARGIN;
-    return { vw, vh, minX, maxX, minY: safeTop, maxY: Math.max(safeTop, safeBottom) };
-  }, []);
-
-  const idlePeekRef = useRef(false);
-
-  const applyTransform = useCallback((x: number, y: number, scale = 1, withTransition = false) => {
+  // Compute the bottom offset so the orb sits above the bottom navigation,
+  // respects safe-area insets, and lifts above the software keyboard.
+  const applyPosition = useCallback(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const dragging = dragRef.current.active;
-    const peeked = (peekRef.current || idlePeekRef.current) && !dragging;
-    const shrink = peeked ? PEEK_SCALE : scale;
-    const lift = getFooterLift();
-    const hidden = isContextHidden();
-    const opacity = hidden ? 0 : peeked ? 0.8 : 1;
-    el.style.opacity = String(opacity);
-    el.style.pointerEvents = hidden ? "none" : "";
-    el.style.transition = withTransition
-      ? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease-out"
-      : "opacity 220ms ease-out";
-    el.style.transform = `translate3d(${x}px, ${y - lift}px, 0) scale(${shrink})`;
+    const cs = getComputedStyle(document.documentElement);
+    const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
+    let navH = 96;
+    if (navRaw) {
+      const n = parseFloat(navRaw);
+      if (Number.isFinite(n) && !navRaw.includes("calc")) navH = Math.max(n, 72);
+    }
+    const vv = window.visualViewport;
+    // Keyboard lift: distance from visualViewport bottom to layout viewport bottom.
+    const kb = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
+    const footer = getFooterLift();
+    const bottom = navH + kb + footer;
+    el.style.bottom = `${bottom}px`;
   }, []);
 
+  const applyVisibility = useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ctxHidden = isContextHidden();
+    const off = hidden || ctxHidden;
+    el.style.transition = "transform 180ms ease-out, opacity 180ms ease-out";
+    el.style.transform = off ? "translateY(120%)" : "translateY(0)";
+    el.style.opacity = off ? "0" : "1";
+    el.style.pointerEvents = off ? "none" : "";
+  }, [hidden]);
 
-  const [placed, setPlaced] = useState(false);
   useEffect(() => {
-    // Register with the floating-widgets collision system. Live Chat is the
-    // highest-priority floating action, so it never moves for others — lower-
-    // priority widgets (Admin toolbar, future) shift out of its way.
+    // Register with the floating-widgets collision system as priority 1 on the
+    // right edge so lower-priority widgets (Admin toolbar) shift out of its way.
     const unregister = registerFloating("livechat", {
       priority: 1,
-      side: sessionDockSide ?? "right",
+      side: "right",
       width: ORB_SIZE,
       height: ORB_SIZE,
     });
-    let cleanupExtra = () => {};
+    let cleanupWait = () => {};
     const cancelWait = waitForLayoutReady(isHeaderLayoutReady, () => {
       const raf = requestAnimationFrame(() => {
-        const b = getBounds();
-        // Restore dock side within the same tab (module-level, resets on refresh).
-        const dockRight = sessionDockSide !== "left";
-        const hiddenPx = ORB_SIZE * HIDDEN_RATIO;
-        const x = dockRight ? b.vw - ORB_SIZE + hiddenPx : -hiddenPx;
-        // Default y is bottom.
-        posRef.current = { x: dockRight ? b.maxX : x, y: b.maxY };
-        // On first mount ever this tab, use full-visible bottom-right (no dock offset).
-        if (sessionDockSide === null) posRef.current = { x: b.maxX, y: b.maxY };
-        applyTransform(posRef.current.x, posRef.current.y, 1, false);
+        applyPosition();
+        applyVisibility();
         setPlaced(true);
       });
-      cleanupExtra = () => cancelAnimationFrame(raf);
+      cleanupWait = () => cancelAnimationFrame(raf);
     });
-    const onResize = () => {
-      const b = getBounds();
-      const x = Math.min(Math.max(posRef.current.x, sessionDockSide === "left" ? -ORB_SIZE * HIDDEN_RATIO : b.minX), sessionDockSide === "right" ? b.vw - ORB_SIZE + ORB_SIZE * HIDDEN_RATIO : b.maxX);
-      const y = Math.min(Math.max(posRef.current.y, b.minY), b.maxY);
-      posRef.current = { x, y };
-      applyTransform(x, y, 1, false);
-    };
+    const onResize = () => applyPosition();
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("scroll", onResize);
-    // Re-apply transform whenever the floating stack changes (footer lift,
-    // fullscreen context hide, admin toolbar side changes).
+    // Re-apply on floating-stack changes (footer lift, fullscreen context).
     const unsubscribe = subscribeFloating(() => {
-      applyTransform(posRef.current.x, posRef.current.y, 1, true);
+      applyPosition();
+      applyVisibility();
     });
     return () => {
       unregister();
       unsubscribe();
       cancelWait();
-      cleanupExtra();
+      cleanupWait();
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("scroll", onResize);
     };
-  }, [applyTransform, getBounds]);
+  }, [applyPosition, applyVisibility]);
 
-  // Edge Peek Mode — after 12s of no user interaction, dock the orb ~35% off
-  // the nearest edge (magnetic idle) and shrink. Any pointer/keyboard/scroll
-  // input restores full presence. Suppressed while dragging.
-  useEffect(() => {
-    let t: number | undefined;
-    const restore = () => {
-      if (!idlePeekRef.current) return;
-      idlePeekRef.current = false;
-      const b = getBounds();
-      const dockRight = sessionDockSide !== "left";
-      posRef.current = { x: dockRight ? b.maxX : b.minX, y: posRef.current.y };
-      applyTransform(posRef.current.x, posRef.current.y, 1, true);
-    };
-    const arm = () => {
-      restore();
-      if (t) window.clearTimeout(t);
-      t = window.setTimeout(() => {
-        if (dragRef.current.active) return;
-        const b = getBounds();
-        const dockRight = sessionDockSide !== "left";
-        const hiddenPx = ORB_SIZE * HIDDEN_RATIO;
-        const snapX = dockRight ? b.vw - ORB_SIZE + hiddenPx : -hiddenPx;
-        posRef.current = { x: snapX, y: posRef.current.y };
-        sessionDockSide = dockRight ? "right" : "left";
-        idlePeekRef.current = true;
-        applyTransform(snapX, posRef.current.y, 1, true);
-      }, 12000);
-    };
-    arm();
-    const evts: (keyof WindowEventMap)[] = ["pointerdown", "keydown", "scroll", "touchstart"];
-    evts.forEach((e) => window.addEventListener(e, arm, { passive: true } as AddEventListenerOptions));
-    return () => {
-      if (t) window.clearTimeout(t);
-      evts.forEach((e) => window.removeEventListener(e, arm));
-    };
-  }, [applyTransform, getBounds]);
-
-
-  useEffect(() => {
-    peekRef.current = peek;
-    if (dragRef.current.active) return;
-    applyTransform(posRef.current.x, posRef.current.y, 1, true);
-  }, [peek, applyTransform]);
-
-  const flushFrame = useCallback(() => {
-    dragRef.current.rafId = 0;
-    applyTransform(dragRef.current.nextX, dragRef.current.nextY, 1.05, false);
-  }, [applyTransform]);
+  // Re-apply visibility whenever the hide flag changes.
+  useEffect(() => { applyVisibility(); }, [applyVisibility]);
 
   const clearLongPress = useCallback(() => {
     if (longPressTimer.current) {
@@ -1084,102 +1003,51 @@ function DraggableOrb({
     }
   }, []);
 
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLButtonElement>) => {
-      const d = dragRef.current;
-      d.active = true;
-      d.moved = false;
-      d.pointerId = e.pointerId;
-      d.startX = e.clientX;
-      d.startY = e.clientY;
-      d.baseX = posRef.current.x;
-      d.baseY = posRef.current.y;
-      d.nextX = posRef.current.x;
-      d.nextY = posRef.current.y;
-      longPressedRef.current = false;
-      clearLongPress();
-      longPressTimer.current = window.setTimeout(() => {
-        if (!dragRef.current.moved) {
-          longPressedRef.current = true;
-          onLongPress();
-        }
-      }, LONG_PRESS_MS);
-      onDragChange(true);
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch { /* noop */ }
-    },
-    [onDragChange, onLongPress, clearLongPress],
-  );
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    downRef.current = { active: true, moved: false, x: e.clientX, y: e.clientY };
+    longPressedRef.current = false;
+    clearLongPress();
+    longPressTimer.current = window.setTimeout(() => {
+      if (!downRef.current.moved) {
+        longPressedRef.current = true;
+        onLongPress();
+      }
+    }, LONG_PRESS_MS);
+  }, [clearLongPress, onLongPress]);
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent<HTMLButtonElement>) => {
-      const d = dragRef.current;
-      if (!d.active) return;
-      const dx = e.clientX - d.startX;
-      const dy = e.clientY - d.startY;
-      if (!d.moved && Math.hypot(dx, dy) < TAP_THRESHOLD) return;
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = downRef.current;
+    if (!d.active) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_THRESHOLD) {
       d.moved = true;
       clearLongPress();
-      const b = getBounds();
-      const x = Math.min(Math.max(d.baseX + dx, b.minX), b.maxX);
-      const y = Math.min(Math.max(d.baseY + dy, b.minY), b.maxY);
-      d.nextX = x;
-      d.nextY = y;
-      if (!d.rafId) d.rafId = requestAnimationFrame(flushFrame);
-    },
-    [flushFrame, getBounds, clearLongPress],
-  );
+    }
+  }, [clearLongPress]);
 
-  const endDrag = useCallback(
-    (e: React.PointerEvent<HTMLButtonElement>) => {
-      const d = dragRef.current;
-      if (!d.active) return;
-      d.active = false;
-      clearLongPress();
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch { /* noop */ }
-      if (d.rafId) {
-        cancelAnimationFrame(d.rafId);
-        d.rafId = 0;
-      }
+  const onPointerUp = useCallback(() => {
+    const d = downRef.current;
+    if (!d.active) return;
+    d.active = false;
+    clearLongPress();
+    if (!d.moved && !longPressedRef.current) onTap();
+  }, [clearLongPress, onTap]);
 
-      if (!d.moved) {
-        applyTransform(posRef.current.x, posRef.current.y, 1, true);
-        onDragChange(false);
-        if (!longPressedRef.current) onTap();
-        return;
-      }
-
-      // Magnetic dock: snap ~35% off the nearest edge.
-      const b = getBounds();
-      const centerX = d.nextX + ORB_SIZE / 2;
-      const hiddenPx = ORB_SIZE * HIDDEN_RATIO;
-      const dockRight = centerX >= b.vw / 2;
-      sessionDockSide = dockRight ? "right" : "left";
-      updateFloating("livechat", { side: sessionDockSide });
-      const snapX = dockRight ? b.vw - ORB_SIZE + hiddenPx : -hiddenPx;
-      const snapY = Math.min(Math.max(d.nextY, b.minY), b.maxY);
-      posRef.current = { x: snapX, y: snapY };
-      applyTransform(snapX, snapY, 1, true);
-      onDragChange(false);
-    },
-    [applyTransform, getBounds, onTap, onDragChange, clearLongPress],
-  );
+  const onPointerCancel = useCallback(() => {
+    downRef.current.active = false;
+    clearLongPress();
+  }, [clearLongPress]);
 
   const ring = ringClass(availability);
 
   return (
     <div
       ref={wrapRef}
-      className="fixed left-0 top-0 z-[60] flex items-end gap-2"
+      className="fixed z-[60] flex items-end gap-2"
       style={{
-        willChange: "transform",
-        touchAction: "none",
-        opacity: placed ? 1 : 0,
+        right: `calc(${EDGE_INSET}px + env(safe-area-inset-right, 0px))`,
+        bottom: 0,
+        willChange: "transform, opacity",
         visibility: placed ? "visible" : "hidden",
-        transition: placed ? "opacity 180ms ease-out" : "none",
       }}
     >
       <button
@@ -1192,12 +1060,11 @@ function DraggableOrb({
         }
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
         onContextMenu={(e) => e.preventDefault()}
-        className={`group relative grid place-items-center size-14 md:size-[60px] lg:size-16 rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_10px_28px_-10px_rgba(0,0,0,0.55)] ring-2 ${ring.color} backdrop-blur-md transition-[box-shadow] duration-200 hover:shadow-[0_16px_36px_-10px_var(--color-primary,theme(colors.orange.500))] motion-safe:animate-orb-pulse-periodic touch-none select-none`}
+        className={`group relative grid place-items-center size-14 md:size-[60px] lg:size-16 min-w-[48px] min-h-[48px] rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_10px_28px_-10px_rgba(0,0,0,0.55)] ring-2 ${ring.color} backdrop-blur-md transition-[box-shadow] duration-200 hover:shadow-[0_16px_36px_-10px_var(--color-primary,theme(colors.orange.500))] select-none`}
       >
-        {/* Animated status ring overlay */}
         {ring.anim && (
           <span
             aria-hidden
@@ -1206,8 +1073,8 @@ function DraggableOrb({
         )}
         <Headset className="size-6 md:size-[26px] lg:size-7" strokeWidth={1.8} />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
-            {unread > 9 ? "9+" : unread}
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold grid place-items-center ring-2 ring-background animate-in zoom-in duration-200">
+            {unread > 99 ? "99+" : unread}
           </span>
         )}
       </button>
@@ -1218,7 +1085,7 @@ function DraggableOrb({
           className="absolute -top-3 right-[calc(100%+8px)] -translate-y-full whitespace-nowrap rounded-2xl border border-white/10 bg-card/95 px-3 py-2 text-[12px] font-medium text-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-1 duration-300"
           aria-label="Dismiss greeting"
         >
-          👋 Hi! Need help finding something?
+          Need help?
         </button>
       )}
       <span className="sr-only">
