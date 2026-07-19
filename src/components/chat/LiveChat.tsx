@@ -943,13 +943,20 @@ function DraggableOrb({
   }, []);
 
   // Initial default position: bottom-right, above bottom nav.
+  const [placed, setPlaced] = useState(false);
   useEffect(() => {
-    const place = () => {
-      const b = getBounds();
-      posRef.current = { x: b.maxX, y: b.maxY };
-      applyTransform(b.maxX, b.maxY, 1, false);
-    };
-    place();
+    // Double rAF: wait for header layout + LayoutMetrics rAF to publish
+    // --app-header-height before we compute the safe area. Prevents the
+    // orb from painting at (0,0) — behind the sticky header — on first load.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        const b = getBounds();
+        posRef.current = { x: b.maxX, y: b.maxY };
+        applyTransform(b.maxX, b.maxY, 1, false);
+        setPlaced(true);
+      });
+    });
     const onResize = () => {
       const b = getBounds();
       const x = Math.min(Math.max(posRef.current.x, b.minX), b.maxX);
@@ -962,6 +969,8 @@ function DraggableOrb({
     window.visualViewport?.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("scroll", onResize);
     return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
