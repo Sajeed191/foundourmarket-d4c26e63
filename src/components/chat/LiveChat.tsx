@@ -886,7 +886,8 @@ function ChatMenuOption({
 // safe-area insets and the software keyboard (visualViewport). Hides while
 // the user scrolls down and restores on scroll-up or 300ms of idle scroll.
 const ORB_SIZE = 56;
-const EDGE_INSET = 20;
+const EDGE_INSET = 16;
+const BOTTOM_GAP = 16;
 const LONG_PRESS_MS = 500;
 const TAP_THRESHOLD = 8;
 
