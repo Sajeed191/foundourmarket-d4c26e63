@@ -1101,6 +1101,7 @@ function DraggableOrb({
       const hiddenPx = ORB_SIZE * HIDDEN_RATIO;
       const dockRight = centerX >= b.vw / 2;
       sessionDockSide = dockRight ? "right" : "left";
+      updateFloating("livechat", { side: sessionDockSide });
       const snapX = dockRight ? b.vw - ORB_SIZE + hiddenPx : -hiddenPx;
       const snapY = Math.min(Math.max(d.nextY, b.minY), b.maxY);
       posRef.current = { x: snapX, y: snapY };
