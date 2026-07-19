@@ -20,9 +20,13 @@ const CHUNK_ERROR_RE =
   /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk|Loading CSS chunk/i;
 
 function isChunkError(err: unknown): boolean {
-  const msg =
-    (err && typeof err === "object" && "message" in err && String((err as { message?: unknown }).message)) ||
-    String(err ?? "");
+  let msg = "";
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    msg = typeof m === "string" ? m : String(m ?? "");
+  } else {
+    msg = String(err ?? "");
+  }
   return CHUNK_ERROR_RE.test(msg);
 }
 
