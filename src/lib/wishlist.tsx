@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
 import { runWhenIdle } from "./idle";
+import { resilientInsert, resilientDelete } from "./infra/supabase-resilient";
 
 type Ctx = {
   slugs: Set<string>;
@@ -65,11 +66,21 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     if (next.has(slug)) {
       next.delete(slug);
       setSlugs(next);
-      await supabase.from("wishlist").delete().eq("user_id", user.id).eq("product_slug", slug);
+      await resilientDelete(
+        "wishlist.remove",
+        "wishlist",
+        { user_id: user.id, product_slug: slug },
+        `wishlist:${user.id}:${slug}`,
+      );
     } else {
       next.add(slug);
       setSlugs(next);
-      await supabase.from("wishlist").insert({ user_id: user.id, product_slug: slug });
+      await resilientInsert(
+        "wishlist.add",
+        "wishlist",
+        { user_id: user.id, product_slug: slug },
+        `wishlist:${user.id}:${slug}`,
+      );
       runWhenIdle(() => {
         import("@/lib/personalization").then((m) => m.recordEvent({ type: "wishlist", productSlug: slug })).catch(() => {});
         import("@/lib/recommendations/performance").then((m) => m.attributeStage("wishlist")).catch(() => {});
