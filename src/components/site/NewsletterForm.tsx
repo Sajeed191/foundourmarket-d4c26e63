@@ -167,9 +167,38 @@ export function NewsletterForm({ source = "homepage" }: { source?: string }) {
       }
       setStatus("idle");
     } catch {
-      const msg = "Network is slow. Please try again.";
-      setError(msg);
-      toast.error(msg);
+      // Transient (offline / timeout / network) — enqueue via Infrastructure v1
+      // so the submission is retried automatically when connectivity returns.
+      try {
+        const { enqueue } = await import("@/lib/infra/request-queue");
+        await enqueue({
+          kind: "newsletter.subscribe",
+          endpoint: SUBSCRIBE_URL,
+          method: "POST",
+          body: {
+            email: normalized,
+            source: safeSource,
+            source_page: path,
+            device: deviceType(),
+            country: currentRegion() === "india" ? "IN" : "INTL",
+            timezone: tz,
+            website,
+            company,
+            ts: Date.now() - mountedAtRef.current,
+          },
+          dedupeKey: `newsletter:${normalized}`,
+          requiresAuth: false,
+        });
+        setEmail("");
+        setStatus("success");
+        setSuccessPulse(true);
+        window.setTimeout(() => setSuccessPulse(false), 1400);
+        inputRef.current?.blur();
+      } catch {
+        const msg = "Network is slow. Please try again.";
+        setError(msg);
+        toast.error(msg);
+      }
       setStatus("idle");
     } finally {
       submittingRef.current = false;
