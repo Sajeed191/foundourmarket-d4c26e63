@@ -26,6 +26,9 @@ const GAP = 16;
 const entries = new Map<string, FloatingEntry>();
 const subs = new Set<() => void>();
 let chatActive = false;
+let footerLift = 0;
+let contextHidden = false;
+
 
 function emit() {
   subs.forEach((fn) => {
@@ -92,3 +95,33 @@ export function setChatActive(v: boolean): void {
 export function isChatActive(): boolean {
   return chatActive;
 }
+
+/**
+ * Extra vertical offset (positive px = move UP) every floating widget should
+ * apply so it clears the site footer / newsletter block by ≥24px. Updated by
+ * `<FloatingContextObserver />` from the site footer's viewport rect.
+ */
+export function setFooterLift(v: number): void {
+  const next = Math.max(0, Math.round(v));
+  if (Math.abs(next - footerLift) < 1) return;
+  footerLift = next;
+  emit();
+}
+export function getFooterLift(): number {
+  return footerLift;
+}
+
+/**
+ * True while an immersive surface (native fullscreen, image zoom, video
+ * fullscreen) is active. Widgets fully hide (opacity 0 + pointer-events none)
+ * without unmounting, so they restore instantly when the user exits.
+ */
+export function setContextHidden(v: boolean): void {
+  if (contextHidden === v) return;
+  contextHidden = v;
+  emit();
+}
+export function isContextHidden(): boolean {
+  return contextHidden;
+}
+
