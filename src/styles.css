@@ -368,6 +368,25 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 }
 .animate-orb-pulse-periodic { animation: orb-pulse-periodic 10s ease-in-out infinite; }
 
+/* Live chat: status ring animations (GPU-only: opacity + transform). */
+@keyframes orb-ring-online {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+@keyframes orb-ring-busy {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+@keyframes orb-ring-spin {
+  to { transform: rotate(360deg); }
+}
+.orb-ring-online { animation: orb-ring-online 2.4s ease-in-out infinite; }
+.orb-ring-busy   { animation: orb-ring-busy 3.2s ease-in-out infinite; }
+.orb-ring-spin   { animation: orb-ring-spin 1.1s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .orb-ring-online, .orb-ring-busy, .orb-ring-spin { animation: none !important; }
+}
+
 /* Live chat: typing dots */
 @keyframes typing-bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
