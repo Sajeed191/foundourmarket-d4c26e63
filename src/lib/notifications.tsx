@@ -310,29 +310,35 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const markRead = async (id: string) => {
     if (!user) return;
     setItems(prev => prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
-    await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id);
+    const { resilientUpdate } = await import("@/lib/infra/supabase-resilient");
+    await resilientUpdate("analytics.event", "notifications", { id }, { read_at: new Date().toISOString() }, `notif.read:${id}`);
   };
   const markAllRead = async () => {
     if (!user) return;
     const now = new Date().toISOString();
     setItems(prev => prev.map(n => n.read_at ? n : { ...n, read_at: now }));
+    // Bulk (is.null filter) — not queueable via resilient helper; keep direct call.
     await supabase.from("notifications").update({ read_at: now }).eq("user_id", user.id).is("read_at", null);
   };
   const remove = async (id: string) => {
     if (!user) return;
     setItems(prev => prev.filter(n => n.id !== id));
-    await supabase.from("notifications").delete().eq("id", id);
+    const { resilientDelete } = await import("@/lib/infra/supabase-resilient");
+    await resilientDelete("analytics.event", "notifications", { id }, `notif.del:${id}`);
   };
   const archive = async (id: string) => {
     if (!user) return;
     setItems(prev => prev.filter(n => n.id !== id));
-    await supabase.from("notifications").update({ archived_at: new Date().toISOString() }).eq("id", id);
+    const { resilientUpdate } = await import("@/lib/infra/supabase-resilient");
+    await resilientUpdate("analytics.event", "notifications", { id }, { archived_at: new Date().toISOString() }, `notif.arch:${id}`);
   };
   const clearAll = async () => {
     if (!user) return;
     setItems([]);
+    // Bulk per-user — not queueable via resilient helper.
     await supabase.from("notifications").delete().eq("user_id", user.id);
   };
+
 
   const unread = items.filter(n => !n.read_at).length;
 

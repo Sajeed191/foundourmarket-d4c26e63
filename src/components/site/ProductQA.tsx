@@ -157,33 +157,31 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   async function remove(id: string) {
     if (!confirm("Are you sure you want to delete this question?")) return;
-    const { error } = await supabase.rpc("soft_delete_own_question", { p_id: id });
-    if (error) {
-      console.error("[ProductQA] delete failed", { id, code: error.code, message: error.message });
+    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientRpc("qa.submit", "soft_delete_own_question", { p_id: id }, `qa.delete:${id}`);
+    if (!r.ok) {
+      console.error("[ProductQA] delete failed", { id, error: r.error });
       toast.error("Couldn't delete the question.");
       return;
     }
-    toast.success("Question deleted.");
-    await load();
+    if (!r.queued) { toast.success("Question deleted."); await load(); }
   }
 
   async function saveQuestion(id: string) {
     const text = questionDraft.trim();
     if (!text) return;
-    const { error } = await supabase
-      .from("product_questions")
-      .update({ question: text })
-      .eq("id", id);
-    if (error) {
-      console.error("[ProductQA] question edit failed", { id, code: error.code, message: error.message });
+    const { resilientUpdate } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientUpdate("qa.submit", "product_questions", { id }, { question: text }, `qa.edit:${id}`);
+    if (!r.ok) {
+      console.error("[ProductQA] question edit failed", { id, error: r.error });
       toast.error("Couldn't update the question.");
       return;
     }
     setEditingQuestionId(null);
     setQuestionDraft("");
-    toast.success("Question updated.");
-    await load();
+    if (!r.queued) { toast.success("Question updated."); await load(); }
   }
+
 
 
   const answeredCount = items.filter((q) => q.answer).length;

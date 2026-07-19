@@ -274,29 +274,44 @@ function EditProfilePage() {
       const e164 = (digits: string) =>
         digits && dial ? `+${dial}${digits}` : digits || null;
       // Server validates phone numbers again before persisting.
-      await saveProfileFn({
-        data: {
-          full_name: form.fullName.trim() || null,
-          phone: e164(form.phone.trim()),
-          alt_phone: e164(form.altPhone.trim()),
-          gender: form.gender.trim() || null,
-          birth_date: form.birthDate || null,
-          country,
-          country_code: cc,
-          language: form.language.trim() || null,
-          timezone: form.timezone.trim() || null,
-          avatar_url: form.avatarUrl.trim() || null,
-        },
-      });
-      await supabase.auth.updateUser({ data: { full_name: form.fullName.trim(), avatar_url: form.avatarUrl.trim() } });
-      setSaved(true);
-      setInitial(form);
-      toast.success("Profile updated successfully");
-      setTimeout(() => nav({ to: "/account" }), 900);
-    } catch (err: any) {
-      toast.error(err?.message ?? "Could not save profile");
-      setSaving(false);
-    }
+      const payload = {
+        full_name: form.fullName.trim() || null,
+        phone: e164(form.phone.trim()),
+        alt_phone: e164(form.altPhone.trim()),
+        gender: form.gender.trim() || null,
+        birth_date: form.birthDate || null,
+        country,
+        country_code: cc,
+        language: form.language.trim() || null,
+        timezone: form.timezone.trim() || null,
+        avatar_url: form.avatarUrl.trim() || null,
+      } as const;
+      try {
+        // Server validates phone numbers again before persisting.
+        await saveProfileFn({ data: payload });
+        await supabase.auth.updateUser({ data: { full_name: form.fullName.trim(), avatar_url: form.avatarUrl.trim() } });
+        setSaved(true);
+        setInitial(form);
+        toast.success("Profile updated successfully");
+        setTimeout(() => nav({ to: "/account" }), 900);
+      } catch (err: any) {
+        // Transient (offline / timeout / 5xx) — queue an RLS-scoped upsert
+        // to the profiles table so the change replays when connectivity returns.
+        const msg = String(err?.message ?? "");
+        const transient = (typeof navigator !== "undefined" && navigator.onLine === false)
+          || /network|fetch|timeout|failed|aborted|502|503|504/i.test(msg);
+        if (!transient || !user) {
+          toast.error(err?.message ?? "Could not save profile");
+          setSaving(false);
+          return;
+        }
+        const { resilientUpdate } = await import("@/lib/infra/supabase-resilient");
+        await resilientUpdate("profile.update", "profiles", { id: user.id }, payload, `profile.update:${user.id}`);
+        setSaved(true);
+        setInitial(form);
+        setTimeout(() => nav({ to: "/account" }), 900);
+      }
+
   };
 
   if (loading || !user || fetching) {

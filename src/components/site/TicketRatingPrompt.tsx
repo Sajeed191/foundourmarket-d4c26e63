@@ -52,7 +52,8 @@ export function TicketRatingPrompt({ ticketId, userId }: { ticketId: string; use
       const end = tk?.resolved_at ?? tk?.closed_at ?? null;
       const resolution_time_ms = tk && end ? +new Date(end) - +new Date(tk.created_at) : null;
 
-      const { error } = await supabase.from("support_ticket_ratings").insert({
+      const { resilientInsert } = await import("@/lib/infra/supabase-resilient");
+      const r = await resilientInsert("support.message.send", "support_ticket_ratings", {
         ticket_id: ticketId,
         customer_id: userId,
         rating,
@@ -61,9 +62,10 @@ export function TicketRatingPrompt({ ticketId, userId }: { ticketId: string; use
         priority: tk?.priority ?? null,
         assigned_agent: tk?.assigned_to ?? null,
         resolution_time_ms,
-      });
-      if (error) throw error;
+      }, `support.rate:${ticketId}:${userId}`);
+      if (!r.ok) throw r.error ?? new Error("Failed");
       setPhase("done");
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not submit feedback");
     } finally {
