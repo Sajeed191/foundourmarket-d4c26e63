@@ -61,11 +61,10 @@ const HISTORY_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
   var BUILD_ID = ${JSON.stringify(BUILD_ID)};
-  var MAX_RECOVER = 1;      // one automatic hard reload per browser session
-  var BASE_DELAY = 1000;    // silent recovery delay before the reload (ms)
-  var fatalShown = false;
-  var pendingOffline = false;
+  var MAX_RECOVER = 5;      // silent auto-recovery attempts per session
+  var BASE_DELAY = 1200;    // ~1-2s between attempts
   var recovering = false;
+  var pendingOffline = false;
 
   function txt(x){
     try { return typeof x === 'string' ? x : (x && (x.message || (x.reason && x.reason.message) || x.type || '')) || ''; }
@@ -82,10 +81,6 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     return /Failed to fetch dynamically imported module|virtual:tanstack-start-client-entry|vite:preloadError|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk|Loading CSS chunk/i.test(String(txt(x)));
   }
   function isAssetUrl(u){ return /\\/assets\\/.*\\.(js|css|mjs)/i.test(String(u || '')); }
-  function swVersion(){
-    try { return (navigator.serviceWorker && navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL) || 'none'; }
-    catch(e){ return 'unknown'; }
-  }
   function getCount(){ try { return parseInt(sessionStorage.getItem('fom_auto_reload_count') || '0', 10) || 0; } catch(e){ return 0; } }
   function setCount(n){ try { sessionStorage.setItem('fom_auto_reload_count', String(n)); } catch(e){} }
 
@@ -99,107 +94,110 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     } catch(e) {}
     try { console.warn('[startup-diagnostics]', name, payload || {}); } catch(e) {}
   }
-  // Telemetry for every asset-load failure: URL, status, deploy version,
-  // browser/device, service-worker version, online status, retry count.
+
+  // Small non-blocking bottom toast. Never replaces the page, never blocks
+  // scrolling, never requires a button. Injected directly by this inline
+  // script so it works even before React hydrates.
+  var toastEl = null;
+  function ensureToast(){
+    if (toastEl && document.body && toastEl.parentNode === document.body) return toastEl;
+    if (!document.body) return null;
+    toastEl = document.createElement('div');
+    toastEl.id = 'fom-connection-toast';
+    toastEl.setAttribute('role', 'status');
+    toastEl.setAttribute('aria-live', 'polite');
+    toastEl.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);transform:translate(-50%,20px);z-index:2147483647;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease;background:rgba(10,10,10,.92);color:#f5f5f5;border:1px solid rgba(245,158,11,.35);border-radius:9999px;padding:10px 18px;font:500 13px/1.2 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);max-width:calc(100vw - 32px);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    document.body.appendChild(toastEl);
+    return toastEl;
+  }
+  function showToast(msg){
+    var commit = function(){
+      var el = ensureToast();
+      if (!el) return;
+      el.textContent = msg;
+      requestAnimationFrame(function(){
+        el.style.opacity = '1';
+        el.style.transform = 'translate(-50%,0)';
+      });
+    };
+    if (document.body) commit();
+    else document.addEventListener('DOMContentLoaded', commit, { once: true });
+  }
+  function hideToast(){
+    if (!toastEl) return;
+    toastEl.style.opacity = '0';
+    toastEl.style.transform = 'translate(-50%,20px)';
+  }
+  window.__fomShowToast = showToast;
+  window.__fomHideToast = hideToast;
+
   function telemetry(reason, assetUrl, status){
     log('asset-load-failure', {
       asset: assetUrl || urlOf(reason),
       status: (status == null ? '' : status),
       deploy: BUILD_ID,
       ua: (navigator.userAgent || '').slice(0, 300),
-      sw: swVersion(),
       online: !!navigator.onLine,
       retry: getCount(),
       reason: txt(reason)
     });
   }
-  function renderFallback(reason){
-    function commit(){
-      try {
-        var body = document.body;
-        if (!body) {
-          body = document.createElement('body');
-          document.documentElement.appendChild(body);
-        }
-        document.documentElement.classList.remove('dark');
-        body.innerHTML = '<div id="fom-startup-fallback" style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><div style="max-width:22rem;text-align:center"><div style="margin:0 auto 1rem;width:3rem;height:3rem;border-radius:.85rem;display:grid;place-items:center;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);overflow:hidden"><img src="/logo.webp" alt="FoundOurMarket\u2122" style="width:100%;height:100%;object-fit:cover" /></div><h1 style="font-size:1.15rem;font-weight:600;margin:0 0 .5rem">We\u2019re having trouble loading FoundOurMarket\u2122</h1><p style="font-size:.9rem;color:#a3a3a3;margin:0 0 1.5rem">Please check your internet connection and try again.</p><button id="fom-retry" style="appearance:none;border:none;cursor:pointer;border-radius:9999px;padding:.75rem 1.75rem;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;background:#f59e0b">Try Again</button></div></div>';
-        var b = document.getElementById('fom-retry');
-        if (b) b.onclick = function(){ setCount(0); location.reload(); };
-      } catch(e) {
-        try { setTimeout(commit, 0); } catch(x) {}
-      }
-    }
-    if (document.body) commit();
-    else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', commit, { once: true });
-    else commit();
-  }
-  function showFatal(reason){
-    if (fatalShown && document.getElementById('fom-startup-fallback')) return;
-    fatalShown = true;
-    log('startup-fallback-shown', { reason: txt(reason), attempts: getCount() });
-    renderFallback(reason);
-  }
 
-  // Defensive stale-cache eviction before a recovery reload: kill any SW and
-  // its caches so the reload cannot be served an outdated app shell.
-  function clearCaches(){
-    try { if ('caches' in window) caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){}); } catch(e){}
-    try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister().catch(function(){}); }); }).catch(function(){}); } catch(e){}
-  }
   function reloadFresh(){
     try {
       var u = new URL(location.href);
       u.searchParams.set('_rc', String(Date.now()));
       location.replace(u.toString());
-    } catch(e){ location.reload(); }
-  }
-  // Detect a newer deployment: re-fetch the current document fresh and check
-  // whether it still references our build id. Either way the reload pulls the
-  // latest asset graph; the check is for telemetry + bypassing the retry cap.
-  function checkVersionThenReload(cb){
-    var done = false;
-    function go(newer){ if (done) return; done = true; if (newer) log('deploy-version-mismatch', { from: BUILD_ID }); clearCaches(); cb(newer); }
-    try {
-      var ctrl = ('AbortController' in window) ? new AbortController() : null;
-      var t = setTimeout(function(){ if (ctrl) try { ctrl.abort(); } catch(e){} go(false); }, 4000);
-      fetch(location.pathname + '?_v=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
-        .then(function(r){ return r.text(); })
-        .then(function(html){ clearTimeout(t); go(html.indexOf(BUILD_ID) === -1); })
-        .catch(function(){ clearTimeout(t); go(false); });
-    } catch(e){ go(false); }
+    } catch(e){ try { location.reload(); } catch(x){} }
   }
 
   function doRecover(reason, assetUrl, status){
-    if (fatalShown || recovering) return;
+    if (recovering) return;
     telemetry(reason, assetUrl, status);
 
-    // Offline: never burn a retry. Wait for connectivity to return, then retry.
     if (!navigator.onLine){
       if (pendingOffline) return;
       pendingOffline = true;
+      showToast("You're offline. Waiting for connection…");
       log('recovery-waiting-online', {});
-      var onOnline = function(){ window.removeEventListener('online', onOnline); pendingOffline = false; doRecover(reason, assetUrl, status); };
+      var onOnline = function(){
+        window.removeEventListener('online', onOnline);
+        pendingOffline = false;
+        showToast('Reconnecting…');
+        doRecover(reason, assetUrl, status);
+      };
       window.addEventListener('online', onOnline);
       return;
     }
 
     var count = getCount();
+    if (count >= MAX_RECOVER){
+      // Never show a full-page error. Keep the small toast up and keep
+      // polling; the moment the network/deploy stabilises the next reload
+      // will succeed silently.
+      showToast('Trying to reconnect…');
+      log('recovery-exhausted-soft', { attempts: count });
+      setTimeout(function(){ recovering = false; setCount(0); doRecover(reason, assetUrl, status); }, 5000);
+      recovering = true;
+      return;
+    }
+
     recovering = true;
-    checkVersionThenReload(function(newer){
-      // A fresh deployment is a legitimate reason to reload beyond the cap once.
-      if (!newer && count >= MAX_RECOVER){ recovering = false; showFatal(reason); return; }
-      if (!newer) setCount(count + 1);
-      var delay = BASE_DELAY * Math.pow(2, count);
-      log('recovery-scheduled', { attempt: count + 1, delayMs: delay, newer: !!newer });
-      setTimeout(reloadFresh, newer ? 0 : delay);
-    });
+    setCount(count + 1);
+    showToast(count === 0 ? 'Reconnecting…' : 'Trying to reconnect…');
+    var delay = BASE_DELAY + Math.round(Math.random() * 400);
+    log('recovery-scheduled', { attempt: count + 1, delayMs: delay });
+    setTimeout(reloadFresh, delay);
   }
 
   window.__fomRecover = function(reason){ doRecover(reason, urlOf(reason), null); };
-  window.__fomShowStartupError = showFatal;
+  // Legacy full-screen fatal hook is now a silent no-op that surfaces only the
+  // small connection toast — the app must never be replaced by an error page.
+  window.__fomShowStartupError = function(reason){ doRecover(reason, urlOf(reason), null); };
   window.__fomBootOk = function(){
     log('boot-ok');
     setCount(0);
+    hideToast();
     try {
       var u = new URL(location.href);
       if (u.searchParams.has('_rc') || u.searchParams.has('_v')) {
@@ -209,10 +207,13 @@ const STARTUP_GUARD_SCRIPT = `(function(){
       }
     } catch(e){}
   };
+  window.addEventListener('online', function(){ hideToast(); });
+  window.addEventListener('offline', function(){ showToast("You're offline. Waiting for connection…"); });
   window.addEventListener('vite:preloadError', function(e){ try { e.preventDefault(); } catch(x) {} var p = e && e.payload; doRecover(p || e, urlOf(p || e), null); });
   window.addEventListener('unhandledrejection', function(e){ if (isEntryFailure(e.reason)) { try { e.preventDefault(); } catch(x) {} doRecover(e.reason, urlOf(e.reason), null); } });
   window.addEventListener('error', function(e){ var t = e && e.target; var src = t && (t.src || t.href) || ''; if (isEntryFailure(e && e.message) || isAssetUrl(src)) doRecover(e && e.message || src, src, null); }, true);
 })();`;
+
 
 // (Removed temporary FF binary-search isolation script — all diagnostic
 // URL-flag experiments have been retired in favour of the permanent
@@ -300,32 +301,38 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">This page didn't load</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Something went wrong on our end.</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="rounded-full bg-accent px-6 py-3 text-xs font-medium uppercase tracking-widest text-accent-foreground"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="rounded-full border border-border px-6 py-3 text-xs font-medium uppercase tracking-widest"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    const w = window as unknown as {
+      __fomShowToast?: (msg: string) => void;
+      __fomRecover?: (reason?: unknown) => void;
+    };
+    w.__fomShowToast?.("Reconnecting…");
+    // Silently retry the loader a few times before falling back to the
+    // background recovery pipeline. No full-screen error page ever renders.
+    let cancelled = false;
+    let attempt = 0;
+    const tick = () => {
+      if (cancelled) return;
+      attempt += 1;
+      router.invalidate();
+      reset();
+      if (attempt < 5) {
+        setTimeout(tick, 1200 + Math.round(Math.random() * 400));
+      } else {
+        w.__fomRecover?.(error);
+      }
+    };
+    const t = setTimeout(tick, 1000);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [error, reset, router]);
+  // Render nothing — the previous route content stays visible under the toast.
+  return null;
 }
+
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
