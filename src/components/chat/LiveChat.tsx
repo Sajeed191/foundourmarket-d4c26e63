@@ -136,6 +136,9 @@ export function LiveChat() {
   const [operatorJoined, setOperatorJoined] = useState(false);
   const [availability, setAvailability] = useState<Availability>("away");
   const [menuOpen, setMenuOpen] = useState(false);
+  // Broadcast active state so lower-priority floating widgets (Admin toolbar)
+  // can visually recede while the chat surface or quick-actions menu is open.
+  useEffect(() => { setChatActive(open || menuOpen); return () => setChatActive(false); }, [open, menuOpen]);
   const [activeOrder, setActiveOrder] = useState<ChatOrder | null>(null);
   // Peek the floating orb ~80% off-screen while the user scrolls down, and
   // restore after they scroll up OR pause scrolling for 600ms. Suppressed
