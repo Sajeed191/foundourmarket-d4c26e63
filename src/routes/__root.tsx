@@ -1076,7 +1076,13 @@ function AppRoot() {
                             <DeferredShell
                               isAuthRoute={isAuthRoute}
                               isAdminRoute={isAdminRoute}
-                              hideLiveChat={!(isHomeRoute || (pathname === "/account" || pathname.startsWith("/account/"))) || isTicketRoute}
+                              hideLiveChat={(() => {
+                                if (isAuthRoute || isAdminRoute || isCheckoutRoute || isTicketRoute) return true;
+                                const hidden = ["/login","/signup","/reset-password","/signin","/otp","/payment","/order-success","/orders/success","/vendor","/builder","/return","/unsubscribe","/newsletter"];
+                                if (hidden.some((p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?"))) return true;
+                                const allowedPrefixes = ["/","/browse","/categories","/category","/products","/product","/search","/wishlist","/cart","/account","/contact","/deals","/recently-viewed","/recommended","/compare","/orders","/blog","/pages","/about"];
+                                return !allowedPrefixes.some((p) => p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/"));
+                              })()}
                             />
                             <Toaster position="bottom-center" richColors />
                             <SyncToastsMount />
