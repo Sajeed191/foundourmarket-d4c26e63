@@ -264,7 +264,13 @@ export function AdminFloatingToolbar() {
       ref={wrapRef}
       data-floating-control
       className="fixed left-0 top-0 z-[var(--z-floating-controls)] print:hidden"
-      style={{ willChange: "transform", touchAction: "none" }}
+      style={{
+        willChange: "transform",
+        touchAction: "none",
+        opacity: placed ? 1 : 0,
+        visibility: placed ? "visible" : "hidden",
+        transition: placed ? "opacity 180ms ease-out" : "none",
+      }}
     >
       <AnimatePresence>
         {open && (
