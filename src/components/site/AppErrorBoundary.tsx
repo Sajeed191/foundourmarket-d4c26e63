@@ -3,32 +3,48 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 /**
  * Global crash fallback for the entire app.
  *
- * TanStack Router's route-level `errorComponent` only catches errors thrown
- * inside a matched route's component/loader. It does NOT catch render-time
- * throws in the provider tree (RegionProvider, AuthProvider, CartProvider, …)
- * or in shared chrome (Nav/Footer). When one of those throws — common on
- * low-end Android with flaky networks or partially-loaded chunks — React
- * unmounts the whole tree and the user sees a blank/grey screen with the
- * browser's sad-face.
+ * On the first crash within a browser session we silently perform ONE hard
+ * reload — most transient failures (chunk load errors, stale service worker,
+ * flaky mobile network, cache corruption) recover cleanly on reload and the
+ * user never sees a failure screen. Only if the reload also fails do we
+ * render the minimal branded "Try Again" screen.
  *
- * This boundary wraps the provider tree so any such crash renders a branded,
- * dependency-free fallback (no app CSS or chunks required) with a one-tap
- * recovery instead of a blank page. The markup uses inline styles so it works
- * even if the stylesheet itself failed to load.
+ * Retry counter uses sessionStorage (`fom_auto_reload_count`) so it resets
+ * for every new tab/session and can never trigger an infinite reload loop.
+ * localStorage, cookies, auth, cart, and analytics state are preserved.
  */
 
+const RELOAD_KEY = "fom_auto_reload_count";
+const MAX_AUTO_RELOADS = 1;
+
 type Props = { children: ReactNode };
-type State = { hasError: boolean };
+type State = { hasError: boolean; exhausted: boolean };
+
+function readCount(): number {
+  try {
+    return parseInt(sessionStorage.getItem(RELOAD_KEY) || "0", 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeCount(n: number) {
+  try {
+    sessionStorage.setItem(RELOAD_KEY, String(n));
+  } catch {
+    /* ignore */
+  }
+}
 
 export class AppErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+  state: State = { hasError: false, exhausted: false };
 
   static getDerivedStateFromError(): State {
-    return { hasError: true };
+    const exhausted = readCount() >= MAX_AUTO_RELOADS;
+    return { hasError: true, exhausted };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Keep this lightweight — logging must never throw inside the boundary.
     try {
       console.error("[AppErrorBoundary] React tree crashed:", error, info.componentStack);
       (window as unknown as { __fomDiag?: (event: string, payload?: Record<string, unknown>) => void }).__fomDiag?.(
@@ -38,15 +54,35 @@ export class AppErrorBoundary extends Component<Props, State> {
     } catch {
       /* ignore */
     }
+
+    // Silent automatic recovery: one hard reload per session. Never shown to
+    // the user — the reload replaces the current document before React can
+    // paint the fallback below.
+    if (typeof window === "undefined") return;
+    if (readCount() >= MAX_AUTO_RELOADS) return;
+    writeCount(readCount() + 1);
+    // Small delay lets React finish the current tick and any pending logs flush.
+    window.setTimeout(() => {
+      try {
+        window.location.reload();
+      } catch {
+        /* ignore */
+      }
+    }, 50);
   }
 
-  private manualReload = () => {
+  private tryAgain = () => {
     if (typeof window === "undefined") return;
+    writeCount(0);
     window.location.reload();
   };
 
   render() {
     if (!this.state.hasError) return this.props.children;
+
+    // Automatic reload in flight — render nothing to avoid a flash of the
+    // fallback before the reload commits.
+    if (!this.state.exhausted) return null;
 
     return (
       <div
@@ -79,14 +115,14 @@ export class AppErrorBoundary extends Component<Props, State> {
             🌍
           </div>
           <h1 style={{ fontSize: "1.15rem", fontWeight: 600, margin: "0 0 0.5rem" }}>
-            FoundOurMarket is loading.
+            We&rsquo;re having trouble loading FoundOurMarket&trade;
           </h1>
           <p style={{ fontSize: "0.9rem", color: "#a3a3a3", margin: "0 0 1.5rem" }}>
-            Please refresh or try again.
+            Please check your internet connection and try again.
           </p>
           <button
             type="button"
-            onClick={this.manualReload}
+            onClick={this.tryAgain}
             style={{
               appearance: "none",
               border: "none",
@@ -101,7 +137,7 @@ export class AppErrorBoundary extends Component<Props, State> {
               background: "#f59e0b",
             }}
           >
-            Reload
+            Try Again
           </button>
         </div>
       </div>
