@@ -61,10 +61,13 @@ const HISTORY_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 const STARTUP_GUARD_SCRIPT = `(function(){
   if (typeof window === 'undefined') return;
   var BUILD_ID = ${JSON.stringify(BUILD_ID)};
-  var MAX_RECOVER = 5;      // silent auto-recovery attempts per session
-  var BASE_DELAY = 1200;    // ~1-2s between attempts
+  // Exponential backoff schedule (ms): 1s, 2s, 4s, 8s, 15s, then background
+  // polling every 30s indefinitely until the app becomes healthy again.
+  var BACKOFF = [1000, 2000, 4000, 8000, 15000];
+  var POLL_INTERVAL = 30000;
   var recovering = false;
   var pendingOffline = false;
+  var wasEverDegraded = false;
 
   function txt(x){
     try { return typeof x === 'string' ? x : (x && (x.message || (x.reason && x.reason.message) || x.type || '')) || ''; }
@@ -83,6 +86,9 @@ const STARTUP_GUARD_SCRIPT = `(function(){
   function isAssetUrl(u){ return /\\/assets\\/.*\\.(js|css|mjs)/i.test(String(u || '')); }
   function getCount(){ try { return parseInt(sessionStorage.getItem('fom_auto_reload_count') || '0', 10) || 0; } catch(e){ return 0; } }
   function setCount(n){ try { sessionStorage.setItem('fom_auto_reload_count', String(n)); } catch(e){} }
+  function markStart(){ try { sessionStorage.setItem('fom_recovery_started', String(Date.now())); } catch(e){} }
+  function readStart(){ try { return parseInt(sessionStorage.getItem('fom_recovery_started') || '0', 10) || 0; } catch(e){ return 0; } }
+  function clearStart(){ try { sessionStorage.removeItem('fom_recovery_started'); } catch(e){} }
 
   function log(name, payload){
     try {
@@ -95,10 +101,12 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     try { console.warn('[startup-diagnostics]', name, payload || {}); } catch(e) {}
   }
 
-  // Small non-blocking bottom toast. Never replaces the page, never blocks
-  // scrolling, never requires a button. Injected directly by this inline
-  // script so it works even before React hydrates.
+  // Premium native-style pill toast. Height <=48px, rounded, blur, orange
+  // accent. Never blocks scroll, never covers bottom nav (sits above it),
+  // never disables the UI. Injected by this inline script so it works even
+  // before React hydrates.
   var toastEl = null;
+  var toastHideTimer = 0;
   function ensureToast(){
     if (toastEl && document.body && toastEl.parentNode === document.body) return toastEl;
     if (!document.body) return null;
@@ -106,29 +114,76 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     toastEl.id = 'fom-connection-toast';
     toastEl.setAttribute('role', 'status');
     toastEl.setAttribute('aria-live', 'polite');
-    toastEl.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);transform:translate(-50%,20px);z-index:2147483647;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease;background:rgba(10,10,10,.92);color:#f5f5f5;border:1px solid rgba(245,158,11,.35);border-radius:9999px;padding:10px 18px;font:500 13px/1.2 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);max-width:calc(100vw - 32px);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    toastEl.style.cssText = [
+      'position:fixed',
+      'left:50%',
+      'bottom:calc(env(safe-area-inset-bottom,0px) + 96px)',
+      'transform:translate(-50%,20px)',
+      'z-index:2147483647',
+      'pointer-events:none',
+      'opacity:0',
+      'transition:opacity .25s ease,transform .25s ease',
+      'height:40px',
+      'max-height:48px',
+      'display:inline-flex',
+      'align-items:center',
+      'gap:8px',
+      'background:rgba(10,10,10,.88)',
+      'color:#f5f5f5',
+      'border:1px solid rgba(245,158,11,.4)',
+      'border-radius:9999px',
+      'padding:0 18px',
+      'font:500 13px/1.2 system-ui,-apple-system,Segoe UI,Roboto,sans-serif',
+      'letter-spacing:.01em',
+      'box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(245,158,11,.08)',
+      '-webkit-backdrop-filter:blur(14px) saturate(140%)',
+      'backdrop-filter:blur(14px) saturate(140%)',
+      'max-width:calc(100vw - 32px)',
+      'white-space:nowrap',
+      'overflow:hidden',
+      'text-overflow:ellipsis'
+    ].join(';') + ';';
+    var dot = document.createElement('span');
+    dot.setAttribute('data-dot', '');
+    dot.style.cssText = 'width:8px;height:8px;border-radius:9999px;background:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,.7);flex:0 0 auto;';
+    var label = document.createElement('span');
+    label.setAttribute('data-label', '');
+    toastEl.appendChild(dot);
+    toastEl.appendChild(label);
     document.body.appendChild(toastEl);
     return toastEl;
   }
-  function showToast(msg){
+  function showToast(msg, opts){
+    var tone = (opts && opts.tone) || 'progress'; // 'progress' | 'success' | 'offline'
+    var autoHide = opts && typeof opts.autoHide === 'number' ? opts.autoHide : (tone === 'success' ? 1800 : 0);
     var commit = function(){
       var el = ensureToast();
       if (!el) return;
-      el.textContent = msg;
+      var label = el.querySelector('[data-label]');
+      var dot = el.querySelector('[data-dot]');
+      if (label) label.textContent = msg;
+      if (dot){
+        if (tone === 'success'){ dot.style.background = '#22c55e'; dot.style.boxShadow = '0 0 10px rgba(34,197,94,.7)'; }
+        else if (tone === 'offline'){ dot.style.background = '#a3a3a3'; dot.style.boxShadow = 'none'; }
+        else { dot.style.background = '#f59e0b'; dot.style.boxShadow = '0 0 10px rgba(245,158,11,.7)'; }
+      }
+      if (toastHideTimer){ clearTimeout(toastHideTimer); toastHideTimer = 0; }
       requestAnimationFrame(function(){
         el.style.opacity = '1';
         el.style.transform = 'translate(-50%,0)';
       });
+      if (autoHide > 0){ toastHideTimer = setTimeout(hideToast, autoHide); }
     };
     if (document.body) commit();
     else document.addEventListener('DOMContentLoaded', commit, { once: true });
   }
   function hideToast(){
     if (!toastEl) return;
+    if (toastHideTimer){ clearTimeout(toastHideTimer); toastHideTimer = 0; }
     toastEl.style.opacity = '0';
     toastEl.style.transform = 'translate(-50%,20px)';
   }
-  window.__fomShowToast = showToast;
+  window.__fomShowToast = function(msg, opts){ showToast(msg, opts); };
   window.__fomHideToast = hideToast;
 
   function telemetry(reason, assetUrl, status){
@@ -154,11 +209,13 @@ const STARTUP_GUARD_SCRIPT = `(function(){
   function doRecover(reason, assetUrl, status){
     if (recovering) return;
     telemetry(reason, assetUrl, status);
+    wasEverDegraded = true;
+    if (!readStart()) markStart();
 
     if (!navigator.onLine){
       if (pendingOffline) return;
       pendingOffline = true;
-      showToast("You're offline. Waiting for connection…");
+      showToast("You're offline", { tone: 'offline' });
       log('recovery-waiting-online', {});
       var onOnline = function(){
         window.removeEventListener('online', onOnline);
@@ -171,21 +228,13 @@ const STARTUP_GUARD_SCRIPT = `(function(){
     }
 
     var count = getCount();
-    if (count >= MAX_RECOVER){
-      // Never show a full-page error. Keep the small toast up and keep
-      // polling; the moment the network/deploy stabilises the next reload
-      // will succeed silently.
-      showToast('Trying to reconnect…');
-      log('recovery-exhausted-soft', { attempts: count });
-      setTimeout(function(){ recovering = false; setCount(0); doRecover(reason, assetUrl, status); }, 5000);
-      recovering = true;
-      return;
+    var delay = count < BACKOFF.length ? BACKOFF[count] : POLL_INTERVAL;
+    if (count >= BACKOFF.length){
+      log('recovery-polling', { intervalMs: POLL_INTERVAL });
     }
-
     recovering = true;
     setCount(count + 1);
     showToast(count === 0 ? 'Reconnecting…' : 'Trying to reconnect…');
-    var delay = BASE_DELAY + Math.round(Math.random() * 400);
     log('recovery-scheduled', { attempt: count + 1, delayMs: delay });
     setTimeout(reloadFresh, delay);
   }
@@ -195,9 +244,16 @@ const STARTUP_GUARD_SCRIPT = `(function(){
   // small connection toast — the app must never be replaced by an error page.
   window.__fomShowStartupError = function(reason){ doRecover(reason, urlOf(reason), null); };
   window.__fomBootOk = function(){
-    log('boot-ok');
+    var started = readStart();
+    var recoveredFrom = started ? Date.now() - started : 0;
+    log('boot-ok', recoveredFrom ? { recoveredInMs: recoveredFrom, attempts: getCount() } : {});
     setCount(0);
-    hideToast();
+    clearStart();
+    if (recoveredFrom > 0){
+      showToast('Connection restored', { tone: 'success', autoHide: 1800 });
+    } else {
+      hideToast();
+    }
     try {
       var u = new URL(location.href);
       if (u.searchParams.has('_rc') || u.searchParams.has('_v')) {
@@ -207,12 +263,29 @@ const STARTUP_GUARD_SCRIPT = `(function(){
       }
     } catch(e){}
   };
-  window.addEventListener('online', function(){ hideToast(); });
-  window.addEventListener('offline', function(){ showToast("You're offline. Waiting for connection…"); });
+  window.addEventListener('online', function(){
+    log('network-online');
+    if (wasEverDegraded){
+      showToast('Back online', { tone: 'success', autoHide: 1600 });
+    }
+  });
+  window.addEventListener('offline', function(){
+    log('network-offline');
+    wasEverDegraded = true;
+    showToast("You're offline", { tone: 'offline' });
+  });
+  // Page visibility: when the tab comes back, quietly re-validate. If the
+  // network dropped while hidden, surface the offline pill immediately.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState !== 'visible') return;
+    if (!navigator.onLine){ showToast("You're offline", { tone: 'offline' }); return; }
+    log('visibility-revalidate');
+  });
   window.addEventListener('vite:preloadError', function(e){ try { e.preventDefault(); } catch(x) {} var p = e && e.payload; doRecover(p || e, urlOf(p || e), null); });
   window.addEventListener('unhandledrejection', function(e){ if (isEntryFailure(e.reason)) { try { e.preventDefault(); } catch(x) {} doRecover(e.reason, urlOf(e.reason), null); } });
   window.addEventListener('error', function(e){ var t = e && e.target; var src = t && (t.src || t.href) || ''; if (isEntryFailure(e && e.message) || isAssetUrl(src)) doRecover(e && e.message || src, src, null); }, true);
 })();`;
+
 
 
 // (Removed temporary FF binary-search isolation script — all diagnostic
