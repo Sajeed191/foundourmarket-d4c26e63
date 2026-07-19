@@ -170,14 +170,23 @@ export function AdminFloatingToolbar() {
   const [placed, setPlaced] = useState(false);
   useEffect(() => {
     if (gated) return;
-    // Wait until the sticky header actually published --app-header-height
-    // (LayoutMetricsProvider writes it on its own rAF, and font/layout shifts
-    // can push that past two frames). Only then compute the safe position and
-    // reveal the toolbar. Capped at ~30 frames so a broken header can never
-    // hide the widget forever.
+    // Register with the collision system as a lower-priority widget so we
+    // shift up automatically when the Live Chat orb is on the same side.
+    // Approximate rest size — final measurement happens on first render.
+    const unregister = registerFloating("admin-toolbar", {
+      priority: 2,
+      side: "right",
+      width: 120,
+      height: 48,
+    });
     const cancelWait = waitForLayoutReady(isHeaderLayoutReady, () => {
-      // One more rAF so the resolved values are committed before we read them.
       const raf = requestAnimationFrame(() => {
+        // Measure once we're mounted and update our registered size so
+        // higher-priority widgets calculating clearance see the real height.
+        const rect = wrapRef.current?.getBoundingClientRect();
+        if (rect && rect.width > 0 && rect.height > 0) {
+          updateFloating("admin-toolbar", { width: Math.round(rect.width), height: Math.round(rect.height) });
+        }
         resetToDefault(false);
         setPlaced(true);
       });
@@ -191,9 +200,16 @@ export function AdminFloatingToolbar() {
       posRef.current = { x, y };
       applyTransform(x, y, 1, false);
     };
+    // Re-apply transform whenever the collision stack changes (Live Chat
+    // mounts/unmounts, docks to the other side, or opens/closes the chat).
+    const unsubscribe = subscribeFloating(() => {
+      applyTransform(posRef.current.x, posRef.current.y, 1, true);
+    });
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     return () => {
+      unregister();
+      unsubscribe();
       cancelWait();
       cleanupExtra();
       window.removeEventListener("resize", onResize);
