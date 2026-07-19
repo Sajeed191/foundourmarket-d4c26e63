@@ -735,15 +735,15 @@ function DeferredShell({
 
   return (
     <Suspense fallback={null}>
-      <RegionSelectModal />
-      {!isAuthRoute && <AdminMobileBar />}
-      {!isAuthRoute && <AdminFloatingToolbar />}
-      {!isAuthRoute && <AdminOverlayIndicator />}
-      {!isAuthRoute && <AdminCommandCenter />}
-      <CompareTray />
-      <InstallPrompt />
-      {!hideLiveChat && <LiveChat />}
-      {!hideLiveChat && <SupportReplyWatcher />}
+      <IsolatedBoundary name="RegionSelectModal"><RegionSelectModal /></IsolatedBoundary>
+      {!isAuthRoute && <IsolatedBoundary name="AdminMobileBar"><AdminMobileBar /></IsolatedBoundary>}
+      {!isAuthRoute && <IsolatedBoundary name="AdminFloatingToolbar"><AdminFloatingToolbar /></IsolatedBoundary>}
+      {!isAuthRoute && <IsolatedBoundary name="AdminOverlayIndicator"><AdminOverlayIndicator /></IsolatedBoundary>}
+      {!isAuthRoute && <IsolatedBoundary name="AdminCommandCenter"><AdminCommandCenter /></IsolatedBoundary>}
+      <IsolatedBoundary name="CompareTray"><CompareTray /></IsolatedBoundary>
+      <IsolatedBoundary name="InstallPrompt"><InstallPrompt /></IsolatedBoundary>
+      {!hideLiveChat && <IsolatedBoundary name="LiveChat"><LiveChat /></IsolatedBoundary>}
+      {!hideLiveChat && <IsolatedBoundary name="SupportReplyWatcher"><SupportReplyWatcher /></IsolatedBoundary>}
     </Suspense>
   );
 }
