@@ -6,6 +6,7 @@ import { useAuth } from "./auth";
 import { useRegion } from "./region";
 import { buildVisibleMap } from "./product-availability";
 import { runWhenIdle } from "./idle";
+import { resilientInsert, resilientUpdate } from "./infra/supabase-resilient";
 
 // A cart line is identified by product slug AND variant id. `variantId` is null
 // for products without variants (every product today) — in that case all logic
@@ -308,11 +309,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
           .eq("saved_for_later", false),
         variantId,
       ).maybeSingle();
-      if (row) await supabase.from("cart_items").update({ quantity: newQty }).eq("id", row.id);
-      else
-        await supabase
-          .from("cart_items")
-          .insert({ cart_id: cartId, product_slug: slug, quantity: qty, saved_for_later: false, variant_id: variantId });
+      if (row) {
+        await resilientUpdate("cart.update", "cart_items", { id: row.id }, { quantity: newQty });
+      } else {
+        await resilientInsert(
+          "cart.add",
+          "cart_items",
+          { cart_id: cartId, product_slug: slug, quantity: qty, saved_for_later: false, variant_id: variantId },
+          `cart.add:${cartId}:${slug}:${variantId ?? ""}`,
+        );
+      }
     } else {
       setItems((prev) => {
         const f = prev.find((i) => sameLine(i, slug, variantId) && !i.savedForLater);
