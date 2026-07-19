@@ -435,16 +435,20 @@ export function ThreadSheet({ ticketId, userId, isStaff, onClose }: { ticketId: 
     if (!reply.trim() && files.length === 0) return;
     setSending(true);
     const urls = await uploadAttachments(userId, ticketId, files);
-    const { error } = await supabase.from("support_messages").insert({
+    const { resilientInsert } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientInsert("support.message.send", "support_messages", {
       ticket_id: ticketId, sender_id: userId, sender_role: isStaff ? "staff" : "customer", body: reply.trim() || "(attachment)", attachments: urls,
-    });
+    }, `support.msg:${ticketId}:${Date.now()}`);
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (!r.ok) { toast.error((r.error as any)?.message ?? "Failed to send"); return; }
     notifyStop();
-    if (isStaff) void import("@/lib/support-presence").then((m) => m.pingPresence("send_message"));
-    fireSupportEmail(ticketId, isStaff ? "staff_reply" : "customer_reply");
+    if (!r.queued) {
+      if (isStaff) void import("@/lib/support-presence").then((m) => m.pingPresence("send_message"));
+      fireSupportEmail(ticketId, isStaff ? "staff_reply" : "customer_reply");
+    }
     setReply(""); setFiles([]);
   }
+
 
   return (
     <Sheet onClose={onClose} title={ticket?.subject ?? "Conversation"} subtitle={ticket ? `#${ticket.id.slice(0, 8)} · ${ticket.status}` : undefined} fullPage>
@@ -679,9 +683,11 @@ export async function uploadAttachments(userId: string, ticketId: string, files:
     const { error } = await supabase.storage.from("support-attachments").upload(path, f, { upsert: false, contentType: f.type });
     if (error) { toast.error(`Upload failed: ${error.message}`); continue; }
     // Register metadata (best-effort; storage upload is the source of truth).
-    await supabase.from("support_attachments").insert({
+    const { resilientInsert } = await import("@/lib/infra/supabase-resilient");
+    await resilientInsert("support.message.send", "support_attachments", {
       ticket_id: ticketId, uploaded_by: userId, file_name: f.name, file_type: f.type, file_size: f.size, storage_path: path,
-    });
+    }, `support.att:${path}`);
+
     urls.push(path);
   }
   return urls;

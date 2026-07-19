@@ -192,10 +192,12 @@ function TicketPage() {
     const patch = status === "resolved"
       ? { status, resolved_at: new Date().toISOString() }
       : { status };
-    const { error } = await supabase.from("support_tickets").update(patch).eq("id", ticketId);
-    if (error) { toast.error(error.message); return; }
-    toast.success(status === "resolved" ? "Ticket marked resolved" : "Ticket reopened");
+    const { resilientUpdate } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientUpdate("support.ticket.create", "support_tickets", { id: ticketId }, patch, `ticket.status:${ticketId}:${status}`);
+    if (!r.ok) { toast.error((r.error as any)?.message ?? "Failed"); return; }
+    if (!r.queued) toast.success(status === "resolved" ? "Ticket marked resolved" : "Ticket reopened");
   }
+
 
   function downloadTranscript() {
     setMenuOpen(false);
