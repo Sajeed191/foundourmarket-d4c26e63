@@ -59,7 +59,7 @@ function reportChunkFailure(reason: unknown): void {
  */
 export function lazyWithRetry<T extends ComponentType<unknown>>(
   factory: () => Promise<{ default: T }>,
-  { retries = 4, baseDelay = 350 }: { retries?: number; baseDelay?: number } = {},
+  { retries = 3, baseDelay = 1000 }: { retries?: number; baseDelay?: number } = {},
 ) {
   return lazy(async () => {
     let lastErr: unknown;
