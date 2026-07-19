@@ -173,15 +173,19 @@ function TicketPage() {
     if (!user || (!reply.trim() && files.length === 0)) return;
     setSending(true);
     const urls = await uploadAttachments(user.id, ticketId, files);
-    const { error } = await supabase.from("support_messages").insert({
+    const { resilientInsert } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientInsert("support.message.send", "support_messages", {
       ticket_id: ticketId, sender_id: user.id, sender_role: "customer", body: reply.trim() || "(attachment)", attachments: urls,
-    });
+    }, `support.msg:${ticketId}:${Date.now()}`);
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (!r.ok) { toast.error((r.error as any)?.message ?? "Failed to send"); return; }
+    if (!r.queued) {
+      void notifySupportEvent({ data: { ticketId, event: "customer_reply" } }).catch(() => {});
+    }
     notifyStop();
-    void notifySupportEvent({ data: { ticketId, event: "customer_reply" } }).catch(() => {});
     setReply(""); setFiles([]);
   }
+
 
   async function setStatus(status: "resolved" | "open") {
     setMenuOpen(false);

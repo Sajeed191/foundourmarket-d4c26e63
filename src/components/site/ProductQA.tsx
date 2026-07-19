@@ -90,21 +90,16 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     if (submittingRef.current || busy) return false; // guard against double submission
     submittingRef.current = true;
     setBusy(true);
-    const { error } = await supabase.from("product_questions").insert({
+    const { resilientInsert } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientInsert("qa.submit", "product_questions", {
       product_slug: productSlug,
       user_id: user.id,
       question: text,
-    });
+    }, `qa.submit:${user.id}:${productSlug}:${text.slice(0, 64)}`);
     submittingRef.current = false;
     setBusy(false);
-    if (error) {
-      console.error("[ProductQA] question insert failed", {
-        productSlug,
-        userId: user.id,
-        code: error.code,
-        message: error.message,
-        details: error.details,
-      });
+    if (!r.ok) {
+      console.error("[ProductQA] question insert failed", { productSlug, userId: user.id, error: r.error });
       toast.error("Couldn't submit your question. Please try again.");
       return false;
     }
@@ -113,10 +108,13 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       localStorage.removeItem(draftKey(productSlug));
       localStorage.removeItem(pendingKey(productSlug));
     }
-    toast.success("Your question was submitted.");
-    await load();
+    if (!r.queued) {
+      toast.success("Your question was submitted.");
+      await load();
+    }
     return true;
   }
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

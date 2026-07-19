@@ -346,42 +346,45 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     if (!user) return;
     if (rating < 1) { toast.error("Choose a star rating before posting your review."); return; }
     setSubmitting(true);
-    const { error } = await supabase.rpc("submit_review", {
+    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientRpc("review.submit", "submit_review", {
       p_product_slug: productSlug,
       p_rating: rating,
       p_title: title.trim() || undefined,
       p_body: body.trim() || undefined,
       p_media: pendingMedia,
-    });
+    }, `review.submit:${user.id}:${productSlug}`);
     setSubmitting(false);
-    if (error) { toast.error("Could not post review", { description: error.message }); return; }
+    if (!r.ok) { toast.error("Could not post review", { description: (r.error as any)?.message }); return; }
     closeCompose();
-    toast.success("Review posted — thank you!");
-    await load();
-    onAggregateChange?.();
+    if (!r.queued) {
+      toast.success("Review posted — thank you!");
+      await load();
+      onAggregateChange?.();
+    }
   }
 
   async function saveEdit(id: string) {
-    const { error } = await supabase.rpc("update_own_review", {
+    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientRpc("review.submit", "update_own_review", {
       p_id: id,
       p_rating: editRating,
       p_title: editTitle.trim() || undefined,
       p_body: editBody.trim() || undefined,
-    });
-    if (error) { toast.error(error.message); return; }
+    }, `review.update:${id}`);
+    if (!r.ok) { toast.error((r.error as any)?.message ?? "Update failed"); return; }
     setEditingId(null);
-    await load();
-    onAggregateChange?.();
+    if (!r.queued) { await load(); onAggregateChange?.(); }
   }
 
   async function remove(id: string) {
     if (!confirm("Are you sure you want to delete this review?")) return;
-    const { error } = await supabase.rpc("soft_delete_own_review", { p_id: id });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Review deleted.");
-    await load();
-    onAggregateChange?.();
+    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+    const r = await resilientRpc("review.submit", "soft_delete_own_review", { p_id: id }, `review.delete:${id}`);
+    if (!r.ok) { toast.error((r.error as any)?.message ?? "Delete failed"); return; }
+    if (!r.queued) { toast.success("Review deleted."); await load(); onAggregateChange?.(); }
   }
+
 
   async function vote(r: Review, v: "helpful" | "not_helpful") {
     if (!user) { toast.error("Sign in to vote"); return; }

@@ -36,6 +36,7 @@ import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
 import { BadgeEngineProvider } from "@/lib/badge-visibility";
 import { Toaster } from "@/components/ui/sonner";
+import { SyncToastsMount } from "@/lib/infra/sync-toasts";
 import { ShareDialog } from "@/components/site/ShareDialog";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
@@ -971,6 +972,8 @@ function AppRoot() {
                               hideLiveChat={!(isHomeRoute || (pathname === "/account" || pathname.startsWith("/account/"))) || isTicketRoute}
                             />
                             <Toaster position="bottom-center" richColors />
+                            <SyncToastsMount />
+
                             <GpuCompatBanner />
                             <ShareDialog />
                             
