@@ -329,22 +329,19 @@ export function LiveChat() {
     <>
       {/* Premium floating support orb — draggable, status ring, long-press menu. */}
       {!open && (
-        <DraggableOrb
-          peek={orbHidden}
+        <FixedOrb
+          hidden={orbHidden}
           availability={availability}
           unread={unread}
           onTap={() => {
             dismissGreeting();
-            // Offline → route straight to the contact form instead of live chat.
             if (availability === "offline") {
               window.location.href = "/contact";
               return;
             }
-            // Tap opens the chat directly (morph animation via chat-slide-up).
             setOpen(true);
           }}
           onLongPress={() => { dismissGreeting(); setMenuOpen(true); }}
-          onDragChange={(d) => { draggingRef.current = d; if (d) dismissGreeting(); }}
           greetVisible={greetVisible}
           onDismissGreeting={dismissGreeting}
         />
