@@ -152,9 +152,19 @@ export function AdminFloatingToolbar() {
     [applyTransform, getBounds],
   );
 
+  const [placed, setPlaced] = useState(false);
   useEffect(() => {
-    // Measure after layout so we know the actual pill width.
-    const raf = requestAnimationFrame(() => resetToDefault(false));
+    if (gated) return;
+    // Measure after layout so we know the actual pill width AND the header
+    // height (--app-header-height is set by LayoutMetricsProvider on its own
+    // rAF). Double-rAF guarantees we read post-layout values.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        resetToDefault(false);
+        setPlaced(true);
+      });
+    });
     const onResize = () => {
       const b = getBounds();
       const x = Math.min(Math.max(posRef.current.x, b.minX - b.w * HIDDEN_RATIO), b.maxX + b.w * HIDDEN_RATIO);
@@ -165,11 +175,12 @@ export function AdminFloatingToolbar() {
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
     };
-  }, [applyTransform, getBounds, resetToDefault]);
+  }, [applyTransform, getBounds, resetToDefault, gated]);
 
   // When the panel opens, ensure the toolbar is fully on-screen so the popover is reachable.
   useEffect(() => {
@@ -253,7 +264,13 @@ export function AdminFloatingToolbar() {
       ref={wrapRef}
       data-floating-control
       className="fixed left-0 top-0 z-[var(--z-floating-controls)] print:hidden"
-      style={{ willChange: "transform", touchAction: "none" }}
+      style={{
+        willChange: "transform",
+        touchAction: "none",
+        opacity: placed ? 1 : 0,
+        visibility: placed ? "visible" : "hidden",
+        transition: placed ? "opacity 180ms ease-out" : "none",
+      }}
     >
       <AnimatePresence>
         {open && (
