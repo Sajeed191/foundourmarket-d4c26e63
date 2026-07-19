@@ -38,6 +38,8 @@ import { BadgeEngineProvider } from "@/lib/badge-visibility";
 import { Toaster } from "@/components/ui/sonner";
 import { SyncToastsMount } from "@/lib/infra/sync-toasts";
 import { ShareDialog } from "@/components/site/ShareDialog";
+import { FloatingContextObserver } from "@/components/site/FloatingContextObserver";
+
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { startPerfMonitoring } from "@/lib/perf-monitor";
@@ -1094,6 +1096,8 @@ function AppRoot() {
                             <WindowMetricsPanel />
                             <GlobalSearchMount />
                             <ContinueShoppingHistoryCleanup />
+                            <FloatingContextObserver />
+
                           </div>
                           </RecommendationProvider>
                           </SearchUIProvider>
