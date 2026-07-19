@@ -822,7 +822,12 @@ function AppRoot() {
     patchImageDecode();
     installStartupDiagnostics();
     installChunkRecovery();
-    if (getFlag("serviceWorker") && getFlag("pwa")) registerServiceWorker();
+    // Infra v2.0 owns SW lifecycle. On approved hosts it registers /sw.js;
+    // everywhere else it runs the same unregister-and-wipe path that
+    // registerServiceWorker() used to perform. bootInfra() (scheduled below
+    // via requestIdleCallback) triggers it.
+    if (!(getFlag("serviceWorker") && getFlag("pwa"))) registerServiceWorker();
+
     logBuildVersion();
     // React mounted successfully. Clear the persistent boot-attempt counter a
     // few seconds after a stable render so the auto-reload cap only ever counts

@@ -31,7 +31,13 @@ export type InfraEventMap = {
   "deploy:activated": { version: string };
   "cache:repair": { scope: string };
   "cache:repaired": { scope: string };
+
+  // Infrastructure v2.0 (self-healing SW)
+  "infra:chunk-recovered": { url: string };
+  "infra:deployment-detected": { version: string };
+  "infra:deployment-activated": { version: string; active?: string };
 };
+
 
 type Handler<T> = (payload: T) => void;
 

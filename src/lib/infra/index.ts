@@ -33,4 +33,21 @@ export function bootInfra() {
 
   startNetworkQuality();
   startRequestQueue();
+
+  // Infrastructure v2.0 — Self-Healing Service Worker + deployment recovery.
+  // Every subsystem is idle-gated and no-ops on preview/dev/iframe.
+  void (async () => {
+    const { bootServiceWorker } = await import("./sw-controller");
+    const active = await bootServiceWorker();
+    if (!active) return; // preview/dev/iframe — v1.5 continues without SW
+    const [{ startChunkRecoveryV2 }, { startDeploymentRecovery }, { startHealthMonitor }] = await Promise.all([
+      import("./chunk-recovery-v2"),
+      import("./deployment-recovery"),
+      import("./health-monitor"),
+    ]);
+    startChunkRecoveryV2();
+    startDeploymentRecovery();
+    startHealthMonitor();
+  })();
 }
+
