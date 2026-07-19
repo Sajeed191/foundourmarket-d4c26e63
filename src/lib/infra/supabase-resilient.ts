@@ -205,3 +205,36 @@ export async function resilientFetch(input: {
     return { ok: false, queued: false, error: err };
   }
 }
+
+/**
+ * Resilient RPC — invokes a Supabase Postgres function, and on transient
+ * failure enqueues an equivalent `/rest/v1/rpc/<fn>` POST for later replay.
+ * Callers that need the RPC's returned value should handle `queued=true`
+ * as an accepted-for-later signal (no data available yet).
+ */
+export async function resilientRpc(
+  kind: QueueKind,
+  fn: string,
+  args: Record<string, unknown>,
+  dedupeKey?: string,
+): Promise<{ ok: boolean; queued: boolean; data?: unknown; error?: unknown }> {
+  try {
+    const res = await (supabase as any).rpc(fn, args);
+    if (!res.error) return { ok: true, queued: false, data: res.data };
+    if (!isTransientPgError(res.error)) return { ok: false, queued: false, error: res.error };
+  } catch (err) {
+    if (!isTransientThrown(err)) return { ok: false, queued: false, error: err };
+  }
+  if (!SUPABASE_URL) return { ok: false, queued: false };
+  await enqueue({
+    kind,
+    endpoint: `${SUPABASE_URL}/rest/v1/rpc/${fn}`,
+    method: "POST",
+    body: args,
+    headers: restHeaders(),
+    dedupeKey,
+    requiresAuth: true,
+  });
+  return { ok: true, queued: true };
+}
+
