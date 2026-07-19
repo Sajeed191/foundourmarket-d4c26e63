@@ -939,7 +939,10 @@ function FixedOrb({
     // Keyboard lift: distance from visualViewport bottom to layout viewport bottom.
     const kb = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
     const footer = getFooterLift();
-    const bottom = navH + kb + footer;
+    // Nav clearance already accounts for safe-area-inset-bottom via the CSS
+    // custom property; add a fixed 16px breathing gap so the orb never
+    // touches the bottom navigation, plus any keyboard/footer lift.
+    const bottom = navH + BOTTOM_GAP + kb + footer;
     el.style.bottom = `${bottom}px`;
   }, []);
 
@@ -948,8 +951,12 @@ function FixedOrb({
     if (!el) return;
     const ctxHidden = isContextHidden();
     const off = hidden || ctxHidden;
-    el.style.transition = "transform 180ms ease-out, opacity 180ms ease-out";
-    el.style.transform = off ? "translateY(120%)" : "translateY(0)";
+    // Show: 180ms ease-out, translateY(16px → 0), opacity 0 → 1.
+    // Hide: 180ms ease-in,  translateY(0 → 24px), opacity 1 → 0.
+    el.style.transition = off
+      ? "transform 180ms ease-in, opacity 180ms ease-in"
+      : "transform 180ms ease-out, opacity 180ms ease-out";
+    el.style.transform = off ? "translateY(24px)" : "translateY(0)";
     el.style.opacity = off ? "0" : "1";
     el.style.pointerEvents = off ? "none" : "";
   }, [hidden]);
