@@ -57,7 +57,7 @@ import {
 import { BrandName } from "@/components/site/BrandName";
 import { waitForLayoutReady, isHeaderLayoutReady } from "@/lib/wait-for-layout";
 import { useSupportSettings } from "@/lib/use-support-settings";
-import { registerFloating, updateFloating, setChatActive } from "@/lib/floating-stack";
+import { registerFloating, updateFloating, subscribeFloating, setChatActive, getFooterLift, isContextHidden } from "@/lib/floating-stack";
 
 type Msg = CrispMessage;
 
@@ -952,15 +952,25 @@ function DraggableOrb({
     return { vw, vh, minX, maxX, minY: safeTop, maxY: Math.max(safeTop, safeBottom) };
   }, []);
 
+  const idlePeekRef = useRef(false);
+
   const applyTransform = useCallback((x: number, y: number, scale = 1, withTransition = false) => {
     const el = wrapRef.current;
     if (!el) return;
-    const shrink = peekRef.current && !dragRef.current.active ? PEEK_SCALE : scale;
+    const dragging = dragRef.current.active;
+    const peeked = (peekRef.current || idlePeekRef.current) && !dragging;
+    const shrink = peeked ? PEEK_SCALE : scale;
+    const lift = getFooterLift();
+    const hidden = isContextHidden();
+    const opacity = hidden ? 0 : peeked ? 0.8 : 1;
+    el.style.opacity = String(opacity);
+    el.style.pointerEvents = hidden ? "none" : "";
     el.style.transition = withTransition
-      ? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)"
-      : "none";
-    el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${shrink})`;
+      ? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease-out"
+      : "opacity 220ms ease-out";
+    el.style.transform = `translate3d(${x}px, ${y - lift}px, 0) scale(${shrink})`;
   }, []);
+
 
   const [placed, setPlaced] = useState(false);
   useEffect(() => {
