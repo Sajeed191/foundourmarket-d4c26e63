@@ -130,6 +130,9 @@ export function LiveChat() {
   const openRef = useRef(false);
   const dismissGreetingRef = useRef<() => void>(() => {});
   useEffect(() => { openRef.current = open; if (open) { setUnread(0); dismissGreetingRef.current(); } }, [open]);
+  // Broadcast active state so lower-priority floating widgets (Admin toolbar)
+  // can visually recede while the chat surface or quick-actions menu is open.
+  useEffect(() => { setChatActive(open || menuOpen); return () => setChatActive(false); }, [open, menuOpen]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [operatorTyping, setOperatorTyping] = useState(false);
