@@ -332,18 +332,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return null;
 }
 
-          </button>
-          <a
-            href="/"
-            className="rounded-full border border-border px-6 py-3 text-xs font-medium uppercase tracking-widest"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
