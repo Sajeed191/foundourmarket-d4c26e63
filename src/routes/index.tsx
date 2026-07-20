@@ -139,17 +139,6 @@ const SECTION_SUBTITLE: Record<string, string> = {
   best_sellers: "The most-loved pieces across the marketplace.",
 };
 
-/* Full-width premium "View All" button shown directly below each product section */
-function ViewAllButton({ to, label = "View All" }: { to: string; label?: string }) {
-  return (
-    <Link
-      to={to}
-      className="mt-4 flex items-center justify-center gap-2 w-full rounded-2xl glass-strong border-2 border-accent py-3.5 text-[11px] font-mono font-semibold uppercase tracking-[0.25em] text-accent hover:bg-accent/10 active:scale-[0.99] transition-colors"
-    >
-      {label} <ArrowRight className="size-3.5" />
-    </Link>
-  );
-}
 
 /* Premium category icon mapping — keyed by keyword in slug/name. */
 const CATEGORY_ICON_RULES: { match: string[]; icon: LucideIcon }[] = [
