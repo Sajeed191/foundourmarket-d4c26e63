@@ -40,7 +40,7 @@ export function rotationWindowIndex(nowMs: number, hours: number): number {
  * @param key      Section key — mixed into the seed so different sections
  *                 shuffle independently.
  */
-export function fairPagedSlice<T extends { id?: string; slug: string }>(
+export function fairPagedSlice<T>(
   items: T[],
   limit: number,
   nowMs: number,
