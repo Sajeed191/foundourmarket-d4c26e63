@@ -74,12 +74,21 @@ function useScrolledOnce(active: boolean) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     if (!active || scrolled) return;
-    const onScroll = () => {
-      if (window.scrollY > 240) setScrolled(true);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // Perf v3 — shared scroll bus (one window listener for the whole app).
+    if (typeof window !== "undefined" && window.scrollY > 240) {
+      setScrolled(true);
+      return;
+    }
+    let off: (() => void) | undefined;
+    import("@/lib/scroll-bus").then(({ onScroll }) => {
+      off = onScroll((y) => {
+        if (y > 240) {
+          setScrolled(true);
+          off?.();
+        }
+      });
+    });
+    return () => off?.();
   }, [active, scrolled]);
   return !active || scrolled;
 }
@@ -467,10 +476,12 @@ function useCategoryLimit() {
   };
   const [limit, setLimit] = useState(get);
   useEffect(() => {
-    const onResize = () => setLimit(get());
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    setLimit(get());
+    let off: (() => void) | undefined;
+    import("@/lib/scroll-bus").then(({ onResize }) => {
+      off = onResize(() => setLimit(get()));
+    });
+    return () => off?.();
   }, []);
   return limit;
 }

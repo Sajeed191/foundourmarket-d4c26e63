@@ -145,7 +145,6 @@ export function LiveChat() {
   // scroll for 300ms restores it. Fully fixed position; not draggable.
   const [orbHidden, setOrbHidden] = useState(false);
   useEffect(() => {
-    let ticking = false;
     let idleTimer: number | undefined;
     let lastY = typeof window !== "undefined" ? window.scrollY : 0;
     const THRESH = 6;
@@ -153,11 +152,10 @@ export function LiveChat() {
       if (idleTimer) window.clearTimeout(idleTimer);
       idleTimer = window.setTimeout(() => setOrbHidden(false), 300);
     };
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
+    // Perf v3 — shared scroll bus (already rAF-batched; drop local ticking gate).
+    let off: (() => void) | undefined;
+    import("@/lib/scroll-bus").then(({ onScroll: onScrollBus }) => {
+      off = onScrollBus((y) => {
         const dy = y - lastY;
         if (Math.abs(dy) >= THRESH) {
           if (dy > 0 && y > 40) {
@@ -168,13 +166,11 @@ export function LiveChat() {
           }
           lastY = y;
         }
-        ticking = false;
         scheduleRestore();
       });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      off?.();
       if (idleTimer) window.clearTimeout(idleTimer);
     };
   }, []);
