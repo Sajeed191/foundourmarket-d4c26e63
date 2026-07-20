@@ -31,6 +31,7 @@ import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Switch } from "@/components/ui/switch";
+import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 
 type SearchParams = {
   q?: string;
@@ -955,6 +956,34 @@ function SearchPage() {
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawRows, currentFilters, priceCtx, variantFacets, sort, search.q, rotBucket, priceOf, compareOf, flashEndAt, flashEligibleIds]);
+
+  // ── AI Shopping Context (v1.3) ──────────────────────────────────────────
+  usePublishShoppingContext(
+    () => ({
+      page: "search",
+      route: "/search",
+      search: {
+        query: (search.q ?? "").trim(),
+        sort,
+        filters: {
+          ...(search.cat ? { category: search.cat } : {}),
+          ...(search.sub ? { subcategory: search.sub } : {}),
+          ...(search.brand ? { brand: search.brand } : {}),
+          ...(search.min != null ? { min_price: search.min } : {}),
+          ...(search.max != null ? { max_price: search.max } : {}),
+          ...(search.rating != null ? { min_rating: search.rating } : {}),
+        },
+        visible: results.slice(0, 12).map((p) => ({
+          slug: p.slug,
+          name: p.name,
+          price_inr: p.priceInr ?? null,
+          category: p.category ?? null,
+        })),
+      },
+    }),
+    [search.q, sort, search.cat, search.sub, search.brand, search.min, search.max, search.rating, results],
+  );
+
 
   // Client-side pagination with back-navigation state preservation. The
   // scroll position + visible window are persisted per search key so returning

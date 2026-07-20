@@ -8,6 +8,7 @@ import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid
 import type { Product } from "@/lib/products";
 import { Loader2, ArrowRight } from "lucide-react";
 import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
+import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 
 function titleize(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -89,6 +90,27 @@ function CategoryPage() {
   useEffect(() => {
     if (cat?.id) void supabase.rpc("track_category_event", { _id: cat.id, _event: "view" });
   }, [cat?.id]);
+
+  // ── AI Shopping Context (v1.3) ──────────────────────────────────────────
+  usePublishShoppingContext(
+    () => ({
+      page: "category",
+      route: `/category/${slug}`,
+      category: {
+        slug,
+        name: cat?.name ?? null,
+        visible: ownItems.slice(0, 12).map((p) => ({
+          slug: p.slug,
+          name: p.name,
+          price_inr: p.priceInr ?? null,
+          category: p.category ?? null,
+        })),
+      },
+    }),
+    [slug, cat?.name, ownItems],
+  );
+
+
 
   const parent = cat?.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);

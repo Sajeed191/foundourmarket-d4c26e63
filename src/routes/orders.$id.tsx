@@ -8,6 +8,7 @@ import { useRegion } from "@/lib/region";
 import { safeExternalUrl } from "@/lib/safe-redirect";
 import { ReturnRequestDialog } from "@/components/site/ReturnRequestDialog";
 import { OrderSupportSection } from "@/components/site/OrderSupportSection";
+import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({ meta: [{ title: "Order Details — FoundOurMarket™" }] }),
@@ -53,6 +54,23 @@ function OrderDetailPage() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnRec, setReturnRec] = useState<ReturnRec | null>(null);
+
+  // ── AI Shopping Context (v1.3) — privacy-safe order metadata only ───────
+  const shipmentStatus = shipments[0]?.status ?? null;
+  usePublishShoppingContext(
+    () => ({
+      page: "order",
+      route: `/orders/${id}`,
+      order: {
+        order_id: id,
+        status: order?.status ?? null,
+        shipment_status: shipmentStatus,
+        placed_at: order?.created_at ?? null,
+      },
+    }),
+    [id, order?.status, order?.created_at, shipmentStatus],
+  );
+
 
   useEffect(() => {
     if (!authLoading && !user) nav({ to: "/auth" });

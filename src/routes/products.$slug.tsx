@@ -50,6 +50,7 @@ import { ProductDescription } from "@/components/site/ProductDescription";
 import { RevealOnScroll } from "@/components/site/RevealOnScroll";
 import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
+import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
@@ -243,7 +244,36 @@ function ProductPage() {
   const inlinePurchaseRef = useRef<HTMLDivElement>(null);
   const [titleExpanded, setTitleExpanded] = useState(false);
 
-
+  // ── AI Shopping Context (v1.3) ──────────────────────────────────────────
+  const currentVariant = variants.find((v) => v.id === variantId) ?? null;
+  usePublishShoppingContext(
+    () => {
+      if (!product) return null;
+      const specs = product.specifications && typeof product.specifications === "object"
+        ? Object.entries(product.specifications as Record<string, string>)
+            .slice(0, 6)
+            .map(([k, v]) => `${k}: ${v}`)
+        : [];
+      return {
+        page: "product",
+        route: `/products/${product.slug}`,
+        product: {
+          slug: product.slug,
+          name: product.name,
+          price_inr: product.priceInr,
+          compare_price_inr: product.comparePriceInr,
+          category: product.category,
+          brand: product.brand,
+          in_stock: product.inStock,
+          variant: currentVariant?.name ?? null,
+          rating: product.rating,
+          reviews: product.reviews,
+          key_specs: specs,
+        },
+      };
+    },
+    [product?.slug, product?.priceInr, product?.inStock, currentVariant?.id],
+  );
 
 
   useEffect(() => {

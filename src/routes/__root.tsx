@@ -12,6 +12,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { AiShoppingMount } from "@/components/chat/AiShoppingMount";
+import { ShoppingContextPublisher } from "@/components/chat/ShoppingContextPublisher";
 import { GpuCompatBanner } from "@/components/site/GpuCompatBanner";
 import { MotionConfig } from "framer-motion";
 import { RegionProvider } from "@/lib/region";
@@ -765,6 +766,7 @@ function DeferredShell({
       {!hideLiveChat && <IsolatedBoundary name="LiveChat"><LiveChat /></IsolatedBoundary>}
       {!hideLiveChat && <IsolatedBoundary name="CommunicationHub"><CommunicationHub /></IsolatedBoundary>}
       {!hideLiveChat && <IsolatedBoundary name="AiShoppingAssistant"><AiShoppingMount /></IsolatedBoundary>}
+      <IsolatedBoundary name="ShoppingContextPublisher"><ShoppingContextPublisher /></IsolatedBoundary>
       {!hideLiveChat && <IsolatedBoundary name="SupportReplyWatcher"><SupportReplyWatcher /></IsolatedBoundary>}
     </Suspense>
   );

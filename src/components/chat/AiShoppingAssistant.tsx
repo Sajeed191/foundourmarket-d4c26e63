@@ -12,6 +12,7 @@ import { openCrispChat } from "@/lib/crisp";
 import { conversationStore as store } from "@/lib/ai-shopping/conversation-store";
 import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry } from "@/lib/ai-shopping/types";
 import { AiProductCard } from "./ai-shopping/AiProductCard";
+import { getShoppingContext } from "@/lib/ai-shopping/shopping-context";
 
 const SUGGESTIONS = [
   "Show me lightweight running shoes under ₹3,000",
@@ -161,10 +162,11 @@ export function AiShoppingAssistant() {
 
     try {
       const payload = withUser.messages.map((m) => ({ role: m.role, content: m.content }));
+      const shoppingContext = getShoppingContext();
       const res = await fetch("/api/ai-shopping", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payload }),
+        body: JSON.stringify({ messages: payload, context: shoppingContext }),
         signal: ac.signal,
       });
       if (!res.ok || !res.body) {
