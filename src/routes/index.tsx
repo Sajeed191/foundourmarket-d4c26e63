@@ -122,21 +122,30 @@ function CinematicDivider() {
   return <PremiumSectionDivider />;
 }
 
-/* Section-specific subtitles ("dynamic labels" per premium heading spec). */
+/* Section identity — subtitle copy, background ghost word, and alignment. */
 const SECTION_SUBTITLE: Record<string, string> = {
-  categories: "Discover thousands of products across every department.",
-  flash_deals: "Limited-time prices that won't last.",
-  trending: "Popular with shoppers today.",
-  new_arrivals: "Fresh products added recently.",
-  best_sellers: "Customer favorites with proven quality.",
+  categories: "Discover every department carefully curated for you.",
+  flash_deals: "Limited-time prices. New deals every day.",
+  trending: "Popular choices loved by thousands of shoppers.",
+  new_arrivals: "Fresh arrivals from trusted brands.",
+  best_sellers: "Top-rated products chosen by customers.",
 };
 
-const SECTION_EYEBROW: Record<string, string> = {
-  categories: "Curated Collection",
-  flash_deals: "Limited Time",
-  trending: "Most Popular",
-  new_arrivals: "Just Arrived",
-  best_sellers: "Customer Favorites",
+const SECTION_GHOST: Record<string, string> = {
+  categories: "CATEGORIES",
+  flash_deals: "FLASH",
+  trending: "TRENDING",
+  new_arrivals: "NEW",
+  best_sellers: "BEST",
+};
+
+/* Alternating alignment — editorial rhythm across the homepage. */
+const SECTION_ALIGN: Record<string, "center" | "left"> = {
+  categories: "center",
+  flash_deals: "left",
+  trending: "center",
+  new_arrivals: "left",
+  best_sellers: "center",
 };
 
 /* Full-width premium "View All" button shown directly below each product section */
