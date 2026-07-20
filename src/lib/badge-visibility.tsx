@@ -4,7 +4,7 @@ import { computeBadges, singleBadge, DEFAULT_BADGE_SETTINGS, type Badge, type Ba
 import { useProducts } from "@/lib/use-products";
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import { hasAssignedCollectionBadge, useBadgeCatalog, type RenderBadge } from "@/lib/use-product-badges";
 import {
   flashWindowSeed,
   dayWindowSeed,
@@ -93,8 +93,8 @@ export type FlashSelection = {
 export function selectActiveFlash(
   products: Product[],
   seed: number,
-  settings: BadgeSettings,
-  badgeMap?: Map<string, import("@/lib/use-product-badges").RenderBadge[]>,
+  _settings: BadgeSettings,
+  badgeMap?: Map<string, RenderBadge[]>,
   now = Date.now(),
 ): FlashSelection {
   const eligible = products.filter(
@@ -110,9 +110,9 @@ export function selectActiveFlash(
   let flashCount = 0;
   let hotCount = 0;
   for (const p of chosen) {
-    const all = computeBadges(p, settings, 99);
-    const hasFlash = all.some((b) => b.key === "flash_deal");
-    const hasHot = all.some((b) => b.key === "hot_deal");
+    const assignedBadges = badgeMap?.get(p.slug);
+    const hasFlash = hasAssignedCollectionBadge(assignedBadges, ["flash_deal"], now);
+    const hasHot = hasAssignedCollectionBadge(assignedBadges, ["hot_deal"], now);
     let key: BadgeKey | null = null;
     if (hasFlash && hasHot) {
       // Pick the rarer badge so far to balance the distribution (ties → Flash).
