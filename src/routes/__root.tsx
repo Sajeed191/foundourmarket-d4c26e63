@@ -1099,8 +1099,10 @@ function AppRoot() {
                             <GpuCompatBanner />
                             <ShareDialog />
                             
-                            <DebugPanel />
-                            <WindowMetricsPanel />
+                            <Suspense fallback={null}>
+                              <DebugPanel />
+                              <WindowMetricsPanel />
+                            </Suspense>
                             <GlobalSearchMount />
                             <ContinueShoppingHistoryCleanup />
                             <FloatingContextObserver />
