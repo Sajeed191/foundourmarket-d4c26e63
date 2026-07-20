@@ -6,15 +6,7 @@ import { ChevronLeft, MessageSquarePlus, Send, Sparkles, X, Menu, Trash2, Headse
 import { toast } from "sonner";
 import { onAiOpen, onAiClose, openHub, setLastHubChoice } from "@/lib/ai-shopping/events";
 import { openCrispChat } from "@/lib/crisp";
-import {
-  createEmptyThread,
-  deleteThread,
-  listThreads,
-  loadThread,
-  makeMessage,
-  saveThread,
-  titleFromFirstMessage,
-} from "@/lib/ai-shopping/storage";
+import { conversationStore as store } from "@/lib/ai-shopping/conversation-store";
 import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry } from "@/lib/ai-shopping/types";
 import { AiProductCard } from "./ai-shopping/AiProductCard";
 
