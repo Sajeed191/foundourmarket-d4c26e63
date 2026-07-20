@@ -604,9 +604,11 @@ export async function setBadgeArchived(id: string, archived: boolean) {
 
 /**
  * Promotional badge keys — a product may hold at most ONE of these at a time
- * (single-badge policy). Enforced centrally in `assignBadge` so every admin
- * surface (bulk tools, product editor, merchandising, badge manager) inherits
- * the guarantee without duplicating logic.
+ * (Single Promotional Badge policy). Featured is deliberately NOT in this set:
+ * it is an editorial overlay ("Featured Editorial Override") that may coexist
+ * with exactly one promotional badge. Enforced centrally in `assignBadge` so
+ * every admin surface (bulk tools, product editor, merchandising, badge
+ * manager) inherits the guarantee without duplicating logic.
  */
 const PROMO_BADGE_KEYS = new Set([
   "flash_deal",
@@ -614,7 +616,6 @@ const PROMO_BADGE_KEYS = new Set([
   "trending",
   "bestseller",
   "new",
-  "featured",
 ]);
 
 function normalizePromoKey(badgeKey: string, label: string): string | null {
