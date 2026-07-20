@@ -1121,7 +1121,7 @@ function ProductPage() {
             </div>
 
             {/* Product Overview — description component owns its own subsection titles */}
-            <section className="mt-14">
+            <section className="mt-16">
               <PdpSectionHeading title="Product Overview" subtitle="Everything you need to know" />
               <ProductDescription description={product.description} />
               {product.features?.length > 0 && (
@@ -1136,18 +1136,11 @@ function ProductPage() {
               )}
             </section>
 
-            {/* Specifications — only when description didn't already render a specs section */}
+            {/* Specifications — grouped accordion, one open at a time. */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <section className="mt-14">
-                <PdpSectionHeading title="Specifications" subtitle="Technical details at a glance" />
-                <dl className="divide-y divide-border/50">
-                  {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
-                    <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3.5 text-[14px]">
-                      <dt className="text-muted-foreground">{k}</dt>
-                      <dd className="text-foreground">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
+              <section className="mt-16">
+                <PdpSectionHeading title="Specifications" subtitle="Grouped for easy scanning" />
+                <SpecificationsAccordion specs={product.specifications as Record<string, string>} />
               </section>
             )}
 
@@ -1163,29 +1156,31 @@ function ProductPage() {
       <ProductLayoutDiagnostics phase="final" />
 
       {(fbtProducts.length > 0 && fbtSlugs.length > 0) && (
-        <Suspense fallback={null}>
-          <PDPRelationshipSections
-            hydratedProducts={fbtProducts}
-            frequentlyBoughtTogetherIds={fbtSlugs}
-            allowedSections={[
-              "frequently_bought_together",
-              "compatible",
-              "accessories",
-              "bundle",
-              "alternatives",
-              "replacement",
-            ]}
-          />
-        </Suspense>
+        <LazyMount minHeight={200} rootMargin="600px" className="mt-4">
+          <Suspense fallback={null}>
+            <PDPRelationshipSections
+              hydratedProducts={fbtProducts}
+              frequentlyBoughtTogetherIds={fbtSlugs}
+              allowedSections={[
+                "frequently_bought_together",
+                "compatible",
+                "accessories",
+                "bundle",
+                "alternatives",
+                "replacement",
+              ]}
+            />
+          </Suspense>
+        </LazyMount>
       )}
 
-      <LazyMount minHeight={120} className="scroll-mt-24" id="reviews">
+      <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="reviews">
         <div data-product-reviews className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
           <PdpSectionHeading title="Customer Reviews" subtitle="Real feedback from real shoppers" />
           <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={120} className="scroll-mt-24" id="questions">
+      <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="questions">
         <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
           <PdpSectionHeading title="Questions & Answers" subtitle="Ask anything about this product" />
           <ProductQA productSlug={product.slug} />
