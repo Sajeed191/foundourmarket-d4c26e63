@@ -71,7 +71,7 @@ const DEFAULT_THEME = "standard";
  * There are no category-type branches; the only fork is the data-driven image
  * vs icon fallback (used when a category genuinely has no image).
  */
-export function CategoryCard({
+export function CategoryCardImpl({
   category,
   count,
   to,
