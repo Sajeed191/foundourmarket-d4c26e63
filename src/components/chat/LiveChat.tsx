@@ -923,11 +923,14 @@ function FixedOrb({
   const downRef = useRef({ active: false, moved: false, x: 0, y: 0 });
   const [placed, setPlaced] = useState(false);
 
-  // Compute the bottom offset so the orb sits above the bottom navigation,
-  // respects safe-area insets, and lifts above the software keyboard.
-  const applyPosition = useCallback(() => {
-    const el = wrapRef.current;
-    if (!el) return;
+  // Cached layout inputs. Position is computed ONCE after layout is ready and
+  // then only recomputed on real layout events (orientation, keyboard, footer
+  // lift, debounced window resize). We intentionally do NOT listen to scroll
+  // or visualViewport scroll — those fire during Chrome/Safari address-bar
+  // animation and would cause visible jitter (v5.0 stability lock).
+  const cachedRef = useRef({ navH: 96, kb: 0, footer: 0, baselineVV: 0 });
+
+  const readNavH = useCallback(() => {
     const cs = getComputedStyle(document.documentElement);
     const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
     let navH = 96;
@@ -935,16 +938,33 @@ function FixedOrb({
       const n = parseFloat(navRaw);
       if (Number.isFinite(n) && !navRaw.includes("calc")) navH = Math.max(n, 72);
     }
-    const vv = window.visualViewport;
-    // Keyboard lift: distance from visualViewport bottom to layout viewport bottom.
-    const kb = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
-    const footer = getFooterLift();
-    // Nav clearance already accounts for safe-area-inset-bottom via the CSS
-    // custom property; add a fixed 16px breathing gap so the orb never
-    // touches the bottom navigation, plus any keyboard/footer lift.
-    const bottom = navH + BOTTOM_GAP + kb + footer;
-    el.style.bottom = `${bottom}px`;
+    return navH;
   }, []);
+
+  const writeBottom = useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const c = cachedRef.current;
+    el.style.bottom = `${c.navH + BOTTOM_GAP + c.kb + c.footer}px`;
+  }, []);
+
+  // Full recompute — allowed only on real layout events, never on scroll.
+  const applyPosition = useCallback(() => {
+    const c = cachedRef.current;
+    c.navH = readNavH();
+    c.footer = getFooterLift();
+    const vv = window.visualViewport;
+    // Keyboard height: measured against the cached baseline (captured at
+    // layout-ready). Only counts when the shrink is large enough to be a
+    // software keyboard, not browser-chrome address-bar animation.
+    if (vv && c.baselineVV) {
+      const delta = c.baselineVV - (vv.height + vv.offsetTop);
+      c.kb = delta > 150 ? delta : 0;
+    } else {
+      c.kb = 0;
+    }
+    writeBottom();
+  }, [readNavH, writeBottom]);
 
   const applyVisibility = useCallback(() => {
     const el = wrapRef.current;
@@ -973,17 +993,48 @@ function FixedOrb({
     let cleanupWait = () => {};
     const cancelWait = waitForLayoutReady(isHeaderLayoutReady, () => {
       const raf = requestAnimationFrame(() => {
+        const vv = window.visualViewport;
+        cachedRef.current.baselineVV = vv ? vv.height + vv.offsetTop : window.innerHeight;
         applyPosition();
         applyVisibility();
         setPlaced(true);
       });
       cleanupWait = () => cancelAnimationFrame(raf);
     });
-    const onResize = () => applyPosition();
+
+    // Debounced window resize: browsers fire resize continuously during
+    // address-bar animation, so wait for it to settle before recomputing.
+    let resizeTimer: number | undefined;
+    const onResize = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        // Refresh baseline on genuine resize (orientation, window resize).
+        const vv = window.visualViewport;
+        if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
+        applyPosition();
+      }, 180);
+    };
+    const onOrientation = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const vv = window.visualViewport;
+        if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
+        applyPosition();
+      }, 220);
+    };
+    // visualViewport RESIZE (not scroll) — fires when the software keyboard
+    // opens/closes. We diff against the cached baseline; small deltas from
+    // browser-chrome collapse are ignored inside applyPosition().
+    let vvTimer: number | undefined;
+    const onVVResize = () => {
+      if (vvTimer) window.clearTimeout(vvTimer);
+      vvTimer = window.setTimeout(applyPosition, 60);
+    };
+
     window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("scroll", onResize);
+    window.addEventListener("orientationchange", onOrientation);
+    window.visualViewport?.addEventListener("resize", onVVResize);
+
     // Re-apply on floating-stack changes (footer lift, fullscreen context).
     const unsubscribe = subscribeFloating(() => {
       applyPosition();
@@ -994,12 +1045,14 @@ function FixedOrb({
       unsubscribe();
       cancelWait();
       cleanupWait();
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      if (vvTimer) window.clearTimeout(vvTimer);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("scroll", onResize);
+      window.removeEventListener("orientationchange", onOrientation);
+      window.visualViewport?.removeEventListener("resize", onVVResize);
     };
   }, [applyPosition, applyVisibility]);
+
 
   // Re-apply visibility whenever the hide flag changes.
   useEffect(() => { applyVisibility(); }, [applyVisibility]);
