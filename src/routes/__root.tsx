@@ -440,8 +440,8 @@ const LiveChat = lazyWithRetry(() =>
 const CommunicationHub = lazyWithRetry(() =>
   import("@/components/chat/CommunicationHub").then((m) => ({ default: m.CommunicationHub })),
 );
-const AiShoppingAssistant = lazyWithRetry(() =>
-  import("@/components/chat/AiShoppingAssistant").then((m) => ({ default: m.AiShoppingAssistant })),
+const AiShoppingMount = lazyWithRetry(() =>
+  import("@/components/chat/AiShoppingMount").then((m) => ({ default: m.AiShoppingMount })),
 );
 const SearchCommand = lazyWithRetry(() =>
   import("@/components/site/SearchCommand").then((m) => ({
@@ -763,7 +763,7 @@ function DeferredShell({
       <IsolatedBoundary name="InstallPrompt"><InstallPrompt /></IsolatedBoundary>
       {!hideLiveChat && <IsolatedBoundary name="LiveChat"><LiveChat /></IsolatedBoundary>}
       {!hideLiveChat && <IsolatedBoundary name="CommunicationHub"><CommunicationHub /></IsolatedBoundary>}
-      {!hideLiveChat && <IsolatedBoundary name="AiShoppingAssistant"><AiShoppingAssistant /></IsolatedBoundary>}
+      {!hideLiveChat && <IsolatedBoundary name="AiShoppingAssistant"><AiShoppingMount /></IsolatedBoundary>}
       {!hideLiveChat && <IsolatedBoundary name="SupportReplyWatcher"><SupportReplyWatcher /></IsolatedBoundary>}
     </Suspense>
   );
