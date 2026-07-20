@@ -4,7 +4,7 @@ import { computeBadges, singleBadge, DEFAULT_BADGE_SETTINGS, type Badge, type Ba
 import { useProducts } from "@/lib/use-products";
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { isFlashDealProduct } from "@/lib/use-flash-deals";
+import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 import {
   flashWindowSeed,
   dayWindowSeed,
@@ -94,9 +94,15 @@ export function selectActiveFlash(
   products: Product[],
   seed: number,
   settings: BadgeSettings,
+  badgeMap?: Map<string, import("@/lib/use-product-badges").RenderBadge[]>,
+  now = Date.now(),
 ): FlashSelection {
   const eligible = products.filter(
-    (p) => isFlashDealProduct(p) && p.status === "published" && p.inStock && p.stockQuantity > 0,
+    (p) =>
+      hasAssignedCollectionBadge(badgeMap?.get(p.slug), ["flash_deal", "hot_deal"], now) &&
+      p.status === "published" &&
+      p.inStock &&
+      p.stockQuantity > 0,
   );
   const chosen = seededShuffle(eligible, seed).slice(0, FLASH_VISIBLE_MAX);
   const slugs = new Set(chosen.map((p) => p.slug));
@@ -143,6 +149,7 @@ export function selectActiveFlashSlugs(
  */
 export function BadgeEngineProvider({ children }: { children: ReactNode }) {
   const { products } = useProducts();
+  const { map: badgeAssignments } = useBadgeCatalog();
   const nonce = useRotationNonce();
   const settings = useBadgeSettings();
   const [now, setNow] = useState(() => Date.now());
@@ -156,9 +163,9 @@ export function BadgeEngineProvider({ children }: { children: ReactNode }) {
   const daySeed = dayWindowSeed(now);
 
   const { activeFlashSlugs, flashBadgeBySlug } = useMemo(() => {
-    const sel = selectActiveFlash(products, flashSeed, settings);
+    const sel = selectActiveFlash(products, flashSeed, settings, badgeAssignments, now);
     return { activeFlashSlugs: sel.slugs, flashBadgeBySlug: sel.badgeBySlug };
-  }, [products, flashSeed, settings]);
+  }, [products, badgeAssignments, flashSeed, settings, now]);
 
   // Memoize by the stable inputs so the context identity only changes when a
   // rotation window actually crosses or admin rules change — not every minute.
