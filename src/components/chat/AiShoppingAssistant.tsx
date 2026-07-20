@@ -1,8 +1,11 @@
-// AI Shopping Assistant — full mobile-first chat surface.
-// Threaded conversations, localStorage-only, lazy-loaded, luxury FoundOurMarket
-// styling that mirrors LiveChat. Talks to POST /api/ai-shopping.
+// AI Shopping Assistant — v1.2 premium shopping experience.
+// Streams NDJSON from /api/ai-shopping, renders skeleton loaders, suggestion
+// chips, and inline error/retry. UI language and structure preserved from v1.1.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, MessageSquarePlus, Send, Sparkles, X, Menu, Trash2, Headset, Lock, ShieldCheck, Zap } from "lucide-react";
+import {
+  ChevronLeft, MessageSquarePlus, Send, Sparkles, X, Menu, Trash2,
+  Headset, Lock, ShieldCheck, Zap, RotateCw, RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { onAiOpen, onAiClose, openHub, setLastHubChoice } from "@/lib/ai-shopping/events";
 import { openCrispChat } from "@/lib/crisp";
@@ -23,6 +26,12 @@ function formatTime(ts: number): string {
   } catch { return ""; }
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  catch { return false; }
+}
+
 export function AiShoppingAssistant() {
   const [open, setOpen] = useState(false);
   const [threads, setThreads] = useState<AiThreadIndexEntry[]>([]);
@@ -31,19 +40,20 @@ export function AiShoppingAssistant() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Live streamed text for the in-progress assistant reply.
+  const [streamingText, setStreamingText] = useState("");
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const lastUserTextRef = useRef<string>("");
 
-  // Wire open/close events.
   useEffect(() => {
     const off1 = onAiOpen(() => setOpen(true));
     const off2 = onAiClose(() => setOpen(false));
     return () => { off1(); off2(); };
   }, []);
 
-  // Load thread index + choose active thread when opening.
   useEffect(() => {
     if (!open) return;
     const idx = store.getThreads();
@@ -61,14 +71,12 @@ export function AiShoppingAssistant() {
     }
   }, [open, activeId]);
 
-  // Load active thread into state.
   useEffect(() => {
     if (!activeId) { setThread(null); return; }
     const t = store.loadThread(activeId);
     if (t) setThread(t);
   }, [activeId]);
 
-  // Body scroll lock + focus.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -82,12 +90,11 @@ export function AiShoppingAssistant() {
     };
   }, [open]);
 
-  // Autoscroll on new messages.
   useEffect(() => {
     if (!open) return;
     const el = scrollRef.current;
     if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-  }, [thread?.messages.length, sending, open]);
+  }, [thread?.messages.length, sending, streamingText, open]);
 
   const persist = useCallback((next: AiThread) => {
     store.saveThread(next);
@@ -125,6 +132,7 @@ export function AiShoppingAssistant() {
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
+    lastUserTextRef.current = trimmed;
     let current = thread;
     if (!current) {
       current = store.createEmptyThread();
@@ -140,10 +148,17 @@ export function AiShoppingAssistant() {
     persist(withUser);
     setInput("");
     setSending(true);
+    setStreamingText("");
 
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
+
+    let accumulated = "";
+    let finalProducts: AiProductRef[] | undefined;
+    let finalSuggestions: string[] | undefined;
+    let streamError: string | null = null;
+
     try {
       const payload = withUser.messages.map((m) => ({ role: m.role, content: m.content }));
       const res = await fetch("/api/ai-shopping", {
@@ -152,35 +167,80 @@ export function AiShoppingAssistant() {
         body: JSON.stringify({ messages: payload }),
         signal: ac.signal,
       });
-      const data = await res.json().catch(() => ({ error: "Bad response" }));
-      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+      if (!res.ok || !res.body) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(errText || `Request failed (${res.status})`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      readLoop: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t) continue;
+          let evt: { type: string; text?: string; products?: AiProductRef[]; suggestions?: string[]; message?: string };
+          try { evt = JSON.parse(t); } catch { continue; }
+          if (evt.type === "token" && typeof evt.text === "string") {
+            accumulated += evt.text;
+            setStreamingText(accumulated);
+          } else if (evt.type === "products" && Array.isArray(evt.products)) {
+            finalProducts = evt.products.slice(0, 6);
+          } else if (evt.type === "suggestions" && Array.isArray(evt.suggestions)) {
+            finalSuggestions = evt.suggestions.slice(0, 5);
+          } else if (evt.type === "error") {
+            streamError = evt.message ?? "Something went wrong";
+          } else if (evt.type === "done") {
+            break readLoop;
+          }
+        }
+      }
 
-      const products: AiProductRef[] | undefined = Array.isArray(data.products)
-        ? (data.products as AiProductRef[]).slice(0, 6).map((p) => ({
-            slug: p.slug,
-            name: p.name,
-            image: p.image ?? null,
-            price_inr: p.price_inr ?? null,
-            compare_price_inr: p.compare_price_inr ?? null,
-            rating: p.rating ?? null,
-            tagline: p.tagline ?? null,
-          }))
-        : undefined;
-      const assistantMsg = store.makeMessage("assistant", String(data.reply ?? ""), products);
+      if (streamError) throw new Error(streamError);
+
+      const replyText = accumulated.trim()
+        || "I'm not sure how to help with that — try asking me to find a product or compare two.";
+      const assistantMsg: AiMessage = {
+        ...store.makeMessage("assistant", replyText, finalProducts),
+        suggestions: finalSuggestions,
+      };
       persist({ ...withUser, messages: [...withUser.messages, assistantMsg] });
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
-      const errMsg = store.makeMessage(
-        "assistant",
-        "I couldn't reach the AI service just now. Please try again in a moment.",
-      );
+      const errMsg: AiMessage = {
+        ...store.makeMessage(
+          "assistant",
+          accumulated.trim()
+            || "I couldn't reach the assistant right now. Please check your connection and try again.",
+        ),
+        error: true,
+      };
       persist({ ...withUser, messages: [...withUser.messages, errMsg] });
     } finally {
       setSending(false);
+      setStreamingText("");
     }
   }, [persist, sending, thread]);
+
+  const retryLast = useCallback(() => {
+    if (sending) return;
+    const t = thread;
+    if (!t) return;
+    // Drop the last (errored) assistant message and re-send the last user text.
+    const trimmed = [...t.messages];
+    while (trimmed.length && trimmed[trimmed.length - 1].role === "assistant") trimmed.pop();
+    persist({ ...t, messages: trimmed });
+    const text = lastUserTextRef.current
+      || [...trimmed].reverse().find((m) => m.role === "user")?.content
+      || "";
+    if (text) void sendMessage(text);
+  }, [persist, sendMessage, sending, thread]);
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
     e?.preventDefault();
@@ -193,28 +253,34 @@ export function AiShoppingAssistant() {
     openCrispChat();
   }, []);
 
-  const messages = thread?.messages ?? [];
-  const isEmpty = messages.length === 0;
+  const onChipClick = useCallback((chip: string) => {
+    if (/customer support/i.test(chip)) { switchToSupport(); return; }
+    sendMessage(chip);
+  }, [sendMessage, switchToSupport]);
 
+  const messages = thread?.messages ?? [];
+  const isEmpty = messages.length === 0 && !sending;
   const activeTitle = useMemo(() => thread?.title ?? "New chat", [thread]);
+  const lastMsg = messages[messages.length - 1];
+  const showChips = !sending && lastMsg?.role === "assistant" && !lastMsg.error
+    && Array.isArray(lastMsg.suggestions) && lastMsg.suggestions.length > 0;
+  const reducedMotion = prefersReducedMotion();
 
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[72] flex flex-col bg-background/95 backdrop-blur-xl animate-chat-slide-up"
+      className={`fixed inset-0 z-[72] flex flex-col bg-background/95 backdrop-blur-xl ${reducedMotion ? "" : "animate-chat-slide-up"}`}
       role="dialog"
       aria-modal="true"
       aria-label="FoundOurMarket AI Shopping Assistant"
     >
-      {/* Ambient glow */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-72"
         style={{ background: "var(--gradient-ember-soft)" }}
         aria-hidden
       />
 
-      {/* Header */}
       <header
         className="relative z-10 border-b border-border/60 bg-card/70 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -224,25 +290,25 @@ export function AiShoppingAssistant() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Back"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
+            aria-label="Close AI Shopping"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5" aria-hidden />
           </button>
 
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="Show chats"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-foreground/90 transition-colors hover:bg-foreground/10 active:scale-90"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden />
           </button>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="grid size-6 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[var(--shadow-ember)]">
-                <Sparkles className="h-3 w-3" />
+                <Sparkles className="h-3 w-3" aria-hidden />
               </span>
               <p className="truncate text-sm font-semibold text-foreground">AI Shopping</p>
             </div>
@@ -252,34 +318,50 @@ export function AiShoppingAssistant() {
           <button
             type="button"
             onClick={switchToSupport}
-            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/60 px-2.5 py-1.5 text-[11px] font-medium text-foreground/90 backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/60 bg-card/60 px-3 py-2 text-[11px] font-medium text-foreground/90 backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
           >
-            <Headset className="h-3.5 w-3.5" /> Switch to Support
+            <Headset className="h-3.5 w-3.5" aria-hidden /> Support
           </button>
         </div>
       </header>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto scrollbar-none px-4 py-5">
+      <div
+        ref={scrollRef}
+        className="relative z-10 flex-1 overflow-y-auto scrollbar-none px-4 py-5"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {isEmpty ? (
           <Welcome onQuick={(s) => sendMessage(s)} />
         ) : (
           <div className="mx-auto flex max-w-lg flex-col gap-3">
-            {messages.map((m) => <Bubble key={m.id} msg={m} />)}
-            {sending && <TypingIndicator />}
+            {messages.map((m) => (
+              <Bubble
+                key={m.id}
+                msg={m}
+                reducedMotion={reducedMotion}
+                onRetry={m.error ? retryLast : undefined}
+              />
+            ))}
+            {sending && (
+              streamingText
+                ? <StreamingBubble text={streamingText} reducedMotion={reducedMotion} />
+                : <ThinkingSkeleton reducedMotion={reducedMotion} />
+            )}
+            {showChips && lastMsg?.suggestions && (
+              <SuggestionChips chips={lastMsg.suggestions} onPick={onChipClick} />
+            )}
           </div>
         )}
       </div>
 
-      {/* Trust row */}
       <div className="relative z-10 flex items-center justify-center gap-4 px-4 py-2 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1"><Sparkles className="h-3 w-3 text-primary" /> AI Curated</span>
-        <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-primary" /> Live Catalog</span>
-        <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Private</span>
-        <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> On-device history</span>
+        <span className="flex items-center gap-1"><Sparkles className="h-3 w-3 text-primary" aria-hidden /> AI Curated</span>
+        <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-primary" aria-hidden /> Live Catalog</span>
+        <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" aria-hidden /> Private</span>
+        <span className="flex items-center gap-1"><Lock className="h-3 w-3" aria-hidden /> On-device</span>
       </div>
 
-      {/* Composer */}
       <form
         onSubmit={handleSubmit}
         className="relative z-10 border-t border-border/60 bg-card/70 px-3 pt-2.5 backdrop-blur-xl"
@@ -287,7 +369,9 @@ export function AiShoppingAssistant() {
       >
         <div className="mx-auto flex max-w-lg items-end gap-2">
           <div className="flex flex-1 items-end rounded-3xl border border-input bg-secondary/60 px-4 py-2">
+            <label htmlFor="ai-shopping-composer" className="sr-only">Message the AI Shopping Assistant</label>
             <textarea
+              id="ai-shopping-composer"
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -302,16 +386,15 @@ export function AiShoppingAssistant() {
           </div>
           <button
             type="submit"
-            aria-label="Send"
+            aria-label="Send message"
             disabled={!input.trim() || sending}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground transition-transform duration-200 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground transition-transform duration-200 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-5 w-5" aria-hidden />
           </button>
         </div>
       </form>
 
-      {/* Threads drawer */}
       {drawerOpen && (
         <ThreadsDrawer
           threads={threads}
@@ -331,7 +414,7 @@ function Welcome({ onQuick }: { onQuick: (s: string) => void }) {
     <div className="mx-auto flex max-w-lg flex-col gap-6 py-6">
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[var(--shadow-ember)] animate-float-soft">
-          <Sparkles className="h-7 w-7" />
+          <Sparkles className="h-7 w-7" aria-hidden />
         </div>
         <h2 className="font-display text-2xl font-semibold text-foreground">Your AI shopping concierge</h2>
         <p className="mt-1 px-4 text-sm text-muted-foreground">
@@ -348,10 +431,10 @@ function Welcome({ onQuick }: { onQuick: (s: string) => void }) {
             key={s}
             type="button"
             onClick={() => onQuick(s)}
-            className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-left text-sm text-foreground/90 backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-[0.99]"
+            className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-left text-sm text-foreground/90 backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-[0.99]"
           >
             <span className="min-w-0 flex-1 truncate">{s}</span>
-            <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
           </button>
         ))}
       </div>
@@ -371,43 +454,99 @@ function Welcome({ onQuick }: { onQuick: (s: string) => void }) {
   );
 }
 
-function Bubble({ msg }: { msg: AiMessage }) {
+function Bubble({
+  msg, reducedMotion, onRetry,
+}: { msg: AiMessage; reducedMotion: boolean; onRetry?: () => void }) {
   const isUser = msg.role === "user";
+  const anim = reducedMotion ? "" : "animate-chat-bubble-in";
+  if (isUser) {
+    return (
+      <div className={`flex justify-end ${anim}`}>
+        <div className="max-w-[82%] rounded-[22px] rounded-br-md bg-gradient-to-br from-primary to-primary/85 px-4 py-2.5 text-sm text-primary-foreground shadow-[var(--shadow-ember)]">
+          <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+          <p className="mt-1 text-[10px] text-primary-foreground/70">{formatTime(msg.ts)}</p>
+        </div>
+      </div>
+    );
+  }
+  // Assistant — no colored bubble background; content sits on the surface.
   return (
-    <div className={`flex animate-chat-bubble-in ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={
-          isUser
-            ? "max-w-[82%] rounded-[22px] rounded-br-md bg-gradient-to-br from-primary to-primary/85 px-4 py-2.5 text-sm text-primary-foreground shadow-[var(--shadow-ember)]"
-            : "max-w-[92%] rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-2.5 text-sm text-foreground backdrop-blur-xl shadow-[var(--shadow-card)]"
-        }
-      >
+    <div className={`flex justify-start ${anim}`}>
+      <div className="max-w-[92%] text-sm text-foreground">
         <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
-        {!isUser && msg.products && msg.products.length > 0 && (
+        {msg.products && msg.products.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
             {msg.products.map((p) => <AiProductCard key={p.slug} product={p} />)}
           </div>
         )}
-        <p className={`mt-1 text-[10px] ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-          {formatTime(msg.ts)}
+        {msg.error && onRetry && (
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+            >
+              <RotateCw className="h-3.5 w-3.5" aria-hidden /> Try again
+            </button>
+            <a
+              href="/deals"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Continue shopping
+            </a>
+          </div>
+        )}
+        <p className="mt-1 text-[10px] text-muted-foreground">{formatTime(msg.ts)}</p>
+      </div>
+    </div>
+  );
+}
+
+function StreamingBubble({ text, reducedMotion }: { text: string; reducedMotion: boolean }) {
+  const anim = reducedMotion ? "" : "animate-chat-bubble-in";
+  return (
+    <div className={`flex justify-start ${anim}`}>
+      <div className="max-w-[92%] text-sm text-foreground">
+        <p className="whitespace-pre-wrap break-words leading-relaxed">
+          {text}
+          <span className="ml-0.5 inline-block h-3 w-[2px] translate-y-0.5 animate-pulse bg-primary/80" aria-hidden />
         </p>
       </div>
     </div>
   );
 }
 
-function TypingIndicator() {
+function ThinkingSkeleton({ reducedMotion }: { reducedMotion: boolean }) {
+  const pulse = reducedMotion ? "" : "animate-pulse";
   return (
-    <div className="flex justify-start animate-chat-bubble-in">
-      <div className="flex items-center gap-1.5 rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-3 backdrop-blur-xl">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="chat-typing-dot h-2 w-2 rounded-full bg-primary/70"
-            style={{ animationDelay: `${i * 0.15}s` }}
-          />
-        ))}
+    <div className="flex justify-start">
+      <div className="w-full max-w-[92%] space-y-2" aria-label="Assistant is thinking">
+        <div className={`h-3 w-3/4 rounded-full bg-foreground/10 ${pulse}`} />
+        <div className={`h-3 w-2/3 rounded-full bg-foreground/10 ${pulse}`} />
+        <div className={`h-3 w-1/2 rounded-full bg-foreground/10 ${pulse}`} />
       </div>
+    </div>
+  );
+}
+
+function SuggestionChips({ chips, onPick }: { chips: string[]; onPick: (c: string) => void }) {
+  return (
+    <div
+      className="mt-1 flex flex-wrap gap-2"
+      role="group"
+      aria-label="Suggested follow-ups"
+    >
+      {chips.map((c) => (
+        <button
+          key={c}
+          type="button"
+          onClick={() => onPick(c)}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-[12px] font-medium text-foreground/90 backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+        >
+          <Sparkles className="h-3 w-3 text-primary" aria-hidden />
+          {c}
+        </button>
+      ))}
     </div>
   );
 }
@@ -440,61 +579,54 @@ function ThreadsDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-white/10 active:scale-90"
+            aria-label="Close chats"
+            className="grid h-11 w-11 place-items-center rounded-full text-muted-foreground hover:bg-white/10 active:scale-90"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
 
         <button
           type="button"
           onClick={onNew}
-          className="mx-3 mt-3 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/15 active:scale-[0.99]"
+          className="mx-3 mt-3 flex min-h-11 items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/15 active:scale-[0.99]"
         >
-          <MessageSquarePlus className="h-4 w-4" /> New chat
+          <MessageSquarePlus className="h-4 w-4" aria-hidden /> New chat
         </button>
 
         <div className="mt-3 flex-1 overflow-y-auto px-2 pb-6">
           {threads.length === 0 ? (
-            <p className="px-3 py-4 text-xs text-muted-foreground">No conversations yet.</p>
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">No chats yet.</p>
           ) : (
-            threads.map((t) => (
-              <div
-                key={t.id}
-                className={`group mx-1 mb-1 flex items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
-                  t.id === activeId ? "bg-primary/10" : "hover:bg-white/[0.04]"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => onSelect(t.id)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <p className={`truncate text-sm ${t.id === activeId ? "font-semibold text-primary" : "text-foreground/90"}`}>
-                    {t.title}
-                  </p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">
-                    {new Date(t.updatedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm("Delete this chat?")) onDelete(t.id);
-                  }}
-                  aria-label="Delete chat"
-                  className="grid size-8 place-items-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-white/10 hover:text-foreground group-hover:opacity-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))
+            <ul className="flex flex-col gap-1">
+              {threads.map((t) => {
+                const active = t.id === activeId;
+                return (
+                  <li key={t.id} className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onSelect(t.id)}
+                      className={`min-h-11 flex-1 truncate rounded-2xl px-3 py-2 text-left text-sm transition-colors ${
+                        active ? "bg-primary/15 text-primary" : "text-foreground/90 hover:bg-white/5"
+                      }`}
+                    >
+                      {t.title || "New chat"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(t.id)}
+                      aria-label={`Delete chat: ${t.title || "New chat"}`}
+                      className="grid h-11 w-11 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-destructive active:scale-90"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       </div>
     </div>
   );
 }
-
-export default AiShoppingAssistant;

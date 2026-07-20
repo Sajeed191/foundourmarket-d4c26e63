@@ -19,6 +19,10 @@ export type AiMessage = {
   ts: number;
   // Products the assistant referenced in this reply — rendered as cards.
   products?: AiProductRef[];
+  // Contextual follow-up chips generated for this assistant turn.
+  suggestions?: string[];
+  // Optional error state for a failed assistant reply — enables inline retry.
+  error?: boolean;
 };
 
 export type AiThread = {
