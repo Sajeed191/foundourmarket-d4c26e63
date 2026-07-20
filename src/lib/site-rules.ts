@@ -8,6 +8,7 @@
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { setPromoResolverConfig } from "@/lib/use-product-badges";
 
 export type HomepageCollectionKey =
   | "flash_deals"
@@ -15,6 +16,16 @@ export type HomepageCollectionKey =
   | "best_sellers"
   | "new_arrivals"
   | "featured";
+
+/**
+ * Featured Editorial Override — behavior toggle.
+ * - `editorial_overlay` (default): Featured is an editorial highlight and can
+ *   coexist with exactly one promotional badge. Legacy multi-promo data is
+ *   collapsed by the resolver into a single promo collection.
+ * - `multi_section`: A Featured product bypasses the single-promo resolver
+ *   and appears in every promotional section it is badged for.
+ */
+export type FeaturedMode = "editorial_overlay" | "multi_section";
 
 export type HomepageCollectionRules = {
   limits: Record<HomepageCollectionKey, number>;
@@ -24,6 +35,8 @@ export type HomepageCollectionRules = {
   reshuffleTimesIst: string[];
   /** Master switch for automatic reshuffles. */
   reshuffleEnabled: boolean;
+  /** Featured Editorial Override — see FeaturedMode. */
+  featuredMode: FeaturedMode;
 };
 
 export const DEFAULT_HOMEPAGE_RULES: HomepageCollectionRules = {
@@ -37,6 +50,7 @@ export const DEFAULT_HOMEPAGE_RULES: HomepageCollectionRules = {
   rotationHours: 2,
   reshuffleTimesIst: ["06:00", "12:00", "18:00", "00:00"],
   reshuffleEnabled: true,
+  featuredMode: "editorial_overlay",
 };
 
 export const ROTATION_HOUR_OPTIONS = [1, 2, 4, 6, 12, 24] as const;
@@ -60,11 +74,14 @@ function coerce(raw: unknown): HomepageCollectionRules {
         .filter((t): t is string => typeof t === "string" && /^\d{2}:\d{2}$/.test(t))
         .slice(0, 12)
     : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst;
+  const featuredMode: FeaturedMode =
+    src.featuredMode === "multi_section" ? "multi_section" : "editorial_overlay";
   return {
     limits,
     rotationHours,
     reshuffleTimesIst: times.length > 0 ? times : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst,
     reshuffleEnabled: src.reshuffleEnabled !== false,
+    featuredMode,
   };
 }
 
@@ -73,6 +90,11 @@ let cache: HomepageCollectionRules | null = null;
 let inflight: Promise<HomepageCollectionRules> | null = null;
 const subs = new Set<(r: HomepageCollectionRules) => void>();
 let realtimeBound = false;
+
+/** Push featuredMode into the badge resolver whenever rules change. */
+function syncResolverFromRules(rules: HomepageCollectionRules) {
+  setPromoResolverConfig({ allowMultiForFeatured: rules.featuredMode === "multi_section" });
+}
 
 function bindRealtime() {
   if (realtimeBound || typeof window === "undefined") return;
@@ -102,6 +124,7 @@ async function load(force = false): Promise<HomepageCollectionRules> {
       const rules = coerce((data as { value?: unknown } | null)?.value);
       cache = rules;
       inflight = null;
+      syncResolverFromRules(rules);
       subs.forEach((fn) => fn(rules));
       return rules;
     })();
@@ -136,5 +159,6 @@ export async function saveHomepageCollectionRules(
     .upsert({ key: "homepage_collections", value: normalized }, { onConflict: "key" });
   if (error) throw new Error(error.message);
   cache = normalized;
+  syncResolverFromRules(normalized);
   subs.forEach((fn) => fn(normalized));
 }

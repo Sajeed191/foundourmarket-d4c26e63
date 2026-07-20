@@ -75,6 +75,60 @@ const KEY = "trending";
   );
 }
 
+// 6. Featured Editorial Override — promo resolver
+{
+  // Minimal RenderBadge shape (only fields the resolver reads).
+  type B = {
+    badgeKey: string; label: string; enabled: boolean;
+    startAt: null; endAt: null;
+    assignArchived: false; assignStartAt: null; assignEndAt: null;
+  };
+  const mk = (key: string): B => ({
+    badgeKey: key, label: key, enabled: true,
+    startAt: null, endAt: null,
+    assignArchived: false, assignStartAt: null, assignEndAt: null,
+  });
+  // Avoid loading the full module (Supabase client). Re-implement the tiny
+  // resolver contract by importing the internal export via dynamic import.
+  const mod = await import("./use-product-badges");
+  const resolve = mod.__resolvePromoCollectionsForTests as unknown as (
+    m: Map<string, unknown[]>,
+    now?: number,
+  ) => Map<string, Set<string>>;
+
+  // A: multiple promos, no featured → collapses to ONE promo collection.
+  // B: single promo → keeps it.
+  // C: featured + one promo → keeps that one promo (featured is orthogonal).
+  const map = new Map<string, B[]>([
+    ["a", [mk("trending"), mk("bestseller"), mk("new")]],
+    ["b", [mk("trending")]],
+    ["c", [mk("featured"), mk("flash_deal")]],
+    ["d", [mk("featured")]],
+  ]);
+  mod.setPromoResolverConfig({ allowMultiForFeatured: false });
+  const r1 = resolve(map);
+  assert(r1.get("a")?.size === 1, "editorial_overlay: multi-promo product resolves to exactly one collection");
+  assert(r1.get("b")?.has("trending") === true, "editorial_overlay: singleton promo preserved");
+  assert(r1.get("c")?.size === 1 && r1.get("c")?.has("flash_deals") === true, "editorial_overlay: featured+flash keeps flash");
+  assert(!r1.has("d"), "editorial_overlay: featured-only product has no promo membership");
+
+  // multi_section: featured product with multiple promos keeps ALL of them.
+  const map2 = new Map<string, B[]>([
+    ["e", [mk("featured"), mk("trending"), mk("bestseller")]],
+    ["f", [mk("trending"), mk("bestseller")]],
+  ]);
+  mod.setPromoResolverConfig({ allowMultiForFeatured: true });
+  const r2 = resolve(map2);
+  assert(
+    r2.get("e")?.has("trending") === true && r2.get("e")?.has("bestseller") === true,
+    "multi_section: featured product appears in every promo section it is badged for",
+  );
+  assert(r2.get("f")?.size === 1, "multi_section: non-featured multi-promo still resolves to one collection");
+
+  // reset for any downstream state
+  mod.setPromoResolverConfig({ allowMultiForFeatured: false });
+}
+
 if (failed > 0) {
   console.error(`\n${failed} assertion(s) failed`);
   process.exit(1);

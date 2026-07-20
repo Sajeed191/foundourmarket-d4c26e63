@@ -4,7 +4,7 @@ import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
-import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import { hasAssignedCollectionBadge, productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
 import { useHomepageCollectionRules } from "@/lib/site-rules";
 
 /** Absolute upper bound on visibly-promoted Flash Deals, regardless of admin config. */
@@ -117,7 +117,7 @@ export function useFlashDeals() {
     let excludedUnavailable = 0;
 
     for (const p of products) {
-      if (!hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["flash_deal", "hot_deal"], now)) continue;
+      if (!productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["flash_deal", "hot_deal"], now)) continue;
       totalFlagged++;
       // Active = published, in stock, and flagged. Inactive products are hidden everywhere.
       const available = p.status === "published" && p.inStock && p.stockQuantity > 0;

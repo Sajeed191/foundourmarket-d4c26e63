@@ -4,7 +4,7 @@ import { computeBadges, singleBadge, DEFAULT_BADGE_SETTINGS, type Badge, type Ba
 import { useProducts } from "@/lib/use-products";
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { hasAssignedCollectionBadge, useBadgeCatalog, type RenderBadge } from "@/lib/use-product-badges";
+import { hasAssignedCollectionBadge, productInHomepageCollection, useBadgeCatalog, type RenderBadge } from "@/lib/use-product-badges";
 import {
   flashWindowSeed,
   dayWindowSeed,
@@ -99,7 +99,7 @@ export function selectActiveFlash(
 ): FlashSelection {
   const eligible = products.filter(
     (p) =>
-      hasAssignedCollectionBadge(badgeMap?.get(p.slug), ["flash_deal", "hot_deal"], now) &&
+      productInHomepageCollection(p.slug, badgeMap?.get(p.slug), ["flash_deal", "hot_deal"], now) &&
       p.status === "published" &&
       p.inStock &&
       p.stockQuantity > 0,

@@ -43,6 +43,7 @@ function cloneRules(r: HomepageCollectionRules): HomepageCollectionRules {
     rotationHours: r.rotationHours,
     reshuffleTimesIst: [...r.reshuffleTimesIst],
     reshuffleEnabled: r.reshuffleEnabled,
+    featuredMode: r.featuredMode,
   };
 }
 
@@ -220,6 +221,28 @@ function SiteRulesPage() {
           </div>
         </Card>
 
+        {/* Featured Behavior (Featured Editorial Override) */}
+        <Card
+          icon={<Star className="size-4" />}
+          title="Featured behavior"
+          description="Featured is an editorial overlay, not a promotional badge. Choose how it interacts with promotional sections."
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <ModeChoice
+              active={draft.featuredMode === "editorial_overlay"}
+              onClick={() => setDraft({ ...draft, featuredMode: "editorial_overlay" })}
+              title="Editorial overlay"
+              hint="Default. Featured coexists with one promotional section (Trending, Flash Deals, Best Sellers, or New Arrivals). Products without Featured never appear in more than one promo section."
+            />
+            <ModeChoice
+              active={draft.featuredMode === "multi_section"}
+              onClick={() => setDraft({ ...draft, featuredMode: "multi_section" })}
+              title="Allow Featured in multiple sections"
+              hint="Featured products may appear in every promotional section they are badged for. Non-Featured products still follow the single-promo rule."
+            />
+          </div>
+        </Card>
+
         {/* Badge rules link */}
         <Card
           icon={<Star className="size-4" />}
@@ -374,5 +397,35 @@ function ComingSoonCard({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function ModeChoice({
+  active, onClick, title, hint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left rounded-xl border px-4 py-3 transition-colors ${
+        active
+          ? "border-accent bg-accent/10"
+          : "border-border/60 bg-background/30 hover:bg-accent/5"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-block size-2.5 rounded-full ${
+            active ? "bg-accent" : "bg-muted-foreground/30"
+          }`}
+        />
+        <span className="text-xs font-medium">{title}</span>
+      </div>
+      <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">{hint}</p>
+    </button>
   );
 }

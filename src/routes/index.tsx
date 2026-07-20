@@ -19,7 +19,7 @@ const CategoryAdminSheet = lazy(() =>
   import("@/components/admin/CategoryAdminSheet").then((m) => ({ default: m.CategoryAdminSheet })),
 );
 import { useHomepageSections, saveHomepageSection, toggleHomepageSection } from "@/lib/use-homepage-sections";
-import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import { productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
@@ -592,7 +592,7 @@ function Home() {
 
   const trending = useMemo(() => {
     const eligible = products.filter((p) =>
-      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["trending"]),
+      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["trending"]),
     );
     return fairPagedSlice(
       eligible,
@@ -606,7 +606,7 @@ function Home() {
 
   const newArrivals = useMemo(() => {
     const eligible = products
-      .filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["new"]))
+      .filter((p) => productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["new"]))
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
     return fairPagedSlice(
       eligible,
@@ -620,7 +620,7 @@ function Home() {
 
   const bestSellers = useMemo(() => {
     const eligible = products.filter((p) =>
-      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["bestseller"]),
+      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["bestseller"]),
     );
     return fairPagedSlice(
       eligible,
@@ -634,7 +634,7 @@ function Home() {
 
   const featured = useMemo(() => {
     const eligible = products.filter((p) =>
-      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["featured"]),
+      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["featured"]),
     );
     return fairPagedSlice(
       eligible,

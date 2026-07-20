@@ -25,17 +25,36 @@ order within a window.
 
 ## How badge assignment works
 
-`assignBadge()` in `src/lib/use-product-badges.ts` enforces the
-**single-promotional-badge policy**: assigning any promo badge
-(`flash_deal`, `trending`, `bestseller`, `new_arrival`, `hot_deal`,
-`recommended`, `best_value`, `popular`) atomically deletes any other promo
-badge on the same product. Utility badges (e.g. `ready_to_ship`) are
-unaffected. This is centralized so every admin surface behaves identically.
+`assignBadge()` in `src/lib/use-product-badges.ts` enforces the **Single
+Promotional Badge policy**: assigning any promo badge (`flash_deal`,
+`hot_deal`, `trending`, `bestseller`, `new`) atomically deletes any other
+promo badge on the same product. Utility badges (e.g. `ready_to_ship`) and
+**`featured`** are unaffected.
+
+## Featured Editorial Override
+
+`featured` is deliberately **not** a promotional badge — it is an editorial
+overlay that can coexist with exactly one promo badge. Site Rules exposes a
+`featuredMode` toggle (`admin-site-rules.tsx` → "Featured behavior"):
+
+| Mode | Behavior |
+| ---- | -------- |
+| `editorial_overlay` (default) | Featured products appear in Featured **and** their single resolved promo section. Non-Featured products never appear in more than one promo section. |
+| `multi_section`               | Featured products bypass the resolver and appear in every promo section they are badged for. Non-Featured products still follow the single-promo rule. |
+
+When a product carries multiple live promo badges (legacy data, imports,
+manual overrides), `resolvePromoCollections()` collapses it to exactly one
+using a load-balancing algorithm: pick the promo collection with the fewest
+currently resolved products; break ties with the priority order
+`flash_deals → trending → bestseller → new_arrivals`.
+
+Every homepage rail reads eligibility through `productInHomepageCollection()`
+so the resolver is the single source of truth.
 
 ## Admin pages that write to the same data
 
 - `src/routes/admin-site-rules.tsx` — limits, rotation, reshuffle schedule,
-  global "Reshuffle now" action.
+  featured behavior, global "Reshuffle now" action.
 - `src/routes/admin-product.$slug.merchandising.tsx` — per-product badge
   assignment (routes through `assignBadge`, so the single-badge policy holds).
 - Any bulk merchandising tools must also call `assignBadge` — never write to
@@ -46,3 +65,7 @@ unaffected. This is centralized so every admin surface behaves identically.
 - `filterFlag` prop on `ProductCollection` — use `collectionKey` instead.
 - `isFlashDealProduct()` in `src/lib/use-flash-deals.ts` — homepage Flash
   Deal membership is driven by live `product_badges` assignments.
+- `hasAssignedCollectionBadge()` for homepage collection filtering — use
+  `productInHomepageCollection()` so the Featured Editorial Override
+  resolver is honored. `hasAssignedCollectionBadge` is still fine for
+  per-product presentational checks (e.g. picking which flash icon to show).
