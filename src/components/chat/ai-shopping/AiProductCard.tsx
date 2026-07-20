@@ -56,10 +56,11 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
     } finally {
       setBusy(null);
     }
-  }, [add, busy, product.slug]);
+  }, [add, busy, emit, product.slug]);
 
   const handleBuy = useCallback(async () => {
     if (busy) return;
+    emit("buy");
     setBusy("buy");
     try {
       const inCart = readLineQty(product.slug) > 0;
@@ -70,10 +71,11 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
     } finally {
       setBusy(null);
     }
-  }, [add, busy, navigate, product.slug]);
+  }, [add, busy, emit, navigate, product.slug]);
 
   const handleWish = useCallback(async () => {
     if (busy) return;
+    emit("wish");
     setBusy("wish");
     try {
       await toggle(product.slug);
@@ -81,7 +83,7 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
     } finally {
       setBusy(null);
     }
-  }, [busy, product.slug, toggle]);
+  }, [busy, emit, product.slug, toggle]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl transition-all hover:border-primary/50">
