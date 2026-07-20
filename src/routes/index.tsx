@@ -316,13 +316,14 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
   }
 
   const subtitle = sectionKey ? SECTION_SUBTITLE[sectionKey] : undefined;
+  const eyebrowLabel = (sectionKey && SECTION_EYEBROW[sectionKey]) || eyebrow || undefined;
 
   return (
     <>
       <PremiumSectionHeading
-        icon={Icon as LucideIcon | undefined}
+        eyebrow={eyebrowLabel}
         title={title}
-        subtitle={subtitle ?? (eyebrow || undefined)}
+        subtitle={subtitle}
         href={href}
         hrefLabel={hrefLabel}
         right={
@@ -337,7 +338,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
               <button
                 onClick={open}
                 aria-label="Edit section"
-                className="grid size-8 shrink-0 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent/20"
+                className="grid size-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-accent/40 hover:text-accent"
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -346,7 +347,7 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
         }
       />
       {/* Silence unused-var warnings; prominent kept for API back-compat. */}
-      {prominent ? null : null}
+      {prominent || Icon ? null : null}
 
       {editing && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" onClick={() => !saving && setEditing(false)}>
