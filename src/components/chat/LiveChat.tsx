@@ -939,8 +939,10 @@ function FixedOrb({
     const el = wrapRef.current;
     if (!el) return;
     const c = cachedRef.current;
-    el.style.bottom = `calc(${c.navH + BOTTOM_GAP + c.kb}px + env(safe-area-inset-bottom, 0px))`;
+    const buyBar = getBuyBarLift();
+    el.style.bottom = `calc(${c.navH + BOTTOM_GAP + c.kb + buyBar}px + env(safe-area-inset-bottom, 0px))`;
   }, []);
+
 
   // Full recompute — allowed only on real layout events, never on scroll or
   // floating UI changes.
