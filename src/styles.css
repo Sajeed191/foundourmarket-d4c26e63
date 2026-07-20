@@ -425,6 +425,26 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   100% { opacity: 0; transform: scale(1.9); }
 }
 
+/* Phase 4 polish — wishlist heart tap. Soft scale + ripple, GPU-only. */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.25); }
+  65%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop { animation: heart-pop 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes heart-ripple {
+  0%   { opacity: 0.55; transform: scale(0.35); }
+  100% { opacity: 0;    transform: scale(2.1); }
+}
+.animate-heart-ripple { animation: heart-ripple 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-heart-pop, .animate-heart-ripple { animation: none !important; }
+}
+
+
+
+
 
 
 /* Soft glow border for floating recommendation cards */
