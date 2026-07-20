@@ -1121,7 +1121,7 @@ function ProductPage() {
             </div>
 
             {/* Product Overview — description component owns its own subsection titles */}
-            <section className="mt-14">
+            <section className="mt-16">
               <PdpSectionHeading title="Product Overview" subtitle="Everything you need to know" />
               <ProductDescription description={product.description} />
               {product.features?.length > 0 && (
@@ -1136,18 +1136,11 @@ function ProductPage() {
               )}
             </section>
 
-            {/* Specifications — only when description didn't already render a specs section */}
+            {/* Specifications — grouped accordion, one open at a time. */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <section className="mt-14">
-                <PdpSectionHeading title="Specifications" subtitle="Technical details at a glance" />
-                <dl className="divide-y divide-border/50">
-                  {Object.entries(product.specifications as Record<string, string>).map(([k, v]) => (
-                    <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3.5 text-[14px]">
-                      <dt className="text-muted-foreground">{k}</dt>
-                      <dd className="text-foreground">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
+              <section className="mt-16">
+                <PdpSectionHeading title="Specifications" subtitle="Grouped for easy scanning" />
+                <SpecificationsAccordion specs={product.specifications as Record<string, string>} />
               </section>
             )}
 
@@ -1163,29 +1156,31 @@ function ProductPage() {
       <ProductLayoutDiagnostics phase="final" />
 
       {(fbtProducts.length > 0 && fbtSlugs.length > 0) && (
-        <Suspense fallback={null}>
-          <PDPRelationshipSections
-            hydratedProducts={fbtProducts}
-            frequentlyBoughtTogetherIds={fbtSlugs}
-            allowedSections={[
-              "frequently_bought_together",
-              "compatible",
-              "accessories",
-              "bundle",
-              "alternatives",
-              "replacement",
-            ]}
-          />
-        </Suspense>
+        <LazyMount minHeight={200} rootMargin="600px" className="mt-4">
+          <Suspense fallback={null}>
+            <PDPRelationshipSections
+              hydratedProducts={fbtProducts}
+              frequentlyBoughtTogetherIds={fbtSlugs}
+              allowedSections={[
+                "frequently_bought_together",
+                "compatible",
+                "accessories",
+                "bundle",
+                "alternatives",
+                "replacement",
+              ]}
+            />
+          </Suspense>
+        </LazyMount>
       )}
 
-      <LazyMount minHeight={120} className="scroll-mt-24" id="reviews">
+      <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="reviews">
         <div data-product-reviews className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
           <PdpSectionHeading title="Customer Reviews" subtitle="Real feedback from real shoppers" />
           <ProductReviews productSlug={product.slug} onAggregateChange={invalidateProducts} />
         </div>
       </LazyMount>
-      <LazyMount minHeight={120} className="scroll-mt-24" id="questions">
+      <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="questions">
         <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
           <PdpSectionHeading title="Questions & Answers" subtitle="Ask anything about this product" />
           <ProductQA productSlug={product.slug} />
@@ -1282,6 +1277,111 @@ function PdpSectionHeading({ title, subtitle, eyebrow }: { title: string; subtit
           <p className="mt-1 text-[13px] text-muted-foreground/80 leading-relaxed">{subtitle}</p>
         )}
       </div>
+    </div>
+  );
+}
+
+
+
+/** Heuristic groups for a flat spec map. Order matters: first match wins. */
+const SPEC_GROUP_ORDER = [
+  "Display",
+  "Performance",
+  "Camera",
+  "Battery",
+  "Connectivity",
+  "Audio",
+  "Build & Design",
+  "Dimensions & Weight",
+  "Package Contents",
+  "Warranty",
+  "General",
+] as const;
+
+const SPEC_GROUP_PATTERNS: Array<{ group: (typeof SPEC_GROUP_ORDER)[number]; test: RegExp }> = [
+  { group: "Display", test: /display|screen|resolution|refresh|panel|nits|hdr|ppi/i },
+  { group: "Performance", test: /processor|chipset|cpu|gpu|ram|memory|storage|os|android|ios|benchmark/i },
+  { group: "Camera", test: /camera|lens|megapixel|aperture|video|zoom|selfie/i },
+  { group: "Battery", test: /battery|charging|charger|mah|watt|wattage|power/i },
+  { group: "Connectivity", test: /wi[- ]?fi|bluetooth|nfc|5g|4g|lte|sim|port|usb|hdmi|jack|network|gps|band/i },
+  { group: "Audio", test: /audio|speaker|microphone|mic|dolby|codec|driver|sound/i },
+  { group: "Build & Design", test: /material|build|design|finish|colou?r|frame|glass|rating|ip[0-9]+|water|dust/i },
+  { group: "Dimensions & Weight", test: /dimension|height|width|depth|thickness|weight|size/i },
+  { group: "Package Contents", test: /package|box|in the box|contents|includes|accessor/i },
+  { group: "Warranty", test: /warranty|guarantee/i },
+];
+
+function groupSpecs(specs: Record<string, string>) {
+  const bucket = new Map<string, Array<[string, string]>>();
+  for (const [k, v] of Object.entries(specs)) {
+    if (v == null || String(v).trim() === "") continue;
+    const match = SPEC_GROUP_PATTERNS.find((p) => p.test.test(k));
+    const g = match?.group ?? "General";
+    if (!bucket.has(g)) bucket.set(g, []);
+    bucket.get(g)!.push([k, String(v)]);
+  }
+  return SPEC_GROUP_ORDER
+    .filter((g) => bucket.has(g))
+    .map((g) => ({ group: g, entries: bucket.get(g)! }));
+}
+
+function SpecificationsAccordion({ specs }: { specs: Record<string, string> }) {
+  const groups = useMemo(() => groupSpecs(specs), [specs]);
+  // Open the first group by default so users see structure immediately.
+  const [openGroup, setOpenGroup] = useState<string | null>(groups[0]?.group ?? null);
+  if (groups.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-white/10 overflow-hidden">
+      {groups.map(({ group, entries }, i) => {
+        const isOpen = openGroup === group;
+        const panelId = `spec-panel-${i}`;
+        const btnId = `spec-trigger-${i}`;
+        return (
+          <div key={group} className={i > 0 ? "border-t border-white/10" : ""}>
+            <button
+              id={btnId}
+              type="button"
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+              onClick={() => setOpenGroup(isOpen ? null : group)}
+              className="w-full flex items-center justify-between gap-4 px-4 sm:px-5 py-4 text-left transition-colors hover:bg-white/[0.02] focus-visible:outline-none focus-visible:bg-white/[0.03]"
+            >
+              <span className="flex items-center gap-3 min-w-0">
+                <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/70 tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-[14.5px] font-medium text-foreground/95 truncate">{group}</span>
+                <span className="text-[11px] text-muted-foreground/70">
+                  {entries.length}
+                </span>
+              </span>
+              <span
+                className={`grid size-6 place-items-center rounded-full border border-white/10 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-45 border-accent/40 text-accent" : ""}`}
+                aria-hidden
+              >
+                <Plus className="size-3" />
+              </span>
+            </button>
+            <div
+              id={panelId}
+              role="region"
+              aria-labelledby={btnId}
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+            >
+              <div className="overflow-hidden">
+                <dl className="divide-y divide-white/[0.06] px-4 sm:px-5 pb-4">
+                  {entries.map(([k, v]) => (
+                    <div key={k} className="grid grid-cols-[40%_60%] gap-4 py-3 text-[13.5px]">
+                      <dt className="text-muted-foreground/90">{k}</dt>
+                      <dd className="text-foreground/95 break-words">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
