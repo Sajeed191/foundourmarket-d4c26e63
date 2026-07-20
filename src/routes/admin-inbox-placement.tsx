@@ -69,16 +69,9 @@ function InboxPlacementPage() {
   const [gmail, setGmail] = useState("");
   const [outlook, setOutlook] = useState("");
 
-  const seeds = useQuery({ queryKey: ["seed-inboxes"], queryFn: () => fetchSeeds(undefined) });
-
-  useEffect(() => {
-    if (seeds.data) {
-      if (seeds.data.gmail.address) setGmail((v) => v || seeds.data!.gmail.address!);
-      if (seeds.data.outlook.address) setOutlook((v) => v || seeds.data!.outlook.address!);
-    }
-  }, [seeds.data]);
-
-  const tests = useQuery({ queryKey: ["placement-tests"], queryFn: () => list({ data: { limit: 25 } }) });
+  const seeds = useQuery({ queryKey: ["seed-inboxes"], queryFn: () => fetchSeeds(undefined), staleTime: 5 * 60_000 });
+...
+  const tests = useQuery({ queryKey: ["placement-tests"], queryFn: () => list({ data: { limit: 25 } }), staleTime: 60_000 });
 
   const runTest = useMutation({
     mutationFn: () =>
