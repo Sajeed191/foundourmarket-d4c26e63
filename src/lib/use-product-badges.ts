@@ -469,6 +469,35 @@ export function productInHomepageCollection(
   return false;
 }
 
+/**
+ * Single Visible Promotional Badge policy — filter helper.
+ *
+ * When a product carries multiple promotional badge assignments (legacy imports,
+ * bulk edits, migrations), only the one belonging to its resolved promotional
+ * collection may render. Featured and other non-promotional badges pass
+ * through unchanged. Uses the cached `resolvedPromoBySlug` map so no work
+ * happens at render time.
+ */
+export function filterToResolvedPromoBadges<T extends RenderBadge>(
+  slug: string,
+  badges: readonly T[],
+): T[] {
+  if (!badges.length) return [];
+  const resolved = cache?.resolvedPromoBySlug.get(slug);
+  return badges.filter((b) => {
+    const col = promoCollectionForBadge(b);
+    if (!col) return true; // non-promotional (featured, custom, trust, …)
+    if (!resolved) return false; // promo badge with no resolution → hide
+    return resolved.has(col);
+  });
+}
+
+/** Hook variant: assigned + live badges filtered to the single resolved promo. */
+export function useResolvedProductBadges(slug: string): RenderBadge[] {
+  const list = useProductBadges(slug);
+  return useMemo(() => filterToResolvedPromoBadges(slug, list), [slug, list]);
+}
+
 
 export async function refreshBadges() {
   await load(true);

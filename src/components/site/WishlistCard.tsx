@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart";
 import { useBuyNow } from "@/lib/use-buy-now";
 import { useWishlist } from "@/lib/wishlist";
 
-import { useProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
+import { useResolvedProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
 import { StarRating } from "@/components/site/StarRating";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -46,7 +46,7 @@ function WishlistCardImpl({
   const lowStock =
     product.stockQuantity > 0 && product.stockQuantity <= (product.lowStockThreshold || 10);
 
-  const assigned = useProductBadges(product.slug);
+  const assigned = useResolvedProductBadges(product.slug);
   const badges = assigned.map((b) => ({
     key: b.badgeKey,
     label: b.label,

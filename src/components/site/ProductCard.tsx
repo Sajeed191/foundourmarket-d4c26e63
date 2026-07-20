@@ -5,7 +5,7 @@ import { Heart, Check, Star, Eye, ShoppingCart, Loader2, Minus, Plus } from "luc
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
 import { useBadgeEngine, type BadgeContext } from "@/lib/badge-visibility";
-import { useProductBadges, type RenderBadge } from "@/lib/use-product-badges";
+import { useResolvedProductBadges, type RenderBadge } from "@/lib/use-product-badges";
 import { useRegion } from "@/lib/region";
 import { useCartActions, useCartQty } from "@/lib/cart";
 import { toast } from "sonner";
@@ -359,7 +359,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const discount = discountPercent(price, originalPrice);
   const shippingFee = shippingFeeOf(product);
   const freeShipping = shippingFee <= 0;
-  const assigned = useProductBadges(product.slug);
+  const assigned = useResolvedProductBadges(product.slug);
   const engine = useBadgeEngine();
   const lowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold;
   const identity = productIdentity(product);
