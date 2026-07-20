@@ -931,16 +931,14 @@ function FixedOrb({
   const readBottomNavHeight = useCallback(() => {
     const css = getComputedStyle(document.documentElement);
     const rootFontPx = Number.parseFloat(css.fontSize) || 16;
-    const safeBottomRaw = css.getPropertyValue("--mobile-safe-bottom").trim();
-    const safeBottom = Number.parseFloat(safeBottomRaw) || 0;
-    return rootFontPx * 5.75 + safeBottom;
+    return rootFontPx * 5.75;
   }, []);
 
   const writeBottom = useCallback(() => {
     const el = wrapRef.current;
     if (!el) return;
     const c = cachedRef.current;
-    el.style.bottom = `${c.navH + BOTTOM_GAP + c.kb}px`;
+    el.style.bottom = `calc(${c.navH + BOTTOM_GAP + c.kb}px + env(safe-area-inset-bottom, 0px))`;
   }, []);
 
   // Full recompute — allowed only on real layout events, never on scroll or
