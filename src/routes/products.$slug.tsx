@@ -928,6 +928,9 @@ function ProductPage() {
                   <span className="text-foreground/70">{stockBadge.sub}</span>
                 </span>
               </div>
+            </div>
+
+
 
             {isAdmin && (
               <Suspense fallback={null}>
