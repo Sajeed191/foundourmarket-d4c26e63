@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Activity, Loader2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,26 +34,60 @@ function ActivityPage() {
       </span>
     }>
       {logs === null ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> :
-        <div className="card-premium rounded-2xl divide-y divide-border/40">
-          {logs.map((l) => (
-            <div key={l.id} className="px-5 py-3 flex items-center gap-4">
-              <Activity className="size-4 text-accent shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm">
-                  <span className="font-mono text-xs uppercase tracking-widest text-accent">{l.action}</span>
-                  {l.entity_type && <span className="text-muted-foreground"> · {l.entity_type}</span>}
-                  {l.entity_id && <span className="font-mono text-[11px] text-muted-foreground"> · {l.entity_id}</span>}
-                </p>
-                {Object.keys(l.metadata ?? {}).length > 0 && (
-                  <p className="text-[10px] font-mono text-muted-foreground truncate">{JSON.stringify(l.metadata)}</p>
-                )}
-              </div>
-              <p className="text-[10px] font-mono text-muted-foreground shrink-0">{new Date(l.created_at).toLocaleString()}</p>
-            </div>
-          ))}
-          {logs.length === 0 && <p className="px-5 py-8 text-center text-sm text-muted-foreground">No activity yet.</p>}
-        </div>
+        logs.length === 0 ? (
+          <div className="card-premium rounded-2xl">
+            <p className="px-5 py-8 text-center text-sm text-muted-foreground">No activity yet.</p>
+          </div>
+        ) : (
+          <div className="card-premium rounded-2xl overflow-hidden">
+            <ActivityList logs={logs} />
+          </div>
+        )
       }
     </AdminShell>
+  );
+}
+
+function ActivityList({ logs }: { logs: Log[] }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: logs.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 64,
+    overscan: 8,
+  });
+  const items = virtualizer.getVirtualItems();
+  return (
+    <div ref={parentRef} className="overflow-auto overscroll-contain" style={{ maxHeight: "72vh", contain: "strict" }}>
+      <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+        {items.map((vi) => {
+          const l = logs[vi.index];
+          return (
+            <div
+              key={l.id}
+              data-index={vi.index}
+              ref={virtualizer.measureElement}
+              className="absolute left-0 top-0 w-full"
+              style={{ transform: `translateY(${vi.start}px)`, willChange: "transform" }}
+            >
+              <div className={`px-5 py-3 flex items-center gap-4 ${vi.index === 0 ? "" : "border-t border-border/40"}`}>
+                <Activity className="size-4 text-accent shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm">
+                    <span className="font-mono text-xs uppercase tracking-widest text-accent">{l.action}</span>
+                    {l.entity_type && <span className="text-muted-foreground"> · {l.entity_type}</span>}
+                    {l.entity_id && <span className="font-mono text-[11px] text-muted-foreground"> · {l.entity_id}</span>}
+                  </p>
+                  {Object.keys(l.metadata ?? {}).length > 0 && (
+                    <p className="text-[10px] font-mono text-muted-foreground truncate">{JSON.stringify(l.metadata)}</p>
+                  )}
+                </div>
+                <p className="text-[10px] font-mono text-muted-foreground shrink-0">{new Date(l.created_at).toLocaleString()}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
