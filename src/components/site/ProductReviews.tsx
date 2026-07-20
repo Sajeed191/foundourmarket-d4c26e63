@@ -189,17 +189,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   // view no longer carries user_id to derive ownership from the list.
   const hasReviewed = !!myReview;
 
-  // Resolve which of the five customer states applies.
-  const customerState: "guest" | "not_purchased" | "purchased_pending" | "can_review" | "reviewed" =
-    !user
-      ? "guest"
-      : hasReviewed
-        ? "reviewed"
-        : eligible
-          ? "can_review"
-          : purchase.purchased && !purchase.delivered
-            ? "purchased_pending"
-            : "not_purchased";
+  // Reviews are open to every signed-in customer. Buyers still receive the
+  // Verified Purchase badge (set server-side by the mark_review_verified
+  // trigger from real orders), but writing is not gated by a purchase.
+  const customerState: "guest" | "can_review" | "reviewed" =
+    !user ? "guest" : hasReviewed ? "reviewed" : "can_review";
 
   const isSaved = user ? wishlist.has(productSlug) : false;
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
@@ -306,7 +300,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }
 
   function openCompose() {
-    if (!eligible) { toast.error("Only verified purchasers can review this product."); return; }
+    if (!user) { toast.error("Sign in to write a review."); return; }
     clearReviewDraft();
     setShowCompose(true);
   }
@@ -523,7 +517,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             {customerState === "guest" && (
               <div className="relative">
                 <p className="text-base sm:text-lg font-display leading-snug">Sign in to share your experience</p>
-                <p className="mt-1 text-sm text-muted-foreground">Only verified purchasers can review products.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Anyone with an account can leave a review. Actual buyers get a Verified Purchase badge automatically.
+                </p>
                 <div className="mt-4">
                   <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
                     <LogIn className="size-3.5" /> Sign In
@@ -532,27 +528,15 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               </div>
             )}
 
-            {/* CASE 2 — Signed in, not purchased */}
-            {customerState === "not_purchased" && (
-              <div className="relative flex items-start gap-2.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.05] p-4">
-                <Lock className="size-4 text-sky-300 shrink-0 mt-0.5" />
-                <p className="text-sm text-foreground/90">Only verified purchasers can review this product after delivery.</p>
-              </div>
-            )}
-
-            {/* CASE 3 — Purchased, awaiting delivery */}
-            {customerState === "purchased_pending" && (
-              <div className="relative flex items-start gap-2.5 rounded-2xl border border-amber-500/15 bg-amber-500/[0.05] p-4">
-                <Truck className="size-4 text-amber-300 shrink-0 mt-0.5" />
-                <p className="text-sm text-foreground/90">Your review will be available once the order is delivered.</p>
-              </div>
-            )}
-
-            {/* CASE 4 — Delivered/completed, no review yet */}
+            {/* CASE 2 — Signed in, no review yet (buyer or not) */}
             {customerState === "can_review" && (
               <div className="relative">
                 <p className="text-base sm:text-lg font-display leading-snug">Share your experience</p>
-                <p className="mt-1 text-sm text-muted-foreground">Help other shoppers by rating this product and uploading photos.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {purchase.purchased
+                    ? "Help other shoppers by rating this product and uploading photos."
+                    : "Rate this product and help other shoppers. Buyers automatically get a Verified Purchase badge."}
+                </p>
                 <div className="mt-4">
                   <button onClick={openCompose} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110">
                     <Pencil className="size-3.5" /> Write Review
