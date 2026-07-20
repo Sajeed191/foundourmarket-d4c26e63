@@ -22,7 +22,7 @@ import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid
 import type { Product } from "@/lib/products";
 import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
 import { useHomepageCollectionRules } from "@/lib/site-rules";
-import { sortRef as _sortRef } from "@/lib/noop-marker"; void _sortRef;
+
 
 
 export const Route = createFileRoute("/deals")({
