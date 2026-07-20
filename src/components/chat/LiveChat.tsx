@@ -1031,11 +1031,13 @@ function FixedOrb({
     window.addEventListener("orientationchange", onOrientation);
     window.visualViewport?.addEventListener("resize", onVVResize);
 
-    // Re-apply visibility only on floating-stack changes. Live Chat position is
-    // deliberately locked and must ignore footer/sticky CTA/toast stack changes.
+    // Re-apply on floating-stack changes. Position updates for buy-bar/footer
+    // lift (real layout events, not scroll); visibility updates for context.
     const unsubscribe = subscribeFloating(() => {
+      writeBottom();
       applyVisibility();
     });
+
     return () => {
       unregister();
       unsubscribe();
