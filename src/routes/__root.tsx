@@ -50,8 +50,9 @@ import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { IsolatedBoundary } from "@/components/site/IsolatedBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
 import { initDebugFlags, getFlag } from "@/lib/debug-flags";
-import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
-import { initCompatConfidence } from "@/lib/compat-confidence";
+// debug-diagnostics (~600 LOC) and compat-confidence (~470 LOC) are
+// dynamic-imported inside the mount effect below so they don't add parse
+// cost to the initial bundle — they only run once, after mount, anyway.
 // Perf v3 — debug overlays are self-gated to render nothing in prod, but
 // static imports still shipped ~1.1k LOC of parse cost on every cold load.
 // Lazy so they only enter the initial bundle when the user actually opens
