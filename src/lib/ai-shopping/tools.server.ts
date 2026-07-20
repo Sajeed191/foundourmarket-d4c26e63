@@ -185,13 +185,107 @@ export const AI_SHOPPING_TOOLS = [
       },
     },
   },
+  {
+    type: "function" as const,
+    function: {
+      name: "attach_explanations",
+      description:
+        "v1.4 Explainable AI. Call this LAST — after you have chosen which products to recommend and BEFORE writing your reply — to attach transparent reasoning to each recommendation. This does NOT return data to you; it only enriches the cards the customer sees. Always set 'source' to where the recommendation came from. Include a short compare table when recommending 2-3 products. Only set 'confidence' when the basis is real product data (specs/ratings/popularity/price) — never fabricate confidence scores.",
+      parameters: {
+        type: "object",
+        required: ["source", "items"],
+        properties: {
+          source: {
+            type: "string",
+            enum: ["pdp", "category", "search", "cart", "wishlist", "home", "marketplace"],
+            description:
+              "Where the recommendations came from. 'pdp' = the current product; 'category'/'search'/'cart'/'wishlist'/'home' = the corresponding visible context; 'marketplace' = a broader catalog search.",
+          },
+          items: {
+            type: "array",
+            minItems: 1,
+            maxItems: 6,
+            items: {
+              type: "object",
+              required: ["slug", "reasons"],
+              properties: {
+                slug: { type: "string" },
+                reasons: {
+                  type: "array",
+                  description: "1-3 short specific reasons (e.g. 'Best value under ₹3,000', 'Longer battery than similar', 'Highest-rated in this category').",
+                  items: { type: "string" },
+                  minItems: 1,
+                  maxItems: 3,
+                },
+                tradeoffs: {
+                  type: "object",
+                  description: "Optional trade-off summary: what the customer gains vs gives up.",
+                  properties: {
+                    pros: { type: "array", items: { type: "string" }, maxItems: 3 },
+                    cons: { type: "array", items: { type: "string" }, maxItems: 3 },
+                  },
+                },
+                confidence: {
+                  type: "object",
+                  description: "Only include when backed by real product data. Otherwise omit entirely.",
+                  required: ["basis", "label"],
+                  properties: {
+                    basis: { type: "string", enum: ["specs", "ratings", "popularity", "price"] },
+                    label: { type: "string", description: "Short human phrase, e.g. 'Based on customer ratings'." },
+                  },
+                },
+              },
+            },
+          },
+          compare: {
+            type: "object",
+            description: "Optional side-by-side verdicts for 2-3 recommended products.",
+            required: ["rows"],
+            properties: {
+              title: { type: "string" },
+              rows: {
+                type: "array",
+                minItems: 2,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  required: ["slug", "verdict"],
+                  properties: {
+                    slug: { type: "string" },
+                    verdict: { type: "string", description: "One short sentence: who it's for / why pick it." },
+                    highlight: { type: "string", description: "Optional key spec or number." },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 ];
+
+// v1.4 — captured payload from attach_explanations tool calls.
+export type AttachExplanationsPayload = {
+  source: import("./types").AiSource;
+  items: Array<{
+    slug: string;
+    reasons: string[];
+    tradeoffs?: { pros?: string[]; cons?: string[] };
+    confidence?: import("./types").AiConfidence;
+  }>;
+  compare?: import("./types").AiCompare;
+};
 
 export async function executeTool(name: string, args: Record<string, unknown>) {
   if (name === "search_products") return searchProducts(args as Parameters<typeof searchProducts>[0]);
   if (name === "get_product") return getProduct(String(args.slug ?? ""));
   if (name === "compare_products") return compareProducts((args.slugs as string[]) ?? []);
   if (name === "get_products_by_slugs") return getProductsBySlugs((args.slugs as string[]) ?? []);
+  if (name === "attach_explanations") {
+    // Ack-only. The route captures the args directly from the tool call.
+    return { ok: true };
+  }
   throw new Error(`Unknown tool: ${name}`);
 }
 
