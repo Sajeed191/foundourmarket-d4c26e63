@@ -6,15 +6,7 @@ import { ChevronLeft, MessageSquarePlus, Send, Sparkles, X, Menu, Trash2, Headse
 import { toast } from "sonner";
 import { onAiOpen, onAiClose, openHub, setLastHubChoice } from "@/lib/ai-shopping/events";
 import { openCrispChat } from "@/lib/crisp";
-import {
-  createEmptyThread,
-  deleteThread,
-  listThreads,
-  loadThread,
-  makeMessage,
-  saveThread,
-  titleFromFirstMessage,
-} from "@/lib/ai-shopping/storage";
+import { conversationStore as store } from "@/lib/ai-shopping/conversation-store";
 import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry } from "@/lib/ai-shopping/types";
 import { AiProductCard } from "./ai-shopping/AiProductCard";
 
@@ -54,15 +46,15 @@ export function AiShoppingAssistant() {
   // Load thread index + choose active thread when opening.
   useEffect(() => {
     if (!open) return;
-    const idx = listThreads();
+    const idx = store.listThreads();
     setThreads(idx);
     if (!activeId) {
       if (idx.length > 0) {
         setActiveId(idx[0].id);
       } else {
-        const fresh = createEmptyThread();
-        saveThread(fresh);
-        setThreads(listThreads());
+        const fresh = store.createEmptyThread();
+        store.saveThread(fresh);
+        setThreads(store.listThreads());
         setActiveId(fresh.id);
         setThread(fresh);
       }
@@ -72,7 +64,7 @@ export function AiShoppingAssistant() {
   // Load active thread into state.
   useEffect(() => {
     if (!activeId) { setThread(null); return; }
-    const t = loadThread(activeId);
+    const t = store.loadThread(activeId);
     if (t) setThread(t);
   }, [activeId]);
 
@@ -98,15 +90,15 @@ export function AiShoppingAssistant() {
   }, [thread?.messages.length, sending, open]);
 
   const persist = useCallback((next: AiThread) => {
-    saveThread(next);
+    store.saveThread(next);
     setThread(next);
-    setThreads(listThreads());
+    setThreads(store.listThreads());
   }, []);
 
   const startNewThread = useCallback(() => {
-    const fresh = createEmptyThread();
-    saveThread(fresh);
-    setThreads(listThreads());
+    const fresh = store.createEmptyThread();
+    store.saveThread(fresh);
+    setThreads(store.listThreads());
     setActiveId(fresh.id);
     setThread(fresh);
     setDrawerOpen(false);
@@ -115,15 +107,15 @@ export function AiShoppingAssistant() {
   }, []);
 
   const removeThread = useCallback((id: string) => {
-    deleteThread(id);
-    const remaining = listThreads();
+    store.deleteThread(id);
+    const remaining = store.listThreads();
     setThreads(remaining);
     if (id === activeId) {
       if (remaining.length > 0) setActiveId(remaining[0].id);
       else {
-        const fresh = createEmptyThread();
-        saveThread(fresh);
-        setThreads(listThreads());
+        const fresh = store.createEmptyThread();
+        store.saveThread(fresh);
+        setThreads(store.listThreads());
         setActiveId(fresh.id);
         setThread(fresh);
       }
@@ -135,14 +127,14 @@ export function AiShoppingAssistant() {
     if (!trimmed || sending) return;
     let current = thread;
     if (!current) {
-      current = createEmptyThread();
-      saveThread(current);
+      current = store.createEmptyThread();
+      store.saveThread(current);
     }
-    const userMsg = makeMessage("user", trimmed);
+    const userMsg = store.makeMessage("user", trimmed);
     const isFirst = current.messages.length === 0;
     const withUser: AiThread = {
       ...current,
-      title: isFirst ? titleFromFirstMessage(trimmed) : current.title,
+      title: isFirst ? store.titleFromFirstMessage(trimmed) : current.title,
       messages: [...current.messages, userMsg],
     };
     persist(withUser);
@@ -174,13 +166,13 @@ export function AiShoppingAssistant() {
             tagline: p.tagline ?? null,
           }))
         : undefined;
-      const assistantMsg = makeMessage("assistant", String(data.reply ?? ""), products);
+      const assistantMsg = store.makeMessage("assistant", String(data.reply ?? ""), products);
       persist({ ...withUser, messages: [...withUser.messages, assistantMsg] });
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
-      const errMsg = makeMessage(
+      const errMsg = store.makeMessage(
         "assistant",
         "I couldn't reach the AI service just now. Please try again in a moment.",
       );
