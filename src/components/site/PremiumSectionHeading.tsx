@@ -1,37 +1,44 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * FoundOurMarket™ — Editorial Section Heading v10 (Luxury Marketplace).
+ * FoundOurMarket™ — Editorial Section Heading v11 (Luxury Marketplace).
  *
- * Minimal editorial composition — inspired by Apple, Aesop, B&O, Porsche Design, COS:
+ * Concept 1 — Editorial Minimal. Inspired by Apple, Aesop, B&O, Porsche, COS.
  *
- *   FEATURED COLLECTION                             View All →
+ *   FEATURED COLLECTION
  *   Main Categories
- *   Explore curated collections chosen for every lifestyle.
+ *   Discover curated collections for every lifestyle.
+ *   ────────────
  *
- * No collection numbers, no ghost words, no orange bars, no glow, no capsules.
- * Just typography and whitespace.
+ * - Small uppercase editorial eyebrow
+ * - Large luxurious title
+ * - Optional one-line subtitle (max 1 line)
+ * - Hairline divider that grows left→right on reveal
+ * - No "View All", no icons, no orange badges, no gradients, no glow
+ * - Compact vertical rhythm: ~14px above, ~16px below
  *
- * Motion (once on enter): opacity 0→1 + translateY(8px→0), 500ms ease-out.
+ * Motion (on enter viewport, once):
+ *   eyebrow  → opacity 0→1, translateY 8→0            (220ms)
+ *   title    → opacity 0→1, translateY 8→0, +40ms
+ *   subtitle → opacity 0→1, +120ms
+ *   divider  → scaleX 0→1 from left, +180ms, 260ms
  * Respects prefers-reduced-motion.
  *
- * Back-compat: all legacy props (ghost/align/badge/icon/live/liveLabel/number)
- * are accepted but ignored so existing call-sites continue to compile.
+ * Back-compat: legacy props (href/hrefLabel/ghost/align/badge/icon/live/liveLabel/number/right)
+ * are accepted but intentionally not rendered — the heading owns typography only.
  */
 
-const REVEAL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export function PremiumSectionHeading({
   title,
   subtitle,
   eyebrow,
-  href,
-  hrefLabel = "View All",
-  right,
-  // Back-compat — accepted but unused.
+  // Back-compat — accepted, not rendered.
+  href: _href,
+  hrefLabel: _hrefLabel,
+  right: _right,
   ghost: _ghost,
   align: _align,
   badge: _badge,
@@ -54,13 +61,8 @@ export function PremiumSectionHeading({
   liveLabel?: string;
   number?: number;
 }) {
-  void _ghost;
-  void _align;
-  void _badge;
-  void _icon;
-  void _live;
-  void _liveLabel;
-  void _number;
+  void _href; void _hrefLabel; void _right; void _ghost; void _align;
+  void _badge; void _icon; void _live; void _liveLabel; void _number;
 
   const ref = useRef<HTMLDivElement | null>(null);
   const [shown, setShown] = useState(false);
@@ -93,93 +95,85 @@ export function PremiumSectionHeading({
     return () => io.disconnect();
   }, []);
 
-  const revealBase: React.CSSProperties = {
+  const reveal = (delay: number): React.CSSProperties => ({
     opacity: shown ? 1 : 0,
     transform: shown ? "translate3d(0,0,0)" : "translate3d(0,8px,0)",
-    transition: `opacity 500ms ${REVEAL_EASE}, transform 500ms ${REVEAL_EASE}`,
+    transition: `opacity 220ms ${EASE} ${delay}ms, transform 220ms ${EASE} ${delay}ms`,
     willChange: shown ? undefined : "opacity, transform",
-  };
-
-  const eyebrowStyle: React.CSSProperties = {
-    ...revealBase,
-    transitionDelay: "0ms",
-    fontSize: "10.5px",
-    fontWeight: 600,
-    letterSpacing: "0.28em",
-    textTransform: "uppercase",
-    color: "rgba(255,255,255,0.48)",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    ...revealBase,
-    transitionDelay: "80ms",
-    fontFamily: '"Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif',
-    fontWeight: 700,
-    letterSpacing: "-0.02em",
-    lineHeight: 1.1,
-    color: "#ffffff",
-    fontSize: "clamp(24px, 5.6vw, 34px)",
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    ...revealBase,
-    transitionDelay: "160ms",
-    marginTop: "10px",
-    fontSize: "13.5px",
-    lineHeight: 1.55,
-    color: "rgba(255,255,255,0.55)",
-    maxWidth: "48ch",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-  };
-
-  const actionStyle: React.CSSProperties = {
-    ...revealBase,
-    transitionDelay: "160ms",
-  };
+  });
 
   return (
     <div
       ref={ref}
-      className="relative mb-8 mt-12 sm:mb-10 sm:mt-20"
+      className="relative mt-3 mb-4 sm:mt-4 sm:mb-5"
     >
-      <div className="flex items-end justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {eyebrow && (
-            <div style={eyebrowStyle} className="mb-3">
-              {eyebrow}
-            </div>
-          )}
-          <h2 style={titleStyle} className="break-words">
-            {title}
-          </h2>
-          {subtitle && <p style={subtitleStyle}>{subtitle}</p>}
+      {eyebrow && (
+        <div
+          style={{
+            ...reveal(0),
+            fontSize: "10.5px",
+            fontWeight: 600,
+            letterSpacing: "0.28em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.46)",
+          }}
+          className="mb-2"
+        >
+          {eyebrow}
         </div>
+      )}
 
-        <div className="flex shrink-0 items-center gap-2" style={actionStyle}>
-          {right}
-          {href && (
-            <Link
-              to={href}
-              className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1.5 text-[12px] font-medium tracking-wide text-white/70 transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:text-[13px]"
-            >
-              <span className="hidden sm:inline">{hrefLabel}</span>
-              <span className="sm:hidden">View All</span>
-              <ArrowRight
-                className="size-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
-                strokeWidth={2}
-              />
-            </Link>
-          )}
-        </div>
-      </div>
+      <h2
+        style={{
+          ...reveal(40),
+          fontFamily: '"Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif',
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
+          color: "#ffffff",
+          fontSize: "clamp(24px, 5.6vw, 32px)",
+        }}
+        className="break-words"
+      >
+        {title}
+      </h2>
+
+      {subtitle && (
+        <p
+          style={{
+            ...reveal(120),
+            marginTop: "8px",
+            fontSize: "13px",
+            lineHeight: 1.5,
+            color: "rgba(255,255,255,0.55)",
+            maxWidth: "52ch",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
+
+      <div
+        aria-hidden
+        style={{
+          marginTop: "12px",
+          height: "1px",
+          width: "56px",
+          background: "rgba(255,255,255,0.22)",
+          transformOrigin: "left center",
+          transform: shown ? "scaleX(1)" : "scaleX(0)",
+          transition: `transform 260ms ${EASE} 180ms`,
+          willChange: shown ? undefined : "transform",
+        }}
+      />
     </div>
   );
 }
 
-/** Kept as a neutral spacer between sections. */
+/** Neutral, tight spacer between sections. */
 export function PremiumSectionDivider() {
-  return <div aria-hidden className="h-6 sm:h-10" />;
+  return <div aria-hidden className="h-3 sm:h-4" />;
 }
