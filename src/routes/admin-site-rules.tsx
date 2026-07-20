@@ -399,3 +399,59 @@ function ComingSoonCard({
     </div>
   );
 }
+
+function ModeChoice({
+  active, onClick, title, hint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-left rounded-xl border px-4 py-3 transition-colors ${
+        active
+          ? "border-accent bg-accent/10"
+          : "border-border/60 bg-background/30 hover:bg-accent/5"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-block size-2.5 rounded-full ${
+            active ? "bg-accent" : "bg-muted-foreground/30"
+          }`}
+        />
+        <span className="text-xs font-medium">{title}</span>
+      </div>
+      <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">{hint}</p>
+    </button>
+  );
+}
+  icon: React.ReactNode;
+  title: string;
+  to?: string;
+  cta?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/30 p-4 flex flex-col justify-between min-h-[110px]">
+      <div className="flex items-center gap-2">
+        <span className="size-7 grid place-items-center rounded-md bg-muted/40 text-muted-foreground">
+          {icon}
+        </span>
+        <div className="text-xs font-medium">{title}</div>
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/70">
+          Coming soon
+        </span>
+        {to && cta ? (
+          <Link to={to} className="text-[11px] text-accent hover:underline inline-flex items-center gap-1">
+            {cta} <ArrowRight className="size-3" />
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+}
