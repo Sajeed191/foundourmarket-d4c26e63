@@ -859,8 +859,15 @@ function ProductPage() {
               </div>
             )}
 
-            {/* Title — 24px mobile / 32px desktop, semibold */}
-            <h1 className={`text-[24px] sm:text-[28px] lg:text-[32px] font-semibold tracking-tight leading-[1.2] text-balance ${titleExpanded ? "" : "line-clamp-3"}`}>
+            {/* Brand — small muted eyebrow */}
+            {product.brand && (
+              <p className="mb-2 text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground/80">
+                {product.brand}
+              </p>
+            )}
+
+            {/* Title — 24px mobile / 32px desktop, semibold, 2 lines max */}
+            <h1 className={`text-[24px] sm:text-[28px] lg:text-[32px] font-semibold tracking-tight leading-[1.2] text-balance ${titleExpanded ? "" : "line-clamp-2"}`}>
               {product.name}
             </h1>
             {product.name.length > 70 && (
@@ -873,7 +880,7 @@ function ProductPage() {
               </button>
             )}
 
-            {/* Rating • Reviews • Sold — one clean 13px line */}
+            {/* Rating • Reviews • Sold */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
               <StarRating
                 rating={product.rating}
@@ -895,75 +902,111 @@ function ProductPage() {
               )}
             </div>
 
-            {/* Price — 34px, accent color, spacious */}
-            <div className="mt-6">
-              {currencyReady ? (
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <span className="fom-price-current text-[34px] font-semibold tracking-tight leading-none text-accent">
-                    {format(effectivePrice)}
-                  </span>
-                  {originalPrice && originalPrice > effectivePrice && (
-                    <>
-                      <span className="fom-price-compare text-[15px] line-through text-muted-foreground/60">
-                        {format(originalPrice)}
-                      </span>
-                      {discountPct && (
-                        <span className="text-[13px] font-semibold text-accent">−{discountPct}%</span>
-                      )}
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="h-9 w-40 rounded-lg bg-white/[0.05] animate-pulse" />
-              )}
-              {/* Premium stock pill — replaces the old star/Sparkles row */}
-              <div className="mt-3">
-                <span
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                    stockBadge.tone === "ok"
-                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-                      : stockBadge.tone === "warn"
-                        ? "border-accent/30 bg-accent/10 text-accent"
-                        : "border-border bg-white/[0.03] text-muted-foreground"
-                  }`}
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span className="relative inline-flex size-2">
-                    {stockBadge.tone === "ok" && (
-                      <span className="absolute inset-0 rounded-full bg-emerald-400/70 animate-ping motion-reduce:hidden" />
-                    )}
-                    <span
-                      className={`relative inline-flex size-2 rounded-full ${
-                        stockBadge.tone === "ok"
-                          ? "bg-emerald-400"
-                          : stockBadge.tone === "warn"
-                            ? "bg-accent"
-                            : "bg-muted-foreground/60"
-                      }`}
-                    />
-                  </span>
-                  <span>{stockBadge.label}</span>
-                  <span className="text-muted-foreground/70">·</span>
-                  <span className="text-foreground/70">{stockBadge.sub}</span>
-                </span>
-              </div>
-            </div>
-
-
-
             {isAdmin && (
               <Suspense fallback={null}>
                 <AdminProductPanel product={product} onOpenChange={setEditorOpen} />
               </Suspense>
             )}
 
-            {/* Variants */}
+            {/* Variants — pill selectors */}
             {variants.length > 0 && (
               <div className="mt-6">
                 <VariantSelector variants={variants} selectedId={variantId} onSelect={setVariantId} />
               </div>
             )}
+
+            {/* Price hierarchy — largest visual block after the image */}
+            <div className="mt-7">
+              {currencyReady ? (
+                <>
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span className="fom-price-current text-[36px] sm:text-[40px] font-semibold tracking-tight leading-none text-accent">
+                      {format(effectivePrice)}
+                    </span>
+                    {originalPrice && originalPrice > effectivePrice && (
+                      <>
+                        <span className="fom-price-compare text-[15px] line-through text-muted-foreground/60">
+                          {format(originalPrice)}
+                        </span>
+                        {discountPct && (
+                          <span className="inline-flex items-center rounded-md bg-accent/15 px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-accent">
+                            {discountPct}% OFF
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {originalPrice && originalPrice > effectivePrice && (
+                    <p className="mt-2 text-[13px] text-emerald-300/90">
+                      You save <span className="font-semibold">{format(originalPrice - effectivePrice)}</span>
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="h-10 w-44 rounded-lg bg-white/[0.05] animate-pulse" />
+              )}
+            </div>
+
+            {/* Premium chip row — stock + service chips, horizontally scrollable */}
+            <div
+              className="mt-5 -mx-4 sm:mx-0 flex gap-2 overflow-x-auto px-4 sm:px-0 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              role="list"
+              aria-label="Product highlights"
+            >
+              {/* Stock chip — always first, tone-aware */}
+              <span
+                role="listitem"
+                className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium whitespace-nowrap ${
+                  stockBadge.tone === "ok"
+                    ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                    : stockBadge.tone === "warn"
+                      ? "border-accent/30 bg-accent/10 text-accent"
+                      : "border-border bg-white/[0.03] text-muted-foreground"
+                }`}
+              >
+                <span className="relative inline-flex size-2">
+                  {stockBadge.tone === "ok" && (
+                    <span className="absolute inset-0 rounded-full bg-emerald-400/70 animate-ping motion-reduce:hidden" />
+                  )}
+                  <span
+                    className={`relative inline-flex size-2 rounded-full ${
+                      stockBadge.tone === "ok"
+                        ? "bg-emerald-400"
+                        : stockBadge.tone === "warn"
+                          ? "bg-accent"
+                          : "bg-muted-foreground/60"
+                    }`}
+                  />
+                </span>
+                {stockBadge.label}
+              </span>
+
+              {/* Ships / delivery estimate — real data only */}
+              {!isOOS && deliveryWindow && (
+                <span role="listitem" className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                  <Truck className="size-3.5" strokeWidth={2} />
+                  {deliveryWindow}
+                </span>
+              )}
+              {/* Free delivery — only when shipping is actually free */}
+              {unitShipping <= 0 && (
+                <span role="listitem" className="shrink-0 inline-flex items-center rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                  Free Delivery
+                </span>
+              )}
+              {/* Easy Returns — only if eligible */}
+              {product.returnEligible && (
+                <span role="listitem" className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                  <RotateCcw className="size-3.5" strokeWidth={2} />
+                  {product.returnWindowDays}-Day Returns
+                </span>
+              )}
+              <span role="listitem" className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                <Lock className="size-3.5" strokeWidth={2} />
+                Secure Checkout
+              </span>
+            </div>
+
 
             {/* Purchase bar v5 — Add to Cart morphs into [-] qty [+] after first tap;
                 reverts to Add to Cart when qty hits 0. Buy Now stays as the primary CTA. */}
