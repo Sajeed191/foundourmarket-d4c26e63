@@ -274,7 +274,7 @@ function ProductSection({
               ))}
             </div>
           )}
-          <ViewAllButton to={viewAllTo} />
+          
         </LazyMount>
 
       )}
