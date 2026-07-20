@@ -516,6 +516,10 @@ function Bubble({
     <div className={`flex justify-start ${anim}`}>
       <div className="max-w-[92%] text-sm text-foreground">
         <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+        {msg.source && <AiSourceBadge source={msg.source} />}
+        {msg.compare && msg.products && msg.products.length > 0 && (
+          <AiCompareBlock compare={msg.compare} products={msg.products} />
+        )}
         {msg.products && msg.products.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
             {msg.products.map((p) => <AiProductCard key={p.slug} product={p} />)}
