@@ -767,7 +767,7 @@ function Home() {
       <TrustBadgesStrip />
 
       {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
         <div className="relative">
           <SectionHeader eyebrow="Browse" title="Main Categories" icon={LayoutGrid} href="/categories" sectionKey="categories" />
           {isProductAdmin && (
@@ -779,7 +779,7 @@ function Home() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-3 sm:gap-4">
+        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-4 sm:gap-6">
           {ffCategoryGrid && homeCategories.map((cat, i) => {
             const Icon = iconForCategory(cat.slug, cat.name);
             const hasImage = !!(cat.image || cat.mobile_image);
