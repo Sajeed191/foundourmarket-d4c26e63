@@ -87,7 +87,7 @@ export function ProductCollection({
       eligible = [...eligible].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
     }
     const limit = collectionKey ? rules.limits[collectionKey] : eligible.length;
-    return fairPagedSlice(
+    const sliced = fairPagedSlice(
       eligible,
       limit,
       nowMs,
@@ -95,7 +95,24 @@ export function ProductCollection({
       rotationNonce,
       collectionKey ?? filterFlag ?? "collection",
     );
+    if (import.meta.env.DEV && typeof window !== "undefined") {
+      const visible = sliced.length;
+      const hiddenByLimit = Math.max(0, eligible.length - limit);
+      const hiddenByRotation = Math.max(0, eligible.length - visible - hiddenByLimit);
+      // eslint-disable-next-line no-console
+      console.info(
+        `[Collection · ${collectionKey ?? filterFlag ?? "collection"}] eligible=${eligible.length} | visible=${visible} | hiddenByRotation=${hiddenByRotation} | hiddenByLimit=${hiddenByLimit} | limit=${limit}`,
+      );
+      if (eligible.length <= limit && visible !== eligible.length) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[Collection · ${collectionKey ?? "collection"}] expected all ${eligible.length} eligible products visible, got ${visible}`,
+        );
+      }
+    }
+    return sliced;
   }, [products, badgeAssignments, filterFlag, collectionKey, sort, rules, rotationNonce, nowMs]);
+
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(

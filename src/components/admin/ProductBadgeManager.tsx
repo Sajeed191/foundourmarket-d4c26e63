@@ -11,12 +11,12 @@ import {
   type BadgeType,
   type RenderBadge,
   useBadgeCatalog,
-  badgeAnimationClass,
   assignBadge,
   unassignBadge,
   reorderProductBadges,
   updateAssignment,
 } from "@/lib/use-product-badges";
+import { ProductBadge } from "@/components/ui/ProductBadge";
 
 /* --------------------------------------------------------------------------
  * ProductBadgeManager
@@ -25,39 +25,36 @@ import {
  *   - live    : `slug` given → every action writes to Supabase immediately.
  *   - pending : new (unsaved) product → controlled `selectedIds` + `onChange`;
  *               assignments are flushed by the parent after the product saves.
+ *
+ * Badge design v1.1 rule: the storefront preview + assigned chips reuse the
+ * single canonical `<ProductBadge>` component. There is no separate admin
+ * badge design — pixel-identical to the customer-facing card badge.
  * ------------------------------------------------------------------------ */
 
-function badgeStyle(b: BadgeType) {
-  return {
-    backgroundColor: b.backgroundColor || b.color,
-    color: b.textColor,
-    border: b.borderColor ? `1px solid ${b.borderColor}` : undefined,
-    borderRadius: `${b.radius}px`,
-    boxShadow: b.shadowStrength
-      ? `0 ${Math.round(b.shadowStrength / 12)}px ${Math.round(b.shadowStrength / 4)}px -2px ${b.glowColor || b.backgroundColor || b.color}`
-      : undefined,
-  } as const;
-}
-
+/**
+ * Storefront-identical badge chip. Uses the shared ProductBadge so admins
+ * see EXACTLY what customers see. When `onRemove` is provided the chip is
+ * wrapped with a small remove affordance beside it.
+ */
 function BadgeChip({ b, onRemove, busy }: { b: BadgeType; onRemove?: () => void; busy?: boolean }) {
+  const pill = <ProductBadge label={b.label} />;
+  if (!onRemove) return pill;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 px-2 min-h-[24px] leading-none text-[11px] font-bold tracking-wide font-mono",
-        badgeAnimationClass(b.animation),
-      )}
-      style={{ ...badgeStyle(b), fontSize: `${b.fontSize}px`, fontWeight: b.fontWeight }}
-    >
-      {b.emoji && <span style={b.iconColor ? { color: b.iconColor } : undefined} aria-hidden>{b.emoji}</span>}
-      {b.label}
-      {onRemove && (
-        <button type="button" onClick={onRemove} disabled={busy} className="ml-0.5 opacity-70 hover:opacity-100 disabled:opacity-40">
-          {busy ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
-        </button>
-      )}
+    <span className="inline-flex items-center gap-1">
+      {pill}
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={busy}
+        aria-label={`Remove ${b.label}`}
+        className="grid place-items-center size-5 rounded-full border border-white/10 text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
+      >
+        {busy ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
+      </button>
     </span>
   );
 }
+
 
 /** Datetime helpers for the schedule editor (HTML datetime-local ⇄ ISO). */
 function isoToLocal(iso: string | null | undefined) {

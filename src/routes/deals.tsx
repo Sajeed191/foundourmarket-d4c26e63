@@ -14,12 +14,16 @@ import {
   ShieldCheck,
   Truck,
   LayoutGrid,
+  ArrowDownWideNarrow,
 } from "lucide-react";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
 import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
+import { useHomepageCollectionRules } from "@/lib/site-rules";
+
+
 
 export const Route = createFileRoute("/deals")({
   head: () => ({
@@ -64,13 +68,19 @@ function useDailyCountdown() {
   };
 }
 
+type DealSort = "savings" | "ending" | "newest" | "rating";
+
 function DealsPage() {
   // Single shared Flash Deal source — identical to the homepage Flash Deals
   // section, so any product shown there also appears here on the Offers /
   // Deals & Promotions page.
   const { items, loading } = useFlashDeals();
+  const rules = useHomepageCollectionRules();
+
   const countdown = useDailyCountdown();
   const [activeCat, setActiveCat] = useState<string>("all");
+  const [sort, setSort] = useState<DealSort>("savings");
+  
 
   const dealProducts = useMemo(
     () => items
@@ -78,6 +88,24 @@ function DealsPage() {
       .map((i) => i.product),
     [items],
   );
+
+  // Dev-only verification: eligible vs visible vs hidden by rotation / limit.
+  useEffect(() => {
+    if (!import.meta.env.DEV || loading) return;
+    const cap = rules.limits.flash_deals;
+    const visible = items.length;
+    // eligible = items pool BEFORE the rotation slice — approximated via
+    // items when eligible <= cap; else `visible` equals cap and rotation hides
+    // the tail. useFlashDeals already logs its own eligible count.
+    // eslint-disable-next-line no-console
+    console.info(
+      `[Deals · View All] visible=${visible} | cap(limit)=${cap} | category=${activeCat}`,
+    );
+    if (visible > cap) {
+      // eslint-disable-next-line no-console
+      console.warn("[Deals] visible exceeds Site Rules limit — check hook cap");
+    }
+  }, [items.length, rules.limits.flash_deals, activeCat, loading]);
 
   const topDiscount = dealProducts.reduce((max, p) => Math.max(max, p.discount ?? 0), 0);
 
@@ -96,23 +124,40 @@ function DealsPage() {
   );
 
   // Browse Presentation Adapter — same adapter as /category, surface: "deals".
-  // Emphasises discount depth + availability; no separate "deal score".
   const presentation = useMemo(
     () => buildBrowsePresentation({ products: filteredProducts, surface: "deals" }),
     [filteredProducts],
   );
-  const visibleProducts = useMemo(
-    () => sortProductsForBrowse(filteredProducts, presentation, "recommended"),
-    [filteredProducts, presentation],
-  );
+
+  const visibleProducts = useMemo(() => {
+    const base = sortProductsForBrowse(filteredProducts, presentation, "recommended");
+    const arr = [...base];
+    switch (sort) {
+      case "savings":
+        return arr.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+      case "newest":
+        return arr.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+      case "rating":
+        return arr.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "ending":
+      default:
+        return arr;
+    }
+  }, [filteredProducts, presentation, sort]);
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
     (p: Product, i: number) => (
-      <BrowseCard product={p} presentation={presentation.get(p.id ?? p.slug)} priority={i < 4} />
+      <BrowseCard
+        product={p}
+        presentation={presentation.get(p.id ?? p.slug)}
+        priority={i < 4}
+        forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"}
+      />
     ),
     [presentation],
   );
+
 
   if (loading) {
     return (
@@ -285,26 +330,41 @@ function DealsPage() {
           ))}
         </motion.div>
 
-        {/* Section heading */}
+        {/* Sticky sort/filter bar */}
         {visibleProducts.length > 0 && (
-          <motion.div
-            {...fadeUp}
-            transition={{ ...fadeUp.transition, delay: 0.08 }}
+          <div
             id="deals-grid"
-            className="flex items-end justify-between scroll-mt-20"
+            className="sticky top-[calc(var(--app-header-h,4.75rem)+4px)] z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 backdrop-blur-xl bg-background/70 border-y border-white/[0.06] scroll-mt-20"
           >
-            <div>
-              <h2 className="text-lg sm:text-xl font-display font-semibold">Today's offers</h2>
-              <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-semibold">{visibleProducts.length}</span> active deal{visibleProducts.length === 1 ? "" : "s"}
-                {activeCat !== "all" && <span> in {activeCat}</span>}
-              </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13px] sm:text-sm font-medium truncate">
+                  <span className="text-foreground font-semibold">{visibleProducts.length}</span> deal{visibleProducts.length === 1 ? "" : "s"}
+                  {activeCat !== "all" && <span className="text-muted-foreground"> · {activeCat}</span>}
+                </p>
+                <p className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
+                  <span className="inline-block size-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5 align-middle" />
+                  Live · rotates every {rules.rotationHours}h
+                </p>
+              </div>
+              <label className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] pl-3 pr-2 py-1.5 text-[11px] font-medium">
+                <ArrowDownWideNarrow className="size-3.5 text-accent" />
+                <span className="sr-only">Sort</span>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as DealSort)}
+                  className="bg-transparent text-[11px] font-mono uppercase tracking-widest focus:outline-none appearance-none pr-1"
+                >
+                  <option value="savings">Biggest savings</option>
+                  <option value="ending">Ending soon</option>
+                  <option value="newest">Newest</option>
+                  <option value="rating">Best rating</option>
+                </select>
+              </label>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
-            </div>
-          </motion.div>
+          </div>
         )}
+
 
         {/* Products grid */}
         {visibleProducts.length > 0 ? (
