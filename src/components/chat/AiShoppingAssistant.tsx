@@ -10,8 +10,9 @@ import { toast } from "sonner";
 import { onAiOpen, onAiClose, openHub, setLastHubChoice } from "@/lib/ai-shopping/events";
 import { openCrispChat } from "@/lib/crisp";
 import { conversationStore as store } from "@/lib/ai-shopping/conversation-store";
-import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry } from "@/lib/ai-shopping/types";
+import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry, AiSource, AiCompare } from "@/lib/ai-shopping/types";
 import { AiProductCard } from "./ai-shopping/AiProductCard";
+import { AiCompareBlock, AiSourceBadge } from "./ai-shopping/AiExplainBlocks";
 import { getShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import { recordAiEvent } from "@/lib/ai-shopping/analytics";
 
@@ -159,6 +160,8 @@ export function AiShoppingAssistant() {
     let accumulated = "";
     let finalProducts: AiProductRef[] | undefined;
     let finalSuggestions: string[] | undefined;
+    let finalSource: AiSource | undefined;
+    let finalCompare: AiCompare | undefined;
     let streamError: string | null = null;
 
     try {
@@ -191,7 +194,15 @@ export function AiShoppingAssistant() {
         for (const line of lines) {
           const t = line.trim();
           if (!t) continue;
-          let evt: { type: string; text?: string; products?: AiProductRef[]; suggestions?: string[]; message?: string };
+          let evt: {
+            type: string;
+            text?: string;
+            products?: AiProductRef[];
+            suggestions?: string[];
+            source?: AiSource;
+            compare?: AiCompare;
+            message?: string;
+          };
           try { evt = JSON.parse(t); } catch { continue; }
           if (evt.type === "token" && typeof evt.text === "string") {
             accumulated += evt.text;
@@ -200,6 +211,10 @@ export function AiShoppingAssistant() {
             finalProducts = evt.products.slice(0, 6);
           } else if (evt.type === "suggestions" && Array.isArray(evt.suggestions)) {
             finalSuggestions = evt.suggestions.slice(0, 5);
+          } else if (evt.type === "source" && typeof evt.source === "string") {
+            finalSource = evt.source;
+          } else if (evt.type === "compare" && evt.compare) {
+            finalCompare = evt.compare;
           } else if (evt.type === "error") {
             streamError = evt.message ?? "Something went wrong";
           } else if (evt.type === "done") {
@@ -215,6 +230,8 @@ export function AiShoppingAssistant() {
       const assistantMsg: AiMessage = {
         ...store.makeMessage("assistant", replyText, finalProducts),
         suggestions: finalSuggestions,
+        source: finalSource,
+        compare: finalCompare,
       };
       persist({ ...withUser, messages: [...withUser.messages, assistantMsg] });
       const postCtx = getShoppingContext();
@@ -227,7 +244,7 @@ export function AiShoppingAssistant() {
         recordAiEvent(
           "ai_recommendation_shown",
           { page: postCtx.page, route: postCtx.route ?? null },
-          { count: finalProducts.length },
+          { count: finalProducts.length, source: finalSource ?? "unknown" },
         );
       }
     } catch (err) {
@@ -499,6 +516,10 @@ function Bubble({
     <div className={`flex justify-start ${anim}`}>
       <div className="max-w-[92%] text-sm text-foreground">
         <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+        {msg.source && <AiSourceBadge source={msg.source} />}
+        {msg.compare && msg.products && msg.products.length > 0 && (
+          <AiCompareBlock compare={msg.compare} products={msg.products} />
+        )}
         {msg.products && msg.products.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
             {msg.products.map((p) => <AiProductCard key={p.slug} product={p} />)}

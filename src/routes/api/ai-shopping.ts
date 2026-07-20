@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AI_SHOPPING_TOOLS, executeTool, type AiProductSummary } from "@/lib/ai-shopping/tools.server";
+import {
+  AI_SHOPPING_TOOLS,
+  executeTool,
+  type AiProductSummary,
+  type AttachExplanationsPayload,
+} from "@/lib/ai-shopping/tools.server";
 import { generateSuggestions } from "@/lib/ai-shopping/suggestions";
 import { summarizeShoppingContext, type ShoppingContext } from "@/lib/ai-shopping/shopping-context";
+import type { AiExplanation, AiSource, AiCompare } from "@/lib/ai-shopping/types";
 
 type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";
@@ -58,6 +64,16 @@ PAGE PLAYBOOK:
 
 EXPLAIN EVERY RECOMMENDATION (mandatory):
 Each product recommendation must include one short, specific reason such as: better value, better rating, more features, better for beginners, longer battery, lighter, cheaper by ₹X, matches your <item>, etc. Never generic ("it's good", "you'll like it").
+
+EXPLAINABLE AI (v1.4) — MANDATORY:
+Before writing your final reply, call the "attach_explanations" tool with:
+- source: where the recommendations came from (pdp / category / search / cart / wishlist / home / marketplace). This is provenance the customer will see.
+- items: for EACH recommended product, 1-3 short specific reasons. Never generic ("it's good"). Examples: "Best value under ₹3,000", "Longer battery than similar", "Highest-rated in this category", "₹500 cheaper than the closest match".
+- tradeoffs (optional): pros/cons — what the customer gains vs gives up. Use for premium picks vs budget picks or when two products differ meaningfully.
+- confidence (optional): ONLY when backed by real data. basis must be one of specs / ratings / popularity / price, and label must be honest (e.g. "Based on customer ratings", "Based on product specifications"). If you cannot back it with real data, omit confidence entirely — never fabricate.
+- compare (optional): when recommending 2-3 products, include a short verdict per row so the customer can decide at a glance.
+
+Skip attach_explanations only when you are NOT recommending any products (support hand-off, refusal, or clarification questions).
 
 Style:
 - Warm, concise, editorial. Prefer bullet points over long paragraphs. Keep replies under ~120 words unless the user asks for depth.
@@ -130,6 +146,8 @@ async function streamAiShopping(
     ...userMessages,
   ];
   const productBySlug = new Map<string, AiProductSummary>();
+  // v1.4 — captured Explainable AI payload (last attach_explanations wins).
+  let explainPayload: AttachExplanationsPayload | null = null;
 
   // Non-streamed tool-calling loop.
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -149,12 +167,17 @@ async function streamAiShopping(
         let toolResult: unknown;
         try {
           const args = JSON.parse(call.function.arguments || "{}");
+          if (call.function.name === "attach_explanations") {
+            explainPayload = sanitizeExplainPayload(args);
+          }
           toolResult = await executeTool(call.function.name, args);
-          const collect = (p: AiProductSummary | null | undefined) => {
-            if (p && p.slug) productBySlug.set(p.slug, p);
-          };
-          if (Array.isArray(toolResult)) toolResult.forEach(collect);
-          else collect(toolResult as AiProductSummary | null);
+          if (call.function.name !== "attach_explanations") {
+            const collect = (p: AiProductSummary | null | undefined) => {
+              if (p && p.slug) productBySlug.set(p.slug, p);
+            };
+            if (Array.isArray(toolResult)) toolResult.forEach(collect);
+            else collect(toolResult as AiProductSummary | null);
+          }
         } catch (err) {
           toolResult = { error: err instanceof Error ? err.message : "Tool failed" };
         }
@@ -180,9 +203,38 @@ async function streamAiShopping(
     break;
   }
 
-  const products = Array.from(productBySlug.values());
+  // v1.4 — merge explanations into product refs and emit provenance / compare.
+  const explainBySlug = new Map<string, AiExplanation>();
+  let source: AiSource | null = null;
+  let compare: AiCompare | null = null;
+  if (explainPayload) {
+    source = explainPayload.source;
+    if (explainPayload.compare) compare = explainPayload.compare;
+    for (const it of explainPayload.items) {
+      if (!it.slug || !productBySlug.has(it.slug)) continue;
+      explainBySlug.set(it.slug, {
+        reasons: it.reasons.slice(0, 3),
+        tradeoffs: it.tradeoffs,
+        confidence: it.confidence,
+      });
+    }
+  }
+
+  const products = Array.from(productBySlug.values()).map((p) => {
+    const explain = explainBySlug.get(p.slug);
+    return explain ? { ...p, explain } : p;
+  });
   if (products.length > 0) {
     controller.enqueue(jsonLine({ type: "products", products }));
+  }
+  if (source) controller.enqueue(jsonLine({ type: "source", source }));
+  if (compare && compare.rows.length > 0) {
+    // Filter compare rows to slugs we actually returned.
+    const validSlugs = new Set(products.map((p) => p.slug));
+    const rows = compare.rows.filter((r) => validSlugs.has(r.slug));
+    if (rows.length >= 2) {
+      controller.enqueue(jsonLine({ type: "compare", compare: { title: compare.title, rows } }));
+    }
   }
 
   // Suggestion chips derived from context — cheap, deterministic, no extra AI call.
@@ -191,6 +243,61 @@ async function streamAiShopping(
   controller.enqueue(jsonLine({ type: "suggestions", suggestions }));
 
   controller.enqueue(jsonLine({ type: "done" }));
+}
+
+// Defensively sanitize the model's attach_explanations payload.
+function sanitizeExplainPayload(raw: unknown): AttachExplanationsPayload | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const sourceAllowed: AiSource[] = ["pdp", "category", "search", "cart", "wishlist", "home", "marketplace"];
+  const source = sourceAllowed.includes(r.source as AiSource) ? (r.source as AiSource) : "marketplace";
+  const itemsRaw = Array.isArray(r.items) ? r.items : [];
+  const items = itemsRaw
+    .map((it: unknown) => {
+      if (!it || typeof it !== "object") return null;
+      const o = it as Record<string, unknown>;
+      const slug = typeof o.slug === "string" ? o.slug : "";
+      const reasons = Array.isArray(o.reasons)
+        ? o.reasons.filter((s): s is string => typeof s === "string" && s.trim().length > 0).slice(0, 3)
+        : [];
+      if (!slug || reasons.length === 0) return null;
+      const tradeoffsRaw = o.tradeoffs && typeof o.tradeoffs === "object" ? (o.tradeoffs as Record<string, unknown>) : null;
+      const clampList = (v: unknown) =>
+        Array.isArray(v) ? v.filter((s): s is string => typeof s === "string").slice(0, 3) : undefined;
+      const tradeoffs = tradeoffsRaw
+        ? { pros: clampList(tradeoffsRaw.pros), cons: clampList(tradeoffsRaw.cons) }
+        : undefined;
+      const confRaw = o.confidence && typeof o.confidence === "object" ? (o.confidence as Record<string, unknown>) : null;
+      const confBasisAllowed = ["specs", "ratings", "popularity", "price"];
+      const confidence =
+        confRaw && confBasisAllowed.includes(confRaw.basis as string) && typeof confRaw.label === "string"
+          ? { basis: confRaw.basis as "specs" | "ratings" | "popularity" | "price", label: String(confRaw.label) }
+          : undefined;
+      return { slug, reasons, tradeoffs, confidence };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  let compare: AiCompare | undefined;
+  const cRaw = r.compare && typeof r.compare === "object" ? (r.compare as Record<string, unknown>) : null;
+  if (cRaw && Array.isArray(cRaw.rows)) {
+    type Row = { slug: string; verdict: string; highlight?: string };
+    const rows: Row[] = cRaw.rows
+      .map((row: unknown): Row | null => {
+        if (!row || typeof row !== "object") return null;
+        const o = row as Record<string, unknown>;
+        const slug = typeof o.slug === "string" ? o.slug : "";
+        const verdict = typeof o.verdict === "string" ? o.verdict : "";
+        if (!slug || !verdict) return null;
+        const out: Row = { slug, verdict };
+        if (typeof o.highlight === "string") out.highlight = o.highlight;
+        return out;
+      })
+      .filter((x): x is Row => x !== null)
+      .slice(0, 3);
+    if (rows.length >= 2) {
+      compare = { title: typeof cRaw.title === "string" ? cRaw.title : undefined, rows };
+    }
+  }
+  return { source, items, compare };
 }
 
 // Soft-streams pre-computed text in small chunks to preserve the typing feel

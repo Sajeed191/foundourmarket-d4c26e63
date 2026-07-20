@@ -3,7 +3,7 @@
 // Wishlist. Buy Now = add + navigate to /cart.
 import { useCallback, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Star, ShoppingBag, Heart, Zap, Check } from "lucide-react";
+import { Star, ShoppingBag, Heart, Zap, Check, Sparkles, ChevronDown, ThumbsUp, ThumbsDown, ShieldCheck } from "lucide-react";
 import { useCartActions, readLineQty } from "@/lib/cart";
 import { useWishlistActions } from "@/lib/wishlist";
 import { toast } from "sonner";
@@ -85,6 +85,13 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
     }
   }, [busy, emit, product.slug, toggle]);
 
+  const explain = product.explain;
+  const [tradeoffsOpen, setTradeoffsOpen] = useState(false);
+  const hasTradeoffs =
+    !!explain?.tradeoffs && (
+      (explain.tradeoffs.pros?.length ?? 0) > 0 || (explain.tradeoffs.cons?.length ?? 0) > 0
+    );
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl transition-all hover:border-primary/50">
       <Link
@@ -138,6 +145,74 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
           </div>
         </div>
       </Link>
+
+      {explain && (explain.reasons.length > 0 || explain.confidence || hasTradeoffs) && (
+        <div className="border-t border-border/40 bg-background/30 px-2.5 py-2">
+          {explain.reasons.length > 0 && (
+            <ul className="flex flex-col gap-1" aria-label="Why this product">
+              {explain.reasons.map((r, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px] leading-snug text-foreground/85">
+                  <Sparkles className="mt-[2px] h-3 w-3 shrink-0 text-primary" aria-hidden />
+                  <span>{r}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {explain.confidence && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                title={explain.confidence.label}
+              >
+                <ShieldCheck className="h-3 w-3" aria-hidden />
+                {explain.confidence.label}
+              </span>
+            )}
+            {hasTradeoffs && (
+              <button
+                type="button"
+                onClick={() => setTradeoffsOpen((v) => !v)}
+                aria-expanded={tradeoffsOpen}
+                className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Trade-offs
+                <ChevronDown
+                  className={`h-3 w-3 transition-transform ${tradeoffsOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </button>
+            )}
+          </div>
+          {tradeoffsOpen && hasTradeoffs && explain.tradeoffs && (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {(explain.tradeoffs.pros?.length ?? 0) > 0 && (
+                <div>
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-500/90">
+                    <ThumbsUp className="h-3 w-3" aria-hidden /> You gain
+                  </p>
+                  <ul className="flex flex-col gap-0.5">
+                    {explain.tradeoffs.pros!.map((p, i) => (
+                      <li key={i} className="text-[11px] leading-snug text-foreground/85">• {p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {(explain.tradeoffs.cons?.length ?? 0) > 0 && (
+                <div>
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-500/90">
+                    <ThumbsDown className="h-3 w-3" aria-hidden /> You give up
+                  </p>
+                  <ul className="flex flex-col gap-0.5">
+                    {explain.tradeoffs.cons!.map((c, i) => (
+                      <li key={i} className="text-[11px] leading-snug text-foreground/85">• {c}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-1.5 border-t border-border/50 bg-background/40 px-2 py-1.5">
         <button
