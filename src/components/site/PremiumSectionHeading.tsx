@@ -1,38 +1,44 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * FoundOurMarket™ — Editorial Section Heading v8 (Luxury Magazine Opener).
+ * FoundOurMarket™ — Editorial Section Heading v9 (Luxury Collection Opener).
  *
- * Composition (all centered, calm, editorial)
- *   [ghost word — 110-160px, 900, uppercase, 2-3% opacity, offset + cropped]
- *   Title       (26-28px, 900, pure white, -0.02em)
- *      ↓ 12px
- *   Subtitle    (12px, neutral gray)
- *      ↓ 18px
- *   Divider     (80×2px metallic orange, edges fade)
- *      ↓ 26px  (content gap owned by wrapper padding-bottom)
+ * Every homepage section reads like a chapter in a curated collection:
+ *
+ *   01                       ← huge cropped collection number (top-left, 8% orange)
+ *      Main Categories        ← 28px / 900 white title
+ *      Editorial description  ← calm one-sentence copy
+ *   ───●                     ← 60px orange signature stroke that draws itself
+ *
+ * Behind the composition sits an oversized faint mirror of the same number.
+ * No cards, no borders, no icons, no glass, no ghost words, no glow.
  *
  * Motion (once on enter, 700ms cubic-bezier(.22,1,.36,1))
- *   Ghost:    opacity 0→3%, translateY(-16px)
- *   Title:    opacity + translateY(18px→0)
- *   Subtitle: 80ms delay
- *   Divider:  160ms delay, width 0→80px
+ *   Number fades → Title slides up → Description fades → Signature draws.
  *
- * Section rhythm: 80px top / 36px bottom.
- * Background: one radial orange spotlight (~3%, 120px blur) — never a blob.
- *
- * Back-compat: legacy props are accepted and intentionally unused; v8 is a
- * single centered, minimal composition per spec.
+ * Section rhythm: 100px top / 40px bottom.
+ * Back-compat: legacy props are accepted but intentionally unused in v9.
  */
 
 const REVEAL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+// Stable auto-numbering by title (order of first mount = collection order).
+const collectionRegistry = new Map<string, number>();
+function collectionNumberFor(title: string): number {
+  const existing = collectionRegistry.get(title);
+  if (existing !== undefined) return existing;
+  const next = collectionRegistry.size + 1;
+  collectionRegistry.set(title, next);
+  return next;
+}
+
 export function PremiumSectionHeading({
   title,
   subtitle,
-  ghost,
-  // Back-compat — accepted but unused in v8.
+  number,
+  // Back-compat — accepted but unused in v9.
+  ghost: _ghost,
   right: _right,
   align: _align,
   eyebrow: _eyebrow,
@@ -45,6 +51,8 @@ export function PremiumSectionHeading({
 }: {
   title: string;
   subtitle?: string;
+  /** Optional explicit collection number override (1–99). Otherwise auto-assigned. */
+  number?: number;
   ghost?: string;
   right?: ReactNode;
   align?: "center" | "left";
@@ -56,6 +64,7 @@ export function PremiumSectionHeading({
   href?: string;
   hrefLabel?: string;
 }) {
+  void _ghost;
   void _right;
   void _align;
   void _eyebrow;
@@ -68,6 +77,11 @@ export function PremiumSectionHeading({
 
   const ref = useRef<HTMLDivElement | null>(null);
   const [shown, setShown] = useState(false);
+
+  const collectionNumber = useMemo(() => {
+    const n = number ?? collectionNumberFor(title);
+    return String(n).padStart(2, "0");
+  }, [number, title]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -97,115 +111,140 @@ export function PremiumSectionHeading({
     return () => io.disconnect();
   }, []);
 
-  const ghostWord = (ghost ?? title.split(/\s+/)[0] ?? title).toUpperCase();
-
-  // Ghost is offset slightly off-center for an editorial, cropped feel.
-  // Base translation: X -54% (nudged left of center), Y -50%. Reveal shifts Y by -16px.
-  const ghostStyle: React.CSSProperties = {
-    opacity: shown ? 0.03 : 0,
-    transform: shown
-      ? "translate3d(-54%, calc(-50% - 16px), 0)"
-      : "translate3d(-54%, -50%, 0)",
+  // ── Styles ────────────────────────────────────────────────────────────────
+  const numberStyle: React.CSSProperties = {
+    opacity: shown ? 0.08 : 0,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,8px,0)",
     transition: `opacity 700ms ${REVEAL_EASE}, transform 700ms ${REVEAL_EASE}`,
+    willChange: shown ? undefined : "opacity, transform",
+    fontFamily: '"Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif',
+    fontWeight: 900,
+    fontSize: "clamp(64px, 18vw, 80px)",
+    lineHeight: 0.85,
+    letterSpacing: "-0.04em",
+    color: "rgb(255,140,40)",
+  };
+
+  // Oversized faint mirror of the same number as the section's background.
+  const bgNumberStyle: React.CSSProperties = {
+    opacity: shown ? 0.025 : 0,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,12px,0)",
+    transition: `opacity 900ms ${REVEAL_EASE}, transform 900ms ${REVEAL_EASE}`,
     willChange: "opacity, transform",
     fontFamily: '"Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif',
     fontWeight: 900,
-    fontSize: "clamp(110px, 34vw, 160px)",
+    fontSize: "clamp(220px, 60vw, 380px)",
+    lineHeight: 0.8,
     letterSpacing: "-0.06em",
-    lineHeight: 0.9,
-    color: "white",
-    top: "50%",
-    left: "50%",
+    color: "rgb(255,140,40)",
+    top: "-8%",
+    right: "-6%",
   };
 
   const titleStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
-    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,18px,0)",
-    transition: `opacity 700ms ${REVEAL_EASE}, transform 700ms ${REVEAL_EASE}`,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,16px,0)",
+    transition: `opacity 700ms ${REVEAL_EASE} 100ms, transform 700ms ${REVEAL_EASE} 100ms`,
     willChange: shown ? undefined : "opacity, transform",
     fontFamily: '"Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif',
     fontWeight: 900,
-    fontSize: "clamp(26px, 6.6vw, 28px)",
-    lineHeight: 1.25,
+    fontSize: "28px",
+    lineHeight: 1.2,
     letterSpacing: "-0.02em",
     color: "#ffffff",
   };
 
-  const subStyle: React.CSSProperties = {
+  const descStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
     transform: shown ? "translate3d(0,0,0)" : "translate3d(0,10px,0)",
-    transition: `opacity 700ms ${REVEAL_EASE} 80ms, transform 700ms ${REVEAL_EASE} 80ms`,
+    transition: `opacity 700ms ${REVEAL_EASE} 220ms, transform 700ms ${REVEAL_EASE} 220ms`,
     willChange: shown ? undefined : "opacity, transform",
-    fontSize: "12px",
-    lineHeight: 1.5,
-    color: "rgba(255,255,255,0.55)",
-    marginTop: "12px",
+    fontSize: "13px",
+    lineHeight: 1.55,
+    color: "rgba(255,255,255,0.58)",
+    marginTop: "14px",
+    maxWidth: "34ch",
   };
 
-  const dividerStyle: React.CSSProperties = {
-    width: shown ? "80px" : "0px",
-    height: "2px",
-    background:
-      "linear-gradient(90deg, transparent 0%, rgba(255,140,40,0.85) 50%, transparent 100%)",
-    transition: `width 700ms ${REVEAL_EASE} 160ms, opacity 700ms ${REVEAL_EASE} 160ms`,
-    willChange: shown ? undefined : "width, opacity",
+  // Signature: 60px stroke that "draws" (SVG stroke-dashoffset) + tiny glowing dot.
+  const STROKE_LEN = 60;
+  const sigPathStyle: React.CSSProperties = {
+    strokeDasharray: STROKE_LEN,
+    strokeDashoffset: shown ? 0 : STROKE_LEN,
+    transition: `stroke-dashoffset 700ms ${REVEAL_EASE} 340ms`,
+    willChange: shown ? undefined : "stroke-dashoffset",
+  };
+  const sigDotStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
-    marginTop: "18px",
-    borderRadius: "1px",
+    transform: shown ? "scale(1)" : "scale(0.4)",
+    transformOrigin: "center",
+    transformBox: "fill-box",
+    transition: `opacity 400ms ${REVEAL_EASE} 980ms, transform 400ms ${REVEAL_EASE} 980ms`,
   };
 
   return (
     <div
       ref={ref}
-      className="relative isolate flex flex-col items-center overflow-hidden text-center"
-      style={{
-        marginTop: "80px",
-        marginBottom: "36px",
-        // 26px gap between the divider and following content.
-        paddingBottom: "26px",
-      }}
+      className="relative isolate overflow-hidden"
+      style={{ marginTop: "100px", marginBottom: "40px" }}
     >
-      {/* Single soft radial spotlight — ~3%, 120px blur, never a blob */}
+      {/* Oversized faint background number */}
       <span
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[320px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(255,140,40,0.03) 0%, rgba(255,140,40,0.015) 50%, transparent 75%)",
-          filter: "blur(120px)",
-        }}
-      />
-
-      {/* Enormous ghost word (offset, cropped by overflow-hidden) */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -z-10 select-none whitespace-nowrap uppercase"
-        style={ghostStyle}
+        className="pointer-events-none absolute -z-10 select-none whitespace-nowrap"
+        style={bgNumberStyle}
       >
-        {ghostWord}
+        {collectionNumber}
       </span>
 
-      {/* Title */}
-      <h2 className="relative" style={titleStyle}>
-        {title}
-      </h2>
+      <div className="relative flex flex-col items-start text-left">
+        {/* Collection number (top-left, huge, 8%) */}
+        <span aria-hidden className="block select-none" style={numberStyle}>
+          {collectionNumber}
+        </span>
 
-      {/* Subtitle */}
-      {subtitle && (
-        <p className="relative" style={subStyle}>
-          {subtitle}
-        </p>
-      )}
+        {/* Title */}
+        <h2 className="mt-3" style={titleStyle}>
+          {title}
+        </h2>
 
-      {/* Metallic divider */}
-      <span aria-hidden className="relative block" style={dividerStyle} />
+        {/* Editorial description */}
+        {subtitle && <p style={descStyle}>{subtitle}</p>}
+
+        {/* Signature: drawn stroke + glowing dot */}
+        <div className="mt-6" aria-hidden>
+          <svg
+            width={STROKE_LEN + 10}
+            height="8"
+            viewBox={`0 0 ${STROKE_LEN + 10} 8`}
+            fill="none"
+            className="block"
+          >
+            <path
+              d={`M 0 4 L ${STROKE_LEN} 4`}
+              stroke="rgb(255,140,40)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              style={sigPathStyle}
+            />
+            <circle
+              cx={STROKE_LEN + 3}
+              cy="4"
+              r="1.8"
+              fill="rgb(255,140,40)"
+              style={{
+                ...sigDotStyle,
+                filter: "drop-shadow(0 0 3px rgba(255,140,40,0.75))",
+              }}
+            />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
 
-/**
- * Premium gradient divider between sections (unchanged spacer).
- */
+/** Kept as a neutral spacer between sections. */
 export function PremiumSectionDivider() {
   return (
     <div aria-hidden className="mx-auto my-10 h-px max-w-7xl sm:my-14">
