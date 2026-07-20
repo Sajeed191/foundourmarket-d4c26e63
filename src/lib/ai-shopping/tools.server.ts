@@ -102,6 +102,26 @@ export async function compareProducts(slugs: string[]): Promise<AiProductSummary
   return (data ?? []).map(normalize);
 }
 
+/**
+ * Batch fetch products by slug — used to hydrate the visible list from the
+ * Shopping Context Engine before falling back to a broader search. Respects
+ * the same visibility filters as the catalog.
+ */
+export async function getProductsBySlugs(slugs: string[]): Promise<AiProductSummary[]> {
+  const clean = Array.from(new Set(slugs.map((s) => String(s).trim()).filter(Boolean))).slice(0, 12);
+  if (clean.length === 0) return [];
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .select(SELECT)
+    .in("slug", clean)
+    .is("deleted_at", null)
+    .eq("hide_from_recommendations", false)
+    .eq("hide_from_search", false);
+  if (error) throw new Error(`get_products_by_slugs: ${error.message}`);
+  return (data ?? []).map(normalize);
+}
+
+
 // OpenAI-style function tool schemas the model sees.
 export const AI_SHOPPING_TOOLS = [
   {
@@ -150,11 +170,28 @@ export const AI_SHOPPING_TOOLS = [
       },
     },
   },
+  {
+    type: "function" as const,
+    function: {
+      name: "get_products_by_slugs",
+      description:
+        "Batch-fetch full product details for up to 12 slugs. USE THIS FIRST when the Shopping Context Engine already lists visible products (category.visible, search.visible, cart.entries, wishlist.entries). Cheaper than search_products and keeps recommendations inside what the customer is actually looking at.",
+      parameters: {
+        type: "object",
+        required: ["slugs"],
+        properties: {
+          slugs: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 12 },
+        },
+      },
+    },
+  },
 ];
 
 export async function executeTool(name: string, args: Record<string, unknown>) {
   if (name === "search_products") return searchProducts(args as Parameters<typeof searchProducts>[0]);
   if (name === "get_product") return getProduct(String(args.slug ?? ""));
   if (name === "compare_products") return compareProducts((args.slugs as string[]) ?? []);
+  if (name === "get_products_by_slugs") return getProductsBySlugs((args.slugs as string[]) ?? []);
   throw new Error(`Unknown tool: ${name}`);
 }
+

@@ -1,19 +1,67 @@
 // Heuristic follow-up suggestion generator for the AI Shopping Assistant.
 // Runs on the server after the reply is finalized. Deterministic and cheap —
-// no extra AI call. Suggestions are shopping-only and context-aware.
+// no extra AI call. v1.3 Step 2: page-context aware chip pools.
 import type { AiProductSummary } from "./tools.server";
+import type { ShoppingContext } from "./shopping-context";
 
 type Ctx = {
   userText: string;
   reply: string;
   products: AiProductSummary[];
+  context?: ShoppingContext | null;
 };
 
-function pick<T>(pool: T[], n: number): T[] {
-  return pool.slice(0, n);
+function dedupeCap(chips: string[], n: number): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const c of chips) {
+    const k = c.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(c);
+    if (out.length >= n) break;
+  }
+  return out;
 }
 
-export function generateSuggestions({ userText, reply, products }: Ctx): string[] {
+function pageChips(context?: ShoppingContext | null): string[] {
+  if (!context) return [];
+  switch (context.page) {
+    case "home":
+      return ["Today's best deals", "What's trending?", "New arrivals", "Best sellers"];
+    case "product":
+      return [
+        "Is this worth buying?",
+        "Show cheaper alternatives",
+        "What accessories go well?",
+        "Compare with similar",
+      ];
+    case "category":
+      return ["Best value option", "Premium pick", "Highest rated", "Under ₹3,000"];
+    case "search":
+      return ["Cheapest here", "Best rated", "Best value", "Show premium options"];
+    case "cart":
+      return [
+        "Any missing accessories?",
+        "How can I save money?",
+        "Bundle suggestions",
+        "Complementary picks",
+      ];
+    case "wishlist":
+      return [
+        "Which should I buy first?",
+        "Which offers best value?",
+        "Which is most popular?",
+      ];
+    case "order":
+    case "orders":
+      return ["Talk to Customer Support"];
+    default:
+      return [];
+  }
+}
+
+export function generateSuggestions({ userText, reply, products, context }: Ctx): string[] {
   const u = userText.toLowerCase();
   const r = reply.toLowerCase();
   const many = products.length >= 2;
@@ -26,16 +74,14 @@ export function generateSuggestions({ userText, reply, products }: Ctx): string[
 
   const chips: string[] = [];
 
+  // Page-context chips take priority — they reflect what the customer is
+  // actually looking at right now.
+  chips.push(...pageChips(context));
+
   if (many) {
-    chips.push("Compare these");
-    chips.push("Show cheaper options");
-    chips.push("Show premium alternatives");
-    chips.push("Show similar products");
+    chips.push("Compare these", "Show cheaper options", "Show premium alternatives");
   } else if (single) {
-    chips.push("View product details");
-    chips.push("Show similar products");
-    chips.push("Compare with alternatives");
-    chips.push("Show cheaper options");
+    chips.push("Compare with alternatives", "Show similar products", "Show cheaper options");
   }
 
   if (/gift|birthday|anniversary|present/.test(u)) chips.push("More gift ideas");
@@ -46,16 +92,8 @@ export function generateSuggestions({ userText, reply, products }: Ctx): string[
 
   // Fallback pool if nothing landed above.
   if (chips.length === 0) {
-    chips.push(
-      "Best sellers",
-      "New arrivals",
-      "Gift ideas under ₹2,000",
-      "Trending now",
-    );
+    chips.push("Best sellers", "New arrivals", "Gift ideas under ₹2,000", "Trending now");
   }
 
-  // Dedupe, cap at 5.
-  const seen = new Set<string>();
-  const unique = chips.filter((c) => (seen.has(c) ? false : (seen.add(c), true)));
-  return pick(unique, 5);
+  return dedupeCap(chips, 5);
 }
