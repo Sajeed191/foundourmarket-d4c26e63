@@ -124,11 +124,11 @@ function CinematicDivider() {
 
 /* Section-specific subtitles ("dynamic labels" per premium heading spec). */
 const SECTION_SUBTITLE: Record<string, string> = {
-  categories: "Explore products across every department.",
-  flash_deals: "Limited-time savings updated throughout the day.",
-  trending: "What shoppers are choosing right now.",
-  new_arrivals: "Fresh additions curated for you.",
-  best_sellers: "Customer favourites with proven quality.",
+  categories: "Discover thousands of products across every department.",
+  flash_deals: "Limited-time prices that won't last.",
+  trending: "Popular with shoppers today.",
+  new_arrivals: "Fresh products added recently.",
+  best_sellers: "Customer favorites with proven quality.",
 };
 
 const SECTION_EYEBROW: Record<string, string> = {
