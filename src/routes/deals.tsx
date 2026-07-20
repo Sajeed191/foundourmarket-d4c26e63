@@ -1,54 +1,52 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Gift,
-  Tag,
   Loader2,
-  Percent,
   Zap,
   Clock,
-  ArrowRight,
-  Sparkles,
   Flame,
-  ShieldCheck,
-  Truck,
-  LayoutGrid,
+  Sparkles,
+  Package,
+  TrendingDown,
   ArrowDownWideNarrow,
+  LayoutGrid,
+  Tag,
+  Star,
+  ArrowRight,
 } from "lucide-react";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
-import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
 import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
 import { useHomepageCollectionRules } from "@/lib/site-rules";
 
-
-
 export const Route = createFileRoute("/deals")({
   head: () => ({
     meta: [
-      { title: "Deals & Promos — FoundOurMarket™" },
-      { name: "description", content: "Discover the best deals and promotions on FoundOurMarket™. Limited-time offers, flash sales, and exclusive discounts." },
-      { property: "og:title", content: "Deals & Promos — FoundOurMarket™" },
-      { property: "og:description", content: "Discover the best deals and promotions on FoundOurMarket™. Limited-time offers, flash sales, and exclusive discounts." },
+      { title: "Flash Deals — FoundOurMarket™" },
+      {
+        name: "description",
+        content:
+          "Live flash sales and hot deals across FoundOurMarket™. Refreshed daily with discounts up to 70% off — while stock lasts.",
+      },
+      { property: "og:title", content: "Flash Deals — FoundOurMarket™" },
+      {
+        property: "og:description",
+        content: "Live flash sales and hot deals. Refreshed daily — while stock lasts.",
+      },
     ],
   }),
   component: DealsPage,
 });
 
 const ease = [0.16, 1, 0.3, 1] as const;
-const fadeUp = {
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, ease },
-};
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-/** Counts down to the next midnight — a rolling daily "deal resets" timer. */
+/** Counts down to next midnight — a rolling daily "deal resets" timer. */
 function useDailyCountdown() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -65,90 +63,150 @@ function useDailyCountdown() {
     h: Math.floor(diff / 3_600_000),
     m: Math.floor((diff % 3_600_000) / 60_000),
     s: Math.floor((diff % 60_000) / 1000),
+    totalMs: diff,
   };
 }
 
-type DealSort = "savings" | "ending" | "newest" | "rating";
+type DealSort = "savings" | "ending" | "newest" | "rating" | "price-low" | "popular";
+
+const SORT_OPTIONS: { value: DealSort; label: string }[] = [
+  { value: "savings", label: "Highest discount" },
+  { value: "ending", label: "Ending soon" },
+  { value: "price-low", label: "Lowest price" },
+  { value: "newest", label: "Newest" },
+  { value: "rating", label: "Best rated" },
+  { value: "popular", label: "Most popular" },
+];
+
+const BATCH_SIZE = 12;
 
 function DealsPage() {
-  // Single shared Flash Deal source — identical to the homepage Flash Deals
-  // section, so any product shown there also appears here on the Offers /
-  // Deals & Promotions page.
+  // Shared, badge-gated, Site-Rules-capped source used by homepage + /deals.
+  // Do NOT re-filter by static p.flashDeal/hotDeal — the hook already gated by
+  // live product_badges assignments. That extra filter was the "only 2 shown" bug.
   const { items, loading } = useFlashDeals();
   const rules = useHomepageCollectionRules();
-
   const countdown = useDailyCountdown();
+
   const [activeCat, setActiveCat] = useState<string>("all");
   const [sort, setSort] = useState<DealSort>("savings");
-  
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
-  const dealProducts = useMemo(
-    () => items
-      .filter((i) => i.product.flashDeal || i.product.hotDeal)
-      .map((i) => i.product),
-    [items],
-  );
+  // Products from the full rotated window — no double-filter, no homepage slice.
+  const dealProducts = useMemo(() => items.map((i) => i.product), [items]);
+  const endAtByProductId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const i of items) if (i.endAt && i.product.id) m.set(i.product.id, i.endAt);
+    return m;
+  }, [items]);
 
-  // Dev-only verification: eligible vs visible vs hidden by rotation / limit.
-  useEffect(() => {
-    if (!import.meta.env.DEV || loading) return;
-    const cap = rules.limits.flash_deals;
-    const visible = items.length;
-    // eligible = items pool BEFORE the rotation slice — approximated via
-    // items when eligible <= cap; else `visible` equals cap and rotation hides
-    // the tail. useFlashDeals already logs its own eligible count.
-    // eslint-disable-next-line no-console
-    console.info(
-      `[Deals · View All] visible=${visible} | cap(limit)=${cap} | category=${activeCat}`,
-    );
-    if (visible > cap) {
-      // eslint-disable-next-line no-console
-      console.warn("[Deals] visible exceeds Site Rules limit — check hook cap");
-    }
-  }, [items.length, rules.limits.flash_deals, activeCat, loading]);
-
-  const topDiscount = dealProducts.reduce((max, p) => Math.max(max, p.discount ?? 0), 0);
-
-
+  // Categories with counts
   const categories = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of dealProducts) {
-      map.set(p.category, (map.get(p.category) ?? 0) + 1);
-    }
-    return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    for (const p of dealProducts) map.set(p.category, (map.get(p.category) ?? 0) + 1);
+    return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
   }, [dealProducts]);
 
   const filteredProducts = useMemo(
-    () => (activeCat === "all" ? dealProducts : dealProducts.filter((p) => p.category === activeCat)),
-    [dealProducts, activeCat]
+    () =>
+      activeCat === "all"
+        ? dealProducts
+        : dealProducts.filter((p) => p.category === activeCat),
+    [dealProducts, activeCat],
   );
 
-  // Browse Presentation Adapter — same adapter as /category, surface: "deals".
   const presentation = useMemo(
     () => buildBrowsePresentation({ products: filteredProducts, surface: "deals" }),
     [filteredProducts],
   );
 
-  const visibleProducts = useMemo(() => {
+  const sortedProducts = useMemo(() => {
     const base = sortProductsForBrowse(filteredProducts, presentation, "recommended");
     const arr = [...base];
     switch (sort) {
       case "savings":
         return arr.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+      case "price-low":
+        return arr.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
       case "newest":
         return arr.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
       case "rating":
         return arr.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "popular":
+        return arr.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
       case "ending":
       default:
-        return arr;
+        return arr.sort((a, b) => {
+          const ea = a.id ? endAtByProductId.get(a.id) : undefined;
+          const eb = b.id ? endAtByProductId.get(b.id) : undefined;
+          const va = ea ? new Date(ea).getTime() : Number.POSITIVE_INFINITY;
+          const vb = eb ? new Date(eb).getTime() : Number.POSITIVE_INFINITY;
+          return va - vb;
+        });
     }
-  }, [filteredProducts, presentation, sort]);
+  }, [filteredProducts, presentation, sort, endAtByProductId]);
 
-  const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
+  // Reset visible count when filters/sort change
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [activeCat, sort]);
+
+  const visible = useMemo(
+    () => sortedProducts.slice(0, visibleCount),
+    [sortedProducts, visibleCount],
+  );
+
+  // Stats
+  const stats = useMemo(() => {
+    const active = dealProducts.length;
+    const avgDiscount = active
+      ? Math.round(
+          dealProducts.reduce((s, p) => s + (p.discount ?? 0), 0) / active,
+        )
+      : 0;
+    const biggest = dealProducts.reduce((m, p) => Math.max(m, p.discount ?? 0), 0);
+    const lowStock = dealProducts.filter(
+      (p) => (p.stockQuantity ?? 0) > 0 && (p.stockQuantity ?? 99) <= 10,
+    ).length;
+    const endingSoon = items.filter((i) => {
+      if (!i.endAt) return false;
+      const t = new Date(i.endAt).getTime() - Date.now();
+      return t > 0 && t < 6 * 3600_000;
+    }).length;
+    return { active, avgDiscount, biggest, lowStock, endingSoon };
+  }, [dealProducts, items]);
+
+  // Dev verification logs (Part 1)
+  useEffect(() => {
+    if (!import.meta.env.DEV || loading) return;
+    console.info(
+      `[Flash Deals · View All] eligible/window=${items.length} | siteRulesLimit=${rules.limits.flash_deals} | homepagePreview=4 | visible=${sortedProducts.length} | category=${activeCat} | rendered=${visible.length}`,
+    );
+  }, [items.length, sortedProducts.length, visible.length, activeCat, loading, rules.limits.flash_deals]);
+
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setVisibleCount((c) => Math.min(sortedProducts.length, c + BATCH_SIZE));
+          }
+        }
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sortedProducts.length]);
+
   const renderProduct = useCallback(
     (p: Product, i: number) => (
       <BrowseCard
+        key={p.id ?? p.slug}
         product={p}
         presentation={presentation.get(p.id ?? p.slug)}
         priority={i < 4}
@@ -157,7 +215,6 @@ function DealsPage() {
     ),
     [presentation],
   );
-
 
   if (loading) {
     return (
@@ -168,221 +225,293 @@ function DealsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-0 md:pb-24">
-      {/* Ambient cinematic backdrop */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="orb animate-orb -top-[10%] left-[10%] size-[60vw] max-w-[520px]" style={{ background: "var(--gradient-ember)" }} />
-        <div className="orb animate-orb [animation-delay:-8s] top-[30%] right-[5%] size-[50vw] max-w-[440px]" style={{ background: "var(--gradient-violet)" }} />
-        {/* Subtle noise */}
-        <div
-          className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
+    <div className="min-h-screen pb-16 md:pb-24">
+      <div className="container-page py-4 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
+        {/* ── PART 2: Premium Hero ── */}
+        <PremiumHero
+          countdown={countdown}
+          biggest={stats.biggest}
+          avgDiscount={stats.avgDiscount}
+          active={stats.active}
         />
-      </div>
 
-      <div className="container-page py-6 sm:py-10 lg:py-14 space-y-7 sm:space-y-10">
-        {/* ── Hero promo banner ── */}
-        <motion.header
-          {...fadeUp}
-          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] glass-strong px-5 py-7 sm:px-9 sm:py-11"
-        >
-          {/* layered lighting */}
-          <div aria-hidden className="absolute inset-0 -z-10">
-            <div className="absolute -top-32 -right-16 size-[440px] rounded-full opacity-60 animate-glow" style={{ background: "var(--gradient-ember)", filter: "blur(90px)" }} />
-            <div className="absolute -bottom-40 -left-24 size-[400px] rounded-full opacity-50 animate-glow [animation-delay:-2s]" style={{ background: "var(--gradient-violet)", filter: "blur(100px)" }} />
-            <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-mesh)" }} />
-          </div>
+        {/* ── PART 3: Deal Statistics ── */}
+        <StatsRow
+          active={stats.active}
+          endingSoon={stats.endingSoon}
+          biggest={stats.biggest}
+          lowStock={stats.lowStock}
+        />
 
-          {/* floating glow particles */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            {[
-              { l: "12%", t: "22%", s: 5, d: 0 },
-              { l: "78%", t: "30%", s: 4, d: 1.2 },
-              { l: "40%", t: "12%", s: 3, d: 0.6 },
-              { l: "88%", t: "68%", s: 6, d: 1.8 },
-              { l: "22%", t: "74%", s: 4, d: 0.9 },
-            ].map((p) => (
-              <motion.span
-                key={`${p.l}-${p.t}`}
-                className="absolute rounded-full bg-accent"
-                style={{ left: p.l, top: p.t, width: p.s, height: p.s, boxShadow: "0 0 12px 2px var(--color-accent)" }}
-                animate={{ y: [0, -16, 0], opacity: [0.25, 0.9, 0.25] }}
-                transition={{ duration: 4 + p.d, repeat: Infinity, ease: "easeInOut", delay: p.d }}
-              />
-            ))}
-          </div>
+        {/* ── PART 4: Sticky Filter Bar ── */}
+        <StickyFilterBar
+          count={sortedProducts.length}
+          activeCat={activeCat}
+          categories={categories}
+          totalCount={dealProducts.length}
+          onCategory={setActiveCat}
+          sort={sort}
+          onSort={setSort}
+          rotationHours={rules.rotationHours}
+        />
 
-          <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 border border-accent/25 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
-                <Sparkles className="size-3" /> Limited Time
-              </span>
-              <h1 className="mt-4 font-display font-bold leading-[1.02] text-[2.4rem] sm:text-[3.25rem] tracking-tight">
-                Deals & <span className="text-gradient-ember">Promos</span>
-              </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground max-w-md">
-                Exclusive discounts and flash sales, curated for you. Grab them before the timer runs out.
-              </p>
-
-              {/* CTAs */}
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <a
-                  href="#deals-grid"
-                  className="cta-primary group !px-5 !py-2.5 !text-sm active:scale-[0.97] transition-transform"
-                >
-                  <Flame className="size-4" /> Shop Deals
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </a>
-                <Link
-                  to="/search"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-foreground/90 backdrop-blur-md transition-all hover:border-accent/40 hover:text-accent active:scale-[0.97]"
-                >
-                  Explore Offers
-                </Link>
-              </div>
+        {/* ── PART 5: Deal Grid ── */}
+        {visible.length > 0 ? (
+          <section id="deals-grid" data-product-card-frame>
+            <div className="grid grid-cols-2 lg:grid-cols-4 items-start gap-3 sm:gap-4">
+              {visible.map((p, i) => renderProduct(p, i))}
             </div>
 
-            {/* Discount + timer card */}
-            {topDiscount > 0 && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, ease, duration: 0.5 }}
-                className="relative shrink-0 w-full lg:w-auto rounded-3xl glass-strong p-5 sm:p-6 text-center"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="size-12 rounded-2xl bg-accent/15 text-accent grid place-items-center ring-1 ring-accent/30 shadow-[0_0_24px_-6px_var(--color-accent)]">
-                    <Percent className="size-5" />
-                  </span>
-                  <div className="text-left">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Best deal today</p>
-                    <p className="text-3xl font-display font-bold text-gradient-ember leading-none">Up to {topDiscount}%</p>
-                  </div>
-                </div>
-
-                {/* Countdown */}
-                <div className="mt-5 border-t border-white/10 pt-4">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-2 flex items-center justify-center gap-1.5">
-                    <Clock className="size-3 text-accent" /> Refreshes in
-                  </p>
-                  <div className="flex items-center justify-center gap-1.5 font-mono tabular-nums">
-                    {[
-                      { v: pad(countdown.h), l: "HRS" },
-                      { v: pad(countdown.m), l: "MIN" },
-                      { v: pad(countdown.s), l: "SEC" },
-                    ].map((t, i) => (
-                      <div key={t.l} className="flex items-center gap-1.5">
-                        <div className="flex flex-col items-center">
-                          <span className="grid place-items-center min-w-11 rounded-xl bg-black/50 ring-1 ring-accent/25 px-2 py-1.5 text-lg font-semibold text-accent">
-                            {t.v}
-                          </span>
-                          <span className="mt-1 text-[8px] tracking-[0.2em] text-muted-foreground">{t.l}</span>
-                        </div>
-                        {i < 2 && <span className="text-accent/50 -mt-3 text-lg">:</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
+            {/* PART 6: Highlight strip — biggest saving in this window */}
+            {sortedProducts.length > 8 && (
+              <HighlightStrip biggest={stats.biggest} totalDeals={stats.active} />
             )}
-          </div>
 
-          {/* Category chips */}
-          {categories.length > 0 && (
-            <div className="relative mt-7 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">
-              <CatChip
-                label="All"
-                count={dealProducts.length}
-                active={activeCat === "all"}
-                onClick={() => setActiveCat("all")}
-                icon={<LayoutGrid className="size-3" />}
-              />
-              {categories.map(([cat, count]) => (
-                <CatChip
-                  key={cat}
-                  label={cat}
-                  count={count}
-                  active={activeCat === cat}
-                  onClick={() => setActiveCat(cat)}
-                  icon={<Tag className="size-3" />}
-                />
-              ))}
-            </div>
-          )}
-        </motion.header>
-
-        {/* Trust strip */}
-        <motion.div
-          {...fadeUp}
-          transition={{ ...fadeUp.transition, delay: 0.05 }}
-          className="grid grid-cols-3 gap-2 sm:gap-3"
-        >
-          {[
-            { icon: Truck, t: "Fast delivery", s: "2–5 days" },
-            { icon: ShieldCheck, t: "Buyer protection", s: "Secure pay" },
-            { icon: Zap, t: "Live pricing", s: "Updated now" },
-          ].map((b) => (
-            <div key={b.t} className="glass rounded-2xl px-3 py-3 flex flex-col items-center text-center gap-1">
-              <b.icon className="size-4 text-accent" />
-              <p className="text-[11px] sm:text-xs font-medium leading-tight">{b.t}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground">{b.s}</p>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Sticky sort/filter bar */}
-        {visibleProducts.length > 0 && (
-          <div
-            id="deals-grid"
-            className="sticky top-[calc(var(--app-header-h,4.75rem)+4px)] z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 backdrop-blur-xl bg-background/70 border-y border-white/[0.06] scroll-mt-20"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[13px] sm:text-sm font-medium truncate">
-                  <span className="text-foreground font-semibold">{visibleProducts.length}</span> deal{visibleProducts.length === 1 ? "" : "s"}
-                  {activeCat !== "all" && <span className="text-muted-foreground"> · {activeCat}</span>}
-                </p>
-                <p className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
-                  <span className="inline-block size-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5 align-middle" />
-                  Live · rotates every {rules.rotationHours}h
-                </p>
+            {/* PART 8: Infinite scroll sentinel */}
+            {visibleCount < sortedProducts.length && (
+              <div ref={sentinelRef} className="mt-8 flex items-center justify-center py-6">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Loading more deals
+                </span>
               </div>
-              <label className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] pl-3 pr-2 py-1.5 text-[11px] font-medium">
-                <ArrowDownWideNarrow className="size-3.5 text-accent" />
-                <span className="sr-only">Sort</span>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as DealSort)}
-                  className="bg-transparent text-[11px] font-mono uppercase tracking-widest focus:outline-none appearance-none pr-1"
-                >
-                  <option value="savings">Biggest savings</option>
-                  <option value="ending">Ending soon</option>
-                  <option value="newest">Newest</option>
-                  <option value="rating">Best rating</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        )}
-
-
-        {/* Products grid */}
-        {visibleProducts.length > 0 ? (
-          <section data-product-card-frame>
-            <VirtualizedProductGrid
-              items={visibleProducts}
-              cols={{ base: 2, lg: 4 }}
-              className="grid grid-cols-2 lg:grid-cols-4 items-start gap-3 sm:gap-4"
-              getKey={getProductKey}
-              getImageSrc={(p) => p.image}
-              renderItem={renderProduct}
-            />
+            )}
+            {visibleCount >= sortedProducts.length && sortedProducts.length > BATCH_SIZE && (
+              <p className="mt-8 text-center text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                You've reached the end · {sortedProducts.length} deals shown
+              </p>
+            )}
           </section>
-
         ) : (
           <EmptyDeals />
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────  PART 2: Premium Hero  ───────────────────────── */
+
+function PremiumHero({
+  countdown,
+  biggest,
+  avgDiscount,
+  active,
+}: {
+  countdown: { h: number; m: number; s: number };
+  biggest: number;
+  avgDiscount: number;
+  active: number;
+}) {
+  return (
+    <motion.header
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease }}
+      className="relative overflow-hidden rounded-2xl sm:rounded-[28px] bg-[#0a0f1c] border border-accent/15 px-5 py-7 sm:px-9 sm:py-11"
+    >
+      {/* Amber glow — no glassmorphism, per spec */}
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <div
+          className="absolute -top-24 -right-16 size-[380px] rounded-full opacity-30"
+          style={{ background: "radial-gradient(circle, var(--color-accent) 0%, transparent 60%)", filter: "blur(60px)" }}
+        />
+        <div
+          className="absolute -bottom-24 -left-16 size-[320px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, var(--color-accent) 0%, transparent 60%)", filter: "blur(70px)" }}
+        />
+      </div>
+
+      <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+        {/* LEFT — headline + savings */}
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 border border-accent/30 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
+            <Flame className="size-3" /> Flash Deals · Live
+          </span>
+          <h1 className="mt-4 font-display font-bold leading-[1.02] text-[2.2rem] sm:text-[3.2rem] tracking-tight text-foreground">
+            Flash <span className="text-accent">Deals</span>
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground max-w-md">
+            Curated flash sales, refreshed daily. Grab them before the timer resets.
+          </p>
+
+          {/* Big savings number */}
+          {biggest > 0 && (
+            <div className="mt-6 flex items-baseline gap-3">
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+                  Save up to
+                </p>
+                <p className="font-display font-bold text-[3.5rem] sm:text-[4.5rem] leading-none text-accent tabular-nums">
+                  {biggest}
+                  <span className="text-[1.5rem] sm:text-[2rem] ml-1">%</span>
+                </p>
+              </div>
+              <div className="border-l border-accent/20 pl-4 self-center space-y-1.5">
+                <MicroStat label="Active deals" value={active.toString()} />
+                <MicroStat label="Avg discount" value={`${avgDiscount}%`} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT — countdown */}
+        <div className="lg:min-w-[300px]">
+          <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground mb-3 flex items-center gap-1.5">
+            <Clock className="size-3 text-accent" /> Ends in
+          </p>
+          <div className="flex items-center gap-2 font-mono tabular-nums">
+            {[
+              { v: pad(countdown.h), l: "HRS" },
+              { v: pad(countdown.m), l: "MIN" },
+              { v: pad(countdown.s), l: "SEC" },
+            ].map((t, i) => (
+              <div key={t.l} className="flex items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <span className="grid place-items-center min-w-[64px] rounded-xl bg-black/60 ring-1 ring-accent/30 px-3 py-3 text-[2rem] font-bold text-accent leading-none">
+                    {t.v}
+                  </span>
+                  <span className="mt-1.5 text-[9px] tracking-[0.25em] text-muted-foreground">
+                    {t.l}
+                  </span>
+                </div>
+                {i < 2 && <span className="text-accent/60 text-2xl -mt-4">:</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.header>
+  );
+}
+
+function MicroStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground leading-none">
+        {label}
+      </p>
+      <p className="text-sm font-semibold text-foreground tabular-nums mt-1">{value}</p>
+    </div>
+  );
+}
+
+/* ─────────────────────────  PART 3: Stats Row  ───────────────────────── */
+
+function StatsRow({
+  active,
+  endingSoon,
+  biggest,
+  lowStock,
+}: {
+  active: number;
+  endingSoon: number;
+  biggest: number;
+  lowStock: number;
+}) {
+  const cards = [
+    { icon: Flame, label: "Active Deals", value: active, tone: "text-accent" },
+    { icon: Clock, label: "Ending Soon", value: endingSoon, tone: "text-amber-400" },
+    { icon: TrendingDown, label: "Biggest Off", value: `${biggest}%`, tone: "text-emerald-400" },
+    { icon: Package, label: "Limited Stock", value: lowStock, tone: "text-rose-400" },
+  ];
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      {cards.map((c) => (
+        <div
+          key={c.label}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 sm:px-4 sm:py-4"
+        >
+          <div className="flex items-center gap-2">
+            <c.icon className={`size-4 ${c.tone}`} />
+            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+              {c.label}
+            </p>
+          </div>
+          <p className="mt-1.5 text-xl sm:text-2xl font-display font-bold text-foreground tabular-nums">
+            {c.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─────────────────────────  PART 4: Sticky Filter Bar  ───────────────────────── */
+
+function StickyFilterBar({
+  count,
+  totalCount,
+  activeCat,
+  categories,
+  onCategory,
+  sort,
+  onSort,
+  rotationHours,
+}: {
+  count: number;
+  totalCount: number;
+  activeCat: string;
+  categories: [string, number][];
+  onCategory: (c: string) => void;
+  sort: DealSort;
+  onSort: (s: DealSort) => void;
+  rotationHours: number;
+}) {
+  return (
+    <div className="sticky top-[calc(var(--app-header-h,4.75rem)+4px)] z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 backdrop-blur-xl bg-background/80 border-y border-white/[0.06] scroll-mt-20">
+      <div className="flex items-center justify-between gap-3 min-h-[44px]">
+        <div className="min-w-0">
+          <p className="text-[13px] sm:text-sm font-medium truncate">
+            <span className="font-semibold text-foreground tabular-nums">{count}</span>{" "}
+            <span className="text-muted-foreground">
+              of {totalCount} deal{totalCount === 1 ? "" : "s"}
+            </span>
+          </p>
+          <p className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
+            <span className="inline-block size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live · rotates every {rotationHours}h
+          </p>
+        </div>
+        <label className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] pl-3 pr-2 py-2 text-[11px] font-medium min-h-[40px]">
+          <ArrowDownWideNarrow className="size-3.5 text-accent" />
+          <span className="sr-only">Sort</span>
+          <select
+            value={sort}
+            onChange={(e) => onSort(e.target.value as DealSort)}
+            className="bg-transparent text-[11px] font-mono uppercase tracking-widest focus:outline-none appearance-none pr-1"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Category chips */}
+      {categories.length > 0 && (
+        <div className="mt-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">
+          <CatChip
+            label="All"
+            count={totalCount}
+            active={activeCat === "all"}
+            onClick={() => onCategory("all")}
+            icon={<LayoutGrid className="size-3" />}
+          />
+          {categories.map(([cat, n]) => (
+            <CatChip
+              key={cat}
+              label={cat}
+              count={n}
+              active={activeCat === cat}
+              onClick={() => onCategory(cat)}
+              icon={<Tag className="size-3" />}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -403,41 +532,88 @@ function CatChip({
   return (
     <button
       onClick={onClick}
-      className={`group inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-medium transition-all duration-300 active:scale-95 ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-colors min-h-[36px] ${
         active
-          ? "bg-accent text-accent-foreground border border-accent shadow-[var(--shadow-ember)]"
-          : "bg-white/[0.05] border border-white/10 text-foreground/80 hover:border-accent/40 hover:text-accent hover:bg-accent/10"
+          ? "bg-accent text-accent-foreground border border-accent"
+          : "bg-white/[0.04] border border-white/10 text-foreground/80 hover:border-accent/40 hover:text-accent"
       }`}
     >
       {icon}
       <span className="capitalize">{label}</span>
-      <span className={`text-[10px] tabular-nums ${active ? "text-accent-foreground/70" : "text-muted-foreground"}`}>
+      <span
+        className={`text-[10px] tabular-nums ${
+          active ? "text-accent-foreground/70" : "text-muted-foreground"
+        }`}
+      >
         {count}
       </span>
     </button>
   );
 }
 
+/* ─────────────────────────  PART 6: Highlight Strip  ───────────────────────── */
+
+function HighlightStrip({ biggest, totalDeals }: { biggest: number; totalDeals: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.5, ease }}
+      className="my-8 relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/[0.08] via-transparent to-transparent px-5 py-6 sm:px-8 sm:py-8"
+    >
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
+            <Sparkles className="inline size-3 mr-1" /> Editorial pick
+          </p>
+          <h2 className="mt-2 font-display font-bold text-2xl sm:text-3xl text-foreground">
+            Today's Biggest Savings
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {totalDeals} live deals · up to {biggest}% off — curated by our team.
+          </p>
+        </div>
+        <a
+          href="#deals-grid"
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-sm font-semibold"
+        >
+          <Flame className="size-4" /> Browse all
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────  PART 7: Empty State  ───────────────────────── */
+
 function EmptyDeals() {
   return (
-    <motion.div {...fadeUp} className="card-premium rounded-2xl border-dashed p-10 sm:p-14 flex flex-col items-center text-center relative overflow-hidden">
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-        className="relative size-14 rounded-2xl bg-accent/10 text-accent grid place-items-center mb-4 ring-1 ring-accent/30 shadow-[0_0_20px_-6px_var(--color-accent)]"
-      >
-        <Gift className="size-6" />
-      </motion.div>
-      <p className="relative text-lg font-display font-semibold">No active deals</p>
-      <p className="relative text-sm text-muted-foreground mt-2 max-w-sm">
-        We're working on fresh promotions. Check back soon for exclusive discounts and flash sales.
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-14 sm:py-20 text-center">
+      <div className="inline-flex size-14 items-center justify-center rounded-full bg-accent/10 border border-accent/20 text-accent mb-5">
+        <Flame className="size-6" />
+      </div>
+      <h2 className="font-display font-bold text-xl sm:text-2xl">
+        No Flash Deals right now
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+        New offers arrive every day. Check back soon — or browse what's trending in the meantime.
       </p>
-      <Link
-        to="/search"
-        className="relative mt-6 inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition-all active:scale-95"
-      >
-        <Clock className="size-3.5" /> Browse all products
-      </Link>
-    </motion.div>
+      <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
+        <Link
+          to="/products/best-sellers"
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-sm font-semibold"
+        >
+          <Star className="size-4" /> Best Sellers
+          <ArrowRight className="size-4" />
+        </Link>
+        <Link
+          to="/products/trending"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-medium hover:border-accent/40 hover:text-accent"
+        >
+          <Zap className="size-4" /> Trending
+        </Link>
+      </div>
+    </div>
   );
 }
