@@ -18,7 +18,7 @@ export const Route = createFileRoute("/products/best-sellers")({
       description="Products our team has marked as Best Sellers, ranked by total sales worldwide."
       icon={Award}
       sort="best_sellers"
-      filterFlag="bestseller"
+      collectionKey="best_sellers"
       forceBadge="bestseller"
     />
   ),

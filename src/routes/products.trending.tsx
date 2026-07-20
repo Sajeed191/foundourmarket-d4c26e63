@@ -18,7 +18,7 @@ export const Route = createFileRoute("/products/trending")({
       description="Products our team has marked as Trending across the marketplace."
       icon={Flame}
       sort="trending"
-      filterFlag="trending"
+      collectionKey="trending"
       forceBadge="trending"
     />
   ),

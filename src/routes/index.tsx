@@ -12,8 +12,9 @@ import { useCategories, useAdminCategories, toggleCategoryVisible } from "@/lib/
 import { useProducts } from "@/lib/use-products";
 import { useRegion } from "@/lib/region";
 import { useProductAdminEditing } from "@/lib/admin-overlay";
-import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
+import { fairPagedSlice } from "@/lib/fair-rotation";
+import { useHomepageCollectionRules } from "@/lib/site-rules";
 const CategoryAdminSheet = lazy(() =>
   import("@/components/admin/CategoryAdminSheet").then((m) => ({ default: m.CategoryAdminSheet })),
 );
@@ -572,46 +573,78 @@ function Home() {
     [products]
   );
 
-  const rotationSeed = useOrderRotationSeed();
   const rotationNonce = useRotationNonce();
+  const rules = useHomepageCollectionRules();
+  // Rotation window ticks every N minutes so the homepage picks up the next
+  // page of eligible products without a hard reload.
+  const [rotationNow, setRotationNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setRotationNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const curatedProductsLoading = productsLoading || badgesLoading;
 
-  const trending = useMemo(
-    () =>
-      seededShuffle(
-        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["trending"])),
-        rotationSeed + rotationNonce,
-      ).slice(0, 8),
-    [products, badgeAssignments, rotationSeed, rotationNonce]
-  );
+  // Homepage rail preview shows the first `HOMEPAGE_PREVIEW` items from the
+  // fair-rotation window; the full window (up to the admin's limit) is served
+  // by the "View All" collection page.
+  const HOMEPAGE_PREVIEW = 8;
 
-  const newArrivals = useMemo(
-    () =>
-      products
-        .filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["new"] ))
-        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-        .slice(0, 8),
-    [products, badgeAssignments]
-  );
+  const trending = useMemo(() => {
+    const eligible = products.filter((p) =>
+      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["trending"]),
+    );
+    return fairPagedSlice(
+      eligible,
+      rules.limits.trending,
+      rotationNow,
+      rules.rotationHours,
+      rotationNonce,
+      "trending",
+    ).slice(0, HOMEPAGE_PREVIEW);
+  }, [products, badgeAssignments, rules.limits.trending, rules.rotationHours, rotationNonce, rotationNow]);
 
-  const bestSellers = useMemo(
-    () =>
-      seededShuffle(
-        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["bestseller"])),
-        rotationSeed + rotationNonce + 1,
-      ).slice(0, 8),
-    [products, badgeAssignments, rotationSeed, rotationNonce]
-  );
+  const newArrivals = useMemo(() => {
+    const eligible = products
+      .filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["new"]))
+      .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+    return fairPagedSlice(
+      eligible,
+      rules.limits.new_arrivals,
+      rotationNow,
+      rules.rotationHours,
+      rotationNonce,
+      "new_arrivals",
+    ).slice(0, HOMEPAGE_PREVIEW);
+  }, [products, badgeAssignments, rules.limits.new_arrivals, rules.rotationHours, rotationNonce, rotationNow]);
 
-  const featured = useMemo(
-    () =>
-      seededShuffle(
-        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["featured"])),
-        rotationSeed + rotationNonce + 2,
-      ).slice(0, 8),
-    [products, badgeAssignments, rotationSeed, rotationNonce]
-  );
+  const bestSellers = useMemo(() => {
+    const eligible = products.filter((p) =>
+      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["bestseller"]),
+    );
+    return fairPagedSlice(
+      eligible,
+      rules.limits.best_sellers,
+      rotationNow,
+      rules.rotationHours,
+      rotationNonce,
+      "best_sellers",
+    ).slice(0, HOMEPAGE_PREVIEW);
+  }, [products, badgeAssignments, rules.limits.best_sellers, rules.rotationHours, rotationNonce, rotationNow]);
+
+  const featured = useMemo(() => {
+    const eligible = products.filter((p) =>
+      hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["featured"]),
+    );
+    return fairPagedSlice(
+      eligible,
+      rules.limits.featured,
+      rotationNow,
+      rules.rotationHours,
+      rotationNonce,
+      "featured",
+    ).slice(0, HOMEPAGE_PREVIEW);
+  }, [products, badgeAssignments, rules.limits.featured, rules.rotationHours, rotationNonce, rotationNow]);
 
 
   const { items: testimonials } = useTestimonials();

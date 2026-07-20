@@ -56,6 +56,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminTrafficRouteImport } from './routes/admin-traffic'
 import { Route as AdminSystemHealthRouteImport } from './routes/admin-system-health'
 import { Route as AdminSupportRouteImport } from './routes/admin-support'
+import { Route as AdminSiteRulesRouteImport } from './routes/admin-site-rules'
 import { Route as AdminShipmentsRouteImport } from './routes/admin-shipments'
 import { Route as AdminServiceabilityRouteImport } from './routes/admin-serviceability'
 import { Route as AdminSeoIntelligenceRouteImport } from './routes/admin-seo-intelligence'
@@ -418,6 +419,11 @@ const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/admin-support',
   path: '/admin-support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSiteRulesRoute = AdminSiteRulesRouteImport.update({
+  id: '/admin-site-rules',
+  path: '/admin-site-rules',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminShipmentsRoute = AdminShipmentsRouteImport.update({
@@ -1160,6 +1166,7 @@ export interface FileRoutesByFullPath {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-site-rules': typeof AdminSiteRulesRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -1337,6 +1344,7 @@ export interface FileRoutesByTo {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-site-rules': typeof AdminSiteRulesRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -1514,6 +1522,7 @@ export interface FileRoutesById {
   '/admin-seo-intelligence': typeof AdminSeoIntelligenceRoute
   '/admin-serviceability': typeof AdminServiceabilityRoute
   '/admin-shipments': typeof AdminShipmentsRoute
+  '/admin-site-rules': typeof AdminSiteRulesRoute
   '/admin-support': typeof AdminSupportRoute
   '/admin-system-health': typeof AdminSystemHealthRoute
   '/admin-traffic': typeof AdminTrafficRoute
@@ -1693,6 +1702,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-serviceability'
     | '/admin-shipments'
+    | '/admin-site-rules'
     | '/admin-support'
     | '/admin-system-health'
     | '/admin-traffic'
@@ -1870,6 +1880,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-serviceability'
     | '/admin-shipments'
+    | '/admin-site-rules'
     | '/admin-support'
     | '/admin-system-health'
     | '/admin-traffic'
@@ -2046,6 +2057,7 @@ export interface FileRouteTypes {
     | '/admin-seo-intelligence'
     | '/admin-serviceability'
     | '/admin-shipments'
+    | '/admin-site-rules'
     | '/admin-support'
     | '/admin-system-health'
     | '/admin-traffic'
@@ -2224,6 +2236,7 @@ export interface RootRouteChildren {
   AdminSeoIntelligenceRoute: typeof AdminSeoIntelligenceRoute
   AdminServiceabilityRoute: typeof AdminServiceabilityRoute
   AdminShipmentsRoute: typeof AdminShipmentsRoute
+  AdminSiteRulesRoute: typeof AdminSiteRulesRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminTrafficRoute: typeof AdminTrafficRoute
@@ -2644,6 +2657,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-support'
       fullPath: '/admin-support'
       preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-site-rules': {
+      id: '/admin-site-rules'
+      path: '/admin-site-rules'
+      fullPath: '/admin-site-rules'
+      preLoaderRoute: typeof AdminSiteRulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-shipments': {
@@ -3690,6 +3710,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSeoIntelligenceRoute: AdminSeoIntelligenceRoute,
   AdminServiceabilityRoute: AdminServiceabilityRoute,
   AdminShipmentsRoute: AdminShipmentsRoute,
+  AdminSiteRulesRoute: AdminSiteRulesRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminTrafficRoute: AdminTrafficRoute,
@@ -3783,13 +3804,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

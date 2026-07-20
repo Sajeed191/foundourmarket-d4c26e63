@@ -130,6 +130,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Marketplace",
     items: [
+      { to: "/admin-site-rules", label: "Site Rules", icon: SlidersHorizontal, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-vendors", label: "Vendors", icon: Store, roles: ["super_admin"] },
     ],
   },

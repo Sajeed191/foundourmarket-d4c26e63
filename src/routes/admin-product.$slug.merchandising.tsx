@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { SectionEditor, Field, Select, Toggle, numOrNull } from "@/components/admin/product-editor/kit";
 
 export const Route = createFileRoute("/admin-product/$slug/merchandising")({ component: MerchPage });
@@ -11,6 +12,20 @@ const FLAGS: [string, string][] = [
   ["premium", "Premium"], ["fast_selling", "Fast Selling"], ["editors_choice", "Editor's Choice"], ["flash_deal", "Flash Deal"],
   ["staff_pick", "Staff Pick"], ["recommended", "Recommended"], ["homepage_hero", "Homepage Hero"], ["gift_idea", "Gift Idea"],
 ];
+
+/**
+ * Single-badge policy — only ONE promotional flag can be active on a product
+ * at a time. Enabling a new one auto-swaps out any other. Non-promotional
+ * flags (staff_pick, gift_idea, premium, etc.) are unaffected.
+ */
+const PROMO_FLAGS: { key: string; label: string }[] = [
+  { key: "flash_deal", label: "Flash Deal" },
+  { key: "trending", label: "Trending" },
+  { key: "bestseller", label: "Best Seller" },
+  { key: "new_arrival", label: "New Arrival" },
+  { key: "featured", label: "Featured" },
+];
+const PROMO_KEYS = new Set(PROMO_FLAGS.map((p) => p.key));
 
 const SECTION_OPTS = ["none", "featured", "trending", "new_arrivals", "best_sellers", "deals"];
 
@@ -40,24 +55,55 @@ function MerchPage() {
         return p;
       }}
     >
-      {(f, set) => (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            {FLAGS.map(([k, label]) => (
-              <Toggle key={k} checked={!!f[k]} onChange={(v) => set({ [k]: v } as any)} label={label} />
-            ))}
+      {(f, set) => {
+        function toggleFlag(k: string, v: boolean) {
+          // Non-promo flag → normal toggle.
+          if (!PROMO_KEYS.has(k) || !v) {
+            set({ [k]: v } as any);
+            return;
+          }
+          // Enabling a promo flag: auto-swap out any other promo flag.
+          const patch: Record<string, boolean> = { [k]: true };
+          const displaced: string[] = [];
+          for (const p of PROMO_FLAGS) {
+            if (p.key === k) continue;
+            if (f[p.key]) {
+              patch[p.key] = false;
+              displaced.push(p.label);
+            }
+          }
+          set(patch as any);
+          const newLabel = PROMO_FLAGS.find((p) => p.key === k)?.label ?? k;
+          if (displaced.length > 0) {
+            toast.success("Promotional badge updated", {
+              description: `"${displaced.join(", ")}" replaced with "${newLabel}".`,
+            });
+          }
+        }
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              {FLAGS.map(([k, label]) => (
+                <Toggle key={k} checked={!!f[k]} onChange={(v) => toggleFlag(k, v)} label={label} />
+              ))}
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              A product may hold only <strong>one</strong> promotional badge at a time (Flash Deal, Trending, Best Seller,
+              New Arrival, Featured). Enabling one automatically removes the others.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Priority score (0-100)" type="number" value={f.priority_score} onChange={(v) => set({ priority_score: v })} />
+              <Select label="Homepage section" value={f.homepage_section} onChange={(v) => set({ homepage_section: v })}
+                options={SECTION_OPTS.map((o) => ({ value: o, label: o.replace(/_/g, " ") }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Toggle checked={f.is_category_banner} onChange={(v) => set({ is_category_banner: v })} label="Category banner" />
+              <Toggle checked={f.hide_from_recommendations} onChange={(v) => set({ hide_from_recommendations: v })} label="Hide from recommendations" />
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Priority score (0-100)" type="number" value={f.priority_score} onChange={(v) => set({ priority_score: v })} />
-            <Select label="Homepage section" value={f.homepage_section} onChange={(v) => set({ homepage_section: v })}
-              options={SECTION_OPTS.map((o) => ({ value: o, label: o.replace(/_/g, " ") }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Toggle checked={f.is_category_banner} onChange={(v) => set({ is_category_banner: v })} label="Category banner" />
-            <Toggle checked={f.hide_from_recommendations} onChange={(v) => set({ hide_from_recommendations: v })} label="Hide from recommendations" />
-          </div>
-        </div>
-      )}
+        );
+      }}
     </SectionEditor>
   );
 }
+
