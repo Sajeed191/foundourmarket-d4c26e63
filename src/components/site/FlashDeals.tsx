@@ -221,7 +221,7 @@ export function FlashDeals() {
   }, [items, sectionActive]);
 
   if (!sectionActive && !isAdmin) return null;
-  if (loading && products.length === 0) return null;
+  if (loading) return null;
 
   if (!sectionActive && isAdmin) {
     return (
