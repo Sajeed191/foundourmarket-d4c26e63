@@ -124,44 +124,19 @@ function CinematicDivider() {
 
 /* Section identity — editorial label, subtitle, ghost word, badge, alignment. */
 const SECTION_EYEBROW: Record<string, string> = {
-  categories: "Curated Collection",
+  categories: "Featured Collection",
   flash_deals: "Limited Offers",
-  trending: "Popular Picks",
-  new_arrivals: "Latest Arrivals",
+  trending: "Popular This Week",
+  new_arrivals: "Just Released",
   best_sellers: "Customer Favorites",
 };
 
 const SECTION_SUBTITLE: Record<string, string> = {
-  categories: "Explore every department curated for you.",
+  categories: "Explore curated collections chosen for every lifestyle.",
   flash_deals: "Today's best prices from trusted sellers.",
-  trending: "Trending products customers love.",
-  new_arrivals: "Fresh arrivals added daily.",
-  best_sellers: "Most purchased products this week.",
-};
-
-const SECTION_GHOST: Record<string, string> = {
-  categories: "CATEGORIES",
-  flash_deals: "FLASH",
-  trending: "TRENDING",
-  new_arrivals: "NEW",
-  best_sellers: "BEST",
-};
-
-const SECTION_BADGE: Record<string, string> = {
-  categories: "Handpicked",
-  flash_deals: "Live",
-  trending: "Updated Today",
-  new_arrivals: "Fresh",
-  best_sellers: "Daily",
-};
-
-/* Alternating alignment — editorial rhythm across the homepage. */
-const SECTION_ALIGN: Record<string, "center" | "left"> = {
-  categories: "center",
-  flash_deals: "left",
-  trending: "center",
-  new_arrivals: "left",
-  best_sellers: "center",
+  trending: "The pieces our community is loving right now.",
+  new_arrivals: "Fresh finds, added to the collection this week.",
+  best_sellers: "The most-loved pieces across the marketplace.",
 };
 
 /* Full-width premium "View All" button shown directly below each product section */
