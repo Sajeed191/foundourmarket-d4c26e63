@@ -13,6 +13,7 @@ import { conversationStore as store } from "@/lib/ai-shopping/conversation-store
 import type { AiMessage, AiProductRef, AiThread, AiThreadIndexEntry } from "@/lib/ai-shopping/types";
 import { AiProductCard } from "./ai-shopping/AiProductCard";
 import { getShoppingContext } from "@/lib/ai-shopping/shopping-context";
+import { recordAiEvent } from "@/lib/ai-shopping/analytics";
 
 const SUGGESTIONS = [
   "Show me lightweight running shoes under ₹3,000",
@@ -163,6 +164,11 @@ export function AiShoppingAssistant() {
     try {
       const payload = withUser.messages.map((m) => ({ role: m.role, content: m.content }));
       const shoppingContext = getShoppingContext();
+      recordAiEvent(
+        "ai_message_sent",
+        { page: shoppingContext.page, route: shoppingContext.route ?? null },
+        { chars: trimmed.length },
+      );
       const res = await fetch("/api/ai-shopping", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,6 +217,19 @@ export function AiShoppingAssistant() {
         suggestions: finalSuggestions,
       };
       persist({ ...withUser, messages: [...withUser.messages, assistantMsg] });
+      const postCtx = getShoppingContext();
+      recordAiEvent(
+        "ai_reply_received",
+        { page: postCtx.page, route: postCtx.route ?? null },
+        { chars: replyText.length, product_count: finalProducts?.length ?? 0 },
+      );
+      if (finalProducts && finalProducts.length > 0) {
+        recordAiEvent(
+          "ai_recommendation_shown",
+          { page: postCtx.page, route: postCtx.route ?? null },
+          { count: finalProducts.length },
+        );
+      }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       const message = err instanceof Error ? err.message : "Something went wrong";
