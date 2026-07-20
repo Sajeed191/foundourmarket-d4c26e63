@@ -264,6 +264,51 @@ export function useBadgeCatalog() {
   return { ...snap, loading };
 }
 
+const normalizeBadgeToken = (value: string): string =>
+  value.trim().toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+
+const BADGE_ALIASES: Record<string, string[]> = {
+  flash_deal: ["flash_deal", "flash_sale", "flash", "limited_offer", "limited_offers"],
+  hot_deal: ["hot_deal", "hot", "deal"],
+  trending: ["trending", "trend", "popular_this_week"],
+  new: ["new", "new_arrival", "new_arrivals", "just_released"],
+  bestseller: ["bestseller", "best_seller", "best_sellers", "customer_favorite", "customer_favorites"],
+  featured: ["featured", "featured_collection", "featured_collections", "featured_product", "featured_products"],
+};
+
+/**
+ * True when a storefront badge assignment is live for presentation/collection
+ * filtering. This mirrors useProductBadges() without needing one hook per card.
+ */
+export function isRenderBadgeLive(b: RenderBadge, now = Date.now()): boolean {
+  if (b.assignArchived) return false;
+  if (b.assignStartAt && new Date(b.assignStartAt).getTime() > now) return false;
+  if (b.assignEndAt && new Date(b.assignEndAt).getTime() < now) return false;
+  return isBadgeLive(b, now);
+}
+
+/**
+ * Homepage collection membership is driven ONLY by assigned product badges.
+ * Legacy product flags (trending/new_arrival/bestseller/featured/etc.) are not
+ * considered here, so empty badge assignments produce empty curated sections.
+ */
+export function hasAssignedCollectionBadge(
+  badges: readonly RenderBadge[] | undefined,
+  keys: readonly string[],
+  now = Date.now(),
+): boolean {
+  if (!badges?.length) return false;
+  const allowed = new Set(
+    keys.flatMap((key) => BADGE_ALIASES[normalizeBadgeToken(key)] ?? [key]).map(normalizeBadgeToken),
+  );
+  return badges.some((b) => {
+    if (!isRenderBadgeLive(b, now)) return false;
+    const key = normalizeBadgeToken(b.badgeKey || "");
+    const label = normalizeBadgeToken(b.label || "");
+    return allowed.has(key) || allowed.has(label);
+  });
+}
+
 export async function refreshBadges() {
   await load(true);
 }

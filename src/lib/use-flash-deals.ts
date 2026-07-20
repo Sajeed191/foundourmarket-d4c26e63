@@ -4,6 +4,7 @@ import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
+import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 
 /** Maximum products visibly promoted as Flash Deals at any one time. */
 const FLASH_VISIBLE_MAX = 10;
@@ -31,9 +32,8 @@ export type FlashItem = {
 };
 
 /**
- * True when a product belongs in the Flash Deals section. Per the badge spec,
- * the section shows products flagged FLASHDEAL or HOTDEAL (verifiable from real
- * product data), plus legacy collection tokens.
+ * Legacy helper retained only for older non-homepage callers. Curated homepage
+ * Flash Deal membership is driven by live product_badges assignments below.
  */
 export function isFlashDealProduct(p: Product): boolean {
   if (p.flashDeal || p.hotDeal) return true;
@@ -61,6 +61,7 @@ function useNow(intervalMs = 60_000, enabled = true) {
  */
 export function useFlashDeals() {
   const { products, loading } = useProducts();
+  const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const now = useNow(60_000, true);
   const rotationNonce = useRotationNonce();
@@ -113,7 +114,7 @@ export function useFlashDeals() {
     let excludedUnavailable = 0;
 
     for (const p of products) {
-      if (!isFlashDealProduct(p)) continue;
+      if (!hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["flash_deal", "hot_deal"], now)) continue;
       totalFlagged++;
       // Active = published, in stock, and flagged. Inactive products are hidden everywhere.
       const available = p.status === "published" && p.inStock && p.stockQuantity > 0;
@@ -145,8 +146,8 @@ export function useFlashDeals() {
     }
 
     return ordered;
-  }, [products, liveDealByProductId, flashSeed, now]);
+  }, [products, badgeAssignments, liveDealByProductId, flashSeed, now]);
 
 
-  return { items, loading, now, products };
+  return { items, loading: loading || badgesLoading, now, products };
 }

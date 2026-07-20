@@ -4,7 +4,7 @@ import { computeBadges, singleBadge, DEFAULT_BADGE_SETTINGS, type Badge, type Ba
 import { useProducts } from "@/lib/use-products";
 import { useBadgeSettings } from "@/lib/use-badge-settings";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { isFlashDealProduct } from "@/lib/use-flash-deals";
+import { hasAssignedCollectionBadge, useBadgeCatalog, type RenderBadge } from "@/lib/use-product-badges";
 import {
   flashWindowSeed,
   dayWindowSeed,
@@ -93,10 +93,16 @@ export type FlashSelection = {
 export function selectActiveFlash(
   products: Product[],
   seed: number,
-  settings: BadgeSettings,
+  _settings: BadgeSettings,
+  badgeMap?: Map<string, RenderBadge[]>,
+  now = Date.now(),
 ): FlashSelection {
   const eligible = products.filter(
-    (p) => isFlashDealProduct(p) && p.status === "published" && p.inStock && p.stockQuantity > 0,
+    (p) =>
+      hasAssignedCollectionBadge(badgeMap?.get(p.slug), ["flash_deal", "hot_deal"], now) &&
+      p.status === "published" &&
+      p.inStock &&
+      p.stockQuantity > 0,
   );
   const chosen = seededShuffle(eligible, seed).slice(0, FLASH_VISIBLE_MAX);
   const slugs = new Set(chosen.map((p) => p.slug));
@@ -104,9 +110,9 @@ export function selectActiveFlash(
   let flashCount = 0;
   let hotCount = 0;
   for (const p of chosen) {
-    const all = computeBadges(p, settings, 99);
-    const hasFlash = all.some((b) => b.key === "flash_deal");
-    const hasHot = all.some((b) => b.key === "hot_deal");
+    const assignedBadges = badgeMap?.get(p.slug);
+    const hasFlash = hasAssignedCollectionBadge(assignedBadges, ["flash_deal"], now);
+    const hasHot = hasAssignedCollectionBadge(assignedBadges, ["hot_deal"], now);
     let key: BadgeKey | null = null;
     if (hasFlash && hasHot) {
       // Pick the rarer badge so far to balance the distribution (ties → Flash).
@@ -143,6 +149,7 @@ export function selectActiveFlashSlugs(
  */
 export function BadgeEngineProvider({ children }: { children: ReactNode }) {
   const { products } = useProducts();
+  const { map: badgeAssignments } = useBadgeCatalog();
   const nonce = useRotationNonce();
   const settings = useBadgeSettings();
   const [now, setNow] = useState(() => Date.now());
@@ -156,9 +163,9 @@ export function BadgeEngineProvider({ children }: { children: ReactNode }) {
   const daySeed = dayWindowSeed(now);
 
   const { activeFlashSlugs, flashBadgeBySlug } = useMemo(() => {
-    const sel = selectActiveFlash(products, flashSeed, settings);
+    const sel = selectActiveFlash(products, flashSeed, settings, badgeAssignments, now);
     return { activeFlashSlugs: sel.slugs, flashBadgeBySlug: sel.badgeBySlug };
-  }, [products, flashSeed, settings]);
+  }, [products, badgeAssignments, flashSeed, settings, now]);
 
   // Memoize by the stable inputs so the context identity only changes when a
   // rotation window actually crosses or admin rules change — not every minute.
@@ -220,7 +227,7 @@ export function computeContextBadges(
     case "flash":
       // Flash section only ever renders the one balanced badge per selected deal.
       if (chosenFlash) return [singleBadge(chosenFlash)];
-      return all.filter((b) => isFlashKey(b.key)).slice(0, 1);
+      return [];
     case "bestseller":
       return all.filter((b) => b.key === "bestseller").slice(0, 1);
     case "trending":

@@ -18,6 +18,7 @@ const CategoryAdminSheet = lazy(() =>
   import("@/components/admin/CategoryAdminSheet").then((m) => ({ default: m.CategoryAdminSheet })),
 );
 import { useHomepageSections, saveHomepageSection, toggleHomepageSection } from "@/lib/use-homepage-sections";
+import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
@@ -172,19 +173,19 @@ function iconForCategory(slug: string, name: string): LucideIcon {
 const SECTION_EMPTY_COPY: Record<string, { title: string; message: string }> = {
   trending: {
     title: "Coming Soon",
-    message: "We're preparing the next trending collection.",
+    message: "Products for this collection will appear here soon.",
   },
   new_arrivals: {
     title: "Coming Soon",
-    message: "New arrivals will appear here soon.",
+    message: "Products for this collection will appear here soon.",
   },
   best_sellers: {
     title: "Coming Soon",
-    message: "Our best-selling products will appear here soon.",
+    message: "Products for this collection will appear here soon.",
   },
   featured: {
     title: "Coming Soon",
-    message: "A new featured collection is on the way.",
+    message: "Products for this collection will appear here soon.",
   },
 };
 
@@ -485,6 +486,7 @@ function Home() {
   // no homepage swapping. These constants keep the (now always-on) premium
   // path live; the dead branches that referenced GPU safe mode tree-shake away.
   const { products, loading: productsLoading } = useProducts();
+  const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();
 
@@ -562,40 +564,42 @@ function Home() {
   const rotationSeed = useOrderRotationSeed();
   const rotationNonce = useRotationNonce();
 
+  const curatedProductsLoading = productsLoading || badgesLoading;
+
   const trending = useMemo(
     () =>
       seededShuffle(
-        products.filter((p) => p.trending),
+        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["trending"])),
         rotationSeed + rotationNonce,
       ).slice(0, 8),
-    [products, rotationSeed, rotationNonce]
+    [products, badgeAssignments, rotationSeed, rotationNonce]
   );
 
   const newArrivals = useMemo(
     () =>
       products
-        .filter((p) => p.newArrival)
+        .filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["new"] ))
         .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
         .slice(0, 8),
-    [products]
+    [products, badgeAssignments]
   );
 
   const bestSellers = useMemo(
     () =>
       seededShuffle(
-        products.filter((p) => p.bestseller),
+        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["bestseller"])),
         rotationSeed + rotationNonce + 1,
       ).slice(0, 8),
-    [products, rotationSeed, rotationNonce]
+    [products, badgeAssignments, rotationSeed, rotationNonce]
   );
 
   const featured = useMemo(
     () =>
       seededShuffle(
-        products.filter((p) => p.featured || p.homepageHero),
+        products.filter((p) => hasAssignedCollectionBadge(badgeAssignments.get(p.slug), ["featured"])),
         rotationSeed + rotationNonce + 2,
       ).slice(0, 8),
-    [products, rotationSeed, rotationNonce]
+    [products, badgeAssignments, rotationSeed, rotationNonce]
   );
 
 
@@ -818,7 +822,7 @@ function Home() {
 
 
       {/* 4-6 · Trending / New Arrivals / Best Sellers — separate lazy rails */}
-      {ffProductGrid && (productsLoading ? (
+      {ffProductGrid && (curatedProductsLoading ? (
         <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
           <ProductSkeletonGrid count={4} />
         </section>

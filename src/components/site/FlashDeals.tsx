@@ -199,7 +199,7 @@ function FallbackNotice() {
 
 
 export function FlashDeals() {
-  const { items: allItems, loading, now, products } = useFlashDeals();
+  const { items: allItems, loading, now } = useFlashDeals();
   const { sections } = useHomepageSections();
   const { canEdit: isAdmin } = useProductAdminEditing();
 
@@ -221,7 +221,7 @@ export function FlashDeals() {
   }, [items, sectionActive]);
 
   if (!sectionActive && !isAdmin) return null;
-  if (loading && products.length === 0) return null;
+  if (loading) return null;
 
   if (!sectionActive && isAdmin) {
     return (
