@@ -748,13 +748,10 @@ function ProductPage() {
 
               {/* Floating wishlist + share — minimalist glass pills */}
               <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-                <button
-                  onClick={() => toggleWishlist(product.slug)}
-                  aria-label="Wishlist"
-                  className={`size-11 grid place-items-center rounded-full backdrop-blur-md border transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/15 border-accent/40 text-accent" : "bg-black/35 border-white/10 text-white/85 hover:text-accent"}`}
-                >
-                  <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
-                </button>
+                <WishlistHeartButton
+                  active={inWishlist(product.slug)}
+                  onToggle={() => toggleWishlist(product.slug)}
+                />
                 <button
                   onClick={handleShare}
                   aria-label="Share"
@@ -763,6 +760,7 @@ function ProductPage() {
                   <Share2 className="size-[18px]" />
                 </button>
               </div>
+
 
               {/* Sold-out chip */}
               {isOOS && (
