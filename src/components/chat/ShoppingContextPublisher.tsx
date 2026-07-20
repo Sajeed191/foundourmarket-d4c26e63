@@ -63,7 +63,7 @@ export function ShoppingContextPublisher() {
       new Set(items.map((i) => i.category).filter((c): c is string => !!c)),
     ).slice(0, 8);
     const subtotal_inr = items.reduce(
-      (sum, i) => (i.priceInr ? sum + i.priceInr * i.quantity : sum),
+      (sum, i) => (i.price_inr ? sum + i.price_inr * i.quantity : sum),
       0,
     );
     return {
@@ -86,7 +86,7 @@ export function ShoppingContextPublisher() {
         category: p?.category ?? null,
       };
     });
-    const prices = items.map((i) => i.priceInr ?? 0).filter((n) => n > 0);
+    const prices = items.map((i) => i.price_inr ?? 0).filter((n) => n > 0);
     const categories = Array.from(
       new Set(items.map((i) => i.category).filter((c): c is string => !!c)),
     ).slice(0, 8);
