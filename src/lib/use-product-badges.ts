@@ -440,8 +440,58 @@ export async function setBadgeArchived(id: string, archived: boolean) {
 }
 
 // ---- Admin assignment mutations ----
+
+/**
+ * Promotional badge keys — a product may hold at most ONE of these at a time
+ * (single-badge policy). Enforced centrally in `assignBadge` so every admin
+ * surface (bulk tools, product editor, merchandising, badge manager) inherits
+ * the guarantee without duplicating logic.
+ */
+const PROMO_BADGE_KEYS = new Set([
+  "flash_deal",
+  "hot_deal",
+  "trending",
+  "bestseller",
+  "new",
+  "featured",
+]);
+
+function normalizePromoKey(badgeKey: string, label: string): string | null {
+  const k = normalizeBadgeToken(badgeKey);
+  if (PROMO_BADGE_KEYS.has(k)) return k;
+  for (const [canonical, aliases] of Object.entries(BADGE_ALIASES)) {
+    if (!PROMO_BADGE_KEYS.has(canonical)) continue;
+    const set = new Set(aliases.map(normalizeBadgeToken));
+    if (set.has(k) || set.has(normalizeBadgeToken(label))) return canonical;
+  }
+  return null;
+}
+
 export async function assignBadge(slug: string, badgeTypeId: string) {
-  const existing = cache?.map.get(slug) ?? [];
+  // Resolve the incoming badge type so we can enforce the single-promo rule.
+  const snap = await load();
+  const incoming = snap.types.find((t) => t.id === badgeTypeId);
+  const existing = snap.map.get(slug) ?? [];
+
+  // Single-badge policy: if the new badge is a promo, drop any OTHER promo
+  // assignments on this product BEFORE inserting the new one.
+  if (incoming) {
+    const incomingPromo = normalizePromoKey(incoming.badgeKey, incoming.label);
+    if (incomingPromo) {
+      const displacedIds = existing
+        .filter((b) => b.id !== incoming.id)
+        .filter((b) => normalizePromoKey(b.badgeKey, b.label) !== null)
+        .map((b) => b.id);
+      if (displacedIds.length > 0) {
+        await supabase
+          .from("product_badges")
+          .delete()
+          .eq("product_slug", slug)
+          .in("badge_type_id", displacedIds);
+      }
+    }
+  }
+
   const sortOrder = existing.length;
   const { error } = await supabase
     .from("product_badges")

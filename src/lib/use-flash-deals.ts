@@ -5,9 +5,10 @@ import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
 import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import { useHomepageCollectionRules } from "@/lib/site-rules";
 
-/** Maximum products visibly promoted as Flash Deals at any one time. */
-const FLASH_VISIBLE_MAX = 10;
+/** Absolute upper bound on visibly-promoted Flash Deals, regardless of admin config. */
+const FLASH_VISIBLE_HARD_CAP = 50;
 
 /** A row from the dedicated flash_deals table (optional flash pricing + window). */
 export type DealRow = {
@@ -62,6 +63,7 @@ function useNow(intervalMs = 60_000, enabled = true) {
 export function useFlashDeals() {
   const { products, loading } = useProducts();
   const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
+  const rules = useHomepageCollectionRules();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const now = useNow(60_000, true);
   const rotationNonce = useRotationNonce();
@@ -132,21 +134,22 @@ export function useFlashDeals() {
       });
     }
 
-    // Shuffle the full eligible pool for this 6h window, then pick the first 10.
-    // Order stays cached until the next scheduled refresh. Excluded eligible
-    // products keep their Flash/Hot flags in the database but are hidden
-    // publicly (no Flash/Hot badge anywhere) until selected.
-    const ordered = seededShuffle(active, flashSeed).slice(0, FLASH_VISIBLE_MAX);
+    // Shuffle the full eligible pool for this 6h window, then pick the admin-
+    // configured limit (Site Rules → flash_deals). Order stays cached until
+    // the next scheduled refresh. Excluded eligible products keep their
+    // Flash/Hot flags in the database but are hidden publicly until selected.
+    const cap = Math.max(1, Math.min(FLASH_VISIBLE_HARD_CAP, Math.floor(rules.limits.flash_deals)));
+    const ordered = seededShuffle(active, flashSeed).slice(0, cap);
 
     if (typeof window !== "undefined" && import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.info(`[FlashDeals] eligible: ${active.length} | visible this window: ${ordered.length} | excluded unavailable: ${excludedUnavailable} | flagged: ${totalFlagged}`);
+      console.info(`[FlashDeals] eligible: ${active.length} | visible this window: ${ordered.length} | excluded unavailable: ${excludedUnavailable} | flagged: ${totalFlagged} | cap: ${cap}`);
       // eslint-disable-next-line no-console
       console.info("[FlashDeals] current display order:", ordered.map((i) => i.product.slug));
     }
 
     return ordered;
-  }, [products, badgeAssignments, liveDealByProductId, flashSeed, now]);
+  }, [products, badgeAssignments, liveDealByProductId, flashSeed, now, rules.limits.flash_deals]);
 
 
   return { items, loading: loading || badgesLoading, now, products };
