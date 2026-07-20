@@ -46,7 +46,7 @@ export function AiShoppingAssistant() {
   // Load thread index + choose active thread when opening.
   useEffect(() => {
     if (!open) return;
-    const idx = store.listThreads();
+    const idx = store.getThreads();
     setThreads(idx);
     if (!activeId) {
       if (idx.length > 0) {
@@ -54,7 +54,7 @@ export function AiShoppingAssistant() {
       } else {
         const fresh = store.createEmptyThread();
         store.saveThread(fresh);
-        setThreads(store.listThreads());
+        setThreads(store.getThreads());
         setActiveId(fresh.id);
         setThread(fresh);
       }
@@ -92,13 +92,13 @@ export function AiShoppingAssistant() {
   const persist = useCallback((next: AiThread) => {
     store.saveThread(next);
     setThread(next);
-    setThreads(store.listThreads());
+    setThreads(store.getThreads());
   }, []);
 
   const startNewThread = useCallback(() => {
     const fresh = store.createEmptyThread();
     store.saveThread(fresh);
-    setThreads(store.listThreads());
+    setThreads(store.getThreads());
     setActiveId(fresh.id);
     setThread(fresh);
     setDrawerOpen(false);
@@ -108,14 +108,14 @@ export function AiShoppingAssistant() {
 
   const removeThread = useCallback((id: string) => {
     store.deleteThread(id);
-    const remaining = store.listThreads();
+    const remaining = store.getThreads();
     setThreads(remaining);
     if (id === activeId) {
       if (remaining.length > 0) setActiveId(remaining[0].id);
       else {
         const fresh = store.createEmptyThread();
         store.saveThread(fresh);
-        setThreads(store.listThreads());
+        setThreads(store.getThreads());
         setActiveId(fresh.id);
         setThread(fresh);
       }
