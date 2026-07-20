@@ -170,36 +170,33 @@ function FallbackNotice() {
   return (
     <section className="px-4 sm:px-6 py-8 sm:py-10 max-w-7xl mx-auto">
       <div
-        className="relative overflow-hidden rounded-[22px] px-6 py-10 text-center"
+        className="relative overflow-hidden rounded-3xl px-6 py-12 sm:py-14 text-center motion-safe:animate-fade-in"
         style={{
-          background: "linear-gradient(160deg, #0b0b0d 0%, #141416 55%, #1a1a1d 100%)",
+          background: "linear-gradient(160deg, oklch(0.16 0.006 60) 0%, oklch(0.18 0.008 60) 100%)",
           border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 h-48 w-2/3 rounded-full blur-3xl opacity-30"
+          className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 h-40 w-2/3 rounded-full blur-3xl opacity-20"
           style={{ background: "var(--gradient-ember)" }}
         />
-        <div className="relative flex flex-col items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-2xl bg-accent/15 text-accent ring-1 ring-accent/25">
-            <Zap className="size-5" strokeWidth={2} />
+        <div className="relative flex flex-col items-center gap-4">
+          <div className="grid size-12 place-items-center rounded-2xl bg-white/[0.04] text-accent/90 ring-1 ring-white/10">
+            <Zap className="size-5" strokeWidth={1.75} />
           </div>
-          <h3 className="text-base sm:text-lg font-display font-semibold">New Flash Deals Arriving Soon</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
-            Limited-time exclusive offers refresh throughout the day.
+          <h3 className="text-2xl sm:text-[26px] font-display font-semibold tracking-tight text-foreground">
+            Coming Soon
+          </h3>
+          <p className="max-w-sm text-[13.5px] leading-relaxed text-muted-foreground">
+            No flash deals are available right now. New limited-time offers will appear here soon.
           </p>
-          <Link
-            to="/search"
-            className="mt-1 inline-flex items-center gap-2 rounded-full border border-accent/40 text-accent px-5 py-2.5 text-xs font-mono uppercase tracking-widest hover:bg-accent/10 transition"
-          >
-            Browse Catalog <ArrowRight className="size-3.5" />
-          </Link>
         </div>
       </div>
     </section>
   );
 }
+
 
 export function FlashDeals() {
   const { items: allItems, loading, now, products } = useFlashDeals();
