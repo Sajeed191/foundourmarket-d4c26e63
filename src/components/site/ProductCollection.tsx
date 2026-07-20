@@ -1,10 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
-import { useOrderRotationSeed, seededShuffle } from "@/lib/rotation";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
+import { fairPagedSlice } from "@/lib/fair-rotation";
+import {
+  useHomepageCollectionRules,
+  type HomepageCollectionKey,
+} from "@/lib/site-rules";
+import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { BadgeKey } from "@/lib/badges";
@@ -12,20 +17,29 @@ import type { Product } from "@/lib/products";
 
 export type CollectionSort = "trending" | "newest" | "best_sellers";
 
+/** Which stored badge keys make a product eligible for a given rail. */
+const BADGE_MAP: Record<HomepageCollectionKey, BadgeKey[]> = {
+  flash_deals: ["flash_deal", "hot_deal"],
+  trending: ["trending"],
+  best_sellers: ["bestseller"],
+  new_arrivals: ["new"],
+  featured: [],
+};
 
 /**
- * Full collection page for a homepage rail's "View All" destination.
- * Loads the whole catalogue (only here, not on the homepage preview) and
- * renders every product sorted by the rail's ranking.
+ * Full collection page for a homepage rail's "View All" destination. Reads the
+ * admin-editable display limit + rotation interval from Site Rules and slices
+ * the eligible product queue via the fair-rotation engine so every product
+ * gets exposure before repeats.
  */
 export function ProductCollection({
   eyebrow,
   title,
   description,
   icon: Icon,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  sort: _sort,
+  sort,
   filterFlag,
+  collectionKey,
   forceBadge,
 }: {
   eyebrow: string;
@@ -33,11 +47,10 @@ export function ProductCollection({
   description: string;
   icon: LucideIcon;
   sort: CollectionSort;
-  /**
-   * When set, only products with this merchandising badge enabled appear in
-   * the collection. Products without the badge NEVER show here.
-   */
+  /** Legacy flag-based filter — used as a fallback if `collectionKey` isn't set. */
   filterFlag?: "trending" | "bestseller" | "flashDeal" | "featured";
+  /** Site-Rules collection key — drives eligibility (via badge assignments) + limit. */
+  collectionKey?: HomepageCollectionKey;
   /**
    * When set, each card shows ONLY this section's badge (e.g. Trending page →
    * Trending badge only), hiding any other badges the product qualifies for.
@@ -45,16 +58,40 @@ export function ProductCollection({
   forceBadge?: BadgeKey | null;
 }) {
   const { products, loading } = useProducts();
-  const rotationSeed = useOrderRotationSeed();
+  const { map: badgeAssignments } = useBadgeCatalog();
+  const rules = useHomepageCollectionRules();
   const rotationNonce = useRotationNonce();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const items = useMemo(() => {
-    const base = filterFlag ? products.filter((p) => Boolean(p[filterFlag])) : products;
-    // Reshuffle the order every 12:00 AM / PM rotation window so the lineup
-    // feels fresh, while staying perfectly stable between boundaries. The
-    // manual reshuffle nonce lets admins re-randomize instantly on demand.
-    return seededShuffle([...base], rotationSeed + rotationNonce);
-  }, [products, filterFlag, rotationSeed, rotationNonce]);
+    let eligible: Product[];
+    if (collectionKey) {
+      const badgeKeys = BADGE_MAP[collectionKey];
+      eligible = products.filter((p) =>
+        hasAssignedCollectionBadge(badgeAssignments.get(p.slug), badgeKeys),
+      );
+    } else if (filterFlag) {
+      eligible = products.filter((p) => Boolean(p[filterFlag]));
+    } else {
+      eligible = products.slice();
+    }
+    if (sort === "newest") {
+      eligible = [...eligible].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+    }
+    const limit = collectionKey ? rules.limits[collectionKey] : eligible.length;
+    return fairPagedSlice(
+      eligible,
+      limit,
+      nowMs,
+      rules.rotationHours,
+      rotationNonce,
+      collectionKey ?? filterFlag ?? "collection",
+    );
+  }, [products, badgeAssignments, filterFlag, collectionKey, sort, rules, rotationNonce, nowMs]);
 
   const getProductKey = useCallback((p: Product) => p.id ?? p.slug, []);
   const renderProduct = useCallback(
