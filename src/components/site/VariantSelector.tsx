@@ -147,9 +147,9 @@ function VariantSelectorImpl({ variants, selectedId, onSelect }: VariantSelector
                 onClick={() => !oos && onSelect(v.id)}
                 disabled={oos}
                 aria-pressed={sel}
-                className={`min-h-11 rounded-full border px-4 py-2.5 text-xs font-medium leading-none transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
+                className={`min-h-11 rounded-full border px-4 py-2.5 text-xs font-medium leading-none transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
                   scroll ? "shrink-0 snap-start" : ""
-                } ${sel ? "border-accent bg-accent/10 text-accent shadow-[var(--shadow-ember)]" : "border-border hover:border-accent/50"}`}
+                } ${sel ? "border-accent bg-accent/10 text-accent shadow-[var(--shadow-ember)] scale-[1.03]" : "border-border hover:border-accent/50"}`}
               >
                 {v.name}
               </button>
@@ -213,9 +213,9 @@ function VariantSelectorImpl({ variants, selectedId, onSelect }: VariantSelector
                   onClick={() => !s.oos && pickSize(s.value)}
                   disabled={s.oos}
                   aria-pressed={sel}
-                  className={`grid min-h-11 min-w-11 place-items-center rounded-full border px-4 text-xs font-semibold uppercase leading-none tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
+                  className={`grid min-h-11 min-w-11 place-items-center rounded-full border px-4 text-xs font-semibold uppercase leading-none tracking-wide transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
                     scroll ? "shrink-0 snap-start" : ""
-                  } ${sel ? "border-accent bg-accent/10 text-accent shadow-[var(--shadow-ember)]" : "border-border hover:border-accent/50"}`}
+                  } ${sel ? "border-accent bg-accent/10 text-accent shadow-[var(--shadow-ember)] scale-[1.03]" : "border-border hover:border-accent/50"}`}
                 >
                   {s.value}
                 </button>

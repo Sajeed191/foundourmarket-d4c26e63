@@ -47,6 +47,7 @@ import { resizedStorageImage } from "@/lib/storage-image";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductDescription } from "@/components/site/ProductDescription";
+import { RevealOnScroll } from "@/components/site/RevealOnScroll";
 import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
 
@@ -748,13 +749,10 @@ function ProductPage() {
 
               {/* Floating wishlist + share — minimalist glass pills */}
               <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-                <button
-                  onClick={() => toggleWishlist(product.slug)}
-                  aria-label="Wishlist"
-                  className={`size-11 grid place-items-center rounded-full backdrop-blur-md border transition-all active:scale-90 ${inWishlist(product.slug) ? "bg-accent/15 border-accent/40 text-accent" : "bg-black/35 border-white/10 text-white/85 hover:text-accent"}`}
-                >
-                  <Heart className={`size-[18px] ${inWishlist(product.slug) ? "fill-accent" : ""}`} />
-                </button>
+                <WishlistHeartButton
+                  active={inWishlist(product.slug)}
+                  onToggle={() => toggleWishlist(product.slug)}
+                />
                 <button
                   onClick={handleShare}
                   aria-label="Share"
@@ -763,6 +761,7 @@ function ProductPage() {
                   <Share2 className="size-[18px]" />
                 </button>
               </div>
+
 
               {/* Sold-out chip */}
               {isOOS && (
@@ -1264,7 +1263,7 @@ function ProductPage() {
 
 function PdpSectionHeading({ title, subtitle, eyebrow }: { title: string; subtitle?: string; eyebrow?: string }) {
   return (
-    <div className="mb-8 sm:mb-10 flex items-start gap-3.5">
+    <RevealOnScroll className="mb-8 sm:mb-10 flex items-start gap-3.5">
       <span aria-hidden className="mt-1.5 h-6 w-[3px] rounded-full bg-accent shrink-0" />
       <div className="min-w-0">
         {eyebrow && (
@@ -1277,9 +1276,46 @@ function PdpSectionHeading({ title, subtitle, eyebrow }: { title: string; subtit
           <p className="mt-1 text-[13px] text-muted-foreground/80 leading-relaxed">{subtitle}</p>
         )}
       </div>
-    </div>
+    </RevealOnScroll>
   );
 }
+
+/**
+ * Phase 4 polish — wishlist heart.
+ * Fill + pop + soft ripple + best-effort haptic. GPU-only, no confetti.
+ */
+function WishlistHeartButton({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  const [pulse, setPulse] = useState(0);
+  const handleClick = () => {
+    // Best-effort haptic (Android Chrome / some in-app browsers). No-op elsewhere.
+    try { navigator.vibrate?.(active ? 8 : [10, 20, 12]); } catch { /* no-op */ }
+    setPulse((n) => n + 1);
+    onToggle();
+  };
+  return (
+    <button
+      onClick={handleClick}
+      aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
+      aria-pressed={active}
+      className={`relative size-11 grid place-items-center rounded-full backdrop-blur-md border transition-colors duration-200 active:scale-90 overflow-visible ${
+        active ? "bg-accent/15 border-accent/40 text-accent" : "bg-black/35 border-white/10 text-white/85 hover:text-accent"
+      }`}
+    >
+      {pulse > 0 && active && (
+        <span
+          key={pulse}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-full bg-accent/40 animate-heart-ripple"
+        />
+      )}
+      <Heart
+        key={`icon-${pulse}-${active}`}
+        className={`size-[18px] transition-colors duration-200 ${active ? "fill-accent animate-heart-pop" : ""}`}
+      />
+    </button>
+  );
+}
+
 
 
 
