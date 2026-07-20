@@ -923,36 +923,31 @@ function FixedOrb({
   const downRef = useRef({ active: false, moved: false, x: 0, y: 0 });
   const [placed, setPlaced] = useState(false);
 
-  // Cached layout inputs. Position is computed ONCE after layout is ready and
-  // then only recomputed on real layout events (orientation, keyboard, footer
-  // lift, debounced window resize). We intentionally do NOT listen to scroll
-  // or visualViewport scroll — those fire during Chrome/Safari address-bar
-  // animation and would cause visible jitter (v5.0 stability lock).
-  const cachedRef = useRef({ navH: 96, kb: 0, footer: 0, baselineVV: 0 });
+  // Position Lock v6.0: compute the fixed anchor after layout is ready, cache
+  // it, and never tie it to footer/sticky CTA/toast/bottom-sheet visibility.
+  // Scroll only changes opacity/transform through applyVisibility().
+  const cachedRef = useRef({ navH: 96, kb: 0, baselineVV: 0 });
 
-  const readNavH = useCallback(() => {
-    const cs = getComputedStyle(document.documentElement);
-    const navRaw = cs.getPropertyValue("--floating-bottom-offset").trim();
-    let navH = 96;
-    if (navRaw) {
-      const n = parseFloat(navRaw);
-      if (Number.isFinite(n) && !navRaw.includes("calc")) navH = Math.max(n, 72);
-    }
-    return navH;
+  const readBottomNavHeight = useCallback(() => {
+    const css = getComputedStyle(document.documentElement);
+    const rootFontPx = Number.parseFloat(css.fontSize) || 16;
+    const safeBottomRaw = css.getPropertyValue("--mobile-safe-bottom").trim();
+    const safeBottom = Number.parseFloat(safeBottomRaw) || 0;
+    return rootFontPx * 5.75 + safeBottom;
   }, []);
 
   const writeBottom = useCallback(() => {
     const el = wrapRef.current;
     if (!el) return;
     const c = cachedRef.current;
-    el.style.bottom = `${c.navH + BOTTOM_GAP + c.kb + c.footer}px`;
+    el.style.bottom = `${c.navH + BOTTOM_GAP + c.kb}px`;
   }, []);
 
-  // Full recompute — allowed only on real layout events, never on scroll.
+  // Full recompute — allowed only on real layout events, never on scroll or
+  // floating UI changes.
   const applyPosition = useCallback(() => {
     const c = cachedRef.current;
-    c.navH = readNavH();
-    c.footer = getFooterLift();
+    c.navH = readBottomNavHeight();
     const vv = window.visualViewport;
     // Keyboard height: measured against the cached baseline (captured at
     // layout-ready). Only counts when the shrink is large enough to be a
@@ -964,7 +959,7 @@ function FixedOrb({
       c.kb = 0;
     }
     writeBottom();
-  }, [readNavH, writeBottom]);
+  }, [readBottomNavHeight, writeBottom]);
 
   const applyVisibility = useCallback(() => {
     const el = wrapRef.current;
@@ -1035,9 +1030,9 @@ function FixedOrb({
     window.addEventListener("orientationchange", onOrientation);
     window.visualViewport?.addEventListener("resize", onVVResize);
 
-    // Re-apply on floating-stack changes (footer lift, fullscreen context).
+    // Re-apply visibility only on floating-stack changes. Live Chat position is
+    // deliberately locked and must ignore footer/sticky CTA/toast stack changes.
     const unsubscribe = subscribeFloating(() => {
-      applyPosition();
       applyVisibility();
     });
     return () => {
