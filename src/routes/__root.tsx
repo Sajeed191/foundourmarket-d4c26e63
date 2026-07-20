@@ -50,15 +50,23 @@ import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
 import { IsolatedBoundary } from "@/components/site/IsolatedBoundary";
 import { installStartupDiagnostics, useRenderDiagnostics } from "@/lib/startup-diagnostics";
 import { initDebugFlags, getFlag } from "@/lib/debug-flags";
-import { installDebugDiagnostics, patchImageDecode } from "@/lib/debug-diagnostics";
-import { initCompatConfidence } from "@/lib/compat-confidence";
-import { DebugPanel } from "@/components/site/DebugPanel";
+// debug-diagnostics (~600 LOC) and compat-confidence (~470 LOC) are
+// dynamic-imported inside the mount effect below so they don't add parse
+// cost to the initial bundle — they only run once, after mount, anyway.
+// Perf v3 — debug overlays are self-gated to render nothing in prod, but
+// static imports still shipped ~1.1k LOC of parse cost on every cold load.
+// Lazy so they only enter the initial bundle when the user actually opens
+// them (dev/admin/?debug flags).
+const DebugPanel = lazyWithRetry(() =>
+  import("@/components/site/DebugPanel").then((m) => ({ default: m.DebugPanel })),
+);
+const WindowMetricsPanel = lazyWithRetry(() =>
+  import("@/components/site/WindowMetricsPanel").then((m) => ({ default: m.WindowMetricsPanel })),
+);
 import { useRegion } from "@/lib/region";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { buildVisibleMap } from "@/lib/product-availability";
 import { RecommendationProvider } from "@/lib/recommendations";
-
-import { WindowMetricsPanel } from "@/components/site/WindowMetricsPanel";
 
 const HISTORY_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
@@ -917,13 +925,13 @@ function AppRoot() {
 
   useEffect(() => {
     initDebugFlags();
-    // Affected-Device Confidence System: loads persisted per-device evidence,
-    // re-scores (a previously-confirmed device activates immediately), and
-    // installs always-on runtime-evidence listeners. Compatibility Mode only
-    // activates at score >= 90% (suspect hardware + verified runtime anomalies).
-    initCompatConfidence();
-    installDebugDiagnostics();
-    patchImageDecode();
+    // Affected-Device Confidence System + debug diagnostics: dynamic-imported
+    // so ~1k LOC of always-mount-once code stays out of the initial bundle.
+    void import("@/lib/compat-confidence").then((m) => m.initCompatConfidence());
+    void import("@/lib/debug-diagnostics").then((m) => {
+      m.installDebugDiagnostics();
+      m.patchImageDecode();
+    });
     installStartupDiagnostics();
     installChunkRecovery();
     // Infra v2.0 owns SW lifecycle. On approved hosts it registers /sw.js;
@@ -1092,8 +1100,10 @@ function AppRoot() {
                             <GpuCompatBanner />
                             <ShareDialog />
                             
-                            <DebugPanel />
-                            <WindowMetricsPanel />
+                            <Suspense fallback={null}>
+                              <DebugPanel />
+                              <WindowMetricsPanel />
+                            </Suspense>
                             <GlobalSearchMount />
                             <ContinueShoppingHistoryCleanup />
                             <FloatingContextObserver />
