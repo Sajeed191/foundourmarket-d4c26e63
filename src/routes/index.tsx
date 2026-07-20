@@ -35,8 +35,6 @@ import { SearchButton } from "@/components/site/SearchButton";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
-import { PremiumProductCarousel } from "@/components/site/PremiumProductCarousel";
-import type { Product } from "@/lib/products";
 
 // Below-the-fold: lazy so the code stays out of the initial homepage chunk.
 const FlashDeals = lazy(() =>
@@ -213,13 +211,12 @@ const SECTION_EMPTY_COPY: Record<string, string> = {
   best_sellers: "More best sellers are on the way.",
 };
 
-/* Single product section (lazy-mounted). Presents a curated collection with
-   one of four layout variants — a rhythmic sequence across the homepage.
-   Business logic (badges, admin toggles, empty state) is unchanged. */
+/* Single product section (lazy-mounted). Shows exactly 4 products in a 2×2
+   mobile grid (no carousel) with a full-width premium "View All" button.
+   When no products carry the section's badge, an elegant empty state renders
+   instead of hiding the section. */
 function ProductSection({
-  sectionKey, eyebrow, title, icon, products, isAdmin, active, viewAllTo,
-  prominent = false, minHeight = 260, limit = 8,
-  variant = "grid",
+  sectionKey, eyebrow, title, icon, products, isAdmin, active, viewAllTo, prominent = false, minHeight = 260, limit = 4,
 }: {
   sectionKey: string;
   eyebrow: string;
@@ -232,11 +229,14 @@ function ProductSection({
   prominent?: boolean;
   minHeight?: number;
   limit?: number;
-  variant?: "grid" | "carousel" | "trending-hero" | "bestsellers-featured";
 }) {
+  // Only the admin-controlled active toggle hides the section. An empty product
+  // list now shows an elegant message rather than disappearing.
   if (!active && !isAdmin) return null;
   const preview = products.slice(0, limit);
   const isEmpty = preview.length === 0;
+  // Section-specific badge: inside a dedicated section, each card shows only
+  // that section's badge.
   const sectionBadge =
     sectionKey === "trending"
       ? "trending"
@@ -245,11 +245,10 @@ function ProductSection({
         : sectionKey === "new_arrivals"
           ? "new"
           : null;
-
   return (
     <SectionTracker
       sectionKey={sectionKey}
-      className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24 block"
+      className={`px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block`}
     >
       <SectionHeader
         eyebrow={eyebrow}
@@ -261,7 +260,6 @@ function ProductSection({
         active={active}
         prominent={prominent}
       />
-      <div className="mt-10">
       {isEmpty ? (
         <div className="grid place-items-center rounded-3xl border border-dashed border-accent/20 bg-card/40 px-6 py-12 text-center">
           {icon && (
@@ -275,81 +273,14 @@ function ProductSection({
         </div>
       ) : (
         <LazyMount minHeight={minHeight}>
-          {variant === "carousel" ? (
-            <PremiumProductCarousel<Product>
-              items={preview}
-              size="regular"
-              ariaLabel={title}
-              getKey={(p) => p.id ?? p.slug}
-              renderItem={(p) => (
-                <ProductCard product={p} compact forceBadge={sectionBadge} />
-              )}
-            />
-          ) : variant === "trending-hero" ? (
-            (() => {
-              const [hero, ...tail] = preview;
-              return (
-                <div className="flex flex-col gap-3 sm:gap-4">
-                  {hero && (
-                    <div data-product-card-frame className="lg:max-w-[68%]">
-                      <ProductCard product={hero} compact forceBadge={sectionBadge} />
-                    </div>
-                  )}
-                  {tail.length > 0 && (
-                    <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {tail.map((p, i) => (
-                        <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame>
-                          <ProductCard product={p} compact forceBadge={sectionBadge} />
-                        </Reveal>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()
-          ) : variant === "bestsellers-featured" ? (
-            (() => {
-              const [featured, ...rest] = preview;
-              const right = rest.slice(0, 3);
-              const belowMobile = rest.slice(0, 4);
-              return (
-                <>
-                  {/* Desktop: featured left (2/3) + 3 stacked right */}
-                  <div className="hidden lg:grid grid-cols-3 gap-4">
-                    {featured && (
-                      <div data-product-card-frame className="col-span-2 row-span-3">
-                        <ProductCard product={featured} compact forceBadge={sectionBadge} />
-                      </div>
-                    )}
-                    {right.map((p) => (
-                      <div key={p.id ?? p.slug} data-product-card-frame>
-                        <ProductCard product={p} compact forceBadge={sectionBadge} />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Mobile / tablet: featured on top, remaining in 2-col */}
-                  <div className="lg:hidden flex flex-col gap-3 sm:gap-4">
-                    {featured && (
-                      <div data-product-card-frame>
-                        <ProductCard product={featured} compact forceBadge={sectionBadge} />
-                      </div>
-                    )}
-                    {belowMobile.length > 0 && (
-                      <div data-product-grid className="grid grid-cols-2 gap-3 sm:gap-4">
-                        {belowMobile.map((p, i) => (
-                          <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame>
-                            <ProductCard product={p} compact forceBadge={sectionBadge} />
-                          </Reveal>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              );
-            })()
-          ) : sectionKey === "trending" ? (
-            // Preserved experiment path (unused now that trending uses trending-hero,
-            // but kept intact behind the variant switch for safety).
+          {sectionKey === "trending" ? (
+            // TEMPORARY EXPERIMENT — Trending only. Same ProductCard, same DOM
+            // wrapper (data-product-grid / data-product-card-frame), same CSS
+            // classes, same data/sorting/limit. The ONLY change is *when* cards
+            // mount: VirtualizedProductGrid → IncrementalGrid stages the initial
+            // mount in batches of 16 (virtualizeThreshold={0} forces the batched
+            // path), exactly as Browse (/search) does. No virtualization,
+            // no unmounting, no pagination.
             <VirtualizedProductGrid
               items={preview}
               virtualizeThreshold={0}
@@ -372,11 +303,9 @@ function ProductSection({
         </LazyMount>
 
       )}
-      </div>
     </SectionTracker>
   );
 }
-
 
 
 function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All", sectionKey, editable, active = true, prominent = false }: { eyebrow: string; title: string; icon?: React.ComponentType<{ className?: string }>; href?: string; hrefLabel?: string; sectionKey?: string; editable?: boolean; active?: boolean; prominent?: boolean }) {
@@ -767,7 +696,7 @@ function Home() {
       <TrustBadgesStrip />
 
       {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-10 sm:py-14 max-w-7xl mx-auto scroll-mt-24">
+      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
         <div className="relative">
           <SectionHeader eyebrow="Browse" title="Main Categories" icon={LayoutGrid} href="/categories" sectionKey="categories" />
           {isProductAdmin && (
@@ -779,7 +708,7 @@ function Home() {
             </button>
           )}
         </div>
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-3 sm:gap-4">
           {ffCategoryGrid && homeCategories.map((cat, i) => {
             const Icon = iconForCategory(cat.slug, cat.name);
             const hasImage = !!(cat.image || cat.mobile_image);
@@ -898,9 +827,8 @@ function Home() {
             active={sections.trending.active}
             viewAllTo="/products/trending"
             prominent
-            minHeight={360}
-            limit={5}
-            variant="trending-hero"
+            minHeight={320}
+            limit={4}
           />
               <ProductSection
                 sectionKey="new_arrivals"
@@ -911,9 +839,6 @@ function Home() {
                 isAdmin={isProductAdmin}
                 active={sections.new_arrivals.active}
                 viewAllTo="/products/new-arrivals"
-                minHeight={320}
-                limit={8}
-                variant="carousel"
               />
               <ProductSection
                 sectionKey="best_sellers"
@@ -924,9 +849,6 @@ function Home() {
                 isAdmin={isProductAdmin}
                 active={sections.best_sellers.active}
                 viewAllTo="/products/best-sellers"
-                minHeight={360}
-                limit={4}
-                variant="bestsellers-featured"
               />
         </>
       ))}
