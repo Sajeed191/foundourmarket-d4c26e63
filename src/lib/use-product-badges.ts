@@ -331,6 +331,145 @@ export function hasAssignedCollectionBadge(
   });
 }
 
+// ============================================================================
+// Featured Editorial Override — promotional collection resolver
+// ============================================================================
+
+/**
+ * A promotional homepage collection. `featured` is intentionally NOT a promo
+ * collection — it is an editorial overlay that can coexist with exactly one
+ * promo. Every promotional badge maps to exactly one collection.
+ */
+export type PromoCollection = "flash_deals" | "trending" | "bestseller" | "new_arrivals";
+
+/** Tie-break order when a product qualifies for multiple promo collections. */
+const PROMO_COLLECTION_PRIORITY: readonly PromoCollection[] = [
+  "flash_deals",
+  "trending",
+  "bestseller",
+  "new_arrivals",
+];
+
+/** Canonical promo badge key → promotional collection. */
+const PROMO_BADGE_TO_COLLECTION: Record<string, PromoCollection> = {
+  flash_deal: "flash_deals",
+  hot_deal: "flash_deals",
+  trending: "trending",
+  bestseller: "bestseller",
+  new: "new_arrivals",
+};
+
+function promoCollectionForBadge(b: RenderBadge): PromoCollection | null {
+  const canonical = normalizePromoKey(b.badgeKey, b.label);
+  return canonical ? PROMO_BADGE_TO_COLLECTION[canonical] ?? null : null;
+}
+
+function isFeaturedBadge(b: RenderBadge): boolean {
+  const set = new Set(BADGE_ALIASES.featured.map(normalizeBadgeToken));
+  return (
+    set.has(normalizeBadgeToken(b.badgeKey || "")) ||
+    set.has(normalizeBadgeToken(b.label || ""))
+  );
+}
+
+/**
+ * Resolves each product's allowed promotional collections. When a product
+ * qualifies for multiple promo collections we pick exactly one using a
+ * load-balancing algorithm (fewest-eligible first, ties broken by
+ * PROMO_COLLECTION_PRIORITY). When `allowMultiForFeatured` is on, Featured
+ * products keep all their promo collections.
+ */
+function resolvePromoCollections(
+  map: Map<string, RenderBadge[]>,
+  now = Date.now(),
+): Map<string, Set<PromoCollection>> {
+  const productCollections = new Map<string, Set<PromoCollection>>();
+  const featuredSlugs = new Set<string>();
+  for (const [slug, list] of map) {
+    const cols = new Set<PromoCollection>();
+    for (const b of list) {
+      if (!isRenderBadgeLive(b, now)) continue;
+      if (isFeaturedBadge(b)) featuredSlugs.add(slug);
+      const col = promoCollectionForBadge(b);
+      if (col) cols.add(col);
+    }
+    if (cols.size > 0) productCollections.set(slug, cols);
+  }
+
+  const resolved = new Map<string, Set<PromoCollection>>();
+  const counts: Record<PromoCollection, number> = {
+    flash_deals: 0, trending: 0, bestseller: 0, new_arrivals: 0,
+  };
+  const ambiguous: string[] = [];
+
+  // Pass 1: singletons and (optionally) featured-with-multi-promos passthrough.
+  for (const [slug, cols] of productCollections) {
+    const multiFeaturedPass = resolverConfig.allowMultiForFeatured && featuredSlugs.has(slug);
+    if (cols.size === 1 || multiFeaturedPass) {
+      resolved.set(slug, cols);
+      for (const c of cols) counts[c]++;
+      continue;
+    }
+    ambiguous.push(slug);
+  }
+
+  // Pass 2: balance ambiguous products, deterministic slug order.
+  ambiguous.sort();
+  for (const slug of ambiguous) {
+    const cols = productCollections.get(slug)!;
+    let best: PromoCollection | null = null;
+    for (const c of PROMO_COLLECTION_PRIORITY) {
+      if (!cols.has(c)) continue;
+      if (best === null || counts[c] < counts[best]) best = c;
+    }
+    if (best) {
+      resolved.set(slug, new Set([best]));
+      counts[best]++;
+    }
+  }
+  return resolved;
+}
+
+/**
+ * Test-only export of the resolver for regression coverage.
+ * @internal
+ */
+export const __resolvePromoCollectionsForTests = resolvePromoCollections;
+
+/**
+ * Homepage collection membership check — the canonical helper for every
+ * homepage rail. Enforces "Featured Editorial Override": promotional
+ * collections respect the single-promo resolver, Featured is checked as a
+ * live editorial badge that can coexist with the product's resolved promo.
+ */
+export function productInHomepageCollection(
+  slug: string,
+  badges: readonly RenderBadge[] | undefined,
+  keys: readonly string[],
+  now = Date.now(),
+): boolean {
+  const wantedCollections = new Set<PromoCollection>();
+  let wantsFeatured = false;
+  for (const k of keys) {
+    const norm = normalizeBadgeToken(k);
+    if (norm === "featured" || (BADGE_ALIASES.featured ?? []).some((a) => normalizeBadgeToken(a) === norm)) {
+      wantsFeatured = true;
+      continue;
+    }
+    const canonical = normalizePromoKey(k, k);
+    if (canonical && PROMO_BADGE_TO_COLLECTION[canonical]) {
+      wantedCollections.add(PROMO_BADGE_TO_COLLECTION[canonical]);
+    }
+  }
+  if (wantsFeatured && hasAssignedCollectionBadge(badges, ["featured"], now)) return true;
+  if (wantedCollections.size === 0) return false;
+  const resolved = cache?.resolvedPromoBySlug.get(slug);
+  if (!resolved) return false;
+  for (const c of wantedCollections) if (resolved.has(c)) return true;
+  return false;
+}
+
+
 export async function refreshBadges() {
   await load(true);
 }
