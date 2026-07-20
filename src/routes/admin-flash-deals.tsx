@@ -286,7 +286,7 @@ function FlashDealsAdmin() {
                 className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
               >
                 <div className="size-12 shrink-0 rounded-xl overflow-hidden bg-black/40 ring-1 ring-white/10">
-                  {p?.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" />}
+                  {p?.image && <img loading="lazy" decoding="async" src={p.image} alt={p.name} className="w-full h-full object-cover" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{p?.name ?? "Unknown product"}</p>

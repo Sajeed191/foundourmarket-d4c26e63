@@ -216,7 +216,7 @@ function OrderDetailPage() {
               const options = [it.variant_color, it.variant_size].filter(Boolean).join(" · ") || it.variant_name || "";
               return (
               <li key={it.id} className="flex items-center gap-3">
-                {(it.variant_image || it.image) && <img src={it.variant_image || it.image || undefined} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
+                {(it.variant_image || it.image) && <img decoding="async" src={it.variant_image || it.image || undefined} alt="" className="size-14 rounded-lg object-cover border border-border" loading="lazy" />}
                 <div className="flex-1 min-w-0">
                   <Link to="/products/$slug" params={{ slug: it.product_slug }} className="text-sm font-medium truncate hover:text-accent block">{it.name}</Link>
                   {options && <p className="text-xs text-accent/90 truncate">{options}{it.variant_sku ? ` · ${it.variant_sku}` : ""}</p>}

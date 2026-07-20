@@ -265,7 +265,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
               <li key={q.id} className="bg-card border border-border rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-4">
                   <div className="size-11 shrink-0 rounded-full bg-muted overflow-hidden grid place-items-center font-display text-sm font-bold ring-1 ring-white/10">
-                    {q.author_avatar ? <img src={q.author_avatar} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
+                    {q.author_avatar ? <img loading="lazy" decoding="async" src={q.author_avatar} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -334,7 +334,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                 {q.answer && editingId !== q.id ? (
                   <div className="mt-4 ml-[3.75rem] flex items-start gap-3 p-4 sm:p-5 bg-accent/[0.07] border border-accent/25 rounded-2xl shadow-[0_16px_40px_-30px_oklch(0_0_0/0.9)]">
                     <span className="size-10 shrink-0 rounded-full overflow-hidden grid place-items-center ring-1 ring-accent/40 bg-card">
-                      <img src={brandLogo} alt="FoundOurMarket" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={brandLogo} alt="FoundOurMarket" className="w-full h-full object-cover" />
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">

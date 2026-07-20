@@ -291,7 +291,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
                 <li key={i} className="flex items-center gap-3">
                   <span className="font-mono text-[10px] text-muted-foreground w-4">{i + 1}</span>
                   <div className="size-9 rounded-lg overflow-hidden bg-background border border-border shrink-0">
-                    {p.image && <img src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
+                    {p.image && <img loading="lazy" decoding="async" src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{p.name}</p>
@@ -375,7 +375,7 @@ export function DashboardOverview({ orders, products, customersCount }: Props) {
               {stats.topRated.map((p) => (
                 <li key={p.id} className="flex items-center gap-3">
                   <div className="size-9 rounded-lg overflow-hidden bg-background border border-border shrink-0">
-                    {p.image && <img src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
+                    {p.image && <img loading="lazy" decoding="async" src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{p.name}</p>

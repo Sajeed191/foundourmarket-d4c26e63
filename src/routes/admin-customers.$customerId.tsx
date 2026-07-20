@@ -375,7 +375,7 @@ function ProfileInner() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3 min-w-0">
             {p.avatar_url ? (
-              <img src={p.avatar_url} alt="" className="size-14 rounded-2xl object-cover border border-white/10" />
+              <img loading="lazy" decoding="async" src={p.avatar_url} alt="" className="size-14 rounded-2xl object-cover border border-white/10" />
             ) : (
               <span className="size-14 rounded-2xl grid place-items-center bg-accent/15 text-accent text-lg font-bold border border-accent/20">
                 {initialsOf(p.full_name, p.email)}

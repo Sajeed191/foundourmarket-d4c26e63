@@ -360,7 +360,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                             onClick={onClose}
                             className="group w-[150px] shrink-0 rounded-[18px] border border-white/10 bg-white/[0.03] p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40"
                           >
-                            <img src={p.image} alt="" loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
+                            <img decoding="async" src={p.image} alt="" loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
                             <p className="product-typography product-title-text mt-2 line-clamp-2 text-[13px] font-medium leading-snug">{p.name}</p>
                             <div className="mt-1.5 flex items-center justify-between">
                               <Price value={priceOf(p)} className="font-mono text-sm font-semibold text-accent" />
@@ -458,7 +458,7 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                         aria-selected={isActive}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${isActive ? "bg-accent/10" : "hover:bg-white/5"}`}
                       >
-                        <img src={p.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover border border-border" />
+                        <img decoding="async" src={p.image} alt="" loading="lazy" className="size-12 rounded-lg object-cover border border-border" />
                         <div className="flex-1 min-w-0">
                           <p className="product-typography product-title-text text-sm font-medium truncate">{p.name}</p>
                           <p className="product-typography text-[11px] font-mono text-muted-foreground truncate">{p.category}</p>

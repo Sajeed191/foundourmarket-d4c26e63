@@ -152,7 +152,7 @@ function WorkQueuePage() {
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="size-11 shrink-0 overflow-hidden rounded-lg border border-border/40 bg-muted/20 grid place-items-center">
                         {item.productImage ? (
-                          <img src={item.productImage} alt="" className="h-full w-full object-cover" />
+                          <img loading="lazy" decoding="async" src={item.productImage} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <Package className="size-4 text-muted-foreground" />
                         )}

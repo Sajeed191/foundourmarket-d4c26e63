@@ -838,7 +838,7 @@ function ReturnsPage() {
                       {/* Thumbnail */}
                       <div className="size-14 shrink-0 rounded-xl overflow-hidden ring-1 ring-white/10 bg-white/[0.04] grid place-items-center">
                         {prod?.image ? (
-                          <img src={prod.image} alt={prod.name} className="size-full object-cover" loading="lazy" />
+                          <img decoding="async" src={prod.image} alt={prod.name} className="size-full object-cover" loading="lazy" />
                         ) : (
                           <Package className="size-5 text-white/30" />
                         )}
@@ -988,7 +988,7 @@ function ReturnsPage() {
                     <div className="flex items-start gap-3">
                       <div className="size-14 shrink-0 rounded-xl overflow-hidden ring-1 ring-white/10 bg-white/[0.04] grid place-items-center">
                         {prod?.image ? (
-                          <img src={prod.image} alt={prod.name} className="size-full object-cover" />
+                          <img loading="lazy" decoding="async" src={prod.image} alt={prod.name} className="size-full object-cover" />
                         ) : (
                           <Package className="size-5 text-white/30" />
                         )}

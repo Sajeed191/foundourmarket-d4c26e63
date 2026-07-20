@@ -291,7 +291,7 @@ function CommandCenter({ slug, f, set, row }: {
       <div className="card-premium rounded-2xl p-3.5">
         <div className="flex items-center gap-3">
           <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 grid place-items-center">
-            {primaryUrl ? <img src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-6 text-muted-foreground" />}
+            {primaryUrl ? <img loading="lazy" decoding="async" src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-6 text-muted-foreground" />}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{f.name || "Untitled product"}</p>

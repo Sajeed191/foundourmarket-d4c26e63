@@ -273,7 +273,7 @@ function MerchListCard({
       <input type="checkbox" checked={selected} onChange={onSelect} onPointerDownCapture={(e) => e.stopPropagation()}
         className="accent-[var(--accent)] shrink-0" />
       <div className="size-12 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
-        {row.image ? <img src={resolveImage(row.image)} alt="" className="size-full object-cover" /> : <Package className="size-4 text-muted-foreground" />}
+        {row.image ? <img loading="lazy" decoding="async" src={resolveImage(row.image)} alt="" className="size-full object-cover" /> : <Package className="size-4 text-muted-foreground" />}
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium truncate">{row.name}</p>
@@ -378,7 +378,7 @@ function HeroManager({ rows, onPublish }: { rows: MerchRow[]; onPublish: (id: st
                 pending === r.id ? "border-accent/60 bg-accent/10" : "border-white/10 hover:border-white/20"
               }`}>
               <div className="aspect-square rounded-lg overflow-hidden bg-white/5 grid place-items-center mb-1.5">
-                {r.image ? <img src={resolveImage(r.image)} alt="" className="size-full object-cover" /> : <Package className="size-5 text-muted-foreground" />}
+                {r.image ? <img loading="lazy" decoding="async" src={resolveImage(r.image)} alt="" className="size-full object-cover" /> : <Package className="size-5 text-muted-foreground" />}
               </div>
               <p className="text-xs truncate">{r.name}</p>
               {pending === r.id && <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-accent"><Check className="size-3" /> Selected</span>}
@@ -392,7 +392,7 @@ function HeroManager({ rows, onPublish }: { rows: MerchRow[]; onPublish: (id: st
         <div className="relative overflow-hidden rounded-2xl border border-white/10 min-h-[240px] grid place-items-center bg-card">
           {hero ? (
             <>
-              {hero.image && <img src={resolveImage(hero.image)} alt="" className="absolute inset-0 size-full object-cover opacity-40" />}
+              {hero.image && <img loading="lazy" decoding="async" src={resolveImage(hero.image)} alt="" className="absolute inset-0 size-full object-cover opacity-40" />}
               <div className="relative z-10 p-6 text-center space-y-2">
                 <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-accent"><Crown className="size-3" /> Homepage Hero</span>
                 <p className="text-xl font-display font-semibold">{hero.name}</p>
@@ -480,7 +480,7 @@ function InsightCard({ title, icon, tone, rows, action, actionLabel, onAdd, metr
           {rows.map((r) => (
             <li key={r.id} className="flex items-center gap-3">
               <div className="size-9 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
-                {r.image ? <img src={resolveImage(r.image)} alt="" className="size-full object-cover" /> : <Package className="size-4 text-muted-foreground" />}
+                {r.image ? <img loading="lazy" decoding="async" src={resolveImage(r.image)} alt="" className="size-full object-cover" /> : <Package className="size-4 text-muted-foreground" />}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs truncate">{r.name}</p>

@@ -42,7 +42,7 @@ function StatusDot({ status }: { status: UserIntel["onlineStatus"] }) {
 }
 
 function Avatar({ u, size = 36 }: { u: UserIntel; size?: number }) {
-  if (u.avatar) return <img src={u.avatar} alt={u.name} className="rounded-full object-cover" style={{ width: size, height: size }} />;
+  if (u.avatar) return <img loading="lazy" decoding="async" src={u.avatar} alt={u.name} className="rounded-full object-cover" style={{ width: size, height: size }} />;
   const initials = u.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
     <div className="rounded-full grid place-items-center bg-accent/10 text-accent font-medium" style={{ width: size, height: size, fontSize: size * 0.36 }}>

@@ -348,7 +348,7 @@ export function ContextCard({ ctx }: { ctx: SupportContextSnapshot }) {
   return (
     <div className="rounded-2xl glass p-3.5 flex gap-3">
       {ctx.product_image ? (
-        <img src={ctx.product_image} alt={ctx.product_name ?? "Product"} className="size-14 rounded-xl object-cover ring-1 ring-white/10 shrink-0" />
+        <img loading="lazy" decoding="async" src={ctx.product_image} alt={ctx.product_name ?? "Product"} className="size-14 rounded-xl object-cover ring-1 ring-white/10 shrink-0" />
       ) : (
         <div className="size-14 rounded-xl bg-white/[0.04] grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>
       )}
@@ -627,7 +627,7 @@ export function AttachmentPicker({ files, setFiles, compact }: { files: File[]; 
                   <span className="block text-[8px] text-muted-foreground truncate max-w-[3.2rem]">{f.name}</span>
                 </div>
               ) : (
-                <img src={URL.createObjectURL(f)} alt={f.name} className="size-14 rounded-lg object-cover ring-1 ring-white/10" />
+                <img loading="lazy" decoding="async" src={URL.createObjectURL(f)} alt={f.name} className="size-14 rounded-lg object-cover ring-1 ring-white/10" />
               )}
               <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute -top-1 -right-1 size-4 grid place-items-center rounded-full bg-black/80 text-white ring-1 ring-white/20"><X className="size-2.5" /></button>
             </div>
@@ -667,7 +667,7 @@ export function Attachment({ path }: { path: string }) {
   return (
     <div className="relative group">
       <a href={url} target="_blank" rel="noreferrer">
-        <img src={url} alt="attachment" className="size-20 rounded-lg object-cover ring-1 ring-white/10 hover:ring-accent/40 transition" />
+        <img loading="lazy" decoding="async" src={url} alt="attachment" className="size-20 rounded-lg object-cover ring-1 ring-white/10 hover:ring-accent/40 transition" />
       </a>
       <button onClick={download} title="Download" className="absolute bottom-1 right-1 size-6 grid place-items-center rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition"><Download className="size-3" /></button>
     </div>

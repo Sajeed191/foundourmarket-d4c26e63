@@ -226,7 +226,7 @@ export function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active
       <div className="flex items-center gap-3">
         <Link to="/admin-product/$slug" params={{ slug: h.slug }}
           className="size-14 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
-          {h.image ? <img src={resolveImage(h.image)} alt={h.name} className="size-full object-cover" /> : <Package className="size-5 text-muted-foreground" />}
+          {h.image ? <img loading="lazy" decoding="async" src={resolveImage(h.image)} alt={h.name} className="size-full object-cover" /> : <Package className="size-5 text-muted-foreground" />}
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{h.name || "Untitled product"}</p>

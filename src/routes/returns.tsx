@@ -416,7 +416,7 @@ function EligibilityCard({ item, status, delay }: { item: Item; status: Eligibil
       <div className="relative flex gap-4">
         <div className="shrink-0 size-20 sm:size-24 rounded-2xl overflow-hidden bg-black/40 ring-1 ring-white/10 relative">
           {item.image ? (
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+            <img decoding="async" src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full grid place-items-center"><Package className="size-6 text-white/30" /></div>
           )}

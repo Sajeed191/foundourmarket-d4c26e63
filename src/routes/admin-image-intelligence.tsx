@@ -211,7 +211,7 @@ function ImageIntelligencePage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-[10px] font-mono uppercase tracking-widest text-white/50">Original</p>
-                  {testUrl && <img src={testUrl} alt="original" className="mt-1 h-48 w-full rounded-lg object-contain bg-black/40" />}
+                  {testUrl && <img loading="lazy" decoding="async" src={testUrl} alt="original" className="mt-1 h-48 w-full rounded-lg object-contain bg-black/40" />}
                 </div>
                 <div>
                   <p className="text-[10px] font-mono uppercase tracking-widest text-white/50">
@@ -219,7 +219,7 @@ function ImageIntelligencePage() {
                     {normResult.status === "succeeded" && <span className="text-emerald-300">· passed gate</span>}
                   </p>
                   {normResult.optimizedUrl
-                    ? <img src={normResult.optimizedUrl} alt="optimized" className="mt-1 h-48 w-full rounded-lg object-contain bg-black/40" />
+                    ? <img loading="lazy" decoding="async" src={normResult.optimizedUrl} alt="optimized" className="mt-1 h-48 w-full rounded-lg object-contain bg-black/40" />
                     : <div className="mt-1 grid h-48 place-items-center rounded-lg bg-black/40 text-[11px] text-white/50">
                         {normResult.reason ?? "No optimized image produced."}
                       </div>}

@@ -52,7 +52,7 @@ function Card({ title, icon, children, className = "", actions }: { title?: stri
 }
 
 function Avatar({ name, url, size = 32 }: { name: string | null; url: string | null; size?: number }) {
-  if (url) return <img src={url} alt={name ?? ""} className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />;
+  if (url) return <img loading="lazy" decoding="async" src={url} alt={name ?? ""} className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />;
   const initials = (name || "?").split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
     <div className="rounded-full grid place-items-center bg-accent/10 text-accent font-medium shrink-0" style={{ width: size, height: size, fontSize: size * 0.36 }}>
@@ -535,7 +535,7 @@ function OrderDrawer({ o, onClose, onRefresh }: { o: EnrichedOrder; onClose: () 
                 const options = [it.variant_color, it.variant_size].filter(Boolean).join(" · ") || it.variant_name || "";
                 return (
                 <div key={i} className="flex items-start gap-3">
-                  {img ? <img src={img} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-border" /> : <div className="size-12 rounded-xl bg-muted/40 grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>}
+                  {img ? <img loading="lazy" decoding="async" src={img} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-border" /> : <div className="size-12 rounded-xl bg-muted/40 grid place-items-center shrink-0"><Package className="size-5 text-muted-foreground" /></div>}
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium leading-snug line-clamp-2">{it.name}</p>
                     {options && <p className="text-[11px] text-accent/90 mt-0.5 truncate">{options}{it.variant_sku ? ` · ${it.variant_sku}` : ""}</p>}

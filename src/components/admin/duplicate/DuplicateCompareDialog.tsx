@@ -120,7 +120,7 @@ function ImgHead({ label, src, title }: { label: string; src: string | null; tit
       <div className="flex gap-2">
         <div className="size-16 shrink-0 overflow-hidden rounded-lg border border-border bg-background">
           {src ? (
-            <img src={resolveImage(src)} alt={label} className="size-full object-cover" />
+            <img loading="lazy" decoding="async" src={resolveImage(src)} alt={label} className="size-full object-cover" />
           ) : (
             <div className="grid size-full place-items-center text-[10px] text-muted-foreground">No image</div>
           )}

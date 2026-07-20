@@ -150,7 +150,7 @@ export function ProductQuickEditSheet({
             <div className="flex items-center gap-3 border-b border-border/60 px-4 py-3">
               <div className="size-11 shrink-0 overflow-hidden rounded-xl border border-border bg-card">
                 {product.image && (
-                  <img src={resolveImage(product.image)} alt="" className="size-full object-cover" />
+                  <img loading="lazy" decoding="async" src={resolveImage(product.image)} alt="" className="size-full object-cover" />
                 )}
               </div>
               <div className="min-w-0 flex-1">

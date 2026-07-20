@@ -149,7 +149,7 @@ function MarketingPage() {
                 const live = b.draft_data ?? b;
                 return (
                   <div key={b.id} className={`card-premium rounded-2xl overflow-hidden border ${b.has_draft ? "border-accent/50" : "border-transparent"}`}>
-                    {live.image && <img src={live.image} alt="" className="w-full h-32 object-cover" />}
+                    {live.image && <img loading="lazy" decoding="async" src={live.image} alt="" className="w-full h-32 object-cover" />}
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -397,7 +397,7 @@ function BannerEditor({ row, onClose, onSaved }: { row: Banner | null; onClose: 
             <div className="flex flex-col gap-2">
               {f.image && (
                 <div className="relative rounded-xl overflow-hidden border border-border bg-black/40">
-                  <img src={f.image} alt="" className="w-full max-h-40 object-cover" />
+                  <img loading="lazy" decoding="async" src={f.image} alt="" className="w-full max-h-40 object-cover" />
                   <button type="button" onClick={() => setF({ ...f, image: "" })} className="absolute top-2 right-2 size-7 grid place-items-center rounded-full bg-black/70 hover:bg-destructive text-white"><X className="size-3.5" /></button>
                 </div>
               )}

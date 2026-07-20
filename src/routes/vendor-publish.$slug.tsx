@@ -199,7 +199,7 @@ function VendorPublishAssistant() {
             >
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
                 {listing.productImage ? (
-                  <img src={listing.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <img decoding="async" src={listing.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
                 ) : null}
               </div>
               <div className="min-w-0 flex-1">

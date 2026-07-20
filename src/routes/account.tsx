@@ -418,9 +418,9 @@ function AccountPage() {
                   className="size-12 sm:size-14 rounded-2xl border border-white/10 bg-secondary overflow-hidden grid place-items-center shadow-[var(--shadow-float)] ring-1 ring-accent/30"
                 >
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <img src={logoSrc} alt="FoundOurMarket logo" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={logoSrc} alt="FoundOurMarket logo" className="w-full h-full object-cover" />
                   )}
                 </motion.div>
                 <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 rounded-2xl blur-xl opacity-60" style={{ background: "var(--gradient-ember)" }} />
@@ -640,7 +640,7 @@ function OrderRow({ o, format }: { o: Order; format: (n: number) => string }) {
             <div className="flex -space-x-2 shrink-0">
               {o.order_items.slice(0, 3).map((it, i) => (
                 <div key={i} className="size-10 sm:size-11 rounded-xl ring-1 ring-white/10 bg-black/40 overflow-hidden">
-                  {it.image && <img src={it.image} alt="" className="w-full h-full object-cover" loading="lazy" />}
+                  {it.image && <img decoding="async" src={it.image} alt="" className="w-full h-full object-cover" loading="lazy" />}
                 </div>
               ))}
             </div>
@@ -1115,7 +1115,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
         <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
           <div className="size-11 rounded-2xl overflow-hidden grid place-items-center bg-secondary ring-1 ring-accent/30 shrink-0">
-            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <img src={logoSrc} alt="" className="w-full h-full object-cover" />}
+            {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <img loading="lazy" decoding="async" src={logoSrc} alt="" className="w-full h-full object-cover" />}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate capitalize">{firstName}</p>
@@ -1426,7 +1426,7 @@ function PremiumLoader() {
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="size-16 rounded-2xl overflow-hidden bg-white grid place-items-center shadow-[0_0_40px_var(--color-accent)] border border-accent/20"
         >
-          <img src={logoSrc} alt="FoundOurMarket" className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={logoSrc} alt="FoundOurMarket" className="w-full h-full object-cover" />
         </motion.div>
 
         <p className="text-sm font-display font-semibold tracking-wide text-gradient-ember">FoundOurMarket™</p>
@@ -1562,7 +1562,7 @@ function TrackingWidget({ journey, format }: { journey: Journey; format: (n: num
         {/* Product row */}
         <div className="relative flex items-start gap-3 mb-4">
           <div className="size-16 shrink-0 rounded-xl overflow-hidden bg-secondary border border-white/10 grid place-items-center">
-            <img src={productImage} alt={productName} className="w-full h-full object-cover" loading="lazy" />
+            <img decoding="async" src={productImage} alt={productName} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium leading-snug line-clamp-2">{productName}</p>

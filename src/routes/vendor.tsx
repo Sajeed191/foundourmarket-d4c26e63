@@ -259,7 +259,7 @@ function VendorDashboard() {
                       >
                         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-muted">
                           {l.productImage ? (
-                            <img src={l.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            <img decoding="async" src={l.productImage} alt="" className="h-full w-full object-cover" loading="lazy" />
                           ) : null}
                         </div>
                         <div className="min-w-0 flex-1">

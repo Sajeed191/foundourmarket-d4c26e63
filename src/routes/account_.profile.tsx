@@ -355,7 +355,7 @@ function EditProfilePage() {
                 <div aria-hidden className="absolute inset-0 -m-2 rounded-full blur-xl opacity-60 animate-glow" style={{ background: "var(--gradient-ember)" }} />
                 <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border border-white/15 grid place-items-center bg-card shadow-[var(--shadow-ember)]">
                   {form.avatarUrl ? (
-                    <img src={form.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={form.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl font-display font-semibold text-accent">{initials}</span>
                   )}

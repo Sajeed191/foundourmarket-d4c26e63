@@ -166,7 +166,7 @@ export function ReturnAdminCard({
                 <div key={item.id} className="flex items-start gap-3">
                   <div className="size-14 rounded-lg overflow-hidden bg-muted/30 border border-border/60 shrink-0 grid place-items-center">
                     {p?.image ? (
-                      <img src={p.image} alt={p.name} className="size-full object-cover" loading="lazy" />
+                      <img decoding="async" src={p.image} alt={p.name} className="size-full object-cover" loading="lazy" />
                     ) : (
                       <ImageOff className="size-5 text-muted-foreground" />
                     )}
@@ -327,7 +327,7 @@ export function ReturnAdminCard({
                     onClick={() => setLightbox(i)}
                     className="aspect-square rounded-lg overflow-hidden border border-border/60 hover:ring-2 hover:ring-accent/50 transition-all"
                   >
-                    <img src={url} alt={`Evidence ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                    <img decoding="async" src={url} alt={`Evidence ${i + 1}`} className="size-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>

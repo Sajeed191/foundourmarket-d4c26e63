@@ -364,7 +364,7 @@ function CommandCenter({ r, slug }: { r: Record<string, any>; slug: string }) {
       <div className="card-premium rounded-2xl p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="size-20 sm:size-24 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0 grid place-items-center">
-            {r.image ? <img src={resolveImage(r.image)} alt={r.name} className="size-full object-cover" /> : <Package className="size-7 text-muted-foreground" />}
+            {r.image ? <img loading="lazy" decoding="async" src={resolveImage(r.image)} alt={r.name} className="size-full object-cover" /> : <Package className="size-7 text-muted-foreground" />}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

@@ -851,7 +851,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                   <div className={`${cardWidth} max-w-full rounded-2xl overflow-hidden border border-white/10 bg-card shadow-[var(--shadow-ember)]`}>
                     <div className="relative aspect-square bg-white/5 grid place-items-center overflow-hidden">
                       {form.image
-                        ? <img src={form.image} alt={form.name} className="w-full h-full object-cover" />
+                        ? <img loading="lazy" decoding="async" src={form.image} alt={form.name} className="w-full h-full object-cover" />
                         : <Package className="size-8 text-muted-foreground" />}
                       <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
                         {badges.map((b) => (
@@ -1467,7 +1467,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
                 </div>
                 <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-background/40 p-3">
                   {gc.product.image
-                    ? <img src={resolveImage(gc.product.image)} alt={gc.product.name} className="size-14 shrink-0 rounded-xl object-cover" />
+                    ? <img loading="lazy" decoding="async" src={resolveImage(gc.product.image)} alt={gc.product.name} className="size-14 shrink-0 rounded-xl object-cover" />
                     : <div className="grid size-14 shrink-0 place-items-center rounded-xl bg-white/5"><Package className="size-5 text-muted-foreground" /></div>}
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{gc.product.name}</p>

@@ -620,7 +620,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                     className="relative aspect-square overflow-hidden rounded-xl border border-white/10 group"
                   >
                     {media.type === "image" ? (
-                      <img src={media.url} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <img decoding="async" src={media.url} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-110" />
                     ) : (
                       <>
                         <video src={media.url} className="size-full object-cover" />
@@ -742,7 +742,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                           <>
                             <div className="flex items-center gap-3.5">
                               <div className="size-12 rounded-full bg-muted overflow-hidden grid place-items-center text-base font-display shrink-0 ring-1 ring-white/10">
-                                {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
+                                {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-[15px] font-display truncate">{name}</p>
@@ -767,7 +767,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                 {r.media.map((m, i) => (
                                   <button key={i} onClick={() => openLightbox(r.media, i)} className="relative size-20 overflow-hidden rounded-xl border border-white/10 group/media">
                                     {m.type === "image" ? (
-                                      <img src={m.url} alt="" loading="lazy" className="size-full object-cover transition-transform group-hover/media:scale-110" />
+                                      <img decoding="async" src={m.url} alt="" loading="lazy" className="size-full object-cover transition-transform group-hover/media:scale-110" />
                                     ) : (
                                       <>
                                         <video src={m.url} className="size-full object-cover" />
@@ -1207,7 +1207,7 @@ function WriteReviewModal(props: {
                   <div className="flex flex-wrap gap-2.5">
                     {pendingMedia.map((m, i) => (
                       <div key={i} className="relative size-20 overflow-hidden rounded-xl border border-border">
-                        {m.type === "image" ? <img src={m.url} alt="" className="size-full object-cover" /> : <video src={m.url} className="size-full object-cover" />}
+                        {m.type === "image" ? <img loading="lazy" decoding="async" src={m.url} alt="" className="size-full object-cover" /> : <video src={m.url} className="size-full object-cover" />}
                         <button type="button" onClick={() => setPendingMedia((p) => p.filter((_, idx) => idx !== i))}
                           className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-background/90 text-foreground ring-1 ring-border">
                           <X className="size-3" />
@@ -1366,7 +1366,7 @@ function Lightbox({ list, index, onIndex, onClose }: { list: ReviewMedia[] | nul
           <div className="flex justify-center gap-2 overflow-x-auto px-4 py-4" onClick={(e) => e.stopPropagation()}>
             {list.map((m, i) => (
               <button key={i} onClick={() => onIndex(i)} className={cn("size-14 shrink-0 overflow-hidden rounded-lg border transition-all", i === index ? "border-accent ring-2 ring-accent/30" : "border-border opacity-60 hover:opacity-100")}>
-                {m.type === "image" ? <img src={m.url} alt="" className="size-full object-cover" loading="lazy" /> : <video src={m.url} className="size-full object-cover" />}
+                {m.type === "image" ? <img decoding="async" src={m.url} alt="" className="size-full object-cover" loading="lazy" /> : <video src={m.url} className="size-full object-cover" />}
               </button>
             ))}
           </div>

@@ -242,7 +242,7 @@ export function PaymentIntelDrawer({ payment, onClose }: { payment: PaymentRow |
                       {detail.items?.map((it, i) => (
                         <div key={i} className="flex items-center gap-2">
                           {it.image
-                            ? <img src={it.image} alt={it.name ?? ""} className="size-9 rounded-lg object-cover border border-white/10" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                            ? <img loading="lazy" decoding="async" src={it.image} alt={it.name ?? ""} className="size-9 rounded-lg object-cover border border-white/10" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                             : <div className="size-9 rounded-lg bg-white/5 grid place-items-center"><Package className="size-4 text-muted-foreground" /></div>}
                           <div className="min-w-0 flex-1">
                             <p className="text-xs truncate">{it.name}</p>

@@ -626,7 +626,7 @@ export function CategoryAdminSheet({
             className="size-12 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"
           >
             {r.image ? (
-              <img
+              <img decoding="async"
                 src={r.image}
                 alt=""
                 loading="lazy"
@@ -1314,7 +1314,7 @@ function ImageField({
         )}
       >
         {value ? (
-          <img src={value} alt="" className="size-full object-cover" />
+          <img loading="lazy" decoding="async" src={value} alt="" className="size-full object-cover" />
         ) : (
           <div className="grid size-full place-items-center text-muted-foreground/40">
             <ImagePlus className="size-5" />

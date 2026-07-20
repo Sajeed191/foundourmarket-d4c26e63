@@ -310,7 +310,7 @@ export function BannerAdminSheet({
                     </div>
                     <div className="size-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]">
                       {r.image ? (
-                        <img src={r.image} alt="" className="size-full object-cover" />
+                        <img loading="lazy" decoding="async" src={r.image} alt="" className="size-full object-cover" />
                       ) : (
                         <div className="grid size-full place-items-center text-muted-foreground/40">
                           <ImagePlus className="size-4" />
@@ -589,7 +589,7 @@ function ImagePicker({
       <span className="mb-1 block text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{label}</span>
       <div className="relative aspect-video overflow-hidden rounded-lg border border-white/10 bg-white/[0.02]">
         {url ? (
-          <img src={url} alt="" className="size-full object-cover" />
+          <img loading="lazy" decoding="async" src={url} alt="" className="size-full object-cover" />
         ) : (
           <div className="grid size-full place-items-center text-muted-foreground/40">{icon}</div>
         )}

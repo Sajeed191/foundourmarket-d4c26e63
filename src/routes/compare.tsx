@@ -93,7 +93,7 @@ function ComparePage() {
                       </button>
                       <Link to="/products/$slug" params={{ slug: p.slug }} className="block">
                         <div className="aspect-square rounded-xl overflow-hidden bg-background mb-3">
-                          {p.image && <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" />}
+                          {p.image && <img loading="lazy" decoding="async" src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" />}
                         </div>
                         <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground capitalize">{p.category}</p>
                         <p className="text-sm font-medium leading-snug mt-1 line-clamp-2">{p.name}</p>

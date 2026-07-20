@@ -49,9 +49,9 @@ export function ImageCompareDialog({
 
         {overlay ? (
           <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-xl border border-border bg-background">
-            {current && <img src={current} alt="current" className="absolute inset-0 size-full object-contain" />}
+            {current && <img loading="lazy" decoding="async" src={current} alt="current" className="absolute inset-0 size-full object-contain" />}
             {existing && (
-              <img
+              <img loading="lazy" decoding="async"
                 src={existing}
                 alt="existing"
                 className="absolute inset-0 size-full object-contain mix-blend-difference"
@@ -90,7 +90,7 @@ function ImgCol({ label, src }: { label: string; src: string | null }) {
       <p className="mb-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{label}</p>
       <div className="aspect-square overflow-hidden rounded-xl border border-border bg-background">
         {src ? (
-          <img src={src} alt={label} className="size-full object-contain" />
+          <img loading="lazy" decoding="async" src={src} alt={label} className="size-full object-contain" />
         ) : (
           <div className="grid size-full place-items-center text-xs text-muted-foreground">No image</div>
         )}

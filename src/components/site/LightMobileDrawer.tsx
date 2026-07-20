@@ -140,7 +140,7 @@ export function LightMobileDrawer({
           }}
         >
           <span className="shrink-0 relative inline-grid place-items-center size-9 rounded-2xl bg-black/40 ring-1 ring-accent/40 overflow-hidden shadow-[0_0_18px_-6px_var(--color-accent)]">
-            <img src="/logo.webp" alt="FoundOurMarket logo" className="size-full object-cover" />
+            <img loading="lazy" decoding="async" src="/logo.webp" alt="FoundOurMarket logo" className="size-full object-cover" />
           </span>
           <span className="flex min-w-0 flex-col leading-none">
             <span className="truncate text-[15px] font-semibold tracking-tight text-foreground">
@@ -182,7 +182,7 @@ export function LightMobileDrawer({
 
             <span className="relative shrink-0">
               <span className="relative grid place-items-center size-13 rounded-full bg-gradient-to-br from-accent to-[oklch(0.6_0.16_30)] text-accent-foreground font-semibold text-lg ring-2 ring-background shadow-[0_6px_18px_-6px_oklch(0.55_0.16_55/0.7)] overflow-hidden">
-                {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : initial}
+                {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="size-full object-cover" /> : initial}
               </span>
             </span>
             <span className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export function LightMobileDrawer({
                       className="flex items-center gap-2.5 rounded-2xl bg-card px-3 py-2.5 ring-1 ring-border shadow-[var(--shadow-card)] active:scale-[0.97] hover:ring-accent/30 transition"
                     >
                       <span className="grid place-items-center size-9 rounded-xl overflow-hidden bg-muted text-accent shrink-0">
-                        {img ? <img src={img} alt="" loading="lazy" className="size-full object-cover" /> : <Fallback className="size-4.5" />}
+                        {img ? <img decoding="async" src={img} alt="" loading="lazy" className="size-full object-cover" /> : <Fallback className="size-4.5" />}
                       </span>
                       <span className="flex-1 min-w-0 text-[13px] font-semibold text-foreground truncate">{cat.name}</span>
                     </Link>

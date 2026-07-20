@@ -42,7 +42,7 @@ function Card({ title, icon, children, className = "", actions }: { title?: stri
 }
 
 function Avatar({ name, url, size = 32 }: { name: string | null; url: string | null; size?: number }) {
-  if (url) return <img src={url} alt={name ?? ""} className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />;
+  if (url) return <img loading="lazy" decoding="async" src={url} alt={name ?? ""} className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />;
   const initials = (name || "?").split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
     <div className="rounded-full grid place-items-center bg-accent/10 text-accent font-medium shrink-0" style={{ width: size, height: size, fontSize: size * 0.36 }}>

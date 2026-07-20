@@ -26,7 +26,7 @@ export function CompareTray() {
           {items.map((p) => (
             <li key={p.id ?? p.slug} className="relative shrink-0 group">
               <div className="size-12 rounded-lg overflow-hidden bg-background border border-border">
-                {p.image && <img src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" />}
+                {p.image && <img loading="lazy" decoding="async" src={resolveImage(p.image)} alt={p.name} className="w-full h-full object-cover" />}
               </div>
               <button
                 onClick={() => remove(p.slug)}

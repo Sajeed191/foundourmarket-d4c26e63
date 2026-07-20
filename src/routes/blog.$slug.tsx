@@ -104,7 +104,7 @@ function BlogPost() {
       <h1 className="text-4xl md:text-5xl font-display font-semibold mb-8">{post.title}</h1>
       {post.cover_image && (
         <div className="aspect-[16/9] overflow-hidden rounded-2xl mb-10 bg-muted">
-          <img src={post.cover_image} alt={`${post.title} — article cover`} className="size-full object-cover" />
+          <img loading="lazy" decoding="async" src={post.cover_image} alt={`${post.title} — article cover`} className="size-full object-cover" />
         </div>
       )}
       <div className="prose prose-invert max-w-none text-foreground/90 leading-relaxed [&_h1]:text-3xl [&_h1]:font-display [&_h1]:font-semibold [&_h1]:mt-10 [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-display [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_p]:mb-4 [&_p]:text-sm"

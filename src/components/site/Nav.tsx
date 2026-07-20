@@ -341,7 +341,7 @@ export function Nav() {
                 }`}
               >
                 <span aria-hidden className="pointer-events-none absolute -inset-1 rounded-2xl bg-accent/25 blur-md -z-[1]" />
-                <img src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
+                <img loading="lazy" decoding="async" src={logoSrc} alt="FoundOurMarket logo" className="size-full object-cover" />
               </span>
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="truncate text-[15px] sm:text-xl lg:text-[22px] font-semibold tracking-tight">
@@ -407,7 +407,7 @@ export function Nav() {
                   >
                     <span className="grid place-items-center size-8 rounded-lg bg-accent/15 ring-1 ring-accent/30 overflow-hidden text-accent">
                       {user?.user_metadata?.avatar_url
-                        ? <img src={user.user_metadata.avatar_url as string} alt="" className="size-full object-cover" />
+                        ? <img loading="lazy" decoding="async" src={user.user_metadata.avatar_url as string} alt="" className="size-full object-cover" />
                         : <User className="size-[17px]" />}
                     </span>
                     <span className="text-[13px] font-medium max-w-[7rem] truncate">{user ? "Account" : "Sign in"}</span>

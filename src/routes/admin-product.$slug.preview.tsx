@@ -33,7 +33,7 @@ function PreviewPage() {
             <div className="grid place-items-center rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-5">
               <div className={`${cardWidth} max-w-full rounded-2xl overflow-hidden border border-white/10 bg-card shadow-[var(--shadow-ember)]`}>
                 <div className="relative aspect-square bg-white/5 grid place-items-center overflow-hidden">
-                  {r.image ? <img src={resolveImage(r.image)} alt={r.name} className="w-full h-full object-cover" /> : <Package className="size-8 text-muted-foreground" />}
+                  {r.image ? <img loading="lazy" decoding="async" src={resolveImage(r.image)} alt={r.name} className="w-full h-full object-cover" /> : <Package className="size-8 text-muted-foreground" />}
                   {pctOff > 0 && <span className="absolute top-2 right-2 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">-{pctOff}%</span>}
                 </div>
                 <div className="p-3 space-y-1">

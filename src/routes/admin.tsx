@@ -458,7 +458,7 @@ function AdminPage() {
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <div className="size-10 rounded-lg overflow-hidden bg-background border border-border shrink-0">
-                            {p.image && <img src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
+                            {p.image && <img loading="lazy" decoding="async" src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" />}
                           </div>
                           <div>
                             <p className="text-sm">{p.name}</p>
@@ -777,7 +777,7 @@ function GalleryManager({ slug }: { slug: string }) {
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
           {images.map((img) => (
             <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-background">
-              <img src={img.url} alt={img.alt ?? ""} className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={img.url} alt={img.alt ?? ""} className="w-full h-full object-cover" />
               <button type="button" onClick={() => remove(img.id)} className="absolute top-1 right-1 size-6 grid place-items-center rounded-full bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove image">
                 <X className="size-3" />
               </button>

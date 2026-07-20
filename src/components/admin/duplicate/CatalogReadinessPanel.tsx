@@ -148,7 +148,7 @@ export function CatalogReadinessPanel({
             {imageQuality.images.length === 0 && <p className="text-sm text-muted-foreground">No images to analyse yet.</p>}
             {imageQuality.images.map((img, i) => (
               <div key={img.url + i} className="flex gap-3 rounded-xl border border-border/60 bg-background/40 p-2">
-                <img src={img.url} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
+                <img loading="lazy" decoding="async" src={img.url} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className={cn("text-sm font-semibold", ringColor(img.score))}>Score {img.score} · {img.width}×{img.height}</p>
                   {img.issues.length === 0 ? (

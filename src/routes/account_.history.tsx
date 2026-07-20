@@ -326,7 +326,7 @@ function HistoryPage() {
                       <div aria-hidden className="absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: "var(--gradient-ember-soft)", filter: "blur(24px)" }} />
                       <div className="relative flex items-center gap-3">
                         {it.image ? (
-                          <img src={it.image} alt="" className="size-12 rounded-xl object-cover ring-1 ring-white/10 shrink-0" />
+                          <img loading="lazy" decoding="async" src={it.image} alt="" className="size-12 rounded-xl object-cover ring-1 ring-white/10 shrink-0" />
                         ) : (
                           <span className="size-12 grid place-items-center rounded-xl bg-accent/15 text-accent ring-1 ring-accent/30 shrink-0">
                             <it.icon className="size-5" />
@@ -477,7 +477,7 @@ function HistoryPage() {
                           <div className="flex -space-x-2 shrink-0">
                             {o.order_items.slice(0, 3).map((it, idx) =>
                               it.image ? (
-                                <img key={idx} src={it.image} alt="" className="size-10 rounded-full border-2 border-background object-cover" />
+                                <img loading="lazy" decoding="async" key={idx} src={it.image} alt="" className="size-10 rounded-full border-2 border-background object-cover" />
                               ) : (
                                 <div key={idx} className="size-10 rounded-full border-2 border-background bg-muted grid place-items-center text-[9px]">{idx + 1}</div>
                               )

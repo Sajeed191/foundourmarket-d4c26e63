@@ -647,7 +647,7 @@ export function VariantMediaPanel({
                 {isVideo ? (
                   <>
                     {m.posterUrl ? (
-                      <img src={m.posterUrl} alt="" className="size-full object-cover" loading="lazy" />
+                      <img decoding="async" src={m.posterUrl} alt="" className="size-full object-cover" loading="lazy" />
                     ) : (
                       <video src={m.url} muted preload="metadata" className="size-full object-cover" />
                     )}
@@ -660,7 +660,7 @@ export function VariantMediaPanel({
 
                   </>
                 ) : (
-                  <img src={m.thumbUrl ?? m.url} alt={`${color} ${i + 1}`} loading="lazy" className="size-full object-cover" />
+                  <img decoding="async" src={m.thumbUrl ?? m.url} alt={`${color} ${i + 1}`} loading="lazy" className="size-full object-cover" />
                 )}
 
                 <button
@@ -875,7 +875,7 @@ function MediaPreview({ media, onClose }: { media: VariantImageDraft; onClose: (
         {isVideo ? (
           <video src={media.url} controls autoPlay className="max-h-[85vh] max-w-[92vw] rounded-lg" />
         ) : (
-          <img
+          <img loading="lazy" decoding="async"
             src={media.url}
             alt=""
             draggable={false}

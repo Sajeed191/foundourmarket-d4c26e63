@@ -408,7 +408,7 @@ function TrackPage() {
 
               {result.items[0]?.image && (
                 <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/5">
-                  <img src={result.items[0].image} alt={result.items[0].name} className="size-14 rounded-xl object-cover ring-1 ring-white/10" />
+                  <img loading="lazy" decoding="async" src={result.items[0].image} alt={result.items[0].name} className="size-14 rounded-xl object-cover ring-1 ring-white/10" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{result.items[0].name}</p>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
@@ -480,7 +480,7 @@ function TrackPage() {
               <ul className="space-y-3">
                 {result.items.map((it, i) => (
                   <li key={i} className="flex items-center gap-3">
-                    {it.image && <img src={it.image} alt={it.name} className="size-12 rounded-xl object-cover ring-1 ring-white/10" />}
+                    {it.image && <img loading="lazy" decoding="async" src={it.image} alt={it.name} className="size-12 rounded-xl object-cover ring-1 ring-white/10" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{it.name}</p>
                       <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Qty {it.quantity}</p>
