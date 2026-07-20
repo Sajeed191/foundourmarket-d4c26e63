@@ -326,15 +326,15 @@ export function FlashDeals() {
           </div>
         )}
 
-        {/* Grid: 2 mobile, 3 tablet, 4 desktop */}
-        <div
-          data-product-grid
-          className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
-        >
-          {items.map((i) => (
-            <FlashCard key={i.product.id ?? i.product.slug} item={i} now={now} />
-          ))}
-        </div>
+        {/* Premium horizontal snap carousel — partial next card, no autoplay */}
+        <PremiumProductCarousel
+          items={items}
+          size="large"
+          ariaLabel="Flash Deals"
+          getKey={(i) => i.product.id ?? i.product.slug}
+          renderItem={(i) => <FlashCard item={i} now={now} />}
+          className="relative"
+        />
 
         {/* View All — premium outline pill */}
         <div className="relative mt-7 sm:mt-9 flex justify-center">
