@@ -2,48 +2,52 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * FoundOurMarket™ — Luxury Section Banner (final).
+ * FoundOurMarket™ — Signature Section Heading (Apple × Nike × Luxury).
  *
- * Centered editorial banner:
- *   [ghost word: huge, uppercase, 5% opacity, behind]
- *      Title (32px, bold, white)
- *      Subtitle (14px, gray)
- *      ── glowing orange divider (80×2px) ──
+ * Layout (per section spec):
+ *   [huge ghost word — 56–72px, 900, 0.03–0.05 opacity, letter-spacing 6–10px]
+ *      Title (28–32px, 800, pure white, tight tracking)
+ *      Subtitle (13–14px, medium gray, max ~220px, aligned)
+ *      ● ━━━━━━━━━━ ●  ← glowing orange capsule w/ dot ends, 90px, soft glow
  *
- * Entrance (once): title fade-up → subtitle fade-up → divider expands from
- * center. 400ms total, GPU transforms only, respects reduced-motion.
+ * Alignment: `align="center" | "left"` — alternating rhythm across the page.
+ * Background: soft radial orange glow (2–4%) behind the heading.
+ * Motion (once): ghost fade → title slide-up → subtitle fade → capsule expand
+ * from center. 450–500ms, GPU transforms only, respects reduced-motion.
  */
 export function PremiumSectionHeading({
-  eyebrow,
   title,
   subtitle,
   right,
   ghost,
+  align = "center",
   // Legacy props accepted for API back-compat; intentionally unused.
+  eyebrow: _eyebrow,
   icon: _icon,
   live: _live,
   liveLabel: _liveLabel,
   href: _href,
   hrefLabel: _hrefLabel,
 }: {
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   right?: ReactNode;
-  /** Faded background word behind the title. Defaults to uppercase title. */
+  /** Faded background word behind the title. Defaults to first word of title uppercased. */
   ghost?: string;
+  align?: "center" | "left";
+  eyebrow?: string;
   icon?: LucideIcon;
   live?: boolean;
   liveLabel?: string;
   href?: string;
   hrefLabel?: string;
 }) {
+  void _eyebrow;
   void _icon;
   void _live;
   void _liveLabel;
   void _href;
   void _hrefLabel;
-  void eyebrow; // Eyebrow removed from luxury banner style; kept for back-compat.
 
   const ref = useRef<HTMLDivElement | null>(null);
   const [shown, setShown] = useState(false);
@@ -75,45 +79,72 @@ export function PremiumSectionHeading({
     return () => io.disconnect();
   }, []);
 
-  const ghostWord = (ghost ?? title).toUpperCase();
+  const ghostWord = (ghost ?? title.split(/\s+/)[0] ?? title).toUpperCase();
+  const isCenter = align === "center";
 
-  const baseTransition = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const ease = "cubic-bezier(0.22, 1, 0.36, 1)";
   const titleStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
-    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,14px,0)",
-    transition: `opacity 420ms ${baseTransition}, transform 420ms ${baseTransition}`,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,12px,0)",
+    transition: `opacity 480ms ${ease}, transform 480ms ${ease}`,
     willChange: shown ? undefined : "opacity, transform",
   };
   const subStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
-    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,10px,0)",
-    transition: `opacity 420ms ${baseTransition} 120ms, transform 420ms ${baseTransition} 120ms`,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,8px,0)",
+    transition: `opacity 460ms ${ease} 100ms, transform 460ms ${ease} 100ms`,
     willChange: shown ? undefined : "opacity, transform",
   };
-  const dividerStyle: React.CSSProperties = {
+  const capsuleStyle: React.CSSProperties = {
     transform: shown ? "scaleX(1)" : "scaleX(0)",
     opacity: shown ? 1 : 0,
     transformOrigin: "center",
-    transition: `transform 460ms ${baseTransition} 220ms, opacity 300ms ${baseTransition} 220ms`,
+    transition: `transform 500ms ${ease} 200ms, opacity 320ms ${ease} 200ms`,
     willChange: shown ? undefined : "opacity, transform",
   };
+  const ghostTranslate = isCenter ? "-50%,-50%" : "0,-50%";
   const ghostStyle: React.CSSProperties = {
-    opacity: shown ? 0.05 : 0,
-    transform: shown ? "translate3d(-50%,-50%,0)" : "translate3d(-50%,-46%,0)",
-    transition: `opacity 600ms ${baseTransition}, transform 600ms ${baseTransition}`,
+    opacity: shown ? 0.045 : 0,
+    transform: shown
+      ? `translate3d(${ghostTranslate},0)`
+      : `translate3d(${isCenter ? "-50%,-46%" : "0,-46%"},0)`,
+    transition: `opacity 700ms ${ease}, transform 700ms ${ease}`,
     willChange: shown ? undefined : "opacity, transform",
   };
 
+  const alignClasses = isCenter ? "text-center items-center" : "text-left items-start";
+  const subtitleAlign = isCenter ? "mx-auto" : "mx-0";
+  const capsuleWrapAlign = isCenter ? "justify-center" : "justify-start";
+  const glowPos = isCenter
+    ? { left: "50%", transform: "translateX(-50%)" }
+    : { left: "-6%" };
+
   return (
-    <div ref={ref} className="relative mt-10 mb-8 text-center sm:mt-12 sm:mb-10">
-      {/* Ghost editorial word */}
+    <div
+      ref={ref}
+      className={`relative mt-10 mb-8 flex flex-col ${alignClasses} sm:mt-12 sm:mb-10`}
+    >
+      {/* Radial ambient glow */}
       <span
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 select-none whitespace-nowrap font-display font-black uppercase text-white leading-none"
+        className="pointer-events-none absolute top-1/2 -z-10 h-[220px] w-[420px] -translate-y-1/2 rounded-full"
+        style={{
+          ...glowPos,
+          background:
+            "radial-gradient(ellipse at center, oklch(0.74 0.19 49 / 0.09) 0%, oklch(0.74 0.19 49 / 0.03) 40%, transparent 70%)",
+          filter: "blur(6px)",
+        }}
+      />
+
+      {/* Huge ghost editorial word */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 select-none whitespace-nowrap font-display font-black uppercase text-white leading-none"
         style={{
           ...ghostStyle,
-          fontSize: "clamp(56px, 14vw, 132px)",
-          letterSpacing: "-0.02em",
+          ...(isCenter ? { left: "50%" } : { left: "-0.04em" }),
+          fontSize: "clamp(52px, 13vw, 76px)",
+          letterSpacing: "0.08em",
         }}
       >
         {ghostWord}
@@ -124,9 +155,10 @@ export function PremiumSectionHeading({
         className="relative font-display font-extrabold tracking-tight text-white"
         style={{
           ...titleStyle,
-          fontSize: "clamp(26px, 5.4vw, 34px)",
+          fontSize: "clamp(26px, 5.2vw, 32px)",
           lineHeight: 1.05,
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.015em",
+          fontWeight: 800,
         }}
       >
         {title}
@@ -135,31 +167,51 @@ export function PremiumSectionHeading({
       {/* Subtitle */}
       {subtitle && (
         <p
-          className="relative mx-auto mt-2.5 max-w-[36ch] text-[13px] leading-snug text-white/55 sm:text-[14px]"
+          className={`relative mt-2.5 max-w-[220px] text-[13px] leading-snug text-white/55 sm:text-[14px] ${subtitleAlign}`}
           style={subStyle}
         >
           {subtitle}
         </p>
       )}
 
-      {/* Glowing divider */}
-      <div className="relative mt-4 flex justify-center sm:mt-5">
+      {/* Signature glowing capsule ● ━━━ ● */}
+      <div className={`relative mt-4 flex items-center gap-1.5 sm:mt-5 ${capsuleWrapAlign}`}>
         <span
           aria-hidden
-          className="block h-[2px] w-[80px] rounded-full"
-          style={{
-            ...dividerStyle,
-            background:
-              "linear-gradient(90deg, transparent 0%, oklch(0.74 0.19 49 / 0.95) 50%, transparent 100%)",
-            boxShadow:
-              "0 0 12px oklch(0.74 0.19 49 / 0.55), 0 0 24px oklch(0.74 0.19 49 / 0.28)",
-          }}
-        />
+          className="flex items-center gap-1.5"
+          style={capsuleStyle}
+        >
+          <span
+            className="block size-[6px] rounded-full"
+            style={{
+              background: "oklch(0.78 0.19 55)",
+              boxShadow:
+                "0 0 8px oklch(0.78 0.19 55 / 0.9), 0 0 16px oklch(0.78 0.19 55 / 0.5)",
+            }}
+          />
+          <span
+            className="block h-[2px] w-[90px] rounded-full"
+            style={{
+              background:
+                "linear-gradient(90deg, oklch(0.78 0.19 55 / 0.9) 0%, oklch(0.74 0.19 49 / 1) 50%, oklch(0.78 0.19 55 / 0.9) 100%)",
+              boxShadow:
+                "0 0 10px oklch(0.74 0.19 49 / 0.55), 0 0 22px oklch(0.74 0.19 49 / 0.28)",
+            }}
+          />
+          <span
+            className="block size-[6px] rounded-full"
+            style={{
+              background: "oklch(0.78 0.19 55)",
+              boxShadow:
+                "0 0 8px oklch(0.78 0.19 55 / 0.9), 0 0 16px oklch(0.78 0.19 55 / 0.5)",
+            }}
+          />
+        </span>
       </div>
 
-      {/* Optional right slot (admin toggles, countdowns) — rendered centered below */}
+      {/* Optional right slot (admin toggles, countdowns) */}
       {right && (
-        <div className="relative mt-4 flex justify-center">
+        <div className={`relative mt-4 flex ${capsuleWrapAlign}`}>
           <div className="flex items-center gap-2">{right}</div>
         </div>
       )}
