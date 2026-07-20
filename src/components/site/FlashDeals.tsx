@@ -273,7 +273,9 @@ export function FlashDeals() {
           title="Flash Deals"
           ghost="FLASH"
           align="left"
-          subtitle="Limited-time prices. New deals every day."
+          eyebrow="Limited Offers"
+          badge="Live"
+          subtitle="Today's best prices from trusted sellers."
           right={
             <div className="flex items-center gap-2">
               {soonestEndAt && (
