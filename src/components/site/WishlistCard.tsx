@@ -305,7 +305,7 @@ export const WishlistCard = memo(WishlistCardImpl, (a, b) =>
   a.product.image === b.product.image &&
   a.product.name === b.product.name &&
   a.product.price === b.product.price &&
-  a.product.compareAtPrice === b.product.compareAtPrice &&
+  a.product.comparePriceInr === b.product.comparePriceInr &&
   a.product.inStock === b.product.inStock &&
   a.product.stockQuantity === b.product.stockQuantity &&
   a.product.rating === b.product.rating &&
