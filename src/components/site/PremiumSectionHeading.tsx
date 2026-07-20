@@ -2,21 +2,23 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * FoundOurMarket™ — Luxury editorial section heading (final).
+ * FoundOurMarket™ — Luxury Section Banner (final).
  *
- * Structure:
- *   EYEBROW LABEL            [right slot]
- *   Title (with soft orange brush-stroke accent behind)
- *   Subtitle
+ * Centered editorial banner:
+ *   [ghost word: huge, uppercase, 5% opacity, behind]
+ *      Title (32px, bold, white)
+ *      Subtitle (14px, gray)
+ *      ── glowing orange divider (80×2px) ──
  *
- * Typography-first. No icons, no cards, no borders, no in-header "View All".
- * Fades + slides up once on scroll. GPU transforms only.
+ * Entrance (once): title fade-up → subtitle fade-up → divider expands from
+ * center. 400ms total, GPU transforms only, respects reduced-motion.
  */
 export function PremiumSectionHeading({
   eyebrow,
   title,
   subtitle,
   right,
+  ghost,
   // Legacy props accepted for API back-compat; intentionally unused.
   icon: _icon,
   live: _live,
@@ -28,6 +30,8 @@ export function PremiumSectionHeading({
   title: string;
   subtitle?: string;
   right?: ReactNode;
+  /** Faded background word behind the title. Defaults to uppercase title. */
+  ghost?: string;
   icon?: LucideIcon;
   live?: boolean;
   liveLabel?: string;
@@ -39,6 +43,7 @@ export function PremiumSectionHeading({
   void _liveLabel;
   void _href;
   void _hrefLabel;
+  void eyebrow; // Eyebrow removed from luxury banner style; kept for back-compat.
 
   const ref = useRef<HTMLDivElement | null>(null);
   const [shown, setShown] = useState(false);
@@ -70,56 +75,93 @@ export function PremiumSectionHeading({
     return () => io.disconnect();
   }, []);
 
-  const revealStyle: React.CSSProperties = {
+  const ghostWord = (ghost ?? title).toUpperCase();
+
+  const baseTransition = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const titleStyle: React.CSSProperties = {
     opacity: shown ? 1 : 0,
-    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,12px,0)",
-    transition:
-      "opacity 400ms cubic-bezier(0.22, 1, 0.36, 1), transform 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,14px,0)",
+    transition: `opacity 420ms ${baseTransition}, transform 420ms ${baseTransition}`,
+    willChange: shown ? undefined : "opacity, transform",
+  };
+  const subStyle: React.CSSProperties = {
+    opacity: shown ? 1 : 0,
+    transform: shown ? "translate3d(0,0,0)" : "translate3d(0,10px,0)",
+    transition: `opacity 420ms ${baseTransition} 120ms, transform 420ms ${baseTransition} 120ms`,
+    willChange: shown ? undefined : "opacity, transform",
+  };
+  const dividerStyle: React.CSSProperties = {
+    transform: shown ? "scaleX(1)" : "scaleX(0)",
+    opacity: shown ? 1 : 0,
+    transformOrigin: "center",
+    transition: `transform 460ms ${baseTransition} 220ms, opacity 300ms ${baseTransition} 220ms`,
+    willChange: shown ? undefined : "opacity, transform",
+  };
+  const ghostStyle: React.CSSProperties = {
+    opacity: shown ? 0.05 : 0,
+    transform: shown ? "translate3d(-50%,-50%,0)" : "translate3d(-50%,-46%,0)",
+    transition: `opacity 600ms ${baseTransition}, transform 600ms ${baseTransition}`,
     willChange: shown ? undefined : "opacity, transform",
   };
 
   return (
-    <div
-      ref={ref}
-      className="relative mt-12 mb-6"
-      style={revealStyle}
-    >
-      {/* Eyebrow row + optional right controls */}
-      <div className="flex items-center justify-between gap-3">
-        {eyebrow ? (
-          <span
-            className="text-[10px] font-medium uppercase leading-none text-white/45 sm:text-[11px]"
-            style={{ letterSpacing: "0.42em" }}
-          >
-            {eyebrow}
-          </span>
-        ) : (
-          <span />
-        )}
-        {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
-      </div>
+    <div ref={ref} className="relative mt-10 mb-8 text-center sm:mt-12 sm:mb-10">
+      {/* Ghost editorial word */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 select-none whitespace-nowrap font-display font-black uppercase text-white leading-none"
+        style={{
+          ...ghostStyle,
+          fontSize: "clamp(56px, 14vw, 132px)",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {ghostWord}
+      </span>
 
-      {/* Title with brush-stroke accent behind */}
-      <div className="relative mt-3 inline-block max-w-full">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute left-0 top-1/2 h-[3px] w-[78px] -translate-y-1/2 rounded-full"
-          style={{
-            background:
-              "linear-gradient(90deg, oklch(0.74 0.19 49 / 0.85) 0%, oklch(0.74 0.19 49 / 0) 100%)",
-            opacity: 0.75,
-          }}
-        />
-        <h2 className="relative text-[28px] font-display font-extrabold leading-[1.05] tracking-tight text-white sm:text-[32px] lg:text-[34px]">
-          {title}
-        </h2>
-      </div>
+      {/* Title */}
+      <h2
+        className="relative font-display font-extrabold tracking-tight text-white"
+        style={{
+          ...titleStyle,
+          fontSize: "clamp(26px, 5.4vw, 34px)",
+          lineHeight: 1.05,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {title}
+      </h2>
 
       {/* Subtitle */}
       {subtitle && (
-        <p className="mt-2 max-w-[70%] text-[13px] leading-snug text-white/55 sm:text-[14px]">
+        <p
+          className="relative mx-auto mt-2.5 max-w-[36ch] text-[13px] leading-snug text-white/55 sm:text-[14px]"
+          style={subStyle}
+        >
           {subtitle}
         </p>
+      )}
+
+      {/* Glowing divider */}
+      <div className="relative mt-4 flex justify-center sm:mt-5">
+        <span
+          aria-hidden
+          className="block h-[2px] w-[80px] rounded-full"
+          style={{
+            ...dividerStyle,
+            background:
+              "linear-gradient(90deg, transparent 0%, oklch(0.74 0.19 49 / 0.95) 50%, transparent 100%)",
+            boxShadow:
+              "0 0 12px oklch(0.74 0.19 49 / 0.55), 0 0 24px oklch(0.74 0.19 49 / 0.28)",
+          }}
+        />
+      </div>
+
+      {/* Optional right slot (admin toggles, countdowns) — rendered centered below */}
+      {right && (
+        <div className="relative mt-4 flex justify-center">
+          <div className="flex items-center gap-2">{right}</div>
+        </div>
       )}
     </div>
   );
