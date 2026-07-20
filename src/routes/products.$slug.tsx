@@ -896,12 +896,38 @@ function ProductPage() {
               ) : (
                 <div className="h-9 w-40 rounded-lg bg-white/[0.05] animate-pulse" />
               )}
-              {isOOS ? (
-                <p className="mt-2 text-[13px] text-muted-foreground">Currently out of stock</p>
-              ) : lowStock ? (
-                <p className="mt-2 text-[13px] text-accent">Only {effectiveStock} left in stock</p>
-              ) : null}
-            </div>
+              {/* Premium stock pill — replaces the old star/Sparkles row */}
+              <div className="mt-3">
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                    stockBadge.tone === "ok"
+                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                      : stockBadge.tone === "warn"
+                        ? "border-accent/30 bg-accent/10 text-accent"
+                        : "border-border bg-white/[0.03] text-muted-foreground"
+                  }`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="relative inline-flex size-2">
+                    {stockBadge.tone === "ok" && (
+                      <span className="absolute inset-0 rounded-full bg-emerald-400/70 animate-ping motion-reduce:hidden" />
+                    )}
+                    <span
+                      className={`relative inline-flex size-2 rounded-full ${
+                        stockBadge.tone === "ok"
+                          ? "bg-emerald-400"
+                          : stockBadge.tone === "warn"
+                            ? "bg-accent"
+                            : "bg-muted-foreground/60"
+                      }`}
+                    />
+                  </span>
+                  <span>{stockBadge.label}</span>
+                  <span className="text-muted-foreground/70">·</span>
+                  <span className="text-foreground/70">{stockBadge.sub}</span>
+                </span>
+              </div>
 
             {isAdmin && (
               <Suspense fallback={null}>
