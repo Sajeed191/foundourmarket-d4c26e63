@@ -267,43 +267,42 @@ export function FlashDeals() {
           style={{ background: "var(--gradient-ember)" }}
         />
 
-        {/* Header */}
-        <div className="relative mb-6 flex items-start justify-between gap-3 sm:mb-8">
-          <div className="min-w-0">
-            <h2 className="text-lg sm:text-2xl font-display font-bold tracking-tight text-white">
-              Flash Deals
-            </h2>
-            <p className="mt-1 text-[10.5px] sm:text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-              Limited-Time Exclusive Offers
-            </p>
-          </div>
+        {/* Header — premium unified section heading */}
+        <PremiumSectionHeading
+          icon={Zap}
+          title="Flash Deals"
+          subtitle="Limited-time offers. Don't miss today's biggest savings."
+          live
+          liveLabel="Live"
+          right={
+            <div className="flex items-center gap-2">
+              {soonestEndAt && (
+                <div
+                  className="hidden sm:flex items-center gap-2 rounded-full px-3 py-2 text-[11px]"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,138,0,0.22)",
+                  }}
+                >
+                  <Timer className="size-3.5 text-accent" strokeWidth={2} />
+                  <InlineCountdown end={soonestEndAt} now={now} />
+                  <span className="text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Remaining
+                  </span>
+                </div>
+              )}
+              {isAdmin && (
+                <InlineActiveToggle
+                  active={sectionActive}
+                  label="Flash Deals section"
+                  size="sm"
+                  onToggle={(next) => toggleHomepageSection("flash_deals", next)}
+                />
+              )}
+            </div>
+          }
+        />
 
-          <div className="flex items-center gap-3 shrink-0">
-            {soonestEndAt && (
-              <div
-                className="hidden sm:flex items-center gap-2 rounded-full px-3.5 py-2 text-[11px]"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,138,0,0.22)",
-                }}
-              >
-                <Timer className="size-3.5 text-accent" strokeWidth={2} />
-                <InlineCountdown end={soonestEndAt} now={now} />
-                <span className="text-muted-foreground uppercase tracking-wider text-[10px]">
-                  Remaining
-                </span>
-              </div>
-            )}
-            {isAdmin && (
-              <InlineActiveToggle
-                active={sectionActive}
-                label="Flash Deals section"
-                size="sm"
-                onToggle={(next) => toggleHomepageSection("flash_deals", next)}
-              />
-            )}
-          </div>
-        </div>
 
         {/* Mobile-only compact countdown chip */}
         {soonestEndAt && (
