@@ -57,7 +57,7 @@ import {
 import { BrandName } from "@/components/site/BrandName";
 import { waitForLayoutReady, isHeaderLayoutReady } from "@/lib/wait-for-layout";
 import { useSupportSettings } from "@/lib/use-support-settings";
-import { registerFloating, subscribeFloating, setChatActive, getFooterLift, isContextHidden } from "@/lib/floating-stack";
+import { registerFloating, subscribeFloating, setChatActive, isContextHidden } from "@/lib/floating-stack";
 
 type Msg = CrispMessage;
 
@@ -327,7 +327,7 @@ export function LiveChat() {
 
   return (
     <>
-      {/* Premium floating support orb — draggable, status ring, long-press menu. */}
+      {/* Premium floating support orb — fixed, status ring, long-press menu. */}
       {!open && (
         <FixedOrb
           hidden={orbHidden}
