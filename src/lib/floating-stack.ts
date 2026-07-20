@@ -114,6 +114,21 @@ export function getFooterLift(): number {
 }
 
 /**
+ * Extra vertical offset (positive px = move UP) every floating widget should
+ * apply so it clears the PDP sticky purchase dock (Buy Now bar). Published by
+ * the PDP whenever the dock is visible; 0 otherwise.
+ */
+export function setBuyBarLift(v: number): void {
+  const next = Math.max(0, Math.round(v));
+  if (Math.abs(next - buyBarLift) < 1) return;
+  buyBarLift = next;
+  emit();
+}
+export function getBuyBarLift(): number {
+  return buyBarLift;
+}
+
+/**
  * True while an immersive surface (native fullscreen, image zoom, video
  * fullscreen) is active. Widgets fully hide (opacity 0 + pointer-events none)
  * without unmounting, so they restore instantly when the user exits.
