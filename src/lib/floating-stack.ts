@@ -27,7 +27,9 @@ const entries = new Map<string, FloatingEntry>();
 const subs = new Set<() => void>();
 let chatActive = false;
 let footerLift = 0;
+let buyBarLift = 0;
 let contextHidden = false;
+
 
 
 function emit() {
