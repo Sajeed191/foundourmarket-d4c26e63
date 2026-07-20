@@ -152,3 +152,15 @@ export function CategoryCardImpl({
     </Link>
   );
 }
+
+export const CategoryCard = memo(CategoryCardImpl, (a, b) =>
+  a.count === b.count &&
+  a.to === b.to &&
+  a.category.id === b.category.id &&
+  a.category.image === b.category.image &&
+  a.category.mobile_image === b.category.mobile_image &&
+  a.category.name === b.category.name &&
+  a.category.slug === b.category.slug &&
+  a.category.theme === b.category.theme &&
+  a.params.slug === b.params.slug,
+);
