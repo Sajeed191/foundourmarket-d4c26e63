@@ -6,7 +6,7 @@ import {
   Star, Loader2, CheckCircle2, Pencil, Trash2, ThumbsUp, ThumbsDown, Flag,
   ImagePlus, X, Pin, Sparkles, ShieldCheck, EyeOff, Eye, MessageSquare, Play, Brain,
   Camera, BadgeCheck, PackageCheck, ChevronLeft, ChevronRight, ThumbsUp as Recommend,
-  Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn,
+  Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn, Search, Video,
   LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -75,7 +75,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   // longer exposes user_id so we can't derive ownership from the list).
   const [myReview, setMyReview] = useState<Review | null>(null);
   const [myVotes, setMyVotes] = useState<Record<string, "helpful" | "not_helpful">>({});
-  const [trust, setTrust] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
   const [eligible, setEligible] = useState(false);
   const [purchase, setPurchase] = useState<PurchaseState>({ purchased: false, delivered: false });
   const [buyingAgain, setBuyingAgain] = useState(false);
@@ -163,8 +163,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     }
 
 
-    const { data: ts } = await supabase.rpc("product_trust_score", { _slug: productSlug });
-    if (typeof ts === "number") setTrust(ts);
+    // Trust score removed — customers found the raw number confusing.
+
     setLoading(false);
   }, [productSlug, isAdmin, user]);
 
@@ -224,7 +224,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
-  const photoReviews = published.filter((r) => (r.media?.length ?? 0) > 0);
+  const photoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "image"));
+  const videoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "video"));
   const recommendPct = published.length
     ? Math.round((published.filter((r) => r.rating >= 4).length / published.length) * 100)
     : 0;
@@ -247,8 +248,13 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }, [published]);
 
   const sorted = useMemo(() => {
+    const q = query.trim().toLowerCase();
     let list = reviews.slice();
     list = list.filter((r) => {
+      if (q) {
+        const hay = `${r.title ?? ""} ${r.body ?? ""} ${r.author_name ?? ""} ${(isAdmin && r.user_id) ? profiles[r.user_id]?.full_name ?? "" : ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       // Deleted reviews are hidden by default; only visible under the explicit
       // "Deleted" filter (admin-only archive view).
       if (r.status === "deleted" && filter !== "deleted") return false;
@@ -281,9 +287,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
       if (sort === "oldest") return +new Date(a.created_at) - +new Date(b.created_at);
       return +new Date(b.created_at) - +new Date(a.created_at);
     });
-  }, [reviews, filter, sort]);
+  }, [reviews, filter, sort, query, isAdmin, profiles]);
 
-  useEffect(() => { setVisibleCount(6); }, [filter, sort]);
+  useEffect(() => { setVisibleCount(6); }, [filter, sort, query]);
 
   function clearReviewDraft() {
     composeSessionRef.current += 1;
@@ -620,12 +626,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 
   return (
     <section className="max-w-7xl mx-auto pt-2 pb-14 sm:pb-20">
-      {trust !== null && hasReviews && (
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.07] px-3.5 py-1.5">
-          <ShieldCheck className="size-4 text-accent" />
-          <span className="text-[11px] font-mono uppercase tracking-widest text-accent">Trust score {trust}/100</span>
-        </div>
-      )}
+      {/* Trust Score removed: opaque numeric scores reduced buyer confidence. */}
+
 
       {loading ? (
         <ReviewsSkeleton />
@@ -648,7 +650,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-400" /> {verifiedCount} verified</span>
-                  <span className="inline-flex items-center gap-1.5"><Camera className="size-3.5 text-accent" /> {photoReviews.length} with photos</span>
+                  <span className="inline-flex items-center gap-1.5"><Camera className="size-3.5 text-accent" /> {photoReviews.length} photos</span>
+                  <span className="inline-flex items-center gap-1.5"><Video className="size-3.5 text-accent" /> {videoReviews.length} videos</span>
                 </div>
                 {recommendPct > 0 && (
                   <p className="mt-3 text-[13px] text-foreground/85">
@@ -747,8 +750,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
           {expanded && hasReviews && (
             <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatCard icon={<Users className="size-4" />} value={verifiedCount.toLocaleString()} label="Verified Buyers" />
-              <StatCard icon={<Star className="size-4" />} value={avg.toFixed(1)} label="Average Rating" />
-              <StatCard icon={<TrendingUp className="size-4" />} value={`${trust ?? 98}%`} label="Trust Score" />
+              <StatCard icon={<Camera className="size-4" />} value={photoReviews.length.toLocaleString()} label="Photo Reviews" />
+              <StatCard icon={<Video className="size-4" />} value={videoReviews.length.toLocaleString()} label="Video Reviews" />
               <StatCard icon={<Recommend className="size-4" />} value={`${recommendPct}%`} label="Recommend" highlight />
             </div>
           )}
@@ -801,10 +804,30 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             </div>
           )}
 
-          {/* Filters + sort + write CTA */}
+          {/* Search + filters + sort */}
           {expanded && (
           <div className="mb-8 space-y-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search reviews by keyword, title, or name…"
+                className="w-full rounded-full border border-white/10 bg-white/[0.03] pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:border-accent/40 focus:bg-white/[0.05]"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
               {filterChips.map((c) => (
                 <button
                   key={c.key}
@@ -986,15 +1009,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               </div>
                             )}
 
-                            {isAdmin && r.sentiment && (
-                              <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-mono">
-                                <Badge tone={r.sentiment === "negative" ? "danger" : r.sentiment === "positive" ? "accent" : "muted"}>
-                                  <Brain className="size-2.5" /> {r.sentiment} {r.sentiment_score ?? 0}
-                                </Badge>
-                                {typeof r.fake_score === "number" && (
-                                  <Badge tone={r.fake_score >= 60 ? "danger" : "muted"}>Fake risk {r.fake_score}</Badge>
-                                )}
-                                {r.sentiment_summary && <span className="text-muted-foreground">{r.sentiment_summary}</span>}
+                            {isAdmin && r.sentiment_summary && (
+                              <div className="mt-3 flex items-start gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-2.5 text-[10px] font-mono text-muted-foreground">
+                                <Brain className="size-3 text-accent mt-0.5 shrink-0" />
+                                <span>{r.sentiment_summary}</span>
                               </div>
                             )}
 
