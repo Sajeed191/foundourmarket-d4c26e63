@@ -1,26 +1,28 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Scale, Check, ArrowRight, Plus, Star, Package, X } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
+import { Scale, Check, ArrowRight, Plus, Star, Package, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useProducts } from "@/lib/use-products";
-import { resolveImage, type Product } from "@/lib/products";
+import { resolveImage, discountPercent, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
 import { Price } from "@/components/site/Price";
 
 /**
- * PDP — Product Comparison v3.0 (Amazon/Flipkart style, inline section).
+ * PDP — Product Comparison v3.1 (Amazon/Flipkart style, live inline table).
  *
- * No sticky bars, no floating CTAs. The comparison lives entirely inside
- * the PDP as another content section:
- *   1) Section header
- *   2) Current product (pinned, always selected)
- *   3) Horizontal carousel of similar products (Select ↔ ✓ Selected)
- *   4) Inline comparison preview table (updates live)
- *   5) One inline "Compare Products →" button at the bottom
+ * No Compare CTA button anywhere. The comparison table updates live as the
+ * shopper toggles similar products. The only navigation into `/compare` is a
+ * subtle "View Full Comparison →" text link in the table header.
  *
- * Reuses the existing compare store (useCompare) and /compare page unchanged.
+ *   Section header
+ *   ─────────────
+ *   Carousel:  [Current Product] [Similar 1] [Similar 2] …
+ *   Live comparison table (Price · Discount · Rating · Reviews · Availability · Shipping · Warranty)
+ *   Inline "View all specifications" toggle → expands additional attribute rows
+ *
+ * Reuses the existing compare store and `/compare` page unchanged.
  */
 
 type ChipKind = "bestseller" | "hot" | "flash" | "trending" | "new" | "featured";
@@ -35,20 +37,11 @@ function pickChip(p: Product): { kind: ChipKind; label: string; cls: string } | 
   return null;
 }
 
-const PREVIEW_ATTRIBUTES = [
-  "Price",
-  "Rating",
-  "Reviews",
-  "Specifications",
-  "Warranty",
-  "Shipping",
-] as const;
-
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
-  const { priceOf } = useRegion();
-  const { slugs, toggle, has, isFull, max, remove, clear } = useCompare();
-  const navigate = useNavigate();
+  const { priceOf, compareOf, region } = useRegion();
+  const { slugs, toggle, has, isFull, max, remove } = useCompare();
+  const [showAll, setShowAll] = useState(false);
 
   const currentSlug = currentProduct.slug;
 
@@ -95,10 +88,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     });
   }, [products, slugs, remove, currentSlug]);
 
-  const selectedCount = slugs.length;
-  const otherSelected = selectedCount - (has(currentSlug) ? 1 : 0);
-  const canCompare = selectedCount >= 2;
-
   const selectedProducts = useMemo(
     () =>
       slugs
@@ -109,6 +98,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     [slugs, products, currentSlug, currentProduct],
   );
 
+  // Ensure current product is always first column.
+  const tableProducts = useMemo(() => {
+    const rest = selectedProducts.filter((p) => p.slug !== currentSlug);
+    return [currentProduct, ...rest];
+  }, [selectedProducts, currentProduct, currentSlug]);
+
   const handleToggle = (slug: string) => {
     if (slug === currentSlug) return;
     if (!has(slug) && isFull) {
@@ -118,6 +113,10 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     toggle(slug);
   };
 
+  // Row builders — memoized for perf.
+  const rows = useMemo(() => buildRows(tableProducts, { priceOf, compareOf, region }), [tableProducts, priceOf, compareOf, region]);
+  const extraRows = useMemo(() => buildExtraRows(tableProducts), [tableProducts]);
+
   // Empty state — no similar products yet.
   if (suggestions.length === 0) {
     return (
@@ -125,7 +124,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20"
         data-pdp-compare
       >
-        <SectionHeader />
+        <SectionHeader count={1} showLink={false} />
         <div className="mt-6 rounded-[20px] border border-white/[0.06] bg-white/[0.02] px-6 py-10 sm:py-14 flex flex-col items-center text-center">
           <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] grid place-items-center mb-4">
             <Package className="size-5 text-white/50" aria-hidden />
@@ -146,7 +145,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20"
       data-pdp-compare
     >
-      <SectionHeader />
+      <SectionHeader count={tableProducts.length} showLink={tableProducts.length >= 2} />
 
       {/* Carousel */}
       <div className="mt-6 -mx-4 sm:mx-0 overflow-hidden">
@@ -226,89 +225,72 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </ul>
       </div>
 
-      {/* Inline preview + inline CTA */}
-      {canCompare ? (
+      {/* Live comparison table */}
+      {tableProducts.length >= 2 ? (
         <div className="mt-6 rounded-[20px] border border-white/[0.08] bg-white/[0.02] overflow-hidden animate-fade-in">
-          {/* Selected chips */}
-          <div className="px-4 sm:px-5 pt-4 pb-3 border-b border-white/[0.06]">
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-[10px] font-mono uppercase tracking-widest text-white/50">
-                Selected Products · {selectedCount} of {max}
-              </p>
-              {otherSelected > 0 && (
-                <button
-                  onClick={() => {
-                    clear();
-                    toggle(currentSlug);
-                  }}
-                  className="text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-white/80 transition-colors"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-            <ul className="flex flex-wrap gap-1.5">
-              {selectedProducts.map((p) => {
-                const isCurrent = p.slug === currentSlug;
-                return (
-                  <li
-                    key={p.slug}
-                    className={`inline-flex items-center gap-1.5 rounded-full pl-2 pr-1 py-1 text-[11px] border transition-all duration-200 ${
-                      isCurrent
-                        ? "bg-amber-500/15 border-amber-500/40 text-amber-200"
-                        : "bg-white/[0.04] border-white/[0.08] text-white/85"
-                    }`}
-                  >
-                    <Check className="size-3" aria-hidden />
-                    <span className="max-w-[140px] sm:max-w-[200px] truncate">{p.name}</span>
-                    {!isCurrent && (
-                      <button
-                        onClick={() => toggle(p.slug)}
-                        aria-label={`Remove ${p.name}`}
-                        className="size-4 grid place-items-center rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/70 hover:text-white transition-colors"
+          <div className="overflow-x-auto [scrollbar-width:thin]">
+            <table className="w-full min-w-[560px] text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/[0.08]">
+                  <th className="sticky left-0 z-10 bg-[#0d0d0f] px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-white/40 w-[130px] min-w-[130px]">
+                    Feature
+                  </th>
+                  {tableProducts.map((p) => {
+                    const isCurrent = p.slug === currentSlug;
+                    return (
+                      <th
+                        key={p.slug}
+                        className="px-3 py-3 align-top min-w-[150px]"
                       >
-                        <X className="size-2.5" />
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+                        <div className="flex flex-col gap-1.5">
+                          {isCurrent && (
+                            <span className="inline-flex self-start items-center rounded-full bg-amber-500/15 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-300">
+                              Current
+                            </span>
+                          )}
+                          <Link
+                            to="/products/$slug"
+                            params={{ slug: p.slug }}
+                            className="text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug hover:text-accent transition-colors"
+                          >
+                            {p.name}
+                          </Link>
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <TableRow key={row.label} row={row} />
+                ))}
+                {showAll && extraRows.map((row) => <TableRow key={row.label} row={row} />)}
+              </tbody>
+            </table>
           </div>
 
-          {/* Preview attributes */}
-          <div className="px-4 sm:px-5 py-4">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-white/50 mb-2.5">
-              You'll compare
-            </p>
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
-              {PREVIEW_ATTRIBUTES.map((c) => (
-                <li key={c} className="flex items-center gap-1.5 text-[12px] text-white/80">
-                  <Check className="size-3.5 text-emerald-400 shrink-0" aria-hidden />
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Inline CTA */}
-          <div className="px-4 sm:px-5 pb-4 pt-1">
+          {extraRows.length > 0 && (
             <button
-              onClick={() => navigate({ to: "/compare" })}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-3 text-[12px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-200"
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-medium text-white/70 hover:text-white border-t border-white/[0.06] hover:bg-white/[0.02] transition-colors"
             >
-              Compare {selectedCount} Products
-              <ArrowRight className="size-4" aria-hidden />
+              {showAll ? "Hide specifications" : "View all specifications"}
+              <ChevronDown
+                className={`size-4 transition-transform duration-200 ${showAll ? "rotate-180" : ""}`}
+                aria-hidden
+              />
             </button>
-          </div>
+          )}
         </div>
       ) : (
         <div className="mt-6 rounded-[20px] border border-dashed border-white/[0.08] bg-white/[0.015] px-5 py-6 text-center animate-fade-in">
           <p className="text-[13px] text-white/70">
-            Select one or more similar products to compare.
+            Select a similar product to see a live comparison.
           </p>
           <p className="mt-1 text-[11.5px] text-white/45">
-            Your comparison preview will appear here.
+            The comparison table updates automatically.
           </p>
         </div>
       )}
@@ -316,20 +298,33 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   );
 }
 
-function SectionHeader() {
+function SectionHeader({ count, showLink }: { count: number; showLink: boolean }) {
   return (
     <div className="flex items-start gap-3.5">
       <span aria-hidden className="mt-1.5 h-6 w-[3px] rounded-full bg-accent shrink-0" />
       <div className="min-w-0 flex-1">
-        <h2 className="text-[18px] sm:text-[20px] font-semibold tracking-tight text-foreground leading-tight inline-flex items-center gap-2">
-          <Scale className="size-[18px] text-accent" aria-hidden />
-          Product Comparison
-        </h2>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="text-[18px] sm:text-[20px] font-semibold tracking-tight text-foreground leading-tight inline-flex items-center gap-2">
+            <Scale className="size-[18px] text-accent" aria-hidden />
+            Product Comparison
+          </h2>
+          {showLink && (
+            <Link
+              to="/compare"
+              className="shrink-0 inline-flex items-center gap-1 text-[12px] font-medium text-accent hover:brightness-125 transition-all pt-1"
+            >
+              View Full Comparison
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          )}
+        </div>
         <p className="mt-1 text-[13px] text-muted-foreground/85 leading-relaxed">
-          Compare this product with similar alternatives.
+          {showLink
+            ? `Showing ${count} product${count === 1 ? "" : "s"} — updates as you select.`
+            : "Compare this product with similar alternatives."}
         </p>
         <p className="mt-1 text-[11.5px] text-muted-foreground/60 leading-relaxed">
-          Ranked by brand, product type, category, and similar specifications.
+          Ranked by brand, product type, and category.
         </p>
       </div>
     </div>
@@ -406,4 +401,168 @@ function StatsRow({ product, price }: { product: Product; price: number }) {
       </span>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Table row model
+// ---------------------------------------------------------------------------
+
+type Cell = { key: string; node: React.ReactNode; highlight?: boolean };
+type Row = { label: string; cells: Cell[] };
+
+function TableRow({ row }: { row: Row }) {
+  return (
+    <tr className="border-b border-white/[0.05] last:border-b-0">
+      <th
+        scope="row"
+        className="sticky left-0 z-10 bg-[#0d0d0f] px-4 py-3 text-[11px] font-medium text-white/55 align-top w-[130px] min-w-[130px]"
+      >
+        {row.label}
+      </th>
+      {row.cells.map((c) => (
+        <td
+          key={c.key}
+          className={`px-3 py-3 align-top text-[12.5px] leading-snug ${c.highlight ? "text-emerald-300 font-semibold" : "text-white/90"}`}
+        >
+          {c.node}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+function buildRows(
+  items: Product[],
+  ctx: {
+    priceOf: (p: Product) => number;
+    compareOf: (p: Product) => number | null;
+    region: { country: "IN" | "INT" } | { country: string };
+  },
+): Row[] {
+  const isIN = (ctx.region as { country: string }).country === "IN";
+
+  const prices = items.map((p) => ctx.priceOf(p));
+  const minPrice = Math.min(...prices);
+  const ratings = items.map((p) => Number(p.rating || 0));
+  const maxRating = Math.max(...ratings);
+  const reviews = items.map((p) => Number(p.reviews || 0));
+  const maxReviews = Math.max(...reviews);
+  const discounts = items.map((p) => {
+    const cmp = ctx.compareOf(p);
+    return discountPercent(cmp, ctx.priceOf(p)) ?? 0;
+  });
+  const maxDiscount = Math.max(...discounts);
+
+  return [
+    {
+      label: "Price",
+      cells: items.map((p, i) => ({
+        key: p.slug,
+        highlight: prices[i] === minPrice && items.length > 1,
+        node: <Price value={prices[i]} variant="current" className="text-[13.5px]" />,
+      })),
+    },
+    {
+      label: "Discount",
+      cells: items.map((p, i) => ({
+        key: p.slug,
+        highlight: discounts[i] > 0 && discounts[i] === maxDiscount && items.length > 1,
+        node: discounts[i] > 0 ? `${discounts[i]}% off` : <span className="text-white/40">—</span>,
+      })),
+    },
+    {
+      label: "Rating",
+      cells: items.map((p, i) => ({
+        key: p.slug,
+        highlight: ratings[i] > 0 && ratings[i] === maxRating && items.length > 1,
+        node: (
+          <span className="inline-flex items-center gap-1 tabular-nums">
+            <Star className="size-3.5 fill-amber-400 text-amber-400" aria-hidden />
+            {ratings[i].toFixed(1)}
+          </span>
+        ),
+      })),
+    },
+    {
+      label: "Reviews",
+      cells: items.map((p, i) => ({
+        key: p.slug,
+        highlight: reviews[i] > 0 && reviews[i] === maxReviews && items.length > 1,
+        node: <span className="tabular-nums">{reviews[i].toLocaleString()}</span>,
+      })),
+    },
+    {
+      label: "Availability",
+      cells: items.map((p) => ({
+        key: p.slug,
+        node:
+          p.inStock === false ? (
+            <span className="text-rose-300">Out of stock</span>
+          ) : (
+            <span className="text-emerald-300">In stock</span>
+          ),
+      })),
+    },
+    {
+      label: "Shipping",
+      cells: items.map((p) => {
+        const fee = isIN ? Number(p.shippingFeeInr || 0) : Number(p.shippingFeeUsd || 0);
+        const label =
+          fee <= 0
+            ? "Free"
+            : isIN
+              ? `₹${fee.toLocaleString("en-IN")}`
+              : `$${fee.toLocaleString("en-US")}`;
+        return {
+          key: p.slug,
+          highlight: fee <= 0 && items.length > 1,
+          node: label,
+        };
+      }),
+    },
+    {
+      label: "Warranty",
+      cells: items.map((p) => ({
+        key: p.slug,
+        node: p.warranty || <span className="text-white/40">—</span>,
+      })),
+    },
+  ];
+}
+
+function buildExtraRows(items: Product[]): Row[] {
+  const rows: Row[] = [];
+
+  const push = (label: string, get: (p: Product) => React.ReactNode) => {
+    const cells = items.map((p) => ({ key: p.slug, node: get(p) }));
+    // Only include the row if at least one product has a meaningful value.
+    const hasAny = cells.some((c) => c.node !== null && c.node !== undefined && c.node !== "");
+    if (hasAny) rows.push({ label, cells });
+  };
+
+  push("Brand", (p) => p.brand || <span className="text-white/40">—</span>);
+  push("Type", (p) => p.productType || <span className="text-white/40">—</span>);
+  push("Category", (p) => p.category || <span className="text-white/40">—</span>);
+  push("SKU", (p) => p.sku || <span className="text-white/40">—</span>);
+  push("Returns", (p) =>
+    p.returnEligible
+      ? `${p.returnWindowDays ?? 7} days`
+      : <span className="text-white/40">Not eligible</span>,
+  );
+  push("Replacement", (p) =>
+    p.replacementEligible ? (
+      <span className="text-emerald-300">Available</span>
+    ) : (
+      <span className="text-white/40">Not available</span>
+    ),
+  );
+  push("International shipping", (p) =>
+    p.internationalShipping ? (
+      <span className="text-emerald-300">Yes</span>
+    ) : (
+      <span className="text-white/40">No</span>
+    ),
+  );
+
+  return rows;
 }
