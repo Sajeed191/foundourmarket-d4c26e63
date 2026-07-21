@@ -163,8 +163,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     }
 
 
-    const { data: ts } = await supabase.rpc("product_trust_score", { _slug: productSlug });
-    if (typeof ts === "number") setTrust(ts);
+    // Trust score removed — customers found the raw number confusing.
+
     setLoading(false);
   }, [productSlug, isAdmin, user]);
 
