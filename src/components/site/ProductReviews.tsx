@@ -224,7 +224,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
-  const photoReviews = published.filter((r) => (r.media?.length ?? 0) > 0);
+  const photoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "image"));
+  const videoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "video"));
   const recommendPct = published.length
     ? Math.round((published.filter((r) => r.rating >= 4).length / published.length) * 100)
     : 0;
