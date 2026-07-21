@@ -240,7 +240,11 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     list = list.filter((r) => {
       switch (filter) {
         case "verified": return r.verified_purchase;
-        case "photo": return (r.media?.length ?? 0) > 0;
+        case "photo": return (r.media ?? []).some((m) => m.type === "image");
+        case "video": return (r.media ?? []).some((m) => m.type === "video");
+        case "featured": return !!r.featured;
+        case "pinned": return !!r.pinned;
+        case "ai": return !!(r.sentiment_summary || r.fake_reasons || r.sentiment);
         case "5": return Math.round(r.rating) === 5;
         case "4": return Math.round(r.rating) === 4;
         case "3": return Math.round(r.rating) === 3;
@@ -255,6 +259,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
       if (sort === "helpful") return (b.helpful_count ?? 0) - (a.helpful_count ?? 0);
       if (sort === "highest") return b.rating - a.rating;
       if (sort === "lowest") return a.rating - b.rating;
+      if (sort === "oldest") return +new Date(a.created_at) - +new Date(b.created_at);
       return +new Date(b.created_at) - +new Date(a.created_at);
     });
   }, [reviews, filter, sort]);
