@@ -146,7 +146,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   <div className="mt-1.5">
                     <StarRating
                       rating={Number(p.rating || 0)}
-                      count={Number(p.reviewCount || 0)}
+                      count={Number(p.reviews || 0)}
                       starClassName="size-3"
                       textClassName="text-[11px]"
                     />
