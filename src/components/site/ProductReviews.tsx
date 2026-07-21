@@ -1254,13 +1254,14 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
         />
       )}
 
-      {/* Lightbox gallery */}
-      <Lightbox
+      {/* Dedicated review media viewer — isolated from product gallery */}
+      <ReviewMediaViewer
         list={lightboxList}
         index={lightboxIndex}
         onIndex={setLightboxIndex}
         onClose={() => setLightboxList(null)}
       />
+
 
       {/* Delete confirmation dialog */}
       <AnimatePresence>
