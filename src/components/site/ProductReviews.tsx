@@ -52,6 +52,24 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Muted, brand-safe accent palette for initial-based avatars. Deterministic
+// per name so a given customer always gets the same swatch across the site.
+const AVATAR_PALETTE = [
+  { bg: "bg-amber-500/20", fg: "text-amber-300", ring: "ring-amber-400/25" },
+  { bg: "bg-emerald-500/20", fg: "text-emerald-300", ring: "ring-emerald-400/25" },
+  { bg: "bg-sky-500/20", fg: "text-sky-300", ring: "ring-sky-400/25" },
+  { bg: "bg-violet-500/20", fg: "text-violet-300", ring: "ring-violet-400/25" },
+  { bg: "bg-rose-500/20", fg: "text-rose-300", ring: "ring-rose-400/25" },
+  { bg: "bg-teal-500/20", fg: "text-teal-300", ring: "ring-teal-400/25" },
+  { bg: "bg-orange-500/20", fg: "text-orange-300", ring: "ring-orange-400/25" },
+  { bg: "bg-indigo-500/20", fg: "text-indigo-300", ring: "ring-indigo-400/25" },
+];
+function avatarSwatch(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
 // Themes derived from review text to surface "what customers love".
 const HIGHLIGHT_THEMES: { label: string; keywords: string[] }[] = [
   { label: "Quality", keywords: ["quality", "well made", "well-made", "durable", "premium", "sturdy", "excellent", "build"] },
@@ -655,12 +673,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-400" /> {verifiedCount} verified</span>
                   <span className="inline-flex items-center gap-1.5"><Camera className="size-3.5 text-accent" /> {photoReviews.length} photos</span>
                   <span className="inline-flex items-center gap-1.5"><Video className="size-3.5 text-accent" /> {videoReviews.length} videos</span>
-                </div>
-                {recommendPct > 0 && (
-                  <p className="mt-3 text-[13px] text-foreground/85">
-                    <span className="font-semibold text-accent">{recommendPct}%</span> of customers recommend this
-                  </p>
-                )}
+              </div>
+
               </div>
               <div className="space-y-2 self-center">
                 {[5, 4, 3, 2, 1].map((star, idx) => {
@@ -888,9 +902,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         )}
                       >
                         {(r.featured || r.pinned) && (
-                          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[9px] font-mono uppercase tracking-widest text-accent">
-                            {r.pinned ? <Pin className="size-2.5" /> : <Sparkles className="size-2.5" />}
-                            {r.pinned ? "Pinned" : "Featured"}
+                          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-amber-300">
+                            <Star className="size-3 fill-amber-300 text-amber-300" />
+                            Featured Review
                           </div>
                         )}
                         {isAdmin && (r.status !== "published" || r.is_flagged) && (
@@ -945,47 +959,52 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               <button onClick={() => setEditingId(null)} disabled={editSaving} className="px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-border">Cancel</button>
                             </div>
                           </div>
-                        ) : (
+                        ) : (() => {
+                          const swatch = avatarSwatch(name);
+                          return (
                           <>
-                            {/* Header: avatar + name + verified inline, date right */}
+                            {/* Header: avatar + name + verified + rating; date right */}
                             <div className="flex items-start gap-3">
-                              <div className="size-10 rounded-full bg-muted overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1 ring-white/10">
-                                {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
+                              <div className={cn(
+                                "size-11 rounded-full overflow-hidden grid place-items-center text-base font-display shrink-0 ring-1",
+                                avatarUrl ? "bg-muted ring-white/10" : cn(swatch.bg, swatch.fg, swatch.ring),
+                              )}>
+                                {avatarUrl
+                                  ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                                  : <span aria-hidden>{name.charAt(0).toUpperCase()}</span>}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-[15px] font-display leading-tight truncate">{name}</p>
+                                  <p className="text-[15px] font-display font-semibold leading-tight truncate">{name}</p>
                                   {r.verified_purchase && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                                      <BadgeCheck className="size-3" /> Verified Buyer
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                                      <Check className="size-3" strokeWidth={3} /> Verified Buyer
                                     </span>
                                   )}
                                 </div>
-                                <div className="mt-1 flex items-center gap-2">
+                                <div className="mt-1 flex items-center gap-1.5">
                                   <StarRating rating={r.rating} starClassName="size-3.5" />
+                                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
                                 </div>
                               </div>
                               <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
                             </div>
 
-                            {/* Title + body */}
-                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
-                            {r.body && <ReviewBody text={r.body} />}
-
-                            {/* Media gallery — adaptive grid */}
+                            {/* Media gallery — media-first, adaptive grid, up to 4 with +N overlay */}
                             {r.media?.length > 0 && (() => {
                               const media = r.media;
                               const count = media.length;
-                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : "grid-cols-3";
-                              const shown = media.slice(0, 3);
+                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4";
+                              const shown = media.slice(0, 4);
                               return (
                                 <div className={cn("mt-3 grid gap-1.5", cols)}>
                                   {shown.map((m, i) => {
-                                    const showOverlay = i === 2 && count > 3;
+                                    const showOverlay = i === 3 && count > 4;
                                     return (
                                       <button
                                         key={i}
                                         onClick={() => openLightbox(media, i)}
+                                        aria-label={m.type === "video" ? "Play customer video" : "Open customer photo"}
                                         className={cn(
                                           "relative overflow-hidden rounded-xl border border-white/10 group/media",
                                           count === 1 ? "aspect-[4/3]" : "aspect-square",
@@ -1005,7 +1024,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                         )}
                                         {showOverlay && (
                                           <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-display text-white">
-                                            +{count - 3}
+                                            +{count - 4}
                                           </span>
                                         )}
                                       </button>
@@ -1014,6 +1033,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                 </div>
                               );
                             })()}
+
+                            {/* Title + body — after media */}
+                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.body && <ReviewBody text={r.body} />}
 
                             {/* Store reply — collapsed by default, expandable */}
                             {r.admin_reply && (
@@ -1053,18 +1076,6 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                 )}
                               >
                                 <ThumbsUp className="size-3.5" /> Helpful {r.helpful_count > 0 ? `(${r.helpful_count})` : ""}
-                              </button>
-                              <button
-                                onClick={() => vote(r, "not_helpful")}
-                                aria-label="Not helpful"
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
-                                  myVotes[r.id] === "not_helpful"
-                                    ? "bg-destructive/15 text-destructive"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                                )}
-                              >
-                                <ThumbsDown className="size-3.5" /> {r.not_helpful_count > 0 ? r.not_helpful_count : ""}
                               </button>
 
                               {/* More menu (Edit / Delete / Report / Copy link) */}
@@ -1215,7 +1226,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               </div>
                             )}
                           </>
-                        )}
+                          );
+                        })()}
                       </motion.li>
                     );
                   })}
@@ -1457,10 +1469,10 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
           <Star className="size-8 fill-accent" />
         </span>
         <h3 className="mt-5 text-xl font-display">No reviews yet</h3>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to share your experience.</p>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to review this product and help other shoppers make the right choice.</p>
         {canWrite && (
           <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write Review
+            <Pencil className="size-3.5" /> Write the First Review
           </button>
         )}
       </div>
