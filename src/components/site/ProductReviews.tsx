@@ -75,7 +75,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   // longer exposes user_id so we can't derive ownership from the list).
   const [myReview, setMyReview] = useState<Review | null>(null);
   const [myVotes, setMyVotes] = useState<Record<string, "helpful" | "not_helpful">>({});
-  const [trust, setTrust] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
   const [eligible, setEligible] = useState(false);
   const [purchase, setPurchase] = useState<PurchaseState>({ purchased: false, delivered: false });
   const [buyingAgain, setBuyingAgain] = useState(false);
