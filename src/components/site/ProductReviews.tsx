@@ -902,9 +902,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         )}
                       >
                         {(r.featured || r.pinned) && (
-                          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[9px] font-mono uppercase tracking-widest text-accent">
-                            {r.pinned ? <Pin className="size-2.5" /> : <Sparkles className="size-2.5" />}
-                            {r.pinned ? "Pinned" : "Featured"}
+                          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-amber-300">
+                            <Star className="size-3 fill-amber-300 text-amber-300" />
+                            Featured Review
                           </div>
                         )}
                         {isAdmin && (r.status !== "published" || r.is_flagged) && (
