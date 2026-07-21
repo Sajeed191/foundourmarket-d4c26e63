@@ -959,47 +959,52 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               <button onClick={() => setEditingId(null)} disabled={editSaving} className="px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-border">Cancel</button>
                             </div>
                           </div>
-                        ) : (
+                        ) : (() => {
+                          const swatch = avatarSwatch(name);
+                          return (
                           <>
-                            {/* Header: avatar + name + verified inline, date right */}
+                            {/* Header: avatar + name + verified + rating; date right */}
                             <div className="flex items-start gap-3">
-                              <div className="size-10 rounded-full bg-muted overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1 ring-white/10">
-                                {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
+                              <div className={cn(
+                                "size-11 rounded-full overflow-hidden grid place-items-center text-base font-display shrink-0 ring-1",
+                                avatarUrl ? "bg-muted ring-white/10" : cn(swatch.bg, swatch.fg, swatch.ring),
+                              )}>
+                                {avatarUrl
+                                  ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                                  : <span aria-hidden>{name.charAt(0).toUpperCase()}</span>}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-[15px] font-display leading-tight truncate">{name}</p>
+                                  <p className="text-[15px] font-display font-semibold leading-tight truncate">{name}</p>
                                   {r.verified_purchase && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                                      <BadgeCheck className="size-3" /> Verified Buyer
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                                      <Check className="size-3" strokeWidth={3} /> Verified Buyer
                                     </span>
                                   )}
                                 </div>
-                                <div className="mt-1 flex items-center gap-2">
+                                <div className="mt-1 flex items-center gap-1.5">
                                   <StarRating rating={r.rating} starClassName="size-3.5" />
+                                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
                                 </div>
                               </div>
                               <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
                             </div>
 
-                            {/* Title + body */}
-                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
-                            {r.body && <ReviewBody text={r.body} />}
-
-                            {/* Media gallery — adaptive grid */}
+                            {/* Media gallery — media-first, adaptive grid, up to 4 with +N overlay */}
                             {r.media?.length > 0 && (() => {
                               const media = r.media;
                               const count = media.length;
-                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : "grid-cols-3";
-                              const shown = media.slice(0, 3);
+                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4";
+                              const shown = media.slice(0, 4);
                               return (
                                 <div className={cn("mt-3 grid gap-1.5", cols)}>
                                   {shown.map((m, i) => {
-                                    const showOverlay = i === 2 && count > 3;
+                                    const showOverlay = i === 3 && count > 4;
                                     return (
                                       <button
                                         key={i}
                                         onClick={() => openLightbox(media, i)}
+                                        aria-label={m.type === "video" ? "Play customer video" : "Open customer photo"}
                                         className={cn(
                                           "relative overflow-hidden rounded-xl border border-white/10 group/media",
                                           count === 1 ? "aspect-[4/3]" : "aspect-square",
@@ -1019,7 +1024,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                         )}
                                         {showOverlay && (
                                           <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-display text-white">
-                                            +{count - 3}
+                                            +{count - 4}
                                           </span>
                                         )}
                                       </button>
@@ -1028,6 +1033,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                 </div>
                               );
                             })()}
+
+                            {/* Title + body — after media */}
+                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.body && <ReviewBody text={r.body} />}
 
                             {/* Store reply — collapsed by default, expandable */}
                             {r.admin_reply && (
