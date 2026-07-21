@@ -1173,8 +1173,28 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
               <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-destructive/15 text-destructive">
                 <Trash2 className="size-5" />
               </div>
-              <p className="mt-4 text-base font-display">Delete this review?</p>
-              <p className="mt-1.5 text-sm text-muted-foreground">This review will be removed and can't be recovered. The product rating and count will update immediately.</p>
+              <p className="mt-4 text-base font-display">
+                {deleteMode === "admin_hard" ? "Permanently delete this review?"
+                  : deleteMode === "admin_soft" ? "Delete this review?"
+                  : "Delete this review?"}
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {deleteMode === "admin_hard"
+                  ? "This will permanently erase the review from the database. This action cannot be undone."
+                  : deleteMode === "admin_soft"
+                  ? "The review will be hidden from customers and moved to the admin archive. You can restore it later."
+                  : "Your review will be hidden from the product page. The product rating will update immediately."}
+              </p>
+              {deleteMode === "admin_soft" && (
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  rows={2}
+                  maxLength={200}
+                  placeholder="Reason (optional, internal only)"
+                  className="mt-3 w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-left text-sm focus:border-accent focus:outline-none"
+                />
+              )}
               <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
                 <button
                   onClick={() => setConfirmDeleteId(null)}
@@ -1189,7 +1209,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-50"
                 >
                   {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                  {deleting ? "Deleting…" : "Delete Review"}
+                  {deleting ? "Working…" : deleteMode === "admin_hard" ? "Delete permanently" : "Delete Review"}
                 </button>
               </div>
             </motion.div>
