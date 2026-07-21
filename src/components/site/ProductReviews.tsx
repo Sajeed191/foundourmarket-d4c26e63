@@ -378,41 +378,119 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }
 
   async function saveEdit(id: string) {
-    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
-    const r = await resilientRpc("review.submit", "update_own_review", {
-      p_id: id,
-      p_rating: editRating,
-      p_title: editTitle.trim() || undefined,
-      p_body: editBody.trim() || undefined,
-    }, `review.update:${id}`);
-    if (!r.ok) { toast.error((r.error as any)?.message ?? "Update failed"); return; }
-    setEditingId(null);
-    if (!r.queued) { await load(); onAggregateChange?.(); }
+    if (!user) return;
+    setEditSaving(true);
+    // Snapshot for rollback.
+    const prevList = reviews;
+    const prevMine = myReview;
+    // Optimistic apply.
+    const patchLocal = { rating: editRating, title: editTitle.trim() || null, body: editBody.trim() || null, media: editMedia };
+    setReviews((list) => list.map((x) => (x.id === id ? { ...x, ...patchLocal } as Review : x)));
+    if (myReview?.id === id) setMyReview({ ...myReview, ...patchLocal } as Review);
+    try {
+      const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+      const r = await resilientRpc("review.submit", "update_own_review", {
+        p_id: id,
+        p_rating: editRating,
+        p_title: editTitle.trim() || undefined,
+        p_body: editBody.trim() || undefined,
+      }, `review.update:${id}`);
+      if (!r.ok) throw new Error((r.error as any)?.message ?? "Update failed");
+      // Media isn't handled by the RPC — patch it directly under RLS.
+      const { error: mErr } = await supabase
+        .from("product_reviews")
+        .update({ media: editMedia as never })
+        .eq("id", id)
+        .eq("user_id", user.id);
+      if (mErr) throw new Error(mErr.message);
+      setEditingId(null);
+      toast.success("Review updated");
+      if (!r.queued) { await load(); onAggregateChange?.(); }
+    } catch (e) {
+      setReviews(prevList);
+      setMyReview(prevMine);
+      toast.error(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setEditSaving(false);
+    }
   }
 
-  async function remove(id: string) {
-    if (!confirm("Are you sure you want to delete this review?")) return;
-    const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
-    const r = await resilientRpc("review.submit", "soft_delete_own_review", { p_id: id }, `review.delete:${id}`);
-    if (!r.ok) { toast.error((r.error as any)?.message ?? "Delete failed"); return; }
-    if (!r.queued) { toast.success("Review deleted."); await load(); onAggregateChange?.(); }
+  async function onPickEditFiles(files: FileList | null) {
+    if (!files || !user) return;
+    setEditUploading(true);
+    try {
+      const uploaded: ReviewMedia[] = [];
+      for (const f of Array.from(files).slice(0, 6 - editMedia.length)) {
+        try {
+          uploaded.push(await uploadReviewMedia(f, user.id));
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Upload failed");
+        }
+      }
+      if (uploaded.length) setEditMedia((m) => [...m, ...uploaded].slice(0, 6));
+    } finally {
+      setEditUploading(false);
+      if (editFileRef.current) editFileRef.current.value = "";
+    }
   }
+
+  async function confirmDelete() {
+    const id = confirmDeleteId;
+    if (!id) return;
+    setDeleting(true);
+    // Snapshot + optimistic remove.
+    const prevList = reviews;
+    const prevMine = myReview;
+    setReviews((list) => list.filter((r) => r.id !== id));
+    if (myReview?.id === id) setMyReview(null);
+    try {
+      const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+      const r = await resilientRpc("review.submit", "soft_delete_own_review", { p_id: id }, `review.delete:${id}`);
+      if (!r.ok) throw new Error((r.error as any)?.message ?? "Delete failed");
+      toast.success("Review deleted");
+      if (!r.queued) { await load(); onAggregateChange?.(); }
+    } catch (e) {
+      setReviews(prevList);
+      setMyReview(prevMine);
+      toast.error(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
+  }
+
+  function requestDelete(id: string) { setConfirmDeleteId(id); }
 
 
   async function vote(r: Review, v: "helpful" | "not_helpful") {
     if (!user) { toast.error("Sign in to vote"); return; }
-    const next = myVotes[r.id] === v ? null : v;
+    const prev = myVotes[r.id] ?? null;
+    const next = prev === v ? null : v;
+    // Optimistically update my vote map and the review's counts.
     setMyVotes((m) => { const c = { ...m }; if (next) c[r.id] = next; else delete c[r.id]; return c; });
+    const deltaHelpful = (next === "helpful" ? 1 : 0) - (prev === "helpful" ? 1 : 0);
+    const deltaNot = (next === "not_helpful" ? 1 : 0) - (prev === "not_helpful" ? 1 : 0);
+    setReviews((list) => list.map((x) => x.id === r.id
+      ? { ...x, helpful_count: Math.max(0, (x.helpful_count ?? 0) + deltaHelpful), not_helpful_count: Math.max(0, (x.not_helpful_count ?? 0) + deltaNot) }
+      : x));
     const { error } = await castReviewVote(r.id, user.id, next);
-    if (error) toast.error(error.message);
+    if (error) {
+      // Rollback on failure.
+      setMyVotes((m) => { const c = { ...m }; if (prev) c[r.id] = prev; else delete c[r.id]; return c; });
+      setReviews((list) => list.map((x) => x.id === r.id
+        ? { ...x, helpful_count: Math.max(0, (x.helpful_count ?? 0) - deltaHelpful), not_helpful_count: Math.max(0, (x.not_helpful_count ?? 0) - deltaNot) }
+        : x));
+      toast.error(error.message);
+    }
   }
 
   async function submitReport(reviewId: string, reason: string) {
     if (!user) return;
     const { error } = await reportReview(reviewId, user.id, reason);
     setReportFor(null);
-    if (error) toast.error(error.message);
-    else toast.success("Reported — thank you. Our team will review it.");
+    if (error) { toast.error(error.message); return; }
+    setReportedIds((s) => new Set(s).add(reviewId));
+    toast.success("Reported — thank you. Our team will review it.");
   }
 
   // staff moderation
