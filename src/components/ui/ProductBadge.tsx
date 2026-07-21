@@ -81,11 +81,20 @@ function composeStyle(label: string, row: BadgeType | undefined): CSSProperties 
   const glow = glowColor
     ? `${BADGE_SHADOW}, 0 0 ${8 + (row?.shadowStrength || 0) * 4}px ${glowColor}55`
     : BADGE_SHADOW;
+  // NOTE: We intentionally DO NOT set `backdrop-filter` inline. Runtime safe-mode
+  // rules in styles.css use `[style*="backdrop-filter"]` selectors with
+  // !important to neutralise blurred surfaces on low-end / render-safe /
+  // degraded devices, and that would overwrite our badge background with the
+  // app surface gray. The pill is fully opaque anyway. We ALSO expose the
+  // resolved colors as `--badge-color`/`--badge-text` so the existing
+  // color-lock rule (`[data-product-badge][style*="--badge-color"]…`) engages
+  // as a second line of defence against any future overrides.
   return {
+    ["--badge-color" as string]: bg,
+    ["--badge-text" as string]: fg,
     backgroundColor: bg,
     color: fg,
     opacity: 1,
-    backdropFilter: BADGE_BACKDROP,
     border: `1px solid ${borderColor}`,
     boxShadow: glow,
     textShadow: "0 1px 1px rgba(0,0,0,0.18)",
@@ -94,8 +103,9 @@ function composeStyle(label: string, row: BadgeType | undefined): CSSProperties 
     fontWeight: row?.fontWeight ? row.fontWeight : 700,
     mixBlendMode: "normal",
     isolation: "isolate",
-  };
+  } as CSSProperties;
 }
+
 
 type ProductBadgeProps = {
   /** Label OR slug (badge_key). Resolves to a Badge Manager row for styling. */
