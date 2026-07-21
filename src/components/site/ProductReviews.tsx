@@ -1528,9 +1528,18 @@ function Lightbox({ list, index, onIndex, onClose }: { list: ReviewMedia[] | nul
             </button>
           )}
           {current.type === "image" ? (
-            <motion.img key={current.url} src={current.url} alt="" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="max-h-[78vh] max-w-full rounded-2xl object-contain" />
+            <motion.img
+              key={current.url}
+              src={current.url}
+              alt=""
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-h-[78vh] max-w-full rounded-2xl object-contain select-none"
+              style={{ touchAction: "pinch-zoom" }}
+              draggable={false}
+            />
           ) : (
-            <video key={current.url} src={current.url} controls autoPlay className="max-h-[78vh] max-w-full rounded-2xl" />
+            <video key={current.url} src={current.url} controls autoPlay playsInline className="max-h-[78vh] max-w-full rounded-2xl" />
           )}
           {count > 1 && (
             <button onClick={() => onIndex((index + 1) % count)} className="absolute right-2 z-10 grid size-11 place-items-center rounded-full border border-white/10 bg-background/60 text-foreground hover:text-accent">
