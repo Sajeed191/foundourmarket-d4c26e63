@@ -102,8 +102,15 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [editRating, setEditRating] = useState(5);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [editMedia, setEditMedia] = useState<ReviewMedia[]>([]);
+  const [editUploading, setEditUploading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [reportFor, setReportFor] = useState<string | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
   const [expanded, setExpanded] = useState(false);
