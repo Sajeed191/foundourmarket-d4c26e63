@@ -6,7 +6,7 @@ import {
   Star, Loader2, CheckCircle2, Pencil, Trash2, ThumbsUp, ThumbsDown, Flag,
   ImagePlus, X, Pin, Sparkles, ShieldCheck, EyeOff, Eye, MessageSquare, Play, Brain,
   Camera, BadgeCheck, PackageCheck, ChevronLeft, ChevronRight, ThumbsUp as Recommend,
-  Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn,
+  Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn, Search, Video,
   LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck,
 } from "lucide-react";
 import { toast } from "sonner";
