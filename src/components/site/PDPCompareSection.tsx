@@ -114,7 +114,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   };
 
   // Row builders — memoized for perf.
-  const rows = useMemo(() => buildRows(tableProducts, { priceOf, compareOf, region }), [tableProducts, priceOf, compareOf, region]);
+  const rows = useMemo(() => buildRows(tableProducts, { priceOf, compareOf, currency }), [tableProducts, priceOf, compareOf, currency]);
   const extraRows = useMemo(() => buildExtraRows(tableProducts), [tableProducts]);
 
   // Empty state — no similar products yet.
