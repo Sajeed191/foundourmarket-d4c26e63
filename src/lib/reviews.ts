@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type ReviewMedia = { url: string; type: "image" | "video" };
 
-export type ReviewStatus = "published" | "pending" | "hidden" | "rejected";
+export type ReviewStatus = "published" | "pending" | "hidden" | "rejected" | "deleted";
 export type Sentiment = "positive" | "neutral" | "negative" | "mixed";
 
 export type Review = {
@@ -35,6 +35,9 @@ export type Review = {
   fake_score: number | null;
   fake_reasons: string | null;
   created_at: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  deleted_reason?: string | null;
 };
 
 export const REPORT_REASONS = [
