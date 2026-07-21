@@ -7439,7 +7439,6 @@ export type Database = {
         Args: { _slug: string }
         Returns: undefined
       }
-      refresh_product_rating: { Args: { _slug: string }; Returns: undefined }
       refresh_review_vote_counts: {
         Args: { _review_id: string }
         Returns: undefined
