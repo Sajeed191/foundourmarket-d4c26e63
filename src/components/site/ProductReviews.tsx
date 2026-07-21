@@ -882,7 +882,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-2xl border bg-card/50 backdrop-blur-xl p-5 sm:p-6 transition-all hover:border-accent/30 hover:shadow-[0_18px_50px_-30px_oklch(0.74_0.19_49/0.5)]",
+                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-all hover:border-white/15 hover:shadow-[0_12px_36px_-24px_rgb(0_0_0/0.6)]",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}
