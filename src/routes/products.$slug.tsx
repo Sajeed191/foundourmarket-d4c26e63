@@ -790,22 +790,6 @@ function ProductPage() {
                 >
                   <Share2 className="size-[18px]" />
                 </button>
-                <button
-                  onClick={() => {
-                    const active = inCompare(product.slug);
-                    if (!active && compareFull) {
-                      toast.message("Maximum 4 products");
-                      return;
-                    }
-                    toggleCompare(product.slug);
-                    toast.success(active ? "Removed from Compare" : "Added to Compare");
-                  }}
-                  aria-label={inCompare(product.slug) ? "Remove from compare" : "Add to compare"}
-                  aria-pressed={inCompare(product.slug)}
-                  className={`size-11 grid place-items-center rounded-full bg-black/35 backdrop-blur-md border border-white/10 transition-all active:scale-90 ${inCompare(product.slug) ? "text-accent border-accent/40" : "text-white/85 hover:text-accent"}`}
-                >
-                  <Scale className="size-[18px]" />
-                </button>
               </div>
 
 
