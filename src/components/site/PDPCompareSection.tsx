@@ -1,13 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Scale, Check, ArrowRight, X, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Scale, Check, ArrowRight, X, Plus, Star, MessageSquare } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useProducts } from "@/lib/use-products";
 import { resolveImage, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
-import { StarRating } from "@/components/site/StarRating";
 import { Price } from "@/components/site/Price";
 import {
   Dialog,
@@ -17,35 +16,65 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * PDP — Product Comparison v2.0.
+ * PDP — Product Comparison v2.1 (polish).
  *
- * Premium, minimal comparison entry point. Lives on the PDP only (Compare
- * is removed from every other surface). Horizontal snap carousel of 4–8
- * similar products; each card is compact (image, name, price, rating,
- * count, compare toggle). A sticky floating CTA appears once at least one
- * product is selected, opening a lightweight preview dialog that lists
- * the selection + comparison categories before deep-linking to `/compare`.
- *
- * Storage, tray, and `/compare` page are unchanged.
+ * Premium, minimal comparison entry point — PDP only. Horizontal snap
+ * carousel of up to 8 *similar* products (same brand / productType /
+ * category overlap). Each card shows a compact stat row (rating, reviews,
+ * price) and a "Select" pill that toggles to "✓ Selected". A sticky CTA
+ * stays pinned to the viewport while the user browses; it is disabled
+ * with a helper message when fewer than 2 are selected. Selections that
+ * become unavailable (product missing, archived, or out of stock) are
+ * auto-pruned. All state routes through the existing `useCompare` store
+ * so selections persist across navigation and the /compare page.
  */
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
   const { priceOf } = useRegion();
-  const { slugs, toggle, has, isFull, max, clear } = useCompare();
+  const { slugs, toggle, has, isFull, max, remove, clear } = useCompare();
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  // Only truly similar products — same brand OR same productType OR
+  // overlapping category (never a random pool). Sorted so best signal
+  // (brand match) surfaces first.
   const suggestions = useMemo<Product[]>(() => {
     if (!products.length) return [];
-    const pool = products.filter(
-      (p) =>
-        p.slug !== currentProduct.slug &&
-        p.status !== "archived" &&
-        p.inStock !== false,
-    );
-    const sameCat = pool.filter((p) => p.category === currentProduct.category);
-    const rest = pool.filter((p) => p.category !== currentProduct.category);
-    return [...sameCat, ...rest].slice(0, 8);
-  }, [products, currentProduct.slug, currentProduct.category]);
+    const cur = currentProduct;
+    const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
+
+    const scored = products
+      .filter(
+        (p) =>
+          p.slug !== cur.slug &&
+          p.status !== "archived" &&
+          p.inStock !== false,
+      )
+      .map((p) => {
+        let score = 0;
+        if (cur.brand && p.brand && p.brand === cur.brand) score += 3;
+        if (cur.productType && p.productType && p.productType === cur.productType) score += 2;
+        const pCats = [p.category, ...(p.categories ?? [])].filter(Boolean);
+        if (pCats.some((c) => curCats.has(c))) score += 1;
+        return { p, score };
+      })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((x) => x.p);
+
+    return scored;
+  }, [products, currentProduct]);
+
+  // Auto-prune selections whose product is unavailable (missing / archived
+  // / out of stock). Runs whenever the catalog updates. Never touches the
+  // current PDP product's selection state.
+  useEffect(() => {
+    if (!products.length || slugs.length === 0) return;
+    slugs.forEach((s) => {
+      const p = products.find((x) => x.slug === s);
+      if (!p || p.status === "archived" || p.inStock === false) remove(s);
+    });
+  }, [products, slugs, remove]);
 
   if (suggestions.length === 0) return null;
 
@@ -64,10 +93,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   };
 
   const openPreview = () => {
-    if (!canCompare) {
-      toast.message("Select at least 2 products to compare");
-      return;
-    }
+    if (!canCompare) return;
     setPreviewOpen(true);
   };
 
@@ -78,11 +104,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     >
       {/* Header — matches PDP editorial rhythm */}
       <div className="mb-6 sm:mb-8 flex items-start gap-3.5">
-        <span
-          aria-hidden
-          className="mt-1.5 h-6 w-[3px] rounded-full bg-accent shrink-0"
-        />
-        <div className="min-w-0">
+        <span aria-hidden className="mt-1.5 h-6 w-[3px] rounded-full bg-accent shrink-0" />
+        <div className="min-w-0 flex-1">
           <h2 className="text-[18px] sm:text-[20px] font-semibold tracking-tight text-foreground leading-tight inline-flex items-center gap-2">
             <Scale className="size-[18px] text-accent" aria-hidden />
             Product Comparison
@@ -90,25 +113,32 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           <p className="mt-1 text-[13px] text-muted-foreground/80 leading-relaxed">
             Compare this product with similar products.
           </p>
+          {isFull && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground/70 animate-fade-in">
+              Maximum {max} products selected.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Horizontal carousel — mobile first, edge padded */}
-      <div className="-mx-4 sm:mx-0">
+      {/* Horizontal carousel — mobile first, edge padded, no layout shift */}
+      <div className="-mx-4 sm:mx-0 overflow-hidden">
         <ul
           className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 sm:px-0 pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             scrollPaddingLeft: "1rem",
             overscrollBehaviorX: "contain",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {suggestions.map((p) => {
             const active = has(p.slug);
+            const disabled = !active && isFull;
             const price = priceOf(p);
             return (
               <li
                 key={p.slug}
-                className={`snap-start shrink-0 w-[62%] min-[420px]:w-[46%] sm:w-[240px] rounded-[20px] border transition-all duration-200 overflow-hidden bg-white/[0.02] ${
+                className={`snap-start shrink-0 w-[62%] min-[420px]:w-[46%] sm:w-[240px] rounded-[20px] border overflow-hidden bg-white/[0.02] transition-all duration-200 ease-out ${
                   active
                     ? "border-accent/70 ring-1 ring-accent/40"
                     : "border-white/[0.08] hover:border-white/20"
@@ -139,23 +169,28 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                     {p.name}
                   </Link>
 
-                  <div className="mt-2">
-                    <Price value={price} variant="current" className="text-[15px]" />
-                  </div>
-
-                  <div className="mt-1.5">
-                    <StarRating
-                      rating={Number(p.rating || 0)}
-                      count={Number(p.reviews || 0)}
-                      starClassName="size-3"
-                      textClassName="text-[11px]"
-                    />
+                  {/* Compact stats row */}
+                  <div className="mt-2 flex items-center gap-2.5 text-[11px] text-white/70 tabular-nums">
+                    <span className="inline-flex items-center gap-0.5">
+                      <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
+                      <span className="font-medium text-white/90">
+                        {Number(p.rating || 0).toFixed(1)}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-0.5">
+                      <MessageSquare className="size-3 text-white/50" aria-hidden />
+                      {Number(p.reviews || 0)}
+                    </span>
+                    <span className="ml-auto">
+                      <Price value={price} variant="current" className="text-[13px]" />
+                    </span>
                   </div>
 
                   <button
                     onClick={() => handleToggle(p.slug)}
                     aria-pressed={active}
-                    className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 ${
+                    disabled={disabled}
+                    className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                       active
                         ? "bg-accent text-accent-foreground"
                         : "bg-white/[0.05] text-white/85 hover:bg-white/[0.1] border border-white/[0.08]"
@@ -163,11 +198,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   >
                     {active ? (
                       <>
-                        <Check className="size-3.5" aria-hidden /> Added
+                        <Check className="size-3.5" aria-hidden /> Selected
                       </>
                     ) : (
                       <>
-                        <Plus className="size-3.5" aria-hidden /> Compare
+                        <Plus className="size-3.5" aria-hidden /> Select
                       </>
                     )}
                   </button>
@@ -179,7 +214,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </ul>
       </div>
 
-      {/* Sticky floating CTA — only when 1+ selected */}
+      {/* Sticky CTA — visible whenever anything is selected, disabled below 2 */}
       {selectedCount > 0 && (
         <div
           data-floating-control
@@ -188,17 +223,22 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           <button
             onClick={openPreview}
             disabled={!canCompare}
-            className={`w-full flex items-center justify-between gap-3 rounded-full px-5 py-3.5 shadow-2xl border transition-all duration-200 ${
+            className={`w-full flex items-center justify-between gap-3 rounded-full px-5 py-3.5 shadow-2xl border transition-all duration-200 ease-out ${
               canCompare
                 ? "bg-accent text-accent-foreground border-accent/60 hover:brightness-110 active:scale-[0.98]"
-                : "bg-card/95 backdrop-blur-xl text-white/70 border-white/[0.08]"
+                : "bg-card/95 backdrop-blur-xl text-white/70 border-white/[0.08] cursor-not-allowed"
             }`}
           >
             <span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest">
               <Scale className="size-4" aria-hidden />
-              Compare Selected ({selectedCount}/{max})
+              {canCompare
+                ? `Compare Selected (${selectedCount}/${max})`
+                : "Select at least 2 products"}
             </span>
-            <ArrowRight className="size-4" aria-hidden />
+            <ArrowRight
+              className={`size-4 transition-opacity duration-200 ${canCompare ? "opacity-100" : "opacity-40"}`}
+              aria-hidden
+            />
           </button>
         </div>
       )}
@@ -220,10 +260,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               </p>
               <ul className="space-y-1.5">
                 {selectedProducts.map((p) => (
-                  <li
-                    key={p.slug}
-                    className="flex items-center gap-2.5 text-[13px] text-white/90"
-                  >
+                  <li key={p.slug} className="flex items-center gap-2.5 text-[13px] text-white/90">
                     <span className="size-1 rounded-full bg-accent shrink-0" />
                     <span className="line-clamp-1 flex-1">{p.name}</span>
                     <button
@@ -243,19 +280,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                 Categories compared
               </p>
               <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {[
-                  "Price",
-                  "Rating",
-                  "Reviews",
-                  "Specifications",
-                  "Features",
-                  "Shipping",
-                  "Warranty",
-                ].map((c) => (
-                  <li
-                    key={c}
-                    className="flex items-center gap-1.5 text-[12px] text-white/80"
-                  >
+                {["Price", "Rating", "Reviews", "Specifications", "Features", "Shipping", "Warranty"].map((c) => (
+                  <li key={c} className="flex items-center gap-1.5 text-[12px] text-white/80">
                     <Check className="size-3.5 text-emerald-400" aria-hidden />
                     {c}
                   </li>
@@ -277,7 +303,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             <Link
               to="/compare"
               onClick={() => setPreviewOpen(false)}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent text-accent-foreground px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent text-accent-foreground px-4 py-3 text-[12px] font-bold uppercase tracking-widest hover:brightness-110 transition-all duration-200"
             >
               Continue to Comparison
               <ArrowRight className="size-3.5" aria-hidden />
