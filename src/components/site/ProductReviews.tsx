@@ -165,6 +165,12 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     setMyVotes(map);
   }, [user]);
 
+  const loadMyReports = useCallback(async () => {
+    if (!user) { setReportedIds(new Set()); return; }
+    const { data } = await supabase.from("review_reports").select("review_id").eq("user_id", user.id);
+    setReportedIds(new Set((data ?? []).map((r: any) => r.review_id as string)));
+  }, [user]);
+
   const loadEligibility = useCallback(async () => {
     if (!user) { setEligible(false); setPurchase({ purchased: false, delivered: false }); return; }
     const [{ data }, { data: ps }] = await Promise.all([
@@ -178,6 +184,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 
   useEffect(() => { setLoading(true); load(); }, [load]);
   useEffect(() => { loadMyVotes(); }, [loadMyVotes]);
+  useEffect(() => { loadMyReports(); }, [loadMyReports]);
   useEffect(() => { loadEligibility(); }, [loadEligibility]);
 
   // realtime
