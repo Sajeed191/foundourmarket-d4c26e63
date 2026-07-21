@@ -1,62 +1,98 @@
-# Reviews v1.1 — Stability & Synchronization Fix
+# Product Q&A v1.0 + Product Comparison v1.0
 
-Scope: only `src/components/site/ProductReviews.tsx` and small helpers in `src/lib/reviews.ts`. No changes to badges, orders, payments, AI, homepage, search, site rules, or DB schema. Existing RPCs, RLS, triggers, and the `product_reviews_public` view already do the right thing — the fixes are all client-side wiring.
+Two independent features. I'll ship them in this order so each can be validated separately before moving on.
 
-## What's actually broken (verified against the running code + DB)
+---
 
-- Delete: uses `window.confirm`, and on success doesn't drop the row from local state until the reload round-trip completes → card lingers.
-- Edit: modal only edits rating/title/body — media (photos/videos) cannot be changed.
-- Helpful: relies solely on realtime `review_votes` events to bump `helpful_count`; if realtime is delayed the count doesn't move.
-- Report: no "already reported" affordance; button always active.
-- Filter/sort chips are missing Oldest, With Videos, Featured, Pinned, AI Insights.
-- Media viewer: images open fullscreen but pinch-zoom isn't enabled and videos don't play inline in the lightbox reliably.
-- Admin-authored reviews are correctly visible when `status = 'published'` — the earlier "invisible admin review" was a single row stuck at `status = 'rejected'`. No code change needed here; documented in validation.
+## Phase 1 — Product Q&A v1.0
 
-Everything else (rating recalc, aggregate refresh, RLS, verified badge trigger, admin visibility of non-published rows) already works via DB triggers + realtime channel — verified.
+### Backend
+Current `product_questions` table only supports one answer per question and has no public SELECT policy. It needs to grow into a full Q&A thread system. New migration:
 
-## Fixes
+- New table `product_answers` (multiple answers per question)
+  - `id, question_id, user_id, body, is_official, is_store_response, parent_answer_id (1-level reply), status ('visible'|'hidden'|'deleted'), helpful_count, created_at, updated_at, deleted_at`
+- New table `product_answer_votes` (one helpful vote per user per answer, unique constraint)
+- Extend `product_questions`: add `is_anonymous bool`, `status ('visible'|'hidden'|'deleted')`, `helpful_count`, `details text`
+- Public SELECT policy on questions/answers where `status='visible'` and not deleted
+- Owner insert/update/delete; staff moderate all
+- GRANTs for anon (SELECT) + authenticated + service_role
+- RPC `toggle_answer_helpful(answer_id)` — atomic vote
+- RPC `mark_official_answer(question_id, answer_id)` — staff-only, unpins previous
+- Realtime publication add for both tables
 
-### 1. Delete
-- Replace `window.confirm` with the existing shadcn `AlertDialog` (premium confirm).
-- On success: optimistically remove from `reviews` state and clear `myReview`, then call `load()` + `onAggregateChange?.()`; error → rollback + toast.
+### Frontend
+- `src/components/site/ProductQuestions.tsx` — new section injected under `<ProductReviews>` in `src/routes/products.$slug.tsx`
+  - Header + "Ask Question" CTA + subtitle
+  - Search box, sort dropdown (Newest / Oldest / Most Helpful / Answered / Unanswered)
+  - Question cards: ❓ icon, question, asker (name or "Anonymous"), date, status badge (Official Answer ✓ / Answered / Unanswered), details
+  - Answers: avatar, name, "🛡 Store Response" badge for admins, date, body, helpful vote, reply button
+  - 1-level nested replies
+  - Admin `Moderation ▾` dropdown: Approve/Hide/Delete/Pin Official/Reply/Edit
+  - Empty state with CTA
+  - Pagination (10 questions/page, load more)
+  - Realtime subscribe on both tables while section mounted
+- `src/components/site/AskQuestionModal.tsx` — question + optional details + Anonymous toggle, 500 char limit, dedupe check
+- `src/lib/product-qna.ts` — data hooks + helpers (fetch, submit, vote, moderate)
+- Guest ask → redirect to `/signin`
 
-### 2. Edit
-- Extend edit mode to include media: reuse `uploadReviewMedia` + `validateReviewFile`, allow add/remove of images and videos.
-- Call existing `update_own_review` RPC for text/rating, then a direct `UPDATE product_reviews SET media = $1 WHERE id = $2 AND user_id = auth.uid()` for media (RLS-scoped).
-- Optimistic update; rollback on error.
+### Design
+- 18px radius, `bg-card/60`, orange accents matching Reviews v2.1
+- Deterministic circular avatars (reuse Reviews v2.1 `avatarSwatch` helper — extract to shared util)
+- Mobile-optimized compact cards
 
-### 3. Helpful
-- Keep server truth via `castReviewVote`, but also optimistically bump `helpful_count` / `not_helpful_count` on the local row (and decrement the opposite bucket when switching). Realtime reconciles.
+---
 
-### 4. Report
-- Track `reported_ids` in local state (seeded from a `review_reports` fetch for the current user).
-- Disable the report button + show "Reported" when already reported.
+## Phase 2 — Product Comparison v1.0
 
-### 5. Filters/Sort
-- Add filter chips: `videos`, `featured`, `pinned`, `ai` (has sentiment_summary or fake_reasons).
-- Add sort option: `oldest`.
+Current `/compare` route and `CompareTray` exist but are basic (single table, no grouping, no winners, no mobile swipe, add-only from PDP). Upgrade in place — no new backend, reuses `useCompare` + product data.
 
-### 6. Media viewer
-- Enable pinch-zoom via `touch-action: pan-x pan-y pinch-zoom` and a max-scale transform on tap.
-- Ensure `<video controls playsInline>` inside the lightbox so it plays inline.
+### Compare Button
+- Add ⇄ Compare toggle to `ProductCard` next to Wishlist heart (badge shows when active)
+- Also expose on PDP, Wishlist, Search, Category, Recently Viewed via existing `useCompare` hook
 
-### 7. Synchronization polish
-- Every mutating action (`patch`, `remove`, `saveEdit`, `submitReport`, `vote`, `postReply`) already calls `load()` + `onAggregateChange?.()`. Confirm they all do; add where missing. The `recalc_product_rating` trigger keeps `products.rating` + `reviews` in sync automatically.
+### Floating Compare Bar
+- `CompareTray` already exists — polish: show product thumbs, count, "Compare Now" + "Clear", sticky, respects floating-stack
 
-### 8. Empty state
-- Confirmed present (`EmptyState` component). Ensure it renders the exact copy: "No reviews yet. Be the first to share your experience." with the "Write a Review" CTA. Update text if drifted.
+### Compare Page (`/compare` rewrite)
+- Grouped spec sections (expandable accordions): General, Dimensions, Performance, Materials, Power, Warranty, Shipping, Description
+- Rows where values differ get subtle amber tint (`bg-amber-500/5`); identical rows plain
+- Winner badges per row when applicable:
+  - 🏆 Lowest Price, 🏆 Highest Rating, 🏆 Best Discount, 🏆 Most Reviews, 🏆 Fastest Delivery (from shipping data)
+- Per-column actions: Add to Cart / Buy Now / Remove
+- Empty state → "Browse Products" CTA
+
+### Mobile
+- Swipeable product columns (horizontal snap-scroll) with sticky left spec-label column
+- Cards, not table, on mobile
+
+### Perf
+- Memoize spec extraction & winner computation
+- Lazy-load compare images
+- No new fetches — reuse `useProducts`/`fetchProductsBySlugs`
+
+---
+
+## Files touched
+
+**New**
+- `supabase/migrations/*_qna_v1.sql`
+- `src/components/site/ProductQuestions.tsx`
+- `src/components/site/AskQuestionModal.tsx`
+- `src/lib/product-qna.ts`
+- `src/lib/avatar-swatch.ts` (extracted shared helper)
+
+**Modified**
+- `src/routes/products.$slug.tsx` — mount `<ProductQuestions>` under Reviews
+- `src/routes/compare.tsx` — full rewrite (grouped specs, winners, mobile swipe)
+- `src/components/site/CompareTray.tsx` — minor polish
+- `src/components/site/ProductCard.tsx` (or equivalent card) — Compare toggle button
+- `src/components/site/ProductReviews.tsx` — swap inline avatar helper for shared util
 
 ## Validation
+- Typecheck passes after each phase
+- Manual verify: submit question (auth + anonymous), submit answer, mark official, helpful vote, search, filters, moderation, empty states, mobile view
 
-- Delete → dialog opens → row disappears instantly → toast → aggregate refreshes.
-- Edit with new photo → modal saves → new media renders inline without refresh.
-- Helpful toggle → count moves immediately, persists after reload.
-- Report → button flips to "Reported" and stays disabled.
-- Filters: Featured/Pinned/Videos/AI Insights each narrow the list correctly.
-- Media viewer: pinch to zoom on iOS/Android; videos play inline.
-- Admin publishes a rejected admin review → appears on the public list within realtime tick.
-- `bun run typecheck` (via harness) passes.
+## Out of scope (untouched)
+Reviews logic, product cards' data model, cart/checkout/orders, homepage, search, badges, AI, all frozen systems.
 
-## Out of scope
-
-Anything outside `ProductReviews.tsx`, `src/lib/reviews.ts`, and the shadcn AlertDialog import. No DB migrations, no changes to RPCs, no touching of `ProductRatingManager` or admin routes.
+Approve to start Phase 1 (Q&A). Phase 2 will follow after Phase 1 is validated.

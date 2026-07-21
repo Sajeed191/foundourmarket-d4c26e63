@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import { Heart, Check, Star, Eye, ShoppingCart, Loader2, Minus, Plus } from "lucide-react";
+import { Heart, Check, Star, Eye, ShoppingCart, Loader2, Minus, Plus, Scale } from "lucide-react";
+import { useCompare } from "@/hooks/use-compare";
 import { type Product, discountPercent } from "@/lib/products";
 import { type BadgeKey } from "@/lib/badges";
 import { useBadgeEngine, type BadgeContext } from "@/lib/badge-visibility";
@@ -229,6 +230,33 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
 }
 const WishlistButton = memo(WishlistButtonImpl);
 
+function CompareButtonImpl({ slug, name }: { slug: string; name: string }) {
+  const { has, toggle, isFull } = useCompare();
+  const active = has(slug);
+  const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!active && isFull) {
+      toast.message("You can compare up to 4 products.");
+      return;
+    }
+    toggle(slug);
+    toast.success(active ? `Removed ${name} from compare` : `Added ${name} to compare`);
+  }, [active, isFull, name, slug, toggle]);
+  return (
+    <button
+      onClick={onClick}
+      aria-label={active ? `Remove ${name} from compare` : `Add ${name} to compare`}
+      aria-pressed={active}
+      style={{ backgroundColor: "rgba(20,20,20,0.55)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 2px 10px rgba(0,0,0,0.30)" }}
+      className={`absolute right-3 top-[calc(3px+40px+10px)] z-10 grid h-[40px] w-[40px] place-items-center rounded-full text-white transition-colors ${active ? "text-accent" : "hover:text-accent"}`}
+    >
+      <Scale className={`size-[18px] ${active ? "fill-accent/20" : ""}`} />
+    </button>
+  );
+}
+const CompareButton = memo(CompareButtonImpl);
+
 function QuickViewButtonImpl({ name, onOpen }: { name: string; onOpen: () => void }) {
   const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -450,6 +478,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
         >
           <ProductBadges badge={winningBadge} reason={forceBadge ? undefined : badgeReason} />
           <WishlistButton slug={product.slug} name={product.name} />
+          <CompareButton slug={product.slug} name={product.name} />
           {/* Variant colour preview — fades a colour's cover image over the
               base image. Overlaid (never swaps the base src) so palette,
               layout and aspect ratio never shift. */}

@@ -3165,6 +3165,95 @@ export type Database = {
         }
         Relationships: []
       }
+      product_answer_votes: {
+        Row: {
+          answer_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_answer_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "product_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_answers: {
+        Row: {
+          body: string
+          created_at: string
+          deleted_at: string | null
+          helpful_count: number
+          id: string
+          is_official: boolean
+          is_store_response: boolean
+          parent_answer_id: string | null
+          question_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          deleted_at?: string | null
+          helpful_count?: number
+          id?: string
+          is_official?: boolean
+          is_store_response?: boolean
+          parent_answer_id?: string | null
+          question_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          deleted_at?: string | null
+          helpful_count?: number
+          id?: string
+          is_official?: boolean
+          is_store_response?: boolean
+          parent_answer_id?: string | null
+          question_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_answers_parent_answer_id_fkey"
+            columns: ["parent_answer_id"]
+            isOneToOne: false
+            referencedRelation: "product_answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "product_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_badges: {
         Row: {
           archived: boolean
@@ -3351,10 +3440,14 @@ export type Database = {
           answered_by: string | null
           created_at: string
           deleted_at: string | null
+          details: string | null
+          helpful_count: number
           id: string
+          is_anonymous: boolean
           is_seeded: boolean
           product_slug: string
           question: string
+          status: string
           updated_at: string
           user_id: string
         }
@@ -3364,10 +3457,14 @@ export type Database = {
           answered_by?: string | null
           created_at?: string
           deleted_at?: string | null
+          details?: string | null
+          helpful_count?: number
           id?: string
+          is_anonymous?: boolean
           is_seeded?: boolean
           product_slug: string
           question: string
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -3377,10 +3474,14 @@ export type Database = {
           answered_by?: string | null
           created_at?: string
           deleted_at?: string | null
+          details?: string | null
+          helpful_count?: number
           id?: string
+          is_anonymous?: boolean
           is_seeded?: boolean
           product_slug?: string
           question?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -7169,6 +7270,13 @@ export type Database = {
           product_slug: string
         }[]
       }
+      get_product_qa: {
+        Args: { _slug: string }
+        Returns: {
+          my_answer_votes: string[]
+          questions: Json
+        }[]
+      }
       get_product_questions: {
         Args: { _slug: string }
         Returns: {
@@ -7237,6 +7345,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _target_user_id: string
         }
+        Returns: undefined
+      }
+      mark_official_answer: {
+        Args: { _answer_id: string; _question_id: string }
         Returns: undefined
       }
       media_library_search: {
@@ -7669,6 +7781,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      toggle_answer_helpful: {
+        Args: { _answer_id: string }
+        Returns: {
+          helpful_count: number
+          voted: boolean
+        }[]
       }
       track_banner_event: {
         Args: { _banner_id: string; _event: string }
