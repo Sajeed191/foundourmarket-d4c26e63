@@ -673,12 +673,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                   <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-400" /> {verifiedCount} verified</span>
                   <span className="inline-flex items-center gap-1.5"><Camera className="size-3.5 text-accent" /> {photoReviews.length} photos</span>
                   <span className="inline-flex items-center gap-1.5"><Video className="size-3.5 text-accent" /> {videoReviews.length} videos</span>
-                </div>
-                {recommendPct > 0 && (
-                  <p className="mt-3 text-[13px] text-foreground/85">
-                    <span className="font-semibold text-accent">{recommendPct}%</span> of customers recommend this
-                  </p>
-                )}
+              </div>
+
               </div>
               <div className="space-y-2 self-center">
                 {[5, 4, 3, 2, 1].map((star, idx) => {
