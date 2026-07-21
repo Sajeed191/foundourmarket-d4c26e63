@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, RotateCcw, Minus, Plus,
-  Share2, Play,
+  Share2, Play, Scale,
   ShoppingCart, Zap, Check, Loader2, Lock,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
@@ -789,6 +789,22 @@ function ProductPage() {
                   className="size-11 grid place-items-center rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-white/85 hover:text-accent transition-all active:scale-90"
                 >
                   <Share2 className="size-[18px]" />
+                </button>
+                <button
+                  onClick={() => {
+                    const active = inCompare(product.slug);
+                    if (!active && compareFull) {
+                      toast.message("Maximum 4 products");
+                      return;
+                    }
+                    toggleCompare(product.slug);
+                    toast.success(active ? "Removed from Compare" : "Added to Compare");
+                  }}
+                  aria-label={inCompare(product.slug) ? "Remove from compare" : "Add to compare"}
+                  aria-pressed={inCompare(product.slug)}
+                  className={`size-11 grid place-items-center rounded-full bg-black/35 backdrop-blur-md border border-white/10 transition-all active:scale-90 ${inCompare(product.slug) ? "text-accent border-accent/40" : "text-white/85 hover:text-accent"}`}
+                >
+                  <Scale className="size-[18px]" />
                 </button>
               </div>
 
