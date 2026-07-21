@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -877,7 +877,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             <EmptyState canWrite={!!user && !hasReviewed} onWrite={openCompose} filtered={filter !== "all"} onReset={() => setFilter("all")} />
           ) : (
             <>
-              <ul className="grid gap-5 sm:grid-cols-2">
+              <ul className="grid gap-3 sm:grid-cols-2">
                 <AnimatePresence>
                   {(expanded ? visible : sorted.slice(0, 2)).map((r) => {
                     // Admin: resolve author by UUID. Public: use denormalized fields.
@@ -896,15 +896,15 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-all hover:border-white/15 hover:shadow-[0_12px_36px_-24px_rgb(0_0_0/0.6)]",
+                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-3 sm:p-3.5 transition-colors hover:border-white/15",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}
                       >
                         {(r.featured || r.pinned) && (
-                          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-amber-300">
-                            <Star className="size-3 fill-amber-300 text-amber-300" />
-                            Featured Review
+                          <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-300">
+                            <Star className="size-2.5 fill-amber-300 text-amber-300" />
+                            Featured
                           </div>
                         )}
                         {isAdmin && (r.status !== "published" || r.is_flagged) && (
@@ -964,9 +964,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                           return (
                           <>
                             {/* Header: avatar + name + verified + rating; date right */}
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-2.5">
                               <div className={cn(
-                                "size-11 rounded-full overflow-hidden grid place-items-center text-base font-display shrink-0 ring-1",
+                                "size-9 rounded-full overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1",
                                 avatarUrl ? "bg-muted ring-white/10" : cn(swatch.bg, swatch.fg, swatch.ring),
                               )}>
                                 {avatarUrl
@@ -974,30 +974,32 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                   : <span aria-hidden>{name.charAt(0).toUpperCase()}</span>}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-[15px] font-display font-semibold leading-tight truncate">{name}</p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="text-[14px] font-display font-semibold leading-tight truncate">{name}</p>
                                   {r.verified_purchase && (
-                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
-                                      <Check className="size-3" strokeWidth={3} /> Verified Buyer
-                                    </span>
+                                    <Check className="size-3 text-emerald-400" strokeWidth={3} aria-label="Verified Buyer" />
                                   )}
                                 </div>
-                                <div className="mt-1 flex items-center gap-1.5">
-                                  <StarRating rating={r.rating} starClassName="size-3.5" />
+                                <div className="mt-0.5 flex items-center gap-1">
+                                  <StarRating rating={r.rating} starClassName="size-3" />
                                   <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
                                 </div>
                               </div>
                               <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
                             </div>
 
-                            {/* Media gallery — media-first, adaptive grid, up to 4 with +N overlay */}
+                            {/* Title + body — primary focus */}
+                            {r.title && <p className="mt-2 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.body && <ReviewBody text={r.body} />}
+
+                            {/* Media gallery — after review text, compact fixed-height thumbnails */}
                             {r.media?.length > 0 && (() => {
                               const media = r.media;
                               const count = media.length;
-                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4";
+                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-4";
                               const shown = media.slice(0, 4);
                               return (
-                                <div className={cn("mt-3 grid gap-1.5", cols)}>
+                                <div className={cn("mt-2.5 grid gap-1.5", cols)}>
                                   {shown.map((m, i) => {
                                     const showOverlay = i === 3 && count > 4;
                                     return (
@@ -1006,8 +1008,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                         onClick={() => openLightbox(media, i)}
                                         aria-label={m.type === "video" ? "Play customer video" : "Open customer photo"}
                                         className={cn(
-                                          "relative overflow-hidden rounded-xl border border-white/10 group/media",
-                                          count === 1 ? "aspect-[4/3]" : "aspect-square",
+                                          "relative overflow-hidden rounded-[12px] border border-white/10 group/media",
+                                          count === 1 ? "h-28" : "h-20 sm:h-24",
                                         )}
                                       >
                                         {m.type === "image" ? (
@@ -1016,8 +1018,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                                           <>
                                             <video src={m.url} className="size-full object-cover" muted playsInline preload="metadata" />
                                             <span className="absolute inset-0 grid place-items-center bg-black/30">
-                                              <span className="grid size-10 place-items-center rounded-full bg-black/60 backdrop-blur-sm">
-                                                <Play className="size-4 text-white fill-white" />
+                                              <span className="grid size-8 place-items-center rounded-full bg-black/60 backdrop-blur-sm">
+                                                <Play className="size-3.5 text-white fill-white" />
                                               </span>
                                             </span>
                                           </>
@@ -1034,26 +1036,22 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               );
                             })()}
 
-                            {/* Title + body — after media */}
-                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
-                            {r.body && <ReviewBody text={r.body} />}
-
                             {/* Store reply — collapsed by default, expandable */}
                             {r.admin_reply && (
-                              <div className="mt-3">
+                              <div className="mt-2">
                                 <button
                                   onClick={() => setReplyOpenId(replyOpenId === r.id ? null : r.id)}
                                   className="inline-flex items-center gap-1.5 text-[11px] font-medium text-accent hover:brightness-110"
                                 >
-                                  <MessageSquare className="size-3.5" />
+                                  <MessageSquare className="size-3" />
                                   {replyOpenId === r.id ? "Hide store response" : "View store response"}
                                 </button>
                                 {replyOpenId === r.id && (
-                                  <div className="mt-2 ml-4 flex items-start gap-2.5 rounded-xl border border-accent/20 bg-accent/[0.05] p-3">
-                                    <ShieldCheck className="size-4 text-accent shrink-0 mt-0.5" />
+                                  <div className="mt-1.5 ml-3 flex items-start gap-2 rounded-xl border border-accent/20 bg-accent/[0.05] p-2.5">
+                                    <ShieldCheck className="size-3.5 text-accent shrink-0 mt-0.5" />
                                     <div className="min-w-0">
-                                      <p className="text-[11px] font-semibold text-accent mb-0.5">🛡 Store Response</p>
-                                      <p className="text-sm leading-relaxed text-foreground/90">{r.admin_reply}</p>
+                                      <p className="text-[11px] font-semibold text-accent mb-0.5">Store Response</p>
+                                      <p className="text-[13px] leading-relaxed text-foreground/90">{r.admin_reply}</p>
                                       {r.admin_reply_at && (
                                         <p className="mt-1 text-[10px] text-muted-foreground">{fmtDate(r.admin_reply_at)}</p>
                                       )}
@@ -1063,8 +1061,8 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               </div>
                             )}
 
-                            {/* Action row — helpful/dislike + More menu */}
-                            <div className="mt-3 flex items-center gap-1 border-t border-border/40 pt-3">
+                            {/* Action row — helpful + More menu */}
+                            <div className="mt-2 flex items-center gap-1">
                               <button
                                 onClick={() => vote(r, "helpful")}
                                 aria-label="Helpful"
@@ -1363,15 +1361,15 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 
 /* ---------- Sub components ---------- */
 
-function ReviewBody({ text }: { text: string }) {
+const ReviewBody = memo(function ReviewBody({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
-  const isLong = text.length > 220 || text.split("\n").length > 4;
+  const isLong = text.length > 160 || text.split("\n").length > 3;
   return (
-    <div className="mt-2">
+    <div className="mt-1.5">
       <p
         className={cn(
           "text-[14px] text-foreground/85 leading-relaxed whitespace-pre-wrap",
-          !open && isLong && "line-clamp-4",
+          !open && isLong && "line-clamp-3",
         )}
       >
         {text}
@@ -1379,14 +1377,14 @@ function ReviewBody({ text }: { text: string }) {
       {isLong && (
         <button
           onClick={() => setOpen((o) => !o)}
-          className="mt-1 text-xs font-medium text-accent hover:brightness-110"
+          className="mt-0.5 text-[11px] font-medium text-accent hover:brightness-110"
         >
           {open ? "Read less" : "Read more"}
         </button>
       )}
     </div>
   );
-}
+});
 
 function SmartActions({
   purchase, primary, onBuyAgain, buyingAgain, onAsk, onSave, isSaved,
