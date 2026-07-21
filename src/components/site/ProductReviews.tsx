@@ -1469,10 +1469,10 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
           <Star className="size-8 fill-accent" />
         </span>
         <h3 className="mt-5 text-xl font-display">No reviews yet</h3>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to share your experience.</p>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to review this product and help other shoppers make the right choice.</p>
         {canWrite && (
           <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write Review
+            <Pencil className="size-3.5" /> Write the First Review
           </button>
         )}
       </div>
