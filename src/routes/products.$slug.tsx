@@ -1176,7 +1176,7 @@ function ProductPage() {
         </div>
       </div>
 
-      <PDPCompareSection currentProduct={product} />
+      
 
       {/* Intelligent PDP recommendations — every rail flows through the
           centralized engine (scored, reason-tagged, diversity-passed) and is
@@ -1201,6 +1201,8 @@ function ProductPage() {
           </Suspense>
         </LazyMount>
       )}
+
+      <PDPCompareSection currentProduct={product} />
 
 
 
