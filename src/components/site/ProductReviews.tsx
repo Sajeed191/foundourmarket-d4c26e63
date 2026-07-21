@@ -779,39 +779,9 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
             </div>
           )}
 
-          {/* Customer photos gallery */}
-          {expanded && galleryMedia.length > 0 && (
-            <div className="mb-8">
-              <h3 className="mb-4 text-sm font-display tracking-tight flex items-center gap-2">
-                <Camera className="size-4 text-accent" /> Customer Photos &amp; Videos
-                <span className="text-[11px] font-mono text-muted-foreground">({galleryMedia.length})</span>
-              </h3>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-                {galleryMedia.slice(0, 16).map((media, i) => (
-                  <button
-                    key={i}
-                    onClick={() => openLightbox(galleryMedia, i)}
-                    className="relative aspect-square overflow-hidden rounded-xl border border-white/10 group"
-                  >
-                    {media.type === "image" ? (
-                      <img decoding="async" src={media.url} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                    ) : (
-                      <>
-                        <video src={media.url} className="size-full object-cover" />
-                        <span className="absolute inset-0 grid place-items-center bg-black/40"><Play className="size-5 text-white" /></span>
-                      </>
-                    )}
-                    {i === 15 && galleryMedia.length > 16 && (
-                      <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-display text-white">+{galleryMedia.length - 16}</span>
-                    )}
-                    <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition-all group-hover:bg-black/30 group-hover:opacity-100">
-                      <ZoomIn className="size-5 text-white" />
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Aggregate customer photo strip removed in Reviews v3.1:
+              review media must remain isolated per-review. */}
+
 
           {/* Search + filters + sort */}
           {expanded && (
