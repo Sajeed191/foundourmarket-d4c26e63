@@ -48,15 +48,18 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20" data-pdp-compare>
-      <PdpSectionHeading
-        title={
-          <span className="inline-flex items-center gap-2">
+      <div className="mb-8 sm:mb-10 flex items-start gap-3.5">
+        <span aria-hidden className="mt-1.5 h-6 w-[3px] rounded-full bg-accent shrink-0" />
+        <div className="min-w-0">
+          <h2 className="text-[18px] sm:text-[20px] font-semibold tracking-tight text-foreground leading-tight inline-flex items-center gap-2">
             <Scale className="size-[18px] text-accent" aria-hidden />
             Product Comparison
-          </span>
-        }
-        subtitle="Compare this product with similar products to make a better buying decision."
-      />
+          </h2>
+          <p className="mt-1 text-[13px] text-muted-foreground/80 leading-relaxed">
+            Compare this product with similar products to make a better buying decision.
+          </p>
+        </div>
+      </div>
 
       <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {suggestions.map((p) => {
