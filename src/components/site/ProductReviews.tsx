@@ -120,6 +120,10 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
   const [expanded, setExpanded] = useState(false);
+  // Per-row popovers for the redesigned card (v2.0).
+  const [moreOpenId, setMoreOpenId] = useState<string | null>(null);
+  const [modOpenId, setModOpenId] = useState<string | null>(null);
+  const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const table = (isAdmin ? "product_reviews" : "product_reviews_public") as "product_reviews_public";
@@ -596,29 +600,28 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
   }
 
   const filterChips: { key: ReviewFilter; label: string; adminOnly?: boolean }[] = [
-    { key: "all", label: "All reviews" },
-    { key: "verified", label: "Verified" },
-    { key: "photo", label: "With photos" },
-    { key: "video", label: "With videos" },
-    { key: "featured", label: "Featured" },
-    { key: "pinned", label: "Pinned" },
-    { key: "ai", label: "AI Insights" },
+    { key: "all", label: "All" },
+    { key: "photo", label: "Photos" },
+    { key: "video", label: "Videos" },
+    { key: "verified", label: "Verified Buyers" },
     { key: "5", label: "5★" },
     { key: "4", label: "4★" },
     { key: "3", label: "3★" },
     { key: "2", label: "2★" },
     { key: "1", label: "1★" },
+    { key: "featured", label: "Featured", adminOnly: true },
+    { key: "pinned", label: "Pinned", adminOnly: true },
+    { key: "ai", label: "AI Insights", adminOnly: true },
     { key: "pending", label: "Pending", adminOnly: true },
     { key: "hidden", label: "Hidden", adminOnly: true },
     { key: "rejected", label: "Rejected", adminOnly: true },
     { key: "deleted", label: "Deleted", adminOnly: true },
   ].filter((c) => !c.adminOnly || isAdmin) as { key: ReviewFilter; label: string; adminOnly?: boolean }[];
   const sortChips: { key: ReviewSort; label: string }[] = [
-    { key: "newest", label: "Newest" },
-    { key: "oldest", label: "Oldest" },
-    { key: "helpful", label: "Most helpful" },
-    { key: "highest", label: "Highest" },
-    { key: "lowest", label: "Lowest" },
+    { key: "newest", label: "Most Recent" },
+    { key: "helpful", label: "Most Helpful" },
+    { key: "highest", label: "Highest Rated" },
+    { key: "lowest", label: "Lowest Rated" },
   ];
 
   const hasReviews = published.length > 0;
@@ -746,15 +749,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 
 
 
-          {/* Trust boosters */}
-          {expanded && hasReviews && (
-            <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard icon={<Users className="size-4" />} value={verifiedCount.toLocaleString()} label="Verified Buyers" />
-              <StatCard icon={<Camera className="size-4" />} value={photoReviews.length.toLocaleString()} label="Photo Reviews" />
-              <StatCard icon={<Video className="size-4" />} value={videoReviews.length.toLocaleString()} label="Video Reviews" />
-              <StatCard icon={<Recommend className="size-4" />} value={`${recommendPct}%`} label="Recommend" highlight />
-            </div>
-          )}
+          {/* Trust boosters removed in v2.0 — summary meta already surfaces verified/photo/video counts. */}
 
           {/* Review highlights */}
           {expanded && highlights.length > 0 && (
@@ -887,7 +882,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-2xl border bg-card/50 backdrop-blur-xl p-5 sm:p-6 transition-all hover:border-accent/30 hover:shadow-[0_18px_50px_-30px_oklch(0.74_0.19_49/0.5)]",
+                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-all hover:border-white/15 hover:shadow-[0_12px_36px_-24px_rgb(0_0_0/0.6)]",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}
@@ -952,103 +947,192 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-center gap-3.5">
-                              <div className="size-12 rounded-full bg-muted overflow-hidden grid place-items-center text-base font-display shrink-0 ring-1 ring-white/10">
+                            {/* Header: avatar + name + verified inline, date right */}
+                            <div className="flex items-start gap-3">
+                              <div className="size-10 rounded-full bg-muted overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1 ring-white/10">
                                 {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : name.charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-[15px] font-display truncate">{name}</p>
-                                {r.verified_purchase && (
-                                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-emerald-400">
-                                    <BadgeCheck className="size-3" /> Verified Purchase
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center gap-3">
-                              <StarRating rating={r.rating} starClassName="size-4" />
-                              <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">{fmtDate(r.created_at)}</span>
-                            </div>
-
-                            {r.title && <p className="mt-4 text-base font-display leading-snug">{r.title}</p>}
-                            {r.body && <ReviewBody text={r.body} />}
-
-                            {r.media?.length > 0 && (
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {r.media.map((m, i) => (
-                                  <button key={i} onClick={() => openLightbox(r.media, i)} className="relative size-20 overflow-hidden rounded-xl border border-white/10 group/media">
-                                    {m.type === "image" ? (
-                                      <img decoding="async" src={m.url} alt="" loading="lazy" className="size-full object-cover transition-transform group-hover/media:scale-110" />
-                                    ) : (
-                                      <>
-                                        <video src={m.url} className="size-full object-cover" />
-                                        <span className="absolute inset-0 grid place-items-center bg-black/30"><Play className="size-5 text-white" /></span>
-                                      </>
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-
-                            {r.verified_purchase && (
-                              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                                <span className="inline-flex items-center gap-1 text-emerald-400/90"><CheckCircle2 className="size-3" /> Verified Purchase</span>
-                                <span className="inline-flex items-center gap-1"><PackageCheck className="size-3" /> Product Delivered</span>
-                                <span className="inline-flex items-center gap-1"><ShieldCheck className="size-3" /> Review Approved</span>
-                              </div>
-                            )}
-
-                            {r.admin_reply && (
-                              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-accent/20 bg-accent/[0.06] p-3.5">
-                                <ShieldCheck className="size-4 text-accent shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-1">FoundOurMarket · Official reply</p>
-                                  <p className="text-sm leading-relaxed">{r.admin_reply}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-[15px] font-display leading-tight truncate">{name}</p>
+                                  {r.verified_purchase && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                                      <BadgeCheck className="size-3" /> Verified Buyer
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-1 flex items-center gap-2">
+                                  <StarRating rating={r.rating} starClassName="size-3.5" />
                                 </div>
                               </div>
-                            )}
+                              <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
+                            </div>
 
-                            {isAdmin && r.sentiment_summary && (
-                              <div className="mt-3 flex items-start gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-2.5 text-[10px] font-mono text-muted-foreground">
-                                <Brain className="size-3 text-accent mt-0.5 shrink-0" />
-                                <span>{r.sentiment_summary}</span>
+                            {/* Title + body */}
+                            {r.title && <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.body && <ReviewBody text={r.body} />}
+
+                            {/* Media gallery — adaptive grid */}
+                            {r.media?.length > 0 && (() => {
+                              const media = r.media;
+                              const count = media.length;
+                              const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : "grid-cols-3";
+                              const shown = media.slice(0, 3);
+                              return (
+                                <div className={cn("mt-3 grid gap-1.5", cols)}>
+                                  {shown.map((m, i) => {
+                                    const showOverlay = i === 2 && count > 3;
+                                    return (
+                                      <button
+                                        key={i}
+                                        onClick={() => openLightbox(media, i)}
+                                        className={cn(
+                                          "relative overflow-hidden rounded-xl border border-white/10 group/media",
+                                          count === 1 ? "aspect-[4/3]" : "aspect-square",
+                                        )}
+                                      >
+                                        {m.type === "image" ? (
+                                          <img decoding="async" src={m.url} alt="" loading="lazy" className="size-full object-cover transition-transform group-hover/media:scale-105" />
+                                        ) : (
+                                          <>
+                                            <video src={m.url} className="size-full object-cover" muted playsInline preload="metadata" />
+                                            <span className="absolute inset-0 grid place-items-center bg-black/30">
+                                              <span className="grid size-10 place-items-center rounded-full bg-black/60 backdrop-blur-sm">
+                                                <Play className="size-4 text-white fill-white" />
+                                              </span>
+                                            </span>
+                                          </>
+                                        )}
+                                        {showOverlay && (
+                                          <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-display text-white">
+                                            +{count - 3}
+                                          </span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+
+                            {/* Store reply — collapsed by default, expandable */}
+                            {r.admin_reply && (
+                              <div className="mt-3">
+                                <button
+                                  onClick={() => setReplyOpenId(replyOpenId === r.id ? null : r.id)}
+                                  className="inline-flex items-center gap-1.5 text-[11px] font-medium text-accent hover:brightness-110"
+                                >
+                                  <MessageSquare className="size-3.5" />
+                                  {replyOpenId === r.id ? "Hide store response" : "View store response"}
+                                </button>
+                                {replyOpenId === r.id && (
+                                  <div className="mt-2 ml-4 flex items-start gap-2.5 rounded-xl border border-accent/20 bg-accent/[0.05] p-3">
+                                    <ShieldCheck className="size-4 text-accent shrink-0 mt-0.5" />
+                                    <div className="min-w-0">
+                                      <p className="text-[11px] font-semibold text-accent mb-0.5">🛡 Store Response</p>
+                                      <p className="text-sm leading-relaxed text-foreground/90">{r.admin_reply}</p>
+                                      {r.admin_reply_at && (
+                                        <p className="mt-1 text-[10px] text-muted-foreground">{fmtDate(r.admin_reply_at)}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
 
-                            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border/40 pt-3">
-                              <button onClick={() => vote(r, "helpful")} className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest transition-all", myVotes[r.id] === "helpful" ? "bg-accent/15 text-accent" : "text-muted-foreground hover:bg-white/5 hover:text-foreground")}>
+                            {/* Action row — helpful/dislike + More menu */}
+                            <div className="mt-3 flex items-center gap-1 border-t border-border/40 pt-3">
+                              <button
+                                onClick={() => vote(r, "helpful")}
+                                aria-label="Helpful"
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
+                                  myVotes[r.id] === "helpful"
+                                    ? "bg-accent/15 text-accent"
+                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                                )}
+                              >
                                 <ThumbsUp className="size-3.5" /> Helpful {r.helpful_count > 0 ? `(${r.helpful_count})` : ""}
                               </button>
-                              <button onClick={() => vote(r, "not_helpful")} className={cn("inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest transition-colors", myVotes[r.id] === "not_helpful" ? "text-destructive" : "text-muted-foreground hover:text-foreground")}>
-                                <ThumbsDown className="size-3.5" /> {r.not_helpful_count}
+                              <button
+                                onClick={() => vote(r, "not_helpful")}
+                                aria-label="Not helpful"
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
+                                  myVotes[r.id] === "not_helpful"
+                                    ? "bg-destructive/15 text-destructive"
+                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                                )}
+                              >
+                                <ThumbsDown className="size-3.5" /> {r.not_helpful_count > 0 ? r.not_helpful_count : ""}
                               </button>
-                              {!isOwn && user && (
-                                reportedIds.has(r.id) ? (
-                                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70 ml-auto">
-                                    <Flag className="size-3.5" /> Reported
-                                  </span>
-                                ) : (
-                                  <button onClick={() => setReportFor(reportFor === r.id ? null : r.id)} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-destructive ml-auto">
-                                    <Flag className="size-3.5" /> Report
-                                  </button>
-                                )
-                              )}
-                              {isOwn && (
-                                <button onClick={() => { setEditingId(r.id); setEditRating(r.rating); setEditTitle(r.title ?? ""); setEditBody(r.body ?? ""); setEditMedia((r.media ?? []).slice()); }} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent">
-                                  <Pencil className="size-3.5" /> Edit
+
+                              {/* More menu (Edit / Delete / Report / Copy link) */}
+                              <div className="relative ml-auto">
+                                <button
+                                  onClick={() => setMoreOpenId(moreOpenId === r.id ? null : r.id)}
+                                  aria-label="More"
+                                  className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                                >
+                                  <span className="text-lg leading-none">⋯</span>
                                 </button>
-                              )}
-                              {isOwn && r.status !== "deleted" && (
-                                <button onClick={() => requestDelete(r.id, "customer")} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-destructive">
-                                  <Trash2 className="size-3.5" /> Delete
-                                </button>
-                              )}
-                              {!isOwn && isAdmin && r.status !== "deleted" && (
-                                <button onClick={() => requestDelete(r.id, "admin_soft")} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-destructive">
-                                  <Trash2 className="size-3.5" /> Delete
-                                </button>
-                              )}
+                                {moreOpenId === r.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setMoreOpenId(null)} />
+                                    <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-white/10 bg-popover/95 backdrop-blur-xl p-1 shadow-2xl">
+                                      {isOwn && r.status !== "deleted" && (
+                                        <button
+                                          onClick={() => {
+                                            setMoreOpenId(null);
+                                            setEditingId(r.id);
+                                            setEditRating(r.rating);
+                                            setEditTitle(r.title ?? "");
+                                            setEditBody(r.body ?? "");
+                                            setEditMedia((r.media ?? []).slice());
+                                          }}
+                                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-white/5"
+                                        >
+                                          <Pencil className="size-3.5" /> Edit
+                                        </button>
+                                      )}
+                                      {isOwn && r.status !== "deleted" && (
+                                        <button
+                                          onClick={() => { setMoreOpenId(null); requestDelete(r.id, "customer"); }}
+                                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
+                                        >
+                                          <Trash2 className="size-3.5" /> Delete
+                                        </button>
+                                      )}
+                                      {!isOwn && user && !reportedIds.has(r.id) && (
+                                        <button
+                                          onClick={() => { setMoreOpenId(null); setReportFor(r.id); }}
+                                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-white/5"
+                                        >
+                                          <Flag className="size-3.5" /> Report
+                                        </button>
+                                      )}
+                                      {!isOwn && user && reportedIds.has(r.id) && (
+                                        <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground/70">
+                                          <Flag className="size-3.5" /> Reported
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={() => {
+                                          setMoreOpenId(null);
+                                          try {
+                                            const url = `${window.location.origin}${window.location.pathname}#review-${r.id}`;
+                                            navigator.clipboard?.writeText(url);
+                                            toast.success("Link copied");
+                                          } catch { /* noop */ }
+                                        }}
+                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-white/5"
+                                      >
+                                        <ArrowRight className="size-3.5 rotate-[-45deg]" /> Copy link
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
 
                             {reportFor === r.id && (
@@ -1061,50 +1145,72 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                               </div>
                             )}
 
+                            {/* Admin moderation — collapsed by default, never mixed with customer actions */}
                             {isAdmin && (
-                              <div className="mt-3 border-t border-border/50 pt-3">
-                                {r.status === "deleted" ? (
-                                  <div className="space-y-2">
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-destructive">
-                                      <Trash2 className="size-3" /> Deleted{r.deleted_at ? ` · ${new Date(r.deleted_at).toLocaleDateString()}` : ""}
-                                    </div>
-                                    {r.deleted_reason && (
-                                      <p className="text-[11px] text-muted-foreground">Reason: {r.deleted_reason}</p>
+                              <div className="mt-3 border-t border-white/5 pt-2">
+                                <button
+                                  onClick={() => setModOpenId(modOpenId === r.id ? null : r.id)}
+                                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent"
+                                >
+                                  <ShieldCheck className="size-3" />
+                                  Moderation
+                                  <span className={cn("transition-transform", modOpenId === r.id && "rotate-180")}>▾</span>
+                                </button>
+                                {modOpenId === r.id && (
+                                  <div className="mt-2 space-y-2">
+                                    {isAdmin && r.sentiment_summary && (
+                                      <div className="flex items-start gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-2 text-[10px] font-mono text-muted-foreground">
+                                        <Brain className="size-3 text-accent mt-0.5 shrink-0" />
+                                        <span>{r.sentiment_summary}</span>
+                                      </div>
                                     )}
-                                    <div className="flex flex-wrap gap-1.5">
-                                      <ModBtn onClick={() => restoreReview(r.id)} disabled={restoringId === r.id}>
-                                        {restoringId === r.id ? <Loader2 className="size-3 animate-spin" /> : <Eye className="size-3" />} Restore
-                                      </ModBtn>
-                                      <ModBtn onClick={() => requestDelete(r.id, "admin_hard")}>
-                                        <Trash2 className="size-3" /> Delete permanently
-                                      </ModBtn>
-                                    </div>
+                                    {r.status === "deleted" ? (
+                                      <div className="space-y-2">
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-destructive">
+                                          <Trash2 className="size-3" /> Deleted{r.deleted_at ? ` · ${new Date(r.deleted_at).toLocaleDateString()}` : ""}
+                                        </div>
+                                        {r.deleted_reason && (
+                                          <p className="text-[11px] text-muted-foreground">Reason: {r.deleted_reason}</p>
+                                        )}
+                                        <div className="flex flex-wrap gap-1.5">
+                                          <ModBtn onClick={() => restoreReview(r.id)} disabled={restoringId === r.id}>
+                                            {restoringId === r.id ? <Loader2 className="size-3 animate-spin" /> : <Eye className="size-3" />} Restore
+                                          </ModBtn>
+                                          <ModBtn onClick={() => requestDelete(r.id, "admin_hard")}>
+                                            <Trash2 className="size-3" /> Delete permanently
+                                          </ModBtn>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          <ModBtn onClick={() => patch(r.id, { pinned: !r.pinned }, r.pinned ? "Unpinned" : "Pinned")} active={r.pinned}><Pin className="size-3" /> Pin</ModBtn>
+                                          <ModBtn onClick={() => patch(r.id, { featured: !r.featured }, r.featured ? "Unfeatured" : "Featured")} active={r.featured}><Sparkles className="size-3" /> Feature</ModBtn>
+                                          {r.status === "published" ? (
+                                            <ModBtn onClick={() => patch(r.id, { status: "hidden" }, "Review hidden")}><EyeOff className="size-3" /> Hide</ModBtn>
+                                          ) : (
+                                            <ModBtn onClick={() => patch(r.id, { status: "published" }, "Review approved")}><Eye className="size-3" /> Approve</ModBtn>
+                                          )}
+                                          {r.status !== "rejected" && (
+                                            <ModBtn onClick={() => patch(r.id, { status: "rejected" }, "Review rejected")}><X className="size-3" /> Reject</ModBtn>
+                                          )}
+                                          {!isOwn && (
+                                            <ModBtn onClick={() => requestDelete(r.id, "admin_soft")}><Trash2 className="size-3" /> Delete</ModBtn>
+                                          )}
+                                          <ModBtn onClick={() => analyzeOne(r.id)} disabled={analyzing === r.id}>
+                                            {analyzing === r.id ? <Loader2 className="size-3 animate-spin" /> : <Brain className="size-3" />} AI analyze
+                                          </ModBtn>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <input value={replyDrafts[r.id] ?? r.admin_reply ?? ""} onChange={(e) => setReplyDrafts((d) => ({ ...d, [r.id]: e.target.value }))} placeholder="Public reply…"
+                                            className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent" />
+                                          <button onClick={() => postReply(r.id)} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest">
+                                            <MessageSquare className="size-3.5" /> {r.admin_reply ? "Update" : "Reply"}
+                                          </button>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
-                                ) : (
-                                  <>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      <ModBtn onClick={() => patch(r.id, { pinned: !r.pinned }, r.pinned ? "Unpinned" : "Pinned")} active={r.pinned}><Pin className="size-3" /> Pin</ModBtn>
-                                      <ModBtn onClick={() => patch(r.id, { featured: !r.featured }, r.featured ? "Unfeatured" : "Featured")} active={r.featured}><Sparkles className="size-3" /> Feature</ModBtn>
-                                      {r.status === "published" ? (
-                                        <ModBtn onClick={() => patch(r.id, { status: "hidden" }, "Review hidden")}><EyeOff className="size-3" /> Hide</ModBtn>
-                                      ) : (
-                                        <ModBtn onClick={() => patch(r.id, { status: "published" }, "Review approved")}><Eye className="size-3" /> Approve</ModBtn>
-                                      )}
-                                      {r.status !== "rejected" && (
-                                        <ModBtn onClick={() => patch(r.id, { status: "rejected" }, "Review rejected")}><X className="size-3" /> Reject</ModBtn>
-                                      )}
-                                      <ModBtn onClick={() => analyzeOne(r.id)} disabled={analyzing === r.id}>
-                                        {analyzing === r.id ? <Loader2 className="size-3 animate-spin" /> : <Brain className="size-3" />} AI analyze
-                                      </ModBtn>
-                                    </div>
-                                    <div className="mt-2 flex gap-2">
-                                      <input value={replyDrafts[r.id] ?? r.admin_reply ?? ""} onChange={(e) => setReplyDrafts((d) => ({ ...d, [r.id]: e.target.value }))} placeholder="Public reply…"
-                                        className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent" />
-                                      <button onClick={() => postReply(r.id)} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest">
-                                        <MessageSquare className="size-3.5" /> {r.admin_reply ? "Update" : "Reply"}
-                                      </button>
-                                    </div>
-                                  </>
                                 )}
                               </div>
                             )}
@@ -1247,16 +1353,21 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
 
 function ReviewBody({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
-  const isLong = text.length > 180 || text.split("\n").length > 3;
+  const isLong = text.length > 220 || text.split("\n").length > 4;
   return (
     <div className="mt-2">
-      <p className={cn("text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap", !open && isLong && "line-clamp-3")}>
+      <p
+        className={cn(
+          "text-[14px] text-foreground/85 leading-relaxed whitespace-pre-wrap",
+          !open && isLong && "line-clamp-4",
+        )}
+      >
         {text}
       </p>
       {isLong && (
         <button
           onClick={() => setOpen((o) => !o)}
-          className="mt-1 text-[11px] font-mono uppercase tracking-widest text-accent hover:brightness-110"
+          className="mt-1 text-xs font-medium text-accent hover:brightness-110"
         >
           {open ? "Read less" : "Read more"}
         </button>
