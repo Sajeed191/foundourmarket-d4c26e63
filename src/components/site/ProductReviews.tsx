@@ -452,28 +452,68 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     const id = confirmDeleteId;
     if (!id) return;
     setDeleting(true);
-    // Snapshot + optimistic remove.
     const prevList = reviews;
     const prevMine = myReview;
-    setReviews((list) => list.filter((r) => r.id !== id));
-    if (myReview?.id === id) setMyReview(null);
+    // Optimistic: soft delete → hide from list (admin can restore via Deleted filter);
+    // hard delete → remove row entirely.
+    if (deleteMode === "admin_hard") {
+      setReviews((list) => list.filter((r) => r.id !== id));
+    } else {
+      setReviews((list) => list.map((r) => (r.id === id ? { ...r, status: "deleted", deleted_at: new Date().toISOString() } : r)));
+    }
+    if (myReview?.id === id && deleteMode !== "admin_hard") setMyReview(null);
     try {
       const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
-      const r = await resilientRpc("review.submit", "soft_delete_own_review", { p_id: id }, `review.delete:${id}`);
-      if (!r.ok) throw new Error((r.error as any)?.message ?? "Delete failed");
-      toast.success("Review deleted");
+      const fn =
+        deleteMode === "admin_hard" ? "admin_hard_delete_review"
+        : deleteMode === "admin_soft" ? "admin_soft_delete_review"
+        : "soft_delete_own_review";
+      const args =
+        deleteMode === "admin_soft"
+          ? { p_id: id, p_reason: deleteReason.trim() || null }
+          : { p_id: id };
+      const r = await resilientRpc("review.submit", fn, args, `review.${fn}:${id}`);
+      if (!r.ok) throw new Error((r.error as any)?.message ?? "Action failed");
+      toast.success(
+        deleteMode === "admin_hard" ? "Review permanently deleted"
+        : deleteMode === "admin_soft" ? "Review deleted (archived)"
+        : "Review deleted",
+      );
       if (!r.queued) { await load(); onAggregateChange?.(); }
     } catch (e) {
       setReviews(prevList);
       setMyReview(prevMine);
-      toast.error(e instanceof Error ? e.message : "Delete failed");
+      toast.error(e instanceof Error ? e.message : "Action failed");
     } finally {
       setDeleting(false);
       setConfirmDeleteId(null);
+      setDeleteReason("");
     }
   }
 
-  function requestDelete(id: string) { setConfirmDeleteId(id); }
+  function requestDelete(id: string, mode: "customer" | "admin_soft" | "admin_hard" = "customer") {
+    setDeleteMode(mode);
+    setDeleteReason("");
+    setConfirmDeleteId(id);
+  }
+
+  async function restoreReview(id: string) {
+    setRestoringId(id);
+    const prev = reviews;
+    setReviews((list) => list.map((r) => (r.id === id ? { ...r, status: "published", deleted_at: null, deleted_by: null, deleted_reason: null } : r)));
+    try {
+      const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
+      const r = await resilientRpc("review.submit", "admin_restore_review", { p_id: id }, `review.restore:${id}`);
+      if (!r.ok) throw new Error((r.error as any)?.message ?? "Restore failed");
+      toast.success("Review restored");
+      if (!r.queued) { await load(); onAggregateChange?.(); }
+    } catch (e) {
+      setReviews(prev);
+      toast.error(e instanceof Error ? e.message : "Restore failed");
+    } finally {
+      setRestoringId(null);
+    }
+  }
 
 
   async function vote(r: Review, v: "helpful" | "not_helpful") {
