@@ -1,73 +1,62 @@
-# Performance Optimization v3 — Frontend Only
+# Reviews v1.1 — Stability & Synchronization Fix
 
-## Guardrails
-- No backend, DB, Supabase, auth, orders/payments/inventory/coupons/returns/business logic changes.
-- No feature/UX changes. Same DOM output, same data, same URLs.
-- Every change must be reversible and observable in a profiler.
+Scope: only `src/components/site/ProductReviews.tsx` and small helpers in `src/lib/reviews.ts`. No changes to badges, orders, payments, AI, homepage, search, site rules, or DB schema. Existing RPCs, RLS, triggers, and the `product_reviews_public` view already do the right thing — the fixes are all client-side wiring.
 
-## Method (measure → target → verify)
-1. **Profile first.** Build a lightweight bottleneck report from source: identify (a) routes >800 LOC, (b) components mounted on every page, (c) `useEffect`/subscription counts, (d) list renderers without `React.memo`, (e) inline object/array props in list items, (f) unbounded queries in loaders. Skip broad rewrites; only touch the top offenders.
-2. **Fix in narrow passes.** After each pass, confirm typecheck + a visual smoke on Home / PDP / Admin Orders Ops / Admin Products.
-3. **Verify.** Compare before/after: React Profiler commit counts on target pages, scroll FPS via `requestAnimationFrame` sampler, LCP/INP via `web-vitals` in dev overlay (already present if wired; otherwise skip).
+## What's actually broken (verified against the running code + DB)
 
-## Scope (in priority order)
+- Delete: uses `window.confirm`, and on success doesn't drop the row from local state until the reload round-trip completes → card lingers.
+- Edit: modal only edits rating/title/body — media (photos/videos) cannot be changed.
+- Helpful: relies solely on realtime `review_votes` events to bump `helpful_count`; if realtime is delayed the count doesn't move.
+- Report: no "already reported" affordance; button always active.
+- Filter/sort chips are missing Oldest, With Videos, Featured, Pinned, AI Insights.
+- Media viewer: images open fullscreen but pinch-zoom isn't enabled and videos don't play inline in the lightbox reliably.
+- Admin-authored reviews are correctly visible when `status = 'published'` — the earlier "invisible admin review" was a single row stuck at `status = 'rejected'`. No code change needed here; documented in validation.
 
-### Pass 1 — Global render hygiene (biggest ROI)
-- `ProductCard` and related list items → wrap in `React.memo` with a shallow-safe props contract; hoist static style objects; stabilize event handlers via `useCallback` in parents.
-- Homepage sections: memoize section headings + product grids; ensure `useMemo` deps are minimal (already partially done for badge filters).
-- Kill inline arrow-prop churn on hot lists (Home grid, Search grid, Admin Products table, Admin Orders Ops table).
-- Audit context providers that update on every render (cart, chat presence, floating stack) — split state so consumers only re-render on the slice they use.
+Everything else (rating recalc, aggregate refresh, RLS, verified badge trigger, admin visibility of non-published rows) already works via DB triggers + realtime channel — verified.
 
-### Pass 2 — Scroll / event listeners
-- Consolidate scroll/resize listeners into a single passive `rAF`-throttled observer (LiveChat, FloatingContextObserver, sticky headers, RevealOnScroll). Ensure `{ passive: true }` everywhere.
-- Replace any `getBoundingClientRect` reads inside scroll handlers with cached values on layout events only.
-- `IntersectionObserver` for RevealOnScroll and lazy sections instead of scroll math.
+## Fixes
 
-### Pass 3 — Data fetching dedupe & caching
-- Confirm all product/list reads go through TanStack Query with sensible `staleTime` (product lists: 60s; catalog metadata: 5m). Remove any `useEffect`+fetch duplicates.
-- Ensure `useProducts`, `useBadgeCatalog`, `useFlashDeals` share a single query key per param set (no duplicated network calls per section).
-- Debounce search inputs (Admin + storefront) to 250ms; throttle filter chip toggles to `requestIdleCallback` where safe.
+### 1. Delete
+- Replace `window.confirm` with the existing shadcn `AlertDialog` (premium confirm).
+- On success: optimistically remove from `reviews` state and clear `myReview`, then call `load()` + `onAggregateChange?.()`; error → rollback + toast.
 
-### Pass 4 — Long lists (Admin)
-- Virtualize tables >100 rows: Admin Products, Admin Orders, Admin Orders Ops, Admin Customers, Admin Support, Admin Email Queue. Use `@tanstack/react-virtual` (already in TanStack ecosystem; add if missing). Preserve current row markup, sticky header, and selection.
-- Paginated fetches: cap page size (50) where a route currently loads all rows.
+### 2. Edit
+- Extend edit mode to include media: reuse `uploadReviewMedia` + `validateReviewFile`, allow add/remove of images and videos.
+- Call existing `update_own_review` RPC for text/rating, then a direct `UPDATE product_reviews SET media = $1 WHERE id = $2 AND user_id = auth.uid()` for media (RLS-scoped).
+- Optimistic update; rollback on error.
 
-### Pass 5 — Route-level code splitting
-- Verify heavy admin routes are code-split (TanStack auto-split is on). Ensure no route file re-exports a component (breaks splitting).
-- Lazy-load heavy modals: `ProductEditorModal` (1.5k LOC), `CategoryAdminSheet`, `VariantImagesSection`, `ProductReviews`, `MobileFilterDrawer` via `React.lazy` + `Suspense` with a skeleton.
-- Move debug-only modules (e.g. `debug-flags.ts` if imported at root) behind a dynamic import gated on `import.meta.env.DEV` or an admin flag.
+### 3. Helpful
+- Keep server truth via `castReviewVote`, but also optimistically bump `helpful_count` / `not_helpful_count` on the local row (and decrement the opposite bucket when switching). Realtime reconciles.
 
-### Pass 6 — Images
-- Confirm every `<img>` on grids has `loading="lazy"`, `decoding="async"`, explicit `width`/`height` (or aspect-ratio) to prevent CLS.
-- Only the LCP hero image gets `fetchpriority="high"` + `<link rel="preload">` in the route `head()`.
-- Add `sizes` attribute on responsive product images so the browser picks the right srcset entry.
+### 4. Report
+- Track `reported_ids` in local state (seeded from a `review_reports` fetch for the current user).
+- Disable the report button + show "Reported" when already reported.
 
-### Pass 7 — Animations
-- Audit all keyframes/transitions; restrict to `transform` and `opacity`. Replace `width`/`height`/`box-shadow`/`filter: blur()` animations with transform/opacity + prerendered shadow layers.
-- Wrap all decorative motion in `@media (prefers-reduced-motion: reduce)` disables (verify existing coverage).
-- Ensure animated elements have `will-change: transform` only while animating; remove after.
+### 5. Filters/Sort
+- Add filter chips: `videos`, `featured`, `pinned`, `ai` (has sentiment_summary or fake_reasons).
+- Add sort option: `oldest`.
 
-### Pass 8 — Bundle
-- Run `bun run build` and inspect chunk sizes; remove unused deps flagged by import graph (source-only, no functional change).
-- Convert any static `import` of an admin-only utility from a customer route into a dynamic import.
+### 6. Media viewer
+- Enable pinch-zoom via `touch-action: pan-x pan-y pinch-zoom` and a max-scale transform on tap.
+- Ensure `<video controls playsInline>` inside the lightbox so it plays inline.
 
-## Technical notes
-- Keep patches surgical. No mass reformatting.
-- Do not introduce new global state libraries.
-- `React.memo` on components with function/object props requires stable references from the parent — always paired.
-- Virtualization must preserve keyboard navigation, row selection, and CSV export flows already present.
-- Verification per pass: `bun run build` (or typecheck) + open Home, PDP, Admin Orders Ops, Admin Products, Search in the preview.
+### 7. Synchronization polish
+- Every mutating action (`patch`, `remove`, `saveEdit`, `submitReport`, `vote`, `postReply`) already calls `load()` + `onAggregateChange?.()`. Confirm they all do; add where missing. The `recalc_product_rating` trigger keeps `products.rating` + `reviews` in sync automatically.
 
-## Deliverable per pass
-- List of files changed
-- 1-line rationale per change
-- Confirm: build green, no visible UX regression on the 5 smoke pages.
+### 8. Empty state
+- Confirmed present (`EmptyState` component). Ensure it renders the exact copy: "No reviews yet. Be the first to share your experience." with the "Write a Review" CTA. Update text if drifted.
+
+## Validation
+
+- Delete → dialog opens → row disappears instantly → toast → aggregate refreshes.
+- Edit with new photo → modal saves → new media renders inline without refresh.
+- Helpful toggle → count moves immediately, persists after reload.
+- Report → button flips to "Reported" and stays disabled.
+- Filters: Featured/Pinned/Videos/AI Insights each narrow the list correctly.
+- Media viewer: pinch to zoom on iOS/Android; videos play inline.
+- Admin publishes a rejected admin review → appears on the public list within realtime tick.
+- `bun run typecheck` (via harness) passes.
 
 ## Out of scope
-- Any behavior change, copy change, or layout redesign.
-- SW/cache/infra tweaks (Infrastructure v2.0 is frozen).
-- Backend query changes.
 
----
-
-**Ask before I start:** Should I execute all 8 passes in one go, or ship one pass per turn (recommended so you can review and snapshot each)?
+Anything outside `ProductReviews.tsx`, `src/lib/reviews.ts`, and the shadcn AlertDialog import. No DB migrations, no changes to RPCs, no touching of `ProductRatingManager` or admin routes.
