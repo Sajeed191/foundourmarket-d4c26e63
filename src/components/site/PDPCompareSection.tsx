@@ -39,7 +39,7 @@ function pickChip(p: Product): { kind: ChipKind; label: string; cls: string } | 
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
-  const { priceOf, compareOf, region } = useRegion();
+  const { priceOf, compareOf, currency } = useRegion();
   const { slugs, toggle, has, isFull, max, remove } = useCompare();
   const [showAll, setShowAll] = useState(false);
 
