@@ -672,7 +672,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                 <p className="text-[44px] leading-none font-display text-foreground">{avg.toFixed(1)}</p>
                 <div className="mt-2"><StarRating rating={avg} starClassName="size-4" /></div>
                 <p className="mt-2 text-[13px] text-muted-foreground">
-                  Based on {published.length.toLocaleString()} {published.length === 1 ? "review" : "reviews"}
+                  Based on {totalReviewCount.toLocaleString()} {totalReviewCount === 1 ? "review" : "reviews"}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-400" /> {verifiedCount} verified</span>
