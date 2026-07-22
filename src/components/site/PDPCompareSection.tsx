@@ -73,12 +73,14 @@ function pillFor(p: Product, shipping: number): Pill | null {
   return null;
 }
 
+// Quieter, near-neutral pill palette. Only Free Delivery keeps a subtle
+// accent — everything else is neutral so a single card never dominates.
 const pillClasses: Record<Pill["tone"], string> = {
-  emerald: "text-emerald-300/90 bg-emerald-400/[0.08] border-emerald-400/20",
-  sky: "text-sky-300/90 bg-sky-400/[0.08] border-sky-400/20",
-  amber: "text-amber-300/90 bg-amber-400/[0.08] border-amber-400/20",
-  violet: "text-violet-300/90 bg-violet-400/[0.08] border-violet-400/20",
-  neutral: "text-white/60 bg-white/[0.04] border-white/10",
+  emerald: "text-emerald-300/85 bg-emerald-400/[0.06] border-emerald-400/15",
+  sky: "text-white/65 bg-white/[0.035] border-white/10",
+  amber: "text-white/65 bg-white/[0.035] border-white/10",
+  violet: "text-white/65 bg-white/[0.035] border-white/10",
+  neutral: "text-white/60 bg-white/[0.035] border-white/10",
 };
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
