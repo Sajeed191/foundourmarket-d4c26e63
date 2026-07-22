@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, Star, ArrowRight, SearchX } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Check, Star, ArrowRight, SearchX, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
 
 import { useProducts } from "@/lib/use-products";
 import { resolveImage, discountPercent, type Product } from "@/lib/products";
@@ -135,6 +136,94 @@ function deriveInsight(
   return null;
 }
 
+type WinnerLabel =
+  | "Best Value"
+  | "Best Rated"
+  | "Most Popular"
+  | "Editor's Pick"
+  | "Best Match";
+
+/**
+ * Pick a single strongest alternative across the visible carousel. Priority
+ * follows the same evidence hierarchy as insights — cheaper + at least as
+ * good rating > higher rating > significantly more reviews > personalization
+ * favourite > default (top similarity).
+ */
+function pickWinner(
+  candidates: Product[],
+  current: Product,
+  priceOf: (p: Product) => number,
+  boostOf: (slug: string) => number,
+): { slug: string; label: WinnerLabel } | null {
+  if (candidates.length === 0) return null;
+  const curPrice = priceOf(current) || 0;
+  const curRating = Number(current.rating || 0);
+  const curReviews = Number(current.reviews || 0);
+
+  // Best Value — cheaper AND rating not lower
+  const value = candidates
+    .filter((p) => {
+      const pp = priceOf(p) || 0;
+      const rr = Number(p.rating || 0);
+      return curPrice > 0 && pp > 0 && pp < curPrice * 0.98 && rr >= curRating - 0.1;
+    })
+    .sort((a, b) => (priceOf(a) || 0) - (priceOf(b) || 0))[0];
+  if (value) return { slug: value.slug, label: "Best Value" };
+
+  // Best Rated — meaningfully higher rating with real review count
+  const rated = candidates
+    .filter((p) => Number(p.rating || 0) - curRating >= 0.3 && Number(p.reviews || 0) >= 20)
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))[0];
+  if (rated) return { slug: rated.slug, label: "Best Rated" };
+
+  // Most Popular — significantly more reviews
+  const popular = candidates
+    .filter(
+      (p) =>
+        Number(p.reviews || 0) >= 50 &&
+        Number(p.reviews || 0) >= Math.max(curReviews * 2, curReviews + 50),
+    )
+    .sort((a, b) => Number(b.reviews || 0) - Number(a.reviews || 0))[0];
+  if (popular) return { slug: popular.slug, label: "Most Popular" };
+
+  // Editor's Pick — top personalization boost (from on-device + AI context)
+  const boosted = [...candidates]
+    .map((p) => ({ p, b: boostOf(p.slug) }))
+    .filter((x) => x.b >= 1)
+    .sort((a, b) => b.b - a.b)[0];
+  if (boosted) return { slug: boosted.p.slug, label: "Editor's Pick" };
+
+  // Default — top similarity (already sorted upstream)
+  return { slug: candidates[0].slug, label: "Best Match" };
+}
+
+/** Short, factual one-liner. Never invented — only when data supports it. */
+function deriveRecommendation(
+  candidate: Product,
+  current: Product,
+  candidatePrice: number,
+  currentPrice: number,
+): string | null {
+  const cRating = Number(candidate.rating || 0);
+  const uRating = Number(current.rating || 0);
+  const cReviews = Number(candidate.reviews || 0);
+  const uReviews = Number(current.reviews || 0);
+
+  const cheaper = currentPrice > 0 && candidatePrice > 0 && candidatePrice < currentPrice * 0.98;
+  const similarPrice =
+    currentPrice > 0 && candidatePrice > 0 &&
+    Math.abs(candidatePrice - currentPrice) / currentPrice <= 0.1;
+
+  if (cheaper && cRating >= uRating - 0.1) return "Better value for the money.";
+  if (cRating - uRating >= 0.3 && similarPrice) return "Higher rating at a similar price.";
+  if (cRating - uRating >= 0.3) return "Higher customer rating overall.";
+  if (cReviews >= 50 && cReviews >= Math.max(uReviews * 2, uReviews + 50))
+    return "Popular among similar buyers.";
+  if (cheaper) return "More affordable alternative.";
+  return null;
+}
+
+
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
   const { priceOf, format } = useRegion();
@@ -150,8 +239,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;
 
-  const allSuggestions = useMemo<Product[]>(() => {
-    if (!products.length) return [];
+  const rankedSuggestions = useMemo(() => {
+    if (!products.length) return [] as Array<{ p: Product; score: number; boost: number }>;
     const cur = currentProduct;
     const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
     const curPrice = currentPrice;
@@ -206,19 +295,43 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           if (pInr && Math.abs(pInr - ctxPrice) / ctxPrice <= 0.3) boost += 0.3;
         }
 
-        const finalScore = score + Math.min(boost, PERSONALIZATION_CAP);
-        return { p, score: finalScore };
+        const cappedBoost = Math.min(boost, PERSONALIZATION_CAP);
+        return { p, score: score + cappedBoost, boost: cappedBoost };
       })
       .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((x) => x.p);
+      .sort((a, b) => b.score - a.score);
   }, [products, currentProduct, currentPrice, priceOf, recentEntries, wishlistSet, cartItems]);
+
+  const allSuggestions = useMemo(() => rankedSuggestions.map((x) => x.p), [rankedSuggestions]);
 
   const visibleSuggestions = useMemo(
     () => allSuggestions.slice(0, VISIBLE_LIMIT),
     [allSuggestions],
   );
   const hasMore = allSuggestions.length > VISIBLE_LIMIT;
+
+  // Best-match winner (single label across the carousel). Data-backed only.
+  const winner = useMemo(() => {
+    if (visibleSuggestions.length === 0) return null;
+    const boostBySlug = new Map(rankedSuggestions.map((x) => [x.p.slug, x.boost]));
+    return pickWinner(
+      visibleSuggestions,
+      currentProduct,
+      priceOf,
+      (slug) => boostBySlug.get(slug) ?? 0,
+    );
+  }, [visibleSuggestions, rankedSuggestions, currentProduct, priceOf]);
+
+  // Snapshot session-persisted selections at mount so the reminder only fires
+  // when the customer arrives with a previous comparison already in progress.
+  const initialSelectionRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (initialSelectionRef.current === null) {
+      initialSelectionRef.current = slugs.filter((s) => s !== currentSlug).length;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const hadPreviousSelection = (initialSelectionRef.current ?? 0) > 0;
 
   // Ensure current product is always part of the compare set on mount.
   useEffect(() => {
@@ -248,6 +361,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     }
     toggle(slug);
   };
+
 
   // Empty state — hide comparison actions entirely.
   if (allSuggestions.length === 0) {
@@ -310,6 +424,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           {visibleSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const isWinner = winner?.slug === p.slug;
             return (
               <li
                 key={p.slug}
@@ -323,10 +438,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   active={active}
                   disabled={disabled}
                   onToggle={() => handleToggle(p.slug)}
+                  winnerLabel={isWinner ? winner!.label : undefined}
                 />
               </li>
             );
           })}
+
           <div aria-hidden className="shrink-0 w-1" />
         </ul>
         <div
@@ -352,6 +469,33 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </div>
       )}
 
+      {hadPreviousSelection && selectedNonCurrent > 0 && (
+        <div className="mt-4 px-1 flex items-center gap-2 text-[12px] text-white/65">
+          <Sparkles className="size-3.5 text-accent" aria-hidden />
+          <span>Your previous comparison is ready.</span>
+          <button
+            type="button"
+            onClick={() => canCompare && navigate({ to: "/compare" })}
+            className="inline-flex items-center gap-0.5 font-medium text-accent hover:text-accent/85 transition-colors duration-150 min-h-[44px] sm:min-h-0"
+            aria-label="Continue with your previous comparison"
+          >
+            Continue
+            <ArrowRight className="size-3" aria-hidden />
+          </button>
+        </div>
+      )}
+
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {selectedNonCurrent === 0
+          ? "No alternatives selected for comparison."
+          : `${selectedCount} products selected for comparison.`}
+      </div>
+
       <div className="mt-5 flex items-center justify-between gap-3 px-1">
         <p className="text-[12px] text-white/60 tabular-nums transition-colors duration-150">
           {selectedNonCurrent === 0 ? (
@@ -366,7 +510,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           type="button"
           disabled={!canCompare}
           onClick={() => canCompare && navigate({ to: "/compare" })}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium tracking-wide transition-[color,border-color,background-color] duration-150 ease-out ${
+          aria-label={canCompare ? `Compare ${selectedCount} selected products` : "Select at least one alternative to compare"}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium tracking-wide transition-[color,border-color,background-color] duration-150 ease-out min-h-[44px] sm:min-h-0 ${
             canCompare
               ? "border-accent text-accent hover:bg-accent/[0.08]"
               : "border-white/10 text-white/35 cursor-not-allowed"
@@ -376,6 +521,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           <ArrowRight className="size-3.5" aria-hidden />
         </button>
       </div>
+
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent
@@ -395,20 +541,23 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               {allSuggestions.map((p) => {
                 const active = has(p.slug);
                 const disabled = !active && isFull;
+                const isWinner = winner?.slug === p.slug;
                 return (
                   <li key={p.slug}>
                     <CompareCard
                       product={p}
                       price={priceOf(p)}
                       currentPrice={currentPrice}
-                  currentProduct={currentProduct}
+                      currentProduct={currentProduct}
                       active={active}
                       disabled={disabled}
                       onToggle={() => handleToggle(p.slug)}
+                      winnerLabel={isWinner ? winner!.label : undefined}
                     />
                   </li>
                 );
               })}
+
             </ul>
           </div>
           <div className="border-t border-white/10 px-5 py-3 flex items-center justify-between gap-3 bg-background">
@@ -457,6 +606,7 @@ function CompareCard({
   disabled,
   pinned,
   onToggle,
+  winnerLabel,
 }: {
   product: Product;
   price: number;
@@ -466,6 +616,7 @@ function CompareCard({
   disabled?: boolean;
   pinned?: boolean;
   onToggle?: () => void;
+  winnerLabel?: WinnerLabel;
 }) {
   const { compareOf, format } = useRegion();
   const comparePrice = compareOf(product);
@@ -494,11 +645,32 @@ function CompareCard({
           ? "bg-violet-500/10 text-violet-300"
           : "bg-emerald-500/10 text-emerald-400";
 
+  // Price difference vs current — subtle, only when meaningful (>=1% delta).
+  const priceDiff = !pinned && currentPrice > 0 && price > 0 ? price - currentPrice : 0;
+  const priceDiffPct = currentPrice > 0 ? Math.abs(priceDiff) / currentPrice : 0;
+  const showPriceDiff = !pinned && Math.abs(priceDiff) >= 1 && priceDiffPct >= 0.01;
+  const priceDiffText = showPriceDiff
+    ? priceDiff < 0
+      ? `${format(Math.round(Math.abs(priceDiff)))} less than current`
+      : `${format(Math.round(priceDiff))} more than current`
+    : null;
+
+  // One-line recommendation — only when data-backed.
+  const recommendation =
+    !pinned && currentProduct
+      ? deriveRecommendation(product, currentProduct, price, currentPrice)
+      : null;
+
   return (
     <div className="flex h-full flex-col">
       {pinned ? (
         <span className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-widest text-white/40">
           Current Product
+        </span>
+      ) : winnerLabel ? (
+        <span className="mb-1.5 inline-flex w-fit items-center gap-1 px-0.5 text-[10px] font-semibold uppercase tracking-widest text-accent">
+          <Sparkles className="size-2.5" aria-hidden />
+          {winnerLabel}
         </span>
       ) : (
         <span aria-hidden className="mb-1.5 h-[14px]" />
@@ -512,6 +684,7 @@ function CompareCard({
         <Link
           to="/products/$slug"
           params={{ slug: product.slug }}
+          aria-label={`View ${product.name}`}
           className="relative block bg-black/25 overflow-hidden"
           style={{ aspectRatio: "1 / 1" }}
         >
@@ -559,6 +732,16 @@ function CompareCard({
             )}
           </div>
 
+          {priceDiffText && (
+            <p
+              className={`mt-0.5 text-[10.5px] tabular-nums ${
+                priceDiff < 0 ? "text-emerald-400/90" : "text-white/45"
+              }`}
+            >
+              {priceDiffText}
+            </p>
+          )}
+
           {insight && (
             <div className="mt-1.5">
               <span
@@ -569,14 +752,29 @@ function CompareCard({
             </div>
           )}
 
+          {recommendation && (
+            <p className="mt-1 text-[11px] leading-snug text-white/60 line-clamp-1">
+              {recommendation}
+            </p>
+          )}
+
+
+
 
           <div className="mt-auto pt-3">
             <button
               type="button"
               onClick={onToggle}
               aria-pressed={isSelected}
+              aria-label={
+                pinned
+                  ? `${product.name} is the current product`
+                  : isSelected
+                    ? `Remove ${product.name} from comparison`
+                    : `Add ${product.name} to comparison`
+              }
               disabled={pinned || disabled}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/75 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center gap-1.5 py-1.5 pr-2 -ml-0.5 pl-0.5 text-[11px] font-medium text-white/75 disabled:cursor-not-allowed disabled:opacity-70 min-h-[44px] sm:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-md"
             >
               <span
                 aria-hidden
@@ -591,6 +789,7 @@ function CompareCard({
               Compare
             </button>
           </div>
+
         </div>
       </div>
     </div>
