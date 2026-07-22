@@ -80,7 +80,7 @@ const HIGHLIGHT_THEMES: { label: string; keywords: string[] }[] = [
   { label: "Comfort", keywords: ["comfort", "comfortable", "soft", "cozy", "fit"] },
 ];
 
-export function ProductReviews({ productSlug, onAggregateChange }: { productSlug: string; onAggregateChange?: () => void }) {
+export function ProductReviews({ productSlug, onAggregateChange, productRating, productReviewCount }: { productSlug: string; onAggregateChange?: () => void; productRating?: number; productReviewCount?: number }) {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const runAnalyze = useServerFn(analyzeReviews);
@@ -243,7 +243,12 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
     !user ? "guest" : hasReviewed ? "reviewed" : "can_review";
 
   const isSaved = user ? wishlist.has(productSlug) : false;
-  const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
+  // Single source of truth: products.rating / products.reviews (maintained by
+  // the DB trigger). Never recompute the aggregate from the loaded review list
+  // — the list may include seeded rows or lag behind moderation state.
+  const localAvg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
+  const avg = typeof productRating === "number" && productRating > 0 ? productRating : localAvg;
+  const totalReviewCount = typeof productReviewCount === "number" ? productReviewCount : published.length;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
   const photoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "image"));
@@ -667,7 +672,7 @@ export function ProductReviews({ productSlug, onAggregateChange }: { productSlug
                 <p className="text-[44px] leading-none font-display text-foreground">{avg.toFixed(1)}</p>
                 <div className="mt-2"><StarRating rating={avg} starClassName="size-4" /></div>
                 <p className="mt-2 text-[13px] text-muted-foreground">
-                  Based on {published.length.toLocaleString()} {published.length === 1 ? "review" : "reviews"}
+                  Based on {totalReviewCount.toLocaleString()} {totalReviewCount === 1 ? "review" : "reviews"}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-400" /> {verifiedCount} verified</span>
