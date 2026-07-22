@@ -12,12 +12,13 @@ import { useCompare } from "@/hooks/use-compare";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /**
- * PDP — Similar Products (v6.3)
+ * PDP — Similar Products (v6.5 · Decision Assistant)
  *
- * Premium native marketplace recommendation carousel. Pure UI + client-side
- * sorting/preview. No new API calls, no backend changes, no ranking-engine
- * changes. Reuses ProductCard, compare store, and existing similarity output.
+ * Adds a single data-backed recommendation, a preview-selection state, a
+ * factual decision helper above the CTA, and a "View Product" primary action
+ * inside the Quick Preview. No engine, backend, or UI-system changes.
  */
+
 
 const VISIBLE_LIMIT = 12;
 const VIEW_MORE_THRESHOLD = 8;
