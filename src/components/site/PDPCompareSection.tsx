@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, Star, ArrowRight, SearchX, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Star, ArrowRight, SearchX, Sparkles, ImageOff } from "lucide-react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 
@@ -363,6 +363,34 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   };
 
 
+  // Loading state — reserved layout, no shift, no flash.
+  if (products.length === 0) {
+    return (
+      <section
+        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20"
+        data-pdp-compare
+        aria-busy="true"
+      >
+        <div className="mb-5">
+          <div className="h-[22px] w-40 rounded bg-white/[0.06]" />
+          <div className="mt-2 h-[14px] w-64 rounded bg-white/[0.04]" />
+        </div>
+        <div className="relative -mx-4 sm:mx-0">
+          <ul className="flex overflow-x-hidden gap-3 px-4 sm:px-1 pb-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <li
+                key={`compare-skel-${i}`}
+                className="shrink-0 w-[43%] min-[420px]:w-[36%] sm:w-[188px]"
+              >
+                <CompareCardSkeleton />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+
   // Empty state — hide comparison actions entirely.
   if (allSuggestions.length === 0) {
     return (
@@ -597,17 +625,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   );
 }
 
-function CompareCard({
-  product,
-  price,
-  currentPrice,
-  currentProduct,
-  active,
-  disabled,
-  pinned,
-  onToggle,
-  winnerLabel,
-}: {
+type CompareCardProps = {
   product: Product;
   price: number;
   currentPrice: number;
@@ -617,8 +635,21 @@ function CompareCard({
   pinned?: boolean;
   onToggle?: () => void;
   winnerLabel?: WinnerLabel;
-}) {
+};
+
+function CompareCardImpl({
+  product,
+  price,
+  currentPrice,
+  currentProduct,
+  active,
+  disabled,
+  pinned,
+  onToggle,
+  winnerLabel,
+}: CompareCardProps) {
   const { compareOf, format } = useRegion();
+  const [imgFailed, setImgFailed] = useState(false);
   const comparePrice = compareOf(product);
   const discount = discountPercent(price, comparePrice) ?? 0;
   const isSelected = !!(pinned || active);
@@ -661,20 +692,23 @@ function CompareCard({
       ? deriveRecommendation(product, currentProduct, price, currentPrice)
       : null;
 
+  const resolvedImg = product.image ? resolveImage(product.image) : null;
+
   return (
     <div className="flex h-full flex-col">
-      {pinned ? (
-        <span className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-widest text-white/40">
-          Current Product
-        </span>
-      ) : winnerLabel ? (
-        <span className="mb-1.5 inline-flex w-fit items-center gap-1 px-0.5 text-[10px] font-semibold uppercase tracking-widest text-accent">
-          <Sparkles className="size-2.5" aria-hidden />
-          {winnerLabel}
-        </span>
-      ) : (
-        <span aria-hidden className="mb-1.5 h-[14px]" />
-      )}
+      {/* Header slot — always 14px tall so cards align regardless of label. */}
+      <div className="mb-1.5 h-[14px] px-0.5 flex items-center">
+        {pinned ? (
+          <span className="text-[10px] font-medium uppercase tracking-widest text-white/40 truncate">
+            Current Product
+          </span>
+        ) : winnerLabel ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-accent truncate">
+            <Sparkles className="size-2.5 shrink-0" aria-hidden />
+            <span className="truncate">{winnerLabel}</span>
+          </span>
+        ) : null}
+      </div>
 
       <div
         className={`flex flex-1 flex-col rounded-[14px] border overflow-hidden bg-transparent transition-[border-color] duration-150 ease-out ${
@@ -685,36 +719,49 @@ function CompareCard({
           to="/products/$slug"
           params={{ slug: product.slug }}
           aria-label={`View ${product.name}`}
-          className="relative block bg-black/25 overflow-hidden"
+          className="relative block bg-white/[0.03] overflow-hidden"
           style={{ aspectRatio: "1 / 1" }}
         >
-          {product.image && (
+          {resolvedImg && !imgFailed ? (
             <img
-              src={resolveImage(product.image)}
+              src={resolvedImg}
               alt={product.name}
               loading="lazy"
               decoding="async"
+              width={400}
+              height={400}
+              onError={() => setImgFailed(true)}
               className="w-full h-full object-cover"
             />
+          ) : (
+            <div
+              aria-hidden
+              className="w-full h-full grid place-items-center text-white/25"
+            >
+              <ImageOff className="size-6" />
+            </div>
           )}
         </Link>
 
         <div className="flex flex-1 flex-col p-3">
+          {/* Title — always 2 lines reserved */}
           <Link
             to="/products/$slug"
             params={{ slug: product.slug }}
-            className="block text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug min-h-[2.4em] hover:text-accent transition-colors"
+            className="block text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug h-[2.6em] hover:text-accent transition-colors"
           >
             {product.name}
           </Link>
 
-          <div className="mt-2 flex items-center gap-1 text-[10.5px] text-white/55 tabular-nums">
-            <Star className="size-2.5 fill-amber-400 text-amber-400" aria-hidden />
+          {/* Rating row — fixed height */}
+          <div className="mt-2 h-[14px] flex items-center gap-1 text-[10.5px] text-white/55 tabular-nums">
+            <Star className="size-2.5 fill-amber-400 text-amber-400 shrink-0" aria-hidden />
             <span className="font-medium text-white/85">{Number(product.rating || 0).toFixed(1)}</span>
-            <span className="text-white/40">({Number(product.reviews || 0)})</span>
+            <span className="text-white/40 truncate">({Number(product.reviews || 0)})</span>
           </div>
 
-          <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+          {/* Price row — fixed height */}
+          <div className="mt-1 h-[20px] flex items-baseline gap-1.5 overflow-hidden">
             <Price value={price} variant="current" className="text-[13px]" />
             {comparePrice != null && comparePrice > price && (
               <>
@@ -732,34 +779,38 @@ function CompareCard({
             )}
           </div>
 
-          {priceDiffText && (
-            <p
-              className={`mt-0.5 text-[10.5px] tabular-nums ${
-                priceDiff < 0 ? "text-emerald-400/90" : "text-white/45"
-              }`}
-            >
-              {priceDiffText}
-            </p>
-          )}
+          {/* Price-diff slot — reserved 14px, 1 line */}
+          <div className="mt-0.5 h-[14px]">
+            {priceDiffText && (
+              <p
+                className={`text-[10.5px] leading-[14px] tabular-nums truncate ${
+                  priceDiff < 0 ? "text-emerald-400/90" : "text-white/45"
+                }`}
+              >
+                {priceDiffText}
+              </p>
+            )}
+          </div>
 
-          {insight && (
-            <div className="mt-1.5">
+          {/* Insight chip slot — reserved 20px, 1 line */}
+          <div className="mt-1.5 h-[20px]">
+            {insight && (
               <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${insightToneClass}`}
+                className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-[16px] tabular-nums truncate ${insightToneClass}`}
               >
                 {insight.label}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
-          {recommendation && (
-            <p className="mt-1 text-[11px] leading-snug text-white/60 line-clamp-1">
-              {recommendation}
-            </p>
-          )}
-
-
-
+          {/* Recommendation slot — reserved 16px, 1 line */}
+          <div className="mt-1 h-[16px]">
+            {recommendation && (
+              <p className="text-[11px] leading-[16px] text-white/60 truncate">
+                {recommendation}
+              </p>
+            )}
+          </div>
 
           <div className="mt-auto pt-3">
             <button
@@ -789,9 +840,46 @@ function CompareCard({
               Compare
             </button>
           </div>
-
         </div>
       </div>
     </div>
   );
 }
+
+/**
+ * Memoized card — prevents re-renders when unrelated state (scroll, hover on
+ * sibling cards) changes upstream. Only re-renders when its own props change.
+ */
+const CompareCard = memo(CompareCardImpl);
+
+/**
+ * Skeleton — dimensions match the final CompareCard exactly so the layout
+ * never shifts once real products load.
+ */
+function CompareCardSkeleton() {
+  return (
+    <div className="flex h-full flex-col" aria-hidden>
+      <div className="mb-1.5 h-[14px]" />
+      <div className="flex flex-1 flex-col rounded-[14px] border border-white/[0.05] overflow-hidden">
+        <div className="relative bg-white/[0.04]" style={{ aspectRatio: "1 / 1" }}>
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
+        </div>
+        <div className="flex flex-1 flex-col p-3">
+          <div className="h-[2.6em] space-y-1.5">
+            <div className="h-[10px] w-11/12 rounded bg-white/[0.05]" />
+            <div className="h-[10px] w-2/3 rounded bg-white/[0.05]" />
+          </div>
+          <div className="mt-2 h-[14px] w-16 rounded bg-white/[0.04]" />
+          <div className="mt-1 h-[20px] w-20 rounded bg-white/[0.05]" />
+          <div className="mt-0.5 h-[14px]" />
+          <div className="mt-1.5 h-[20px] w-24 rounded-full bg-white/[0.04]" />
+          <div className="mt-1 h-[16px] w-3/4 rounded bg-white/[0.04]" />
+          <div className="mt-auto pt-3">
+            <div className="h-[16px] w-20 rounded bg-white/[0.04]" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
