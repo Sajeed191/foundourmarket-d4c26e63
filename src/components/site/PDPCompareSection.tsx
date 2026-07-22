@@ -8,6 +8,10 @@ import { resolveImage, discountPercent, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
 import { Price } from "@/components/site/Price";
+import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
+import { useWishlist } from "@/lib/wishlist";
+import { useCart } from "@/lib/cart";
+import { getShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import {
   Sheet,
   SheetContent,
@@ -17,21 +21,119 @@ import {
 } from "@/components/ui/sheet";
 
 /**
- * PDP — Compare Alternatives v5.2 (Native, Premium Polish).
+ * PDP — Compare Alternatives v5.3 (Intelligent Shopping Insights).
  *
- * UI/UX-only refinement. Reuses existing similarity, compare storage,
- * and `/compare` page. No new API calls, no schema changes.
+ * UI unchanged from v5.2. Adds two intelligence layers on top of the
+ * existing similarity algorithm — never overriding it:
  *
- * Highlights:
- * - Dynamic label: "Discover similar products" ↔ "N selected"
- * - Cheaper-than-current insight ("Save ₹X") derived from existing prices
- * - "View all similar products" bottom sheet when >8 exist
- * - Session selection persists via existing localStorage compare store
- * - Clean empty state hides compare CTA / counter
- * - 150–180ms transitions, no scaling / glow / bounce
+ * 1. Per-card "insight" chip — a single, data-backed reason to consider an
+ *    alternative (Price > Rating > Reviews > Discount > Stock > Delivery).
+ *    Only shown when the underlying delta is real and meaningful.
+ * 2. Soft personalization re-ranking using existing on-device signals:
+ *    recently viewed, wishlist, cart, and the AI Shopping Context snapshot.
+ *    Adds at most PERSONALIZATION_CAP to the similarity score so that ties
+ *    and near-ties surface products most relevant to the shopper's intent.
+ *
+ * Reuses existing storage, compare engine, `/compare` page, and shopping
+ * context engine. Zero new API calls, zero schema changes.
  */
 
 const VISIBLE_LIMIT = 8;
+// Maximum personalization boost applied on top of the similarity score.
+// Similarity max is 10 (4+3+2+1), so this can only reorder near-ties.
+const PERSONALIZATION_CAP = 2;
+
+type Insight = {
+  label: string;
+  tone: "emerald" | "amber" | "sky" | "violet";
+} | null;
+
+/** Detect a preferred brand from on-device signals (no PII, no network). */
+function inferPreferredBrands(
+  products: Product[],
+  recentSlugs: string[],
+  wishlistSlugs: Set<string>,
+  cartSlugs: Set<string>,
+): Set<string> {
+  const counts = new Map<string, number>();
+  const bump = (slug: string, weight: number) => {
+    const p = products.find((x) => x.slug === slug);
+    if (!p?.brand) return;
+    counts.set(p.brand, (counts.get(p.brand) ?? 0) + weight);
+  };
+  cartSlugs.forEach((s) => bump(s, 3));
+  wishlistSlugs.forEach((s) => bump(s, 2));
+  recentSlugs.slice(0, 8).forEach((s) => bump(s, 1));
+  const brands = new Set<string>();
+  for (const [brand, count] of counts) {
+    if (count >= 2) brands.add(brand);
+  }
+  return brands;
+}
+
+/** Choose the single highest-priority insight backed by real data. */
+function deriveInsight(
+  candidate: Product,
+  current: Product,
+  candidatePrice: number,
+  currentPrice: number,
+  candidateCompare: number | null,
+  currentCompare: number | null,
+  format: (v: number) => string,
+): Insight {
+  // 1. Price — cheaper by a non-trivial amount (>=1% and >=1 unit)
+  if (
+    currentPrice > 0 &&
+    candidatePrice > 0 &&
+    candidatePrice < currentPrice
+  ) {
+    const diff = currentPrice - candidatePrice;
+    const pct = diff / currentPrice;
+    if (diff >= 1 && pct >= 0.01) {
+      return { label: `Save ${format(Math.round(diff))}`, tone: "emerald" };
+    }
+  }
+
+  // 2. Rating — >= 0.3★ higher, both sides have a real rating
+  const curRating = Number(current.rating || 0);
+  const canRating = Number(candidate.rating || 0);
+  if (curRating > 0 && canRating > 0 && canRating - curRating >= 0.3) {
+    const delta = (canRating - curRating).toFixed(1);
+    return { label: `${delta}★ Higher Rated`, tone: "amber" };
+  }
+
+  // 3. Reviews — "significantly more" (>=50 more AND >=2× current), both real
+  const curReviews = Number(current.reviews || 0);
+  const canReviews = Number(candidate.reviews || 0);
+  if (canReviews >= 50 && canReviews >= curReviews * 2 && canReviews - curReviews >= 50) {
+    const more = canReviews - curReviews;
+    return { label: `${more.toLocaleString()} More Reviews`, tone: "sky" };
+  }
+
+  // 4. Discount — better discount by >=5 percentage points
+  const curDisc = discountPercent(currentPrice, currentCompare) ?? 0;
+  const canDisc = discountPercent(candidatePrice, candidateCompare) ?? 0;
+  if (canDisc > 0 && canDisc - curDisc >= 5) {
+    return { label: `${canDisc - curDisc}% Better Offer`, tone: "emerald" };
+  }
+
+  // 5. Stock — current is low, candidate is comfortably in stock
+  const curLow =
+    current.inStock !== false &&
+    current.stockQuantity > 0 &&
+    current.lowStockThreshold > 0 &&
+    current.stockQuantity <= current.lowStockThreshold;
+  const canHealthy =
+    candidate.inStock !== false &&
+    candidate.stockQuantity > (candidate.lowStockThreshold || 0);
+  if (curLow && canHealthy) {
+    return { label: "Ready to Ship", tone: "violet" };
+  }
+
+  // 6. Delivery — only when both sides expose a real shipping fee delta signal.
+  // We do not have per-product ETA in the catalog; skip silently otherwise.
+  return null;
+}
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
@@ -39,6 +141,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const { slugs, toggle, has, isFull, max, remove } = useCompare();
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Personalization signals — all local, no network. Never override similarity.
+  const { entries: recentEntries } = useRecentlyViewed();
+  const { slugs: wishlistSet } = useWishlist();
+  const { items: cartItems } = useCart();
 
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;
@@ -49,6 +156,21 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
     const curPrice = currentPrice;
 
+    // On-device personalization signals — read once per memo.
+    const recentSlugs = recentEntries.map((e) => e.slug);
+    const recentSet = new Set(recentSlugs);
+    const wlSet = wishlistSet instanceof Set ? wishlistSet : new Set<string>();
+    const cartSet = new Set(cartItems.map((i) => i.slug));
+    const preferredBrands = inferPreferredBrands(products, recentSlugs, wlSet, cartSet);
+
+    // Shopping-context signals (also feeds the AI Assistant). Soft only.
+    const ctx = getShoppingContext();
+    const ctxBrand = ctx.product?.brand ?? null;
+    const ctxCategory = ctx.product?.category ?? null;
+    const ctxPrice = ctx.product?.price_inr ?? null;
+    const ctxCartCats = new Set(ctx.cart?.categories ?? []);
+    const ctxWishlistCats = new Set(ctx.wishlist?.categories ?? []);
+
     return products
       .filter(
         (p) =>
@@ -57,6 +179,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           p.inStock !== false,
       )
       .map((p) => {
+        // ---- Existing similarity score (unchanged) ----
         let score = 0;
         if (cur.brand && p.brand && p.brand === cur.brand) score += 4;
         if (cur.productType && p.productType && p.productType === cur.productType) score += 3;
@@ -66,12 +189,30 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           const diff = Math.abs((priceOf(p) || 0) - curPrice) / curPrice;
           if (diff <= 0.25) score += 1;
         }
-        return { p, score };
+
+        // ---- Personalization boost (capped, never overrides similarity) ----
+        let boost = 0;
+        if (recentSet.has(p.slug)) boost += 0.8;
+        if (wlSet.has(p.slug)) boost += 0.6;
+        if (p.brand && preferredBrands.has(p.brand)) boost += 0.5;
+        if (p.category && ctxCartCats.has(p.category)) boost += 0.4;
+        if (p.category && ctxWishlistCats.has(p.category)) boost += 0.3;
+
+        // AI Shopping Context — soft signals from the active conversation.
+        if (ctxBrand && p.brand && p.brand === ctxBrand) boost += 0.6;
+        if (ctxCategory && p.category && p.category === ctxCategory) boost += 0.4;
+        if (ctxPrice && ctxPrice > 0) {
+          const pInr = p.priceInr ?? null;
+          if (pInr && Math.abs(pInr - ctxPrice) / ctxPrice <= 0.3) boost += 0.3;
+        }
+
+        const finalScore = score + Math.min(boost, PERSONALIZATION_CAP);
+        return { p, score: finalScore };
       })
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .map((x) => x.p);
-  }, [products, currentProduct, currentPrice, priceOf]);
+  }, [products, currentProduct, currentPrice, priceOf, recentEntries, wishlistSet, cartItems]);
 
   const visibleSuggestions = useMemo(
     () => allSuggestions.slice(0, VISIBLE_LIMIT),
@@ -162,6 +303,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               product={currentProduct}
               price={currentPrice}
               currentPrice={currentPrice}
+                  currentProduct={currentProduct}
               pinned
             />
           </li>
@@ -177,6 +319,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   product={p}
                   price={priceOf(p)}
                   currentPrice={currentPrice}
+                  currentProduct={currentProduct}
                   active={active}
                   disabled={disabled}
                   onToggle={() => handleToggle(p.slug)}
@@ -258,6 +401,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                       product={p}
                       price={priceOf(p)}
                       currentPrice={currentPrice}
+                  currentProduct={currentProduct}
                       active={active}
                       disabled={disabled}
                       onToggle={() => handleToggle(p.slug)}
@@ -308,6 +452,7 @@ function CompareCard({
   product,
   price,
   currentPrice,
+  currentProduct,
   active,
   disabled,
   pinned,
@@ -316,6 +461,7 @@ function CompareCard({
   product: Product;
   price: number;
   currentPrice: number;
+  currentProduct?: Product;
   active?: boolean;
   disabled?: boolean;
   pinned?: boolean;
@@ -326,10 +472,27 @@ function CompareCard({
   const discount = discountPercent(price, comparePrice) ?? 0;
   const isSelected = !!(pinned || active);
 
-  const savings =
-    !pinned && currentPrice > 0 && price > 0 && price < currentPrice
-      ? Math.round(currentPrice - price)
-      : 0;
+  const insight: Insight =
+    !pinned && currentProduct
+      ? deriveInsight(
+          product,
+          currentProduct,
+          price,
+          currentPrice,
+          comparePrice,
+          compareOf(currentProduct),
+          format,
+        )
+      : null;
+
+  const insightToneClass =
+    insight?.tone === "amber"
+      ? "bg-amber-500/10 text-amber-300"
+      : insight?.tone === "sky"
+        ? "bg-sky-500/10 text-sky-300"
+        : insight?.tone === "violet"
+          ? "bg-violet-500/10 text-violet-300"
+          : "bg-emerald-500/10 text-emerald-400";
 
   return (
     <div className="flex h-full flex-col">
@@ -396,13 +559,16 @@ function CompareCard({
             )}
           </div>
 
-          {savings > 0 && (
+          {insight && (
             <div className="mt-1.5">
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 tabular-nums">
-                Save {format(savings)}
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${insightToneClass}`}
+              >
+                {insight.label}
               </span>
             </div>
           )}
+
 
           <div className="mt-auto pt-3">
             <button
