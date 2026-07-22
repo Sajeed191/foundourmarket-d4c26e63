@@ -12,12 +12,13 @@ import { useCompare } from "@/hooks/use-compare";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /**
- * PDP — Similar Products (v6.3)
+ * PDP — Similar Products (v6.5 · Decision Assistant)
  *
- * Premium native marketplace recommendation carousel. Pure UI + client-side
- * sorting/preview. No new API calls, no backend changes, no ranking-engine
- * changes. Reuses ProductCard, compare store, and existing similarity output.
+ * Adds a single data-backed recommendation, a preview-selection state, a
+ * factual decision helper above the CTA, and a "View Product" primary action
+ * inside the Quick Preview. No engine, backend, or UI-system changes.
  */
+
 
 const VISIBLE_LIMIT = 12;
 const VIEW_MORE_THRESHOLD = 8;
@@ -82,6 +83,125 @@ const pillClasses: Record<Pill["tone"], string> = {
   violet: "text-white/65 bg-white/[0.035] border-white/10",
   neutral: "text-white/60 bg-white/[0.035] border-white/10",
 };
+
+type Recommendation = {
+  slug: string;
+  badge: "Recommended" | "Best Value" | "Most Popular" | "Highest Rated" | "Best Seller";
+  reason: string;
+};
+
+/**
+ * Pick ONE recommended product from the visible list using deterministic,
+ * data-backed rules. Never fabricates. Returns null when no signal is strong
+ * enough. Priority reflects customer decision value:
+ *   Best Value → Most Popular → Highest Rated → Best Seller → Recommended.
+ */
+function pickRecommendation(
+  list: Product[],
+  priceOf: (p: Product) => number,
+): Recommendation | null {
+  if (list.length < 2) return null;
+
+  const withPrice = list.filter((p) => (priceOf(p) || 0) > 0);
+
+  // Best Value: rating >= 4.3, meaningful review base, best rating-per-price.
+  const valueCandidates = withPrice.filter(
+    (p) => (p.rating || 0) >= 4.3 && (p.reviews || 0) >= 10,
+  );
+  if (valueCandidates.length > 0) {
+    const best = valueCandidates
+      .slice()
+      .sort((a, b) => (b.rating || 0) / priceOf(b) - (a.rating || 0) / priceOf(a))[0];
+    if (best) {
+      return { slug: best.slug, badge: "Best Value", reason: "Best value for the price." };
+    }
+  }
+
+  // Most Popular: leader in sold + reviews with a meaningful floor.
+  const popular = list
+    .slice()
+    .sort(
+      (a, b) =>
+        (b.soldCount || 0) + (b.reviews || 0) - ((a.soldCount || 0) + (a.reviews || 0)),
+    )[0];
+  if (popular && (popular.soldCount || 0) + (popular.reviews || 0) >= 50) {
+    return {
+      slug: popular.slug,
+      badge: "Most Popular",
+      reason: "Most customers choose this option.",
+    };
+  }
+
+  // Highest Rated: top rating with credible review count.
+  const rated = list
+    .filter((p) => (p.reviews || 0) >= 10)
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+  if (rated && (rated.rating || 0) >= 4.5) {
+    return {
+      slug: rated.slug,
+      badge: "Highest Rated",
+      reason: "Highest rated among similar products.",
+    };
+  }
+
+  // Best Seller: explicit bestseller flag.
+  const seller = list.find((p) => p.bestseller);
+  if (seller) {
+    return {
+      slug: seller.slug,
+      badge: "Best Seller",
+      reason: "A best-selling option in this category.",
+    };
+  }
+
+  // Fallback Recommended: top-ranked match with a decent rating.
+  const first = list[0];
+  if (first && (first.rating || 0) >= 4) {
+    return {
+      slug: first.slug,
+      badge: "Recommended",
+      reason: "Best balance of price and rating.",
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Build ONE factual decision helper comparing a selected alternative to the
+ * current product. Priority: price < rating < reviews < discount.
+ */
+function buildDecisionHelper(
+  alt: Product,
+  current: Product,
+  priceOf: (p: Product) => number,
+): string | null {
+  const ap = priceOf(alt) || 0;
+  const cp = priceOf(current) || 0;
+  if (ap > 0 && cp > 0 && ap < cp) {
+    return "This product costs less than your current selection.";
+  }
+  if ((alt.rating || 0) >= (current.rating || 0) + 0.3 && (alt.reviews || 0) >= 5) {
+    return "This product has a higher customer rating.";
+  }
+  if ((alt.reviews || 0) >= (current.reviews || 0) * 1.5 && (alt.reviews || 0) >= 20) {
+    return "This product has more verified reviews.";
+  }
+  const discPct = (p: Product) => {
+    const price = priceOf(p) || 0;
+    const orig =
+      (p.comparePriceInr && p.comparePriceInr > price ? p.comparePriceInr : null) ??
+      (p.comparePriceUsd && p.comparePriceUsd > price ? p.comparePriceUsd : null);
+    if (!orig || orig <= 0 || price <= 0) return 0;
+    return (orig - price) / orig;
+  };
+  if (discPct(alt) > discPct(current) + 0.05) {
+    return "This product offers a better discount.";
+  }
+  return null;
+}
+
+
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
@@ -187,6 +307,21 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     return diff;
   }, [selectedAlt, suggestions, priceOf, currentPrice]);
 
+  // --- Single data-backed recommendation across the carousel ---
+  const recommendation = useMemo(
+    () => pickRecommendation(sortedSuggestions, priceOf),
+    [sortedSuggestions, priceOf],
+  );
+
+  // --- Decision helper (factual, based on first selected alternative) ---
+  const decisionMessage = useMemo(() => {
+    const firstAltSlug = selectedAlt[0];
+    if (!firstAltSlug) return null;
+    const alt = suggestions.find((p) => p.slug === firstAltSlug);
+    if (!alt) return null;
+    return buildDecisionHelper(alt, currentProduct, priceOf);
+  }, [selectedAlt, suggestions, currentProduct, priceOf]);
+
   const handleToggle = useCallback(
     (slug: string) => {
       if (slug === currentSlug) return;
@@ -210,9 +345,9 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     writeSort(v);
   };
 
-  const ctaLabel = canCompare
-    ? `Compare ${selectedCount} Product${selectedCount === 1 ? "" : "s"}`
-    : "Compare";
+  const ctaLabel = "Compare Selected Products";
+  const previewSlug = preview?.slug ?? null;
+
 
   if (products.length === 0) return null;
 
@@ -310,11 +445,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               pinned
               pill={pillFor(currentProduct, shippingFeeOf(currentProduct))}
               onPreview={() => setPreview(currentProduct)}
+              previewSelected={previewSlug === currentProduct.slug}
             />
           </li>
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const isRecommended = recommendation?.slug === p.slug;
             return (
               <li
                 key={p.slug}
@@ -327,11 +464,15 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   pill={pillFor(p, shippingFeeOf(p))}
                   onToggle={() => handleToggle(p.slug)}
                   onPreview={() => setPreview(p)}
+                  previewSelected={previewSlug === p.slug}
+                  recommendedBadge={isRecommended ? recommendation!.badge : null}
+                  recommendedReason={isRecommended ? recommendation!.reason : null}
                 />
               </li>
             );
           })}
           <div aria-hidden className="shrink-0 w-1" />
+
         </ul>
       </div>
 
@@ -365,7 +506,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </p>
       )}
 
-      <div className="mt-4 pt-6 border-t border-white/[0.05] flex items-center justify-between gap-3 px-1">
+      {decisionMessage && (
+        <p className="mt-6 text-[12.5px] text-white/70 px-1">{decisionMessage}</p>
+      )}
+
+      <div
+        className={`${decisionMessage ? "mt-3" : "mt-4"} pt-6 border-t border-white/[0.05] flex items-center justify-between gap-3 px-1`}
+      >
         <span className="text-[12px] text-white/50 tabular-nums">
           Selected: {selectedCount}
         </span>
@@ -375,8 +522,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           onClick={handleCompare}
           aria-label={
             canCompare
-              ? `Compare ${selectedCount} selected products`
-              : "Select at least one more product to compare"
+              ? "Compare selected products"
+              : "Select one more product to compare"
           }
           className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium tracking-wide transition-colors duration-150 ease-out min-h-[36px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
             canCompare && !navigating
@@ -397,6 +544,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           )}
         </button>
       </div>
+      {!canCompare && (
+        <p className="mt-2 text-[11.5px] text-white/45 px-1 text-right">
+          Select one more product to compare.
+        </p>
+      )}
+
 
       <QuickPreviewSheet
         product={preview}
@@ -419,6 +572,9 @@ type RailItemProps = {
   pill?: Pill | null;
   onToggle?: () => void;
   onPreview?: () => void;
+  previewSelected?: boolean;
+  recommendedBadge?: Recommendation["badge"] | null;
+  recommendedReason?: string | null;
 };
 
 function RailItemImpl({
@@ -429,23 +585,46 @@ function RailItemImpl({
   pill,
   onToggle,
   onPreview,
+  previewSelected,
+  recommendedBadge,
+  recommendedReason,
 }: RailItemProps) {
   const isSelected = !!(pinned || active);
+  // Border priority: preview-selected (orange) wins over compare-selected accent.
+  const borderClass = previewSelected
+    ? "border-accent"
+    : isSelected && !pinned
+      ? "border-accent/60"
+      : "border-transparent";
+
+  // Caption slot priority: Current > Selected > Recommended.
+  let caption: { label: string; tone: "muted" | "accent" | "recommend" } | null = null;
+  if (pinned) caption = { label: "Current", tone: "muted" };
+  else if (previewSelected) caption = { label: "Selected", tone: "accent" };
+  else if (recommendedBadge) caption = { label: recommendedBadge, tone: "recommend" };
+
+  const captionClass =
+    caption?.tone === "accent"
+      ? "text-accent"
+      : caption?.tone === "recommend"
+        ? "text-amber-300/90"
+        : "text-white/40";
+
   return (
     <div className="flex h-full flex-col">
-      {/* Reserved caption slot so cards align regardless of "Current" tag */}
+      {/* Reserved caption slot so cards align regardless of tag */}
       <div className="mb-1.5 h-[14px] px-0.5 flex items-center">
-        {pinned && (
-          <span className="text-[10px] font-medium uppercase tracking-widest text-white/40">
-            Current
+        {caption && (
+          <span
+            className={`text-[10px] font-medium uppercase tracking-widest ${captionClass}`}
+          >
+            {caption.label}
           </span>
         )}
       </div>
 
       <div
-        className={`relative rounded-2xl border transition-colors duration-150 ${
-          isSelected && !pinned ? "border-accent/60" : "border-transparent"
-        }`}
+        className={`relative rounded-2xl border transition-colors duration-150 ${borderClass}`}
       >
         <ProductCard product={product} compact hideBadges={pinned} />
 
@@ -474,6 +653,14 @@ function RailItemImpl({
           </span>
         )}
       </div>
+
+      {/* "Why we recommend it" — factual, single line, recommended card only */}
+      {recommendedReason && (
+        <p className="mt-1 px-0.5 text-[11px] leading-snug text-white/60 line-clamp-2">
+          {recommendedReason}
+        </p>
+      )}
+
 
       <div className="mt-1 px-0.5">
         <button
