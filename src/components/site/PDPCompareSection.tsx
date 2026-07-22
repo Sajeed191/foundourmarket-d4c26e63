@@ -445,11 +445,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               pinned
               pill={pillFor(currentProduct, shippingFeeOf(currentProduct))}
               onPreview={() => setPreview(currentProduct)}
+              previewSelected={previewSlug === currentProduct.slug}
             />
           </li>
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const isRecommended = recommendation?.slug === p.slug;
             return (
               <li
                 key={p.slug}
@@ -462,11 +464,15 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   pill={pillFor(p, shippingFeeOf(p))}
                   onToggle={() => handleToggle(p.slug)}
                   onPreview={() => setPreview(p)}
+                  previewSelected={previewSlug === p.slug}
+                  recommendedBadge={isRecommended ? recommendation!.badge : null}
+                  recommendedReason={isRecommended ? recommendation!.reason : null}
                 />
               </li>
             );
           })}
           <div aria-hidden className="shrink-0 w-1" />
+
         </ul>
       </div>
 
