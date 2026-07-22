@@ -913,8 +913,8 @@ function ProductPage() {
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
               <StarRating
                 rating={product.rating}
-                count={0}
-                showValue={product.reviews > 0}
+                count={product.reviews}
+                showValue
                 starClassName="size-4"
                 textClassName="text-[13px] font-medium text-foreground"
               />
