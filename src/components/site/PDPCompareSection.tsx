@@ -303,6 +303,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               product={currentProduct}
               price={currentPrice}
               currentPrice={currentPrice}
+                  currentProduct={currentProduct}
               pinned
             />
           </li>
@@ -318,6 +319,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   product={p}
                   price={priceOf(p)}
                   currentPrice={currentPrice}
+                  currentProduct={currentProduct}
                   active={active}
                   disabled={disabled}
                   onToggle={() => handleToggle(p.slug)}
@@ -399,6 +401,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                       product={p}
                       price={priceOf(p)}
                       currentPrice={currentPrice}
+                  currentProduct={currentProduct}
                       active={active}
                       disabled={disabled}
                       onToggle={() => handleToggle(p.slug)}
