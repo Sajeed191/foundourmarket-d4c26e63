@@ -239,8 +239,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;
 
-  const allSuggestions = useMemo<Product[]>(() => {
-    if (!products.length) return [];
+  const rankedSuggestions = useMemo(() => {
+    if (!products.length) return [] as Array<{ p: Product; score: number; boost: number }>;
     const cur = currentProduct;
     const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
     const curPrice = currentPrice;
@@ -295,19 +295,43 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           if (pInr && Math.abs(pInr - ctxPrice) / ctxPrice <= 0.3) boost += 0.3;
         }
 
-        const finalScore = score + Math.min(boost, PERSONALIZATION_CAP);
-        return { p, score: finalScore };
+        const cappedBoost = Math.min(boost, PERSONALIZATION_CAP);
+        return { p, score: score + cappedBoost, boost: cappedBoost };
       })
       .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((x) => x.p);
+      .sort((a, b) => b.score - a.score);
   }, [products, currentProduct, currentPrice, priceOf, recentEntries, wishlistSet, cartItems]);
+
+  const allSuggestions = useMemo(() => rankedSuggestions.map((x) => x.p), [rankedSuggestions]);
 
   const visibleSuggestions = useMemo(
     () => allSuggestions.slice(0, VISIBLE_LIMIT),
     [allSuggestions],
   );
   const hasMore = allSuggestions.length > VISIBLE_LIMIT;
+
+  // Best-match winner (single label across the carousel). Data-backed only.
+  const winner = useMemo(() => {
+    if (visibleSuggestions.length === 0) return null;
+    const boostBySlug = new Map(rankedSuggestions.map((x) => [x.p.slug, x.boost]));
+    return pickWinner(
+      visibleSuggestions,
+      currentProduct,
+      priceOf,
+      (slug) => boostBySlug.get(slug) ?? 0,
+    );
+  }, [visibleSuggestions, rankedSuggestions, currentProduct, priceOf]);
+
+  // Snapshot session-persisted selections at mount so the reminder only fires
+  // when the customer arrives with a previous comparison already in progress.
+  const initialSelectionRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (initialSelectionRef.current === null) {
+      initialSelectionRef.current = slugs.filter((s) => s !== currentSlug).length;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const hadPreviousSelection = (initialSelectionRef.current ?? 0) > 0;
 
   // Ensure current product is always part of the compare set on mount.
   useEffect(() => {
@@ -337,6 +361,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     }
     toggle(slug);
   };
+
 
   // Empty state — hide comparison actions entirely.
   if (allSuggestions.length === 0) {
