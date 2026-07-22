@@ -424,6 +424,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           {visibleSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const isWinner = winner?.slug === p.slug;
             return (
               <li
                 key={p.slug}
@@ -437,10 +438,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   active={active}
                   disabled={disabled}
                   onToggle={() => handleToggle(p.slug)}
+                  winnerLabel={isWinner ? winner!.label : undefined}
                 />
               </li>
             );
           })}
+
           <div aria-hidden className="shrink-0 w-1" />
         </ul>
         <div
