@@ -449,6 +449,7 @@ function CompareCard({
   product,
   price,
   currentPrice,
+  currentProduct,
   active,
   disabled,
   pinned,
@@ -457,6 +458,7 @@ function CompareCard({
   product: Product;
   price: number;
   currentPrice: number;
+  currentProduct?: Product;
   active?: boolean;
   disabled?: boolean;
   pinned?: boolean;
@@ -467,10 +469,27 @@ function CompareCard({
   const discount = discountPercent(price, comparePrice) ?? 0;
   const isSelected = !!(pinned || active);
 
-  const savings =
-    !pinned && currentPrice > 0 && price > 0 && price < currentPrice
-      ? Math.round(currentPrice - price)
-      : 0;
+  const insight: Insight =
+    !pinned && currentProduct
+      ? deriveInsight(
+          product,
+          currentProduct,
+          price,
+          currentPrice,
+          comparePrice,
+          compareOf(currentProduct),
+          format,
+        )
+      : null;
+
+  const insightToneClass =
+    insight?.tone === "amber"
+      ? "bg-amber-500/10 text-amber-300"
+      : insight?.tone === "sky"
+        ? "bg-sky-500/10 text-sky-300"
+        : insight?.tone === "violet"
+          ? "bg-violet-500/10 text-violet-300"
+          : "bg-emerald-500/10 text-emerald-400";
 
   return (
     <div className="flex h-full flex-col">
@@ -537,13 +556,16 @@ function CompareCard({
             )}
           </div>
 
-          {savings > 0 && (
+          {insight && (
             <div className="mt-1.5">
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 tabular-nums">
-                Save {format(savings)}
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${insightToneClass}`}
+              >
+                {insight.label}
               </span>
             </div>
           )}
+
 
           <div className="mt-auto pt-3">
             <button
