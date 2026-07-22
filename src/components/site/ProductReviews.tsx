@@ -80,7 +80,7 @@ const HIGHLIGHT_THEMES: { label: string; keywords: string[] }[] = [
   { label: "Comfort", keywords: ["comfort", "comfortable", "soft", "cozy", "fit"] },
 ];
 
-export function ProductReviews({ productSlug, onAggregateChange }: { productSlug: string; onAggregateChange?: () => void }) {
+export function ProductReviews({ productSlug, onAggregateChange, productRating, productReviewCount }: { productSlug: string; onAggregateChange?: () => void; productRating?: number; productReviewCount?: number }) {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const runAnalyze = useServerFn(analyzeReviews);
