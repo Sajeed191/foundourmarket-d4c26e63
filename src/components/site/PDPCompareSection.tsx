@@ -1,24 +1,20 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, Plus, Star, Package, ArrowRight } from "lucide-react";
+import { Check, Star, Package, ArrowRight } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
 import { useProducts } from "@/lib/use-products";
-import { resolveImage, type Product } from "@/lib/products";
+import { resolveImage, discountPercent, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
 import { Price } from "@/components/site/Price";
 
 /**
- * PDP — Product Comparison v4.0 (Premium Minimal).
+ * PDP — Compare Similar Products v4.1 (Premium Polish).
  *
- * Simple, mobile-first natural shopping section:
- *   1. Section header (title + subtitle)
- *   2. Horizontal carousel of 4–8 similar products (image / name / rating / price / select)
- *   3. Compact summary: "Current + N Selected" and a single "Compare Products (N) →" CTA
- *
- * No inline table, no floating bar, no chip lists, no preview modal.
- * Reuses the existing compare store and `/compare` page unchanged.
+ * Refinement of v4.0 — same flow, tighter cards, calmer selection state,
+ * compact one-line summary, edge fades on the carousel. Reuses the existing
+ * compare store and `/compare` page unchanged.
  */
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
@@ -29,7 +25,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   const currentSlug = currentProduct.slug;
 
-  // Similarity: brand → productType → category → price proximity.
   const suggestions = useMemo<Product[]>(() => {
     if (!products.length) return [];
     const cur = currentProduct;
@@ -61,7 +56,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       .map((x) => x.p);
   }, [products, currentProduct, priceOf]);
 
-  // Keep the current PDP product in the compare store.
+  // Keep the current PDP product locked into the compare store.
   useEffect(() => {
     if (!has(currentSlug)) toggle(currentSlug);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,12 +92,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         data-pdp-compare
       >
         <SectionHeader />
-        <div className="mt-6 rounded-[18px] border border-white/[0.06] bg-white/[0.015] px-6 py-12 flex flex-col items-center text-center">
-          <div className="size-11 rounded-full bg-white/[0.04] border border-white/[0.06] grid place-items-center mb-4">
-            <Package className="size-5 text-white/50" aria-hidden />
+        <div className="mt-5 rounded-[18px] border border-white/[0.06] bg-white/[0.015] px-6 py-10 flex flex-col items-center text-center">
+          <div className="size-10 rounded-full bg-white/[0.04] border border-white/[0.06] grid place-items-center mb-3">
+            <Package className="size-4 text-white/50" aria-hidden />
           </div>
-          <p className="text-[13.5px] text-white/80 max-w-sm leading-relaxed">
-            No similar products available yet.
+          <p className="text-[13px] text-white/75 max-w-sm leading-relaxed">
+            No similar products available for comparison yet.
           </p>
         </div>
       </section>
@@ -116,23 +111,33 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     >
       <SectionHeader />
 
-      {/* Carousel */}
-      <div className="mt-6 -mx-4 sm:mx-0">
+      {/* Carousel with edge fades */}
+      <div className="mt-5 relative -mx-4 sm:mx-0">
         <ul
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 sm:px-0 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-2.5 px-4 sm:px-1 pb-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             scrollPaddingLeft: "1rem",
             overscrollBehaviorX: "contain",
             WebkitOverflowScrolling: "touch",
           }}
         >
+          <li className="snap-start shrink-0 w-[52%] min-[420px]:w-[40%] sm:w-[196px]">
+            <CompareCard
+              product={currentProduct}
+              price={priceOf(currentProduct)}
+              active
+              disabled
+              pinned
+              onToggle={() => {}}
+            />
+          </li>
           {suggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
             return (
               <li
                 key={p.slug}
-                className="snap-start shrink-0 w-[58%] min-[420px]:w-[44%] sm:w-[220px]"
+                className="snap-start shrink-0 w-[52%] min-[420px]:w-[40%] sm:w-[196px]"
               >
                 <CompareCard
                   product={p}
@@ -146,32 +151,52 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           })}
           <div aria-hidden className="shrink-0 w-1" />
         </ul>
+        {/* Edge fades — hint that more content scrolls */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent"
+        />
       </div>
 
-      {/* Compact summary */}
-      <div className="mt-8 rounded-[18px] border border-white/[0.06] bg-white/[0.02] px-5 py-5 sm:px-6 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[13.5px] font-medium text-white/95">
-            Current Product{selectedCount > 0 ? ` + ${selectedCount} Selected` : ""}
+      {/* Compact summary row */}
+      <div className="mt-6 rounded-[16px] border border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5 sm:py-3.5 flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[12.5px] font-medium text-white/90 flex items-center gap-1.5">
+            {canCompare ? (
+              <>
+                <Check className="size-3.5 text-accent shrink-0" aria-hidden />
+                {totalCount} products selected
+              </>
+            ) : (
+              <>Select a product to compare</>
+            )}
           </p>
-          <p className="mt-1 text-[12.5px] text-white/55 leading-relaxed">
-            {canCompare
-              ? `Ready to compare ${totalCount} product${totalCount === 1 ? "" : "s"}.`
-              : "Select at least one similar product to compare."}
+          <p className="mt-0.5 text-[11px] text-white/45 leading-snug truncate">
+            Compare Price · Rating · Reviews · Specifications
           </p>
         </div>
         <button
           type="button"
           disabled={!canCompare}
           onClick={() => canCompare && navigate({ to: "/compare" })}
-          className={`shrink-0 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[12.5px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] ${
+          className={`shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] ${
             canCompare
-              ? "bg-accent text-accent-foreground hover:brightness-110 shadow-[0_6px_20px_-8px_oklch(0.74_0.19_49/0.55)]"
+              ? "bg-accent text-accent-foreground hover:brightness-110"
               : "bg-white/[0.04] text-white/40 border border-white/[0.06] cursor-not-allowed"
           }`}
         >
-          Compare Products{canCompare ? ` (${totalCount})` : ""}
-          {canCompare && <ArrowRight className="size-3.5" aria-hidden />}
+          {canCompare ? (
+            <>
+              Compare {totalCount} Products
+              <ArrowRight className="size-3.5" aria-hidden />
+            </>
+          ) : (
+            "Select at least 2 products"
+          )}
         </button>
       </div>
     </section>
@@ -181,11 +206,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 function SectionHeader() {
   return (
     <div>
-      <h2 className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
-        Product Comparison
+      <h2 className="text-[19px] sm:text-[21px] font-semibold tracking-tight text-foreground leading-tight">
+        Compare Similar Products
       </h2>
-      <p className="mt-1.5 text-[13px] text-muted-foreground/80 leading-relaxed">
-        Compare with similar products.
+      <p className="mt-1 text-[12.5px] text-muted-foreground/80 leading-relaxed">
+        See how this product compares with similar alternatives.
       </p>
     </div>
   );
@@ -196,26 +221,33 @@ function CompareCard({
   price,
   active,
   disabled,
+  pinned,
   onToggle,
 }: {
   product: Product;
   price: number;
   active: boolean;
   disabled: boolean;
+  pinned?: boolean;
   onToggle: () => void;
 }) {
+  const discount = discountPercent(product);
+
   return (
     <div
-      className={`group relative rounded-[18px] border overflow-hidden bg-white/[0.02] transition-all duration-200 ease-out h-full ${
-        active
-          ? "border-accent ring-1 ring-accent/40"
-          : "border-white/[0.06] hover:border-white/15"
+      className={`group relative rounded-[16px] border overflow-hidden bg-white/[0.02] transition-[border-color,box-shadow] duration-200 ease-out h-full ${
+        pinned
+          ? "border-amber-500/40"
+          : active
+            ? "border-accent"
+            : "border-white/[0.06] hover:border-white/15"
       }`}
     >
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}
-        className="relative block aspect-square bg-black/30 overflow-hidden"
+        className="relative block bg-black/30 overflow-hidden"
+        style={{ aspectRatio: "1 / 0.85" }}
       >
         {product.image && (
           <img
@@ -226,48 +258,59 @@ function CompareCard({
             className="w-full h-full object-cover"
           />
         )}
-        {active && (
-          <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-widest shadow-md">
-            <Check className="size-2.5" aria-hidden /> Selected
+        {discount > 0 && (
+          <span className="absolute top-2 left-2 inline-flex items-center rounded-md bg-black/60 backdrop-blur px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-emerald-300 border border-emerald-500/25">
+            -{discount}%
           </span>
         )}
       </Link>
-      <div className="p-3">
+      <div className="p-2.5">
+        {pinned && (
+          <span className="inline-flex items-center rounded-full border border-amber-500/40 px-1.5 py-[1px] text-[8.5px] font-semibold uppercase tracking-widest text-amber-300/90 mb-1">
+            Current Product
+          </span>
+        )}
         <Link
           to="/products/$slug"
           params={{ slug: product.slug }}
-          className="block text-[13px] font-medium text-white/95 line-clamp-2 leading-snug min-h-[2.5em] hover:text-accent transition-colors"
+          className="block text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug min-h-[2.4em] hover:text-accent transition-colors"
         >
           {product.name}
         </Link>
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/65 tabular-nums">
-          <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
-          <span className="font-medium text-white/90">{Number(product.rating || 0).toFixed(1)}</span>
-          <span className="text-white/45">({Number(product.reviews || 0)})</span>
+        <div className="mt-1.5 flex items-center gap-1 text-[10.5px] text-white/60 tabular-nums">
+          <Star className="size-2.5 fill-amber-400 text-amber-400" aria-hidden />
+          <span className="font-medium text-white/85">{Number(product.rating || 0).toFixed(1)}</span>
+          <span className="text-white/40">({Number(product.reviews || 0)})</span>
         </div>
-        <div className="mt-1.5">
-          <Price value={price} variant="current" className="text-[14px]" />
+        <div className="mt-1">
+          <Price value={price} variant="current" className="text-[13px]" />
         </div>
         <button
           type="button"
           onClick={onToggle}
           aria-pressed={active}
           disabled={disabled}
-          className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-            active
-              ? "bg-white/[0.06] text-white/90 border border-white/[0.1] hover:bg-white/[0.1]"
-              : "bg-white/[0.04] text-white/85 border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/20"
+          className={`mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-medium tracking-wide transition-[color,border-color,background-color,transform] duration-200 ease-out active:scale-[0.97] disabled:cursor-not-allowed ${
+            pinned
+              ? "border border-amber-500/30 text-amber-300/80 bg-transparent cursor-default"
+              : active
+                ? "border border-accent text-accent bg-accent/[0.06]"
+                : "border border-white/[0.1] text-white/80 bg-transparent hover:border-white/25 disabled:opacity-40"
           }`}
         >
-          {active ? (
-            <>
-              <Check className="size-3.5" aria-hidden /> Selected
-            </>
-          ) : (
-            <>
-              <Plus className="size-3.5" aria-hidden /> Compare
-            </>
-          )}
+          <span
+            aria-hidden
+            className={`grid place-items-center size-3.5 rounded-[4px] border transition-colors duration-200 ${
+              active
+                ? pinned
+                  ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
+                  : "border-accent bg-accent text-accent-foreground"
+                : "border-white/25 bg-transparent"
+            }`}
+          >
+            {active && <Check className="size-2.5" strokeWidth={3} />}
+          </span>
+          {active ? "Selected" : "Compare"}
         </button>
       </div>
     </div>
