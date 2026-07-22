@@ -541,20 +541,23 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               {allSuggestions.map((p) => {
                 const active = has(p.slug);
                 const disabled = !active && isFull;
+                const isWinner = winner?.slug === p.slug;
                 return (
                   <li key={p.slug}>
                     <CompareCard
                       product={p}
                       price={priceOf(p)}
                       currentPrice={currentPrice}
-                  currentProduct={currentProduct}
+                      currentProduct={currentProduct}
                       active={active}
                       disabled={disabled}
                       onToggle={() => handleToggle(p.slug)}
+                      winnerLabel={isWinner ? winner!.label : undefined}
                     />
                   </li>
                 );
               })}
+
             </ul>
           </div>
           <div className="border-t border-white/10 px-5 py-3 flex items-center justify-between gap-3 bg-background">
