@@ -231,3 +231,169 @@ export const moderateReview = createServerFn({ method: "POST" })
 
     return { ok: true, state };
   });
+
+// ---------------------------------------------------------------------------
+// Admin recovery workflow — restore missing `initial_rating` values.
+// A regression left some products with `initial_rating IS NULL` (or 0), so the
+// PDP falls back to 0.0 whenever there are no published customer reviews. This
+// pair of functions powers the admin recovery page that fixes only those
+// products, without touching customer averages or review data.
+// ---------------------------------------------------------------------------
+
+export type MissingRatingRow = {
+  slug: string;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  image: string | null;
+  initialRating: number;
+  publishedReviewCount: number;
+  hasCustomerReviews: boolean;
+};
+
+/** List products whose admin initial rating is missing (NULL or <= 0). */
+export const listMissingInitialRatings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context as { supabase: any; userId: string };
+    await assertRole(supabase, userId, RATING_STAFF_ROLES);
+
+    const { data: products, error } = await supabase
+      .from("products")
+      .select("slug, name, brand, category, image, initial_rating")
+      .or("initial_rating.is.null,initial_rating.lte.0")
+      .order("name", { ascending: true });
+    if (error) throw new Error(error.message || "Failed to load products.");
+
+    const slugs = (products || []).map((p: any) => p.slug);
+    const counts: Record<string, number> = {};
+    if (slugs.length) {
+      const { data: reviews } = await supabase
+        .from("product_reviews")
+        .select("product_slug, status, deleted_at, is_seeded")
+        .in("product_slug", slugs)
+        .eq("status", "published")
+        .is("deleted_at", null);
+      for (const r of reviews || []) {
+        if (r.is_seeded) continue;
+        counts[r.product_slug] = (counts[r.product_slug] || 0) + 1;
+      }
+    }
+
+    const rows: MissingRatingRow[] = (products || []).map((p: any) => ({
+      slug: p.slug,
+      name: p.name,
+      brand: p.brand ?? null,
+      category: p.category ?? null,
+      image: p.image ?? null,
+      initialRating: Number(p.initial_rating || 0),
+      publishedReviewCount: counts[p.slug] || 0,
+      hasCustomerReviews: (counts[p.slug] || 0) > 0,
+    }));
+
+    return { rows, total: rows.length };
+  });
+
+const bulkSchema = z.object({
+  updates: z
+    .array(
+      z.object({
+        slug: z.string().min(1).max(200),
+        // 0.0–5.0 to one decimal place. Multiply and round-trip to enforce.
+        initialRating: z
+          .number()
+          .min(0)
+          .max(5)
+          .refine((n) => Math.abs(n * 10 - Math.round(n * 10)) < 1e-9, {
+            message: "Rating must have at most one decimal.",
+          }),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+
+export type BulkRecoveryResult = {
+  updated: string[];
+  skipped: { slug: string; reason: string }[];
+  displayRefreshed: string[];
+};
+
+/**
+ * Bulk-set `initial_rating` for products that are missing one. The rating
+ * source is stamped as `imported_supplier` so future audits can trace the
+ * recovery batch. After each update we call `recalculate_product_rating`,
+ * which is the authoritative rule: it keeps the customer average when the
+ * product has published reviews, and applies the new fallback when it does
+ * not — so displayed ratings for products with reviews are never overwritten.
+ */
+export const bulkSetInitialRatings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => bulkSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as { supabase: any; userId: string };
+    await assertRole(supabase, userId, RATING_ADMIN_ROLES);
+
+    const result: BulkRecoveryResult = { updated: [], skipped: [], displayRefreshed: [] };
+    const nowIso = new Date().toISOString();
+
+    for (const u of data.updates) {
+      // Round to one decimal for safety even though the schema already enforces it.
+      const rounded = Math.round(u.initialRating * 10) / 10;
+
+      const { data: before, error: readErr } = await supabase
+        .from("products")
+        .select("slug, initial_rating")
+        .eq("slug", u.slug)
+        .maybeSingle();
+      if (readErr || !before) {
+        result.skipped.push({ slug: u.slug, reason: "Product not found." });
+        continue;
+      }
+
+      const { error: updErr } = await supabase
+        .from("products")
+        .update({
+          initial_rating: rounded,
+          rating_source: "imported_supplier",
+          updated_at: nowIso,
+        })
+        .eq("slug", u.slug);
+      if (updErr) {
+        result.skipped.push({ slug: u.slug, reason: updErr.message || "Update failed." });
+        continue;
+      }
+
+      const { error: rpcErr } = await supabase.rpc("recalculate_product_rating", { _slug: u.slug });
+      if (rpcErr) {
+        result.skipped.push({ slug: u.slug, reason: rpcErr.message || "Recalculation failed." });
+        continue;
+      }
+
+      const state = await buildState(supabase, u.slug);
+      result.updated.push(u.slug);
+      // Anything with 0 published reviews now displays the new fallback.
+      if (state.customerReviewCount === 0) result.displayRefreshed.push(u.slug);
+
+      await supabase.from("product_rating_audit").insert({
+        product_slug: u.slug,
+        admin_id: userId,
+        action: "recover_initial_rating",
+        initial_rating: rounded,
+        initial_review_count: 0,
+        rating_source: "imported_supplier",
+        final_rating: state.finalRating,
+        total_reviews: state.totalReviews,
+        metadata: { previous_initial_rating: Number(before.initial_rating || 0) },
+      });
+    }
+
+    return {
+      ok: true,
+      updated: result.updated.length,
+      skipped: result.skipped.length,
+      displayRefreshed: result.displayRefreshed.length,
+      detail: result,
+    };
+  });
+
