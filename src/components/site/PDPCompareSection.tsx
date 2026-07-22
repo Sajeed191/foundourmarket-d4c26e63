@@ -363,6 +363,34 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   };
 
 
+  // Loading state — reserved layout, no shift, no flash.
+  if (products.length === 0) {
+    return (
+      <section
+        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20"
+        data-pdp-compare
+        aria-busy="true"
+      >
+        <div className="mb-5">
+          <div className="h-[22px] w-40 rounded bg-white/[0.06]" />
+          <div className="mt-2 h-[14px] w-64 rounded bg-white/[0.04]" />
+        </div>
+        <div className="relative -mx-4 sm:mx-0">
+          <ul className="flex overflow-x-hidden gap-3 px-4 sm:px-1 pb-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <li
+                key={`compare-skel-${i}`}
+                className="shrink-0 w-[43%] min-[420px]:w-[36%] sm:w-[188px]"
+              >
+                <CompareCardSkeleton />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+
   // Empty state — hide comparison actions entirely.
   if (allSuggestions.length === 0) {
     return (
