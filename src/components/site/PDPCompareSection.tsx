@@ -10,10 +10,10 @@ import { useCompare } from "@/hooks/use-compare";
 import { Price } from "@/components/site/Price";
 
 /**
- * PDP — Compare Similar Products v5.0 (Native Recommendation).
+ * PDP — Compare Alternatives v5.1 (Native).
  *
- * Full-native shopping section. No floating bar, no summary chips, no dialog.
- * Just: header → horizontal carousel of product cards → one CTA row.
+ * A premium recommendation carousel with a lightweight comparison affordance.
+ * Header → carousel → small outlined CTA. No pills, no scaling, no glow.
  * Reuses existing compare storage and `/compare` page unchanged.
  */
 
@@ -70,7 +70,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     });
   }, [products, slugs, remove, currentSlug]);
 
-  const selectedCount = slugs.filter((s) => s !== currentSlug).length + 1; // include current
+  const selectedCount = slugs.filter((s) => s !== currentSlug).length + 1; // + current
   const canCompare = selectedCount >= 2;
 
   const handleToggle = (slug: string) => {
@@ -89,25 +89,24 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20"
       data-pdp-compare
     >
-      <div className="mb-4">
+      <div className="mb-5">
         <h2 className="text-[19px] sm:text-[21px] font-semibold tracking-tight text-foreground leading-tight">
-          Compare Similar Products
+          Compare Alternatives
         </h2>
-        <p className="mt-1 text-[12.5px] text-muted-foreground/80 leading-relaxed">
-          Compare this product with similar alternatives.
+        <p className="mt-1 text-[12.5px] text-muted-foreground/75 leading-relaxed">
+          See how this product compares with similar options.
         </p>
       </div>
 
       <div className="relative -mx-4 sm:mx-0">
         <ul
-          className="flex overflow-x-auto snap-x snap-mandatory gap-2.5 px-4 sm:px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto gap-3 px-4 sm:px-1 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
-            scrollPaddingLeft: "1rem",
             overscrollBehaviorX: "contain",
             WebkitOverflowScrolling: "touch",
           }}
         >
-          <li className="snap-start shrink-0 w-[44%] min-[420px]:w-[38%] sm:w-[188px]">
+          <li className="shrink-0 w-[43%] min-[420px]:w-[36%] sm:w-[188px]">
             <CompareCard product={currentProduct} price={priceOf(currentProduct)} pinned />
           </li>
           {suggestions.map((p) => {
@@ -116,7 +115,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             return (
               <li
                 key={p.slug}
-                className="snap-start shrink-0 w-[44%] min-[420px]:w-[38%] sm:w-[188px]"
+                className="shrink-0 w-[43%] min-[420px]:w-[36%] sm:w-[188px]"
               >
                 <CompareCard
                   product={p}
@@ -141,18 +140,17 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-3 px-1">
-        <p className="text-[12.5px] text-white/70 tabular-nums">
-          <span className="font-medium text-white/90">{selectedCount}</span>{" "}
-          {selectedCount === 1 ? "product" : "products"} selected
+        <p className="text-[12px] text-white/60 tabular-nums">
+          <span className="font-medium text-white/85">{selectedCount}</span> selected
         </p>
         <button
           type="button"
           disabled={!canCompare}
           onClick={() => canCompare && navigate({ to: "/compare" })}
-          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-semibold tracking-wide transition-[background-color,color,border-color,transform] duration-150 ease-out active:scale-[0.98] ${
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium tracking-wide transition-[color,border-color,background-color] duration-150 ease-out ${
             canCompare
-              ? "bg-accent text-accent-foreground hover:brightness-110"
-              : "bg-white/[0.05] text-white/40 cursor-not-allowed"
+              ? "border-accent text-accent hover:bg-accent/[0.08]"
+              : "border-white/10 text-white/35 cursor-not-allowed"
           }`}
         >
           Compare
@@ -181,97 +179,94 @@ function CompareCard({
   const { compareOf } = useRegion();
   const comparePrice = compareOf(product);
   const discount = discountPercent(price, comparePrice) ?? 0;
-  const isSelected = pinned || active;
+  const isSelected = !!(pinned || active);
 
   return (
-    <div
-      className={`relative flex h-full flex-col rounded-[14px] border overflow-hidden bg-white/[0.02] transition-[border-color] duration-150 ease-out ${
-        pinned
-          ? "border-amber-500/35"
-          : active
-            ? "border-accent"
-            : "border-white/[0.06] hover:border-white/15"
-      }`}
-    >
-      <Link
-        to="/products/$slug"
-        params={{ slug: product.slug }}
-        className="relative block bg-black/30 overflow-hidden"
-        style={{ aspectRatio: "1 / 1" }}
-      >
-        {product.image && (
-          <img
-            src={resolveImage(product.image)}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover"
-          />
-        )}
-        {pinned ? (
-          <span className="absolute top-1.5 left-1.5 inline-flex items-center rounded-full border border-amber-500/50 bg-black/55 backdrop-blur px-1.5 py-[1px] text-[9px] font-semibold uppercase tracking-widest text-amber-300/90">
-            Current
-          </span>
-        ) : product.bestseller ? (
-          <span className="absolute top-1.5 left-1.5 inline-flex items-center rounded-full border border-white/15 bg-black/55 backdrop-blur px-1.5 py-[1px] text-[9px] font-semibold uppercase tracking-widest text-white/85">
-            Best Seller
-          </span>
-        ) : null}
-      </Link>
+    <div className="flex h-full flex-col">
+      {pinned ? (
+        <span className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-widest text-white/40">
+          Current Product
+        </span>
+      ) : (
+        <span aria-hidden className="mb-1.5 h-[14px]" />
+      )}
 
-      <div className="flex flex-1 flex-col p-2.5">
+      <div
+        className={`flex flex-1 flex-col rounded-[14px] border overflow-hidden bg-transparent transition-[border-color] duration-150 ease-out ${
+          isSelected ? "border-accent" : "border-white/[0.07] hover:border-white/15"
+        }`}
+      >
         <Link
           to="/products/$slug"
           params={{ slug: product.slug }}
-          className="block text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug min-h-[2.4em] hover:text-accent transition-colors"
+          className="relative block bg-black/25 overflow-hidden"
+          style={{ aspectRatio: "1 / 1" }}
         >
-          {product.name}
+          {product.image && (
+            <img
+              src={resolveImage(product.image)}
+              alt={product.name}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover"
+            />
+          )}
         </Link>
 
-        <div className="mt-1.5 flex items-center gap-1 text-[10.5px] text-white/60 tabular-nums">
-          <Star className="size-2.5 fill-amber-400 text-amber-400" aria-hidden />
-          <span className="font-medium text-white/85">{Number(product.rating || 0).toFixed(1)}</span>
-          <span className="text-white/40">({Number(product.reviews || 0)})</span>
-        </div>
-
-        <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
-          <Price value={price} variant="current" className="text-[13px]" />
-          {comparePrice != null && comparePrice > price && (
-            <>
-              <Price
-                value={comparePrice}
-                variant="compare"
-                className="text-[10.5px] text-white/40 line-through"
-              />
-              {discount > 0 && (
-                <span className="text-[10.5px] font-semibold text-emerald-400 tabular-nums">
-                  -{discount}%
-                </span>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="mt-auto pt-2.5">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-pressed={!!isSelected}
-            disabled={pinned || disabled}
-            className="w-full inline-flex items-center gap-1.5 text-[11px] font-medium text-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+        <div className="flex flex-1 flex-col p-3">
+          <Link
+            to="/products/$slug"
+            params={{ slug: product.slug }}
+            className="block text-[12.5px] font-medium text-white/95 line-clamp-2 leading-snug min-h-[2.4em] hover:text-accent transition-colors"
           >
-            <span
-              aria-hidden
-              className={`grid place-items-center size-3.5 rounded-[3.5px] border transition-colors duration-150 ${
-                isSelected
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-white/30 bg-transparent"
-              }`}
+            {product.name}
+          </Link>
+
+          <div className="mt-2 flex items-center gap-1 text-[10.5px] text-white/55 tabular-nums">
+            <Star className="size-2.5 fill-amber-400 text-amber-400" aria-hidden />
+            <span className="font-medium text-white/85">{Number(product.rating || 0).toFixed(1)}</span>
+            <span className="text-white/40">({Number(product.reviews || 0)})</span>
+          </div>
+
+          <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+            <Price value={price} variant="current" className="text-[13px]" />
+            {comparePrice != null && comparePrice > price && (
+              <>
+                <Price
+                  value={comparePrice}
+                  variant="compare"
+                  className="text-[10.5px] text-white/40 line-through"
+                />
+                {discount > 0 && (
+                  <span className="text-[10.5px] font-semibold text-emerald-400 tabular-nums">
+                    -{discount}%
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="mt-auto pt-3">
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-pressed={isSelected}
+              disabled={pinned || disabled}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/75 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSelected && <Check className="size-2.5" strokeWidth={3} />}
-            </span>
-            {isSelected ? "Selected" : "Compare"}
-          </button>
+              <span
+                aria-hidden
+                className={`grid place-items-center size-3.5 rounded-[3.5px] border transition-colors duration-150 ${
+                  isSelected
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-white/25 bg-transparent"
+                }`}
+              >
+                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+              </span>
+              Compare
+            </button>
+          </div>
         </div>
       </div>
     </div>
