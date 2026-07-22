@@ -5,7 +5,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, BarChart3, Megaphone, Zap, Target, Flame,
   FileText, Truck, RotateCcw, Pencil, Activity, Wallet, Globe, Search,
   Boxes, Loader2, ShieldAlert, Menu, X, Sparkles, TrendingUp, ShoppingCart,
-  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell, Gem, Crown, Store, UserCog, AlertTriangle, Trophy, ShieldCheck, Gauge, Filter, Brain, SlidersHorizontal,
+  Cpu, ChevronRight, Mail, ShieldBan, Inbox, PackageCheck, MailCheck, LifeBuoy, Database, Images, Bell, Gem, Crown, Store, UserCog, AlertTriangle, Trophy, ShieldCheck, Gauge, Filter, Brain, SlidersHorizontal, Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
