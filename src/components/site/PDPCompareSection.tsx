@@ -290,11 +290,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       <div className="relative -mx-4 sm:mx-0">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent z-10"
+          className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background/95 to-transparent z-10"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent z-10"
+          className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10"
         />
 
         <ul
