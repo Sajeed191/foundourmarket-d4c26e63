@@ -1361,6 +1361,140 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       />
 
 
+      {/* Hide / Unhide / Restore confirmation */}
+      <AnimatePresence>
+        {modConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !modRunning && setModConfirm(null)}
+            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
+            >
+              <div className={cn(
+                "mx-auto grid size-12 place-items-center rounded-2xl",
+                modConfirm.kind === "hide" ? "bg-accent/15 text-accent" : "bg-emerald-500/15 text-emerald-400",
+              )}>
+                {modConfirm.kind === "hide" ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+              </div>
+              <p className="mt-4 text-base font-display">
+                {modConfirm.kind === "hide" && "Hide this review from customers?"}
+                {modConfirm.kind === "unhide" && "Unhide this review?"}
+                {modConfirm.kind === "restore" && "Restore this deleted review?"}
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {modConfirm.kind === "hide" && "The review will be removed from the product page and the rating will recalculate immediately."}
+                {modConfirm.kind === "unhide" && "The review will be shown to customers again and the rating will recalculate."}
+                {modConfirm.kind === "restore" && "The review will be restored to Published and the rating will recalculate."}
+              </p>
+              <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
+                <button
+                  onClick={() => setModConfirm(null)}
+                  disabled={modRunning}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={runConfirmedMod}
+                  disabled={modRunning}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground transition-all hover:brightness-110 disabled:opacity-50"
+                >
+                  {modRunning ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
+                  {modRunning ? "Working…" : "Confirm"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Review details drawer (admin-only) */}
+      <AnimatePresence>
+        {detailsFor && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDetailsFor(null)}
+            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-card p-6 shadow-[var(--shadow-float)]"
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-xs font-mono uppercase tracking-widest text-accent">Review Details</p>
+                  <p className="mt-1 text-lg font-display">{detailsFor.title || "Untitled review"}</p>
+                </div>
+                <button onClick={() => setDetailsFor(null)} className="rounded-full p-2 text-muted-foreground hover:text-foreground">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+                <dt className="text-muted-foreground">Review ID</dt>
+                <dd className="font-mono break-all">{detailsFor.id}</dd>
+                <dt className="text-muted-foreground">Author</dt>
+                <dd>{detailsFor.author_name || detailsFor.user_id || "—"}</dd>
+                <dt className="text-muted-foreground">Rating</dt>
+                <dd>{detailsFor.rating} / 5</dd>
+                <dt className="text-muted-foreground">Status</dt>
+                <dd className="capitalize">{detailsFor.status}</dd>
+                <dt className="text-muted-foreground">Verified Purchase</dt>
+                <dd>{detailsFor.verified_purchase ? "Yes" : "No"}</dd>
+                <dt className="text-muted-foreground">Featured / Pinned</dt>
+                <dd>{detailsFor.featured ? "Featured" : "—"}{detailsFor.pinned ? " · Pinned" : ""}</dd>
+                <dt className="text-muted-foreground">Helpful / Not helpful</dt>
+                <dd>{detailsFor.helpful_count ?? 0} / {detailsFor.not_helpful_count ?? 0}</dd>
+                <dt className="text-muted-foreground">Reports</dt>
+                <dd>{detailsFor.report_count ?? 0}{detailsFor.is_flagged ? " (flagged)" : ""}</dd>
+                <dt className="text-muted-foreground">Sentiment</dt>
+                <dd>{detailsFor.sentiment ?? "—"}{typeof detailsFor.sentiment_score === "number" ? ` (${detailsFor.sentiment_score.toFixed(2)})` : ""}</dd>
+                <dt className="text-muted-foreground">Fake score</dt>
+                <dd>{typeof detailsFor.fake_score === "number" ? detailsFor.fake_score.toFixed(2) : "—"}</dd>
+                <dt className="text-muted-foreground">Created</dt>
+                <dd>{fmtDate(detailsFor.created_at)}</dd>
+                {detailsFor.deleted_at && (
+                  <>
+                    <dt className="text-muted-foreground">Deleted</dt>
+                    <dd>{fmtDate(detailsFor.deleted_at)}</dd>
+                  </>
+                )}
+              </dl>
+              {detailsFor.body && (
+                <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">Body</p>
+                  <p className="text-[13px] whitespace-pre-wrap text-foreground/85">{detailsFor.body}</p>
+                </div>
+              )}
+              {detailsFor.admin_reply && (
+                <div className="mt-3 rounded-xl border border-accent/20 bg-accent/[0.05] p-3">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-1.5">Store Reply</p>
+                  <p className="text-[13px] whitespace-pre-wrap text-foreground/85">{detailsFor.admin_reply}</p>
+                </div>
+              )}
+              {detailsFor.fake_reasons && (
+                <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/[0.05] p-3">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-destructive mb-1.5">Fake signals</p>
+                  <p className="text-[12px] text-foreground/80">{detailsFor.fake_reasons}</p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Delete confirmation dialog */}
       <AnimatePresence>
         {confirmDeleteId && (
