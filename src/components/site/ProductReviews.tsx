@@ -618,7 +618,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       { admin_reply: text, admin_reply_at: new Date().toISOString(), admin_reply_by: user.id },
       "Reply published",
     );
-    if (ok) setReplyDrafts((d) => ({ ...d, [id]: "" }));
+    if (ok) {
+      setReplyDrafts((d) => ({ ...d, [id]: "" }));
+      setReplyForId(null);
+    }
   }
   async function analyzeOne(id: string) {
     setAnalyzing(id);
@@ -629,6 +632,27 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       toast.error("Analysis failed", { description: e instanceof Error ? e.message : undefined });
     } finally {
       setAnalyzing(null);
+    }
+  }
+
+  /** Execute a confirmed moderation action. Every path triggers a rating
+   *  recalculation via `patch`/`restoreReview`, which in turn calls
+   *  `onAggregateChange` (wired to `invalidateProducts`) so every surface
+   *  refreshes without a manual reload. */
+  async function runConfirmedMod() {
+    if (!modConfirm) return;
+    setModRunning(true);
+    try {
+      if (modConfirm.kind === "hide") {
+        await patch(modConfirm.id, { status: "hidden" }, "Review hidden");
+      } else if (modConfirm.kind === "unhide") {
+        await patch(modConfirm.id, { status: "published" }, "Review restored");
+      } else if (modConfirm.kind === "restore") {
+        await restoreReview(modConfirm.id);
+      }
+    } finally {
+      setModRunning(false);
+      setModConfirm(null);
     }
   }
 
