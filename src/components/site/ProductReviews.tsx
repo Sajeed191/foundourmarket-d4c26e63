@@ -243,7 +243,12 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     !user ? "guest" : hasReviewed ? "reviewed" : "can_review";
 
   const isSaved = user ? wishlist.has(productSlug) : false;
-  const avg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
+  // Single source of truth: products.rating / products.reviews (maintained by
+  // the DB trigger). Never recompute the aggregate from the loaded review list
+  // — the list may include seeded rows or lag behind moderation state.
+  const localAvg = published.length ? published.reduce((s, r) => s + r.rating, 0) / published.length : 0;
+  const avg = typeof productRating === "number" && productRating > 0 ? productRating : localAvg;
+  const totalReviewCount = typeof productReviewCount === "number" ? productReviewCount : published.length;
   const buckets = ratingBuckets(published);
   const verifiedCount = published.filter((r) => r.verified_purchase).length;
   const photoReviews = published.filter((r) => (r.media ?? []).some((m) => m.type === "image"));
