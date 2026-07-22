@@ -142,6 +142,16 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const [moreOpenId, setMoreOpenId] = useState<string | null>(null);
   const [modOpenId, setModOpenId] = useState<string | null>(null);
   const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
+  // Confirmation dialog for reversible moderation actions (hide/unhide/restore).
+  const [modConfirm, setModConfirm] = useState<
+    | { id: string; kind: "hide" | "unhide" | "restore" }
+    | null
+  >(null);
+  const [modRunning, setModRunning] = useState(false);
+  // Details drawer for admins to inspect the full review payload.
+  const [detailsFor, setDetailsFor] = useState<Review | null>(null);
+  // Inline reply-as-store composer (opened from the moderation menu).
+  const [replyForId, setReplyForId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const table = (isAdmin ? "product_reviews" : "product_reviews_public") as "product_reviews_public";
