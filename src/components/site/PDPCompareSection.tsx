@@ -142,6 +142,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // Personalization signals — all local, no network. Never override similarity.
+  const { entries: recentEntries } = useRecentlyViewed();
+  const { slugs: wishlistSet } = useWishlist();
+  const { items: cartItems } = useCart();
+
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;
 
@@ -151,6 +156,21 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
     const curPrice = currentPrice;
 
+    // On-device personalization signals — read once per memo.
+    const recentSlugs = recentEntries.map((e) => e.slug);
+    const recentSet = new Set(recentSlugs);
+    const wlSet = wishlistSet instanceof Set ? wishlistSet : new Set<string>();
+    const cartSet = new Set(cartItems.map((i) => i.slug));
+    const preferredBrands = inferPreferredBrands(products, recentSlugs, wlSet, cartSet);
+
+    // Shopping-context signals (also feeds the AI Assistant). Soft only.
+    const ctx = getShoppingContext();
+    const ctxBrand = ctx.product?.brand ?? null;
+    const ctxCategory = ctx.product?.category ?? null;
+    const ctxPrice = ctx.product?.price_inr ?? null;
+    const ctxCartCats = new Set(ctx.cart?.categories ?? []);
+    const ctxWishlistCats = new Set(ctx.wishlist?.categories ?? []);
+
     return products
       .filter(
         (p) =>
@@ -159,6 +179,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           p.inStock !== false,
       )
       .map((p) => {
+        // ---- Existing similarity score (unchanged) ----
         let score = 0;
         if (cur.brand && p.brand && p.brand === cur.brand) score += 4;
         if (cur.productType && p.productType && p.productType === cur.productType) score += 3;
@@ -168,12 +189,30 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           const diff = Math.abs((priceOf(p) || 0) - curPrice) / curPrice;
           if (diff <= 0.25) score += 1;
         }
-        return { p, score };
+
+        // ---- Personalization boost (capped, never overrides similarity) ----
+        let boost = 0;
+        if (recentSet.has(p.slug)) boost += 0.8;
+        if (wlSet.has(p.slug)) boost += 0.6;
+        if (p.brand && preferredBrands.has(p.brand)) boost += 0.5;
+        if (p.category && ctxCartCats.has(p.category)) boost += 0.4;
+        if (p.category && ctxWishlistCats.has(p.category)) boost += 0.3;
+
+        // AI Shopping Context — soft signals from the active conversation.
+        if (ctxBrand && p.brand && p.brand === ctxBrand) boost += 0.6;
+        if (ctxCategory && p.category && p.category === ctxCategory) boost += 0.4;
+        if (ctxPrice && ctxPrice > 0) {
+          const pInr = p.priceInr ?? null;
+          if (pInr && Math.abs(pInr - ctxPrice) / ctxPrice <= 0.3) boost += 0.3;
+        }
+
+        const finalScore = score + Math.min(boost, PERSONALIZATION_CAP);
+        return { p, score: finalScore };
       })
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .map((x) => x.p);
-  }, [products, currentProduct, currentPrice, priceOf]);
+  }, [products, currentProduct, currentPrice, priceOf, recentEntries, wishlistSet, cartItems]);
 
   const visibleSuggestions = useMemo(
     () => allSuggestions.slice(0, VISIBLE_LIMIT),
